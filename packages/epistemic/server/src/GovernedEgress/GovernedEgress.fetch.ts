@@ -50,8 +50,10 @@ import {
   destinationDigestOf,
   digestForLedger,
   ExecutionRunKey,
+  ExecutionSettlement,
   operationDigestOf,
   sealExecutionDecision,
+  sealExecutionOutcome,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
 import {
   DenialReason,
@@ -71,6 +73,19 @@ import * as Str from "effect/String";
 import type { DecisionRecordHash } from "@beep/epistemic-domain/values/ExecutionRecord";
 
 const $I = $EpistemicServerId.create("GovernedEgress/GovernedEgress.fetch");
+// The settlement write happens *after* the request has already gone out, so it
+// can never fail the fetch — but an unbounded one would hold the caller's
+// response hostage to a stalled ledger. This bound is what makes "best effort"
+// literally true. It is deliberately generous: a measured PGlite write-ahead
+// append is ~2ms, so a second is roughly 500x headroom and a timeout here means
+// the ledger is genuinely unwell rather than merely busy.
+//
+// The cost of exceeding it is real and is why it is not tighter: the decision
+// stays allowed-with-no-outcome, which `readUnsettledAllowed` reports as
+// "decided, outcome unknown". That is the honest answer — the request did go
+// out and we cannot say how it ended — and the dropped write is logged at
+// warning with its cause.
+const outcomeAppendTimeout = Duration.seconds(1);
 
 /**
  * Session-static inputs the composition root supplies to the governed egress
@@ -247,15 +262,14 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
     return SinkDestination.make(O.getOrElse(covering, () => O.getOrElse(canonical, () => requested)));
   };
 
-  const deny = (reason: DenialReason, destination: SinkDestination): Effect.Effect<boolean> =>
+  const deny = (reason: DenialReason, destination: SinkDestination): Effect.Effect<void> =>
     Effect.logWarning("governed egress refused a destination").pipe(
       Effect.annotateLogs({
         destinationDigest: destinationDigestOf(destination),
         guidance: denialGuidance[reason],
         reason,
         subsystem: "epistemic_governed_egress",
-      }),
-      Effect.as(false)
+      })
     );
 
   const authorize = Effect.fn("Epistemic.GovernedEgress.authorize")(function* (requested: string) {
@@ -312,13 +326,34 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
         );
         if (!appended) {
           // No record, no request — the same fail-closed rule the gate applies.
-          return yield* deny(DenialReason.Enum["ledger-unavailable"], recordedDestination);
+          yield* deny(DenialReason.Enum["ledger-unavailable"], recordedDestination);
+          return O.none<DecisionRecordHash>();
         }
         return yield* ExecutionVerdict.match(verdict, {
-          allowed: () => Effect.succeed(true),
-          denied: ({ reason }) => deny(reason, recordedDestination),
+          allowed: () => Effect.succeed(O.some(record.hash)),
+          denied: ({ reason }) => deny(reason, recordedDestination).pipe(Effect.as(O.none<DecisionRecordHash>())),
         });
       })
+    );
+  });
+
+  const recordOutcome = Effect.fn("Epistemic.GovernedEgress.recordOutcome")(function* (
+    decisionHash: DecisionRecordHash,
+    settlement: ExecutionSettlement
+  ) {
+    const recordedAt = yield* DateTime.now;
+    const outcome = sealExecutionOutcome({ decisionHash, recordedAt, runKey, settlement });
+    yield* ledger.appendOutcome(outcome).pipe(
+      Effect.timeout(outcomeAppendTimeout),
+      Effect.catchCause((cause) =>
+        Effect.logWarning("governed egress could not write a settlement outcome").pipe(
+          Effect.annotateLogs({
+            cause,
+            settlement,
+            subsystem: "epistemic_governed_egress",
+          })
+        )
+      )
     );
   });
 
@@ -328,7 +363,7 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
   // it *with* the build context is what keeps the boundary's own logs and spans
   // inside the application's logger and tracer instead of a bare default
   // runtime — the decision log is the only place a denial's reason survives.
-  const runAuthorize = Effect.runPromiseWith(yield* Effect.context<never>());
+  const runInContext = Effect.runPromiseWith(yield* Effect.context<never>());
 
   // `Fetch` is `typeof globalThis.fetch`, so the contract is a promise-returning
   // function and this cannot be an Effect. It is written as a `.then` chain
@@ -345,8 +380,21 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
     input: Parameters<typeof globalThis.fetch>[0],
     init?: Parameters<typeof globalThis.fetch>[1]
   ): Promise<Response> =>
-    runAuthorize(authorize(input instanceof Request ? input.url : String(input))).then((allowed) =>
-      allowed ? platformFetch(input, { ...init, redirect: "error" }) : Promise.reject(EgressDenied.make({}))
+    runInContext(authorize(input instanceof Request ? input.url : String(input))).then(
+      O.match({
+        onNone: () => Promise.reject(EgressDenied.make({})),
+        onSome: (decisionHash) =>
+          Promise.resolve()
+            .then(() => platformFetch(input, { ...init, redirect: "error" }))
+            .then(
+              (response) =>
+                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.completed)).then(() => response),
+              (cause: unknown) =>
+                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.failed)).then(() =>
+                  Promise.reject(cause)
+                )
+            ),
+      })
     );
 
   return governedFetch as typeof globalThis.fetch;

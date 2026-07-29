@@ -6,13 +6,22 @@ A default-deny authority boundary over the MCP agent surface of the
 professional-desktop sidecar, with a hash-chained, append-only record of every
 decision and outcome.
 
-Observable end state: an MCP agent operates under a grant set frozen at the
-start of its session. Every tool dispatch is decided before it runs and the
-decision is durably recorded **before** the effect executes — no record, no
-action. An outbound publish to a destination outside the session's grants is
-refused, and the refusal reaches the agent as a typed value, not an exception.
-Reading the two ledger tables afterwards reconstructs exactly what was decided,
-in what order, with a hash chain that fails verification if any row is altered.
+Observable end state: an MCP agent operates under a grant set frozen on its first
+governed dispatch and reused for the rest of the session. Every tool dispatch is
+decided before it runs and the decision is durably recorded **before** the effect
+executes — no record, no action. An outbound publish to a destination outside the
+session's grants is refused, and the refusal reaches the agent as a typed value,
+not an exception. Reading the two ledger tables afterwards reconstructs exactly
+what was decided, in what order, with a hash chain that fails verification at the
+index of any **altered** row.
+
+*(Corrected at closeout: the freeze point is the first governed dispatch, not
+session open — read-only and idle time do not consume the grant TTL. And the
+chain detects alteration, not truncation: a resealed tail or a deleted suffix
+still verifies intact, because nothing anchors the tip. Tip anchoring is the
+`agent-execution-record-anchoring` candidate, a stated non-goal below. Outcome
+rows bind to their decisions individually and are not part of the decision
+chain.)*
 
 Deliberately **not** a sandbox in the host-isolation sense. This packet buys the
 policy plane and its records. A green acceptance suite here must never be
@@ -226,31 +235,75 @@ is the session. The decision's substance is unchanged: a run is an MCP session.
 
 ## Acceptance Criteria
 
-- [ ] An MCP tool dispatch is refused when the session's frozen grant set does
+Every box below is discharged. `README.md` carries the criterion-to-proof map
+naming the specific test behind each one; the three marked *(PR 7)* are the ones
+the acceptance suite added.
+
+- [x] An MCP tool dispatch is refused when the session's frozen grant set does
       not authorize it, and the refusal is a typed value the agent receives.
-- [ ] An outbound POST to a destination outside the grant set is refused with the
+- [x] An outbound POST to a destination outside the grant set is refused with the
       stub fetch counter at **0** — not merely "the effect failed."
-- [ ] An allowed dispatch produces exactly two ledger rows: a decision written
+- [x] An allowed dispatch produces exactly two ledger rows: a decision written
       before the effect runs, and an outcome written after it settles.
-- [ ] A denied dispatch produces exactly one row — the decision. There is no
+- [x] A denied dispatch produces exactly one row — the decision. There is no
       execution to report, and `dispatchWithTierGate` never runs `onApproved` on
       the refused branch, so no outcome row is written or expected.
-- [ ] The derived "decided, outcome unknown" query is scoped to **allowed**
+- [x] The derived "decided, outcome unknown" query is scoped to **allowed**
       decisions; a test asserts an ordinary denial is not reported as unknown.
-- [ ] The chain verifier fails at the tampered index after a raw-SQL mutation of
+- [x] The chain verifier fails at the tampered index after a raw-SQL mutation of
       any ledger row.
-- [ ] A canary string planted in every request body and response appears nowhere
-      in the serialized ledger rows.
-- [ ] A descriptor-walk test fails on any `jsonb`/`blob` column, or any `text`
+- [x] A canary planted in the outbound **request body** appears nowhere in the
+      serialized ledger rows, and the exact physical column set of both ledger
+      tables is pinned from `information_schema.columns`. *(PR 7 — see the
+      narrowing note below)*
+- [x] A descriptor-walk test fails on any `jsonb`/`blob` column, or any `text`
       column whose field schema is outside the allowlist.
-- [ ] The `ungoverned-infrastructure` literal domain's membership is asserted to
+- [x] The `ungoverned-infrastructure` literal domain's membership is asserted to
       be exactly empty.
-- [ ] On one MCP session, a poisoned read followed by an outbound publish to the
-      injected destination is denied.
-- [ ] `ontology_publish_provenance` is not registered when the destination
+- [x] On one MCP session, a poisoned read followed by an outbound publish to the
+      injected destination is denied. *(PR 7)*
+- [x] `ontology_publish_provenance` is not registered when the destination
       allowlist is empty.
-- [ ] `bun run beep yeet verify` is green.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep yeet verify` is green.
+- [x] No unrelated refactors or formatting churn.
+
+**Two criteria were narrowed against the original wording rather than being
+claimed in full. Both narrowings are deliberate and are what the tests actually
+establish.**
+
+*The canary criterion originally said "every request body and response."* The
+suite proves absence for the outbound **publish body** only. The workspace
+contents and the stub response body are each proven to reach the boundary — every
+canary carries its own positive control — but production never carries either into
+the ledger's write path, so asserting their absence from ledger rows would pass
+for a reason unrelated to the guarantee. Claiming them would be theatre.
+
+The suite adds a **physical schema tripwire**: a literal comparison against
+`information_schema.columns` pinning the exact column name and type set of both
+tables. It exists because a nullable `payload TEXT` column added to the migration
+would otherwise serialize as `payload: null` through `SELECT *`, contain no
+canary, and pass — and the descriptor test in `epistemic/tables` would not catch
+it either, because it inspects the Drizzle projection rather than the database.
+
+**Call it a drift tripwire, not proof of payload incapacity.** Every digest,
+run-key, and revision field is unconstrained `TEXT` at the database boundary, so
+a raw writer or a converter regression could place payload into an *existing*
+column without changing `information_schema` at all, and the canary search would
+only catch the exact unencoded token. The typed writer is what keeps that from
+happening today; the database does not forbid it. Closing that gap means CHECK
+constraints or typmods on every text field — exact SHA-256 form, bounded
+semantic-version syntax, bounded literals — plus negative raw-insert tests. That
+is real work with a new migration and its four-place registration, and it is
+recorded as a follow-up rather than smuggled into the packet's close.
+
+*The cost criterion is per-path, not a single number.* A **tier-only** allowed
+dispatch moves the ledger by exactly 2 rows: one write-ahead decision, one
+settlement outcome. An allowed **publish** moves it by 4, because governed egress
+writes and settles its own decision — 2 decisions plus 2 outcomes. Both are asserted as
+before/after deltas around the dispatch, never as absolute totals, so an
+in-process retry cannot make them lie, and never in wall time, so they cannot
+decay into a CI timing flake. The measured PGlite write-ahead cost was 1.873 ms on
+the sampled run; that number is recorded, not asserted.
 
 ## Verification Matrix
 
