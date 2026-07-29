@@ -99,15 +99,17 @@ and runtime sanitization?
 **Answer:** `@beep/file-processing` owns ingestion orchestration, advisory
 `InjectionFinding`, redaction proof, and OOXML/PDF-integrity findings.
 `@beep/provenance` remains a judgment-free anchor substrate. `@beep/html` owns
-pure `SafeHtmlAttributes`, allowed-element metadata, strict URL-attribute
-schemas, and safe-output markers—not a runtime sanitizer.
+pure tree conformance, generator-owned element and attribute metadata, strict
+URL policy, deterministic serialization, and module-issued safe-output
+markers—not parsing or runtime sanitization.
 
 The HTML policy must not derive a safe attribute set from live
 `GlobalAttributes` verbatim: `packages/foundation/modeling/html/src/Html.attributes.ts`
 includes `EventHandlerAttributes` and `style`, both XSS sinks. `sanitize-html`
 is the server-side adapter and DOMPurify is the browser render-boundary adapter.
-A spike must prove whether raw HTML or the typed AST currently reaches the
-browser before the sanitizer output contract freezes.
+The typed-AST path may issue `SafeHtml` only after conformance and deny-by-default
+policy checks. A separate spike must still prove where raw HTML strings reach
+the browser before the sanitizer-adapter output contract freezes.
 
 **Rationale:** Findings contain judgment and belong with the consuming ingestion
 policy; provenance must stay reusable and neutral. Pure schema/metadata belongs
@@ -240,8 +242,10 @@ freezes; the exploration records a counsel flag, not clearance.
 
 ### 2026-07-14 — Browser sanitizer boundary
 
-**Status:** DEFERRED — spike whether raw HTML or the typed AST reaches the
-browser, then freeze the trusted sanitizer output and invalidating conversions.
+**Status:** DEFERRED — the pure typed-AST conformance, policy, serialization,
+and safe-marker contract is implemented in `@beep/html`; spike where raw HTML
+strings reach the browser, then freeze environment-owned sanitizer adapters and
+their invalidating conversions.
 
 ### 2026-07-14 — DNS-rebinding harness
 

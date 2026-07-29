@@ -141,6 +141,7 @@ enough to produce stable path-located issues, but do not map them losslessly to
 `@beep/md`.
 
 **Rationale:** Supporting `custom-style` would likely force an immediate
-`@beep/md` extension decision; supporting tables would enlarge v1 beyond the
-current `@beep/md` profile. Gap-only evidence preserves the signal needed for
-the compatibility matrix without expanding the supported profile.
+`@beep/md` extension decision. `@beep/md` now has a Markdown table model, but
+Pandoc's richer table payload still has no truthful lossless mapping into that
+profile. Keeping Pandoc tables as an explicit mapping gap preserves the signal
+needed for the compatibility matrix without overstating interoperability.
