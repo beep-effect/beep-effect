@@ -405,6 +405,33 @@ describe("practice KG projections", () => {
       expect(first.counts.edges).toBe(9);
 
       yield* Effect.gen(function* () {
+        const db = yield* DuckDb;
+        const textLines = yield* db
+          .query(
+            "SELECT to_json(t)::VARCHAR AS line FROM (SELECT operation_id, text FROM document_text ORDER BY digest) t"
+          )
+          .pipe(Effect.flatMap(decodeDumpLines));
+        expect(A.map(textLines, (row) => row.line)).toStrictEqual([
+          '{"operation_id":"op-a","text":"alpha docket 20001US01 response"}',
+          '{"operation_id":"op-b","text":"family 20001 patent application"}',
+        ]);
+        const ftsDocLines = yield* db
+          .query(
+            "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS indexed_documents FROM fts_docstats WHERE doc_id LIKE 'document:%') x"
+          )
+          .pipe(Effect.flatMap(decodeDumpLines));
+        expect(A.map(ftsDocLines, (row) => row.line)).toStrictEqual(['{"indexed_documents":2}']);
+      }).pipe(withDuckDb(path.join(firstOut, "practice.duckdb")));
+
+      yield* Effect.gen(function* () {
+        const db = yield* DuckDb;
+        const refreshTextLines = yield* db
+          .query("SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS text_rows FROM document_text) x")
+          .pipe(Effect.flatMap(decodeDumpLines));
+        expect(A.map(refreshTextLines, (row) => row.line)).toStrictEqual(['{"text_rows":3}']);
+      }).pipe(withDuckDb(path.join(refreshOut, "practice.duckdb")));
+
+      yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         const provenanceRows = yield* sql
           .unsafe(
@@ -468,6 +495,10 @@ describe("practice KG projections", () => {
           expect(result.epistemic_status).toBe("derived-from-official-records");
         });
         expect(O.getOrUndefined(A.get(results, 6))?.note).toContain("archive-level confidence");
+        const search = O.getOrThrow(A.get(results, 4));
+        const searchRow = R.fromEntries(A.zip(search.data.columns, O.getOrThrow(A.head(search.data.rows))));
+        expect(searchRow.digest).toBe(fixtureDigests.docket);
+        expect(searchRow.snippet).toContain("alpha docket 20001US01");
         const digestProvenance = yield* callToolText("kg_provenance", { digest: fixtureDigests.docket }).pipe(
           Effect.flatMap(decodeToolResultJson)
         );

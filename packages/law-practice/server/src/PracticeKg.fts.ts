@@ -167,7 +167,7 @@ SELECT
   t.content
 FROM read_json(${sqlStringLiteral(sourcesPath)}, format='newline_delimited') s
 JOIN read_text(${sqlStringLiteral(textGlob)}) t
-  ON regexp_extract(t.filename, 'operation:([^/\\\\]+)\\\\.txt$', 1) = s.operationId`
+  ON regexp_extract(t.filename, 'operation:([^/\\\\]+)\\.txt$', 1) = s.operationId`
     ),
     "\nUNION ALL\n"
   );
