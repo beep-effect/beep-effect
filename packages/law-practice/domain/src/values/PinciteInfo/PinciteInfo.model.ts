@@ -46,7 +46,7 @@ export declare namespace PinciteInfo {
    * @since 0.0.0
    */
   export interface Type {
-    readonly additionalPincites: O.Option<ReadonlyArray<PinciteInfo.Type>>;
+    readonly additionalPincites: ReadonlyArray<PinciteInfo.Type>;
     readonly endPage: O.Option<NonNegativeInt>;
     readonly endParagraph: O.Option<NonNegativeInt>;
     readonly footnote: O.Option<NonNegativeInt>;
@@ -55,7 +55,7 @@ export declare namespace PinciteInfo {
     readonly page: O.Option<NonNegativeInt>;
     readonly paragraph: O.Option<NonNegativeInt>;
     readonly raw: string;
-    readonly starPage: O.Option<boolean>;
+    readonly starPage: boolean;
   }
 
   /**
@@ -74,7 +74,7 @@ export declare namespace PinciteInfo {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly additionalPincites?: ReadonlyArray<PinciteInfo.Encoded>;
+    readonly additionalPincites?: ReadonlyArray<PinciteInfo.Encoded> | undefined;
     readonly endPage?: number;
     readonly endParagraph?: number;
     readonly footnote?: number;
@@ -96,8 +96,7 @@ export declare namespace PinciteInfo {
  * hand-written {@link PinciteInfo} namespace types for the same reason.
  */
 const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, PinciteInfo.Encoded> => PinciteInfo)).pipe(
-  S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  SchemaUtils.withEmptyArrayDefaults<PinciteInfo.Type>(),
   S.annotateKey({
     description:
       "Additional discrete pincites following the primary one (#247). Each entry is a full PinciteInfo so ranges/footnotes/star-pages inside the comma chain are preserved.",
@@ -109,9 +108,9 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
  *
  * `page` and `paragraph` are mutually exclusive — a pincite is either a page
  * reference or a paragraph reference (#204). Every optional numeric component
- * is modeled as `Option<NonNegativeInt>` with a `None` constructor default, and
- * `additionalPincites` is a self-recursive `Option` array so the discrete
- * pincites of a comma chain each preserve their own ranges, footnotes, and
+ * is modeled as `Option<NonNegativeInt>` with a `None` constructor default.
+ * `starPage` defaults to `false`, and `additionalPincites` defaults to an empty
+ * self-recursive array whose entries preserve their own ranges, footnotes, and
  * star-pages (#247).
  *
  * **Example**
@@ -127,13 +126,13 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
  *   endPage: O.some(NonNegativeInt.make(575)),
  *   isRange: true,
  *   raw: "570-75",
- *   additionalPincites: O.some([
+ *   additionalPincites: [
  *     PinciteInfo.make({
  *       page: O.some(NonNegativeInt.make(580)),
  *       isRange: false,
  *       raw: "580",
  *     }),
- *   ]),
+ *   ],
  * })
  *
  * console.log(O.isSome(pincite.page)) // true
@@ -178,9 +177,7 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
     isRange: S.Boolean.annotateKey({
       description: "True if this is a page or paragraph range",
     }),
-    starPage: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    starPage: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
           'True when the pincite uses star-pagination (e.g., "*2"), denoting a slip-opinion page or unreported-decision page rather than a reporter page.',

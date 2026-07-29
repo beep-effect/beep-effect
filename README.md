@@ -233,7 +233,11 @@ The repository is built on three pillars:
 - **Schema-first** — `effect/Schema` (plus `@beep/schema` helpers) is the single source of truth for shape, validation, codecs, and persistence metadata.
 - **Topology as compressed context** — Package paths, role suffixes (`.model.ts`, `.ports.ts`, etc.), and family/kind declarations in `package.json` carry meaning so readers can understand intent before opening files.
 
-See [`standards/effect-first-development.md`](standards/effect-first-development.md) and [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md) (especially the Core Principles).
+See [`standards/effect-first-development.md`](standards/effect-first-development.md),
+the paste-ready
+[`standards/schema-first-development-prompt.md`](standards/schema-first-development-prompt.md),
+and [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md) (especially the
+Core Principles).
 
 ---
 

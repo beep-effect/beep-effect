@@ -115,9 +115,7 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
         description: "Alias for subsection.",
       })
     ),
-    hasEtSeq: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    hasEtSeq: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: 'True when "et seq." follows.',
       })
