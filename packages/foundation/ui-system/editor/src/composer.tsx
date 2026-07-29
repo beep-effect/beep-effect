@@ -8,7 +8,8 @@
  */
 "use client";
 
-import { EditorStateFromJson, SerializedEditorState } from "@beep/lexical-schema";
+import { EditorStateFromJson } from "@beep/lexical-schema";
+import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model";
 import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-editable";
 import { O } from "@beep/utils";
 import { TRANSFORMERS } from "@lexical/markdown";
@@ -21,10 +22,13 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as S from "effect/Schema";
 import { editorNodes } from "./nodes.ts";
+import { decodeEditorStateForRuntime } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
+import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
+import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
 
 const onError = (error: Error) => {
@@ -47,18 +51,56 @@ const onError = (error: Error) => {
  */
 export const markdownTransformers = TRANSFORMERS;
 
-interface EditorComposerProps {
+/**
+ * React props for {@link EditorComposer}.
+ *
+ * @example
+ * ```ts
+ * import type { EditorComposerProps } from "@beep/editor/composer"
+ *
+ * const props: EditorComposerProps = { placeholder: "Draft response" }
+ * console.log(props.placeholder) // "Draft response"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorComposerProps {
   /** Optional class for the editable content container. */
-  readonly className?: string;
-  /** Optional schema-decoded initial editor state. */
-  readonly initialState?: SerializedEditorState.Type;
+  readonly className?: string | undefined;
+  /**
+   * Optional schema-decoded initial editor state. Lexical reads it once; change
+   * the component `key` to replace it after mount.
+   */
+  readonly initialState?: SerializedEditorState.Type | undefined;
   /**
    * Called with the schema-decoded state on every content change; states
    * that fail the v1 schema are logged and skipped.
    */
-  readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
+  readonly onSerializedChange?: ((state: SerializedEditorState.Type) => void) | undefined;
   /** Composer placeholder text. */
-  readonly placeholder?: string;
+  readonly placeholder?: string | undefined;
+}
+
+/**
+ * React props for {@link EditorWireComposer}.
+ *
+ * @example
+ * ```ts
+ * import type { EditorWireComposerProps } from "@beep/editor/composer"
+ *
+ * const props: EditorWireComposerProps = {
+ *   input: { root: { type: "root", version: 1, children: [] } },
+ * }
+ * console.log(typeof props.input) // "object"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorWireComposerProps extends Omit<EditorComposerProps, "initialState"> {
+  /** Unknown persisted input admitted before any editable Lexical surface mounts. */
+  readonly input: unknown;
 }
 
 /**
@@ -88,6 +130,19 @@ export function EditorComposer({
   className,
   onSerializedChange,
 }: EditorComposerProps): JSX.Element {
+  const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
+    Exit.match(Effect.runSyncExit(decodeEditorStateForRuntime(state)), {
+      onFailure: (cause) => {
+        Effect.runSync(Effect.logError("EditorComposer refused runtime-incompatible initial state", cause));
+        return O.none();
+      },
+      onSuccess: O.some,
+    })
+  );
+  if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+    return <EditorWireViewer input={initialState} className={className} />;
+  }
+
   return (
     <LexicalComposer
       initialConfig={{
@@ -95,7 +150,7 @@ export function EditorComposer({
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(O.fromUndefinedOr(initialState), S.encodeSync(EditorStateFromJson)),
+          editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
         }),
         onError,
       }}
@@ -123,7 +178,7 @@ export function EditorComposer({
         <OnChangePlugin
           ignoreSelectionChange={true}
           onChange={(nextEditorState) => {
-            const exit = Effect.runSyncExit(S.decodeUnknownEffect(SerializedEditorState)(nextEditorState.toJSON()));
+            const exit = Effect.runSyncExit(decodeEditorStateForRuntime(nextEditorState.toJSON()));
             Exit.match(exit, {
               onSuccess: onSerializedChange,
               onFailure: (cause) =>
@@ -134,4 +189,52 @@ export function EditorComposer({
       )}
     </LexicalComposer>
   );
+}
+
+/**
+ * Editable admission surface for persisted Lexical wire. Compatible v1 input
+ * mounts {@link EditorComposer}; future/extension wire remains escaped and
+ * read-only, so incompatible content can never reach a load or save callback.
+ * A changed compatible `input` remounts the inner editor with its canonical
+ * encoded state.
+ *
+ * @example
+ * ```tsx
+ * import { EditorWireComposer } from "@beep/editor/composer"
+ *
+ * const wire = { root: { type: "root", version: 1, children: [] } }
+ * const editor = <EditorWireComposer input={wire} placeholder="Draft" />
+ * console.log(editor.type.name) // "EditorWireComposer"
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function EditorWireComposer({
+  input,
+  className,
+  onSerializedChange,
+  placeholder,
+}: EditorWireComposerProps): JSX.Element {
+  return Result.match(Effect.runSync(Effect.result(analyzeEditorStateCompatibility(input))), {
+    onFailure: () => <EditorWireViewer input={input} className={className} />,
+    onSuccess: (result) =>
+      O.match(result.state, {
+        onNone: () => <EditorCompatibilityViewer result={result} className={className} />,
+        onSome: (initialState) => {
+          const encodedInitialState = S.encodeSync(EditorStateFromJson)(initialState);
+          return (
+            <EditorComposer
+              key={encodedInitialState}
+              initialState={initialState}
+              {...O.getSomesStruct({
+                className: O.fromUndefinedOr(className),
+                onSerializedChange: O.fromUndefinedOr(onSerializedChange),
+                placeholder: O.fromUndefinedOr(placeholder),
+              })}
+            />
+          );
+        },
+      }),
+  });
 }

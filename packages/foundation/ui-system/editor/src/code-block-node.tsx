@@ -41,7 +41,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * @example
  * ```ts
- * import { SerializedCodeBlockNode } from "@beep/editor"
+ * import { SerializedCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * const payload = SerializedCodeBlockNode.make({
  *   format: "",
@@ -76,7 +76,7 @@ const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(
  *
  * @example
  * ```tsx
- * import { $createCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($createCodeBlockNode("export {}", "typescript").getType()) // "codeblock"
  * ```
@@ -138,7 +138,7 @@ export class CodeBlockNode extends DecoratorBlockNode {
  *
  * @example
  * ```ts
- * import { $createCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($createCodeBlockNode("export {}", "ts").getTextContent()) // "export {}"
  * ```
@@ -154,7 +154,7 @@ export const $createCodeBlockNode = (code: string, language: string): CodeBlockN
  *
  * @example
  * ```ts
- * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($isCodeBlockNode($createCodeBlockNode("x", "ts"))) // true
  * ```

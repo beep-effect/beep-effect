@@ -39,10 +39,12 @@ struct SidecarTransport {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RendererObservabilityConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
     build_commit: Option<String>,
     deployment_environment: String,
     launch_id: String,
     log_level: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
     otlp_url: Option<String>,
     qa_session_id: String,
 }
@@ -1198,6 +1200,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -1281,20 +1284,21 @@ pub fn run() {
                     .env("BEEP_DESKTOP_BUILD_VERSION", &app_version)
                     .env("BEEP_DESKTOP_BUILD_PROFILE", build_profile());
 
+                // A packaged debug binary does not inherit a repository working
+                // directory. Always anchor PGlite in Tauri's app-data directory
+                // so debug and release sidecars cannot resolve the fallback to
+                // `/.beep` (which fails closed before the renderer can boot).
+                std::fs::create_dir_all(&data_dir)?;
+                command = command.env(
+                    "CHAT_DB_PATH",
+                    data_dir.join("chat-db").to_string_lossy().to_string(),
+                );
+
                 if cfg!(debug_assertions) {
-                    // Dev + ipc: keyless fixture kernel; the sidecar falls back to
-                    // its repo-local PGlite dir when CHAT_DB_PATH is unset.
+                    // Dev + ipc: keyless fixture kernel with app-local data.
                     command = command.env("CHAT_AGENT", "fixture");
                 } else {
-                    std::fs::create_dir_all(&data_dir)?;
-                    // CHAT_DB_PATH is a directory PGlite persists into (see the
-                    // sidecar's ChatDbConfig), not a single file.
-                    command = command
-                        .env(
-                            "CHAT_DB_PATH",
-                            data_dir.join("chat-db").to_string_lossy().to_string(),
-                        )
-                        .env("CHAT_AGENT", "anthropic");
+                    command = command.env("CHAT_AGENT", "anthropic");
                     if let Some(key) = anthropic_key() {
                         command = command.env("AI_ANTHROPIC_API_KEY", key);
                     }
@@ -1444,7 +1448,7 @@ pub fn run() {
 mod tests {
     use super::{
         authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame,
-        parse_native_logging_config, read_bounded_sidecar_line,
+        parse_native_logging_config, read_bounded_sidecar_line, RendererObservabilityConfig,
     };
     #[cfg(unix)]
     use super::{
@@ -1459,6 +1463,24 @@ mod tests {
     #[cfg(unix)]
     use std::time::{Duration, Instant};
     use uuid::Uuid;
+
+    #[test]
+    fn omits_absent_renderer_observability_options_from_the_wire() {
+        let encoded = serde_json::to_value(RendererObservabilityConfig {
+            build_commit: None,
+            deployment_environment: "qa".to_string(),
+            launch_id: "launch-id".to_string(),
+            log_level: "Info",
+            otlp_url: None,
+            qa_session_id: "session-id".to_string(),
+        })
+        .expect("renderer observability config should serialize");
+
+        assert!(encoded.get("buildCommit").is_none());
+        assert!(encoded.get("otlpUrl").is_none());
+        assert_eq!(encoded["deploymentEnvironment"], "qa");
+        assert_eq!(encoded["logLevel"], "Info");
+    }
 
     #[cfg(unix)]
     fn spawn_test_sidecar(script: &str) -> SidecarProcess {

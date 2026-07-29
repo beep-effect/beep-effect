@@ -1,7 +1,8 @@
-import { ChatComposer, EditorComposer } from "@beep/editor";
+import { ChatComposer } from "@beep/editor/chat/chat-composer";
+import { EditorComposer } from "@beep/editor/composer";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { draftReplyInitialState as initialState } from "./fixtures.ts";
-import type { MentionOption } from "@beep/editor";
+import type { MentionOption } from "@beep/editor/chat/config";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 // Sample app-injected `@` mention source (ephemeral; serializes to plain text).

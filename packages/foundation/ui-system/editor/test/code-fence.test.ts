@@ -1,5 +1,6 @@
-import { editorNodes } from "@beep/editor";
-import { SEND_MESSAGE_COMMAND, sendKeyBindingAtom } from "@beep/editor/chat";
+import { sendKeyBindingAtom } from "@beep/editor/chat/atoms";
+import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
+import { editorNodes } from "@beep/editor/nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { $isCodeNode } from "@lexical/code";
 import { createHeadlessEditor } from "@lexical/headless";

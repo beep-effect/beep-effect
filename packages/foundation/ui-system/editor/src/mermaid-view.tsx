@@ -7,9 +7,17 @@
  */
 "use client";
 
-import { Match } from "effect";
-import { useEffect, useId, useMemo, useState } from "react";
+import { $EditorId } from "@beep/identity";
+import { TaggedErrorClass } from "@beep/schema";
+import { Str } from "@beep/utils";
+import { useAtomValue } from "@effect/atom-react";
+import { Effect, Layer, Match } from "effect";
+import * as S from "effect/Schema";
+import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { useId } from "react";
 import type { JSX } from "react";
+
+const $I = $EditorId.create("mermaid-view");
 
 type MermaidRenderState =
   | { readonly _tag: "pending" }
@@ -17,9 +25,54 @@ type MermaidRenderState =
   | { readonly _tag: "failed"; readonly message: string };
 
 const pendingState: MermaidRenderState = { _tag: "pending" };
-
 const fallbackErrorMessage = "Unable to render diagram.";
-const mermaidSecurityLevel = "strict" as const;
+const invalidDiagramMessage = "Diagram could not be parsed.";
+
+/**
+ * Typed Mermaid load, parse, or render failure. The optional defect is retained
+ * for runtime diagnostics; only the user-safe message is rendered.
+ *
+ * @example
+ * ```ts
+ * import { MermaidRenderError } from "@beep/editor/mermaid-view"
+ *
+ * const error = MermaidRenderError.make({ message: "Unable to render diagram." })
+ * console.log(error._tag) // "MermaidRenderError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class MermaidRenderError extends TaggedErrorClass<MermaidRenderError>($I`MermaidRenderError`)(
+  "MermaidRenderError",
+  {
+    message: S.String.annotateKey({ description: "User-safe diagram failure message." }),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Optional underlying Mermaid defect retained for diagnostics.",
+    }),
+  },
+  $I.annote("MermaidRenderError", {
+    description: "A typed Mermaid load, parse, or render failure.",
+  })
+) {}
+
+/**
+ * Upper bound on the diagram source Mermaid is asked to lay out.
+ *
+ * `mermaid.render` parses and lays the graph out synchronously on the main
+ * thread. An assistant can emit arbitrarily large content, so oversized source
+ * falls back to inert text before Mermaid is imported.
+ */
+const maxSourceLength = 20_000;
+
+const oversizedMessage = (length: number): string =>
+  `Diagram source is too large to render (${length.toLocaleString()} characters; limit ${maxSourceLength.toLocaleString()}).`;
+
+const mermaidConfig = Object.freeze({
+  securityLevel: "strict" as const,
+  startOnLoad: false,
+  suppressErrorRendering: true,
+});
 
 const hashString = (value: string): string => {
   let hash = 0;
@@ -29,38 +82,63 @@ const hashString = (value: string): string => {
   return (hash >>> 0).toString(36);
 };
 
-// Upper bound on the length of any sanitized DOM id segment. `renderKey` is
-// caller-supplied and can be derived from unbounded, attacker-influenced
-// assistant content; collapsing oversized segments to a fixed-length hash keeps
-// the generated `renderId` bounded instead of duplicating megabytes of source.
 const maxIdPartLength = 64;
 
 const sanitizeIdPart = (value: string): string => {
   const sanitized = value.replace(/[^a-zA-Z0-9_-]/gu, "-");
-  if (sanitized.length === 0) {
-    return "diagram";
-  }
+  if (sanitized.length === 0) return "diagram";
   return sanitized.length > maxIdPartLength ? hashString(sanitized) : sanitized;
 };
 
-const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : fallbackErrorMessage);
+const boundedSourceIdentity = (source: string): string => {
+  const length = Str.length(source);
+  return length > maxSourceLength
+    ? `${Str.takeLeft(source, maxIdPartLength)}:${Str.takeRight(source, maxIdPartLength)}:${length}`
+    : source;
+};
 
-/**
- * Upper bound on the diagram source Mermaid is asked to lay out.
- *
- * `mermaid.render` parses and lays the graph out synchronously on the main
- * thread, and cancelling only suppresses the later state write — the work itself
- * cannot be interrupted. An assistant is free to emit an arbitrarily large or
- * pathological diagram, so an unbounded source is a way to freeze the window.
- * Past the bound the source is shown as text, which is exactly what a viewer
- * needs anyway when a diagram is too big to read.
- */
-const maxSourceLength = 20_000;
+const failedState = (message: string): MermaidRenderState => ({ _tag: "failed", message });
+const okState = (svg: string): MermaidRenderState => ({ _tag: "ok", svg });
 
-const oversizedMessage = (length: number): string =>
-  `Diagram source is too large to render (${length.toLocaleString()} characters; limit ${maxSourceLength.toLocaleString()}).`;
+const renderMermaid = Effect.fnUntraced(function* (renderId: string, source: string) {
+  if (Str.length(source) > maxSourceLength) {
+    return yield* MermaidRenderError.make({ message: oversizedMessage(Str.length(source)) });
+  }
 
-const invalidDiagramMessage = "Diagram could not be parsed.";
+  const { default: mermaid } = yield* Effect.tryPromise({
+    try: () => import("mermaid"),
+    catch: (cause) => MermaidRenderError.make({ message: fallbackErrorMessage, cause }),
+  });
+
+  mermaid.initialize(mermaidConfig);
+
+  const parsed = yield* Effect.tryPromise({
+    try: () => mermaid.parse(source, { suppressErrors: true }),
+    catch: (cause) => MermaidRenderError.make({ message: invalidDiagramMessage, cause }),
+  });
+  if (parsed === false) {
+    return yield* MermaidRenderError.make({ message: invalidDiagramMessage });
+  }
+
+  const rendered = yield* Effect.tryPromise({
+    try: () => mermaid.render(renderId, source),
+    catch: (cause) => MermaidRenderError.make({ message: fallbackErrorMessage, cause }),
+  });
+  return okState(rendered.svg);
+});
+
+const mermaidRuntime = Atom.runtime(Layer.empty);
+
+// Nested families keep both identities primitive and stable without a React
+// memo: render id isolates concurrent diagrams, source changes select a fresh
+// async atom, and unmounting interrupts obsolete work through the registry.
+const mermaidRenderAtom = Atom.family((renderId: string) =>
+  Atom.family((source: string) =>
+    mermaidRuntime.atom(
+      renderMermaid(renderId, source).pipe(Effect.catch((failure) => Effect.succeed(failedState(failure.message))))
+    )
+  )
+);
 
 const renderMermaidState = (source: string) =>
   Match.type<MermaidRenderState>().pipe(
@@ -77,7 +155,7 @@ const renderMermaidState = (source: string) =>
         <div
           className="my-3 overflow-x-auto rounded border bg-background p-3"
           data-testid="mermaid-diagram"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid 11.15.0 renders sanitized SVG with securityLevel strict; sandboxed iframe rendering is the separate "sandbox" level.
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid renders sanitized SVG under the frozen strict-security config above; this is the sole raw-HTML sink.
           dangerouslySetInnerHTML={{ __html: state.svg }}
         />
       ),
@@ -91,7 +169,8 @@ const renderMermaidState = (source: string) =>
 
 /**
  * Renders Mermaid source to SVG and falls back to source text on render
- * failure.
+ * failure. Async lifecycle is owned by an interruptible Atom runtime rather
+ * than app-authored React state/effect hooks.
  *
  * @example
  * ```tsx
@@ -114,59 +193,14 @@ export function MermaidView({
   readonly renderKey: string;
 }): JSX.Element {
   const reactId = useId();
-  const renderId = useMemo(
-    () => `mermaid-${sanitizeIdPart(reactId)}-${sanitizeIdPart(renderKey)}-${hashString(source)}`,
-    [reactId, renderKey, source]
-  );
-  const [state, setState] = useState<MermaidRenderState>(pendingState);
+  const renderId = `mermaid-${sanitizeIdPart(reactId)}-${sanitizeIdPart(renderKey)}-${hashString(
+    boundedSourceIdentity(source)
+  )}`;
+  const state = useAtomValue(mermaidRenderAtom(renderId)(source));
 
-  useEffect(() => {
-    let active = true;
-    setState(pendingState);
-
-    if (source.length > maxSourceLength) {
-      setState({ _tag: "failed", message: oversizedMessage(source.length) });
-      return;
-    }
-
-    void import("mermaid")
-      .then(({ default: mermaid }) => {
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: mermaidSecurityLevel,
-          // Without this, an unparseable diagram RESOLVES with Mermaid's own
-          // "Syntax error in text" bomb SVG instead of rejecting — so the failed
-          // branch below never ran and the raw-source fallback this component
-          // promises was unreachable. Even valid-looking diagrams that tripped
-          // Mermaid rendered as that error graphic with no way to see the source.
-          suppressErrorRendering: true,
-        });
-        // `parse` is the documented validity check; with `suppressErrors` it
-        // answers `false` rather than throwing.
-        return mermaid
-          .parse(source, { suppressErrors: true })
-          .then((parsed) => (parsed === false ? undefined : mermaid.render(renderId, source)));
-      })
-      .then((rendered) => {
-        if (!active) {
-          return;
-        }
-        setState(
-          rendered === undefined
-            ? { _tag: "failed", message: invalidDiagramMessage }
-            : { _tag: "ok", svg: rendered.svg }
-        );
-      })
-      .catch((error: unknown) => {
-        if (active) {
-          setState({ _tag: "failed", message: errorMessage(error) });
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [renderId, source]);
-
-  return renderMermaidState(source)(state);
+  return AsyncResult.match(state, {
+    onInitial: () => renderMermaidState(source)(pendingState),
+    onSuccess: ({ value }) => renderMermaidState(source)(value),
+    onFailure: () => renderMermaidState(source)(failedState(fallbackErrorMessage)),
+  });
 }

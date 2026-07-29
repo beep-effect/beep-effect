@@ -14,7 +14,9 @@
 "use client";
 
 import { AssistantBlock, InlineNode } from "@beep/agents-domain/values/AssistantContent";
-import { CodeBlockView, MermaidView, YouTubeEmbed } from "@beep/editor";
+import { CodeBlockView } from "@beep/editor/code-block-view";
+import { MermaidView } from "@beep/editor/mermaid-view";
+import { YouTubeEmbed } from "@beep/editor/youtube-embed";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { A, O, Str } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";

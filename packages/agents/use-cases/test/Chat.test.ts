@@ -1,5 +1,9 @@
-import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
+import { ChatActionError, ChatRpcs, SendMessageRpc } from "@beep/agents-use-cases/public";
+import { A, Document, P, RawHtml, Text } from "@beep/md/Md.model";
+import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { describe, expect, it } from "@effect/vitest";
+import { Result } from "effect";
+import * as S from "effect/Schema";
 import * as RpcSchema from "effect/unstable/rpc/RpcSchema";
 
 const tags = [
@@ -31,5 +35,36 @@ describe("@beep/agents-use-cases Chat", () => {
     const error = ChatActionError.make({ message: "thread not found" });
     expect(error._tag).toBe("ChatActionError");
     expect(error.message).toBe("thread not found");
+  });
+
+  it("rejects every unsafe user-content class at the send RPC schema boundary", () => {
+    const hostileDocuments = [
+      Document.make({
+        children: [P.make({ children: [RawHtml.make({ value: "<script>alert(1)</script>" })] })],
+      }),
+      Document.make({
+        children: [
+          P.make({
+            children: [A.make({ href: "http://example.com", children: [Text.make({ value: "insecure" })] })],
+          }),
+        ],
+      }),
+      Document.make({
+        children: [P.make({ children: [Text.make({ value: "NUL\u0000text" })] })],
+      }),
+    ];
+
+    for (const content of hostileDocuments) {
+      const encodedContent = Result.getOrThrow(S.encodeResult(Document)(content));
+      expect(
+        Result.isFailure(
+          S.decodeUnknownResult(SendMessageRpc.payloadSchema)({
+            threadId: WorkspaceIdentity.ThreadId.make(1),
+            content: encodedContent,
+            requestId: "hostile-remote-payload",
+          })
+        )
+      ).toBe(true);
+    }
   });
 });

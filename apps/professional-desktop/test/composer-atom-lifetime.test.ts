@@ -35,7 +35,7 @@ describe("composer delegated runtime action lifetime", () => {
         timeoutResolution: 1,
         initialValues: [[professionalBrowserRuntime.layer, Layer.effectDiscard(Effect.sleep(25))]],
       });
-      const handlerAtom = composerSerializedChangeHandlerAtoms(threadId);
+      const handlerAtom = composerSerializedChangeHandlerAtoms(threadId)(draft);
       registry.mount(draftAtoms(threadId));
       registry.mount(handlerAtom);
       const serializedState = yield* documentToEditorState(draft);

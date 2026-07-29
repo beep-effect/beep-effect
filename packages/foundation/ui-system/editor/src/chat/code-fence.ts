@@ -33,7 +33,7 @@ const CODE_FENCE_OPENER = /^[ \t]*`{3,}([\w-]+)?[ \t]?$/;
  *
  * @example
  * ```ts
- * import { $isInsideCodeBlock } from "@beep/editor/chat"
+ * import { $isInsideCodeBlock } from "@beep/editor/chat/code-fence"
  *
  * // Inside a Lexical read/update context:
  * const inCode = $isInsideCodeBlock()
@@ -55,7 +55,7 @@ export const $isInsideCodeBlock = (): boolean => {
  *
  * @example
  * ```ts
- * import { $openCodeFence } from "@beep/editor/chat"
+ * import { $openCodeFence } from "@beep/editor/chat/code-fence"
  *
  * // Inside a Lexical update context, on Enter:
  * const opened = $openCodeFence()

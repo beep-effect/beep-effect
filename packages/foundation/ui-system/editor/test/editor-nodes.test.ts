@@ -1,4 +1,9 @@
-import { editorNodes } from "@beep/editor";
+// @vitest-environment jsdom
+
+import { ArtifactRefNode } from "@beep/editor/artifact-ref-node";
+import { editorNodes } from "@beep/editor/nodes";
+import { YOUTUBE_EMBED_SANDBOX } from "@beep/editor/youtube-embed";
+import { YouTubeNode } from "@beep/editor/youtube-node";
 import { ARTIFACT_URI_PREFIX, documentToEditorState, SerializedEditorState } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import { describe, expect, it } from "@effect/vitest";
@@ -82,5 +87,77 @@ describe("@beep/editor node registration", () => {
         (node) => node.type === "code" && O.isSome(node.language) && node.language.value === "mermaid"
       )
     ).toBe(true);
+  });
+
+  it("keeps malformed serialized decorator payloads inert at runtime import", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-invalid-node-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    let youtubeId: string | undefined;
+    let artifactId: string | undefined;
+    let artifactLabel: string | undefined;
+
+    editor.update(
+      () => {
+        const youtube = YouTubeNode.importJSON({
+          type: "youtube",
+          version: 1,
+          format: "",
+          videoID: '"><script>alert(1)</script>',
+        } as never);
+        const artifact = ArtifactRefNode.importJSON({
+          type: "artifact-ref",
+          version: 1,
+          artifactId: "",
+          label: "<img src=x onerror=alert(1)>",
+        } as never);
+        youtubeId = youtube.__id;
+        artifactId = artifact.__artifactId;
+        artifactLabel = artifact.__label;
+      },
+      { discrete: true }
+    );
+
+    expect(youtubeId).toBe("");
+    expect(artifactId).toBe("");
+    expect(artifactLabel).toBeUndefined();
+  });
+
+  it("exports YouTube DOM with the same least-privilege frame and visible watch fallback", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-youtube-export-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    const output: { current: HTMLElement | null } = { current: null };
+
+    editor.update(
+      () => {
+        const node = YouTubeNode.importJSON({
+          type: "youtube",
+          version: 1,
+          format: "",
+          videoID: "dQw4w9WgXcQ",
+        });
+        const element = node.exportDOM().element;
+        output.current = element instanceof HTMLElement ? element : null;
+      },
+      { discrete: true }
+    );
+
+    const iframe = output.current?.querySelector("iframe");
+    const watch = output.current?.querySelector("a");
+    expect(iframe?.getAttribute("src")).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(iframe?.getAttribute("sandbox")).toBe(YOUTUBE_EMBED_SANDBOX);
+    expect(iframe?.getAttribute("referrerpolicy")).toBe("strict-origin-when-cross-origin");
+    expect(watch?.getAttribute("href")).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(watch?.getAttribute("rel")).toBe("noreferrer noopener");
+    expect(watch?.textContent).toBe("Watch on YouTube");
   });
 });

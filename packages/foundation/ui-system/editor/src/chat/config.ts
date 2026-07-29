@@ -18,9 +18,10 @@
 import { $EditorId } from "@beep/identity";
 import { DOMReactNode } from "@beep/schema/DomReactNode";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { P } from "@beep/utils";
-import { Effect } from "effect";
+import { A, P } from "@beep/utils";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { LexicalEditor } from "lexical";
 
 const $I = $EditorId.create("chat/config");
@@ -32,7 +33,7 @@ const $I = $EditorId.create("chat/config");
  *
  * @example
  * ```ts
- * import { SendOn } from "@beep/editor/chat"
+ * import { SendOn } from "@beep/editor/chat/config"
  *
  * console.log(SendOn.is.enter("enter")) // true
  * ```
@@ -51,7 +52,7 @@ export const SendOn = LiteralKit(["enter", "modifierEnter"]).pipe(
  *
  * @example
  * ```ts
- * import type { SendOn } from "@beep/editor/chat"
+ * import type { SendOn } from "@beep/editor/chat/config"
  *
  * const sendOn: SendOn = "modifierEnter"
  * console.log(sendOn) // "modifierEnter"
@@ -70,7 +71,7 @@ export type SendOn = typeof SendOn.Type;
  *
  * @example
  * ```ts
- * import { ComposerFeatures } from "@beep/editor/chat"
+ * import { ComposerFeatures } from "@beep/editor/chat/config"
  *
  * const chat = ComposerFeatures.make({ toolbar: false })
  * console.log(chat.slash) // true
@@ -118,7 +119,7 @@ export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatu
  *
  * @example
  * ```ts
- * import type { EditorEffect } from "@beep/editor/chat"
+ * import type { EditorEffect } from "@beep/editor/chat/config"
  *
  * const focusEditor: EditorEffect = (editor) => {
  *   editor.focus()
@@ -149,7 +150,7 @@ const EditorEffectSchema = S.declare<EditorEffect>(isEditorEffect).pipe(
  *
  * @example
  * ```ts
- * import { SlashItem } from "@beep/editor/chat"
+ * import { SlashItem } from "@beep/editor/chat/config"
  *
  * const item = SlashItem.make({ key: "h1", label: "Heading 1", onSelect: () => {} })
  * console.log(item.label) // "Heading 1"
@@ -184,13 +185,77 @@ export class SlashItem extends S.Class<SlashItem>($I`SlashItem`)(
   })
 ) {}
 
+const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
+  (items) => {
+    const seen = new Set<string>();
+    return A.filterMap(items, (item, index) => {
+      if (seen.has(item.key)) {
+        return Result.succeed({
+          path: [index, "key"],
+          issue: `Duplicate slash-command key ${JSON.stringify(item.key)}.`,
+        });
+      }
+      seen.add(item.key);
+      return Result.fail(undefined);
+    });
+  },
+  {
+    identifier: $I`UniqueSlashItemKeys`,
+    title: "Unique slash-command keys",
+    description: "Every slash command must have a unique key.",
+  }
+);
+
+/**
+ * Runtime schema for the complete slash-command collection accepted by
+ * {@link ChatComposer}. Decoding the collection at the mount boundary prevents
+ * malformed plain-object entries from reaching Lexical callbacks.
+ *
+ * @example
+ * ```ts
+ * import { SlashItem, SlashItems } from "@beep/editor/chat/config"
+ * import * as S from "effect/Schema"
+ *
+ * const items = S.decodeUnknownSync(SlashItems)([
+ *   SlashItem.make({ key: "paragraph", label: "Paragraph", onSelect: () => {} }),
+ * ])
+ * console.log(items.length) // 1
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const SlashItems = S.Array(SlashItem)
+  .check(uniqueSlashItemKeys)
+  .pipe(
+    $I.annoteSchema("SlashItems", {
+      description: "The runtime-decoded slash-command collection accepted by ChatComposer.",
+    })
+  );
+
+/**
+ * Companion type for {@link SlashItems}.
+ *
+ * @example
+ * ```ts
+ * import type { SlashItems } from "@beep/editor/chat/config"
+ *
+ * const items: SlashItems = []
+ * console.log(items.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SlashItems = typeof SlashItems.Type;
+
 /**
  * A single `@` mention candidate. Mentions are ephemeral composer affordances:
  * on select they serialize to plain text (`@label`), never a persisted node.
  *
  * @example
  * ```ts
- * import { MentionOption } from "@beep/editor/chat"
+ * import { MentionOption } from "@beep/editor/chat/config"
  *
  * const option = MentionOption.make({ id: "u1", label: "Ada Lovelace" })
  * console.log(option.label) // "Ada Lovelace"
@@ -215,6 +280,68 @@ export class MentionOption extends S.Class<MentionOption>($I`MentionOption`)(
   })
 ) {}
 
+const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
+  (options) => {
+    const seen = new Set<string>();
+    return A.filterMap(options, (option, index) => {
+      if (seen.has(option.id)) {
+        return Result.succeed({
+          path: [index, "id"],
+          issue: `Duplicate mention-option id ${JSON.stringify(option.id)}.`,
+        });
+      }
+      seen.add(option.id);
+      return Result.fail(undefined);
+    });
+  },
+  {
+    identifier: $I`UniqueMentionOptionIds`,
+    title: "Unique mention-option ids",
+    description: "Every mention option must have a unique id.",
+  }
+);
+
+/**
+ * Runtime schema for a mention-source response. Sources are app-injected and
+ * may cross an async boundary, so every response is decoded before its values
+ * are exposed to the typeahead menu.
+ *
+ * @example
+ * ```ts
+ * import { MentionOptions } from "@beep/editor/chat/config"
+ * import * as S from "effect/Schema"
+ *
+ * const options = S.decodeUnknownSync(MentionOptions)([{ id: "ada", label: "Ada" }])
+ * console.log(options[0]?.label) // "Ada"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const MentionOptions = S.Array(MentionOption)
+  .check(uniqueMentionOptionIds)
+  .pipe(
+    $I.annoteSchema("MentionOptions", {
+      description: "The runtime-decoded mention candidates returned by an app-injected source.",
+    })
+  );
+
+/**
+ * Companion type for {@link MentionOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { MentionOptions } from "@beep/editor/chat/config"
+ *
+ * const options: MentionOptions = []
+ * console.log(options.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MentionOptions = typeof MentionOptions.Type;
+
 /**
  * App-injected source of `@` mention candidates for a query. May be sync or
  * async; the composer races stale responses out by request order. Modeled as a
@@ -222,7 +349,7 @@ export class MentionOption extends S.Class<MentionOption>($I`MentionOption`)(
  *
  * @example
  * ```ts
- * import { MentionSource } from "@beep/editor/chat"
+ * import { MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(MentionSource)((q: string) => [])) // true
@@ -241,7 +368,7 @@ const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
  *
  * @example
  * ```ts
- * import { MentionOption, MentionSource } from "@beep/editor/chat"
+ * import { MentionOption, MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
  *
  * const source = (query: string) => [
@@ -259,3 +386,39 @@ export const MentionSource = S.declare<MentionSource>(isMentionSource).pipe(
     description: "App-injected source of `@` mention candidates for a query.",
   })
 );
+
+/**
+ * Consumer port notified after attachment files pass capture validation.
+ * Promise-returning ports are awaited; rejection rolls the current batch back
+ * and surfaces a typed inline failure.
+ *
+ * @example
+ * ```ts
+ * import type { AttachmentPort } from "@beep/editor/chat/config"
+ *
+ * const attach: AttachmentPort = async (files) => {
+ *   console.log(files.length)
+ * }
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export type AttachmentPort = (files: ReadonlyArray<File>) => void | Promise<void>;
+
+/**
+ * Consumer port invoked with the live, schema-decoded editor state when the
+ * composer dispatches a send.
+ *
+ * @example
+ * ```ts
+ * import type { SendPort } from "@beep/editor/chat/config"
+ *
+ * const send: SendPort = (state) => state.root.children.length > 0
+ * console.log(typeof send) // "function"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export type SendPort = (state: SerializedEditorState) => boolean | void;

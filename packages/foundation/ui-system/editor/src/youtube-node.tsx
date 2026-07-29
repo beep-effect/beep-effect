@@ -6,10 +6,12 @@
  */
 "use client";
 
+import { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
+import { O } from "@beep/utils";
 import { BlockWithAlignableContents } from "@lexical/react/LexicalBlockWithAlignableContents";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import { YouTubeEmbed } from "./youtube-embed.tsx";
-import type { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
+import * as S from "effect/Schema";
+import { YOUTUBE_EMBED_SANDBOX, YouTubeEmbed, youtubeEmbedUrl, youtubeWatchUrl } from "./youtube-embed.tsx";
 import type {
   DOMConversionMap,
   DOMConversionOutput,
@@ -18,7 +20,6 @@ import type {
   ElementFormatType,
   LexicalEditor,
   LexicalNode,
-  LexicalUpdateJSON,
   NodeKey,
 } from "lexical";
 import type { JSX } from "react";
@@ -45,6 +46,13 @@ import type { JSX } from "react";
  * @since 0.0.0
  */
 export type SerializedYouTubeNode = YouTubeNodeSchema.Encoded;
+
+const decodeYouTubeNode = S.decodeUnknownOption(YouTubeNodeSchema);
+
+const decodedYouTubeNode = (videoID: unknown, format: unknown = "") =>
+  decodeYouTubeNode({ type: "youtube", version: 1, videoID, format });
+
+const invalidYouTubeNode = (): YouTubeNode => new YouTubeNode("");
 
 /**
  * Block-level Lexical decorator node for YouTube embeds.
@@ -79,12 +87,11 @@ export class YouTubeNode extends DecoratorBlockNode {
     return {
       iframe: (node: Node) => {
         const id = node instanceof HTMLIFrameElement ? node.getAttribute("data-lexical-youtube") : null;
-        return id === null
-          ? null
-          : {
-              conversion: (): DOMConversionOutput => ({ node: $createYouTubeNode(id) }),
-              priority: 1,
-            };
+        if (id === null || O.isNone(decodedYouTubeNode(id))) return null;
+        return {
+          conversion: (): DOMConversionOutput => ({ node: $createYouTubeNode(id) }),
+          priority: 1,
+        };
       },
     };
   }
@@ -93,9 +100,10 @@ export class YouTubeNode extends DecoratorBlockNode {
   // `SerializedLexicalNode & Record<string, unknown>`; mirror the intersection so
   // the narrowed (schema-pinned, interface-backed) wire shape stays bivariant.
   static override importJSON(serializedNode: SerializedYouTubeNode & Record<string, unknown>): YouTubeNode {
-    return $createYouTubeNode(serializedNode.videoID).updateFromJSON(
-      serializedNode as LexicalUpdateJSON<SerializedYouTubeNode>
-    );
+    return O.match(decodeYouTubeNode(serializedNode), {
+      onNone: invalidYouTubeNode,
+      onSome: (decoded) => new YouTubeNode(decoded.videoID, decoded.format),
+    });
   }
 
   override exportJSON(): SerializedYouTubeNode {
@@ -107,18 +115,35 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   override exportDOM(): DOMExportOutput {
-    const element = document.createElement("iframe");
-    element.setAttribute("data-lexical-youtube", this.__id);
-    element.setAttribute("width", "560");
-    element.setAttribute("height", "315");
-    element.setAttribute("src", `https://www.youtube-nocookie.com/embed/${this.__id}`);
-    element.setAttribute(
+    const decoded = decodedYouTubeNode(this.__id, this.__format);
+    if (O.isNone(decoded)) {
+      const fallback = document.createElement("span");
+      fallback.textContent = "Video unavailable";
+      return { element: fallback };
+    }
+    const container = document.createElement("figure");
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("data-lexical-youtube", decoded.value.videoID);
+    iframe.setAttribute("width", "560");
+    iframe.setAttribute("height", "315");
+    iframe.setAttribute("src", youtubeEmbedUrl(decoded.value.videoID));
+    iframe.setAttribute(
       "allow",
       "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     );
-    element.setAttribute("allowfullscreen", "true");
-    element.setAttribute("title", "YouTube video");
-    return { element };
+    iframe.setAttribute("allowfullscreen", "true");
+    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    iframe.setAttribute("sandbox", YOUTUBE_EMBED_SANDBOX);
+    iframe.setAttribute("title", "YouTube video");
+
+    const watch = document.createElement("a");
+    watch.setAttribute("href", youtubeWatchUrl(decoded.value.videoID));
+    watch.setAttribute("target", "_blank");
+    watch.setAttribute("rel", "noreferrer noopener");
+    watch.textContent = "Watch on YouTube";
+
+    container.append(iframe, watch);
+    return { element: container };
   }
 
   getId(): string {
@@ -126,7 +151,9 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   override getTextContent(): string {
-    return `https://www.youtube.com/watch?v=${this.__id}`;
+    return O.isSome(decodedYouTubeNode(this.__id))
+      ? `https://www.youtube.com/watch?v=${this.__id}`
+      : "Video unavailable";
   }
 
   override decorate(_editor: LexicalEditor, config: EditorConfig): JSX.Element {
@@ -158,7 +185,11 @@ export class YouTubeNode extends DecoratorBlockNode {
  * @category constructors
  * @since 0.0.0
  */
-export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): YouTubeNode => new YouTubeNode(videoID);
+export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): YouTubeNode =>
+  O.match(decodedYouTubeNode(videoID), {
+    onNone: invalidYouTubeNode,
+    onSome: (decoded) => new YouTubeNode(decoded.videoID, decoded.format),
+  });
 
 /**
  * Type guard for {@link YouTubeNode}.
