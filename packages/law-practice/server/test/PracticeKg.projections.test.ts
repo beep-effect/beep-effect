@@ -202,7 +202,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       digest: fixtureDigests.docket,
       engine: "tika",
       format: "text",
-      operationId: "op-a",
+      operationId: "operation:op-a",
       relativePath: "text/operation:op-a.txt",
       sizeBytes: 20,
       status: "succeeded",
@@ -212,7 +212,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       digest: fixtureDigests.family,
       engine: "tika",
       format: "text",
-      operationId: "op-b",
+      operationId: "operation:op-b",
       relativePath: "text/operation:op-b.txt",
       sizeBytes: 20,
       status: "succeeded",
@@ -228,7 +228,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       digest: fixtureDigests.refresh,
       engine: "tika",
       format: "text",
-      operationId: "op-refresh",
+      operationId: "operation:op-refresh",
       relativePath: "text/operation:op-refresh.txt",
       sizeBytes: 24,
       status: "succeeded",
@@ -412,8 +412,8 @@ describe("practice KG projections", () => {
           )
           .pipe(Effect.flatMap(decodeDumpLines));
         expect(A.map(textLines, (row) => row.line)).toStrictEqual([
-          '{"operation_id":"op-a","text":"alpha docket 20001US01 response"}',
-          '{"operation_id":"op-b","text":"family 20001 patent application"}',
+          '{"operation_id":"operation:op-a","text":"alpha docket 20001US01 response"}',
+          '{"operation_id":"operation:op-b","text":"family 20001 patent application"}',
         ]);
         const ftsDocLines = yield* db
           .query(
