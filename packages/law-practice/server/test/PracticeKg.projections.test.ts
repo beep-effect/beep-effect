@@ -91,6 +91,7 @@ const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: s
   );
 
 const fixtureModelOutput = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
+const fixtureRejectionlessOutput = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."}]}`;
 const fixtureUsage = Response.Usage.make({
   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },
   outputTokens: { reasoning: undefined, text: 0, total: 0 },
@@ -98,9 +99,13 @@ const fixtureUsage = Response.Usage.make({
 const fixtureLanguageModel = Layer.effect(
   LanguageModel.LanguageModel,
   LanguageModel.make({
-    generateText: () =>
+    generateText: (options) =>
       Effect.succeed([
-        Response.makePart("text", { text: fixtureModelOutput }),
+        Response.makePart("text", {
+          text: Str.includes("without office action rejections")(JSON.stringify(options.prompt))
+            ? fixtureRejectionlessOutput
+            : fixtureModelOutput,
+        }),
         Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
       ]),
     streamText: () => Stream.empty,
@@ -569,7 +574,23 @@ describe("practice KG projections", () => {
       const inputs = path.join(corpusRoot, "claims-inputs");
       yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
       yield* fs.makeDirectory(inputs, { recursive: true });
-      yield* fs.writeFileString(path.join(inputs, "20001US01-office-action.txt"), OFFICE_ACTION_FIXTURE);
+      yield* fs.writeFileString(
+        path.join(inputs, "0_Assignment - 20001US03.txt"),
+        "assignment fixture without office action rejections"
+      );
+      yield* fs.writeFileString(path.join(inputs, "1_Response OA - 20001US01.txt"), OFFICE_ACTION_FIXTURE);
+      yield* fs.writeFileString(
+        path.join(inputs, "10013 OA memo.txt"),
+        `${OFFICE_ACTION_FIXTURE}\nleading bare docket fallback exercise`
+      );
+      yield* fs.writeFileString(
+        path.join(inputs, "2_Letter - 20001US04.txt"),
+        "letter fixture with unalignable content"
+      );
+      yield* fs.writeFileString(
+        path.join(inputs, "US7699009-fulltext.txt"),
+        "patent fulltext reference without a docket"
+      );
 
       const claimsLayer = Layer.mergeAll(
         LawPracticeServerLive,
@@ -581,11 +602,34 @@ describe("practice KG projections", () => {
       const summary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
         provideScopedLayer(claimsLayer)
       );
-      expect(summary.claims).toBe(1);
+      expect(summary.claims).toBe(2);
+      expect(summary.files).toBe(2);
+      expect(summary.failedFiles).toBe(2);
       const rerunSummary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
         provideScopedLayer(claimsLayer)
       );
-      expect(rerunSummary.claims).toBe(1);
+      expect(rerunSummary.claims).toBe(2);
+
+      const emptyBundleOut = path.join(corpusRoot, "bundle-claims-empty");
+      const emptyInputs = path.join(corpusRoot, "claims-empty-inputs");
+      yield* runBuild(graphOptions(corpusRoot, emptyBundleOut), emptyBundleOut);
+      yield* fs.makeDirectory(emptyInputs, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(emptyInputs, "0_Assignment - 20001US03.txt"),
+        "assignment fixture without office action rejections"
+      );
+      const emptyClaimsLayer = Layer.mergeAll(
+        LawPracticeServerLive,
+        Pglite.makeLayer({ dataDir: path.join(emptyBundleOut, "kg.pglite") })
+      ).pipe(
+        Layer.provide(fixtureLanguageModel),
+        Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+      );
+      const zeroClaimsFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut: emptyBundleOut, inputs: emptyInputs })
+      ).pipe(Effect.flip, provideScopedLayer(emptyClaimsLayer));
+      expect(zeroClaimsFailure.message).toContain("zero claims");
+
       const persistedRows = yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         yield* Effect.forEach(
@@ -628,7 +672,7 @@ describe("practice KG projections", () => {
       expect(row.label).toBe("candidate — unreviewed");
       expect(row.claimText).toBe("A widget comprising a lid and a base.");
       expect(row.evidenceQuote).toBe("A Hinge Coupling The Lid To The Base");
-      expect(row.sourceFile).toBe("20001US01-office-action.txt");
+      expect(row.sourceFile).toBe("1_Response OA - 20001US01.txt");
       expect(OFFICE_ACTION_FIXTURE.slice(Number(row.startChar), Number(row.endChar))).toBe(row.evidenceQuote);
       expect(row.activityOperation).toContain("operation:");
     }, provideTestLayer),
