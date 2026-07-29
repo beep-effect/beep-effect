@@ -1,4 +1,11 @@
-import { BrowserSafeUrlPolicySpec, Md, makeHtmlFragmentAdapter, makeMarkdownAdapter, renderSafeHtml } from "@beep/md";
+import {
+  BrowserSafeUrlPolicySpec,
+  decodeSafeDocumentUnsafe,
+  Md,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
+  renderSafeHtml,
+} from "@beep/md";
 import { Effect, Result } from "effect";
 import { describe, expect, it } from "tstyche";
 import type { SafeHtml } from "@beep/html";
@@ -36,6 +43,7 @@ import type {
   P,
   PureRenderAdapter,
   RenderError,
+  SafeDocument,
   Strong,
   Table,
   TaskItem,
@@ -47,6 +55,13 @@ import type {
 } from "@beep/md";
 import type { HtmlFragment, Markdown } from "@beep/schema";
 import type * as S from "effect/Schema";
+
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToMarkdownCompatibility = DocumentToMarkdown;
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToHtmlFragmentCompatibility = DocumentToHtmlFragment;
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToPlainTextCompatibility = DocumentToPlainText;
 
 describe("@beep/md", () => {
   it("keeps document, block, and inline constructors typed", () => {
@@ -76,7 +91,9 @@ describe("@beep/md", () => {
     expect(Md.ul(["One", Md.li("Two"), [Md.strong("Three")]])).type.toBe<Ul>();
     expect(Md.taskItem("Done", { checked: true })).type.toBe<TaskItem>();
     expect(Md.taskListFromItems([Md.taskItem("Done", { checked: true })])).type.toBe<TaskList>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Verifies the retained ambiguous-input compatibility signature.
     expect(Md.taskList(["Todo", { text: "Done", checked: true }, Md.taskItem("Maybe")])).type.toBe<TaskList>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Verifies the retained block-child compatibility signature.
     expect(Md.taskList([{ children: [Md.p("Parent"), Md.ul(["Child"])], checked: true }])).type.toBe<TaskList>();
     expect(Md.inlineMath("a^2")).type.toBe<InlineMath>();
     expect(Md.footnoteRef("note-1")).type.toBe<FootnoteReference>();
@@ -151,6 +168,8 @@ describe("@beep/md", () => {
     >();
     expect(Md.makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec })).type.toBe<PureRenderAdapter<Markdown>>();
     const safeDocument = Result.getOrThrow(Md.refineSafeDocument(document));
+    expect(decodeSafeDocumentUnsafe).type.toBe<(input: unknown) => SafeDocument>();
+    expect(decodeSafeDocumentUnsafe(document)).type.toBe<SafeDocument>();
     expect(renderSafeHtml(safeDocument)).type.toBe<SafeHtml>();
     expect(Md.renderSafeHtml(safeDocument)).type.toBe<SafeHtml>();
 
@@ -167,9 +186,9 @@ describe("@beep/md", () => {
   });
 
   it("exposes schema transformation types and future effectful adapter shape", () => {
-    expect<DocumentToMarkdown>().type.toBe<Markdown>();
-    expect<DocumentToHtmlFragment>().type.toBe<HtmlFragment>();
-    expect<DocumentToPlainText>().type.toBe<string>();
+    expect<DocumentToMarkdownCompatibility>().type.toBe<Markdown>();
+    expect<DocumentToHtmlFragmentCompatibility>().type.toBe<HtmlFragment>();
+    expect<DocumentToPlainTextCompatibility>().type.toBe<string>();
 
     type BytesAdapter = EffectRenderAdapter<Uint8Array, Error, never>;
     expect<BytesAdapter["name"]>().type.toBe<string>();

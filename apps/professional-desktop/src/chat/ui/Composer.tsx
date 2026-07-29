@@ -90,6 +90,21 @@ const emptyDocument = Md.Document.make({ children: [] });
  * normalization. Preview content is rendered as React text in a `<pre>`, never
  * as HTML.
  *
+ * @example
+ * ```tsx
+ * import { ComposerSafetyWarning } from "@/chat/ui/Composer"
+ *
+ * function LegacyDraftWarning() {
+ *   return (
+ *     <ComposerSafetyWarning
+ *       message="Review the escaped literal copy before sending."
+ *       preview="<strong>literal text</strong>"
+ *       onConfirm={() => console.log("confirmed")}
+ *     />
+ *   )
+ * }
+ * ```
+ *
  * @category components
  * @since 0.0.0
  */

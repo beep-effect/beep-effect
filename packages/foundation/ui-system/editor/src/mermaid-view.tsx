@@ -68,11 +68,11 @@ const maxSourceLength = 20_000;
 const oversizedMessage = (length: number): string =>
   `Diagram source is too large to render (${length.toLocaleString()} characters; limit ${maxSourceLength.toLocaleString()}).`;
 
-const mermaidConfig = Object.freeze({
+const mermaidConfig = {
   securityLevel: "strict" as const,
   startOnLoad: false,
   suppressErrorRendering: true,
-});
+};
 
 const hashString = (value: string): string => {
   let hash = 0;

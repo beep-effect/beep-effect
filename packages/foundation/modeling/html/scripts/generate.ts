@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
+import { TaggedErrorClass } from "@beep/schema";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -28,6 +29,23 @@ import * as Str from "effect/String";
 import { GlobalAttributes } from "../src/Html.attributes.ts";
 
 const $I = $HtmlId.create("scripts/generate");
+
+class HtmlGenerationError extends TaggedErrorClass<HtmlGenerationError>($I`HtmlGenerationError`)(
+  "HtmlGenerationError",
+  {
+    cause: S.Defect({ includeStack: true }).pipe(S.optionalKey),
+    message: S.String,
+  },
+  $I.annote("HtmlGenerationError", {
+    description: "Typed failure raised when pinned HTML metadata cannot produce a valid deterministic model.",
+  })
+) {}
+
+const isHtmlGenerationError = S.is(HtmlGenerationError);
+
+const failGeneration = (message: string): never => {
+  throw HtmlGenerationError.make({ message });
+};
 
 // ---------------------------------------------------------------------------
 // reserved identifiers / naming
@@ -293,12 +311,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       MutableHashSet.has(classificationSet, tag)
     ).length;
     if (matches !== 1) {
-      throw new Error(`HTML generator requires exactly one element classification for <${tag}>; found ${matches}`);
+      failGeneration(`HTML generator requires exactly one element classification for <${tag}>; found ${matches}`);
     }
     const hasPinnedContentModel = contentModel[tag] !== undefined;
     const hasExplicitEmptyContentModel = MutableHashSet.has(emptyContentModelEls, tag);
     if (hasPinnedContentModel === hasExplicitEmptyContentModel) {
-      throw new Error(
+      failGeneration(
         `HTML generator requires exactly one content-model source for <${tag}> (pinned or explicit empty override)`
       );
     }
@@ -314,18 +332,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   ] as const) {
     for (const tag of classificationSet) {
       if (!MutableHashSet.has(elementNameSet, tag)) {
-        throw new Error(`HTML generator ${classificationName} classification names unknown element <${tag}>`);
+        failGeneration(`HTML generator ${classificationName} classification names unknown element <${tag}>`);
       }
     }
   }
   for (const [tag, pattern] of R.toEntries(classification.childSequencePatterns)) {
     if (!MutableHashSet.has(elementNameSet, tag)) {
-      throw new Error(`HTML generator child-sequence pattern names unknown element <${tag}>`);
+      failGeneration(`HTML generator child-sequence pattern names unknown element <${tag}>`);
     }
     try {
       new RegExp(pattern, "u");
     } catch {
-      throw new Error(`HTML generator child-sequence pattern for <${tag}> is not a valid Unicode regexp`);
+      failGeneration(`HTML generator child-sequence pattern for <${tag}> is not a valid Unicode regexp`);
     }
   }
 
@@ -400,7 +418,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         encoded: "string",
       };
     }
-    throw new Error(`HTML generator has no attribute classification for ${el}/${attr}`);
+    return failGeneration(`HTML generator has no attribute classification for ${el}/${attr}`);
   };
 
   // Generated runtime field body + TS type bodies for an element's specific
@@ -1209,6 +1227,19 @@ export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pi
 /**
  * Decoded HTML boolean attribute name.
  *
+ * @example
+ * \`\`\`ts
+ * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlBooleanAttributeName)("disabled")
+ * if (Result.isSuccess(decoded)) {
+ *   const name: HtmlBooleanAttributeName = decoded.success
+ *   console.log(name) // "disabled"
+ * }
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1292,12 +1323,22 @@ const program = Effect.gen(function* () {
   const classification = yield* readJson(Classification, "overrides/classification.json");
   const obsDoc = yield* readJson(ObsoleteInterfacesDoc, "overrides/obsolete-interfaces.json");
 
-  const { conforming, meta, model, total } = buildModel({
-    dfns: dfnsDoc.dfns,
-    elements: elementsDoc.elements,
-    contentModel: cmDoc.elements,
-    classification,
-    obsoleteInterfaces: obsDoc.interfaces,
+  const { conforming, meta, model, total } = yield* Effect.try({
+    try: () =>
+      buildModel({
+        dfns: dfnsDoc.dfns,
+        elements: elementsDoc.elements,
+        contentModel: cmDoc.elements,
+        classification,
+        obsoleteInterfaces: obsDoc.interfaces,
+      }),
+    catch: (cause) =>
+      isHtmlGenerationError(cause)
+        ? cause
+        : HtmlGenerationError.make({
+            cause,
+            message: "HTML generation failed unexpectedly",
+          }),
   });
 
   yield* fs.writeFileString(path.join(srcDir, "Html.model.ts"), model);

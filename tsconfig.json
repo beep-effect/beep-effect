@@ -1084,9 +1084,6 @@
       "@beep/lexical-schema": [
         "./packages/foundation/modeling/lexical/src/index.ts"
       ],
-      "@beep/lexical-schema/*": [
-        "./packages/foundation/modeling/lexical/src/*"
-      ],
       "@beep/editor": ["./packages/foundation/ui-system/editor/src/index.ts"],
       "@beep/editor/artifact-ref-node": [
         "./packages/foundation/ui-system/editor/src/artifact-ref-node.tsx"
@@ -1107,7 +1104,6 @@
         "./packages/agents/client/src/ClientObservability.ts"
       ],
       "@beep/html": ["./packages/foundation/modeling/html/src/index.ts"],
-      "@beep/html/*": ["./packages/foundation/modeling/html/src/*"],
       "@beep/editor/mermaid-view": [
         "./packages/foundation/ui-system/editor/src/mermaid-view.tsx"
       ],
@@ -1723,7 +1719,87 @@
         "./packages/law-practice/tables/src/entities/index.ts"
       ],
       "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
-      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"],
+      "@beep/editor/chat/atoms": [
+        "./packages/foundation/ui-system/editor/src/chat/atoms.ts"
+      ],
+      "@beep/editor/chat/attachment-model": [
+        "./packages/foundation/ui-system/editor/src/chat/attachment-model.ts"
+      ],
+      "@beep/editor/chat/attachments": [
+        "./packages/foundation/ui-system/editor/src/chat/attachments.tsx"
+      ],
+      "@beep/editor/chat/chat-composer": [
+        "./packages/foundation/ui-system/editor/src/chat/chat-composer.tsx"
+      ],
+      "@beep/editor/chat/code-fence": [
+        "./packages/foundation/ui-system/editor/src/chat/code-fence.ts"
+      ],
+      "@beep/editor/chat/commands": [
+        "./packages/foundation/ui-system/editor/src/chat/commands.ts"
+      ],
+      "@beep/editor/chat/config": [
+        "./packages/foundation/ui-system/editor/src/chat/config.ts"
+      ],
+      "@beep/editor/chat/send": [
+        "./packages/foundation/ui-system/editor/src/chat/send.tsx"
+      ],
+      "@beep/editor/chat/slash-items": [
+        "./packages/foundation/ui-system/editor/src/chat/slash-items.tsx"
+      ],
+      "@beep/editor/chat/toolbar": [
+        "./packages/foundation/ui-system/editor/src/chat/toolbar.tsx"
+      ],
+      "@beep/editor/chat/typeahead": [
+        "./packages/foundation/ui-system/editor/src/chat/typeahead.tsx"
+      ],
+      "@beep/editor/code-block-node": [
+        "./packages/foundation/ui-system/editor/src/code-block-node.tsx"
+      ],
+      "@beep/editor/code-block-view": [
+        "./packages/foundation/ui-system/editor/src/code-block-view.tsx"
+      ],
+      "@beep/editor/runtime": [
+        "./packages/foundation/ui-system/editor/src/runtime.ts"
+      ],
+      "@beep/html/Html.attributes": [
+        "./packages/foundation/modeling/html/src/Html.attributes.ts"
+      ],
+      "@beep/html/Html.conformance": [
+        "./packages/foundation/modeling/html/src/Html.conformance.ts"
+      ],
+      "@beep/html/Html.contract": [
+        "./packages/foundation/modeling/html/src/Html.contract.ts"
+      ],
+      "@beep/html/Html.meta": [
+        "./packages/foundation/modeling/html/src/Html.meta.ts"
+      ],
+      "@beep/html/Html.model": [
+        "./packages/foundation/modeling/html/src/Html.model.ts"
+      ],
+      "@beep/html/Html.nodes": [
+        "./packages/foundation/modeling/html/src/Html.nodes.ts"
+      ],
+      "@beep/html/Html.policy": [
+        "./packages/foundation/modeling/html/src/Html.policy.ts"
+      ],
+      "@beep/html/Html.serialize": [
+        "./packages/foundation/modeling/html/src/Html.serialize.ts"
+      ],
+      "@beep/lexical-schema/Lexical.behavior": [
+        "./packages/foundation/modeling/lexical/src/Lexical.behavior.ts"
+      ],
+      "@beep/lexical-schema/Lexical.codec": [
+        "./packages/foundation/modeling/lexical/src/Lexical.codec.ts"
+      ],
+      "@beep/lexical-schema/Lexical.model": [
+        "./packages/foundation/modeling/lexical/src/Lexical.model.ts"
+      ],
+      "@beep/lexical-schema/Lexical.normalize": [
+        "./packages/foundation/modeling/lexical/src/Lexical.normalize.ts"
+      ],
+      "@beep/md/Md.html": ["./packages/foundation/modeling/md/src/Md.html.ts"],
+      "@beep/md/Md.safe": ["./packages/foundation/modeling/md/src/Md.safe.ts"]
     }
   }
 }

@@ -405,6 +405,19 @@ export const HtmlBooleanAttributeName = LiteralKit([
 /**
  * Decoded HTML boolean attribute name.
  *
+ * @example
+ * ```ts
+ * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlBooleanAttributeName)("disabled")
+ * if (Result.isSuccess(decoded)) {
+ *   const name: HtmlBooleanAttributeName = decoded.success
+ *   console.log(name) // "disabled"
+ * }
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -9,8 +9,11 @@ import type { EditorViewer, EditorViewerProps, EditorWireViewerProps } from "@be
 
 describe("@beep/editor package boundaries", () => {
   it("keeps compatibility aliases type-identical to exact subpath exports", () => {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Pins the retained root facade to the supported subpath.
     expect(RootEditorViewer).type.toBe<typeof EditorViewer>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Pins the retained root facade to the supported subpath.
     expect(RootChatComposer).type.toBe<typeof ChatComposer>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Pins the retained chat facade to the supported subpath.
     expect(ChatFacadeComposer).type.toBe<typeof ChatComposer>();
   });
 

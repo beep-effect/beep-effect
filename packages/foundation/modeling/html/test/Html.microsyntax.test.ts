@@ -13,8 +13,26 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"]);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
+const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger);
+const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger);
 
 describe("@beep/html attribute microsyntaxes", () => {
+  it("derives valid presence and integer values from the production schemas", () =>
+    fc.assert(
+      fc.property(
+        BooleanAttributeArbitrary,
+        HtmlNonNegativeIntegerArbitrary,
+        HtmlPositiveIntegerArbitrary,
+        (presence, nonNegative, positive) => {
+          expect(S.is(BooleanAttribute)(presence)).toBe(true);
+          expect(S.is(HtmlNonNegativeInteger)(nonNegative)).toBe(true);
+          expect(S.is(HtmlPositiveInteger)(positive)).toBe(true);
+        }
+      ),
+      fcRuns(50)
+    ));
+
   it("models boolean presence without a false value", () => {
     expect(S.is(BooleanAttribute)(true)).toBe(true);
     expect(S.is(BooleanAttribute)("")).toBe(true);

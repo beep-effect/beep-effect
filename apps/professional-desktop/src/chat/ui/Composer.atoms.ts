@@ -23,6 +23,7 @@ import { LiteralKit } from "@beep/schema";
 import { toast } from "@beep/ui/components/sonner";
 import { A, O, Str } from "@beep/utils";
 import { Effect, Match, Result, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -193,7 +194,7 @@ function normalizeLegacyBlock(block: Md.Block): Md.Block {
  * console.log(normalized.children[0]?._tag) // "p"
  * ```
  *
- * @category conversions
+ * @category utilities
  * @since 0.0.0
  */
 export const normalizeLegacyRawDocument = (document: Md.Document): Md.Document =>
@@ -208,7 +209,7 @@ export const normalizeLegacyRawDocument = (document: Md.Document): Md.Document =
  * @category models
  * @since 0.0.0
  */
-export class ComposerRawNormalizationGate extends S.TaggedClass<ComposerRawNormalizationGate>(
+class ComposerRawNormalizationGate extends S.TaggedClass<ComposerRawNormalizationGate>(
   $I`ComposerRawNormalizationGate`
 )(
   "RawNormalization",
@@ -229,9 +230,7 @@ export class ComposerRawNormalizationGate extends S.TaggedClass<ComposerRawNorma
  * @category models
  * @since 0.0.0
  */
-export class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocumentGate>(
-  $I`ComposerUnsafeDocumentGate`
-)(
+class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocumentGate>($I`ComposerUnsafeDocumentGate`)(
   "UnsafeDocument",
   {
     issueCount: S.Int.check(S.isGreaterThan(0)),
@@ -245,6 +244,18 @@ export class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocu
 /**
  * Tagged safety gate raised before an unsafe or legacy document can be sent.
  *
+ * @example
+ * ```ts
+ * import { ComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
+ * import * as S from "effect/Schema"
+ *
+ * const gate = ComposerDocumentSafetyGate.cases.UnsafeDocument.make({
+ *   issueCount: 1,
+ *   message: "Replace the unsafe link before sending.",
+ * })
+ * console.log(S.is(ComposerDocumentSafetyGate)(gate)) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -257,6 +268,17 @@ export const ComposerDocumentSafetyGate = S.Union([ComposerRawNormalizationGate,
 
 /**
  * Runtime value represented by {@link ComposerDocumentSafetyGate}.
+ *
+ * @example
+ * ```ts
+ * import { ComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
+ *
+ * const gate: ComposerDocumentSafetyGate = ComposerDocumentSafetyGate.cases.UnsafeDocument.make({
+ *   issueCount: 1,
+ *   message: "Replace the unsafe link before sending.",
+ * })
+ * console.log(gate._tag) // "UnsafeDocument"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -321,6 +343,18 @@ const rawNormalizationGate = (safeDocument: SafeDocument, issueCount: number): C
  * Raw-only legacy content gets a confirmable escaped copy; any unsafe URL keeps
  * a non-convertible refusal.
  *
+ * @example
+ * ```ts
+ * import { prepareComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
+ * import * as Md from "@beep/md/Md.model"
+ * import * as O from "effect/Option"
+ *
+ * const legacy = Md.Document.make({
+ *   children: [Md.P.make({ children: [Md.RawHtml.make({ value: "<b>literal</b>" })] })],
+ * })
+ * console.log(O.getOrThrow(prepareComposerDocumentSafetyGate(legacy))._tag) // "RawNormalization"
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -344,6 +378,20 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * original persisted `Document`, before Lexical can lossily project trusted raw
  * nodes to plain text.
  *
+ * @example
+ * ```ts
+ * import { composerDocumentSafetyGateAtoms } from "@/chat/ui/Composer.atoms"
+ * import * as Md from "@beep/md/Md.model"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const seed = Md.Document.make({ children: [] })
+ * const registry = AtomRegistry.make()
+ * const gate = registry.get(composerDocumentSafetyGateAtoms(WorkspaceIdentity.ThreadId.make(1))(seed))
+ * console.log(gate._tag) // "None"
+ * registry.dispose()
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -357,6 +405,20 @@ export const composerDocumentSafetyGateAtoms = Atom.family((_threadId: Workspace
  * One-shot safe payload approved by a legacy normalization confirmation. The
  * next ordinary send consumes this exact document instead of rebuilding it
  * from Lexical's intentionally lossy projection.
+ *
+ * @example
+ * ```ts
+ * import { composerConfirmedNormalizationAtoms } from "@/chat/ui/Composer.atoms"
+ * import * as Md from "@beep/md/Md.model"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const seed = Md.Document.make({ children: [] })
+ * const registry = AtomRegistry.make()
+ * const confirmed = registry.get(composerConfirmedNormalizationAtoms(WorkspaceIdentity.ThreadId.make(1))(seed))
+ * console.log(confirmed._tag) // "None"
+ * registry.dispose()
+ * ```
  *
  * @category atoms
  * @since 0.0.0
@@ -423,7 +485,7 @@ const updateComposerDraftAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
         const currentGate = ctx(gateAtom);
         const document = composerDocumentFromEditorState(seed, serializedState);
         const nextGate = O.match(currentGate, {
-          onNone: () => O.none<ComposerDocumentSafetyGate>(),
+          onNone: O.none<ComposerDocumentSafetyGate>,
           onSome: (gate) =>
             ComposerDocumentSafetyGate.match(gate, {
               RawNormalization: () =>
@@ -525,13 +587,31 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
  * Rebuilds editable children while retaining persistence-owned frontmatter,
  * which is intentionally outside the Lexical wire vocabulary.
  *
- * @category conversions
+ * @example
+ * ```ts
+ * import { composerDocumentFromEditorState } from "@/chat/ui/Composer.atoms"
+ * import { documentToEditorState } from "@beep/lexical-schema"
+ * import * as Md from "@beep/md/Md.model"
+ * import * as A from "effect/Array"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const seed = Md.Document.make({ children: [] })
+ *   const state = yield* documentToEditorState(seed)
+ *   console.log(A.length(composerDocumentFromEditorState(seed, state).children)) // 0
+ * })
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
  */
-export const composerDocumentFromEditorState = (seed: Md.Document, state: SerializedEditorState): Md.Document => {
+export const composerDocumentFromEditorState: {
+  (state: SerializedEditorState): (seed: Md.Document) => Md.Document;
+  (seed: Md.Document, state: SerializedEditorState): Md.Document;
+} = dual(2, (seed: Md.Document, state: SerializedEditorState): Md.Document => {
   const projected = editorStateToDocument(state);
   return Md.Document.make({ children: projected.children, frontmatter: seed.frontmatter });
-};
+});
 
 /**
  * Selects the document submitted by the composer. A confirmed normalized
@@ -539,14 +619,34 @@ export const composerDocumentFromEditorState = (seed: Md.Document, state: Serial
  * the exact semantics shown in the confirmation preview. Ordinary projection
  * preserves the seed's persistence-owned frontmatter.
  *
- * @category conversions
+ * @example
+ * ```ts
+ * import { composerDocumentForSend } from "@/chat/ui/Composer.atoms"
+ * import { documentToEditorState } from "@beep/lexical-schema"
+ * import * as Md from "@beep/md/Md.model"
+ * import { refineSafeDocument } from "@beep/md/Md.safe"
+ * import { Effect, Result } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = Effect.gen(function* () {
+ *   const seed = Md.Document.make({ children: [] })
+ *   const state = yield* documentToEditorState(seed)
+ *   const confirmed = Result.getOrThrow(refineSafeDocument(seed))
+ *   console.log(composerDocumentForSend(seed, state, O.some(confirmed)) === confirmed) // true
+ * })
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
  */
-export const composerDocumentForSend = (
-  seed: Md.Document,
-  state: SerializedEditorState,
-  confirmed: O.Option<SafeDocument>
-): Md.Document => O.getOrElse(confirmed, () => composerDocumentFromEditorState(seed, state));
+export const composerDocumentForSend: {
+  (state: SerializedEditorState, confirmed: O.Option<SafeDocument>): (seed: Md.Document) => Md.Document;
+  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document;
+} = dual(
+  3,
+  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document =>
+    O.getOrElse(confirmed, () => composerDocumentFromEditorState(seed, state))
+);
 
 /**
  * Stable send handler. Synchronous refusal decisions satisfy the editor
@@ -642,6 +742,22 @@ export const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity
  * Confirms the latest escaped-literal copy retained by a raw-normalization
  * gate. The caller then dispatches the ordinary editor send command so content,
  * attachments, focus, and selection share the exact successful-send reset.
+ *
+ * @example
+ * ```ts
+ * import { composerConfirmNormalizationHandlerAtoms } from "@/chat/ui/Composer.atoms"
+ * import * as Md from "@beep/md/Md.model"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const seed = Md.Document.make({ children: [] })
+ * const registry = AtomRegistry.make()
+ * const confirm = registry.get(
+ *   composerConfirmNormalizationHandlerAtoms(WorkspaceIdentity.ThreadId.make(1))(seed),
+ * )
+ * console.log(confirm()) // false
+ * registry.dispose()
+ * ```
  *
  * @category atoms
  * @since 0.0.0

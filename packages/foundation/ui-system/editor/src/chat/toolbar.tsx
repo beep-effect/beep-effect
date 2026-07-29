@@ -33,18 +33,16 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { $createQuoteNode, $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
 import { $isTableCellNode } from "@lexical/table";
-import {
-  CodeBlockIcon,
-  CodeIcon,
-  ListBulletsIcon,
-  ListChecksIcon,
-  ListNumbersIcon,
-  QuotesIcon,
-  TextBIcon,
-  TextItalicIcon,
-  TextStrikethroughIcon,
-  TextUnderlineIcon,
-} from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react/Code";
+import { CodeBlockIcon } from "@phosphor-icons/react/CodeBlock";
+import { ListBulletsIcon } from "@phosphor-icons/react/ListBullets";
+import { ListChecksIcon } from "@phosphor-icons/react/ListChecks";
+import { ListNumbersIcon } from "@phosphor-icons/react/ListNumbers";
+import { QuotesIcon } from "@phosphor-icons/react/Quotes";
+import { TextBIcon } from "@phosphor-icons/react/TextB";
+import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
+import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
+import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
@@ -93,6 +91,14 @@ export const BlockType = LiteralKit([
 
 /**
  * Block family represented by the fixed toolbar.
+ *
+ * @example
+ * ```ts
+ * import type { BlockType } from "@beep/editor/chat/toolbar"
+ *
+ * const selectedBlock: BlockType = "code"
+ * console.log(selectedBlock) // "code"
+ * ```
  *
  * @category models
  * @since 0.0.0

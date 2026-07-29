@@ -517,7 +517,7 @@ export const decodeSafeDocumentEffect = S.decodeUnknownEffect(SafeDocument);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeSafeDocumentUnsafe = S.decodeUnknownSync(SafeDocument);
+export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument => S.decodeUnknownSync(SafeDocument)(input);
 
 /**
  * Narrows an already-decoded document after reporting structured issues.

@@ -2116,10 +2116,15 @@ export declare namespace Div {
 }
 
 const PandocAttrPayload = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
-const PandocConstructorJson = S.Struct({
-  c: S.optionalKey(S.Json),
-  t: S.String,
-});
+class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
+  {
+    c: S.optionalKey(S.Json),
+    t: S.String,
+  },
+  $I.annote("PandocConstructorJson", {
+    description: "Internal structural view of a Pandoc JSON constructor.",
+  })
+) {}
 const PandocJsonArray = S.Array(S.Json);
 const PandocTableCaptionPair = S.Tuple([S.NullOr(PandocJsonArray), PandocJsonArray]);
 const decodePandocConstructorOption = S.decodeUnknownOption(PandocConstructorJson);
@@ -2162,6 +2167,19 @@ export const PandocTablePayload = S.Tuple([
 /**
  * Runtime type for {@link PandocTablePayload}.
  *
+ * @example
+ * ```ts
+ * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(PandocTablePayload)([["", [], []], [], [], [], [], []])
+ * if (Result.isSuccess(decoded)) {
+ *   const payload: PandocTablePayload = decoded.success
+ *   console.log(payload.length) // 6
+ * }
+ * ```
+ *
  * @category tables
  * @since 0.0.0
  */
@@ -2185,16 +2203,16 @@ const tableCaptionInlineFromWire = (input: S.Json): O.Option<PandocInline.Type> 
   });
 
 const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.match(decodePandocConstructorOption(input), {
-    onNone: A.emptyReadonly,
-    onSome: (wire) =>
-      wire.t === "Plain" || wire.t === "Para"
-        ? O.match(decodePandocJsonArrayOption(wire.c), {
-            onNone: A.emptyReadonly,
-            onSome: (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire)),
-          })
-        : A.emptyReadonly(),
-  });
+  O.getOrElse(
+    O.map(
+      O.flatMap(
+        O.filter(decodePandocConstructorOption(input), (wire) => wire.t === "Plain" || wire.t === "Para"),
+        (wire) => decodePandocJsonArrayOption(wire.c)
+      ),
+      (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire))
+    ),
+    A.emptyReadonly
+  );
 
 const tableCaptionInlinesFromBlocksWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
   O.match(decodePandocJsonArrayOption(input), {
@@ -2476,276 +2494,154 @@ export declare namespace PandocBlock {
 }
 
 /**
- * Recursive decoded Pandoc metadata value.
+ * Companion recursive type knot for {@link PandocMetaValue}.
  *
  * @example
  * ```ts
- * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
- * import type { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const value: PandocMetaValue = MetaString.make({ value: "Document" })
- * console.log(value._tag) // "metaString"
+ * const decoded = S.decodeUnknownResult(PandocMetaValue)({
+ *   _tag: "metaList",
+ *   values: [{ _tag: "metaString", value: "Document" }],
+ * })
+ * if (Result.isSuccess(decoded)) {
+ *   const value: PandocMetaValue.Type = decoded.success
+ *   console.log(value._tag) // "metaList"
+ * }
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type PandocMetaValue = MetaBool | MetaString | MetaInlines | MetaBlocks | MetaList | MetaMap | UnknownMeta;
+export declare namespace PandocMetaValue {
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBoolShape {
+    readonly _tag: "metaBool";
+    readonly value: boolean;
+  }
 
-/**
- * Recursive encoded Pandoc metadata value.
- *
- * @example
- * ```ts
- * import type { PandocMetaValueEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: PandocMetaValueEncoded = { _tag: "metaString", value: "Document" }
- * console.log(value._tag) // "metaString"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PandocMetaValueEncoded =
-  | MetaBool
-  | MetaString
-  | MetaInlinesEncoded
-  | MetaBlocksEncoded
-  | MetaListEncoded
-  | MetaMapEncoded
-  | UnknownMetaEncoded;
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaStringShape {
+    readonly _tag: "metaString";
+    readonly value: string;
+  }
 
-/**
- * Decoded boolean metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaBool = { _tag: "metaBool", value: true }
- * console.log(value.value) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaBool {
-  readonly _tag: "metaBool";
-  readonly value: boolean;
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesEncodedShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksEncodedShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Type>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListEncodedShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Encoded>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Type>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapEncodedShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Encoded>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaShape {
+    readonly _tag: "unknownMeta";
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaEncodedShape {
+    readonly _tag: "unknownMeta";
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export type Type =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesShape
+    | MetaBlocksShape
+    | MetaListShape
+    | MetaMapShape
+    | UnknownMetaShape;
+
+  /**
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesEncodedShape
+    | MetaBlocksEncodedShape
+    | MetaListEncodedShape
+    | MetaMapEncodedShape
+    | UnknownMetaEncodedShape;
 }
 
-/**
- * Decoded string metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaString } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaString = { _tag: "metaString", value: "Document" }
- * console.log(value.value) // "Document"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaString {
-  readonly _tag: "metaString";
-  readonly value: string;
-}
-
-/**
- * Decoded inline-list metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaInlines = { _tag: "metaInlines", children: [] }
- * console.log(value.children.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaInlines {
-  readonly _tag: "metaInlines";
-  readonly children: PandocInlineChildren.Type;
-}
-
-/**
- * Encoded inline-list metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaInlinesEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaInlinesEncoded = { _tag: "metaInlines", children: [] }
- * console.log(value.children.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaInlinesEncoded {
-  readonly _tag: "metaInlines";
-  readonly children: PandocInlineChildren.Encoded;
-}
-
-/**
- * Decoded block-list metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaBlocks = { _tag: "metaBlocks", children: [] }
- * console.log(value.children.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaBlocks {
-  readonly _tag: "metaBlocks";
-  readonly children: PandocBlockChildren.Type;
-}
-
-/**
- * Encoded block-list metadata payload.
- *
- * @example
- * ```ts
- * import type { MetaBlocksEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaBlocksEncoded = { _tag: "metaBlocks", children: [] }
- * console.log(value.children.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaBlocksEncoded {
-  readonly _tag: "metaBlocks";
-  readonly children: PandocBlockChildren.Encoded;
-}
-
-/**
- * Decoded recursive metadata-list payload.
- *
- * @example
- * ```ts
- * import type { MetaList } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaList = { _tag: "metaList", values: [] }
- * console.log(value.values.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaList {
-  readonly _tag: "metaList";
-  readonly values: ReadonlyArray<PandocMetaValue>;
-}
-
-/**
- * Encoded recursive metadata-list payload.
- *
- * @example
- * ```ts
- * import type { MetaListEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaListEncoded = { _tag: "metaList", values: [] }
- * console.log(value.values.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaListEncoded {
-  readonly _tag: "metaList";
-  readonly values: ReadonlyArray<PandocMetaValueEncoded>;
-}
-
-/**
- * Decoded recursive metadata-map payload.
- *
- * @example
- * ```ts
- * import type { MetaMap } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaMap = { _tag: "metaMap", entries: {} }
- * console.log(Object.keys(value.entries).length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaMap {
-  readonly _tag: "metaMap";
-  readonly entries: Readonly<Record<string, PandocMetaValue>>;
-}
-
-/**
- * Encoded recursive metadata-map payload.
- *
- * @example
- * ```ts
- * import type { MetaMapEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: MetaMapEncoded = { _tag: "metaMap", entries: {} }
- * console.log(Object.keys(value.entries).length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface MetaMapEncoded {
-  readonly _tag: "metaMap";
-  readonly entries: Readonly<Record<string, PandocMetaValueEncoded>>;
-}
-
-/**
- * Exact future metadata constructor retained by strict semantic decoding.
- *
- * @example
- * ```ts
- * import { UnknownMeta } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: UnknownMeta = UnknownMeta.make({ wire: { t: "MetaFuture" } })
- * console.log(value.constructorName) // "MetaFuture"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface UnknownMeta {
-  readonly _tag: "unknownMeta";
-  readonly constructorName: string;
-  readonly payload: S.Json | undefined;
-  readonly wire: PandocUnknownConstructorWire;
-}
-
-/**
- * Encoded exact future metadata constructor.
- *
- * @example
- * ```ts
- * import type { UnknownMetaEncoded } from "@beep/pandoc-ast/Pandoc.model"
- *
- * const value: UnknownMetaEncoded = { _tag: "unknownMeta", wire: { t: "MetaFuture" } }
- * console.log(value.wire.t) // "MetaFuture"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface UnknownMetaEncoded {
-  readonly _tag: "unknownMeta";
-  readonly wire: PandocUnknownConstructorWire;
-}
-
-const DeferredPandocMetaValue: S.Codec<PandocMetaValue, PandocMetaValueEncoded> = S.suspend(() => PandocMetaValue);
+const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Encoded> = S.suspend(
+  () => PandocMetaValue
+);
 
 /**
  * Boolean Pandoc metadata value.
@@ -2922,6 +2818,215 @@ export const PandocMetaValue = S.Union([
   }),
   SchemaUtils.withCodecStatics
 );
+
+/**
+ * Decoded boolean metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBool = MetaBool.make({ value: true })
+ * console.log(value.value) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBool = typeof MetaBool.Type;
+
+/**
+ * Decoded string metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaString = MetaString.make({ value: "Document" })
+ * console.log(value.value) // "Document"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaString = typeof MetaString.Type;
+
+/**
+ * Decoded inline-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlines = MetaInlines.make({ children: [] })
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlines = typeof MetaInlines.Type;
+
+/**
+ * Encoded inline-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaInlinesEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlinesEncoded = { _tag: "metaInlines", children: [] }
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlinesEncoded = typeof MetaInlines.Encoded;
+
+/**
+ * Decoded block-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocks = MetaBlocks.make({ children: [] })
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocks = typeof MetaBlocks.Type;
+
+/**
+ * Encoded block-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaBlocksEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocksEncoded = { _tag: "metaBlocks", children: [] }
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocksEncoded = typeof MetaBlocks.Encoded;
+
+/**
+ * Decoded recursive metadata-list payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaList } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaList = MetaList.make({ values: [] })
+ * console.log(value.values.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaList = typeof MetaList.Type;
+
+/**
+ * Encoded recursive metadata-list payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaListEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaListEncoded = { _tag: "metaList", values: [] }
+ * console.log(value.values.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaListEncoded = typeof MetaList.Encoded;
+
+/**
+ * Decoded recursive metadata-map payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaMap } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMap = MetaMap.make({ entries: {} })
+ * console.log(Object.keys(value.entries).length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMap = typeof MetaMap.Type;
+
+/**
+ * Encoded recursive metadata-map payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaMapEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMapEncoded = { _tag: "metaMap", entries: {} }
+ * console.log(Object.keys(value.entries).length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMapEncoded = typeof MetaMap.Encoded;
+
+/**
+ * Encoded exact future metadata constructor.
+ *
+ * @example
+ * ```ts
+ * import type { UnknownMetaEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: UnknownMetaEncoded = { _tag: "unknownMeta", wire: { t: "MetaFuture" } }
+ * console.log(value.wire.t) // "MetaFuture"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnknownMetaEncoded = typeof UnknownMeta.Encoded;
+
+/**
+ * Recursive decoded Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ * import type { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValue = MetaString.make({ value: "Document" })
+ * console.log(value._tag) // "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValue = typeof PandocMetaValue.Type;
+
+/**
+ * Recursive encoded Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import type { PandocMetaValueEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValueEncoded = { _tag: "metaString", value: "Document" }
+ * console.log(value._tag) // "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
 
 /**
  * Pandoc document metadata map.

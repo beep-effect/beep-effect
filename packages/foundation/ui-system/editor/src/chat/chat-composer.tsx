@@ -37,7 +37,9 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { PaperclipIcon, PaperPlaneRightIcon, StopIcon } from "@phosphor-icons/react";
+import { PaperclipIcon } from "@phosphor-icons/react/Paperclip";
+import { PaperPlaneRightIcon } from "@phosphor-icons/react/PaperPlaneRight";
+import { StopIcon } from "@phosphor-icons/react/Stop";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
@@ -375,10 +377,17 @@ function ComposerSurface({
   );
 }
 
-interface ComposerBodyProps extends Omit<ChatComposerProps, "ariaLabel" | "initialState"> {
+interface ComposerBodyProps {
   readonly ariaLabel: string;
+  readonly children?: ReactNode;
+  readonly className?: string;
   readonly features: ComposerFeatures;
   readonly maxAttachmentBytes: number;
+  readonly mentionSource?: MentionSource;
+  readonly onAttach?: AttachmentPort;
+  readonly onSend?: SendPort;
+  readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
+  readonly onStop?: () => void;
   readonly placeholder: string;
   readonly sendDisabled: boolean;
   readonly sendLabel: string;
@@ -568,26 +577,27 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 // composer plugins and their optional consumer ports. Extracting the prop
 // forwarding would obscure which mount-time values enter the atom-backed body.
 // fallow-ignore-next-line complexity
-export function ChatComposer({
-  ariaLabel = DEFAULT_ARIA_LABEL,
-  mountConfig,
-  features,
-  initialState,
-  placeholder,
-  className,
-  namespace = "beep-chat-editor",
-  onSerializedChange,
-  slashItems = defaultChatSlashItems,
-  mentionSource,
-  onAttach,
-  maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
-  onSend,
-  onStop,
-  streaming = false,
-  sendDisabled = false,
-  sendLabel = "Send",
-  children,
-}: ChatComposerProps): JSX.Element {
+export function ChatComposer(props: ChatComposerProps): JSX.Element {
+  const {
+    ariaLabel = DEFAULT_ARIA_LABEL,
+    mountConfig,
+    features,
+    initialState,
+    placeholder,
+    className,
+    namespace = "beep-chat-editor",
+    onSerializedChange,
+    slashItems = defaultChatSlashItems,
+    mentionSource,
+    onAttach,
+    maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
+    onSend,
+    onStop,
+    streaming = false,
+    sendDisabled = false,
+    sendLabel = "Send",
+    children,
+  } = props as Omit<ChatComposerProps, keyof ChatComposerMountConfig> & ChatComposerMountConfig;
   const resolved = ComposerFeatures.make(mountConfig?.features ?? features ?? {});
   const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? maxAttachmentBytes;
   const resolvedOnAttach = mountConfig?.onAttach ?? onAttach;
@@ -595,7 +605,7 @@ export function ChatComposer({
   const resolvedSlashItems = O.getOrElse(S.decodeUnknownOption(SlashItems)(slashItems), () => defaultChatSlashItems);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
     Exit.match(Effect.runSyncExit(decodeEditorStateForRuntime(state)), {
-      onFailure: () => O.none(),
+      onFailure: O.none,
       onSuccess: O.some,
     })
   );

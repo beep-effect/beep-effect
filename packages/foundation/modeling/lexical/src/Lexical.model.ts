@@ -2680,7 +2680,10 @@ export const StrictSerializedEditorState = SerializedEditorState;
  * @remarks
  * This is a persistence and migration shape, not a render-safe semantic node.
  * Decode through {@link decodeEditorStateStrict} before using values in editor
- * behavior or DOM adapters.
+ * behavior or DOM adapters. `StructWithRest` is intentional here: Effect
+ * schema classes accept closed `Struct` fields and cannot retain arbitrary
+ * future keys. Replacing this open wire object with a class would discard
+ * unknown fields, versions, or `"$"` NodeState and violate lossless identity.
  *
  * @example
  * ```ts
@@ -2769,6 +2772,12 @@ export declare namespace LexicalNodeWire {
 
 /**
  * Lossless JSON-only editor-state envelope.
+ *
+ * @remarks
+ * This is deliberately an open `StructWithRest`, not a class model. Both the
+ * envelope and root may carry future extension fields, while root `children`
+ * must remain an array of open {@link LexicalNodeWire} values. A closed class
+ * would discard top-level or root extensions and break exact wire identity.
  *
  * @example
  * ```ts

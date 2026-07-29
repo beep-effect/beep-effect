@@ -437,8 +437,8 @@ export const captureAttachmentsFn = composerRuntime.fn<{
             cause,
           }),
       }).pipe(
-        Effect.catch((failure) =>
-          Effect.gen(function* () {
+        Effect.catch(
+          Effect.fnUntraced(function* (failure) {
             yield* Effect.logError("ChatComposer upload port rejected captured attachments", failure);
             const current = registry.get(attachmentsAtom(editor));
             const rolledBack = A.filter(current, (attachment) =>

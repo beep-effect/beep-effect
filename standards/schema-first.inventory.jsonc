@@ -1,7 +1,11 @@
 {
   "version": 1,
   "generatedOn": "2026-07-30",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -220,12 +224,28 @@
       "reason": "Integration descriptor intentionally couples an Effectful handler with generated JSON-schema objects; the owning Effect AI Tool schemas remain the executable parameter and success truth."
     },
     {
-      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
-      "symbol": "HtmlElementMeta",
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "LexicalNodeWire",
       "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "Generated metadata-lookup schema for the ELEMENT_META table (not a domain entity); an annotated S.Struct with a derived type is intentional over S.Class."
+      "status": "candidate",
+      "owner": "@beep/lexical-schema",
+      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "SerializedEditorStateWire",
+      "kind": "object-struct-schema",
+      "status": "candidate",
+      "owner": "@beep/lexical-schema",
+      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "symbol": "PandocUnknownConstructorWire",
+      "kind": "object-struct-schema",
+      "status": "candidate",
+      "owner": "@beep/pandoc-ast",
+      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
     },
     {
       "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
@@ -286,6 +306,14 @@
       "line": 9,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "symbol": "ChatComposerMountConfig",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/editor",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
     },
     {
       "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
