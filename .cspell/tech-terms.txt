@@ -194,6 +194,8 @@ nocollapse
 nocompile
 nodir
 noembed
+noprofile
+norc
 noframes
 nohref
 nohup
