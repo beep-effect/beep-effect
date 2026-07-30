@@ -8,11 +8,12 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as N, pipe, String as Str } from "effect";
+import { Effect, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
 import { OPENCLAW_HTTP_PROBE_TIMEOUT } from "./Openclaw.config.ts";
 import {
@@ -122,6 +123,17 @@ const acceptanceFailure = (step: OpenclawLiveAcceptanceStep, diagnostics: string
 /**
  * Probe a local OpenAI-compatible `/models` endpoint and require one exact model id.
  *
+ * @example
+ * ```ts
+ * import { probeOpenclawLocalModels } from "@beep/openclaw"
+ *
+ * const program = probeOpenclawLocalModels({
+ *   baseUrl: "http://127.0.0.1:11434/v1",
+ *   modelId: "gemma3:4b"
+ * })
+ * console.log(program)
+ * ```
+ *
  * @category clients
  * @since 0.0.0
  */
@@ -148,43 +160,87 @@ export const probeOpenclawLocalModels = Effect.fn("Openclaw.probeLocalModels")(f
   });
 });
 
-/**
- * Coordinate already-decoded P3 acceptance results without performing mutation.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const coordinateOpenclawLiveAcceptance = (input: OpenclawLiveAcceptanceInput): OpenclawLiveAcceptanceResult => {
-  const hostedOk =
-    sameString(input.hostedTurn.status, "ok") &&
-    O.exists(input.hostedTurn.text, (text) => sameString(text, "P3_MODEL_OK")) &&
-    O.exists(input.hostedTurn.runId, Str.isNonEmpty) &&
-    O.exists(input.hostedTurn.stopReason, (reason) => sameString(reason, "stop")) &&
-    O.exists(input.hostedTurn.aborted, (aborted) => !aborted) &&
-    O.exists(input.hostedTurn.provider, (provider) => sameString(provider, input.hostedProviderId)) &&
-    O.exists(input.hostedTurn.model, (model) => sameString(model, input.hostedModelId));
-  const localOk = A.some(input.localModels.data, (model) => sameString(model.id, input.localModelId));
+const hostedTurnPassed = (input: OpenclawLiveAcceptanceInput): boolean =>
+  sameString(input.hostedTurn.status, "ok") &&
+  O.exists(input.hostedTurn.text, (text) => sameString(text, "P3_MODEL_OK")) &&
+  O.exists(input.hostedTurn.runId, Str.isNonEmpty) &&
+  O.exists(input.hostedTurn.stopReason, (reason) => sameString(reason, "stop")) &&
+  O.exists(input.hostedTurn.aborted, (aborted) => !aborted) &&
+  O.exists(input.hostedTurn.provider, (provider) => sameString(provider, input.hostedProviderId)) &&
+  O.exists(input.hostedTurn.model, (model) => sameString(model, input.hostedModelId));
+
+const localModelsPassed = (input: OpenclawLiveAcceptanceInput): boolean =>
+  A.some(input.localModels.data, (model) => sameString(model.id, input.localModelId));
+
+const proofSkillPassed = (input: OpenclawLiveAcceptanceInput): boolean => {
   const eligibleProofSkills = A.filter(
     input.skillInventory.skills,
     (skill) =>
       skill.eligible && sameString(skill.name, "beep-proof-ping") && sameString(skill.source, "openclaw-workspace")
   );
-  const skillOk =
+  return (
     A.length(eligibleProofSkills) === 1 &&
     sameString(input.skillTurn.status, "ok") &&
-    O.exists(input.skillTurn.text, (text) => sameString(text, "P3_SKILL_OK"));
-  const reloadOk = P.isTagged("Reloaded")(input.restoredReload) && input.restoredReload.warningCount === 0;
-  const channelOk =
-    A.length(input.channelAccounts) === 1 &&
-    sameString(input.channelAccounts[0]?.accountId ?? "", "default") &&
-    O.exists(input.channelAccounts[0]?.probeOk ?? O.none(), (ok) => ok) &&
-    O.isNone(input.channelAccounts[0]?.probeError ?? O.none());
+    O.exists(input.skillTurn.text, (text) => sameString(text, "P3_SKILL_OK"))
+  );
+};
+
+const restoredReloadPassed = (input: OpenclawLiveAcceptanceInput): boolean =>
+  P.isTagged("Reloaded")(input.restoredReload) && input.restoredReload.warningCount === 0;
+
+const telegramChannelPassed = (input: OpenclawLiveAcceptanceInput): boolean =>
+  A.length(input.channelAccounts) === 1 &&
+  O.exists(
+    A.head(input.channelAccounts),
+    (account) =>
+      sameString(account.accountId, "default") && O.isNone(account.probeError) && O.exists(account.probeOk, (ok) => ok)
+  ) &&
+  input.telegramSend.payload.ok;
+
+/**
+ * Coordinate already-decoded P3 acceptance results without performing mutation.
+ *
+ * @example
+ * ```ts
+ * import { coordinateOpenclawLiveAcceptance, OpenclawLiveAcceptanceInput } from "@beep/openclaw"
+ * import * as S from "effect/Schema"
+ *
+ * const input = S.decodeUnknownSync(OpenclawLiveAcceptanceInput)({
+ *   channelAccounts: [],
+ *   hostedModelId: "legal-primary",
+ *   hostedProviderId: "hosted",
+ *   hostedTurn: { status: "ok" },
+ *   localModels: { data: [{ id: "gemma3:4b" }] },
+ *   localModelId: "gemma3:4b",
+ *   restoredReload: { _tag: "Reloaded", warningCount: 0 },
+ *   skillInventory: {
+ *     skills: [],
+ *     workspaceDir: "/var/lib/beep/openclaw/workspace"
+ *   },
+ *   skillTurn: { status: "ok" },
+ *   telegramSend: {
+ *     action: "send",
+ *     channel: "telegram",
+ *     dryRun: false,
+ *     handledBy: "telegram",
+ *     messageId: "telegram-message-42",
+ *     payload: { messageId: "telegram-message-42", ok: true }
+ *   }
+ * })
+ * const result = coordinateOpenclawLiveAcceptance(input)
+ * console.log(result._tag) // "Failed"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coordinateOpenclawLiveAcceptance = (input: OpenclawLiveAcceptanceInput): OpenclawLiveAcceptanceResult => {
   const failures = A.getSomes([
-    hostedOk ? O.none() : O.some(acceptanceFailure("hosted-model", "Hosted model assertion failed.")),
-    localOk ? O.none() : O.some(acceptanceFailure("local-model", "Local model assertion failed.")),
-    skillOk ? O.none() : O.some(acceptanceFailure("skill", "Proof skill assertion failed.")),
-    reloadOk ? O.none() : O.some(acceptanceFailure("reload", "Restored reload assertion failed.")),
-    channelOk && input.telegramSend.payload.ok
+    hostedTurnPassed(input) ? O.none() : O.some(acceptanceFailure("hosted-model", "Hosted model assertion failed.")),
+    localModelsPassed(input) ? O.none() : O.some(acceptanceFailure("local-model", "Local model assertion failed.")),
+    proofSkillPassed(input) ? O.none() : O.some(acceptanceFailure("skill", "Proof skill assertion failed.")),
+    restoredReloadPassed(input) ? O.none() : O.some(acceptanceFailure("reload", "Restored reload assertion failed.")),
+    telegramChannelPassed(input)
       ? O.none()
       : O.some(acceptanceFailure("telegram", "Telegram send or channel assertion failed.")),
   ]);

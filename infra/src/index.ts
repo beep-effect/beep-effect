@@ -70,6 +70,20 @@ export * from "./OipWeb.ts";
  */
 export * from "./OpenClaw.ts";
 /**
+ * OpenClaw immutable workspace artifact exports.
+ *
+ * @example
+ * ```ts
+ * import { openClawSoulRelativePath } from "@beep/infra"
+ *
+ * console.log(openClawSoulRelativePath) // "workspace/SOUL.md"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export * from "./OpenClawArtifacts.ts";
+/**
  * Storybook Pulumi orchestration exports.
  *
  * @example

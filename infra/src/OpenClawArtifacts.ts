@@ -4,13 +4,49 @@
  * @since 0.0.0
  */
 
-/** Relative generation path of the legal persona artifact. */
+/**
+ * Relative generation path of the legal persona artifact.
+ *
+ * @example
+ * ```ts
+ * import { openClawSoulRelativePath } from "@beep/infra"
+ *
+ * console.log(openClawSoulRelativePath) // "workspace/SOUL.md"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const openClawSoulRelativePath = "workspace/SOUL.md";
 
-/** Relative generation path of the declarative proof skill. */
+/**
+ * Relative generation path of the declarative proof skill.
+ *
+ * @example
+ * ```ts
+ * import { openClawProofSkillRelativePath } from "@beep/infra"
+ *
+ * console.log(openClawProofSkillRelativePath) // "workspace/skills/beep-proof-ping/SKILL.md"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const openClawProofSkillRelativePath = "workspace/skills/beep-proof-ping/SKILL.md";
 
-/** Exact legal-workstation persona bytes rendered into every generation. */
+/**
+ * Exact legal-workstation persona bytes rendered into every generation.
+ *
+ * @example
+ * ```ts
+ * import { openClawLegalSoulMarkdown } from "@beep/infra"
+ *
+ * console.log(openClawLegalSoulMarkdown.includes("not a lawyer")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const openClawLegalSoulMarkdown = `# Beep Legal Workstation Assistant
 
 You are a legal information and workstation proof assistant, not a lawyer.
@@ -29,7 +65,19 @@ review by qualified counsel.
 You have no network, shell, or secret authority.
 `;
 
-/** Exact instruction-only proof skill bytes rendered into every generation. */
+/**
+ * Exact instruction-only proof skill bytes rendered into every generation.
+ *
+ * @example
+ * ```ts
+ * import { openClawProofSkillMarkdown } from "@beep/infra"
+ *
+ * console.log(openClawProofSkillMarkdown.includes("P3_SKILL_OK")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const openClawProofSkillMarkdown = `---
 name: beep-proof-ping
 description: Return one fixed synthetic sentinel for the P3 declarative-skill proof.

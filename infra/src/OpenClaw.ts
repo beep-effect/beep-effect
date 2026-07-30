@@ -447,7 +447,27 @@ export class OpenClawWorkstationPaths extends S.Class<OpenClawWorkstationPaths>(
   })
 ) {}
 
-/** Hosted OpenAI-compatible provider selected as the workstation primary. */
+/**
+ * Hosted OpenAI-compatible provider selected as the workstation primary.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawHostedProviderConfig } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
+ *
+ * const provider = OpenClawHostedProviderConfig.make({
+ *   apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *   baseUrl: "https://api.example.com/v1",
+ *   modelId: "legal-primary",
+ *   modelName: "Legal Primary",
+ *   providerId: "hosted"
+ * })
+ * console.log(provider.providerId) // "hosted"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class OpenClawHostedProviderConfig extends S.Class<OpenClawHostedProviderConfig>(
   $I`OpenClawHostedProviderConfig`
 )(
@@ -463,7 +483,25 @@ export class OpenClawHostedProviderConfig extends S.Class<OpenClawHostedProvider
   })
 ) {}
 
-/** Local loopback OpenAI-compatible fallback provider. */
+/**
+ * Local loopback OpenAI-compatible fallback provider.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawLocalProviderConfig } from "@beep/infra"
+ *
+ * const provider = OpenClawLocalProviderConfig.make({
+ *   baseUrl: "http://127.0.0.1:11434/v1",
+ *   modelId: "gemma3:4b",
+ *   modelName: "Gemma 3 4B",
+ *   providerId: "ollama"
+ * })
+ * console.log(provider.baseUrl) // "http://127.0.0.1:11434/v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class OpenClawLocalProviderConfig extends S.Class<OpenClawLocalProviderConfig>($I`OpenClawLocalProviderConfig`)(
   {
     baseUrl: LoopbackProviderBaseUrl,
@@ -484,9 +522,30 @@ export class OpenClawLocalProviderConfig extends S.Class<OpenClawLocalProviderCo
  *
  * @example
  * ```ts
- * import { OpenClawDeploymentConfig } from "@beep/infra"
+ * import {
+ *   OpenClawDeploymentConfig,
+ *   OpenClawHostedProviderConfig,
+ *   OpenClawLocalProviderConfig
+ * } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
  *
- * console.log(OpenClawDeploymentConfig.make({}).gatewayPort) // 19031
+ * const deployment = OpenClawDeploymentConfig.make({
+ *   hostedProvider: OpenClawHostedProviderConfig.make({
+ *     apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *     baseUrl: "https://api.example.com/v1",
+ *     modelId: "legal-primary",
+ *     modelName: "Legal Primary",
+ *     providerId: "hosted"
+ *   }),
+ *   localProvider: OpenClawLocalProviderConfig.make({
+ *     baseUrl: "http://127.0.0.1:11434/v1",
+ *     modelId: "gemma3:4b",
+ *     modelName: "Gemma 3 4B",
+ *     providerId: "ollama"
+ *   }),
+ *   telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token")
+ * })
+ * console.log(deployment.gatewayPort) // 19031
  * ```
  *
  * @category models
@@ -546,9 +605,31 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
  *
  * @example
  * ```ts
- * import { makeOpenClawDeploymentIntent, OpenClawDeploymentConfig } from "@beep/infra"
+ * import {
+ *   makeOpenClawDeploymentIntent,
+ *   OpenClawDeploymentConfig,
+ *   OpenClawHostedProviderConfig,
+ *   OpenClawLocalProviderConfig
+ * } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
  *
- * console.log(makeOpenClawDeploymentIntent(OpenClawDeploymentConfig.make({})).gateway.port) // 19031
+ * const deployment = OpenClawDeploymentConfig.make({
+ *   hostedProvider: OpenClawHostedProviderConfig.make({
+ *     apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *     baseUrl: "https://api.example.com/v1",
+ *     modelId: "legal-primary",
+ *     modelName: "Legal Primary",
+ *     providerId: "hosted"
+ *   }),
+ *   localProvider: OpenClawLocalProviderConfig.make({
+ *     baseUrl: "http://127.0.0.1:11434/v1",
+ *     modelId: "gemma3:4b",
+ *     modelName: "Gemma 3 4B",
+ *     providerId: "ollama"
+ *   }),
+ *   telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token")
+ * })
+ * console.log(makeOpenClawDeploymentIntent(deployment).gateway.port) // 19031
  * ```
  *
  * @category constructors
@@ -697,20 +778,27 @@ export class OpenClawBackupConfig extends S.Class<OpenClawBackupConfig>($I`OpenC
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
- * const generation = makeOpenClawGeneration(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
  * console.log(generation.generationId.length) // 64
  * ```
  *
@@ -883,15 +971,36 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
     "\n"
   )}\n`;
 
-/** Build the deterministic length-delimited generation bundle hash. */
-export const makeOpenClawBundleHash = (
-  configHash: OpenclawSha256Hex,
-  soulHash: OpenclawSha256Hex,
-  proofSkillHash: OpenclawSha256Hex
-): OpenclawSha256Hex => {
+/**
+ * Build the deterministic length-delimited generation bundle hash.
+ *
+ * @example
+ * ```ts
+ * import { makeOpenClawBundleHash } from "@beep/infra"
+ * import { OpenclawSha256Hex } from "@beep/openclaw"
+ *
+ * const zeroHash = OpenclawSha256Hex.make("0".repeat(64))
+ * const bundleHash = makeOpenClawBundleHash({
+ *   configHash: zeroHash,
+ *   proofSkillHash: zeroHash,
+ *   soulHash: zeroHash
+ * })
+ * console.log(bundleHash.length) // 64
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeOpenClawBundleHash = (input: {
+  readonly configHash: OpenclawSha256Hex;
+  readonly proofSkillHash: OpenclawSha256Hex;
+  readonly soulHash: OpenclawSha256Hex;
+}): OpenclawSha256Hex => {
   const compatibilityId = `${OPENCLAW_COMPATIBILITY_SET.adapterVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawCommit}:${OPENCLAW_COMPATIBILITY_SET.nodeVersion}`;
-  const hash = A.reduce([configHash, soulHash, proofSkillHash, compatibilityId], createHash("sha256"), (hash, part) =>
-    hash.update(`${new TextEncoder().encode(part).byteLength}:`).update(part, "utf8")
+  const hash = A.reduce(
+    [input.configHash, input.soulHash, input.proofSkillHash, compatibilityId],
+    createHash("sha256"),
+    (hash, part) => hash.update(`${new TextEncoder().encode(part).byteLength}:`).update(part, "utf8")
   );
   return OpenclawSha256Hex.make(hash.digest("hex"));
 };
@@ -905,20 +1014,27 @@ export const makeOpenClawBundleHash = (
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
- * const generation = makeOpenClawGeneration(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
  * console.log(generation.configRoot) // "/etc/beep/openclaw"
  * ```
  *
@@ -937,7 +1053,7 @@ export const makeOpenClawGeneration = (args: OpenClawStackArgs): OpenClawGenerat
     configRoot: args.paths.configRoot,
     configHash: rendered.contentHash,
     gatewayPort: args.deployment.gatewayPort,
-    generationId: makeOpenClawBundleHash(rendered.contentHash, soulHash, proofSkillHash),
+    generationId: makeOpenClawBundleHash({ configHash: rendered.contentHash, proofSkillHash, soulHash }),
     home: args.identity.home,
     hostedModelId: args.deployment.hostedProvider.modelId,
     hostedProviderId: args.deployment.hostedProvider.providerId,
@@ -970,22 +1086,31 @@ export const makeOpenClawGeneration = (args: OpenClawStackArgs): OpenClawGenerat
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs, renderOpenClawUnit } from "@beep/infra"
+ * import {
+ *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
+ *   renderOpenClawUnit
+ * } from "@beep/infra"
  *
- * const unit = renderOpenClawUnit(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const unit = renderOpenClawUnit(makeOpenClawGeneration(args))
  * console.log(unit.startsWith("# BEEP_OPENCLAW_MANAGED")) // true
  * ```
  *
@@ -1034,25 +1159,29 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRunScript
  * } from "@beep/infra"
  *
- * const runScript = renderOpenClawRunScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const runScript = renderOpenClawRunScript(makeOpenClawGeneration(args))
  * console.log(runScript.includes("config validate")) // true
  * ```
  *
@@ -1129,25 +1258,29 @@ export class OpenClawGenerationFile extends S.Class<OpenClawGenerationFile>($I`O
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawGenerationTree
  * } from "@beep/infra"
  *
- * const tree = renderOpenClawGenerationTree(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const tree = renderOpenClawGenerationTree(makeOpenClawGeneration(args))
  * console.log(tree["run.sh"]?.mode) // "0755"
  * ```
  *
@@ -1184,21 +1317,31 @@ export const renderOpenClawGenerationTree = (
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawPreflightScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawPreflightScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("PREFLIGHT-OK")) // true
@@ -1262,25 +1405,29 @@ export const renderOpenClawPreflightScript = ({
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawStageScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawStageScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawStageScript(makeOpenClawGeneration(args))
  * console.log(script.includes("STAGE-OK")) // true
  * ```
  *
@@ -1384,25 +1531,29 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawApplyScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawApplyScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawApplyScript(makeOpenClawGeneration(args))
  * console.log(script.includes("APPLY-OK")) // true
  * ```
  *
@@ -1499,25 +1650,29 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRollbackScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawRollbackScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawRollbackScript(makeOpenClawGeneration(args))
  * console.log(script.includes("ROLLBACK-OK")) // true
  * ```
  *
@@ -1642,21 +1797,31 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawDriftAuditScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawDriftAuditScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("ALERT: OPENCLAW_CONFIG_DRIFT")) // true
@@ -1682,21 +1847,31 @@ export const renderOpenClawDriftAuditScript = (input: {
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawProbeScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawProbeScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("PROBE-COMPLETE")) // true
@@ -1744,6 +1919,37 @@ export const renderOpenClawProbeScript = (input: {
  * Run `degraded` while the designated op:// reference is unresolvable, then
  * restore it and run `restored`; the restored phase immediately proves model,
  * local inventory, skill, Telegram send, and channel health.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
+ *   renderOpenClawLiveAcceptanceScript
+ * } from "@beep/infra"
+ *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
+ * const script = renderOpenClawLiveAcceptanceScript(generation)
+ * console.log(script.includes("LIVE-ACCEPTANCE-RESTORED PASS")) // true
+ * ```
  *
  * @category serialization
  * @since 0.0.0
@@ -1812,26 +2018,32 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * ```ts
  * import {
  *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   OpenClawBackupConfig,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
  *   renderOpenClawBackupShipScript
  * } from "@beep/infra"
  *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * const script = renderOpenClawBackupShipScript({
  *   backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
- *   generation: makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
+ *   generation: makeOpenClawGeneration(args)
  * })
  * console.log(script.includes("BACKUP-OK")) // true
  * ```
@@ -1882,18 +2094,26 @@ export const renderOpenClawBackupShipScript = ({
  *
  * @example
  * ```ts
- * import { OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
- * const args = OpenClawStackArgs.new(
- *   OpenClawExpectedIdentity.make({
- *     home: "/home/elpresidank",
- *     hostname: "DankStation",
- *     machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *     runtimeDir: "/run/user/1000",
- *     uid: 1000,
- *     username: "elpresidank"
- *   })
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * console.log(args.paths.unitName) // "openclaw.service"
  * ```
  *
@@ -2160,21 +2380,28 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
  *
  * @example
  * ```ts
- * import { OpenClawExpectedIdentity, OpenClawStack, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawStackArgsFromConfigValues, OpenClawStack } from "@beep/infra"
  *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * console.log(OpenClawStack)
- * console.log(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   ).paths.configRoot
- * )
+ * console.log(args.paths.configRoot)
  * ```
  *
  * @category resources

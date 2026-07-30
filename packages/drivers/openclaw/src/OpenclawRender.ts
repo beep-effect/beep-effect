@@ -347,9 +347,11 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  * ```ts
  * import {
  *   OpenclawAgentIntent,
+ *   OpenclawControlUiIntent,
  *   OpenclawDeploymentIntent,
  *   OpenclawGatewayIntent,
  *   OpenclawLoggingIntent,
+ *   OpenclawPersonaIntent,
  *   OpenclawSecretReference,
  *   OpenclawSecretsResolverIntent
  * } from "@beep/openclaw/OpenclawIntent.models"
@@ -363,12 +365,21 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  *       name: "Spike 3",
  *       workspace: "/var/lib/beep/spike3"
  *     }),
+ *     controlUi: OpenclawControlUiIntent.make({
+ *       allowedOrigins: ["http://127.0.0.1:19031"],
+ *       enabled: true
+ *     }),
  *     gateway: OpenclawGatewayIntent.make({
  *       authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
  *       port: 19031
  *     }),
  *     logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/spike3/log/openclaw.log" }),
  *     openclawVersion: "2026.7.1-2",
+ *     persona: OpenclawPersonaIntent.make({
+ *       clientDataPolicy: "synthetic-only",
+ *       confidentialityPolicy: "advisory",
+ *       soulMarkdown: "Use synthetic examples only."
+ *     }),
  *     providers: [],
  *     secretsResolver: OpenclawSecretsResolverIntent.make({
  *       commandPath: "/opt/beep/openclaw/op-resolver.sh",
@@ -405,9 +416,11 @@ export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): Rendered
  * ```ts
  * import {
  *   OpenclawAgentIntent,
+ *   OpenclawControlUiIntent,
  *   OpenclawDeploymentIntent,
  *   OpenclawGatewayIntent,
  *   OpenclawLoggingIntent,
+ *   OpenclawPersonaIntent,
  *   OpenclawSecretReference,
  *   OpenclawSecretsResolverIntent
  * } from "@beep/openclaw/OpenclawIntent.models"
@@ -421,12 +434,21 @@ export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): Rendered
  *       name: "Spike 3",
  *       workspace: "/var/lib/beep/spike3"
  *     }),
+ *     controlUi: OpenclawControlUiIntent.make({
+ *       allowedOrigins: ["http://127.0.0.1:19031"],
+ *       enabled: true
+ *     }),
  *     gateway: OpenclawGatewayIntent.make({
  *       authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
  *       port: 19031
  *     }),
  *     logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/spike3/log/openclaw.log" }),
  *     openclawVersion: "2026.7.1-2",
+ *     persona: OpenclawPersonaIntent.make({
+ *       clientDataPolicy: "synthetic-only",
+ *       confidentialityPolicy: "advisory",
+ *       soulMarkdown: "Use synthetic examples only."
+ *     }),
  *     providers: [],
  *     secretsResolver: OpenclawSecretsResolverIntent.make({
  *       commandPath: "/opt/beep/openclaw/op-resolver.sh",

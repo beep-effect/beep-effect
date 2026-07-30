@@ -1,3 +1,6 @@
+/** @effect-diagnostics nodeBuiltinImport:skip-file */
+// The rendered acceptance script is executed once to prove its fail-closed
+// usage path; a raw spawn keeps @beep/infra free of platform-node test deps.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -23,7 +26,7 @@ import {
   renderOpenClawStageScript,
   renderOpenClawUnit,
 } from "@beep/infra";
-import { OpenclawSha256Hex } from "@beep/openclaw";
+import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -71,7 +74,7 @@ const identityConfigValues = {
 
 const deploymentConfig = OpenClawDeploymentConfig.make({
   hostedProvider: {
-    apiKeyRef: "op://beep-openclaw/hosted/api-key",
+    apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
     baseUrl: "https://hosted.example.test/v1",
     modelId: "hosted-model",
     modelName: "Hosted Model",
@@ -83,7 +86,7 @@ const deploymentConfig = OpenClawDeploymentConfig.make({
     modelName: "Local Model",
     providerId: "local",
   },
-  telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token",
+  telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token"),
 });
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
@@ -353,7 +356,11 @@ describe("@beep/infra OpenClaw", () => {
     );
 
     expect(
-      makeOpenClawBundleHash(defaultGeneration.configHash, changedSoulHash, defaultGeneration.proofSkillHash)
+      makeOpenClawBundleHash({
+        configHash: defaultGeneration.configHash,
+        proofSkillHash: defaultGeneration.proofSkillHash,
+        soulHash: changedSoulHash,
+      })
     ).not.toBe(defaultGeneration.generationId);
   });
 
@@ -383,20 +390,20 @@ describe("@beep/infra OpenClaw", () => {
       openClawSoulRelativePath,
       openClawProofSkillRelativePath,
     ]);
-    expect(tree["openclaw.json"]?.mode).toBe("0644");
-    expect(tree["manifest.json"]?.mode).toBe("0644");
-    expect(tree["run.sh"]?.mode).toBe("0755");
-    expect(tree[openClawSoulRelativePath]?.mode).toBe("0644");
-    expect(tree[openClawProofSkillRelativePath]?.mode).toBe("0644");
-    expect(tree[openClawSoulRelativePath]?.content).toBe(openClawLegalSoulMarkdown);
-    expect(tree[openClawProofSkillRelativePath]?.content).toBe(openClawProofSkillMarkdown);
-    expect(tree["openclaw.json"]?.content).toBe(defaultGeneration.canonicalJson);
-    expect(tree["manifest.json"]?.content).toContain(`"openclawVersion": "2026.7.1-2"`);
-    expect(tree["manifest.json"]?.content).toContain(`"nodeVersion": "24.16.0"`);
-    expect(tree["manifest.json"]?.content).toContain(`"generationId": "${defaultGeneration.generationId}"`);
-    expect(tree["manifest.json"]?.content).toContain(`"configHash": "${defaultGeneration.configHash}"`);
-    expect(tree["manifest.json"]?.content).toContain(`"soulSha256": "${defaultGeneration.soulHash}"`);
-    expect(tree["manifest.json"]?.content).toContain(`"proofSkillSha256": "${defaultGeneration.proofSkillHash}"`);
+    expect(tree).toMatchObject({
+      "manifest.json": { mode: "0644" },
+      "openclaw.json": { content: defaultGeneration.canonicalJson, mode: "0644" },
+      "run.sh": { mode: "0755" },
+      [openClawSoulRelativePath]: { content: openClawLegalSoulMarkdown, mode: "0644" },
+      [openClawProofSkillRelativePath]: { content: openClawProofSkillMarkdown, mode: "0644" },
+    });
+    const manifestContent = tree["manifest.json"]?.content ?? "";
+    expect(manifestContent).toContain(`"openclawVersion": "2026.7.1-2"`);
+    expect(manifestContent).toContain(`"nodeVersion": "24.16.0"`);
+    expect(manifestContent).toContain(`"generationId": "${defaultGeneration.generationId}"`);
+    expect(manifestContent).toContain(`"configHash": "${defaultGeneration.configHash}"`);
+    expect(manifestContent).toContain(`"soulSha256": "${defaultGeneration.soulHash}"`);
+    expect(manifestContent).toContain(`"proofSkillSha256": "${defaultGeneration.proofSkillHash}"`);
   });
 
   it("stages every generation file root-owned with its declared mode", () => {
