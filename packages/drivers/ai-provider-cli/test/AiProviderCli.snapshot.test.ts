@@ -9,9 +9,11 @@ import {
 } from "@beep/ai-provider-cli";
 import * as HostPath from "@beep/utils/Path";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Ref, Result } from "effect";
+import { Effect, Layer, Logger, Ref, References, Result } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { ChildProcessSpawner } from "effect/unstable/process";
 import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
 const claudeLoggedInStdout = `{
@@ -157,6 +159,61 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
 
       expect(error._tag).toBe("AiProviderCliError");
       expect(error.provider).toBe("claude");
+    })
+  );
+
+  it.effect(
+    "logs safe process diagnostics before translating native failures",
+    Effect.fnUntraced(function* () {
+      const executable = "/nonexistent/claude-secret-path";
+      const secret = "AI_PROVIDER_SECRET_MARKER";
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+      const failingSpawnerLayer = Layer.succeed(
+        ChildProcessSpawner.ChildProcessSpawner,
+        ChildProcessSpawner.make(() =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "NotFound",
+              cause: new Error(secret),
+              method: "spawn",
+              module: "ChildProcess",
+              pathOrDescriptor: executable,
+            })
+          )
+        )
+      );
+      const nativeLayer = AiProviderCli.makeLayer({ claudePath: executable }).pipe(Layer.provide(failingSpawnerLayer));
+      const testLayer = Layer.mergeAll(
+        nativeLayer,
+        Logger.layer([logger]),
+        Layer.succeed(References.MinimumLogLevel, "Debug")
+      );
+
+      const error = yield* Effect.gen(function* () {
+        const providerCli = yield* AiProviderCli;
+        return yield* providerCli.checkAuth(
+          "claude",
+          AiProviderCliProbeOptions.make({ env: { TEST_AI_PROVIDER_SECRET: secret } })
+        );
+      }).pipe(provideScopedLayer(testLayer), Effect.flip);
+
+      expect(error._tag).toBe("AiProviderCliError");
+      expect(error.command).toEqual(O.none());
+      expect(error.stderr).toEqual(O.some("unknown"));
+      expect(error.message).not.toContain(secret);
+      expect(error.message).not.toContain(executable);
+      expect(annotations).toEqual([
+        {
+          "ai_provider_cli.operation": "checkAuth",
+          "ai_provider_cli.provider": "claude",
+          "process.error_kind": "NotFound",
+          "process.method": "spawn",
+          "process.module": "ChildProcess",
+        },
+      ]);
     })
   );
 

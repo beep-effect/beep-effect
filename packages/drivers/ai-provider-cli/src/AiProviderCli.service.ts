@@ -141,6 +141,17 @@ const runNative = (
       return AiProviderCliProcessResult.make({ exitCode, stderr, stdout });
     })
   ).pipe(
+    Effect.tapError((error) =>
+      Effect.logDebug("AI provider CLI process failed").pipe(
+        Effect.annotateLogs({
+          "ai_provider_cli.operation": "checkAuth",
+          "ai_provider_cli.provider": request.provider,
+          "process.error_kind": error.reason._tag,
+          "process.method": error.reason.method,
+          "process.module": error.reason.module,
+        })
+      )
+    ),
     Effect.mapError(() =>
       AiProviderCliError.make({
         command: O.none(),

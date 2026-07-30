@@ -77,7 +77,8 @@ URLs, ~30 X post citations) lives in the exploration's ledger and legs:
   (tagged-union deploy target, preflight→apply→health command chains);
   `@beep/onepassword-cli` (CLI wrapper style); `OnePasswordReference`
   (`packages/shared/domain/src/values/OnePasswordReference`); `@beep/schema`
-  kits; `@beep/identity` composers; `@beep/utils/Stream.collectProcessOutput`.
+  kits; `@beep/identity` composers; driver-local concurrent
+  stdout/stderr/exit collection over `effect/unstable/process`.
 - NET-NEW: `packages/drivers/openclaw` (desired-intent schema, render
   adapter, CLI wrapper, probes); OpenClawGeneration engine; workstation
   applicator; drift audit.

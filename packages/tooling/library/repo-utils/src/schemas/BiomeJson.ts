@@ -14,6 +14,8 @@ import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import { DomainError } from "../errors/index.ts";
 import { findRepoRoot } from "../Root.ts";
+import type { FileSystem } from "effect";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const require = createRequire(import.meta.url);
 const biomeExecutable = require.resolve("@biomejs/biome/bin/biome");
@@ -53,8 +55,15 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  * @since 0.0.0
  */
 export const renderBiomeJson: {
-  (filePath: string, value: unknown): Effect.Effect<string, DomainError, Path.Path>;
-  (value: unknown): (filePath: string) => Effect.Effect<string, DomainError, Path.Path>;
+  (
+    filePath: string,
+    value: unknown
+  ): Effect.Effect<string, DomainError, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    value: unknown
+  ): (
+    filePath: string
+  ) => Effect.Effect<string, DomainError, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(
   2,
   Effect.fn(function* (filePath: string, value: unknown) {
@@ -85,11 +94,14 @@ export const renderBiomeJson: {
     const result = yield* Effect.scoped(
       Effect.gen(function* () {
         const handle = yield* command;
-        return yield* Effect.all({
-          stdout: collectText(handle.stdout),
-          stderr: collectText(handle.stderr),
-          exitCode: handle.exitCode,
-        });
+        return yield* Effect.all(
+          {
+            stdout: collectText(handle.stdout),
+            stderr: collectText(handle.stderr),
+            exitCode: handle.exitCode,
+          },
+          { concurrency: "unbounded" }
+        );
       })
     ).pipe(Effect.mapError((cause) => DomainError.make({ message: `Failed to run Biome for "${filePath}".`, cause })));
     const stderr = Str.trim(result.stderr);
