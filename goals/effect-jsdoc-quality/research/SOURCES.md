@@ -88,13 +88,14 @@ any `{@link}`-resolution check; any described-`@see` convention.
 
 ## 5. Cross-links & provenance
 
-- This packet: `RESEARCH.md` (synthesis), `research/effect-doc-pipeline.md`,
-  `research/diff-effect-vs-beep.md`, `research/quality-rubric.md`,
-  `research/options.md`, `DECISIONS.md` (grill COMPLETE 2026-07-30 — twelve
-  decisions).
-- Exploration ↔ goal: graduated 2026-07-30 → `goals/effect-jsdoc-quality`
-  (manifest `links.goals`; the goal manifest's `provenance.exploration`
-  back-links here).
+- Grill COMPLETE (2026-07-30): twelve decisions recorded in
+  `explorations/effect-jsdoc-quality/DECISIONS.md`; this goal's `SPEC.md`
+  encodes them normatively. Research legs live in the exploration packet's
+  `research/` (RESEARCH.md synthesis, effect-doc-pipeline, diff, rubric,
+  options).
+- Exploration ↔ goal: graduated 2026-07-30 — exploration manifest
+  `links.goals` → `goals/effect-jsdoc-quality`; this manifest
+  `provenance.exploration` → `explorations/effect-jsdoc-quality`.
 - Sibling prior art: `goals/jsdoc-worker-eval`, `goals/repo-codegraph-jsdoc`,
   `goals/quality-gate-ratchets`; killed packet `effect-capability-kg` (ATLAS
   history — resume-as-fresh precedent).
