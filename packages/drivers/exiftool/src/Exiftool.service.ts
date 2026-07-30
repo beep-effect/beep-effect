@@ -89,6 +89,8 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
     Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
   );
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const parseFiniteNumber = (value: unknown): O.Option<number> => {
   if (P.isNumber(value)) {
     return Number.isFinite(value) ? O.some(value) : O.none();

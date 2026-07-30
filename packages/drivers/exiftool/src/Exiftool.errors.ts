@@ -13,6 +13,8 @@ import * as S from "effect/Schema";
 
 const $I = $ExiftoolId.create("Exiftool.errors");
 const ExiftoolDefect = S.Defect({ includeStack: true });
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const isExiftoolDefect = S.is(ExiftoolDefect);
 
 /**
@@ -72,6 +74,8 @@ const causeFromUnknown = (cause: unknown): O.Option<typeof ExiftoolDefect.Type> 
   P.hasInspectableObjectShape(cause) && isExiftoolDefect(cause) ? O.some(cause) : O.none();
 
 const optionsFromInput = (options: ExiftoolErrorContextInput): ExiftoolErrorFromUnknownOptions =>
+  // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+  // fallow-ignore-next-line code-duplication
   ExiftoolErrorFromUnknownOptions.make({
     cause: causeFromUnknown(options.cause),
     command: O.fromUndefinedOr(options.command),

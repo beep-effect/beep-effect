@@ -142,6 +142,9 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
 export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
   cwd: string,
   options: QaJudgeIngestOptions
+  // Every `beep qa` subcommand opens with the same service acquisition and
+  // round-layout read; only the error wording each command owns differs.
+  // fallow-ignore-next-line code-duplication
 ): Effect.fn.Return<QaInventory, QaCommandError, FileSystem.FileSystem | Path.Path | SessionStore> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

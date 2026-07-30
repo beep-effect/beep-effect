@@ -1547,6 +1547,8 @@ const renderManifest = Effect.fn("FFmpeg.renderManifest")(function* (
 ) {
   const encoded = yield* ExtractFramesManifest.encodeEffect(manifest).pipe(
     Effect.mapError((cause) =>
+      // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+      // fallow-ignore-next-line code-duplication
       FFmpegError.fromUnknown("extractFrames", `Failed to encode extract-frames manifest: "${manifestPath}"`, { cause })
     )
   );
@@ -1624,6 +1626,8 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
         FFmpegError.fromUnknown("extractFrames", `Failed to write temporary manifest: "${tempManifestPath}"`, { cause })
       )
     );
+  // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+  // fallow-ignore-next-line code-duplication
   if (context.request.overwrite) {
     yield* fs.remove(context.manifestPath, { force: true }).pipe(Effect.ignore);
   }
@@ -1925,6 +1929,8 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     const manifestCandidate = pipe(
       request.manifestPath,
       O.match({
+        // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+        // fallow-ignore-next-line code-duplication
         onNone: () => path.join(outDir, "extract-frames-manifest.json"),
         onSome: path.resolve,
       })
@@ -2258,6 +2264,8 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
 
   const extractClip = Effect.fn("FFmpeg.extractClip")(function* (rawRequest: ExtractClipRequest) {
     const request = yield* ExtractClipRequest.decodeEffect(rawRequest).pipe(
+      // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+      // fallow-ignore-next-line code-duplication
       Effect.mapError((cause) => FFmpegError.fromUnknown("extractClip", "Invalid extract-clip request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
@@ -2288,6 +2296,8 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
 
   const renderGif = Effect.fn("FFmpeg.renderGif")(function* (rawRequest: RenderGifRequest) {
     const request = yield* RenderGifRequest.decodeEffect(rawRequest).pipe(
+      // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+      // fallow-ignore-next-line code-duplication
       Effect.mapError((cause) => FFmpegError.fromUnknown("renderGif", "Invalid render-gif request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);

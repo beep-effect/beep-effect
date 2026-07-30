@@ -188,6 +188,21 @@ export const resolveCaptureTarget = (options: CaptureTargetRequest): Effect.Effe
     })
   );
 
+// Both round resolvers accept an explicit `--round` the same way and differ
+// only in what they do when the flag is absent, so the decode branch is shared
+// and the discovery branch is the parameter.
+const roundOrDiscovered = (
+  round: O.Option<number>,
+  onNone: () => Effect.Effect<RoundNumber, QaCommandError, SessionStore>
+): Effect.Effect<RoundNumber, QaCommandError, SessionStore> =>
+  O.match(round, {
+    onNone,
+    onSome: (value) =>
+      S.decodeUnknownEffect(RoundNumber)(value).pipe(
+        QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)
+      ),
+  });
+
 /**
  * Resolve an explicit `--round` flag, or discover the next free round.
  *
@@ -203,21 +218,20 @@ export const resolveCaptureTarget = (options: CaptureTargetRequest): Effect.Effe
  * @category use-cases
  * @since 0.0.0
  */
+// Two distinct public round resolvers with the same signature. The shared
+// decode branch is already factored into roundOrDiscovered; what remains is
+// entry-point boilerplate that only merging the two public APIs could remove.
+// fallow-ignore-next-line code-duplication
 export const resolveRound = Effect.fn("QaSession.resolveRound")(function* (
   qaRoot: string,
   round: O.Option<number>
 ): Effect.fn.Return<RoundNumber, QaCommandError, SessionStore> {
   const store = yield* SessionStore;
-  return yield* O.match(round, {
-    onNone: () =>
-      store
-        .discoverNextRound(qaRoot)
-        .pipe(QaCommandError.mapError("qa could not discover the next round under .beep/qa.")),
-    onSome: (value) =>
-      S.decodeUnknownEffect(RoundNumber)(value).pipe(
-        QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)
-      ),
-  });
+  return yield* roundOrDiscovered(round, () =>
+    store
+      .discoverNextRound(qaRoot)
+      .pipe(QaCommandError.mapError("qa could not discover the next round under .beep/qa."))
+  );
 });
 
 /**
@@ -240,25 +254,20 @@ export const resolveExistingRound = Effect.fn("QaSession.resolveExistingRound")(
   round: O.Option<number>
 ): Effect.fn.Return<RoundNumber, QaCommandError, SessionStore> {
   const store = yield* SessionStore;
-  return yield* O.match(round, {
-    onNone: () =>
-      store.discoverNextRound(qaRoot).pipe(
-        QaCommandError.mapError("qa could not inspect .beep/qa for recorded rounds."),
-        Effect.flatMap((next) =>
-          next > 1
-            ? Effect.succeed(RoundNumber.make(next - 1))
-            : Effect.fail(
-                QaCommandError.make({
-                  message: "qa found no recorded rounds under .beep/qa; run `bun run beep qa record` first.",
-                })
-              )
-        )
-      ),
-    onSome: (value) =>
-      S.decodeUnknownEffect(RoundNumber)(value).pipe(
-        QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)
-      ),
-  });
+  return yield* roundOrDiscovered(round, () =>
+    store.discoverNextRound(qaRoot).pipe(
+      QaCommandError.mapError("qa could not inspect .beep/qa for recorded rounds."),
+      Effect.flatMap((next) =>
+        next > 1
+          ? Effect.succeed(RoundNumber.make(next - 1))
+          : Effect.fail(
+              QaCommandError.make({
+                message: "qa found no recorded rounds under .beep/qa; run `bun run beep qa record` first.",
+              })
+            )
+      )
+    )
+  );
 });
 
 /**

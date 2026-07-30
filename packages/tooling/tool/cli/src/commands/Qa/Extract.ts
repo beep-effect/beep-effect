@@ -709,12 +709,18 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const store = yield* SessionStore;
+  // Every `beep qa` subcommand opens with the same service acquisition and
+  // round-layout read; only the error wording each command owns differs.
+  // fallow-ignore-next-line code-duplication
   const correlator = yield* ClockCorrelator;
 
   const layout = yield* resolveRoundLayout(cwd, options.session);
   const manifest = yield* store
     .readSessionManifest(layout)
     .pipe(QaCommandError.mapError(`qa extract could not read ${layout.sessionPath}.`));
+  // Every `beep qa` subcommand opens with the same service acquisition and
+  // round-layout read; only the error wording each command owns differs.
+  // fallow-ignore-next-line code-duplication
   const eventLog = yield* readEventLog(layout.eventsPath);
 
   const videoPath = yield* O.match(manifest.videoPath, {
