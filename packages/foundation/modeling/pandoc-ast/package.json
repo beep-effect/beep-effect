@@ -1,7 +1,7 @@
 {
   "name": "@beep/pandoc-ast",
   "version": "0.0.0",
-  "description": "Schema-first Pandoc JSON AST mirror and compatibility adapters.",
+  "description": "Schema-first strict and lossless Pandoc JSON interchange with Markdown compatibility",
   "license": "MIT",
   "private": true,
   "type": "module",

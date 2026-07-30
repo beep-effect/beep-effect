@@ -202,10 +202,11 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
  * @example
  * ```ts
  * import { UrlPolicySpec } from "@beep/md/Md.escape"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const policy = S.decodeUnknownSync(UrlPolicySpec)({ _tag: "AllowList", schemes: [" HTTPS: "] })
- * console.log(policy._tag === "AllowList" ? policy.schemes : []) // ["https:"]
+ * const policy = S.decodeUnknownResult(UrlPolicySpec)({ _tag: "AllowList", schemes: [" HTTPS: "] })
+ * console.log(Result.isSuccess(policy)) // true
  * ```
  *
  * @category models
@@ -335,10 +336,11 @@ export const UserContentImageUrlPolicySpec = AllowListUrlPolicySpec.make({
  * @example
  * ```ts
  * import { UrlPolicyInput } from "@beep/md/Md.escape"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const policy = S.decodeUnknownSync(UrlPolicyInput)({ _tag: "Compatibility" })
- * console.log("_tag" in policy) // true
+ * const policy = S.decodeUnknownResult(UrlPolicyInput)({ _tag: "Compatibility" })
+ * console.log(Result.isSuccess(policy)) // true
  * ```
  *
  * @category models

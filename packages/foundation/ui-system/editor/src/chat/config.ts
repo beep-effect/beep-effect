@@ -214,12 +214,13 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
  * @example
  * ```ts
  * import { SlashItem, SlashItems } from "@beep/editor/chat/config"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const items = S.decodeUnknownSync(SlashItems)([
+ * const items = S.decodeUnknownResult(SlashItems)([
  *   SlashItem.make({ key: "paragraph", label: "Paragraph", onSelect: () => {} }),
  * ])
- * console.log(items.length) // 1
+ * console.log(Result.isSuccess(items)) // true
  * ```
  *
  * @category configuration
@@ -309,10 +310,11 @@ const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
  * @example
  * ```ts
  * import { MentionOptions } from "@beep/editor/chat/config"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const options = S.decodeUnknownSync(MentionOptions)([{ id: "ada", label: "Ada" }])
- * console.log(options[0]?.label) // "Ada"
+ * const options = S.decodeUnknownResult(MentionOptions)([{ id: "ada", label: "Ada" }])
+ * console.log(Result.isSuccess(options)) // true
  * ```
  *
  * @category configuration

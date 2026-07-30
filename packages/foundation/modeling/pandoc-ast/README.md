@@ -64,13 +64,11 @@ import {
 const input =
   `{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[{"t":"FutureBlock","c":{"v":1}}],"future":true}`
 
-const output = Effect.runSync(
-  decodePandocJsonStringLossless(input).pipe(
-    Effect.flatMap(encodePandocJsonStringLossless)
-  )
-)
+const document = Effect.runSync(decodePandocJsonStringLossless(input))
+const output = Effect.runSync(encodePandocJsonStringLossless(document))
 
-console.log(JSON.parse(output).future) // true
+console.log(document.wire.future) // true
+console.log(output.includes('"future":true')) // true
 ```
 
 ## Model invariants

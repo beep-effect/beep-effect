@@ -329,10 +329,10 @@ const renderHtmlTableRow =
       joinEmpty
     )}</tr>`;
 
-const renderHtmlTable = (block: Table): string => {
+const renderHtmlTableRows = (block: Table, renderRow: (tag: "td" | "th") => (row: TableRow) => string): string => {
   if (block.headerRow) {
-    const header = pipe(block.children, A.head, O.map(renderHtmlTableRow("th", block.align)));
-    const body = pipe(block.children, A.drop(1), A.map(renderHtmlTableRow("td", block.align)), joinEmpty);
+    const header = pipe(block.children, A.head, O.map(renderRow("th")));
+    const body = pipe(block.children, A.drop(1), A.map(renderRow("td")), joinEmpty);
 
     return `<table>${pipe(
       header,
@@ -341,8 +341,11 @@ const renderHtmlTable = (block: Table): string => {
     )}<tbody>${body}</tbody></table>`;
   }
 
-  return `<table><tbody>${pipe(block.children, A.map(renderHtmlTableRow("td", block.align)), joinEmpty)}</tbody></table>`;
+  return `<table><tbody>${pipe(block.children, A.map(renderRow("td")), joinEmpty)}</tbody></table>`;
 };
+
+const renderHtmlTable = (block: Table): string =>
+  renderHtmlTableRows(block, (tag) => renderHtmlTableRow(tag, block.align));
 
 const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
 const youtubeEmbedUrl = (videoId: string): string => `https://www.youtube-nocookie.com/embed/${videoId}`;
@@ -1086,18 +1089,7 @@ const renderHtmlTableWithPolicy = (policy: UrlPolicySpec, block: Table): string 
         joinEmpty
       )}</tr>`;
 
-  if (block.headerRow) {
-    const header = pipe(block.children, A.head, O.map(renderRow("th")));
-    const body = pipe(block.children, A.drop(1), A.map(renderRow("td")), joinEmpty);
-
-    return `<table>${pipe(
-      header,
-      O.map((row) => `<thead>${row}</thead>`),
-      O.getOrElse(thunkEmptyStr)
-    )}<tbody>${body}</tbody></table>`;
-  }
-
-  return `<table><tbody>${pipe(block.children, A.map(renderRow("td")), joinEmpty)}</tbody></table>`;
+  return renderHtmlTableRows(block, renderRow);
 };
 
 const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>

@@ -2651,30 +2651,6 @@ export declare namespace SerializedEditorState {
 }
 
 /**
- * Semantic editor-state schema with the supported v1 Lexical child grammar.
- *
- * @remarks
- * This is a readability alias for {@link SerializedEditorState}; the
- * established editor-state schema itself enforces strict topology.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { StrictSerializedEditorState } from "@beep/lexical-schema/Lexical.model"
- *
- * const program = S.decodeUnknownEffect(StrictSerializedEditorState)({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
- * })
- * Effect.runPromise(program).then((state) => console.log(state.root.type))
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const StrictSerializedEditorState = SerializedEditorState;
-
-/**
  * JSON-only wire node that retains unknown node types, versions, and fields.
  *
  * @remarks
@@ -2957,9 +2933,9 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
   }
 }
 
-const decodeStrictEditorStateResult = S.decodeUnknownResult(StrictSerializedEditorState);
+const decodeStrictEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
 const decodeLosslessEditorStateResult = S.decodeUnknownResult(SerializedEditorStateWire);
-const inspectStrictEditorState = S.decodeUnknownResult(StrictSerializedEditorState);
+const inspectStrictEditorState = S.decodeUnknownResult(SerializedEditorState);
 const strictEditorStateDecodeError = LexicalDecodeError.new("Lexical editor state failed strict semantic decoding.");
 const losslessEditorStateDecodeError = LexicalDecodeError.new(
   "Lexical editor state failed lossless JSON-wire decoding."
@@ -3100,26 +3076,6 @@ export const analyzeEditorStateCompatibility = (
   input: unknown
 ): Effect.Effect<LexicalCompatibilityResult, LexicalDecodeError> =>
   Effect.fromResult(analyzeEditorStateCompatibilityResult(input));
-
-/**
- * Backward-compatible alias for {@link analyzeEditorStateCompatibility}.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import { decodeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
- *
- * const program = decodeEditorStateCompatibility({
- *   root: { children: [], type: "root", version: 1 },
- * })
- * Effect.runPromise(program).then((result) => console.log(result.isCompatible))
- * ```
- *
- * @deprecated Prefer {@link analyzeEditorStateCompatibility}.
- * @category decoding
- * @since 0.0.0
- */
-export const decodeEditorStateCompatibility = analyzeEditorStateCompatibility;
 
 /**
  * The same envelope, but encoding directly to/from a JSON string (for
