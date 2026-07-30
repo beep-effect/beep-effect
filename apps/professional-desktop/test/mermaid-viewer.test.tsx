@@ -22,7 +22,11 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
   afterEach(cleanup);
 
   const expectInertDiagram = (container: HTMLElement): void => {
-    expect(container.querySelector("script")).toBeNull();
+    expect(
+      container.querySelector(
+        "a, animate, animateMotion, animateTransform, audio, base, button, canvas, discard, embed, feImage, foreignObject, form, iframe, image, img, input, link, meta, object, script, set, source, video"
+      )
+    ).toBeNull();
     expect(container.querySelector("[onerror], [onload], [onclick], [onfocus]")).toBeNull();
     expect(
       container.querySelector(
