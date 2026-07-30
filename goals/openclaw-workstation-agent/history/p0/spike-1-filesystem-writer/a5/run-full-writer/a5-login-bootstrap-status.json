@@ -1,8 +1,6 @@
 {
   "ts": 1785032357035,
-  "channelOrder": [
-    "telegram"
-  ],
+  "channelOrder": ["telegram"],
   "channelLabels": {
     "telegram": "Telegram"
   },
