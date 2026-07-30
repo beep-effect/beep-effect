@@ -24,7 +24,7 @@ import {
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { A, O, thunkFalse, thunkTrue } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -77,16 +77,16 @@ const OptionalOntologyChangeActor = S.optionalKey(OntologyChangeActor);
 
 const isDefaultGraph = (graph: GraphTerm): boolean =>
   GraphTerm.match(graph, {
-    DefaultGraph: thunkTrue,
-    NamedNode: thunkFalse,
-    BlankNode: thunkFalse,
+    DefaultGraph: () => true,
+    NamedNode: () => false,
+    BlankNode: () => false,
   });
 
 const graphIsCanonicalPartition = (graph: GraphTerm, partition: Exclude<GraphPartition, "asserted">): boolean =>
   GraphTerm.match(graph, {
-    DefaultGraph: thunkFalse,
+    DefaultGraph: () => false,
     NamedNode: (node) => node.value === graphPartitionIri(partition),
-    BlankNode: thunkFalse,
+    BlankNode: () => false,
   });
 
 const graphMatchesPartition = (change: PartitionedQuad): boolean =>

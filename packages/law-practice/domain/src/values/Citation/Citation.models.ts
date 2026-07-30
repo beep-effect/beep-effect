@@ -14,7 +14,8 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { O, Str, thunkEmptyStr } from "@beep/utils";
+import { A, O, Str, thunkEmptyStr } from "@beep/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
 import { AnnotationCitation } from "../AnnotationCitation/index.ts";
@@ -52,8 +53,14 @@ import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
 import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
 import { TreatiseCitation } from "../TreatiseCitation/index.ts";
 import { TreatyCitation } from "../TreatyCitation/index.ts";
+import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
+
+const parentheticalCitationsToArbitrary: () => (
+  fc: typeof FastCheck
+) => FastCheck.Arbitrary<ReadonlyArray<Citation.Type>> = () => (fc) =>
+  fc.array(S.toArbitrary(DocketCitation), { maxLength: 2 });
 
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).
@@ -66,6 +73,9 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
  */
 const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Citation.Encoded> => Citation)).pipe(
   SchemaUtils.withEmptyArrayDefaults<Citation.Type>(),
+  S.annotate({
+    toArbitrary: parentheticalCitationsToArbitrary,
+  }),
   S.annotateKey({
     description:
       "Child citations nested within this explanatory parenthetical (#851); each carries its own CitationId, may be any citation type, and may itself carry parentheticals (recursive).",
@@ -515,8 +525,8 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
    * Reconstruct a canonical Bluebook-style citation string from structured fields.
    *
    * @remarks
-   * Works across all 11 citation types via the discriminated union.
-   * Best-effort: uses whatever fields are available on the citation object.
+   * Best-effort formatting for a full case citation using the available party
+   * name, reporter, page, pincite, court, and year fields.
    *
    * **Example**
    * ```ts
@@ -539,27 +549,30 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
    *   reporter: "U.S.",
    * })
    *
-   * const bluebook = FullCaseCitation.toBlueBook(citation) // TODO
+   * const bluebook = FullCaseCitation.toBlueBook(citation)
    * ```
    */
   static readonly toBlueBook = (citation: FullCaseCitation): string => {
     const reporter = citation.normalizedReporter.pipe(O.getOrElse(() => citation.reporter));
-    let pageStr: string;
-    if (citation.hasBlankPage) {
-      pageStr = " ___";
-    } else if (O.isSome(citation.page)) {
-      pageStr = ` ${citation.page}`;
-    } else {
-      pageStr = Str.empty;
-    }
-
-    const core = `${citation.volume} ${reporter}${pageStr}`;
+    const page = citation.hasBlankPage
+      ? " ___"
+      : citation.page.pipe(
+          O.map((page) => ` ${page}`),
+          O.getOrElse(thunkEmptyStr)
+        );
+    const core = `${citation.volume} ${reporter}${page}`;
     const pincite = citation.pincite.pipe(
       O.map((pincite) => `, ${pincite}`),
       O.getOrElse(thunkEmptyStr)
     );
-    const year = citation.year.pipe(
-      O.map((year) => ` (${year})`),
+    const courtAndYear = pipe(
+      A.getSomes([
+        citation.normalizedCourt.pipe(O.orElse(() => citation.court)),
+        citation.year.pipe(O.map((year) => `${year}`)),
+      ]),
+      A.join(" "),
+      O.liftPredicate(Str.isNonEmpty),
+      O.map((parenthetical) => ` (${parenthetical})`),
       O.getOrElse(thunkEmptyStr)
     );
 
@@ -568,7 +581,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
       O.getOrElse(thunkEmptyStr)
     );
 
-    return `${caseName}${core}${pincite}${year}`;
+    return `${caseName}${core}${pincite}${courtAndYear}`;
   };
 }
 

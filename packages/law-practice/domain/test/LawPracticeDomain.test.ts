@@ -564,6 +564,33 @@ describe("@beep/law-practice-domain", () => {
     expect(locator.contextLength).toBe(64);
   });
 
+  it("formats full case citation option values without leaking Option representations", () => {
+    const citation = FullCaseCitation.make({
+      ...citationBaseInput("Smith v. Jones, 410 U.S. 113, 120 (2d Cir. 2020)"),
+      volume: NonNegativeInt.make(410),
+      reporter: "U.S.",
+      page: O.some(NonNegativeInt.make(113)),
+      pincite: O.some(NonNegativeInt.make(120)),
+      court: O.some("Second Circuit"),
+      normalizedCourt: O.some("2d Cir."),
+      year: O.some(NonNegativeInt.make(2020)),
+      caseName: O.some("Smith v. Jones"),
+    });
+
+    expect(FullCaseCitation.toBlueBook(citation)).toBe("Smith v. Jones, 410 U.S. 113, 120 (2d Cir. 2020)");
+
+    const rawCourtCitation = FullCaseCitation.make({
+      ...citationBaseInput("410 U.S. 113 (D. Mass. 2021)"),
+      volume: NonNegativeInt.make(410),
+      reporter: "U.S.",
+      page: O.some(NonNegativeInt.make(113)),
+      court: O.some("D. Mass."),
+      year: O.some(NonNegativeInt.make(2021)),
+    });
+
+    expect(FullCaseCitation.toBlueBook(rawCourtCitation)).toBe("410 U.S. 113 (D. Mass. 2021)");
+  });
+
   it("round-trips leaf citation value schemas through encoded form", () => {
     for (const schema of [StatuteCitation, RegulationCitation, DocketCitation]) {
       assertSchemaEncodedRoundTrips(schema, 10);

@@ -9,8 +9,13 @@ import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
+import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/PinciteInfo/PinciteInfo.model");
+
+const additionalPincitesToArbitrary: () => (
+  fc: typeof FastCheck
+) => FastCheck.Arbitrary<ReadonlyArray<PinciteInfo.Type>> = () => (fc) => fc.constant([]);
 
 /**
  * Companion namespace for `PinciteInfo`.
@@ -97,6 +102,9 @@ export declare namespace PinciteInfo {
  */
 const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, PinciteInfo.Encoded> => PinciteInfo)).pipe(
   SchemaUtils.withEmptyArrayDefaults<PinciteInfo.Type>(),
+  S.annotate({
+    toArbitrary: additionalPincitesToArbitrary,
+  }),
   S.annotateKey({
     description:
       "Additional discrete pincites following the primary one (#247). Each entry is a full PinciteInfo so ranges/footnotes/star-pages inside the comma chain are preserved.",
