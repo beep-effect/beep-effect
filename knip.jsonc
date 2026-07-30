@@ -82,7 +82,7 @@
   // babel-plugin-annotate-pure-calls is invoked via the `babel --plugins annotate-pure-calls`
   // CLI flag in every package's build script, which knip can't trace.
   // tsgo: a policy-pack test references the node_modules/.bin/tsgo binary via a path string,
-  // which knip misreads as a dependency import (the binary comes from @typescript/native-preview).
+  // which knip misreads as a dependency import (the binary comes from @beep/tsgo-shim).
   // oxlint (devDependency on @beep/lint-rules): test/oxlint-harness.ts spawns it via
   // `Bun.spawnSync(["bunx", "oxlint", ...])`, a subprocess call knip can't trace as usage.
   // babel/* + babel-plugin-transform-next-use-client: build-toolchain babel plugins driven by the

@@ -12,6 +12,7 @@ import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
+const tscBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
 const tsgoBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -97,26 +98,27 @@ const bootstrapTsgoProject = Effect.fn(function* (projectDir: string) {
   );
 });
 
-const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
-  const path = yield* Path.Path;
-  const command = ChildProcess.make(
-    process.execPath,
-    [tsgoBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
-    {
-      cwd: projectDir,
-      stdout: "pipe",
-      stderr: "pipe",
-    }
-  );
-
+const runCommand = Effect.fn("EffectTsgoEffectFnPolicy.runCommand")(function* (
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string
+) {
+  const child = ChildProcess.make(command, args, {
+    cwd,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   return yield* Effect.scoped(
     Effect.gen(function* () {
-      const handle = yield* command;
-      const result = yield* Effect.all({
-        stdout: collectText(handle.stdout),
-        stderr: collectText(handle.stderr),
-        exitCode: handle.exitCode,
-      });
+      const handle = yield* child;
+      const result = yield* Effect.all(
+        {
+          stdout: collectText(handle.stdout),
+          stderr: collectText(handle.stderr),
+          exitCode: handle.exitCode,
+        },
+        { concurrency: 3 }
+      );
 
       return {
         stdout: Str.trim(result.stdout),
@@ -125,6 +127,46 @@ const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
       };
     })
   );
+});
+
+const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
+  const path = yield* Path.Path;
+  return yield* runCommand(
+    process.execPath,
+    [tsgoBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
+    projectDir
+  );
+});
+
+describe("TypeScript compiler routing", () => {
+  it("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const [tsc, tsgo, typescriptApi] = yield* Effect.all(
+          [
+            runCommand(process.execPath, [tscBinPath, "--version"], repoRoot),
+            runCommand(process.execPath, [tsgoBinPath, "--version"], repoRoot),
+            runCommand(
+              process.execPath,
+              [
+                "--input-type=module",
+                "--eval",
+                'import typescript from "typescript"; process.stdout.write(typescript.version)',
+              ],
+              repoRoot
+            ),
+          ],
+          { concurrency: 1 }
+        );
+
+        expect(tsc.exitCode).toBe(0);
+        expect(tsgo.exitCode).toBe(0);
+        expect(typescriptApi.exitCode).toBe(0);
+        expect(tsc.stdout).toBe(tsgo.stdout);
+        expect(tsc.stdout).toMatch(/^Version 7\..*\+effect-tsgo\./u);
+        expect(typescriptApi.stdout).toMatch(/^6\./u);
+      }).pipe(provideScopedLayer(TestLayer))
+    ));
 });
 
 describe("Effect tsgo effectFn policy", () => {
