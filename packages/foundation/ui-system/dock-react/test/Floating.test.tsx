@@ -154,6 +154,24 @@ describe("floating dock adapter", { concurrent: false }, () => {
     })
   );
 
+  it.effect(
+    "clears a floating header move on pointercancel without committing",
+    Effect.fnUntraced(function* () {
+      const graph = yield* mount();
+      const header = query(`[data-floating-header='${floating2Id}']`);
+      const pane = query(`[data-floating-pane='${floating2Id}']`);
+      const revision = graph.registry.get(graph.workspaceAtom).revision;
+      pointer(header, "pointerDown", 340, 90);
+      pointer(header, "pointerMove", 390, 120);
+      expect([pane.style.left, pane.style.top]).toEqual(["370px", "110px"]);
+      fireEvent.pointerCancel(header, { pointerId: 11 });
+      yield* graph.awaitIdle;
+      expect(graph.registry.get(graph.workspaceAtom).revision).toBe(revision);
+      expect(query(`[data-floating-pane='${floating2Id}']`).style.left).toBe("320px");
+      graph.dispose();
+    })
+  );
+
   it.effect("resizes a floating member with a 32px minimum extent", () =>
     Effect.gen(function* () {
       const graph = yield* mount();

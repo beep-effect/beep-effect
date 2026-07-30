@@ -62,6 +62,19 @@ export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPositi
 export const pressStartsOnButton = (event: PointerEvent): boolean =>
   event.target instanceof Element && P.isNotNull(event.target.closest("button"));
 
+// A press only promotes to a drag once the pointer travels past this radius
+// (dockview's PointerDragSource threshold): taps and plain clicks never show
+// drag chrome (ghost, drop indicator) or compile a drop.
+const DRAG_THRESHOLD = 5;
+export const exceedsDragThreshold: Dual2<PointerPosition, PointerPosition, boolean> = dual(
+  2,
+  (origin: PointerPosition, pointer: PointerPosition): boolean => {
+    const dx = pointer.left - origin.left;
+    const dy = pointer.top - origin.top;
+    return dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD;
+  }
+);
+
 const contains = (box: DockBox, point: PointerPosition): boolean =>
   point.left >= box.left &&
   point.left <= box.left + box.width &&

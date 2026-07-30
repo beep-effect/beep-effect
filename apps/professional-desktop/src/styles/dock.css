@@ -88,6 +88,17 @@
   box-sizing: border-box;
 }
 
+/* Surfaces were authored for the workbench's `flex min-h-0 flex-col` parents
+   (weighted regions like the graph's `flex-[3]` and `h-10 shrink-0` headers).
+   The dock's portal target must recreate that context or those regions
+   collapse to zero height and, e.g., the graph canvas never mounts. Scoped to
+   :not([hidden]) so the hidden attribute's display:none keeps suppressing
+   inactive always-rendered panels. */
+.desktop-dock [data-panel-target]:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+}
+
 .desktop-dock [data-sash-id] {
   border-radius: 3px;
   background: color-mix(in oklch, var(--muted-foreground) 22%, transparent);
@@ -100,6 +111,23 @@
   background: color-mix(in oklch, var(--primary) 55%, transparent);
   background-clip: border-box;
   padding: 0;
+}
+
+/* Follow-cursor after-image for a tab being dragged: a floating copy of the
+   tab chip so the carried panel stays visible mid-drag (the adapter emits
+   position/transform; visuals live here). */
+.desktop-dock [data-drag-ghost] {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
+  border-radius: calc(var(--radius, 8px) - 3px);
+  box-shadow: 0 6px 18px color-mix(in oklch, var(--foreground) 30%, transparent);
 }
 
 .desktop-dock [data-drop-indicator] {
