@@ -2,7 +2,7 @@
  * Desktop sidecar transport probe schema.
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
@@ -22,7 +22,7 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
  * console.log(transport.ipc) // false
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(

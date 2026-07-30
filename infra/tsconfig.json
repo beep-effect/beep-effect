@@ -13,6 +13,9 @@
   },
   "references": [
     {
+      "path": "../packages/drivers/openclaw/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/modeling/identity/tsconfig.json"
     },
     {

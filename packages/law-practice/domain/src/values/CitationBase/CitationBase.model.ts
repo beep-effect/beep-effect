@@ -87,8 +87,7 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
       description: "Number of regex patterns checked before match.",
     }),
     warnings: S.Array(CitationWarning).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<CitationWarning>(),
       S.annotateKey({
         description: "Warnings for malformed or ambiguous regions.",
       })

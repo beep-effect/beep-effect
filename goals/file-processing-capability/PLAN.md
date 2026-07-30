@@ -117,7 +117,11 @@ Stop Conditions:
 
 ## P2: Tika Driver
 
-Status: pending
+Status: complete (2026-07-26) — Tika Server HTTP engine (`Tika.server.ts`) with
+typed config (`BEEP_TIKA_*`), shared response/error-translation role files,
+`output-budget` reason, stubbed-HTTP proof across all 12 declared families, and
+an opt-in `BEEP_TEST_TIKA_URL` live lane. Live doc/docx binary calibration is
+deferred to P5 per the P2 design contract.
 
 Goal: Complete `@beep/tika` as the broad extraction driver for corpus-core text
 and metadata after the P1 vertical proof exists.
@@ -149,7 +153,16 @@ Required Checks:
 
 ## P3: libpff Driver
 
-Status: pending
+Status: complete (2026-07-26) — the pffexport engine gained `-V` version
+capture, mode-derived target-tree walking (`.export`/`.orphans`/`.recovered`),
+deterministic per-item `Message.eml` assembly (verbatim InternetHeaders with
+MIME-structural stripping, synthesized Outlook headers otherwise),
+`<artifact-id>.messages.jsonl` records (`PffexportMessageRecord`) preserving
+folder/message/body/attachment relationships, an `existingExportPolicy`
+output-directory policy, a shared `Libpff.error-translation.ts` role file, and
+stub-based deterministic coverage plus an opt-in `BEEP_TEST_LIBPFF_PST` live
+lane. Design contract and adversarial-review resolutions:
+`research/p3-libpff-design.md`.
 
 Goal: Implement `@beep/libpff` as the PST export driver.
 
@@ -167,11 +180,11 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] libpff driver reports engine name and version.
-- [ ] PST export writes child EML artifacts and JSONL metadata records.
-- [ ] Exported children are represented through `@beep/file-processing`
+- [x] libpff driver reports engine name and version.
+- [x] PST export writes child EML artifacts and JSONL metadata records.
+- [x] Exported children are represented through `@beep/file-processing`
   artifact schemas.
-- [ ] Driver failures do not escape the operation contract as process errors.
+- [x] Driver failures do not escape the operation contract as process errors.
 
 Required Checks:
 
@@ -181,7 +194,15 @@ Required Checks:
 
 ## P4: Repo CLI Proof
 
-Status: pending
+Status: complete (2026-07-27) — `beep files process` now composes the real
+driver engines (Tika App via `--tika-jar`/`--java`, Tika Server via
+`--tika-url` or `BEEP_TIKA_*` env, pffexport via `--pffexport`) with lazy
+memoized per-family construction hoisted ahead of dispatch, content-digest
+dedupe of duplicate inputs, output-root-rebased child references, SPEC 0/1/2
+exit codes through `Runtime.errorExitCode`, memory-light per-representative
+source materialization, and seven hermetic stub-engine test lanes. Design
+contract with two adversarial-review rounds:
+`research/p4-files-process-design.md`.
 
 Goal: Add `beep files process` under the existing repo CLI files command group
 and prove manifest-tree output.
@@ -202,10 +223,10 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] `beep files process` runs against generated fixtures.
-- [ ] CLI output validates through `@beep/file-processing` schemas.
-- [ ] CLI records successful, skipped, and failed records deterministically.
-- [ ] CLI tests prove failure translation and output tree shape.
+- [x] `beep files process` runs against generated fixtures.
+- [x] CLI output validates through `@beep/file-processing` schemas.
+- [x] CLI records successful, skipped, and failed records deterministically.
+- [x] CLI tests prove failure translation and output tree shape.
 
 Required Checks:
 
@@ -215,18 +236,23 @@ Required Checks:
 
 ## P5: Quality And Handoff
 
-Status: pending
+Status: complete (2026-07-27) — live doc/docx Tika calibration landed in the
+opt-in `BEEP_TEST_TIKA_URL` lane (runtime-generated OLE2 `.doc` and OOXML
+`.docx` fixtures; 11/11 live tests against Apache Tika 3.3.1), the real-PST
+end-to-end `beep files process` proof covered every V1 family, evidence and
+handoff notes landed under `history/outputs/`, and the packet flipped to
+completed-retained with its closeout reflection in the same PR.
 
 Goal: Close the capability with verification evidence and implementation notes
 that future product packets can consume.
 
 Exit Criteria:
 
-- [ ] Package-level `check`, `test`, `lint`, and docgen pass for all new
+- [x] Package-level `check`, `test`, `lint`, and docgen pass for all new
   packages.
-- [ ] Relevant root quality lane passes or any unrelated failure is classified.
-- [ ] Generated fixtures and manifest outputs are documented.
-- [ ] `goals/file-processing-capability/history/outputs/` records final
+- [x] Relevant root quality lane passes or any unrelated failure is classified.
+- [x] Generated fixtures and manifest outputs are documented.
+- [x] `goals/file-processing-capability/history/outputs/` records final
   implementation notes and verification evidence.
 
 Required Checks:

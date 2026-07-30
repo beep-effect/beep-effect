@@ -4,6 +4,16 @@ import {
   OfficeActionReviewError,
   OfficeActionReviewInput,
 } from "@beep/law-practice-use-cases/OfficeActionReview";
+import {
+  PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCandidateClaimsResult,
+  PracticeKgCandidateClaimToolRow,
+  PracticeKgDocumentToolRow,
+  PracticeKgEmailToolRow,
+  PracticeKgFamilyToolRow,
+  PracticeKgGraphToolRow,
+  PracticeKgToolkit,
+} from "@beep/law-practice-use-cases/server";
 import { EntityInput } from "@beep/law-practice-use-cases/test";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -34,8 +44,25 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     assertSchemaArbitraryDecodesToSelf(IrToLawExtractionErrorReason, { numRuns: 25 });
     assertSchemaArbitraryDecodesToSelf(OfficeActionReviewInput, { numRuns: 10 });
     assertSchemaArbitraryDecodesToSelf(EntityInput, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgCandidateClaimToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgDocumentToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgEmailToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgFamilyToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgGraphToolRow, { numRuns: 10 });
     assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, { numRuns: 10 });
+  });
+
+  it("composes the nine-tool practice KG surface with a typed claims not-loaded branch", () => {
+    const notLoaded = PracticeKgCandidateClaimsNotLoadedResult.make({
+      available: false,
+      bundle_version: "fixture-1",
+      epistemic_status: "candidate-unreviewed",
+      reason: "claims batch not yet loaded",
+    });
+
+    expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(9);
+    expect(PracticeKgCandidateClaimsResult.is(notLoaded)).toBe(true);
   });
 
   it("preserves the IrToLawExtractionError encoded wire shape", () => {

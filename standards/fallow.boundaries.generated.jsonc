@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/epistemic-config",
+        "patterns": [
+          "packages/epistemic/config/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-domain",
         "patterns": [
           "packages/epistemic/domain/src/**"
@@ -351,6 +357,12 @@
         "name": "@beep/law-practice-server",
         "patterns": [
           "packages/law-practice/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/law-practice-tables",
+        "patterns": [
+          "packages/law-practice/tables/src/**"
         ]
       },
       {
@@ -492,6 +504,12 @@
         ]
       },
       {
+        "name": "@beep/openclaw",
+        "patterns": [
+          "packages/drivers/openclaw/src/**"
+        ]
+      },
+      {
         "name": "@beep/oxigraph",
         "patterns": [
           "packages/drivers/oxigraph/src/**"
@@ -525,6 +543,12 @@
         "name": "@beep/postgres",
         "patterns": [
           "packages/drivers/postgres/src/**"
+        ]
+      },
+      {
+        "name": "@beep/practice-kg-mcp",
+        "patterns": [
+          "apps/practice-kg-mcp/src/**"
         ]
       },
       {
@@ -933,12 +957,14 @@
         "allow": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1438,6 +1464,19 @@
         ]
       },
       {
+        "from": "@beep/epistemic-config",
+        "allow": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ]
+      },
+      {
         "from": "@beep/epistemic-domain",
         "allow": [
           "@beep/epistemic-domain",
@@ -1445,7 +1484,8 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
@@ -1453,24 +1493,43 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
         "from": "@beep/epistemic-server",
         "allow": [
+          "@beep/api-transport",
+          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
+          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1494,14 +1553,18 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -1696,6 +1759,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
           "@beep/test-utils",
@@ -1704,6 +1768,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
           "@beep/test-utils",
@@ -1751,26 +1816,59 @@
       {
         "from": "@beep/law-practice-server",
         "allow": [
+          "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
+          "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
+          "@beep/libpff",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/schema",
           "@beep/test-utils",
-          "@beep/tika"
+          "@beep/tika",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
+          "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
+          "@beep/libpff",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/schema",
           "@beep/test-utils",
-          "@beep/tika"
+          "@beep/tika",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/law-practice-tables",
+        "allow": [
+          "@beep/law-practice-domain",
+          "@beep/law-practice-tables",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/law-practice-domain",
+          "@beep/law-practice-tables",
+          "@beep/schema"
         ]
       },
       {
@@ -1783,6 +1881,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -1795,6 +1894,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -1826,14 +1926,16 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2089,6 +2191,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2100,6 +2203,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2139,6 +2243,7 @@
       {
         "from": "@beep/ontology-server",
         "allow": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
@@ -2152,6 +2257,7 @@
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
@@ -2168,8 +2274,6 @@
       {
         "from": "@beep/ontology-ui",
         "allow": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",
@@ -2179,8 +2283,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",
@@ -2227,6 +2329,23 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai-compat",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/openclaw",
+        "allow": [
+          "@beep/identity",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/openclaw",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -2339,6 +2458,29 @@
         ]
       },
       {
+        "from": "@beep/practice-kg-mcp",
+        "allow": [
+          "@beep/anthropic",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/pglite",
+          "@beep/practice-kg-mcp",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/pglite",
+          "@beep/practice-kg-mcp",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/pretext",
         "allow": [
           "@beep/identity",
@@ -2371,8 +2513,11 @@
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
+          "@beep/epistemic-config",
           "@beep/epistemic-domain",
+          "@beep/epistemic-server",
           "@beep/epistemic-tables",
+          "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
           "@beep/identity",
@@ -2381,6 +2526,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",
@@ -2411,8 +2557,11 @@
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
+          "@beep/epistemic-config",
           "@beep/epistemic-domain",
+          "@beep/epistemic-server",
           "@beep/epistemic-tables",
+          "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
           "@beep/identity",
@@ -2421,6 +2570,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",
@@ -2689,6 +2839,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
@@ -2700,6 +2851,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"

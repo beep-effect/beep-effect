@@ -31,6 +31,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "docgen": "bun run ../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -51,7 +52,9 @@
     "@beep/documents-server": "workspace:^",
     "@beep/documents-use-cases": "workspace:^",
     "@beep/editor": "workspace:^",
+    "@beep/epistemic-config": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
+    "@beep/epistemic-server": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/graph-3d": "workspace:^",
@@ -61,6 +64,7 @@
     "@beep/md": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/ontology-client": "workspace:^",
+    "@beep/ontology-config": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-server": "workspace:^",
     "@beep/ontology-ui": "workspace:^",
@@ -84,6 +88,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@beep/epistemic-use-cases": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",

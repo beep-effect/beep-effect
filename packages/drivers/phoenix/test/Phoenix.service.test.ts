@@ -171,7 +171,7 @@ describe("@beep/phoenix", () => {
     });
   });
 
-  it("round-trips schema-derived Phoenix values through their encoded shapes", { timeout: 30000 }, () => {
+  it("round-trips schema-derived Phoenix values through their encoded shapes", () => {
     for (const [, schema] of publicSchemaRoundTripCases) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => {

@@ -96,6 +96,50 @@ export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryEr
 }
 
 /**
+ * Failure raised when the test-typecheck blind-spot baseline cannot be read,
+ * decoded, or rewritten.
+ *
+ * @example
+ * ```ts
+ * import { TestTypecheckBaselineError } from "@beep/repo-cli/commands/Lint/Lint.errors"
+ *
+ * const error = TestTypecheckBaselineError.new(
+ *   new Error("ENOENT"),
+ *   "Failed to read standards/test-typecheck.blindspot-baseline.jsonc."
+ * )
+ * console.log(error.message)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class TestTypecheckBaselineError extends TaggedErrorClass<TestTypecheckBaselineError>(
+  $I`TestTypecheckBaselineError`
+)(
+  "TestTypecheckBaselineError",
+  {
+    message: S.String,
+  },
+  $I.annote("TestTypecheckBaselineError", {
+    description: "Raised when the committed test-typecheck blind-spot baseline cannot be read, decoded, or written.",
+  })
+) {
+  /**
+   * Construct a baseline error from an underlying cause and an action message.
+   *
+   * @param cause - Underlying filesystem, JSONC, or schema failure to render into the message.
+   * @param message - Action that failed, such as `Failed to read <baseline path>.`.
+   * @returns The tagged error carrying the action message with the rendered cause appended.
+   * @category constructors
+   */
+  static readonly new = (cause: unknown, message: string): TestTypecheckBaselineError =>
+    TestTypecheckBaselineError.make({ message: messageWithCause(message, cause) });
+
+  static readonly mapError = Err.mapCauseError<TestTypecheckBaselineError, [message: string]>((cause, message) =>
+    TestTypecheckBaselineError.new(cause, message)
+  );
+}
+
+/**
  * Failure raised when the schema-first inventory cannot be read or decoded.
  *
  * @example

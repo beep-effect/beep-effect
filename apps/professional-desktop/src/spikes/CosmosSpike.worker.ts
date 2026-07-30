@@ -6,15 +6,7 @@
  * @since 0.0.0
  */
 
-import {
-  buildOntologyGraphProjection,
-  defaultOntologyGraphProjectionOptions,
-  OntologyGraphProjectionOptions,
-  OntologyMetrics,
-  OntologyRelationshipSummary,
-  OntologyResourceSummary,
-  OntologySnapshot,
-} from "@beep/ontology-use-cases/aggregates/Session/worker";
+import { Session } from "@beep/ontology-use-cases/worker";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import * as BrowserRuntime from "@effect/platform-browser/BrowserRuntime";
@@ -33,11 +25,11 @@ const labelFor = (index: number): string => (index % 5 === 0 ? `Class ${index}` 
 
 const iriFor = (index: number): string => `https://example.test/synthetic/${index}`;
 
-const resourceFor = (index: number): OntologyResourceSummary => {
+const resourceFor = (index: number): Session.OntologyResourceSummary => {
   const isClass = index % 5 === 0;
   const parentIndex = isClass && index >= 500 ? index % 500 : 0;
 
-  return OntologyResourceSummary.make({
+  return Session.OntologyResourceSummary.make({
     iri: iriFor(index),
     label: labelFor(index),
     kind: isClass ? "class" : "individual",
@@ -48,13 +40,13 @@ const resourceFor = (index: number): OntologyResourceSummary => {
   });
 };
 
-const relationshipFor = (index: number, nodeCount: number, state: number): OntologyRelationshipSummary => {
+const relationshipFor = (index: number, nodeCount: number, state: number): Session.OntologyRelationshipSummary => {
   const source = index % nodeCount;
   const offset = nodeCount === 1 ? 0 : 1 + (state % (nodeCount - 1));
   const target = (source + offset) % nodeCount;
   const isClassLink = source % 5 === 0 && target % 5 === 0;
 
-  return OntologyRelationshipSummary.make({
+  return Session.OntologyRelationshipSummary.make({
     sourceIri: iriFor(source),
     predicateIri: isClassLink ? RDFS_SUB_CLASS_OF : RDF_TYPE.value,
     objectIri: iriFor(target),
@@ -63,7 +55,7 @@ const relationshipFor = (index: number, nodeCount: number, state: number): Ontol
   });
 };
 
-const buildSyntheticProjection = Effect.fn("CosmosSpikeWorker.buildSyntheticProjection")(
+const buildSyntheticProjection = Effect.fn("professional_desktop.cosmos_spike.build_projection")(
   (request: ProjectSyntheticGraphRequest) =>
     Effect.sync(() => {
       const resources = A.makeBy(request.nodeCount, resourceFor);
@@ -75,12 +67,12 @@ const buildSyntheticProjection = Effect.fn("CosmosSpikeWorker.buildSyntheticProj
           return [nextState, relationshipFor(index, request.nodeCount, nextState)];
         }
       );
-      const snapshot = OntologySnapshot.make({
+      const snapshot = Session.OntologySnapshot.make({
         sessionId: "cosmos-spike",
         resources,
         hierarchy: [],
         relationships,
-        metrics: OntologyMetrics.make({
+        metrics: Session.OntologyMetrics.make({
           quadCount: request.edgeCount,
           resourceCount: request.nodeCount,
           classCount: A.countBy(resources, (resource) => resource.kind === "class"),
@@ -90,10 +82,10 @@ const buildSyntheticProjection = Effect.fn("CosmosSpikeWorker.buildSyntheticProj
           aboxCount: A.countBy(resources, (resource) => resource.classification === "abox"),
         }),
       });
-      const projection = buildOntologyGraphProjection(
+      const projection = Session.buildOntologyGraphProjection(
         snapshot,
-        OntologyGraphProjectionOptions.make({
-          ...defaultOntologyGraphProjectionOptions(),
+        Session.OntologyGraphProjectionOptions.make({
+          ...Session.defaultOntologyGraphProjectionOptions(),
           foldLevel: "L3",
           autoClusterThreshold: 2_500,
           structuralFoldThreshold: 24,

@@ -1,0 +1,5 @@
+=== spike-4 cleanup ===
+removed '/home/elpresidank/.config/systemd/user/openclaw-spike.service'
+daemon-reload OK
+list exit: 1 (1 = none found)
+spike gateways still running: 3

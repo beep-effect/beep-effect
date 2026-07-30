@@ -20,9 +20,9 @@
  * - Otherwise, on a real http(s) origin (the vite dev server) the exporter posts
  *   to the same-origin `/otlp` path, which vite proxies to the collector (see
  *   the app's vite.config.ts) — no CORS setup needed.
- * - Otherwise, a packaged Tauri webview uses the loopback OTLP/HTTP collector;
- *   jsdom/SSR still collapses to {@link Layer.empty}, so tests without a
- *   collector remain unaffected.
+ * - Otherwise, packaged webviews and jsdom/SSR collapse to
+ *   {@link Layer.empty}; packaged telemetry requires explicit runtime
+ *   injection.
  *
  * @packageDocumentation
  * @category observability
@@ -30,7 +30,7 @@
  */
 
 import { LogLevel } from "@beep/schema";
-import { O, P, pipe, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
+import { O, P, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import { Effect, Layer, Metric, References } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
@@ -53,18 +53,7 @@ const runtimeAttribute = (key: string, attribute: string): R.ReadonlyRecord<stri
 
 // browser/runtime-derived config boundary — no vite env, no node `process`.
 const resolveOtlpBaseUrl = (): O.Option<string> =>
-  O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () =>
-    pipe(
-      resolveBrowserHttpUrl(globalThis.window, "/otlp"),
-      O.orElse(() =>
-        pipe(
-          O.fromUndefinedOr(globalThis.window),
-          O.filter((runtimeWindow) => P.hasProperty(runtimeWindow, "__TAURI_INTERNALS__")),
-          O.as("http://127.0.0.1:4318")
-        )
-      )
-    )
-  );
+  O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => resolveBrowserHttpUrl(globalThis.window, "/otlp"));
 
 const resolveMinimumLogLevel = (): LogLevel =>
   O.match(readRuntimeString("__BEEP_LOG_LEVEL__"), {

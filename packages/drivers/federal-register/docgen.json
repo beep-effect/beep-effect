@@ -27,14 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/federal-register": [
-        "../../../packages/drivers/federal-register/src/index.ts"
-      ],
-      "@beep/federal-register/*": [
-        "../../../packages/drivers/federal-register/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

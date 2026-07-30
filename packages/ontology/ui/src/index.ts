@@ -28,7 +28,6 @@ export const VERSION = "0.0.0" as const;
  * @since 0.0.0
  */
 export {
-  iriFieldValid,
   OntologyChangeLogRegion,
   OntologyDocumentRegion,
   OntologyExplorerRegion,

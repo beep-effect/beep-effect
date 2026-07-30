@@ -221,8 +221,26 @@ The package binary works the same way:
 bunx @beep/repo-cli files <subcommand> [options]
 ```
 
-All `files` subcommands work on direct children of `--dir`; they do not recurse
-into nested directories.
+Except for `flatten-media`, `files` subcommands work on direct children of
+`--dir`; they do not recurse into nested directories.
+
+#### `files flatten-media`
+
+Recursively move image and video files into one flat output directory while
+leaving non-media files and source directories in place.
+
+```bash
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media --dry-run
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media
+```
+
+Existing output files are preserved. Name collisions are checked
+case-insensitively and use numeric suffixes such as `_01` and `_02`. Use
+`--dry-run` to print the complete move plan without creating the output
+directory or moving files. If a move fails, completed moves are restored; a
+newly created output directory may remain empty.
+
+Do not modify the source or output tree concurrently while this command runs.
 
 #### `files sort-and-rename`
 
@@ -474,20 +492,6 @@ Render CI helper output from checked-in repo automation.
 ```bash
 bun run beep ci append-turbo-summary
 bun run beep ci append-turbo-summary .turbo/runs/latest.json
-```
-
-### `graphiti`
-
-Run and manage the local Graphiti MCP queue proxy.
-
-```bash
-bun run beep graphiti proxy
-bun run beep graphiti proxy ensure
-bun run beep graphiti proxy service install
-bun run beep graphiti restore --dry-run
-bun run beep graphiti restore
-bun run beep graphiti verify
-bun run beep graphiti recover --dry-run
 ```
 
 ### `codex`

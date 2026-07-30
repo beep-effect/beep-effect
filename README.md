@@ -1,6 +1,7 @@
 # beep-effect
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/beep-effect/beep-effect)
+[![Greptile: The War on Bugs](https://www.greptile.com/badge.svg)](https://www.greptile.com/?utm_source=oss_badge&utm_medium=readme&utm_campaign=greptile_for_open_source)
 
 **Mission.** beep-effect is the Effect-first, schema-first monorepo for building local-first, evidence-backed, governed **professional agentic runtimes**. It ships reliable domain experiments as production-quality vertical slices that can be added, rewritten, or removed without long-term topology debt.
 
@@ -178,10 +179,6 @@ bun run docgen:local
 # Quality, security, and effect-law checks
 bun run beep quality repo-exports-catalog --check
 bun run beep codex quality-review-fix-loop "close the current initiative"
-
-# Graphiti memory helpers
-bun run graphiti:proxy
-bun run graphiti:proxy:ensure
 ```
 
 Full reference (all commands, flags, and schemas): [`packages/tooling/tool/cli/README.md`](packages/tooling/tool/cli/README.md)
@@ -237,7 +234,11 @@ The repository is built on three pillars:
 - **Schema-first** — `effect/Schema` (plus `@beep/schema` helpers) is the single source of truth for shape, validation, codecs, and persistence metadata.
 - **Topology as compressed context** — Package paths, role suffixes (`.model.ts`, `.ports.ts`, etc.), and family/kind declarations in `package.json` carry meaning so readers can understand intent before opening files.
 
-See [`standards/effect-first-development.md`](standards/effect-first-development.md) and [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md) (especially the Core Principles).
+See [`standards/effect-first-development.md`](standards/effect-first-development.md),
+the paste-ready
+[`standards/schema-first-development-prompt.md`](standards/schema-first-development-prompt.md),
+and [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md) (especially the
+Core Principles).
 
 ---
 

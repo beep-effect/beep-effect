@@ -19,7 +19,8 @@ Upstream repositories:
   - Pinned release: `v3.2.66`
   - Pinned commit: [`fad63b383b92f9446c223ddc12bf0b6fd1a6b44c`](https://github.com/freelawproject/reporters-db/commit/fad63b383b92f9446c223ddc12bf0b6fd1a6b44c)
   - Affected material: generated reporter records, editions, variations,
-    abbreviations, citation types, regular expressions, and parity fixtures.
+    case-name and state abbreviations, journals, laws, citation types, regular
+    expression fragments, and parity fixtures.
 - eyecite: <https://github.com/freelawproject/eyecite>
   - Pinned commit: [`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`](https://github.com/freelawproject/eyecite/commit/04d82c032ad5fd0f9ab72a61c87110c46ee8f52e)
   - Affected material: extraction-pipeline behavior, ported/reimplemented
@@ -50,3 +51,47 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## Zep Software, Inc. (Graphiti) — Apache-2.0 material
+
+Upstream repository:
+
+- graphiti: <https://github.com/getzep/graphiti>
+  - Pinned release: `v0.29.2`
+  - Pinned commit: [`ff7e29ccd127d8d9721b5cbb2163a6407ef915fe`](https://github.com/getzep/graphiti/commit/ff7e29ccd127d8d9721b5cbb2163a6407ef915fe)
+  - Provenance inventory revision: default branch `main` at
+    `448e57c5841f418f2a90586e53b11f7280f367a8` (2026-07-25); the files below are
+    byte-identical between that revision and the pinned release.
+  - Affected material: bitemporal edge temporal-field semantics (valid-time
+    `valid_at`/`invalid_at` and transaction-time `created_at`/`expired_at`
+    axes), the invalidate-don't-delete supersession contract (valid-time closes
+    at the invalidating fact's valid time while only the transaction axis is
+    stamped at ingestion), and the episode lineage shape linking episodes to the
+    entity edges they produced.
+  - Upstream locations consulted: `graphiti_core/edges.py:263-285`,
+    `graphiti_core/nodes.py:318-351`,
+    `graphiti_core/utils/maintenance/edge_operations.py:538-847`.
+  - Form of use: **behavioral reimplementation in Effect/TypeScript against
+    Postgres.** No Python source is copied, vendored, or redistributed; the
+    donor is not a build-time or runtime dependency of this project. Storage
+    shape, transaction boundaries, identity model, and error handling are
+    this project's own and diverge from the donor.
+  - Upstream ships no root `NOTICE` file at the pinned revision, so no
+    Apache-2.0 §4(d) attribution-notice reproduction applies.
+
+Copyright 2024, 2025 Zep Software, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+A full copy of the Apache License, Version 2.0 is included at
+[`licenses/Apache-2.0.txt`](./licenses/Apache-2.0.txt).

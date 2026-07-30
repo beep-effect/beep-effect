@@ -14,6 +14,8 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { A, O, Str, thunkEmptyStr } from "@beep/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
 import { AnnotationCitation } from "../AnnotationCitation/index.ts";
@@ -51,9 +53,14 @@ import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
 import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
 import { TreatiseCitation } from "../TreatiseCitation/index.ts";
 import { TreatyCitation } from "../TreatyCitation/index.ts";
-import type * as O from "effect/Option";
+import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
+
+const parentheticalCitationsToArbitrary: () => (
+  fc: typeof FastCheck
+) => FastCheck.Arbitrary<ReadonlyArray<Citation.Type>> = () => (fc) =>
+  fc.array(S.toArbitrary(DocketCitation), { maxLength: 2 });
 
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).
@@ -65,8 +72,10 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
  * same reason (mirrors the `AdditionalPincites` pattern in `PinciteInfo`).
  */
 const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Citation.Encoded> => Citation)).pipe(
-  S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  SchemaUtils.withEmptyArrayDefaults<Citation.Type>(),
+  S.annotate({
+    toArbitrary: parentheticalCitationsToArbitrary,
+  }),
   S.annotateKey({
     description:
       "Child citations nested within this explanatory parenthetical (#851); each carries its own CitationId, may be any citation type, and may itself carry parentheticals (recursive).",
@@ -158,7 +167,7 @@ export declare namespace Parenthetical {
    * @since 0.0.0
    */
   export interface Type {
-    readonly citations: O.Option<ReadonlyArray<Citation.Type>>;
+    readonly citations: ReadonlyArray<Citation.Type>;
     readonly span: O.Option<Span>;
     readonly text: string;
     readonly type: ParentheticalType;
@@ -180,7 +189,7 @@ export declare namespace Parenthetical {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly citations?: ReadonlyArray<Citation.Encoded>;
+    readonly citations?: ReadonlyArray<Citation.Encoded> | undefined;
     readonly span?: typeof Span.Encoded;
     readonly text: string;
     readonly type: typeof ParentheticalType.Encoded;
@@ -194,9 +203,9 @@ export declare namespace Parenthetical {
  * discriminant plus the volume/reporter/page anatomy of a reporter citation,
  * parallel-citation grouping, explanatory {@link Parenthetical}s, subsequent
  * procedural history, structured dates, party names, and the inferred court.
- * Only `volume` and `reporter` are required; every other own field is optional
- * and modeled as `Option` with a `None` constructor default because case-citation
- * forms vary widely across reporters and pinpoint styles.
+ * Only `volume` and `reporter` are required as constructor input. Sparse
+ * citation fields use `Option`, while definitive flags and zero-or-more
+ * collections receive schema-owned defaults.
  *
  * **Example**
  *
@@ -227,9 +236,8 @@ export declare namespace Parenthetical {
  * @category models
  * @since 0.0.0
  */
-export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitation`)(
+export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`FullCaseCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("case"),
     volume: S.Union([NonNegativeInt, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
@@ -265,12 +273,10 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
         description: "Court string as captured from the citation parenthetical.",
       })
     ),
-    unpublished: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    unpublished: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True for citations whose source carried an unpublished-disposition marker. Set by NY Slip Op `(U)` / `[U]` suffix detection (#231). Absent or false for published decisions.",
+          "True for citations whose source carried an unpublished-disposition marker. Set by NY Slip Op `(U)` / `[U]` suffix detection (#231). Defaults to false for published decisions.",
       })
     ),
     normalizedCourt: S.String.pipe(
@@ -324,16 +330,14 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
       })
     ),
     parentheticals: S.Array(Parenthetical).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<Parenthetical>(),
       S.annotateKey({
         description:
           "Explanatory parentheticals following the citation. Only populated when explanatory content is found (not court/year/disposition).",
       })
     ),
     subsequentHistoryEntries: S.Array(SubsequentHistoryEntry).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<SubsequentHistoryEntry>(),
       S.annotateKey({
         description:
           "Subsequent history entries attached to this citation. Populated on every chain link that received a history clause from the scanner — not just the chain's root (#619). Each entry describes a procedural event (affirmed, reversed, etc.).",
@@ -460,9 +464,7 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
           'Nominative (historical) reporter abbreviation for early SCOTUS citations. Present only when the citation includes a nominative parenthetical, e.g., `67 U.S. (2 Black) 635` → "Black".',
       })
     ),
-    hasBlankPage: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    hasBlankPage: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
           'True when page position contains a blank placeholder ("___" or "---"), populated by Phase 5 (Blank Page support). When true, page is undefined and confidence is reduced to 0.8.',
@@ -477,8 +479,7 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
       })
     ),
     justices: S.Array(S.String).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<string>(),
       S.annotateKey({
         description:
           'Surname(s) of justice(s) attributed to the parenthetical disposition, populated for justice-attribution parens (#235) like `(Brennan, J., dissenting)` → ["Brennan"].',
@@ -519,7 +520,70 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
   $I.annote("FullCaseCitation", {
     description: 'A parsed full case citation (type: "case").',
   })
-) {}
+) {
+  /**
+   * Reconstruct a canonical Bluebook-style citation string from structured fields.
+   *
+   * @remarks
+   * Best-effort formatting for a full case citation using the available party
+   * name, reporter, page, pincite, court, and year fields.
+   *
+   * **Example**
+   * ```ts
+   * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
+   * import { NonNegativeInt } from "@beep/schema"
+   *
+   * const citation = FullCaseCitation.make({
+   *   text: "410 U.S. 113",
+   *   span: Span.make({
+   *     cleanStart: NonNegativeInt.make(0),
+   *     cleanEnd: NonNegativeInt.make(12),
+   *     originalStart: NonNegativeInt.make(0),
+   *     originalEnd: NonNegativeInt.make(12),
+   *   }),
+   *   confidence: 1,
+   *   matchedText: "410 U.S. 113",
+   *   processTimeMs: 0,
+   *   patternsChecked: NonNegativeInt.make(1),
+   *   volume: NonNegativeInt.make(410),
+   *   reporter: "U.S.",
+   * })
+   *
+   * const bluebook = FullCaseCitation.toBlueBook(citation)
+   * ```
+   */
+  static readonly toBlueBook = (citation: FullCaseCitation): string => {
+    const reporter = citation.normalizedReporter.pipe(O.getOrElse(() => citation.reporter));
+    const page = citation.hasBlankPage
+      ? " ___"
+      : citation.page.pipe(
+          O.map((page) => ` ${page}`),
+          O.getOrElse(thunkEmptyStr)
+        );
+    const core = `${citation.volume} ${reporter}${page}`;
+    const pincite = citation.pincite.pipe(
+      O.map((pincite) => `, ${pincite}`),
+      O.getOrElse(thunkEmptyStr)
+    );
+    const courtAndYear = pipe(
+      A.getSomes([
+        citation.normalizedCourt.pipe(O.orElse(() => citation.court)),
+        citation.year.pipe(O.map((year) => `${year}`)),
+      ]),
+      A.join(" "),
+      O.liftPredicate(Str.isNonEmpty),
+      O.map((parenthetical) => ` (${parenthetical})`),
+      O.getOrElse(thunkEmptyStr)
+    );
+
+    const caseName = citation.caseName.pipe(
+      O.map((caseName) => `${caseName}, `),
+      O.getOrElse(thunkEmptyStr)
+    );
+
+    return `${caseName}${core}${pincite}${courtAndYear}`;
+  };
+}
 
 /**
  * Companion namespace for `FullCaseCitation`.
@@ -578,10 +642,10 @@ export declare namespace FullCaseCitation {
     readonly disposition: O.Option<string>;
     readonly fullSpan: O.Option<Span>;
     readonly groupId: O.Option<string>;
-    readonly hasBlankPage: O.Option<boolean>;
+    readonly hasBlankPage: boolean;
     readonly historyChain: O.Option<HistoryChain>;
     readonly inferredCourt: O.Option<CourtInference>;
-    readonly justices: O.Option<ReadonlyArray<string>>;
+    readonly justices: ReadonlyArray<string>;
     readonly nominativeReporter: O.Option<string>;
     readonly nominativeVolume: O.Option<NonNegativeInt>;
     readonly normalizedCourt: O.Option<string>;
@@ -595,7 +659,7 @@ export declare namespace FullCaseCitation {
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
-    readonly parentheticals: O.Option<ReadonlyArray<Parenthetical.Type>>;
+    readonly parentheticals: ReadonlyArray<Parenthetical.Type>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly plaintiff: O.Option<string>;
@@ -613,14 +677,14 @@ export declare namespace FullCaseCitation {
     readonly reporter: string;
     readonly scope: O.Option<string>;
     readonly spans: O.Option<CaseComponentSpan>;
-    readonly subsequentHistoryEntries: O.Option<ReadonlyArray<SubsequentHistoryEntry>>;
+    readonly subsequentHistoryEntries: ReadonlyArray<SubsequentHistoryEntry>;
     readonly subsequentHistoryOf: O.Option<{
       readonly index: NonNegativeInt;
       readonly priorId: O.Option<CitationId>;
       readonly signal: HistorySignal;
     }>;
     readonly type: "case";
-    readonly unpublished: O.Option<boolean>;
+    readonly unpublished: boolean;
     readonly volume: NonNegativeInt | string;
     readonly year: O.Option<NonNegativeInt>;
   }
@@ -637,7 +701,11 @@ export declare namespace FullCaseCitation {
     readonly court?: string;
     readonly date?: {
       readonly iso: string;
-      readonly parsed?: { readonly year: number; readonly month?: number; readonly day?: number };
+      readonly parsed?: {
+        readonly year: number;
+        readonly month?: number;
+        readonly day?: number;
+      };
     };
     readonly defendant?: string;
     readonly defendantNormalized?: string;
@@ -647,7 +715,7 @@ export declare namespace FullCaseCitation {
     readonly hasBlankPage?: boolean;
     readonly historyChain?: typeof HistoryChain.Encoded;
     readonly inferredCourt?: typeof CourtInference.Encoded;
-    readonly justices?: ReadonlyArray<string>;
+    readonly justices?: ReadonlyArray<string> | undefined;
     readonly nominativeReporter?: string;
     readonly nominativeVolume?: number;
     readonly normalizedCourt?: string;
@@ -659,7 +727,7 @@ export declare namespace FullCaseCitation {
       readonly page: number;
     }>;
     readonly parallelGroup?: typeof ParallelGroup.Encoded;
-    readonly parentheticals?: ReadonlyArray<Parenthetical.Encoded>;
+    readonly parentheticals?: ReadonlyArray<Parenthetical.Encoded> | undefined;
     readonly pincite?: number;
     readonly pinciteInfo?: PinciteInfo.Encoded;
     readonly plaintiff?: string;
@@ -675,7 +743,7 @@ export declare namespace FullCaseCitation {
     readonly reporter: string;
     readonly scope?: string;
     readonly spans?: typeof CaseComponentSpan.Encoded;
-    readonly subsequentHistoryEntries?: ReadonlyArray<typeof SubsequentHistoryEntry.Encoded>;
+    readonly subsequentHistoryEntries?: ReadonlyArray<typeof SubsequentHistoryEntry.Encoded> | undefined;
     readonly subsequentHistoryOf?: {
       readonly index: number;
       readonly priorId?: string;
@@ -692,10 +760,10 @@ export declare namespace FullCaseCitation {
  * A parsed `Id.` short-form citation (type: `id`).
  *
  * Spreads the shared {@link CitationBase} fields and adds the `id` discriminant.
- * Every own field is optional and modeled as `Option` with a `None` constructor
- * default: an `Id.` reference inherits most of its anatomy (pincite, party
- * names) from the antecedent citation it resolves to, and may carry a trailing
- * {@link Parenthetical}.
+ * Sparse own fields use `Option`: an `Id.` reference inherits most of its
+ * anatomy (pincite, party names) from the antecedent citation it resolves to,
+ * and may carry a trailing {@link Parenthetical}. `pinciteInherited` defaults
+ * to `false`.
  *
  * **Example**
  *
@@ -724,9 +792,8 @@ export declare namespace FullCaseCitation {
  * @category models
  * @since 0.0.0
  */
-export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
+export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("id"),
     pincite: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
@@ -742,12 +809,10 @@ export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -894,7 +959,7 @@ export declare namespace IdCitation {
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly plaintiff: O.Option<string>;
@@ -936,8 +1001,8 @@ export declare namespace IdCitation {
  *
  * Spreads the shared {@link CitationBase} fields and adds the `supra`
  * discriminant. A `supra` reference points back to an earlier citation by party
- * name; every own field is optional and modeled as `Option` with a `None`
- * constructor default.
+ * name; sparse own fields use `Option`, while `pinciteInherited` defaults to
+ * `false`.
  *
  * **Example**
  *
@@ -966,9 +1031,8 @@ export declare namespace IdCitation {
  * @category models
  * @since 0.0.0
  */
-export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
+export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("supra"),
     partyName: S.String.pipe(
       S.OptionFromOptionalKey,
@@ -991,12 +1055,10 @@ export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -1090,7 +1152,7 @@ export declare namespace SupraCitation {
     readonly partyName: O.Option<string>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly spans: O.Option<SupraComponentSpan>;
@@ -1123,8 +1185,8 @@ export declare namespace SupraCitation {
  * Spreads the shared {@link CitationBase} fields and adds the `shortFormCase`
  * discriminant. An abbreviated reference to an earlier full citation,
  * distinguished from a full case by the lack of a case name. Only `volume` and
- * `reporter` are required; every other own field is optional and modeled as
- * `Option` with a `None` constructor default.
+ * `reporter` are required as constructor input; sparse own fields use `Option`,
+ * while `pinciteInherited` defaults to `false`.
  *
  * **Example**
  *
@@ -1155,9 +1217,8 @@ export declare namespace SupraCitation {
  * @category models
  * @since 0.0.0
  */
-export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
+export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("shortFormCase"),
     volume: S.Union([NonNegativeInt, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
@@ -1186,12 +1247,10 @@ export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`Sho
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -1373,7 +1432,7 @@ export declare namespace ShortFormCaseCitation {
     readonly partyNameNormalized: O.Option<string>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly reporter: string;

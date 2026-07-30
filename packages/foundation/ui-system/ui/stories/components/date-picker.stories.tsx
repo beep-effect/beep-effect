@@ -62,7 +62,9 @@ export const Default: Story = {
     expect(trigger).toBeVisible();
     return userEvent.click(trigger).then(() => {
       const popover = within(document.body);
-      expect(popover.getByRole("grid")).toBeVisible();
+      return waitFor(() => {
+        expect(popover.getByRole("grid")).toBeVisible();
+      });
     });
   },
 };

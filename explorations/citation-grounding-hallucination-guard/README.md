@@ -40,6 +40,12 @@ cluster "Citation lookup + verbatim-span grounding (hallucination guard)".
 
 ## Trail
 
+- 2026-07-25: received a corpus dispatch note
+  ([`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md))
+  from the `academia-corpus-mining` align dispatch — shapes the
+  anchor-to-stance-to-authority-to-admission follow-on and carries master
+  align Q7 (where the qualifier-aware stance layer lives, and the minimum
+  qualifiers before two claims may be compared).
 - 2026-07-14: scaffolded
   [`goals/citation-extraction-engine`](../../goals/citation-extraction-engine/README.md)
   per the ratified campaign revisit; it is blocked by

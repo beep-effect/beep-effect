@@ -1,0 +1,1 @@
+Could not reload secrets because the Gateway did not respond: gateway closed (4001): gateway auth changed. Run `openclaw gateway status --deep` to inspect the active Gateway.

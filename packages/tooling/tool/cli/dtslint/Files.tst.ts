@@ -7,6 +7,8 @@ import {
   cropBordersFiles,
   DetectBordersOptions,
   detectBordersFiles,
+  FlattenMediaOptions,
+  flattenMediaFiles,
   NormalizeFilesOptions,
   normalizeFiles,
 } from "@beep/repo-cli/test/Files";
@@ -30,6 +32,8 @@ import type {
   FileSha256Hash,
   FilesCommandError,
   FilesCommandService,
+  FilesCommandServiceShape,
+  FlattenMediaSummary,
   NormalizeImageFormat,
   NormalizeManifest,
   NormalizePlanEntry,
@@ -66,6 +70,34 @@ describe("Files command", () => {
       | "symlink"
       | "video"
     >();
+  });
+
+  it("returns the flatten-media summary through the files service", () => {
+    const options = FlattenMediaOptions.make({
+      dir: "./raw",
+      dryRun: true,
+      outDir: "./flat",
+    });
+
+    expect(flattenMediaFiles(options)).type.toBe<
+      Effect.Effect<FlattenMediaSummary, FilesCommandError, FilesCommandService>
+    >();
+    expect<FilesCommandServiceShape["flattenMediaFiles"]>().type.toBe<
+      (options: FlattenMediaOptions) => Effect.Effect<FlattenMediaSummary, FilesCommandError>
+    >();
+  });
+
+  it("keeps flatten-media options and summary fields JSON-safe", () => {
+    expect<FlattenMediaOptions["dir"]>().type.toBe<string>();
+    expect<FlattenMediaOptions["dryRun"]>().type.toBe<boolean>();
+    expect<FlattenMediaOptions["outDir"]>().type.toBe<string>();
+    expect<FlattenMediaSummary["collisionCount"]>().type.toBe<number>();
+    expect<FlattenMediaSummary["destinationDirectory"]>().type.toBe<string>();
+    expect<FlattenMediaSummary["dryRun"]>().type.toBe<boolean>();
+    expect<FlattenMediaSummary["movedCount"]>().type.toBe<number>();
+    expect<FlattenMediaSummary["plannedCount"]>().type.toBe<number>();
+    expect<FlattenMediaSummary["skippedCount"]>().type.toBe<number>();
+    expect<FlattenMediaSummary["sourceDirectory"]>().type.toBe<string>();
   });
 
   it("returns the archive-poor-candidates summary through the files service", () => {

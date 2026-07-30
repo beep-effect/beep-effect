@@ -7,10 +7,12 @@ import {
   $WorkspaceDomainId,
   make,
 } from "@beep/identity";
+import { TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "tstyche";
 import type {
+  // biome-ignore lint/suspicious/noDeprecatedImports: Compatibility coverage for the retained public alias.
   HttpApiEncoding,
   IdentityComposer,
   IdentityString,
@@ -19,6 +21,8 @@ import type {
   SegmentValue,
   TitleFromIdentifier,
 } from "@beep/identity";
+import type { TaggedErrorClassFromFields } from "@beep/schema";
+import type * as Equivalence from "effect/Equivalence";
 
 declare module "effect/Schema" {
   namespace Annotations {
@@ -81,6 +85,7 @@ describe("Identity", () => {
 
   it("types annoteSchema and annoteHttp like schema annotators", () => {
     const { $SchemaId } = make("beep").$BeepId.compose("schema");
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- compatibility coverage for the retained public alias
     const textEncoding = { _tag: "Text", contentType: "text/plain" } as const satisfies HttpApiEncoding;
     const schemaAnnotated = S.String.pipe(
       $SchemaId.annoteSchema("tenant_profile-name", {
@@ -121,6 +126,58 @@ describe("Identity", () => {
     expect(eventAnnotated.cases.message).type.toBe<typeof Event.cases.message>();
     expect(eventAnnotated.match).type.toBe<typeof Event.match>();
     expect(stringWithStaticsAnnotated.empty).type.toBe<"">();
+  });
+
+  it("types annoteClass for whole-argument class annotations", () => {
+    const { $SchemaId } = make("beep").$BeepId.compose("schema");
+    const CircuitOpenErrorFields = {
+      resetTimeoutMs: S.Finite,
+    } satisfies S.Struct.Fields;
+    const CircuitOpenErrorFieldsStruct = S.TaggedStruct("CircuitOpenError", CircuitOpenErrorFields);
+    const makeCircuitOpenError = (input: typeof CircuitOpenErrorFieldsStruct.Type): CircuitOpenError =>
+      CircuitOpenError.make({ resetTimeoutMs: input.resetTimeoutMs });
+
+    // Whole-argument contextual typing infers TP but leaves Schema["Type"] as unknown.
+    // @ts-expect-error!
+    const contextualAnnotations: S.Annotations.Declaration<
+      CircuitOpenError,
+      readonly [typeof CircuitOpenErrorFieldsStruct]
+    > = $SchemaId.annoteClass("CircuitOpenError", {
+      description: "Contextual inference does not recover the declared schema type.",
+    });
+    void contextualAnnotations;
+
+    const CircuitOpenErrorBase: TaggedErrorClassFromFields<
+      CircuitOpenError,
+      "CircuitOpenError",
+      typeof CircuitOpenErrorFields
+    > = TaggedErrorClass<CircuitOpenError>($SchemaId`CircuitOpenError`)(
+      "CircuitOpenError",
+      CircuitOpenErrorFields,
+      $SchemaId.annoteClass<S.declare<CircuitOpenError>, readonly [typeof CircuitOpenErrorFieldsStruct]>(
+        "CircuitOpenError",
+        {
+          description: "Failure raised when a circuit breaker rejects work while open.",
+          toArbitrary: ([from]) => {
+            expect(from).type.toBe<S.Annotations.ToArbitrary.TypeParameter<typeof CircuitOpenErrorFieldsStruct.Type>>();
+
+            return () => ({
+              arbitrary: from.arbitrary.map(makeCircuitOpenError),
+              terminal: from.terminal?.map(makeCircuitOpenError),
+            });
+          },
+          toEquivalence: ([sameFields]) => {
+            expect(sameFields).type.toBe<Equivalence.Equivalence<typeof CircuitOpenErrorFieldsStruct.Type>>();
+
+            return () => true;
+          },
+        }
+      )
+    );
+
+    class CircuitOpenError extends CircuitOpenErrorBase {}
+
+    expect(CircuitOpenError.make({ resetTimeoutMs: 1 })).type.toBe<CircuitOpenError>();
   });
 
   it("supports ergonomic and strict annoteKey typing", () => {

@@ -231,6 +231,23 @@ export * from "./FederalRegisterCitation/index.ts";
  */
 export * from "./FederalRuleCitation/index.ts";
 /**
+ * Footnote namespace module export.
+ *
+ * **Example**
+ *
+ * @example
+ * ```ts
+ * import { Footnote } from "@beep/law-practice-domain";
+ *
+ * const footnoteMap: Footnote.FootnoteMap =
+ *   Footnote.detectTextFootnotes("Body\n----------\n1. See Smith v. Jones.");
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./Footnote/index.ts";
+/**
  * Full-citation-type value-object exports.
  *
  * @example
@@ -290,6 +307,20 @@ export * from "./HistorySignal/index.ts";
  * @since 0.0.0
  */
 export * from "./JournalCitation/index.ts";
+/**
+ * Practice knowledge-graph edge-predicate exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./KgEdgePredicate/index.ts";
+/**
+ * Practice knowledge-graph node-kind exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./KgNodeKind/index.ts";
 /**
  * WIPO ST.16 kind code value-object exports.
  *

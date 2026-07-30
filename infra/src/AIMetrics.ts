@@ -18,7 +18,11 @@ import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import {
+  optionalPulumiConfigFields,
+  pulumiConfigSchemaIssueError,
+  withPulumiConfigDecodeEffect,
+} from "./internal/PulumiConfigSchema.ts";
 import type { AiMetricsInstallSpec, AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics";
 
 const $I = $InfraId.create("AIMetrics");
@@ -51,10 +55,7 @@ const TailnetHttpsPort = S.Int.check(TailnetHttpsPortRange).pipe(
   })
 );
 
-const schemaIssueToPulumiConfigError =
-  (key: string, value: string) =>
-  (cause: S.SchemaError): pulumi.RunError =>
-    new pulumi.RunError(`Invalid aiMetrics:${key} Pulumi config value "${value}": ${cause.message}`);
+const schemaIssueToPulumiConfigError = pulumiConfigSchemaIssueError("aiMetrics");
 
 const decodeAiMetricsDeployTarget = S.decodeUnknownResult(AiMetricsDeployTarget);
 const decodeAiMetricsTool = S.decodeUnknownResult(AiMetricsTool);

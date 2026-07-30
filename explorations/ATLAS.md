@@ -39,6 +39,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
@@ -62,6 +63,20 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
+- [`model-artifact-admission`](./model-artifact-admission/README.md) —
+  capture-stage: bind model qualification to the exact model, adapter,
+  modality, prompt, wrapper, decoding configuration, and artifact digest —
+  no qualification transfer across any substitution; routed out of
+  `academia-corpus-mining` (align dispatch 2026-07-25).
+- [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
+  capture-stage: a recoverable, replayable projection that selects one working
+  assertion per logical lineage (or abstains) under a named policy, revised by
+  new versions with causal ancestry rather than by mutating evidence. Routed out
+  of `academia-corpus-mining` (align dispatch 2026-07-25, master Q4: the first
+  composition over the bitemporal core) once
+  [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md)
+  landed. Carries master align Q1 (verdict-family naming) and Q3 (retention
+  classes for prunable projections).
 - [`knowledge-workspace`](./knowledge-workspace/README.md) — capture-stage
   product vision for an immutable event journal projected into a live graph,
   Lexical wiki-link authoring/backlinks, and auditable temporal replay; stale
@@ -161,7 +176,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
   [`uspto-mcp`](../goals/uspto-mcp/README.md), and
   [`mcp-host-retrofit`](../goals/mcp-host-retrofit/README.md) completed-retained;
-  write-wall gate remains for a named genuinely write-capable host),
+  **closed `graduated` 2026-07-25** — the write wall was absorbed into
+  [`agent-execution-authority`](../goals/agent-execution-authority/README.md)
+  as its MCP sink class),
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
   (stage `graduate`, still active while two lanes remain): graduated
   [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
@@ -180,10 +197,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
-  (stage `graduate`, still active for triage/retention lanes): graduated
+  (stage `graduate`, still active for the retention lane): graduated
   [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
   the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
-  operator Graphiti retirement without making product tables its backend,
+  operator Graphiti retirement without making product tables its backend —
+  closed `completed-retained` 2026-07-25, which cleared the order-2 gate and
+  graduated
+  [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
+  the same day (approval-gated `CONTRADICTS` candidates; Deferred spike B is its
+  P0 hard gate). Retention/tier projections remain the only queued lane,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
   (stage `graduate`, still active for queued families/streaming/calibration):
   graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
@@ -237,6 +259,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation`), and an effect-only scratchpad
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
+
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory
@@ -244,6 +267,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`academia-corpus-mining`](./academia-corpus-mining/README.md) — parked
+  2026-07-25 at align-complete with all 15 high-priority routes dispatched:
+  443 canonical Academia.edu papers mined in tiers (T1 triage of all 443,
+  185 Sol-max T2 deep-reads — 42 gold / 125 silver / 15 bronze / 3 dross —
+  7 cluster reports + a repo-grounded master synthesis with a 36-route
+  table). Nine align decisions landed 2026-07-25: 11 bounded dispatch notes
+  into target packets, 2 new capture packets (`agent-execution-sandbox`,
+  `model-artifact-admission`), prose-to-proof/approval-policy fact language
+  replaced with typed-verdict vocabulary, memory-layer-taxonomy
+  episodic/projection split, belief views first over the bitemporal core,
+  argumentation after semantic-foundation M1. Medium/low routes stay
+  recorded in the master table; the June-29 prior synthesis stays adopted
+  (snippets errata-flagged); the normalized corpus lives externally
+  (`~/YeeBois/research/academia-2026-07/`). Revival trigger: the approved
+  wave-2 backlog run (97 legal-NLP/extraction papers first).
 - [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — parked
   2026-07-14 at align-complete: harvest-not-port complete with zero goals by
   design; demand gates and reference routes are recorded, and every item must
@@ -259,6 +297,28 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`agent-execution-sandbox`](./agent-execution-sandbox/README.md) — graduated
+  2026-07-25 (capture→graduate in one day) into
+  [`agent-execution-authority`](../goals/agent-execution-authority/README.md):
+  a default-deny authority boundary over the MCP agent surface with a
+  hash-chained append-only record of every decision and outcome. Routed out of
+  `academia-corpus-mining`. 14 decisions in
+  [`DECISIONS.md`](./agent-execution-sandbox/DECISIONS.md) — align 1–6 (first
+  fixture = privileged read + outbound sink, absorbing
+  `mcp-auth-gated-registration`'s `mcp-write-wall`; schema-native in-process
+  grants; tamper-evident-only ledger; grant schema in `epistemic/domain`) and
+  shape 7–14 from a doctrine grilling pass that overturned the original
+  enforcement design: `foundation` may not import a slice, so the evaluator
+  became a slice-side implementation of `mcp-kit`'s **existing** `TierGate`
+  port rather than a generalization of it. Scoping to the MCP branch alone
+  collapsed the build to one composition root and eliminated the
+  telemetry-recursion hazard. Both mechanisms proven by spike
+  (`FetchHttpClient.Fetch` override reaches sealed drivers; plpgsql triggers
+  work in PGlite) — though the `Fetch` half is proven only for a
+  directly-provided effect, and the goal carries a blocking check for the
+  server-dispatched case. Three dependent candidates stay named in
+  [`MAP.md`](./agent-execution-sandbox/MAP.md) (chat egress, host isolation,
+  record anchoring), each blocked on a fact that does not exist yet.
 - [`openclaw-deployment-platform`](./openclaw-deployment-platform/README.md) —
   graduated 2026-07-25 (capture→graduate in two days) into
   [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md):

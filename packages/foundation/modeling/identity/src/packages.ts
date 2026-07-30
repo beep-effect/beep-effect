@@ -175,7 +175,11 @@ const generatedComposers = $I.compose(
   "documents-tables",
   "tailscale",
   "agents-tables",
-  "graph-3d"
+  "graph-3d",
+  "epistemic-config",
+  "law-practice-tables",
+  "practice-kg-mcp",
+  "openclaw"
 );
 
 const composers = {
@@ -2172,3 +2176,68 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
  * @category configuration
  */
 export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
+
+/**
+ * Identity composer for `@beep/epistemic-config`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicConfigId } from "@beep/identity"
+ *
+ * const id = $EpistemicConfigId.make("EpistemicConfig")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
+
+/**
+ * Identity composer for `@beep/law-practice-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $LawPracticeTablesId } from "@beep/identity"
+ *
+ * const id = $LawPracticeTablesId.make("LawPracticeTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $LawPracticeTablesId: Identity.IdentityComposer<"@beep/law-practice-tables"> =
+  composers.$LawPracticeTablesId;
+
+/**
+ * Identity composer for `@beep/practice-kg-mcp`.
+ *
+ * @example
+ * ```typescript
+ * import { $PracticeKgMcpId } from "@beep/identity"
+ *
+ * const id = $PracticeKgMcpId.make("PracticeKgMcp")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"> = composers.$PracticeKgMcpId;
+
+/**
+ * Identity composer for `@beep/openclaw`.
+ *
+ * @example
+ * ```typescript
+ * import { $OpenclawId } from "@beep/identity"
+ *
+ * const id = $OpenclawId.make("Openclaw")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composers.$OpenclawId;

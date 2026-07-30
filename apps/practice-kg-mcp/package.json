@@ -1,0 +1,53 @@
+{
+  "name": "@beep/practice-kg-mcp",
+  "version": "0.0.0",
+  "description": "Local practice knowledge-graph bundle builder and MCP host.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/kriegcloud/beep-effect/tree/main/apps/practice-kg-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kriegcloud/beep-effect.git",
+    "directory": "apps/practice-kg-mcp"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:build": "tsc -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "docgen": "bun run ../../packages/tooling/tool/docgen/src/bin.ts",
+    "lint": "bun run beep:lint",
+    "lint:fix": "bun run beep:lint:fix",
+    "package:mcpb": "bun run src/package.ts",
+    "package:mcpb:linux": "bun run src/package.ts --target linux-x64",
+    "smoke:compiled": "bun run package:mcpb:linux && bun run src/smoke.ts",
+    "test": "bun run beep:test"
+  },
+  "bin": {
+    "practice-kg-build": "./src/build.ts",
+    "practice-kg-claims": "./src/claims.ts",
+    "practice-kg-mcp": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@beep/anthropic": "workspace:^",
+    "@beep/duckdb": "workspace:^",
+    "@beep/identity": "workspace:^",
+    "@beep/law-practice-server": "workspace:^",
+    "@beep/pglite": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "@electric-sql/pglite": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:"
+  }
+}

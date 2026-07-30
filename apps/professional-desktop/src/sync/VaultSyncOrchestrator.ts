@@ -63,8 +63,9 @@ const toVaultSyncActionError = (context: string) =>
  * @example
  * ```ts
  * import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(VaultSyncHandlersLive)
+ * console.log(Layer.isLayer(VaultSyncHandlersLive)) // true
  * ```
  *
  * @category layers

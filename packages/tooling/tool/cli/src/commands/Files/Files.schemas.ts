@@ -34,6 +34,27 @@ export * from "./internal/CreateCaptions.schemas.ts";
  */
 export * from "./internal/DetectFaces.schemas.ts";
 /**
+ * Recursive media flattening option and summary schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/FlattenMedia.schemas.ts";
+/**
+ * Read-only image audit schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/ImageAudit.schemas.ts";
+/**
+ * Ledger-driven image curation schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/ImageCuration.schemas.ts";
+/**
  * Shared media primitive and probe-boundary schemas.
  *
  * @category schemas

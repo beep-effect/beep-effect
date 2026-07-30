@@ -1,0 +1,74 @@
+{
+  "accountId": "default",
+  "enabled": true,
+  "configured": true,
+  "running": true,
+  "lastStartAt": 1785139734336,
+  "lastStopAt": null,
+  "lastError": null,
+  "probe": {
+    "ok": true,
+    "status": null,
+    "error": null,
+    "elapsedMs": 329,
+    "botInfo": {
+      "id": 8842758525,
+      "is_bot": true,
+      "first_name": "BeepBot",
+      "username": "beep_ip_bot",
+      "can_join_groups": true,
+      "can_read_all_group_messages": false,
+      "can_manage_bots": false,
+      "supports_inline_queries": false,
+      "supports_join_request_queries": false,
+      "can_connect_to_business": false,
+      "has_main_web_app": false,
+      "has_topics_enabled": false,
+      "allows_users_to_create_topics": false
+    },
+    "bot": {
+      "id": 8842758525,
+      "isBot": true,
+      "firstName": "BeepBot",
+      "username": "beep_ip_bot",
+      "canJoinGroups": true,
+      "canReadAllGroupMessages": false,
+      "canManageBots": false,
+      "supportsInlineQueries": false,
+      "canConnectToBusiness": false,
+      "hasMainWebApp": false,
+      "hasTopicsEnabled": false,
+      "allowsUsersToCreateTopics": false
+    }
+  },
+  "connected": true,
+  "restartPending": false,
+  "reconnectAttempts": 0,
+  "lastConnectedAt": 1785139765646,
+  "lastEventAt": 1785139765646,
+  "lastTransportActivityAt": 1785139765646,
+  "lastInboundAt": null,
+  "lastOutboundAt": null,
+  "tokenSource": "config",
+  "tokenStatus": "available",
+  "mode": "polling",
+  "audit": {
+    "ok": true,
+    "checkedGroups": 1,
+    "unresolvedGroups": 0,
+    "hasWildcardUnmentionedGroups": false,
+    "groups": [
+      {
+        "chatId": "-1004475923698",
+        "ok": true,
+        "status": "member",
+        "error": null,
+        "matchKey": "-1004475923698",
+        "matchSource": "id"
+      }
+    ],
+    "elapsedMs": 460
+  },
+  "allowUnmentionedGroups": true,
+  "lastProbeAt": 1785139768983
+}

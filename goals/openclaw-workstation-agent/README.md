@@ -41,17 +41,105 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
-P0 Prototype gauntlet — not started. Next concrete action: run the four
-hard-gating spikes on the workstation per the executable contract in
-[`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)
-(filesystem bypass/drift + writer surface, non-interactive user-manager
-apply, same-ref rotation/reload, upgrade+failed-health rollback across
-SQLite stamps) and archive evidence under `history/p0/`. No implementation
-phase may run before every contract assertion passes.
+P2 Generation engine + applicator — **in progress: code surface landed**
+(`infra/src/OpenClaw.ts` + `infra/openclaw` project on
+`goals/openclaw-p2-generation`): pure generation renderers, the staged
+upgrade applicator (stopped-state WAL snapshot → atomic pointer switch →
+bounded health wait → restore-on-failure, `user_version` downgrade guard),
+fail-closed identity-binding preflight with armed-sudo assertion, alert-only
+drift audit, and the encrypted receipt-verified dankserver backup-ship leg.
+Remaining P2 exit criteria are operator-gated: the `pulumi up` vertical
+slice, second-generation switch with forced rollback, live drift demo, and
+backups + restore drill (armed sudo pty per
+[`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)).
+
+P1 Driver — **complete.** `@beep/openclaw` ships the desired-intent schema,
+the versioned render adapter pinned to `openclaw@2026.7.1-2` (canonical
+JSON, sha256 content hash, adapter invariants), the CLI process wrapper
+(version, read-only doctor, `config validate`, `config schema`,
+`secrets reload`, gateway health, channels status, agent turn), the
+`systemctl --user` wrapper, and never-fail HTTP probes. The integration
+lane drives the real pinned binary: rendered golden intent validates, four
+negative fixtures fail validation, and the lossy schema-export guard finds
+no placeholder for any declared extension surface. P2 (generation engine +
+applicator) is next.
+
+P0 Prototype gauntlet — complete. All four spikes pass every contract
+assertion ([`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)):
+spike 1 (6/6), spike 2 (3/3), spike 3 (3/3), spike 4 (3/3). No gated decision
+was re-opened.
 
 ## Latest Evidence
 
-Not started.
+- 2026-07-27 — P1 driver (`packages/drivers/openclaw`): package green under
+  repo gates — 50/50 unit tests, 4/4 integration tests against the real
+  pinned `openclaw@2026.7.1-2` binary (`config validate` accepts the
+  renderer's output as rendered; negative fixtures rejected; schema-export
+  guard clean), docgen with 101 compiling examples. Evidence-side fixture
+  correction recorded in the acceptance test: `allowSymlinkCommand` was
+  retired upstream only after the pin, so the strict-boundary negative
+  fixture uses an unknown exec-provider key instead.
+- 2026-07-26: **Spike 2 (non-interactive user-manager apply) — 3/3 assertions
+  PASS**, no blockers; evidence + harness at
+  [`history/p0/spike-2/NOTES.md`](./history/p0/spike-2/NOTES.md). The gated
+  decision *applicator contracts + identity binding* stands as written.
+  Contract findings for P1: gate preflight on a bus round-trip, not
+  `systemctl --user is-system-running` (returns `degraded` on healthy desktop
+  managers); use `UnitsLoadTimestampMonotonic` as the daemon-reload drift
+  witness; UNIX socket paths cap at 108 bytes under deep content-hashed roots;
+  preflight must fail closed when the expected-identity file is unreadable or
+  malformed (unchecked parse must never yield an empty-mismatch pass); a
+  mid-apply failure after preflight must roll back already-written unit state
+  rather than exit with a partial apply (both spotted by review on the
+  archived spike harness — the prototype script is retained as-run, these land
+  in the real applicator).
+  Recorded residual: the positive lane ran with an active session present —
+  the genuinely session-less linger case is a named P1 follow-up.
+  An earlier independent spike-2 run from this branch (same 3/3 verdict, its own
+  harness and logs) is retained at
+  [`history/p0/spike-2-user-manager/NOTES.md`](./history/p0/spike-2-user-manager/NOTES.md).
+- 2026-07-25 — Spike 4 (upgrade + failed-health rollback across SQLite
+  stamps): **PASS** in the v3 rerun (20 assertions, forward-recovery leg,
+  full pins, zero-residual postflight),
+  [`history/p0/spike-4-upgrade-rollback/NOTES.md`](./history/p0/spike-4-upgrade-rollback/NOTES.md).
+  The interrupted v2 run and its adversarial adjudication are archived
+  alongside as run history.
+- 2026-07-26 — Spike 1 (filesystem bypass/drift + writer surface): **PASS,
+  6 of 6**,
+  [`history/p0/spike-1-filesystem-writer/NOTES.md`](./history/p0/spike-1-filesystem-writer/NOTES.md).
+  Assertions 1–4 on 2026-07-25; the writer surface and its compatibility
+  matrix on 2026-07-26 with no INCOMPATIBLE row. The pairing case is the
+  strongest single result: a live externally triggered first-owner pairing
+  completes and persists the sender in mutable state while the
+  `OPENCLAW_NIX_MODE` guard refuses the owner-config write, with the root
+  inventory byte-identical. Its live-fire sections record fourteen
+  execution-only harness defects that adversarial review did not catch, plus
+  applicator findings (app-layer refusal as a second defense, the
+  `config_health_entries` drift surface, cross-writer mode-encoding
+  variance).
+- 2026-07-27 — Spike 3 (same-reference rotation/reload): **PASS, 3 of 3**,
+  [`history/p0/spike-3-secret-rotation/NOTES.md`](./history/p0/spike-3-secret-rotation/NOTES.md).
+  Rotation behind an unchanged `op://` reference evicts the cold owner within
+  a second, the degraded-reload alert fires and recovers, and a gateway-served
+  model completion plus a live Telegram probe are both bound to the same
+  reload event. Records eight harness defects, the single-use bootstrap
+  credential constraint, and a disclosed earlier isolation deviation.
+
+## Session Handoff
+
+P2's code surface landed 2026-07-27 (same day as P1 and the gauntlet
+close); the spike-2 contract findings are encoded in the applicator's
+preflight/apply scripts. The remaining P2 exit criteria are operator-gated
+and fully scripted in
+[`ops/handoffs/p2-slice-proof-runbook.md`](./ops/handoffs/p2-slice-proof-runbook.md)
+(merge PR #482 first, then the P2 PR, then the armed-pty `pulumi up`
+sequence). The mid-gauntlet handoff
+[`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)
+is retained as run history — its operator prerequisites are satisfied, but its
+privileged-run mechanics still apply (YubiKey-FIDO sudo needs a single armed
+pty session; spikes 1 and 3 must never run concurrently on the shared root;
+the spike-3 bootstrap credential is single-use per cycle and its creation
+needs an interactive 1Password approval).
 
 ## Notes
 

@@ -1,0 +1,30 @@
+[spike4] === step 0: start gen-A, prove healthy baseline ===
+ASSERT-PASS: gen-A live: /health on 19011 = 200
+[spike4] baseline user_version=1
+ASSERT-PASS: baseline stamp user_version=1
+[spike4] === step 1: gen-B staged side-by-side (setup) ===
+ASSERT-PASS: gen-B staged side-by-side
+[spike4] === step 2: validate gen-B config with the CANDIDATE (B) binary ===
+ASSERT-PASS: B binary validates gen-B config
+[spike4] === step 3: stop ===
+ASSERT-PASS: unit stopped
+[spike4] === step 4: snapshot state incl. WAL ===
+ASSERT-PASS: snapshot contains WAL sidecar
+ASSERT-PASS: snapshot contains shared sqlite db
+[spike4] === step 5: atomic pointer switch -> gen-B ===
+[spike4] pointer -> gen-B
+[spike4] === step 6: start B; state must migrate and stamp ===
+ASSERT-PASS: gen-B booted (listens on its rendered port 19012)
+[spike4] post-migrate user_version=5
+ASSERT-PASS: migrations ran: user_version 1 -> 5
+[spike4] === step 7: acceptance probe against EXPECTED port 19011 must FAIL (forced) ===
+ASSERT-PASS: acceptance probe failed as forced (http='000' on 19011) -> rollback path engages
+[spike4] === step 8 (assertion 2): downgrade WITHOUT restore must be refused ===
+[spike4] pointer -> gen-A
+ASSERT-PASS: old binary REFUSED migrated state (journal: 'uses newer schema version', unit=failed)
+[spike4] === step 9: restore snapshot + switch back -> A starts cleanly ===
+[spike4] pointer -> gen-A
+ASSERT-PASS: gen-A healthy against RESTORED state
+ASSERT-PASS: restored stamp user_version=1
+
+SPIKE4-SEQUENCE-PASS

@@ -26,31 +26,32 @@ Why it matters:
   declarations
 - it demonstrates that even small protocol payloads stay schema-first
 
-## 2. Config Normalization with Defaults in the Schema
+## 2. Defaults and Normalization in the Schema
 
-File:
+Files:
 
-- `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts`
+- `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts`
+- `packages/foundation/ui-system/dock/src/Minima.ts`
 
-Use this file when you need:
+Use these files when you need:
 
-- env or config decoding
-- normalization from strings into booleans, numbers, or URLs
 - default behavior encoded directly in the schema
+- constructor defaults and decoding defaults kept next to the field definition
+- defaults on branded or refined fields
 
 What to copy:
 
-- `makeDefaultedStringField`
-- `makeDefaultedPositiveIntField`
-- `makeDefaultedBooleanField`
-- `GraphitiProxyConfig`
+- `SchemaUtils.withConstantDefault`
+- `SchemaUtils.withNoneDefault`
+- the `Minima.ts` field pattern:
+  `PixelAllowance.pipe(SchemaUtils.withConstantDefault<number>(0))` — note the
+  explicit type parameter, required when the field is branded
 
 Why it matters:
 
-- normalization lives in `S.decodeTo(...)` and `SchemaTransformation`, not in
-  ad-hoc runtime branches
-- constructor defaults and decoding defaults stay close to the field definition
-- the final class schema becomes the single source of truth for config behavior
+- normalization and defaults live in schema combinators, not in ad-hoc runtime
+  branches
+- the final class schema becomes the single source of truth for field behavior
 
 ## 3. Optional Data and Typed Errors at a Boundary
 
@@ -152,7 +153,8 @@ Why it matters:
 - Need a `S.Class` domain payload:
   Start with `packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts`
 - Need schema-driven defaults and transforms:
-  Start with `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts`
+  Start with `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts`
+  and the field usage in `packages/foundation/ui-system/dock/src/Minima.ts`
 - Need `Option` boundary fields or schema-backed errors:
   Start with `packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts`
 - Need a `kind` or `type` tagged union:

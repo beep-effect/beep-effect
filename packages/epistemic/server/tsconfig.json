@@ -9,16 +9,46 @@
   },
   "references": [
     {
+      "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/postgres/tsconfig.json"
+    },
+    {
+      "path": "../config/tsconfig.json"
+    },
+    {
       "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../tables/tsconfig.json"
     },
     {
       "path": "../use-cases/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/api-transport/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
     }
   ]
 }

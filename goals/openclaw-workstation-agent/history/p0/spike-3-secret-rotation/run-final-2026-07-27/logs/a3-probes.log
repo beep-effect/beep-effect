@@ -1,0 +1,19 @@
+tied-event old-sha256-prefix=cf5bcbd0 new-sha256-prefix=6c9c6b13 reload-epoch=1785139746
+
+=== authenticated model completion after tied reload ===
+gateway-served-completion runId=15a60d83-cfba-45fe-841b-cb9f2dd3a3ae
+ASSERT-PASS: authenticated gateway model completion succeeded after tied reload
+
+=== Telegram live probe after the same reload ===
+ASSERT-PASS: Telegram live probe succeeded after tied rotation
+
+=== evidence secret scan ===
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+log-scan label=rotated-gateway sha256-prefix=6c9c6b13 plaintext=absent token-shapes=absent
+ASSERT-PASS: model and Telegram probes are causally tied to reload event 957f1e5aaf3f942d3fa00dc1

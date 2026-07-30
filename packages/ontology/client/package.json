@@ -60,6 +60,7 @@
     "@beep/agents-client": "workspace:^",
     "@beep/cosmos": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/observability": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
     "@beep/schema": "workspace:^",

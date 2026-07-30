@@ -12,8 +12,10 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LiteralKit } from "../LiteralKit/index.ts";
 
 /**
@@ -43,8 +45,8 @@ export const $I = $SchemaId.create("JSONSchema");
  * import { CanonicalKeyword } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const keyword = S.decodeUnknownSync(CanonicalKeyword)("properties")
- * console.log(keyword)
+ * const keyword = S.decodeUnknownResult(CanonicalKeyword)("properties")
+ * console.log(keyword._tag)
  * ```
  *
  * @category models
@@ -154,8 +156,8 @@ export const isCanonicalKeyword = S.is(CanonicalKeyword);
  * import { TypeName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const name = S.decodeUnknownSync(TypeName)("string")
- * console.log(name)
+ * const name = S.decodeUnknownResult(TypeName)("string")
+ * console.log(name._tag)
  * ```
  *
  * @category models
@@ -200,8 +202,8 @@ const TypeNameListUniqueCheck = S.isUnique({
  * import { TypeNameList } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const names = S.decodeUnknownSync(TypeNameList)(["string", "null"])
- * console.log(names.length)
+ * const names = S.decodeUnknownResult(TypeNameList)(["string", "null"])
+ * console.log(names._tag)
  * ```
  *
  * @category models
@@ -240,9 +242,9 @@ export type TypeNameList = typeof TypeNameList.Type;
  * import { Types } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const single = S.decodeUnknownSync(Types)("object")
- * const many = S.decodeUnknownSync(Types)(["string", "null"])
- * console.log(single, many)
+ * const single = S.decodeUnknownResult(Types)("object")
+ * const many = S.decodeUnknownResult(Types)(["string", "null"])
+ * console.log(single._tag, many._tag)
  * ```
  *
  * @category models
@@ -287,8 +289,8 @@ const NonNegativeCountCheck = S.isGreaterThanOrEqualTo(0, {
  * import { NonNegativeCount } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const count = S.decodeUnknownSync(NonNegativeCount)(3)
- * console.log(count)
+ * const count = S.decodeUnknownResult(NonNegativeCount)(3)
+ * console.log(count._tag)
  * ```
  *
  * @category models
@@ -333,8 +335,8 @@ const PositiveNumberCheck = S.isGreaterThan(0, {
  * import { PositiveNumber } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const step = S.decodeUnknownSync(PositiveNumber)(0.5)
- * console.log(step)
+ * const step = S.decodeUnknownResult(PositiveNumber)(0.5)
+ * console.log(step._tag)
  * ```
  *
  * @category models
@@ -409,7 +411,7 @@ const RegexCompilesCheck = S.makeFilter<string>(
  *   (record) => R.keys(record).every(compiles) || "keys must be valid ECMA-262 regular expressions"
  * )
  * const PatternProperties = S.Record(S.String, S.Unknown).check(RegexKeys)
- * console.log(S.decodeUnknownSync(PatternProperties)({ "^[a-z]+$": true }))
+ * console.log(S.decodeUnknownResult(PatternProperties)({ "^[a-z]+$": true })._tag)
  * ```
  *
  * @internal
@@ -437,7 +439,7 @@ const safeRegexSources = [
   "^x-",
   "a|b",
   "^\\d+(\\.\\d+)?$",
-] as const;
+];
 
 /**
  * A string that compiles as an ECMA-262 regular expression — the value space
@@ -449,8 +451,8 @@ const safeRegexSources = [
  * import { RegexPatternString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const pattern = S.decodeUnknownSync(RegexPatternString)("^[a-z]+$")
- * console.log(pattern)
+ * const pattern = S.decodeUnknownResult(RegexPatternString)("^[a-z]+$")
+ * console.log(pattern._tag)
  * ```
  *
  * @category models
@@ -497,8 +499,8 @@ const AnchorNameCheck = S.isPattern(anchorNamePattern, {
  * import { AnchorName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const anchor = S.decodeUnknownSync(AnchorName)("node")
- * console.log(anchor)
+ * const anchor = S.decodeUnknownResult(AnchorName)("node")
+ * console.log(anchor._tag)
  * ```
  *
  * @category models
@@ -527,26 +529,134 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
  */
 export type AnchorName = typeof AnchorName.Type;
 
-const UriReferenceCheck = S.isPattern(/^\S*$/, {
+const uriReferenceStructurePattern =
+  /^(?:([A-Za-z][A-Za-z0-9+.-]*):)?(?:\/\/([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/u;
+const uriReferenceAsciiPattern = /^[\x21-\x7e]*$/u;
+const malformedPercentEncodingPattern = /%(?![0-9A-Fa-f]{2})/u;
+const uriPathPattern = /^[A-Za-z0-9._~!$&'()*+,;=:@%/-]*$/u;
+const uriQueryOrFragmentPattern = /^[A-Za-z0-9._~!$&'()*+,;=:@%/?-]*$/u;
+const uriUserInfoPattern = /^[A-Za-z0-9._~!$&'()*+,;=:%-]*$/u;
+const uriRegNamePattern = /^[A-Za-z0-9._~!$&'()*+,;=%-]*$/u;
+const uriPortPattern = /^[0-9]*$/u;
+const uriIpvFuturePattern = /^[Vv][0-9A-Fa-f]+\.[A-Za-z0-9._~!$&'()*+,;=:-]+$/u;
+
+type UriReferenceParts = {
+  readonly host: string | undefined;
+  readonly path: string;
+  readonly scheme: string | undefined;
+};
+
+const hasValidUriPortSuffix = (suffix: string): boolean =>
+  suffix === "" || (Str.startsWith(":")(suffix) && uriPortPattern.test(Str.slice(1)(suffix)));
+
+const isValidIpLiteral = (literal: string): boolean =>
+  uriIpvFuturePattern.test(literal) ||
+  ((!Str.endsWith(":")(literal) || Str.endsWith("::")(literal)) && URL.canParse(`http://[${literal}]/`));
+
+const parseBracketedUriHost = (hostAndPort: string): O.Option<string> => {
+  const literalEnd = hostAndPort.indexOf("]");
+  if (literalEnd === -1) {
+    return O.none();
+  }
+
+  const literal = Str.slice(1, literalEnd)(hostAndPort);
+  const portSuffix = Str.slice(literalEnd + 1)(hostAndPort);
+  return hasValidUriPortSuffix(portSuffix) && isValidIpLiteral(literal) ? O.some(literal) : O.none();
+};
+
+const parseRegNameUriHost = (hostAndPort: string): O.Option<string> => {
+  const portSeparator = hostAndPort.lastIndexOf(":");
+  const host = portSeparator === -1 ? hostAndPort : Str.slice(0, portSeparator)(hostAndPort);
+  const port = portSeparator === -1 ? "" : Str.slice(portSeparator + 1)(hostAndPort);
+  return uriRegNamePattern.test(host) && !Str.includes(":")(host) && uriPortPattern.test(port)
+    ? O.some(host)
+    : O.none();
+};
+
+const parseUriAuthorityHost = (authority: string): O.Option<string> => {
+  const userInfoSeparator = authority.lastIndexOf("@");
+  const userInfo = userInfoSeparator === -1 ? undefined : Str.slice(0, userInfoSeparator)(authority);
+  if (userInfo !== undefined && !uriUserInfoPattern.test(userInfo)) {
+    return O.none();
+  }
+
+  const hostAndPort = userInfoSeparator === -1 ? authority : Str.slice(userInfoSeparator + 1)(authority);
+  return Str.startsWith("[")(hostAndPort) ? parseBracketedUriHost(hostAndPort) : parseRegNameUriHost(hostAndPort);
+};
+
+const hasValidUriReferenceEncoding = (value: string): boolean =>
+  uriReferenceAsciiPattern.test(value) && !malformedPercentEncodingPattern.test(value);
+
+const hasValidUriComponents = (path: string, query: string | undefined, fragment: string | undefined): boolean =>
+  uriPathPattern.test(path) &&
+  (query === undefined || uriQueryOrFragmentPattern.test(query)) &&
+  (fragment === undefined || uriQueryOrFragmentPattern.test(fragment));
+
+const hasValidRelativeFirstSegment = (
+  scheme: string | undefined,
+  authority: string | undefined,
+  path: string
+): boolean => {
+  if (scheme !== undefined || authority !== undefined || Str.startsWith("/")(path)) {
+    return true;
+  }
+
+  const firstSegmentEnd = path.indexOf("/");
+  const firstSegment = firstSegmentEnd === -1 ? path : Str.slice(0, firstSegmentEnd)(path);
+  return !Str.includes(":")(firstSegment);
+};
+
+const parseUriReference = (value: string): UriReferenceParts | undefined => {
+  if (!hasValidUriReferenceEncoding(value)) {
+    return undefined;
+  }
+
+  const match = uriReferenceStructurePattern.exec(value);
+  if (match === null) {
+    return undefined;
+  }
+
+  const scheme = match[1];
+  const authority = match[2];
+  const path = match[3] ?? "";
+  const query = match[4];
+  const fragment = match[5];
+  if (!hasValidUriComponents(path, query, fragment)) {
+    return undefined;
+  }
+
+  const host = authority === undefined ? O.none<string>() : parseUriAuthorityHost(authority);
+  if (authority !== undefined && O.isNone(host)) {
+    return undefined;
+  }
+
+  if (!hasValidRelativeFirstSegment(scheme, authority, path)) {
+    return undefined;
+  }
+
+  return { host: O.getOrUndefined(host), path, scheme };
+};
+
+const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(value) !== undefined, {
   identifier: $I`UriReferenceCheck`,
   title: "URI-Reference",
-  description:
-    "Pragmatic URI-Reference syntax gate for `$id`, `$ref`, and `$dynamicRef`: rejects whitespace, which no RFC 3986 URI-Reference may contain.",
-  message: "must be a URI-Reference (whitespace is not allowed)",
+  description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
+  message: "must be a valid RFC 3986 URI-Reference",
 });
 
 /**
- * A pragmatic URI-Reference string for `$id`, `$ref`, and `$dynamicRef`.
- * Full RFC 3986 grammar validation is deliberately out of scope; the check
- * rejects whitespace, which no URI-Reference may contain.
+ * An RFC 3986 URI-Reference string for `$ref`, `$dynamicRef`, and other
+ * reference-valued keywords. Relative references are valid; malformed
+ * structure, invalid characters, and invalid percent encoding are rejected.
+ * `$id` additionally uses {@link IdUriReferenceString}.
  *
  * @example
  * ```ts
  * import { UriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const ref = S.decodeUnknownSync(UriReferenceString)("#/$defs/User")
- * console.log(ref)
+ * const ref = S.decodeUnknownResult(UriReferenceString)("#/$defs/User")
+ * console.log(ref._tag)
  * ```
  *
  * @category models
@@ -554,7 +664,7 @@ const UriReferenceCheck = S.isPattern(/^\S*$/, {
  */
 export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
   $I.annoteSchema("UriReferenceString", {
-    description: "URI-Reference (pragmatic validation: no whitespace).",
+    description: "RFC 3986 URI-Reference.",
     toArbitrary: () => (fc) =>
       fc.constantFrom(
         "#/$defs/User",
@@ -584,6 +694,133 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
  */
 export type UriReferenceString = typeof UriReferenceString.Type;
 
+const unreservedUriCharacterPattern = /^[A-Za-z0-9\-._~]$/;
+const uriDotSegmentPattern = /(?:^|\/)\.{1,2}(?:\/|$)/;
+
+const normalizePercentEncoding = (value: string): string =>
+  value.replace(/%[0-9A-Fa-f]{2}/g, (token) => {
+    const decoded = String.fromCharCode(Number.parseInt(Str.slice(1)(token), 16));
+    return unreservedUriCharacterPattern.test(decoded) ? decoded : Str.toUpperCase(token);
+  });
+
+const normalizeUriHostCase = (value: string): string =>
+  value.replace(/%[0-9A-F]{2}|./g, (token) => (Str.startsWith("%")(token) ? token : Str.toLowerCase(token)));
+
+const isNormalizedUriHost = (host: string | undefined): boolean =>
+  host === undefined || host === normalizeUriHostCase(host);
+
+const isNormalizedAbsoluteUri = (value: string): boolean => {
+  const parts = parseUriReference(value);
+  if (parts?.scheme === undefined) {
+    return false;
+  }
+
+  return (
+    parts.scheme === Str.toLowerCase(parts.scheme) &&
+    isNormalizedUriHost(parts.host) &&
+    normalizePercentEncoding(value) === value &&
+    !uriDotSegmentPattern.test(parts.path)
+  );
+};
+
+const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
+  identifier: $I`AbsoluteUriCheck`,
+  title: "Normalized absolute URI",
+  description: "Normalized absolute RFC 3986 URI with a scheme.",
+  message: "must be a valid normalized absolute URI",
+});
+
+/**
+ * A normalized absolute URI string for dialect and vocabulary identifiers.
+ *
+ * @example
+ * ```ts
+ * import { AbsoluteUriString } from "@beep/schema/JSONSchema"
+ * import * as S from "effect/Schema"
+ *
+ * const uri = S.decodeUnknownResult(AbsoluteUriString)("https://json-schema.org/draft/2020-12/schema")
+ * console.log(uri._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AbsoluteUriString = UriReferenceString.check(AbsoluteUriCheck).pipe(
+  $I.annoteSchema("AbsoluteUriString", {
+    description: "Normalized absolute RFC 3986 URI.",
+    toArbitrary: () => (fc) =>
+      fc.constantFrom(
+        "https://json-schema.org/draft/2020-12/schema",
+        "https://json-schema.org/draft/2020-12/vocab/core",
+        "urn:example:vocabulary"
+      ),
+  })
+);
+
+/**
+ * Type for {@link AbsoluteUriString}.
+ *
+ * @example
+ * ```ts
+ * import type { AbsoluteUriString } from "@beep/schema/JSONSchema"
+ *
+ * const uri: AbsoluteUriString = "https://json-schema.org/draft/2020-12/schema"
+ * console.log(uri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AbsoluteUriString = typeof AbsoluteUriString.Type;
+
+const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
+  identifier: $I`IdUriReferenceCheck`,
+  title: "$id URI-Reference",
+  description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
+  message: "must not contain a non-empty fragment",
+});
+
+/**
+ * A draft-2020-12 `$id` URI-Reference. It inherits the RFC 3986 validation of
+ * {@link UriReferenceString} and additionally rejects non-empty fragments; a
+ * trailing empty `#` remains backward-compatible.
+ *
+ * @example
+ * ```ts
+ * import { IdUriReferenceString } from "@beep/schema/JSONSchema"
+ * import * as S from "effect/Schema"
+ *
+ * const id = S.decodeUnknownResult(IdUriReferenceString)("https://example.com/schema#")
+ * console.log(id._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const IdUriReferenceString = UriReferenceString.check(IdUriReferenceCheck).pipe(
+  $I.annoteSchema("IdUriReferenceString", {
+    description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
+    toArbitrary: () => (fc) =>
+      fc.constantFrom("", "#", "schema.json", "https://example.com/schema.json", "urn:example:schema"),
+  })
+);
+
+/**
+ * Type for {@link IdUriReferenceString}.
+ *
+ * @example
+ * ```ts
+ * import type { IdUriReferenceString } from "@beep/schema/JSONSchema"
+ *
+ * const id: IdUriReferenceString = "https://example.com/schema.json"
+ * console.log(id)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IdUriReferenceString = typeof IdUriReferenceString.Type;
+
 const NotCanonicalKeywordCheck = S.makeFilter<string>(
   (value) => (isCanonicalKeyword(value) ? "must not shadow a canonical JSON Schema keyword" : true),
   {
@@ -604,8 +841,8 @@ const NotCanonicalKeywordCheck = S.makeFilter<string>(
  * import { ExtensionKey } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const key = S.decodeUnknownSync(ExtensionKey)("x-vendor")
- * console.log(key)
+ * const key = S.decodeUnknownResult(ExtensionKey)("x-vendor")
+ * console.log(key._tag)
  * ```
  *
  * @category models
@@ -644,8 +881,8 @@ export type ExtensionKey = typeof ExtensionKey.Type;
  * import { JsonValue } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const value = S.decodeUnknownSync(JsonValue)({ nested: [1, "two", null] })
- * console.log(value)
+ * const value = S.decodeUnknownResult(JsonValue)({ nested: [1, "two", null] })
+ * console.log(value._tag)
  * ```
  *
  * @category models
@@ -654,7 +891,7 @@ export type ExtensionKey = typeof ExtensionKey.Type;
 export const JsonValue = S.Json.pipe(
   $I.annoteSchema("JsonValue", {
     description: "Any JSON value (depth-bounded generation).",
-    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map((value) => value as (typeof S.Json)["Type"]),
+    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map(S.decodeUnknownOption(S.Json)).map(O.getOrNull),
   })
 );
 
@@ -702,8 +939,8 @@ const ExtensionsBagKeysCheck = S.makeFilter<{ readonly [key: string]: unknown }>
  * import { ExtensionsBag } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const bag = S.decodeUnknownSync(ExtensionsBag)({ "x-vendor": 42 })
- * console.log(bag["x-vendor"])
+ * const bag = S.decodeUnknownResult(ExtensionsBag)({ "x-vendor": 42 })
+ * console.log(bag._tag)
  * ```
  *
  * @category models

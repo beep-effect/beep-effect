@@ -3,6 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/scratchpad",
+  "scripts": {
+    "audit:effect-ontology-arbitraries": "bun effect-ontology/scripts/audit-arbitraries.ts",
+    "audit:effect-ontology-docs": "bun effect-ontology/scripts/audit-documentation.ts",
+    "check:effect-ontology": "tsgo -p effect-ontology/tsconfig.json --noEmit --pretty false",
+    "claudecode:check": "bun run claudecode:typecheck && bun run claudecode:test && bun run claudecode:lint",
+    "claudecode:lint": "biome check --config-path claudecode/biome.jsonc claudecode test/claudecode",
+    "claudecode:lint:fix": "biome check --write --config-path claudecode/biome.jsonc claudecode test/claudecode",
+    "claudecode:test": "bunx --bun vitest run --config claudecode/vitest.config.ts",
+    "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
+    "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
+    "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",
+    "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts"
+  },
   "dependencies": {
     "@beep/dock": "workspace:^",
     "@beep/dock-react": "workspace:^",
@@ -10,12 +24,15 @@
     "@beep/md": "workspace:^",
     "@beep/ontology": "workspace:^",
     "@beep/pretext": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
+    "@effect/platform-node-shared": "catalog:",
     "effect": "catalog:",
     "lexical": "catalog:",
-    "n3": "catalog:"
+    "n3": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

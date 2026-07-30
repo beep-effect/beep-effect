@@ -73,9 +73,7 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
         description: "End page for range pincites (3755-58 -> 3758) (#639).",
       })
     ),
-    pinciteIsRange: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteIsRange: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: "True when the pincite is a range (3755-58) (#639).",
       })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
-import { intakeRefusal } from "@/intake/DocumentIntakeTarget";
+import { intakeRefusal } from "@/intake/Intake.atoms";
 
 const MEGABYTE = 1024 * 1024;
 

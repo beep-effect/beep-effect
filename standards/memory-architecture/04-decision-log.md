@@ -4,6 +4,47 @@ Dated decision log for the memory architecture standard. Records decisions as th
 
 ---
 
+## 2026-07-25: Bitemporal Port Landed — Graphiti Retirement Trigger Fires
+
+**Context:** The 2026-07-08 entry below conditioned graphiti-memory's
+decommissioning on the `@beep/epistemic-tables` bitemporal port landing. That
+milestone ships with `goals/epistemic-bitemporal-edge-core`: the epistemic
+slice now owns the Postgres bitemporal claim/edge authority (immutable
+`epistemic_edge_version` history with half-open `[valid_from, valid_to)` /
+`[recorded_at, expired_at)` axes, durable `epistemic_claim_disposition`,
+atomic close-and-insert supersession, canonical `asOf(validAt, knownAt)`
+reads, and restart/migration proof), reimplementing the Graphiti temporal-edge
+contract repo-natively under Apache-2.0 attribution
+(`THIRD_PARTY_NOTICES.md`, `licenses/Apache-2.0.txt`).
+
+**Decision:** The write-frozen operator-level Graphiti deployment is retired.
+Its sole surviving differentiator (the bitemporal edge model) is now owned
+repo-natively, so the read-available window closes: operators may remove the
+`graphiti-memory` MCP server, proxy helpers, and hooks from their
+configurations at leisure; no repo surface depends on them. Cognee remains the
+sole always-on dev-memory incumbent per the 2026-07-08 entry, and Layer-1 file
+memory remains the fallback.
+
+**Boundary restated (binding):** product tables are the professional
+runtime's authority and NEVER become an operator-memory backend. Retiring
+Graphiti transfers no operator-memory traffic onto
+`@beep/epistemic-tables`; operator memory stays in operator-level tooling
+(Cognee + file memory), and the product authority stays product-only.
+
+**Consequences:**
+
+- The `mcp-graphiti-memory` skill's deprecation notice becomes a retirement
+  notice; read workflows against the old deployment are no longer part of any
+  documented procedure.
+- Operator-level cleanup (MCP config, `graphiti:*` proxy scripts, hooks)
+  follows the drafted-cleanup list in
+  `docs/agent-memory-infra/00-recommendation.md` § "Drafted cleanup".
+- Queued epistemic lanes (`epistemic-contradiction-triage`,
+  `epistemic-memory-retention-projections`) build on the landed core; none
+  reopen the operator/product boundary.
+
+---
+
 ## 2026-07-08: External Memory Stack — Donor Portfolio Confirmed; Cognee Is the Sole Dev-Memory Incumbent; Doctrine Phrasing Sharpened
 
 **Context:** Six products (OriginTrail DKG, TrustGraph, Graphiti/Zep, Cognee,

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Effect-TS/tsgo/refs/heads/main/schema.json",
+  "extends": "../../tsconfig.base.json",
+  "include": ["./**/*.ts", "../test/claudecode/**/*.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "types": ["node", "bun"],
+    "rootDir": "..",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "composite": false,
+    "incremental": false
+  }
+}

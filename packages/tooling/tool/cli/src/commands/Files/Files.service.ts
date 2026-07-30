@@ -98,6 +98,8 @@ import {
   preflightNormalizeOutputs,
   preflightTargetCollisions,
 } from "./internal/Apply.ts";
+import { runFlattenMediaFiles } from "./internal/FlattenMedia.ts";
+import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
 import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
 import { processFilesImpl } from "./internal/Process.ts";
 import {
@@ -116,6 +118,7 @@ import {
 } from "./internal/Validation.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ArchivePoorCandidatesOptions,
@@ -129,6 +132,12 @@ import type {
   DetectFacesEntry,
   DetectFacesOptions,
   DetectFacesSkippedReason,
+  FlattenMediaOptions,
+  FlattenMediaSummary,
+  ImageAuditManifest,
+  ImageAuditOptions,
+  ImageCurationOptions,
+  ImageCurationSummary,
   MediaDimensions,
   MediaKind,
   NormalizeImageFormat,
@@ -146,7 +155,8 @@ type FilesCommandServiceRequirements =
   | Path.Path
   | Terminal.Terminal
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto;
+  | Crypto.Crypto
+  | HttpClient.HttpClient;
 
 interface DetectBordersCollectedEntries {
   readonly files: ReadonlyArray<SortableFile>;
@@ -190,6 +200,12 @@ export interface FilesCommandServiceShape {
   readonly archivePoorCandidates: (
     options: ArchivePoorCandidatesOptions
   ) => Effect.Effect<ArchivePoorCandidatesSummary, FilesCommandError>;
+  /**
+   * Audit direct images without mutating source bytes.
+   *
+   * @since 0.0.0
+   */
+  readonly auditImages: (options: ImageAuditOptions) => Effect.Effect<ImageAuditManifest, FilesCommandError>;
 
   /**
    * Create same-stem caption sidecar files for direct image files.
@@ -208,6 +224,13 @@ export interface FilesCommandServiceShape {
   readonly cropBordersFiles: (options: CropBordersOptions) => Effect.Effect<CropBordersSummary, FilesCommandError>;
 
   /**
+   * Validate a complete decision ledger and materialize canonical PNG derivatives.
+   *
+   * @since 0.0.0
+   */
+  readonly curateImages: (options: ImageCurationOptions) => Effect.Effect<ImageCurationSummary, FilesCommandError>;
+
+  /**
    * Detect solid or near-solid borders in direct image files.
    *
    * @since 0.0.0
@@ -220,6 +243,13 @@ export interface FilesCommandServiceShape {
    * @since 0.0.0
    */
   readonly detectFacesFiles: (options: DetectFacesOptions) => Effect.Effect<DetectFacesReport, FilesCommandError>;
+
+  /**
+   * Recursively move image and video files into one flat destination directory.
+   *
+   * @since 0.0.0
+   */
+  readonly flattenMediaFiles: (options: FlattenMediaOptions) => Effect.Effect<FlattenMediaSummary, FilesCommandError>;
 
   /**
    * Normalize direct image files into a reversible output directory.
@@ -1692,8 +1722,11 @@ const buildStripMetadataPlan = Effect.fn("Files.buildStripMetadataPlan")(functio
  */
 export const printFilesIndex = printLines([
   "Files commands:",
+  "- bun run files audit-images --dir ./raw --model ./face_detection_yunet.onnx --manifest ./audit.json",
+  "- bun run files curate-images --dir ./raw --decisions ./decisions.json --out-dir ./prepared",
   "- bun run files sort-and-rename --prefix image --dir ./tmp",
   "- bun run files sort-and-rename --prefix image --dir ./tmp --with-dimensions",
+  "- bun run files flatten-media --dir ./raw --out-dir ./flat --dry-run",
   "- bun run files strip-metadata --dir ./tmp",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png --dedupe",
@@ -2353,6 +2386,17 @@ const sortAndRenameFilesImpl = Effect.fn("FilesCommandService.sortAndRenameFiles
   });
 });
 
+const flattenMediaFilesImpl = Effect.fn("FilesCommandService.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  return yield* profilePhase(runFlattenMediaFiles(options), {
+    phase: "files.flatten-media",
+    attributes: {
+      dryRun: `${options.dryRun}`,
+    },
+  });
+});
+
 const stripMetadataFilesImpl = Effect.fn("FilesCommandService.stripMetadataFiles")(function* (
   dir: string,
   dryRun: boolean
@@ -2416,6 +2460,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
   const runtimeContext = yield* Effect.context<FilesCommandServiceRequirements>();
 
   return FilesCommandService.of({
+    auditImages: Effect.fn("FilesCommandService.auditImages")((options) =>
+      auditImagesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     archivePoorCandidates: Effect.fn("FilesCommandService.archivePoorCandidates")((options) =>
       archivePoorCandidatesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -2425,11 +2472,17 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
     cropBordersFiles: Effect.fn("FilesCommandService.cropBordersFiles")((options) =>
       cropBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
+    curateImages: Effect.fn("FilesCommandService.curateImages")((options) =>
+      curateImagesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     detectBordersFiles: Effect.fn("FilesCommandService.detectBordersFiles")((options) =>
       detectBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     detectFacesFiles: Effect.fn("FilesCommandService.detectFacesFiles")((options) =>
       detectFacesFilesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    flattenMediaFiles: Effect.fn("FilesCommandService.flattenMediaFiles")((options) =>
+      flattenMediaFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     normalizeFiles: Effect.fn("FilesCommandService.normalizeFiles")((options) =>
       normalizeFilesImpl(options).pipe(Effect.provide(runtimeContext))
@@ -2461,6 +2514,27 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
  */
 export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, FilesCommandServiceRequirements> =
   Layer.effect(FilesCommandService, makeFilesCommandService());
+
+/**
+ * Audit direct images and write deterministic review evidence without changing source files.
+ *
+ * @param options - Image audit directory, model, manifest, and overwrite options.
+ * @returns The completed image audit manifest.
+ * @example
+ * ```ts
+ * import { auditImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof auditImages = auditImages
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const auditImages = Effect.fn("Files.auditImages")(function* (
+  options: ImageAuditOptions
+): Effect.fn.Return<ImageAuditManifest, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.auditImages(options);
+});
 
 /**
  * Archive obvious poor image candidates out of a dataset directory.
@@ -2526,6 +2600,27 @@ export const cropBordersFiles = Effect.fn("Files.cropBordersFiles")(function* (
 });
 
 /**
+ * Validate a complete decision ledger and materialize canonical PNG derivatives.
+ *
+ * @param options - Source, ledger, output, dry-run, and overwrite options.
+ * @returns Summary counts for the curation run.
+ * @example
+ * ```ts
+ * import { curateImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof curateImages = curateImages
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const curateImages = Effect.fn("Files.curateImages")(function* (
+  options: ImageCurationOptions
+): Effect.fn.Return<ImageCurationSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.curateImages(options);
+});
+
+/**
  * Detect solid or near-solid borders in direct image files.
  *
  * @param options - Border detection options.
@@ -2565,6 +2660,32 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
 ): Effect.fn.Return<DetectFacesReport, FilesCommandError, FilesCommandService> {
   const files = yield* FilesCommandService;
   return yield* files.detectFacesFiles(options);
+});
+
+/**
+ * Recursively move image and video files into one flat destination directory.
+ *
+ * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
+ * @example
+ * ```ts
+ * import { FlattenMediaOptions, flattenMediaFiles } from "@beep/repo-cli/commands/Files"
+ * import { Effect } from "effect"
+ *
+ * const program = flattenMediaFiles(FlattenMediaOptions.make({
+ *   dir: "./raw",
+ *   dryRun: true,
+ *   outDir: "./flat"
+ * }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const flattenMediaFiles = Effect.fn("Files.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.flattenMediaFiles(options);
 });
 
 /**

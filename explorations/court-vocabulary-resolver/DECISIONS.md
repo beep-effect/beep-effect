@@ -4,6 +4,22 @@ The align gate closed on 2026-07-14. All seven alignment questions below are
 ratified and locked. Items under **Deferred Work** are implementation spikes or
 optional follow-ons, not unresolved alignment questions.
 
+## 2026-07-25 — SUPERSEDING — Raw artifact home and ingestion boundary
+
+The generated raw artifact home is
+`packages/law-practice/domain/src/internal/generated/free-law-project/`, not
+`packages/foundation/primitive/data/src/generated/`. This supersedes only the
+raw-artifact location in Q5; public stable vocabulary and pure product semantics
+remain owned by law-practice domain.
+
+The first implementation increment is ingestion substrate only. reporters-db
+ingestion includes all six official datasets (case-name abbreviations, journals,
+laws, regex fragments, reporters, and state abbreviations), and courts-db is
+assembled from its pinned authored inputs. eyecite-js and eyecite-ts are
+research references only; their local/custom overlays are excluded from
+production truth. Public IDs, lookups, compatibility/lifecycle APIs, and
+resolver behavior remain later goal phases.
+
 ## 2026-07-14 — LOCKED — Q1: What do we build?
 
 **Question:** Should beep reimplement court-string resolution, adopt a JavaScript

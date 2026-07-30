@@ -122,6 +122,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/otlp/, ""),
       },
     },
+    // Cargo can materialize tens of thousands of generated files under target.
+    // They never affect the web bundle and exhausting inotify there prevents the
+    // canonical portless dev server from starting.
+    watch: {
+      ignored: ["**/src-tauri/target/**"],
+    },
   },
   envPrefix: ["VITE_", "TAURI_"],
 });

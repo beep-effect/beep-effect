@@ -1,0 +1,110 @@
+{
+  "ok": true,
+  "ts": 1785139746437,
+  "durationMs": 5,
+  "eventLoop": {
+    "degraded": false,
+    "reasons": [],
+    "intervalMs": 4347,
+    "delayP99Ms": 20.7,
+    "delayMaxMs": 34.6,
+    "utilization": 0.038,
+    "cpuCoreRatio": 0.084
+  },
+  "plugins": {
+    "loaded": [
+      "browser",
+      "canvas",
+      "device-pair",
+      "file-transfer",
+      "memory-core",
+      "ollama",
+      "phone-control",
+      "talk-voice",
+      "telegram"
+    ],
+    "errors": []
+  },
+  "configReload": {
+    "hotReloadStatus": "active"
+  },
+  "modelPricing": {
+    "state": "ok",
+    "sources": []
+  },
+  "channels": {
+    "telegram": {
+      "accountId": "default",
+      "enabled": true,
+      "configured": true,
+      "running": true,
+      "lastStartAt": 1785139734336,
+      "lastStopAt": null,
+      "lastError": null,
+      "connected": false,
+      "restartPending": false,
+      "reconnectAttempts": 0,
+      "lastInboundAt": null,
+      "lastOutboundAt": null,
+      "tokenSource": "config",
+      "tokenStatus": "available",
+      "mode": "polling",
+      "allowUnmentionedGroups": true,
+      "lastProbeAt": null,
+      "accounts": {
+        "default": {
+          "accountId": "default",
+          "enabled": true,
+          "configured": true,
+          "running": true,
+          "lastStartAt": 1785139734336,
+          "lastStopAt": null,
+          "lastError": null,
+          "connected": false,
+          "restartPending": false,
+          "reconnectAttempts": 0,
+          "lastInboundAt": null,
+          "lastOutboundAt": null,
+          "tokenSource": "config",
+          "tokenStatus": "available",
+          "mode": "polling",
+          "allowUnmentionedGroups": true,
+          "lastProbeAt": null
+        }
+      }
+    }
+  },
+  "channelOrder": [
+    "telegram"
+  ],
+  "channelLabels": {
+    "telegram": "Telegram"
+  },
+  "heartbeatSeconds": 1800,
+  "defaultAgentId": "spike3",
+  "agents": [
+    {
+      "agentId": "spike3",
+      "name": "Spike 3",
+      "isDefault": true,
+      "heartbeat": {
+        "enabled": true,
+        "every": "30m",
+        "everyMs": 1800000,
+        "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.",
+        "target": "none",
+        "ackMaxChars": 300
+      },
+      "sessions": {
+        "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/state/agents/spike3/sessions/sessions.json",
+        "count": 0,
+        "recent": []
+      }
+    }
+  ],
+  "sessions": {
+    "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/state/agents/spike3/sessions/sessions.json",
+    "count": 0,
+    "recent": []
+  }
+}

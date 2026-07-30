@@ -6,9 +6,8 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, HashMap, HashSet, Order, Path, pipe } from "effect";
+import { Effect, flow, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -16,44 +15,10 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { RepoPackageName } from "./PackageJson.ts";
-import {
-  buildDocgenAliasTargets,
-  RootAliasTarget,
-  resolveRootExportTarget,
-  resolveSubpathExportTarget,
-  resolveWildcardExportTarget,
-  WildcardAliasTarget,
-} from "./TsconfigAliasTargets.ts";
-import type { PackageJson } from "./PackageJson.ts";
 
 const $I = $RepoUtilsId.create("schemas/DocgenConfig");
 
-const EMPTY_STRING_RECORD: R.ReadonlyRecord<string, string> = R.empty();
-const byStringAscending: Order.Order<string> = Order.String;
-const DocgenWildcardAliasTarget = S.Union([WildcardAliasTarget, S.Literal("")]).pipe(
-  $I.annoteSchema("DocgenWildcardAliasTarget", {
-    description: "A concrete wildcard alias target, or an empty string when the package exports no wildcard.",
-  })
-);
-
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
-
-const recordOrEmpty = (value: O.Option<Readonly<Record<string, string>>>): Readonly<Record<string, string>> =>
-  O.getOrElse(value, () => EMPTY_STRING_RECORD);
-
-const uniqueSortedStringValues: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
-  HashSet.fromIterable,
-  A.fromIterable,
-  A.sort(byStringAscending)
-);
-const withRootRelativePrefix: {
-  (rootRelativePrefix: string, targetPath: string): string;
-  (rootRelativePrefix: string): (targetPath: string) => string;
-} = dual(
-  2,
-  (rootRelativePrefix: string, targetPath: string): string =>
-    `${rootRelativePrefix}${Str.replace(/^\.\//, Str.empty)(targetPath)}`
-);
 
 /**
  * Default docgen exclude globs for repo packages.
@@ -75,45 +40,6 @@ const withRootRelativePrefix: {
 export const DEFAULT_DOCGEN_EXCLUDE = ["src/internal/**/*.ts"] as const;
 
 /**
- * Workspace alias metadata used to build docgen example path mappings.
- *
- * @example
- * ```ts
- * import { DocgenAliasSource } from "@beep/repo-utils/schemas/DocgenConfig"
- * const source = DocgenAliasSource.make({
- *   packageName: "@beep/example",
- *   rootAliasTarget: "./packages/example/src/index.ts",
- *   wildcardAliasTarget: "./packages/example/src/*.ts",
- *   subpathAliasTargets: { "@beep/example/testing": "./packages/example/src/testing.ts" }
- * })
- * console.log(source.rootAliasTarget) // "./packages/example/src/index.ts"
- * ```
- * @category models
- * @since 0.0.0
- */
-export class DocgenAliasSource extends S.Class<DocgenAliasSource>($I`DocgenAliasSource`)(
-  {
-    packageName: RepoPackageName.annotateKey({
-      description: "Workspace package name that owns these docgen aliases.",
-    }),
-    rootAliasTarget: RootAliasTarget.annotateKey({
-      description: "Root alias target used for bare package imports.",
-    }),
-    wildcardAliasTarget: DocgenWildcardAliasTarget.annotateKey({
-      description: "Wildcard alias target used for package subpath imports, or empty when disabled.",
-    }),
-    subpathAliasTargets: S.Record(S.String, RootAliasTarget)
-      .pipe(SchemaUtils.withKeyDefaults(EMPTY_STRING_RECORD))
-      .annotateKey({
-        description: "Concrete package subpath aliases derived from package export entries.",
-      }),
-  },
-  $I.annote("DocgenAliasSource", {
-    description: "Workspace alias metadata used to build docgen example path mappings.",
-  })
-) {}
-
-/**
  * Input used to build the canonical repo docgen config for a package.
  *
  * @example
@@ -123,9 +49,7 @@ export class DocgenAliasSource extends S.Class<DocgenAliasSource>($I`DocgenAlias
  *   rootDir: "/repo",
  *   packageAbsolutePath: "/repo/packages/example",
  *   packageRelativePath: "packages/example",
- *   packageName: "@beep/example",
- *   directWorkspaceDependencies: ["@beep/schema"],
- *   workspaceAliasSources: []
+ *   packageName: "@beep/example"
  * })
  * console.log(input.packageRelativePath) // "packages/example"
  * ```
@@ -145,12 +69,6 @@ export class CanonicalDocgenConfigInput extends S.Class<CanonicalDocgenConfigInp
     }),
     packageName: RepoPackageName.annotateKey({
       description: "Workspace package name being configured for docgen.",
-    }),
-    directWorkspaceDependencies: S.Array(RepoPackageName).annotateKey({
-      description: "Direct workspace package dependencies used for example path aliases.",
-    }),
-    workspaceAliasSources: S.Array(DocgenAliasSource).annotateKey({
-      description: "Alias metadata for workspace packages visible to examples.",
     }),
   },
   $I.annote("CanonicalDocgenConfigInput", {
@@ -193,10 +111,9 @@ export class CanonicalDocgenConfigInput extends S.Class<CanonicalDocgenConfigInp
  *   stripInternal: false,
  *   noErrorTruncation: true,
  *   types: [],
- *   jsx: "react-jsx",
- *   paths: { "@beep/example": ["./packages/example/src/index.ts"] }
+ *   jsx: "react-jsx"
  * })
- * console.log(options.paths["@beep/example"]) // ["./packages/example/src/index.ts"]
+ * console.log(options.moduleResolution) // "bundler"
  * ```
  * @category models
  * @since 0.0.0
@@ -230,7 +147,6 @@ export class CanonicalDocgenExamplesCompilerOptions extends S.Class<CanonicalDoc
     noErrorTruncation: S.Literal(true),
     types: S.Array(S.String),
     jsx: S.Literal("react-jsx"),
-    paths: S.Record(S.String, S.Array(S.String)),
   },
   $I.annote("CanonicalDocgenExamplesCompilerOptions", {
     description: "Managed TypeScript compiler options used for docgen examples.",
@@ -276,8 +192,7 @@ export class CanonicalDocgenExamplesCompilerOptions extends S.Class<CanonicalDoc
  *     stripInternal: false,
  *     noErrorTruncation: true,
  *     types: [],
- *     jsx: "react-jsx",
- *     paths: {}
+ *     jsx: "react-jsx"
  *   })
  * })
  * console.log(config.exclude[0] === internalGlob) // true
@@ -339,8 +254,7 @@ const isReadonlyUnknownRecord = (value: unknown): value is Readonly<Record<strin
  *     stripInternal: false,
  *     noErrorTruncation: true,
  *     types: [],
- *     jsx: "react-jsx",
- *     paths: { "@beep/example": ["./packages/example/src/index.ts"] }
+ *     jsx: "react-jsx"
  *   })
  * )
  * console.log(json.moduleResolution) // "bundler"
@@ -376,10 +290,6 @@ export const toDocgenExamplesCompilerOptionsJson = (
   noErrorTruncation: options.noErrorTruncation,
   types: cloneStringArray(options.types),
   jsx: options.jsx,
-  paths: pipe(
-    options.paths,
-    R.map((targets) => cloneStringArray(targets))
-  ),
 });
 
 /**
@@ -470,8 +380,7 @@ export type CanonicalDocgenConfigJson = (typeof CanonicalDocgenConfigJsonShape)[
  *       stripInternal: false,
  *       noErrorTruncation: true,
  *       types: [],
- *       jsx: "react-jsx",
- *       paths: {}
+ *       jsx: "react-jsx"
  *     })
  *   })
  * )
@@ -488,177 +397,6 @@ export const toCanonicalDocgenConfigJson = (config: CanonicalDocgenConfig): Cano
 });
 
 /**
- * Collect direct workspace package dependencies from a package manifest.
- *
- * @param packageJson - Package manifest whose dependency sections are scanned.
- * @returns The deduplicated, sorted list of workspace (`@beep/*`) dependency names.
- * @remarks
- * The returned names are deduplicated and sorted across dependency,
- * development, peer, and optional dependency sections. Non-workspace packages
- * are intentionally ignored because docgen only needs path aliases for local
- * examples.
- * @example
- * ```ts
- * import { collectDocgenWorkspaceDependencyNames } from "@beep/repo-utils/schemas/DocgenConfig"
- * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
- * const names = collectDocgenWorkspaceDependencyNames(
- *   decodePackageJson({
- *     name: "@beep/example",
- *     dependencies: { "@beep/schema": "workspace:^", "effect": "catalog:" },
- *     devDependencies: { "@beep/utils": "workspace:^", "@beep/schema": "workspace:^" }
- *   })
- * )
- * console.log(names) // ["@beep/schema", "@beep/utils"]
- * ```
- * @category models
- * @since 0.0.0
- */
-export const collectDocgenWorkspaceDependencyNames = (packageJson: PackageJson.Type): ReadonlyArray<string> =>
-  pipe(
-    [
-      ...pipe(packageJson.dependencies, recordOrEmpty, R.keys),
-      ...pipe(packageJson.devDependencies, recordOrEmpty, R.keys),
-      ...pipe(packageJson.peerDependencies, recordOrEmpty, R.keys),
-      ...pipe(packageJson.optionalDependencies, recordOrEmpty, R.keys),
-    ],
-    A.filter((name) => Str.startsWith("@beep/")(name)),
-    uniqueSortedStringValues
-  );
-
-/**
- * Build docgen alias targets for one workspace package from its exports.
- *
- * @remarks
- * Missing root exports fall back to `./src/index.ts`; wildcard aliases are
- * emitted only when a wildcard export exists so docgen does not invent subpath
- * import support for packages that intentionally omit it.
- * @example
- * ```ts
- * import { buildDocgenAliasSource } from "@beep/repo-utils/schemas/DocgenConfig"
- * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
- * const source = buildDocgenAliasSource(
- *   "@beep/example",
- *   "packages/example",
- *   decodePackageJson({
- *     name: "@beep/example",
- *     exports: {
- *       ".": "./src/index.ts",
- *       "./testing": "./src/testing.ts",
- *       "./*": "./src/*.ts"
- *     }
- *   })
- * )
- * console.log(source.subpathAliasTargets["@beep/example/testing"])
- * // "./packages/example/src/testing.ts"
- * ```
- * @category models
- * @since 0.0.0
- */
-export const buildDocgenAliasSource: {
-  (packageName: string, packageRelativePath: string, packageJson: PackageJson.Type): DocgenAliasSource;
-  (packageRelativePath: string, packageJson: PackageJson.Type): (packageName: string) => DocgenAliasSource;
-} = dual(3, (packageName: string, packageRelativePath: string, packageJson: PackageJson.Type): DocgenAliasSource => {
-  const exportsField = O.getOrUndefined(packageJson.exports);
-  const rootExportTarget = pipe(
-    exportsField,
-    resolveRootExportTarget,
-    O.getOrElse(() => "./src/index.ts")
-  );
-  const wildcardExportTarget = pipe(exportsField, resolveWildcardExportTarget, O.getOrUndefined);
-  const hasWildcardExport = pipe(exportsField, resolveWildcardExportTarget, O.isSome);
-  const aliasTargets = buildDocgenAliasTargets(packageRelativePath, {
-    rootExportTarget,
-    wildcardExportTarget,
-  });
-  const subpathAliasTargets = buildDocgenSubpathAliasTargets(packageName, packageRelativePath, exportsField);
-
-  return DocgenAliasSource.make({
-    packageName,
-    rootAliasTarget: aliasTargets.rootAliasTarget,
-    wildcardAliasTarget: hasWildcardExport ? aliasTargets.wildcardAliasTarget : "",
-    subpathAliasTargets,
-  });
-});
-
-const isConcretePackageSubpathExport = (exportKey: string): boolean =>
-  Str.startsWith("./")(exportKey) && exportKey !== "./package.json" && !Str.includes("*")(exportKey);
-
-const packageSubpathAlias = (packageName: string, exportKey: string): string =>
-  `${packageName}/${Str.replace(/^\.\//, Str.empty)(exportKey)}`;
-
-const sourceAliasTarget = (packageRelativePath: string, exportTarget: string): string =>
-  `./${packageRelativePath}/${Str.replace(/^\.\//, Str.empty)(exportTarget)}`;
-
-const buildDocgenSubpathAliasTargets = (
-  packageName: string,
-  packageRelativePath: string,
-  exportsField: unknown
-): Readonly<Record<string, string>> => {
-  if (!isReadonlyUnknownRecord(exportsField)) {
-    return EMPTY_STRING_RECORD;
-  }
-
-  return pipe(
-    exportsField,
-    R.keys,
-    A.filter(isConcretePackageSubpathExport),
-    A.flatMap((exportKey) =>
-      pipe(
-        resolveSubpathExportTarget(exportsField, exportKey),
-        O.map((exportTarget) => [
-          [packageSubpathAlias(packageName, exportKey), sourceAliasTarget(packageRelativePath, exportTarget)] as const,
-        ]),
-        O.getOrElse(() => [])
-      )
-    ),
-    R.fromEntries
-  );
-};
-
-const buildDocgenAliasIndex = (sources: ReadonlyArray<DocgenAliasSource>): HashMap.HashMap<string, DocgenAliasSource> =>
-  HashMap.fromIterable(A.map(sources, (source) => [source.packageName, source] as const));
-
-const docgenAliasPathEntries = (
-  rootRelativePrefix: string,
-  aliasSource: DocgenAliasSource
-): ReadonlyArray<readonly [string, ReadonlyArray<string>]> => {
-  const wildcardEntries = Str.isNonEmpty(aliasSource.wildcardAliasTarget)
-    ? ([
-        [`${aliasSource.packageName}/*`, [withRootRelativePrefix(rootRelativePrefix, aliasSource.wildcardAliasTarget)]],
-      ] as const)
-    : A.empty<readonly [string, ReadonlyArray<string>]>();
-
-  return [
-    [aliasSource.packageName, [withRootRelativePrefix(rootRelativePrefix, aliasSource.rootAliasTarget)]],
-    ...wildcardEntries,
-    ...pipe(
-      aliasSource.subpathAliasTargets,
-      R.toEntries,
-      A.map(([alias, target]) => [alias, [withRootRelativePrefix(rootRelativePrefix, target)]] as const)
-    ),
-  ];
-};
-
-const buildDocgenExamplesPaths = (
-  packageName: string,
-  directWorkspaceDependencies: ReadonlyArray<string>,
-  workspaceAliasIndex: HashMap.HashMap<string, DocgenAliasSource>,
-  rootRelativePrefix: string
-): Readonly<Record<string, ReadonlyArray<string>>> => {
-  const packageSequence = [
-    packageName,
-    ...A.filter(uniqueSortedStringValues(directWorkspaceDependencies), P.not(Eq.equals(packageName))),
-  ];
-
-  return pipe(
-    packageSequence,
-    A.flatMap((dependencyName) => pipe(HashMap.get(workspaceAliasIndex, dependencyName), O.toArray)),
-    A.flatMap((aliasSource) => docgenAliasPathEntries(rootRelativePrefix, aliasSource)),
-    R.fromEntries
-  );
-};
-
-/**
  * Build the canonical repo docgen config for a package.
  *
  * @remarks
@@ -666,8 +404,8 @@ const buildDocgenExamplesPaths = (
  * same builder works for shallow packages such as `packages/schema` and nested
  * packages such as `packages/tooling/library/repo-utils`.
  * @effects
- * Requires the `Path.Path` service to compute root-relative schema and alias
- * targets; it does not read or write files.
+ * Requires the `Path.Path` service to compute the root-relative schema
+ * reference; it does not read or write files.
  * @example
  * ```ts
  * import { Effect, Path } from "effect"
@@ -679,9 +417,7 @@ const buildDocgenExamplesPaths = (
  *   rootDir: "/repo",
  *   packageAbsolutePath: "/repo/packages/example",
  *   packageRelativePath: "packages/example",
- *   packageName: "@beep/example",
- *   directWorkspaceDependencies: [],
- *   workspaceAliasSources: []
+ *   packageName: "@beep/example"
  * })
  * const srcLink = Effect.runSync(
  *   createCanonicalDocgenConfig(input).pipe(
@@ -700,13 +436,6 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
   const path = yield* Path.Path;
   const rootRelative = normalizeSlashes(path.relative(input.packageAbsolutePath, input.rootDir));
   const rootRelativePrefix = rootRelative.length === 0 ? "./" : `${rootRelative}/`;
-  const workspaceAliasIndex = buildDocgenAliasIndex(input.workspaceAliasSources);
-  const examplesPaths = buildDocgenExamplesPaths(
-    input.packageName,
-    input.directWorkspaceDependencies,
-    workspaceAliasIndex,
-    rootRelativePrefix
-  );
 
   return CanonicalDocgenConfig.make({
     $schema: `${rootRelativePrefix}packages/tooling/tool/docgen/schema.json`,
@@ -738,7 +467,6 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
       noErrorTruncation: true,
       types: [],
       jsx: "react-jsx",
-      paths: examplesPaths,
     }),
   });
 });
@@ -748,6 +476,10 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
  *
  * Existing package-local extras are preserved. The default `exclude` field is only
  * backfilled when it is absent so package-specific exclusions survive sync.
+ * Managed `@beep/*` entries in `examplesCompilerOptions.paths` are pruned:
+ * docgen examples resolve `@beep/*` imports through workspace `node_modules`
+ * symlinks and package export maps, so those mappings are dead configuration.
+ * Package-local custom aliases (for example an app's `@/*`) survive.
  *
  * @example
  * ```ts
@@ -785,8 +517,7 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
  *     stripInternal: false,
  *     noErrorTruncation: true,
  *     types: [],
- *     jsx: "react-jsx",
- *     paths: {}
+ *     jsx: "react-jsx"
  *   })
  * })
  * const generatedGlob = "src/generated/**" + "/*.ts"
@@ -809,25 +540,53 @@ export const mergeManagedDocgenConfig: {
       R.get("examplesCompilerOptions"),
       O.filter(isReadonlyUnknownRecord)
     );
+    const existingCustomSrcLink = pipe(
+      existing,
+      R.get("srcDir"),
+      O.filter(P.isString),
+      O.filter(P.not(Eq.equals("src"))),
+      O.flatMap(() => pipe(existing, R.get("srcLink"), O.filter(P.isString)))
+    );
+    const customExamplesPaths = pipe(
+      existingExamplesCompilerOptions,
+      O.flatMap(flow(R.get("paths"), O.filter(isReadonlyUnknownRecord))),
+      O.map((paths) => R.filter(paths, (_target, aliasKey) => !Str.startsWith("@beep/")(aliasKey))),
+      O.filter(P.not(R.isEmptyReadonlyRecord))
+    );
     const mergedExamplesCompilerOptions = pipe(
       existingExamplesCompilerOptions,
-      O.map((options) => ({
-        ...options,
-        ...canonicalJson.examplesCompilerOptions,
-        ...pipe(
-          options,
-          R.get("types"),
-          O.filter(A.isArray),
-          O.map((types) => ({ types })),
-          O.getOrElse(() => ({}))
-        ),
-      })),
+      O.map((options) => {
+        const combined: Record<string, unknown> = {
+          ...options,
+          ...canonicalJson.examplesCompilerOptions,
+          ...pipe(
+            options,
+            R.get("module"),
+            O.filter(P.isString),
+            O.map((module) => ({ module })),
+            O.getOrElse(() => ({}))
+          ),
+          ...pipe(
+            options,
+            R.get("types"),
+            O.filter(A.isArray),
+            O.map((types) => ({ types })),
+            O.getOrElse(() => ({}))
+          ),
+        };
+        const pruned = R.remove(combined, "paths");
+
+        return O.match(customExamplesPaths, {
+          onNone: () => pruned,
+          onSome: (paths) => ({ ...pruned, paths }),
+        });
+      }),
       O.getOrElse(() => canonicalJson.examplesCompilerOptions)
     );
     const merged = {
       ...existing,
       $schema: canonicalJson.$schema,
-      srcLink: canonicalJson.srcLink,
+      srcLink: O.getOrElse(existingCustomSrcLink, () => canonicalJson.srcLink),
       examplesCompilerOptions: mergedExamplesCompilerOptions,
     };
 

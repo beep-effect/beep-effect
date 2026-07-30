@@ -27,14 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/fc-runs": [
-        "../../../../packages/tooling/test-kit/fc-runs/src/index.ts"
-      ],
-      "@beep/fc-runs/*": [
-        "../../../../packages/tooling/test-kit/fc-runs/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

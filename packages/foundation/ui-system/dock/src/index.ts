@@ -84,6 +84,11 @@ export {
    * @category commands
    * @since 0.0.0
    */
+  AllowedRenderers,
+  /**
+   * @category commands
+   * @since 0.0.0
+   */
   ApiCommandOrigin,
   /**
    * @category commands

@@ -25,6 +25,7 @@ const config = {
     "packages/agents/client/package.json",
     "packages/agents/server/package.json",
     "packages/agents/tables/package.json",
+    "packages/epistemic/config/package.json",
     "packages/epistemic/domain/package.json",
     "packages/epistemic/tables/package.json",
     "packages/epistemic/use-cases/package.json",
@@ -32,6 +33,7 @@ const config = {
     "packages/law-practice/domain/package.json",
     "packages/law-practice/use-cases/package.json",
     "packages/law-practice/server/package.json",
+    "packages/law-practice/tables/package.json",
     "packages/documents/domain/package.json",
     "packages/documents/use-cases/package.json",
     "packages/documents/server/package.json",
@@ -64,6 +66,7 @@ const config = {
     "packages/architecture-lab/client/package.json",
     "packages/architecture-lab/ui/package.json",
     "apps/architecture-lab-proof/package.json",
+    "apps/practice-kg-mcp/package.json",
     "packages/drivers/runpod/package.json",
     "packages/drivers/onepassword-cli/package.json",
     "packages/drivers/discord/package.json",
@@ -98,6 +101,7 @@ const config = {
     "packages/drivers/tailscale/package.json",
     "packages/drivers/pretext/package.json",
     "packages/drivers/graph-3d/package.json",
+    "packages/drivers/openclaw/package.json",
   ],
   customTypes: {
     catalog: {

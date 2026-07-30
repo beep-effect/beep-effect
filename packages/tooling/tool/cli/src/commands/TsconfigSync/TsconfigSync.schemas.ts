@@ -251,7 +251,6 @@ const repoCliPackageName = "@beep/repo-cli" as const;
 const repoCliSourceOnlyTestKitAliases = [
   ["@beep/repo-cli/test/CreatePackage", "src/test/CreatePackage.test-kit.ts"],
   ["@beep/repo-cli/test/Docgen", "src/test/Docgen.test-kit.ts"],
-  ["@beep/repo-cli/test/Graphiti", "src/test/Graphiti.test-kit.ts"],
   ["@beep/repo-cli/test/Laws", "src/test/Laws.test-kit.ts"],
   ["@beep/repo-cli/test/Quality", "src/test/Quality.test-kit.ts"],
   ["@beep/repo-cli/test/SyncDataToTs", "src/test/SyncDataToTs.test-kit.ts"],
@@ -882,13 +881,9 @@ export class WorkspaceDescriptor extends S.Class<WorkspaceDescriptor>($I`Workspa
     hasProjectTsconfig: S.Boolean,
     hasDtslintDirectory: S.Boolean,
     hasDocgenConfig: S.Boolean,
-    directWorkspaceDependencies: S.Array(S.String),
     rootAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
     wildcardAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
     subpathAliasTargets: S.Record(S.String, S.String).pipe(S.UndefinedOr, S.optionalKey),
-    docgenRootAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
-    docgenWildcardAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
-    docgenSubpathAliasTargets: S.Record(S.String, S.String).pipe(S.UndefinedOr, S.optionalKey),
   },
   $I.annote("WorkspaceDescriptor", {
     description: "A workspace package descriptor with metadata for tsconfig synchronization.",
@@ -1008,8 +1003,7 @@ export class TsconfigWithPaths extends S.Class<TsconfigWithPaths>($I`TsconfigWit
  *   ownerTsconfigPath: undefined,
  *   hasProjectTsconfig: true,
  *   hasDtslintDirectory: false,
- *   hasDocgenConfig: true,
- *   directWorkspaceDependencies: []
+ *   hasDocgenConfig: true
  * })
  * console.log(byWorkspaceRelativeDirAscending(descriptor, descriptor)) // 0
  * ```

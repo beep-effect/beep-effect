@@ -12,6 +12,9 @@
       "path": "../../modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../modeling/schema/tsconfig.json"
+    },
+    {
       "path": "../../modeling/utils/tsconfig.json"
     },
     {

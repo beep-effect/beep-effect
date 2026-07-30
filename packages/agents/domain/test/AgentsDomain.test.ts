@@ -134,7 +134,7 @@ describe("@beep/agents-domain", () => {
     const assistantContentDefinitionName = decodeJsonPointerSegment(
       assistantContentSchema.$ref.slice("#/$defs/".length)
     );
-    expect(assistantContentSchema.$ref).toMatch(/^#\/\$defs\/.+AssistantContent$/);
+    expect(assistantContentSchema.$ref).toMatch(/^#\/\$defs\/.+AssistantContentJsonEncoding$/);
     expect(R.has(assistantContentDocument.definitions, assistantContentDefinitionName)).toBe(true);
     expect(S.toJsonSchemaDocument(RootAssistantBlock)).toStrictEqual(S.toJsonSchemaDocument(AssistantBlock));
     expect(S.toJsonSchemaDocument(AssistantContentSubpath.AssistantBlock)).toStrictEqual(

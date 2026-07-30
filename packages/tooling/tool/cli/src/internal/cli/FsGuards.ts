@@ -148,8 +148,8 @@ export const dedupeBySha256 = <A extends { readonly sha256: string }>(
 };
 
 /**
- * Allocate a filesystem name that does not collide with an in-use set,
- * suffixing `_NN` on collision.
+ * Allocate a filesystem name that does not collide case-insensitively with an
+ * in-use set, suffixing `_NN` on collision.
  *
  * @param stem - The base file name without extension.
  * @param extension - The extension (including any leading dot) to append.
@@ -172,8 +172,9 @@ export const allocateUniqueName: {
 } = dual(3, (stem: string, extension: string, usedNames: HashSet.HashSet<string>): UniqueNameAllocation => {
   let suffix = 0;
   let targetName = `${stem}${extension}`;
+  const normalizedUsedNames = HashSet.map(usedNames, Str.toLowerCase);
 
-  while (HashSet.has(usedNames, targetName)) {
+  while (HashSet.has(normalizedUsedNames, Str.toLowerCase(targetName))) {
     suffix += 1;
     targetName = `${stem}_${Str.padStart(2, "0")(`${suffix}`)}${extension}`;
   }

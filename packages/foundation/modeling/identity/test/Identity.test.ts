@@ -111,6 +111,22 @@ describe("@beep/identity", () => {
     expect(annotation.version).toBe(1);
   });
 
+  it("creates class annotations through the same runtime merge path as annote", () => {
+    const sameText = (self: string, that: string): boolean => self === that;
+    const extras = {
+      description: "Tenant class",
+      toEquivalence: () => sameText,
+    };
+    const annotation = $SchemaId.annoteClass<typeof S.String, readonly []>("TenantClass", extras);
+
+    expect(annotation).toEqual($SchemaId.annote("TenantClass", extras));
+    expect(annotation.schemaId).toBe(Symbol.for("@beep/schema/TenantClass"));
+    expect(annotation.identifier).toBe("@beep/schema/TenantClass");
+    expect(annotation.title).toBe("TenantClass");
+    expect(annotation.description).toBe("Tenant class");
+    expect(annotation.toEquivalence).toBe(extras.toEquivalence);
+  });
+
   it("applies schema annotations via annoteSchema", () => {
     const toArbitrary: S.Annotations.ToArbitrary.Declaration<string, readonly []> = () => (fc) => fc.constant("tenant");
     const schema = S.String.pipe(

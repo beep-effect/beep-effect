@@ -250,8 +250,8 @@ export * from "./Int64.ts";
  * import { JSONSchema } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
- * const node = S.decodeUnknownSync(JSONSchema.NodeCodec)({ type: "object" })
- * console.log(node)
+ * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
+ * console.log(node._tag)
  * ```
  *
  * @category schemas
@@ -376,7 +376,7 @@ export * from "./Record/index.ts";
  */
 export * from "./RegExp.ts";
 /**
- * Nominal schema for string-keyed objects with unknown values.
+ * Nominal safe-object schema and object-keyword normalization codec.
  *
  * @example
  * ```ts
@@ -393,7 +393,7 @@ export * from "./RegExp.ts";
  * @category validation
  * @since 0.0.0
  */
-export { SafeObject } from "./SafeObject/index.ts";
+export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";
 /**
  * @since 0.0.0
  * @category validation

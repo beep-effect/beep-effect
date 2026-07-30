@@ -10,11 +10,12 @@
  * @since 0.0.0
  */
 
+import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
-import { SchemaUtils } from "@beep/schema";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
@@ -81,9 +82,38 @@ export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I
     sourceArtifact: SourceArtifact.annotateKey({
       description: "Source artifact whose text is extracted for review.",
     }),
+    entitySeed: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+      description: "Deterministic positive seed used to mint distinct batch entity identities.",
+    }),
   },
   $I.annote("OfficeActionReviewInput", {
     description: "Schema-backed input for reviewing one office-action source artifact.",
+  })
+) {}
+
+/**
+ * Candidate claim and evidence produced by the grounded extraction phase.
+ *
+ * @example
+ * ```ts
+ * import type { OfficeActionCandidateExtraction } from "@beep/law-practice-use-cases/OfficeActionReview"
+ *
+ * const lifecycle = (value: OfficeActionCandidateExtraction) => value.candidate.lifecycle
+ * console.log(typeof lifecycle) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandidateExtraction>(
+  $I`OfficeActionCandidateExtraction`
+)(
+  {
+    candidate: CandidateClaim,
+    evidence: Evidence,
+  },
+  $I.annote("OfficeActionCandidateExtraction", {
+    description: "Grounded epistemic candidate and evidence emitted before claim admission.",
   })
 ) {}
 
@@ -164,7 +194,7 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
  *     })
  *   )
  *
- * const shape: OfficeActionReviewShape = { review }
+ * const shape: OfficeActionReviewShape = { extractCandidate: () => Effect.never, review }
  * console.log(typeof shape.review) // "function"
  * ```
  *
@@ -175,6 +205,9 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
  * @since 0.0.0
  */
 export interface OfficeActionReviewShape {
+  readonly extractCandidate: (
+    input: OfficeActionReviewInput
+  ) => Effect.Effect<OfficeActionCandidateExtraction, OfficeActionReviewError>;
   readonly review: (input: OfficeActionReviewInput) => Effect.Effect<ClaimProjectionView, OfficeActionReviewError>;
 }
 
@@ -189,6 +222,7 @@ export interface OfficeActionReviewShape {
  * import { Effect } from "effect"
  *
  * const shape: OfficeActionReviewShape = {
+ *   extractCandidate: () => Effect.never,
  *   review: () =>
  *     Effect.fail(
  *       IrToLawExtractionError.fromReason("required-extraction-missing", {

@@ -56,7 +56,7 @@
     "mcp-graphiti-memory": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "1ddb75b7c3c7b0a34284f5736839b1facce4dfd3cdc416689382a273872d5da6"
+      "computedHash": "88d3799d59cfe2fef7f220e7a1b4ba2e94db7d154e1d3a166cfa570ee2221a62"
     },
     "mcp-jetbrains": {
       "source": "repo-local",
@@ -110,7 +110,7 @@
     "schema-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "8bd82c8eadec74ae9f055515bc24214a187752d77f2a5a5ca85d6a3e4c965f34"
+      "computedHash": "fd6b12adb902c5b8f073058fac4c48ad732d5ad96f473af42ad1a0635ec62043"
     },
     "schema-model-specialist": {
       "source": "repo-local",

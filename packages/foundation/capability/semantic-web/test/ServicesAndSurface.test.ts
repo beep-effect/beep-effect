@@ -84,7 +84,7 @@ describe("Services and Surface", () => {
 
   it(
     "round-trips schema-derived RDF datasets and canonicalization DTOs through boundary encoders",
-    { timeout: 30000 },
+    {}, // Inherit the deep-sweep timeout from vitest.shared.ts.
     () =>
       fc.assert(
         fc.property(

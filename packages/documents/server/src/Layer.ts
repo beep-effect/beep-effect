@@ -22,6 +22,30 @@ import {
 } from "./entities/SyncOperation/index.ts";
 
 /**
+ * Document filing configuration layers consumed by application composition.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export {
+  FILING_DECISION_DEFAULT_MODEL,
+  FILING_DECISION_MODEL_ENV,
+  FilingDecisionLlmConfigLayer,
+} from "./aggregates/Document/FilingDecisionLlm.config.ts";
+/**
+ * Box-backed mirror configuration and adapter layers consumed by application
+ * composition.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export {
+  BoxMirrorConfigLayer,
+  DmsMirrorAvailabilityBoxLayer,
+  DmsMirrorBoxLive,
+} from "./aggregates/Sync/DmsMirrorBox.ts";
+
+/**
  * Live documents server layer.
  *
  * @example

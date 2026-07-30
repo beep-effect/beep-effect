@@ -1,3 +1,4 @@
+import { SchemaUtils } from "@beep/schema";
 import { Fn, ThunkOf } from "@beep/schema/Fn";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -84,6 +85,18 @@ describe("Fn", () => {
     const impl = schema.implementEffect((_count): Effect.Effect<string, "boom"> => Effect.fail("boom" as const));
 
     expect(impl).type.toBe<(input: unknown) => Effect.Effect<string, SchemaIssue.Issue | "boom">>();
+  });
+
+  it("preserves constructor-default state and composes with key defaults", () => {
+    const unary = Fn({ input: S.Finite, output: S.Finite });
+    const thunk = ThunkOf(S.Finite);
+    const unaryWithDefault = unary.pipe(SchemaUtils.withKeyDefaults(Math.floor));
+    const thunkWithDefault = thunk.pipe(SchemaUtils.withKeyDefaults(Math.random));
+
+    expect<(typeof unary)["~type.constructor.default"]>().type.toBe<"no-default">();
+    expect<(typeof thunk)["~type.constructor.default"]>().type.toBe<"no-default">();
+    expect<(typeof unaryWithDefault)["~type.constructor.default"]>().type.toBe<"with-default">();
+    expect<(typeof thunkWithDefault)["~type.constructor.default"]>().type.toBe<"with-default">();
   });
 
   it("exposes exported helper types", () => {

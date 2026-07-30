@@ -205,11 +205,11 @@
     },
     {
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-      "symbol": "ConfigureWorkspaceVaultInput",
+      "symbol": "DocumentIntakeState",
       "kind": "schema-class",
       "owner": "@beep/professional-desktop",
-      "identity": "ConfigureWorkspaceVaultInput",
-      "description": "Browser-side workspace vault configuration input."
+      "identity": "DocumentIntakeState",
+      "description": "Renderer-owned document intake progress, results, and operator status."
     },
     {
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
@@ -220,6 +220,38 @@
       "description": "Browser-side dropped document input."
     },
     {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "IntakeResultEntry",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "IntakeResultEntry",
+      "description": "Exhaustive per-file outcome emitted by desktop document intake."
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "VaultSelectionState",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "VaultSelectionState",
+      "description": "Workspace vault picker and persistence lifecycle state."
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/VaultDirectoryPicker.rpc.ts",
+      "symbol": "VaultDirectoryPickError",
+      "kind": "tagged-error",
+      "owner": "@beep/professional-desktop",
+      "identity": "VaultDirectoryPickError",
+      "description": "Client-safe native vault directory picker failure."
+    },
+    {
+      "file": "apps/professional-desktop/src/runtime/BrowserFailure.atoms.ts",
+      "symbol": "BrowserFailure",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "BrowserFailure",
+      "description": "One browser-global failure awaiting sanitized telemetry reporting."
+    },
+    {
       "file": "apps/professional-desktop/src/runtime/Migrations.ts",
       "symbol": "ProfessionalDesktopMigrationOptions",
       "kind": "schema-class",
@@ -228,12 +260,60 @@
       "description": "Options accepted when applying the Professional Desktop runtime migrations."
     },
     {
-      "file": "apps/professional-desktop/src/spikes/CosmosSpike.worker.ts",
+      "file": "apps/professional-desktop/src/spikes/CosmosSpike.rpc.ts",
       "symbol": "SyntheticProjectionResponse",
       "kind": "schema-class",
       "owner": "@beep/professional-desktop",
       "identity": "SyntheticProjectionResponse",
-      "description": "Response posted from the synthetic cosmos projection worker."
+      "description": "Synthetic ontology graph projection returned across the worker RPC boundary."
+    },
+    {
+      "file": "apps/professional-desktop/src/spikes/CosmosSpike.tsx",
+      "symbol": "CosmosSpikeProbeContract",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "CosmosSpikeProbeContract",
+      "description": "Headless probe contract exposed by the mounted Cosmos spike."
+    },
+    {
+      "file": "apps/professional-desktop/src/spikes/CosmosSpike.tsx",
+      "symbol": "CosmosSpikeSize",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "CosmosSpikeSize",
+      "description": "Node and edge counts for a synthetic Cosmos spike preset."
+    },
+    {
+      "file": "apps/professional-desktop/src/spikes/CosmosSpike.tsx",
+      "symbol": "CosmosSpikeStatus",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "CosmosSpikeStatus",
+      "description": "Exhaustive lifecycle state for the Cosmos spike."
+    },
+    {
+      "file": "apps/professional-desktop/src/spikes/Graph3DSpike.tsx",
+      "symbol": "Graph3DSpikeStatus",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "Graph3DSpikeStatus",
+      "description": "Exhaustive lifecycle state for the graph-3d spike renderer."
+    },
+    {
+      "file": "apps/professional-desktop/src/sync/Sync.atoms.ts",
+      "symbol": "VaultSyncCommand",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "VaultSyncCommand",
+      "description": "Serialized operator commands for one workspace vault sync state machine."
+    },
+    {
+      "file": "apps/professional-desktop/src/sync/Sync.atoms.ts",
+      "symbol": "VaultSyncPanelState",
+      "kind": "tagged-union",
+      "owner": "@beep/professional-desktop",
+      "identity": "VaultSyncPanelState",
+      "description": "Exhaustive lifecycle state for vault sync and conflict-review actions."
     },
     {
       "file": "apps/professional-desktop/src/transport/SidecarTransport.ts",
@@ -413,7 +493,7 @@
       "kind": "schema-class",
       "owner": "@beep/agents-client",
       "identity": "StreamingTurn",
-      "description": "A streaming assistant turn rendered optimistically while blocks arrive."
+      "description": "An assistant turn rendered locally while blocks stream, its timeline refresh is pending, or receipt evidence is uncertain."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -722,6 +802,108 @@
       "owner": "@beep/agents-server",
       "identity": "ScanState",
       "description": "The carry state of the incremental block extractor between chunks."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "AddProviderInstanceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "AddProviderInstanceCommand",
+      "description": "Command for adding a provider CLI instance."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "GetProviderInstanceQuery",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "GetProviderInstanceQuery",
+      "description": "Query for loading one provider instance."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "ListProviderInstancesQuery",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ListProviderInstancesQuery",
+      "description": "Query for listing every provider instance."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "ProbeProviderInstanceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProbeProviderInstanceCommand",
+      "description": "Command for probing a provider instance."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "RemoveProviderInstanceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "RemoveProviderInstanceCommand",
+      "description": "Command for removing a provider instance."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "symbol": "UpdateProviderInstanceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "UpdateProviderInstanceCommand",
+      "description": "Command for updating provider instance configuration."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "symbol": "ProviderActionError",
+      "kind": "tagged-union",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderActionError",
+      "description": "Client-safe provider-instance action failures."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "symbol": "ProviderInstanceNotFound",
+      "kind": "tagged-error",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderInstanceNotFound",
+      "description": "The requested provider instance does not exist."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "symbol": "ProviderProbeUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderProbeUnavailable",
+      "description": "The provider probe or its persistence boundary is unavailable."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "symbol": "ProviderUnauthenticated",
+      "kind": "tagged-error",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderUnauthenticated",
+      "description": "The provider CLI is unauthenticated and requires login."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.repository.ts",
+      "symbol": "ProviderInstanceActorScope",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderInstanceActorScope",
+      "description": "Trusted server-side actor and organization scope for provider-instance persistence."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.repository.ts",
+      "symbol": "ProviderProbeInput",
+      "kind": "schema-class",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProviderProbeInput",
+      "description": "Provider CLI configuration consumed by the product-neutral authentication probe port."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.rpc.ts",
+      "symbol": "ListProviderInstancesRpc",
+      "kind": "schema-const",
+      "owner": "@beep/agents-use-cases"
     },
     {
       "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts",
@@ -2145,11 +2327,43 @@
     },
     {
       "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliAuthSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliAuthSnapshot",
+      "description": "Rich provider CLI auth snapshot with optional account and subscription detail."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
       "symbol": "AiProviderCliAuthStatus",
       "kind": "literal-kit",
       "owner": "@beep/ai-provider-cli",
       "identity": "AiProviderCliAuthStatus",
       "description": "Authentication state inferred from a provider CLI status command."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliClaudeAuthStatusPayload",
+      "kind": "schema-class",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliClaudeAuthStatusPayload",
+      "description": "Decoded stdout JSON payload from the Claude CLI auth status command."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliClaudeSubscriptionLabel",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliClaudeSubscriptionLabel",
+      "description": "Reversible Claude subscription type to human-readable label codec."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliProbeOptions",
+      "kind": "schema-class",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliProbeOptions",
+      "description": "Per-call executable and child-environment overrides for a provider CLI auth probe."
     },
     {
       "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
@@ -2166,6 +2380,110 @@
       "owner": "@beep/ai-provider-cli",
       "identity": "AiProviderCliProvider",
       "description": "AI provider CLI names supported by the driver."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliRunRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliRunRequest",
+      "description": "Technical provider CLI child-process invocation request."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "symbol": "AiProviderCliTokenSource",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliTokenSource",
+      "description": "Credential origin reported by a provider CLI status command."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomeEntryConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomeEntryConflictError",
+      "description": "Failure raised when a non-symlink entry blocks a required shadow-home link."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomeError",
+      "kind": "union",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomeError",
+      "description": "Union of all provider CLI home-layout failures."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomeFileSystemError",
+      "kind": "tagged-error",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomeFileSystemError",
+      "description": "Filesystem failure raised while maintaining a provider CLI home layout."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomeFsOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomeFsOperation",
+      "description": "Filesystem operation names performed during provider CLI home maintenance."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomePathConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomePathConflictError",
+      "description": "Failure raised when a shadow home path equals the shared home path."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "symbol": "AiProviderCliHomePrivateEntrySymlinkError",
+      "kind": "tagged-error",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomePrivateEntrySymlinkError",
+      "description": "Failure raised when a private credential entry resolves to a symlink."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "symbol": "AiProviderCliCodexHomeLayout",
+      "kind": "schema-class",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliCodexHomeLayout",
+      "description": "Resolved Codex home layout with shared home and optional effective home paths."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "symbol": "AiProviderCliCodexLocalEntry",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliCodexLocalEntry",
+      "description": "Codex home entry names left untouched in each home, never symlinked."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "symbol": "AiProviderCliCodexPrivateEntry",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliCodexPrivateEntry",
+      "description": "Codex home entry names that must be real files private to each shadow home."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "symbol": "AiProviderCliCodexSharedDirectory",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliCodexSharedDirectory",
+      "description": "Codex home directory names symlinked from a shadow home to the shared home."
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "symbol": "AiProviderCliHomeMode",
+      "kind": "literal-kit",
+      "owner": "@beep/ai-provider-cli",
+      "identity": "AiProviderCliHomeMode",
+      "description": "Provider CLI home-layout mode: direct shared home or shadow-home auth overlay."
     },
     {
       "file": "packages/drivers/anthropic/src/Anthropic.config.ts",
@@ -2821,7 +3139,7 @@
       "kind": "schema-class",
       "owner": "@beep/cosmos",
       "identity": "CosmosGraphProjection",
-      "description": "Typed-array graph projection containing node ids, point positions, and source-target link pairs."
+      "description": "Typed-array graph projection: node ids, point positions, source-target link pairs, and labels."
     },
     {
       "file": "packages/drivers/cosmos/src/Cosmos.projection.ts",
@@ -2830,6 +3148,14 @@
       "owner": "@beep/cosmos",
       "identity": "SyntheticOntologyGraphOptions",
       "description": "Deterministic synthetic ontology graph generation options."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+      "symbol": "CosmosRenderHandle",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosRenderHandle",
+      "description": ""
     },
     {
       "file": "packages/drivers/discord/src/Discord.errors.ts",
@@ -4632,6 +4958,62 @@
       "description": "GovInfo collection summary row with collection identifiers and counts."
     },
     {
+      "file": "packages/drivers/graph-3d/src/Graph3D.errors.ts",
+      "symbol": "Graph3DDriverError",
+      "kind": "tagged-error",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DDriverError",
+      "description": "Typed error raised by the instanced three.js graph render adapter."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.errors.ts",
+      "symbol": "Graph3DDriverErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DDriverErrorReason",
+      "description": "Failure reason emitted by the graph-3d render driver."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.projection.ts",
+      "symbol": "Graph3DProjection",
+      "kind": "schema-class",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DProjection",
+      "description": "Typed-array 3D graph projection with interleaved positions, indexed links, community ordinals, importance, weights, and optional labels."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.projection.ts",
+      "symbol": "SyntheticGraph3DOptions",
+      "kind": "schema-class",
+      "owner": "@beep/graph-3d",
+      "identity": "SyntheticGraph3DOptions",
+      "description": "Defaulted options for deterministic synthetic 3D graph generation."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "symbol": "Graph3DRenderHandle",
+      "kind": "schema-class",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DRenderHandle",
+      "description": "Imperative lifecycle for a mounted instanced three.js graph: destroy, fps sampling, full-projection update, selection dimming, and stats introspection."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "symbol": "Graph3DRenderOptions",
+      "kind": "schema-class",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DRenderOptions",
+      "description": "Optional selection and runtime-error callbacks for a mounted 3D graph renderer."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "symbol": "Graph3DRenderStats",
+      "kind": "schema-class",
+      "owner": "@beep/graph-3d",
+      "identity": "Graph3DRenderStats",
+      "description": "Snapshot of rendered node/edge/label counts and active selection dimming."
+    },
+    {
       "file": "packages/drivers/hubspot/src/HubSpot.config.ts",
       "symbol": "HubSpotBaseUrl",
       "kind": "codec",
@@ -4752,12 +5134,28 @@
       "description": "Redacted technical error reasons emitted by the libpff driver."
     },
     {
+      "file": "packages/drivers/libpff/src/Libpff.messages.ts",
+      "symbol": "PffexportMessageRecord",
+      "kind": "schema-class",
+      "owner": "@beep/libpff",
+      "identity": "PffexportMessageRecord",
+      "description": "JSONL-safe pffexport item record preserving folder, message, body, EML, and attachment relationships."
+    },
+    {
       "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
       "symbol": "PffexportEngineConfig",
       "kind": "schema-class",
       "owner": "@beep/libpff",
       "identity": "PffexportEngineConfig",
-      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, and optional per-archive timeout."
+      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, existing-export policy, and optional per-archive timeout."
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+      "symbol": "PffexportExistingExportPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/libpff",
+      "identity": "PffexportExistingExportPolicy",
+      "description": "Output-directory policy when a prior export tree or messages JSONL already exists: fail with a typed config error or replace the stale outputs."
     },
     {
       "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
@@ -6336,6 +6734,22 @@
       "description": "Optional diagnostic context captured while normalizing Postgres-adjacent failures."
     },
     {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "symbol": "MigrationBundleConfig",
+      "kind": "schema-class",
+      "owner": "@beep/postgres",
+      "identity": "MigrationBundleConfig",
+      "description": "An in-memory Drizzle migration bundle and optional journal location."
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "symbol": "MigrationBundleEntry",
+      "kind": "schema-class",
+      "owner": "@beep/postgres",
+      "identity": "MigrationBundleEntry",
+      "description": "One timestamped Drizzle migration and its byte-exact SQL content."
+    },
+    {
       "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
       "symbol": "PgErrorCode",
       "kind": "literal-kit",
@@ -6350,6 +6764,118 @@
       "owner": "@beep/postgres",
       "identity": "PgErrorName",
       "description": "PostgreSQL SQLSTATE name literal domain."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextMeasurementError",
+      "kind": "tagged-error",
+      "owner": "@beep/pretext",
+      "identity": "PretextMeasurementError",
+      "description": "A pretext measurement operation failed."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextMeasurementOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/pretext",
+      "identity": "PretextMeasurementOperation",
+      "description": "Measurement operation that can fail."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextMeasurementUnavailableError",
+      "kind": "tagged-error",
+      "owner": "@beep/pretext",
+      "identity": "PretextMeasurementUnavailableError",
+      "description": "The runtime lacks a capability the pretext capture surface requires."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextMeasurementUnavailableReason",
+      "kind": "literal-kit",
+      "owner": "@beep/pretext",
+      "identity": "PretextMeasurementUnavailableReason",
+      "description": "Reason a runtime cannot capture font metrics."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextSnapshotCodecError",
+      "kind": "tagged-error",
+      "owner": "@beep/pretext",
+      "identity": "PretextSnapshotCodecError",
+      "description": "A font-metrics snapshot failed to decode or encode against the versioned contract."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextSnapshotCodecOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/pretext",
+      "identity": "PretextSnapshotCodecOperation",
+      "description": "Font-metrics snapshot codec operation."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "symbol": "PretextUnsupportedFontError",
+      "kind": "tagged-error",
+      "owner": "@beep/pretext",
+      "identity": "PretextUnsupportedFontError",
+      "description": "The requested font is rejected for measurement accuracy."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "EngineProfile",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "EngineProfile",
+      "description": "Per-engine layout quirk fences mirroring upstream pretext's EngineProfile."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "FontMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "FontMetrics",
+      "description": "A single engine's font measurement capture: word widths, space advance, line height, engine profile."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "FontMetricsSnapshotV1",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "FontMetricsSnapshotV1",
+      "description": "Versioned font-metrics snapshot envelope: version tag plus a single engine's capture."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "LineRange",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "LineRange",
+      "description": "A word-indexed half-open line range and its measured advance width."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "LineStats",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "LineStats",
+      "description": "Aggregate line count and maximum line width from a greedy text layout."
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "TextLayoutInput",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "TextLayoutInput",
+      "description": "Text and maximum width used by pure font-metrics layout calculations."
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.service.ts",
+      "symbol": "PretextCaptureRequest",
+      "kind": "schema-class",
+      "owner": "@beep/pretext",
+      "identity": "PretextCaptureRequest",
+      "description": "Font-metrics capture request: font, caller-supplied line height, words to measure."
     },
     {
       "file": "packages/drivers/runpod/src/Runpod.config.ts",
@@ -6550,6 +7076,86 @@
       "owner": "@beep/shacl",
       "identity": "ShaclEngineErrorReason",
       "description": "shacl-engine driver failure reason."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleCommandError",
+      "kind": "tagged-union",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleCommandError",
+      "description": "Typed union of Tailscale process execution failures."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleCommandExitError",
+      "kind": "tagged-error",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleCommandExitError",
+      "description": "Redacted diagnostic for a Tailscale process that exited unsuccessfully."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleCommandOutputError",
+      "kind": "tagged-error",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleCommandOutputError",
+      "description": "Failure raised while collecting output from a running Tailscale process."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleCommandSpawnError",
+      "kind": "tagged-error",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleCommandSpawnError",
+      "description": "Failure raised when the operating system cannot spawn the Tailscale CLI."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleCommandTimeoutError",
+      "kind": "tagged-error",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleCommandTimeoutError",
+      "description": "Failure raised when a Tailscale process exceeds its configured timeout."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "symbol": "TailscaleStatusParseError",
+      "kind": "tagged-error",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleStatusParseError",
+      "description": "Failure raised when Tailscale status JSON cannot be decoded."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.models.ts",
+      "symbol": "TailscaleStatus",
+      "kind": "schema-class",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleStatus",
+      "description": "Normalized MagicDNS and Tailnet IPv4 facts for the local node."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.models.ts",
+      "symbol": "TailscaleStatusJson",
+      "kind": "schema-class",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleStatusJson",
+      "description": "Decoded subset of the `tailscale status --json` response."
+    },
+    {
+      "file": "packages/drivers/tailscale/src/Tailscale.models.ts",
+      "symbol": "TailscaleStatusSelf",
+      "kind": "schema-class",
+      "owner": "@beep/tailscale",
+      "identity": "TailscaleStatusSelf",
+      "description": "Validated local-node subset of the `tailscale status --json` payload."
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.config.ts",
+      "symbol": "TikaServerEngineConfig",
+      "kind": "schema-class",
+      "owner": "@beep/tika",
+      "identity": "TikaServerEngineConfig",
+      "description": "Configuration for the Tika Server HTTP engine: base URL, per-file timeout, and output budget."
     },
     {
       "file": "packages/drivers/tika/src/Tika.errors.ts",
@@ -7188,12 +7794,36 @@
       "description": "Options accepted by the xAI Effect AI language-model adapter."
     },
     {
+      "file": "packages/epistemic/config/src/ServerConfig.ts",
+      "symbol": "EpistemicServerConfig",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-config",
+      "identity": "EpistemicServerConfig",
+      "description": "Server-only execution-authority settings: destination allowlist and pinned policy revision."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/ClaimDisposition/ClaimDisposition.model.ts",
+      "symbol": "ClaimDisposition",
+      "kind": "schema-const",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ClaimDisposition",
+      "description": "Durable record of how a candidate claim was resolved."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
       "symbol": "TurnFinalizationUsageAppend",
       "kind": "schema-class",
       "owner": "@beep/epistemic-domain",
       "identity": "TurnFinalizationUsageAppend",
       "description": "Decoded append payload for a UsageRecord produced while finalizing a turn."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimDispositionStatus/ClaimDispositionStatus.model.ts",
+      "symbol": "ClaimDispositionStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ClaimDispositionStatus",
+      "description": "Status of a durable claim disposition."
     },
     {
       "file": "packages/epistemic/domain/src/values/ClaimGate/ClaimGateResult.model.ts",
@@ -7252,6 +7882,46 @@
       "description": "Count of claims in each lifecycle state."
     },
     {
+      "file": "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts",
+      "symbol": "EdgeEndpointKind",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeEndpointKind",
+      "description": "Bounded vocabulary of what a bitemporal epistemic edge may point at."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts",
+      "symbol": "EdgeEntityRef",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeEntityRef",
+      "description": "Opaque non-empty reference to a domain entity used as an epistemic edge endpoint."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts",
+      "symbol": "EdgeObservationRef",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeObservationRef",
+      "description": "Opaque non-empty reference to an observation used as an epistemic edge endpoint."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeRelation/EdgeRelation.model.ts",
+      "symbol": "EdgeRelation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeRelation",
+      "description": "Bounded relation vocabulary carried by a bitemporal epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeRelation/EdgeRelation.model.ts",
+      "symbol": "SymmetricEdgeRelation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "SymmetricEdgeRelation",
+      "description": "Subset of the edge relation vocabulary whose endpoint ordering carries no meaning."
+    },
+    {
       "file": "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
       "symbol": "EvidenceSpan",
       "kind": "schema-class",
@@ -7260,12 +7930,396 @@
       "description": "Char-offset evidence span wrapping a @beep/provenance TextAnchor with an extraction confidence."
     },
     {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "ExecutionGrant",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionGrant",
+      "description": "Pre-authorized authority unit: principal, purpose, resource, operation, sink, budget, policy revision, expiry."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "ExecutionSink",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionSink",
+      "description": "Governed sink triple (class, audience, destination)."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "GrantBudget",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantBudget",
+      "description": "Recorded, unenforced grant budget (v1 carries the field, denies on nothing)."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "GrantOperation",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantOperation",
+      "description": "Operation a grant authorizes; exact match, no wildcard."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "GrantPurpose",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantPurpose",
+      "description": "Purpose a grant was issued for; opaque to evaluation."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "GrantResource",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantResource",
+      "description": "Resource selector a grant covers; opaque to evaluation in v1."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "PolicyRevision",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "PolicyRevision",
+      "description": "Pinned policy revision a grant and its records were evaluated under."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "SinkAudience",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "SinkAudience",
+      "description": "Audience able to observe a sink's effect: the local workspace or the external network."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "SinkClass",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "SinkClass",
+      "description": "Governed sink class: outbound network egress or an MCP workspace write."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "symbol": "SinkDestination",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "SinkDestination",
+      "description": "Raw granted sink destination; grant-side only, never persisted in execution records."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "DecisionRecordHash",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DecisionRecordHash",
+      "description": "Seal hash of one execution decision record."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "ExecutionOutcomeRecord",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionOutcomeRecord",
+      "description": "Post-settlement outcome record bound to its allowed decision by hash."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "ExecutionRunKey",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionRunKey",
+      "description": "Opaque digest key naming one governed run."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "ExecutionSettlement",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionSettlement",
+      "description": "Bounded settlement of an allowed execution: completed, failed, or interrupted."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "GrantOperationDigest",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantOperationDigest",
+      "description": "SHA-256 digest of a granted operation name; raw names never enter the ledger."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "OutcomeRecordHash",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "OutcomeRecordHash",
+      "description": "Seal hash of one execution outcome record."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "symbol": "SinkDestinationDigest",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "SinkDestinationDigest",
+      "description": "SHA-256 digest of a sink destination; the raw destination never enters the ledger."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts",
+      "symbol": "DenialReason",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DenialReason",
+      "description": "Closed denial-reason domain; recorded and logged, never returned to the agent."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts",
+      "symbol": "EgressClassification",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EgressClassification",
+      "description": "Three-way policy-seam classification; only ungoverned-infrastructure writes no record."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts",
+      "symbol": "ExecutionRequest",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ExecutionRequest",
+      "description": "One governed execution request: operation, sink class, destination, resolver-owned audience."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.errors.ts",
+      "symbol": "GrantRevisionMismatch",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantRevisionMismatch",
+      "description": "A grant's policy revision does not match the revision its grant set is pinned to."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "symbol": "DraftGrantSet",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "DraftGrantSet",
+      "description": "Grant set under construction; the only state addGrant accepts."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "symbol": "FrozenGrantSet",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "FrozenGrantSet",
+      "description": "Sealed grant set; construct only via freezeGrantSet, verify via verifyFrozenGrantSetDigest."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "symbol": "GrantSet",
+      "kind": "tagged-union",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantSet",
+      "description": "Draft/Frozen grant-set union discriminated on state."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "symbol": "GrantSetDigest",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantSetDigest",
+      "description": "SHA-256 digest sealing a frozen grant set's exact contents."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "symbol": "GrantSetDigestInput",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "GrantSetDigestInput",
+      "description": "The committed-to input of a grant-set seal."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts",
+      "symbol": "EdgeQualifiers",
+      "kind": "schema-const",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeQualifiers",
+      "description": "Order-insensitive string qualifiers that further partition a logical epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts",
+      "symbol": "LogicalEdgeIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "LogicalEdgeIdentity",
+      "description": "Time-independent identity of a bitemporal epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts",
+      "symbol": "LogicalEdgeKey",
+      "kind": "brand",
+      "owner": "@beep/epistemic-domain",
+      "identity": "LogicalEdgeKey",
+      "description": "Lowercase SHA-256 hex digest naming one logical epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.commands.ts",
+      "symbol": "ClaimDispositionAppend",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ClaimDispositionAppend",
+      "description": "Decoded append payload for one durable claim disposition."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.ports.ts",
+      "symbol": "ClaimDispositionOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ClaimDispositionOperation",
+      "description": "Bounded vocabulary of claim disposition repository operations."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.ports.ts",
+      "symbol": "ClaimDispositionRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ClaimDispositionRepositoryUnavailable",
+      "description": "The claim disposition repository could not serve the request."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.service.ts",
+      "symbol": "ClaimGateOutcome",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ClaimGateOutcome",
+      "description": "Outcome of resolving one claim gate verdict."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.service.ts",
+      "symbol": "ClaimGateOutcomeInput",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ClaimGateOutcomeInput",
+      "description": "Input resolving one claim gate verdict into a lifecycle advance or a durable disposition."
+    },
+    {
       "file": "packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts",
       "symbol": "ClaimProjection",
       "kind": "schema-const",
       "owner": "@beep/epistemic-use-cases",
       "identity": "ClaimProjection",
       "description": "Pure read-only projection from candidate-claim authority to deterministic read model."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
+      "symbol": "EdgeAsOfQuery",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeAsOfQuery",
+      "description": "Two-axis read contract for one logical epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
+      "symbol": "RecordEdgeFact",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "RecordEdgeFact",
+      "description": "Command asserting one fact about a logical epistemic edge over a known valid-time interval."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
+      "symbol": "SupersedeEdgeFact",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "SupersedeEdgeFact",
+      "description": "Command replacing the open head of a logical epistemic edge with a new version."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "EdgeAuthorityError",
+      "kind": "union",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeAuthorityError",
+      "description": "Union of every edge authority repository failure."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "EdgeAuthorityOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeAuthorityOperation",
+      "description": "Bounded vocabulary of edge authority repository operations."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "EdgeConstraintViolation",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeConstraintViolation",
+      "description": "A named database constraint rejected a bitemporal edge write."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "EdgeRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeRepositoryUnavailable",
+      "description": "The bitemporal edge repository could not serve the request."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "EdgeWriteOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "EdgeWriteOperation",
+      "description": "Subset of edge authority operations that write to the bitemporal edge store."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "symbol": "SupersessionConflict",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "SupersessionConflict",
+      "description": "A supersession could not be applied to the version the caller named."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "symbol": "ExecutionLedgerConstraintViolation",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ExecutionLedgerConstraintViolation",
+      "description": "A ledger write was rejected by a named append-only constraint."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "symbol": "ExecutionLedgerError",
+      "kind": "union",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ExecutionLedgerError",
+      "description": "Every failure an execution ledger write can produce."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "symbol": "ExecutionLedgerOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ExecutionLedgerOperation",
+      "description": "Closed domain of execution ledger port operations."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "symbol": "ExecutionLedgerUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/epistemic-use-cases",
+      "identity": "ExecutionLedgerUnavailable",
+      "description": "The execution ledger could not serve the request."
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/EgressDenied.ts",
+      "symbol": "EgressDenied",
+      "kind": "tagged-error",
+      "owner": "@beep/api-transport",
+      "identity": "EgressDenied",
+      "description": "A governed egress boundary refused the request's destination; deliberately reason-free."
     },
     {
       "file": "packages/foundation/capability/api-transport/src/Transport.ts",
@@ -7940,6 +8994,14 @@
       "description": "Policy consulted by fromApprovedToolsPolicy: tool names explicitly approved to dispatch."
     },
     {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "symbol": "TierGateSettlement",
+      "kind": "literal-kit",
+      "owner": "@beep/mcp-kit",
+      "identity": "TierGateSettlement",
+      "description": "Bounded settlement of an approved dispatch: completed, failed, or interrupted."
+    },
+    {
       "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
       "symbol": "FourHintAnnotations",
       "kind": "schema-class",
@@ -8405,6 +9467,14 @@
     },
     {
       "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "symbol": "LogRedactedCauseOptions",
+      "kind": "schema-class",
+      "owner": "@beep/observability",
+      "identity": "LogRedactedCauseOptions",
+      "description": "Options for logging one sanitized and bounded Cause."
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
       "symbol": "RedactCauseOptions",
       "kind": "schema-class",
       "owner": "@beep/observability",
@@ -8426,6 +9496,14 @@
       "owner": "@beep/observability",
       "identity": "RedactedCauseError",
       "description": "Boundary failure carrying only a sanitized, bounded representation of the originating cause."
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "symbol": "RedactedCauseLogLevel",
+      "kind": "literal-kit",
+      "owner": "@beep/observability",
+      "identity": "RedactedCauseLogLevel",
+      "description": "Runtime-controlled levels supported by redacted boundary logging."
     },
     {
       "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
@@ -11840,6 +12918,166 @@
       "description": "String or integer segment in a validation error location path."
     },
     {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "ConceptAlignment",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "ConceptAlignment",
+      "description": "Vetted external SKOS mapping metadata for a repo-owned concept."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "DocumentClass",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology",
+      "identity": "DocumentClass",
+      "description": "Lifecycle and handling class assigned to an intake document."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "FilingRoot",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "FilingRoot",
+      "description": "Vocabulary data for a local or mirrored filing root."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "FilingRootKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology",
+      "identity": "FilingRootKind",
+      "description": "Kind of filing root described by the semantic registry."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "SkosMappingKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology",
+      "identity": "SkosMappingKind",
+      "description": "SKOS mapping predicate used for an externally vetted concept alignment."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "TaxonomyConcept",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "TaxonomyConcept",
+      "description": "One repository-owned SKOS concept with filing and document-class metadata."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "symbol": "TaxonomySeed",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "TaxonomySeed",
+      "description": "A loadable SKOS taxonomy seed and its filing vocabulary metadata."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "TaxonomyManifestParseError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "TaxonomyManifestParseError",
+      "description": "A vendor manifest JSONL row failed schema decoding."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "TaxonomyManifestReadError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "TaxonomyManifestReadError",
+      "description": "The vendor manifest is missing or unreadable."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorLoadStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology",
+      "identity": "VendorLoadStatus",
+      "description": "Explicit implementation-loading verdict for a vendor slice."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorManifestEntry",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "VendorManifestEntry",
+      "description": "Manifest row for one explicitly vetted JSON-LD taxonomy slice."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorSliceParseError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "VendorSliceParseError",
+      "description": "An explicitly vetted vendor taxonomy slice is unparsable."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorSlicePathEscape",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "VendorSlicePathEscape",
+      "description": "A vetted vendor taxonomy slice resolved outside its canonical vendor root."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorSliceReadError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "VendorSliceReadError",
+      "description": "An explicitly vetted vendor slice is unreadable."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "symbol": "VendorSliceUnvetted",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "VendorSliceUnvetted",
+      "description": "A vendor slice is not explicitly VETTED for loading."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "symbol": "FilingPath",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "FilingPath",
+      "description": "A projected path paired with its semantic filing-root kind."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "symbol": "LibrarianInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "LibrarianInput",
+      "description": "Document metadata used to project one registry-backed filing decision."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "symbol": "LibrarianOutput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology",
+      "identity": "LibrarianOutput",
+      "description": "Pure classification output projected from loaded registry vocabulary data."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "symbol": "TaxonomyConceptNotFound",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "TaxonomyConceptNotFound",
+      "description": "The requested concept IRI is absent from the loaded taxonomy registry."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "symbol": "UnsupportedDocumentClass",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology",
+      "identity": "UnsupportedDocumentClass",
+      "description": "The selected taxonomy concept does not admit the requested document class."
+    },
+    {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
       "symbol": "PandocConstructorWire",
       "kind": "schema-class",
@@ -15226,6 +16464,70 @@
       "description": "A decimal string codec for signed 64-bit integer BigInt values."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "symbol": "Document",
+      "kind": "schema-class",
+      "owner": "@beep/schema",
+      "identity": "Document",
+      "description": "Draft-2020-12 document envelope: dialect, root schema, and hoisted definitions."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "symbol": "Node",
+      "kind": "schema-class",
+      "owner": "@beep/schema",
+      "identity": "Node",
+      "description": "A JSON Schema draft-2020-12 node with lossless unknown-keyword preservation."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "symbol": "NodeCodec",
+      "kind": "codec",
+      "owner": "@beep/schema",
+      "identity": "NodeCodec",
+      "description": "Wire codec between flat JSON Schema objects and Node instances."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "symbol": "SubSchema",
+      "kind": "union",
+      "owner": "@beep/schema",
+      "identity": "SubSchema",
+      "description": "A boolean schema or a full JSON Schema node."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+      "symbol": "CanonicalKeyword",
+      "kind": "literal-kit",
+      "owner": "@beep/schema",
+      "identity": "CanonicalKeyword",
+      "description": "A first-class draft-2020-12 keyword recognized by the JSONSchema node model."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+      "symbol": "ExtensionsBag",
+      "kind": "schema-const",
+      "owner": "@beep/schema",
+      "identity": "ExtensionsBag",
+      "description": "Preserved non-canonical keywords, keyed by extension name."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+      "symbol": "TypeName",
+      "kind": "literal-kit",
+      "owner": "@beep/schema",
+      "identity": "TypeName",
+      "description": "A draft-2020-12 primitive type name."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+      "symbol": "Types",
+      "kind": "union",
+      "owner": "@beep/schema",
+      "identity": "Types",
+      "description": "The `type` keyword value: one type name or a non-empty unique array of type names."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/Json.ts",
       "symbol": "JsonArray",
       "kind": "schema-const",
@@ -15696,6 +16998,14 @@
       "owner": "@beep/schema",
       "identity": "SafeObject",
       "description": "A nominally branded record with string keys and unknown values."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
+      "symbol": "SafeObjectFromObjectKeyword",
+      "kind": "codec",
+      "owner": "@beep/schema",
+      "identity": "SafeObjectFromObjectKeyword",
+      "description": "Normalizes any JavaScript object-keyword value into a nominally branded string-keyed record."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
@@ -16181,7 +17491,7 @@
       "kind": "tagged-error",
       "owner": "@beep/utils",
       "identity": "GlobError",
-      "description": "An error that occurs during glob pattern matching"
+      "description": "An error that occurs during glob pattern matching."
     },
     {
       "file": "packages/foundation/modeling/utils/src/Glob.ts",
@@ -16222,12 +17532,1068 @@
       "description": "Dot-delimited or segment-array path accepted by struct lookup helpers."
     },
     {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockPanelApi",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "DockPanelApi",
+      "description": "Renderer-facing API identifying the dock panel currently being rendered."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "FloatingGesture",
+      "kind": "tagged-union",
+      "owner": "@beep/dock-react",
+      "identity": "FloatingGesture",
+      "description": "Mode-discriminated gesture state for a floating dock group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "FloatingGestureBase",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "FloatingGestureBase",
+      "description": "Shared pointer and geometry state for moving or resizing a floating group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "FloatingOverride",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "FloatingOverride",
+      "description": "Transient anchored-box preview for a floating dock group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "PointerPosition",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "PointerPosition",
+      "description": "Finite client-space coordinates captured from a pointer event."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "RatioOverride",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "RatioOverride",
+      "description": "Transient split-ratio preview applied while a sash is moving."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "SashDrag",
+      "kind": "tagged-union",
+      "owner": "@beep/dock-react",
+      "identity": "SashDrag",
+      "description": "Axis-discriminated state for an in-progress split-sash resize gesture."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "SashDragBase",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "SashDragBase",
+      "description": "Shared state captured while resizing a split sash."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "symbol": "TabDrag",
+      "kind": "schema-class",
+      "owner": "@beep/dock-react",
+      "identity": "TabDrag",
+      "description": "Active tab-drag state, including its source group and latest pointer position."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "AnchoredBox",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "AnchoredBox",
+      "description": "A legacy-tolerant anchored floating box."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "AnchoredSize",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "AnchoredSize",
+      "description": "Floating box extent."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "BottomLeft",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "BottomLeft",
+      "description": "Bottom-left anchored position."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "BottomRight",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "BottomRight",
+      "description": "Bottom-right anchored position."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "TopLeft",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "TopLeft",
+      "description": "Top-left anchored position."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "symbol": "TopRight",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "TopRight",
+      "description": "Top-right anchored position."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "ActivatePanelCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ActivatePanelCommand",
+      "description": "Makes an existing panel active within its tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "ApiCommandOrigin",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ApiCommandOrigin",
+      "description": "Origin metadata for a programmatic dock command."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "ClearWorkspaceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ClearWorkspaceCommand",
+      "description": "Clears the docked tree and all floating members atomically."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "ClosePanelCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ClosePanelCommand",
+      "description": "Closes one panel and canonically collapses empty topology."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "CommandOrigin",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "CommandOrigin",
+      "description": "Causal origin carried with every top-level dock command."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "DockCommand",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockCommand",
+      "description": "Exhaustive command algebra for the POC layout kernel."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "DockCommandEnvelope",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockCommandEnvelope",
+      "description": "Top-level dock command with explicit causal origin."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "DockFloatingGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockFloatingGroupCommand",
+      "description": "Moves a floating group back into the docked tree."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "FloatGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "FloatGroupCommand",
+      "description": "Moves one docked group into a new topmost floating member."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "MaximizeGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "MaximizeGroupCommand",
+      "description": "Reveals and maximizes one existing tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "MoveFloatingGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "MoveFloatingGroupCommand",
+      "description": "Updates a floating member box and brings it to front."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "MoveGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "MoveGroupCommand",
+      "description": "Merges or relocates an entire tab group as one atomic transition."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "MovePanelCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "MovePanelCommand",
+      "description": "Moves a panel to a semantic destination as one atomic tree transition."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "OpenPanelCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "OpenPanelCommand",
+      "description": "Opens one unique panel at a semantic destination."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "ResizeSplitCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ResizeSplitCommand",
+      "description": "Changes one bounded binary split ratio."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "RestoreMaximizedCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "RestoreMaximizedCommand",
+      "description": "Clears the currently maximized group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "RestoreSnapshotRequest",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "RestoreSnapshotRequest",
+      "description": "Causal metadata attached to a validated snapshot installation."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "UpdateGroupCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "UpdateGroupCommand",
+      "description": "Applies whole-value replacements to existing group metadata."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "UpdatePanelCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "UpdatePanelCommand",
+      "description": "Applies whole-value replacements to an existing panel."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "symbol": "UserCommandOrigin",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "UserCommandOrigin",
+      "description": "Origin metadata for a user gesture compiled into a command."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockCommandRejected",
+      "kind": "tagged-error",
+      "owner": "@beep/dock",
+      "identity": "DockCommandRejected",
+      "description": "An expected command rejection that leaves state untouched."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockInputBoundary",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockInputBoundary",
+      "description": "External schema boundary at which unknown input was rejected."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockInputError",
+      "kind": "tagged-error",
+      "owner": "@beep/dock",
+      "identity": "DockInputError",
+      "description": "Schema decoding failure mapped at a public POC boundary."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockInvariantReason",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockInvariantReason",
+      "description": "Workspace invariant failures surfaced through the typed transition boundary."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockInvariantViolation",
+      "kind": "tagged-error",
+      "owner": "@beep/dock",
+      "identity": "DockInvariantViolation",
+      "description": "A workspace invariant failed before state publication."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockPersistenceError",
+      "kind": "tagged-error",
+      "owner": "@beep/dock",
+      "identity": "DockPersistenceError",
+      "description": "Failure while loading or saving a dock snapshot."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockPersistenceOperation",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockPersistenceOperation",
+      "description": "Snapshot-store operation that can fail in a host adapter."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockRejectionReason",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockRejectionReason",
+      "description": "Expected business reasons for rejecting a dock command."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockSnapshotMissing",
+      "kind": "tagged-error",
+      "owner": "@beep/dock",
+      "identity": "DockSnapshotMissing",
+      "description": "No persisted snapshot exists for a restore action."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "symbol": "DockTransitionError",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockTransitionError",
+      "description": "Error while executing a dock transition."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "DockEvent",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockEvent",
+      "description": "Exhaustive events produced by accepted commands and restores."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "FloatingGroupMovedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "FloatingGroupMovedEvent",
+      "description": "A floating member moved or changed z-order."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupDockedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupDockedEvent",
+      "description": "A floating group returned to the docked tree."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupFloatedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupFloatedEvent",
+      "description": "A docked group became floating."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupMaximizedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupMaximizedEvent",
+      "description": "A visible group became the exclusive geometry projection."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupMergedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupMergedEvent",
+      "description": "A complete source group was merged into a destination group in source order."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupMovedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupMovedEvent",
+      "description": "A complete tab group was relocated through a newly created split."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupRestoredEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupRestoredEvent",
+      "description": "A group left maximized mode."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "GroupUpdatedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupUpdatedEvent",
+      "description": "Persistable metadata for a tab group changed."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelActivatedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelActivatedEvent",
+      "description": "A panel became the active member of its tab zipper."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelClosedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelClosedEvent",
+      "description": "A panel was removed and empty topology was collapsed."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelConstraintsChangedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelConstraintsChangedEvent",
+      "description": "A panel size-constraint contract was replaced or cleared."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelMovedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelMovedEvent",
+      "description": "A panel moved between tab groups in one tree publication."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelOpenedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelOpenedEvent",
+      "description": "A panel was installed into a tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelRenderModeChangedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelRenderModeChangedEvent",
+      "description": "A panel rendering policy was replaced."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelReorderedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelReorderedEvent",
+      "description": "A panel changed position within its existing tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelTabComponentChangedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelTabComponentChangedEvent",
+      "description": "A panel custom tab renderer key was replaced or cleared."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelTitleChangedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelTitleChangedEvent",
+      "description": "A panel title was replaced."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "PanelViewChangedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelViewChangedEvent",
+      "description": "A panel view contract was replaced."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "SplitResizedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "SplitResizedEvent",
+      "description": "A binary split ratio changed."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "WorkspaceClearedEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "WorkspaceClearedEvent",
+      "description": "The complete workspace was cleared atomically."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "symbol": "WorkspaceRestoredEvent",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "WorkspaceRestoredEvent",
+      "description": "A fully decoded and validated snapshot replaced live content without rewinding live revision order."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "CommandId",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "CommandId",
+      "description": "Causal identity shared by a command and its emitted events."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "GroupId",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "GroupId",
+      "description": "Stable identity for one non-empty tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "PanelId",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "PanelId",
+      "description": "Stable identity for one panel instance in a dock workspace."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "RendererKey",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "RendererKey",
+      "description": "Renderer-neutral key resolved by a host adapter outside dockview-core."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "SplitId",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "SplitId",
+      "description": "Stable identity for one binary layout split."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "symbol": "SplitRatio",
+      "kind": "brand",
+      "owner": "@beep/dock",
+      "identity": "SplitRatio",
+      "description": "Exact child share in basis points, bounded from ten through ninety percent."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "ComponentPanelView",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "ComponentPanelView",
+      "description": "Panel content resolved by a host renderer registry."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "DockSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockSnapshot",
+      "description": "Version one persisted snapshot envelope containing one complete dock workspace."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "DockWorkspace",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockWorkspace",
+      "description": "Complete dock state discriminated between empty and populated layouts."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "EmptyWorkspace",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "EmptyWorkspace",
+      "description": "A dock workspace with no docked tree; floating subtrees may still exist."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "FloatingMember",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "FloatingMember",
+      "description": "A floating dock subtree and its anchored container geometry."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "GroupHeaderPosition",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "GroupHeaderPosition",
+      "description": "Persisted tab-group header edge."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "GroupLockedMode",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "GroupLockedMode",
+      "description": "Persisted group locking policy data."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "GroupMetadata",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupMetadata",
+      "description": "Serializable display and future policy metadata for one tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "GroupPatch",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupPatch",
+      "description": "Optional whole-value replacements for persistable group metadata."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "HorizontalSplitLayout",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "HorizontalSplitLayout",
+      "description": "Horizontal split geometry whose ratio describes the left child share."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "Panel",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "Panel",
+      "description": "A renderer-neutral panel owned directly by one tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelConstraints",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelConstraints",
+      "description": "Optional positive finite minimum and maximum pixel extents for one panel."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelParameterValue",
+      "kind": "union",
+      "owner": "@beep/dock",
+      "identity": "PanelParameterValue",
+      "description": "A JSON-safe scalar accepted by renderer-neutral panel parameters."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelParameters",
+      "kind": "schema-const",
+      "owner": "@beep/dock",
+      "identity": "PanelParameters",
+      "description": "Serializable renderer parameters keyed by host-defined names."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelPatch",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PanelPatch",
+      "description": "Optional whole-value replacements for persistable panel facets."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelRenderMode",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "PanelRenderMode",
+      "description": "Serializable host rendering policy for inactive panel content."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PanelView",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "PanelView",
+      "description": "Discriminated panel content with no DOM or framework values."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "PopulatedWorkspace",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "PopulatedWorkspace",
+      "description": "A dock workspace containing a non-empty binary layout tree."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "SplitLayout",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "SplitLayout",
+      "description": "Axis-specific split geometry with semantic child and leading-ratio names."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "SplitNode",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "SplitNode",
+      "description": "A recursive binary split with axis-specific geometry and exactly two children."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "TabsNode",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "TabsNode",
+      "description": "A non-empty ordered tab zipper with one structurally active panel."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "TextPanelView",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "TextPanelView",
+      "description": "Renderer-independent text panel content."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "symbol": "VerticalSplitLayout",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "VerticalSplitLayout",
+      "description": "Vertical split geometry whose ratio describes the top child share."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "symbol": "DockChanged",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "DockChanged",
+      "description": "A dock intent changed state and produced causally associated events."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "symbol": "DockMutationOutcome",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockMutationOutcome",
+      "description": "Causally identified result of a valid command or snapshot restore."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "symbol": "DockMutationResult",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockMutationResult",
+      "description": "Discriminates published state changes from idempotent no-change results."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "symbol": "DockUnchanged",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "DockUnchanged",
+      "description": "A valid dock intent left state and revision untouched and emitted no event."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "symbol": "DockUnchangedReason",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockUnchangedReason",
+      "description": "Expected reasons a valid dock intent produces no state change or domain event."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "DockGroupMoveTarget",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockGroupMoveTarget",
+      "description": "Merges a group into tabs or relocates it without unused new-group identifiers."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "DockMoveTarget",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockMoveTarget",
+      "description": "Moves a panel into tabs or docks it beside an existing group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "DockPlacement",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockPlacement",
+      "description": "Semantic panel placement independent from DOM coordinates."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "DockSide",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockSide",
+      "description": "Semantic side on which a new tab group is inserted."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "GroupRootSplitPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupRootSplitPlacement",
+      "description": "Relocates an existing group against one semantic edge of the workspace root."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "GroupSplitPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupSplitPlacement",
+      "description": "Relocates an existing group beside a reference group using a new split."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "RootPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "RootPlacement",
+      "description": "Creates the root tab group in an empty workspace."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "RootSplitPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "RootSplitPlacement",
+      "description": "Creates a new tab group against one semantic edge of an existing docked workspace root."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "SplitPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "SplitPlacement",
+      "description": "Creates a new tab group beside an existing group with an explicit share for the new group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "symbol": "TabPlacement",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "TabPlacement",
+      "description": "Inserts a panel into an existing tab group, optionally without changing its active panel."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DispatchDockCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DispatchDockCommand",
+      "description": "Executes a typed dock command through the serialized Atom session."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DispatchUnknownDockCommand",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DispatchUnknownDockCommand",
+      "description": "Decodes untrusted command input at the Atom session boundary."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomFeedEntry",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockAtomFeedEntry",
+      "description": "Discriminates successful outcomes from typed failures in the host-facing completion feed."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomFeedFailure",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "DockAtomFeedFailure",
+      "description": "Publishes one typed session failure with its operation and submission causality."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomFeedSuccess",
+      "kind": "tagged-class",
+      "owner": "@beep/dock",
+      "identity": "DockAtomFeedSuccess",
+      "description": "Publishes one successful operation outcome with its submission causality."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomOperation",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockAtomOperation",
+      "description": "All stateful session operations share this one serialized execution lane."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomOperationKind",
+      "kind": "literal-kit",
+      "owner": "@beep/dock",
+      "identity": "DockAtomOperationKind",
+      "description": "Discriminant for the dock atom session operation protocol."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomOperationOutcome",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockAtomOperationOutcome",
+      "description": "Discriminates mutation outcomes from snapshot persistence results."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockAtomSessionError",
+      "kind": "tagged-union",
+      "owner": "@beep/dock",
+      "identity": "DockAtomSessionError",
+      "description": "Typed failures produced after the Atom session layer has built."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockMutationCompleted",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockMutationCompleted",
+      "description": "Carries either a changed transition or an explicit unchanged result."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "DockSnapshotSaved",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockSnapshotSaved",
+      "description": "Confirms persistence and carries the encoded snapshot for diagnostics."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "RestoreDockSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "RestoreDockSnapshot",
+      "description": "Loads, validates, and atomically installs the persisted snapshot."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "symbol": "SaveDockSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "SaveDockSnapshot",
+      "description": "Persists the current workspace without changing live topology."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "DockBox",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockBox",
+      "description": "A finite non-negative rectangle in host pixel coordinates."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "DockGeometry",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "DockGeometry",
+      "description": "Ordered leaf rectangles and split sash hit rectangles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "FloatingGeometry",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "FloatingGeometry",
+      "description": "One floating subtree projection in z-order."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "GeometryOptions",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GeometryOptions",
+      "description": "Gap, minimum sash hit thickness, and global per-leaf minimum extent for geometry projection. minGroupExtent is the floor under every visible leaf; each split clamps between the requiredExtent of its two subtrees (leaf minimums sum through same-axis splits plus gaps, max across cross-axis splits), and an infeasible split degrades to the unclamped proportional partition."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "GroupGeometry",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "GroupGeometry",
+      "description": "The projected pixel rectangle for one tab group."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "symbol": "SashGeometry",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "SashGeometry",
+      "description": "A split gap hit rectangle, optionally expanded for grabbing."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Minima.ts",
+      "symbol": "TabChrome",
+      "kind": "schema-class",
+      "owner": "@beep/dock",
+      "identity": "TabChrome",
+      "description": "Per-tab and fixed tab-strip pixel allowances."
+    },
+    {
       "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
       "symbol": "AttachmentInvalidMimeType",
       "kind": "tagged-error",
       "owner": "@beep/editor",
       "identity": "AttachmentInvalidMimeType",
       "description": "A captured file rejected because its `file.type` is empty or not a recognized MIME type."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+      "symbol": "AttachmentPortFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "AttachmentPortFailed",
+      "description": "The consumer's `onAttach` upload port threw while being notified of accepted attachments."
     },
     {
       "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
@@ -16284,6 +18650,22 @@
       "owner": "@beep/editor",
       "identity": "SlashItem",
       "description": "A single `/` command: identity, label, optional hint/keywords/icon, and an editor side effect."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/code-block-node.tsx",
+      "symbol": "SerializedCodeBlockNode",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "SerializedCodeBlockNode",
+      "description": "Viewer-internal serialized code-block decorator node."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-node.tsx",
+      "symbol": "SerializedMermaidNode",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "SerializedMermaidNode",
+      "description": "Viewer-internal serialized Mermaid decorator node."
     },
     {
       "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
@@ -16790,6 +19172,14 @@
       "description": "Federal Rules of Procedure citation covering the civil, criminal, evidence, appellate, and bankruptcy rule sets (#576)."
     },
     {
+      "file": "packages/law-practice/domain/src/values/Footnote/Footnote.model.ts",
+      "symbol": "Zone",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Zone",
+      "description": "A detected footnote zone in raw input-text coordinates."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/FullCitationType/FullCitationType.model.ts",
       "symbol": "FullCitationType",
       "kind": "literal-kit",
@@ -17261,6 +19651,46 @@
     },
     {
       "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OntologyGraphRenderer",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-client",
+      "identity": "OntologyGraphRenderer",
+      "description": "Graph renderer selected by the ontology workbench."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OntologyInspectorAction",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-client",
+      "identity": "OntologyInspectorAction",
+      "description": "Exhaustive inspector intents converted into ontology commands by the client runtime."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OntologyInspectorFormState",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-client",
+      "identity": "OntologyInspectorFormState",
+      "description": "Inspector draft values and schema-derived validation flags rendered by the UI."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OntologyInspectorInputField",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-client",
+      "identity": "OntologyInspectorInputField",
+      "description": "Inspector draft fields updated by the ontology client runtime."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OntologyInspectorObjectKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-client",
+      "identity": "OntologyInspectorObjectKind",
+      "description": "RDF object term variants accepted by the ontology inspector."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
       "symbol": "OpenOntologyDocumentInput",
       "kind": "schema-class",
       "owner": "@beep/ontology-client",
@@ -17274,6 +19704,14 @@
       "owner": "@beep/ontology-client",
       "identity": "SaveOntologyDocumentInput",
       "description": "Save ontology document payload for the client atom."
+    },
+    {
+      "file": "packages/ontology/config/src/McpConfig.ts",
+      "symbol": "OntologyMcpServerConfig",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-config",
+      "identity": "OntologyMcpServerConfig",
+      "description": "Server-only ontology MCP tool-registration settings."
     },
     {
       "file": "packages/ontology/config/src/ServerConfig.ts",
@@ -17441,7 +19879,7 @@
       "kind": "literal-kit",
       "owner": "@beep/ontology-use-cases",
       "identity": "OntologyFileStoreErrorReason",
-      "description": "Ontology sidecar file-store failure reason."
+      "description": "Ontology sidecar file-store failure reason. `notFound` is distinct from `readFailed` because callers act on absence (seed a starter document) and must never take that path for a file that exists but could not be read."
     },
     {
       "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
@@ -17898,6 +20336,14 @@
       "owner": "@beep/ontology-use-cases",
       "identity": "DiffWorkerResult",
       "description": "Diff worker result expressed as typed change operations."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
+      "symbol": "OntologyWorkerUndecodableCommand",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyWorkerUndecodableCommand",
+      "description": "The graph worker received a message it could not decode as a WorkerCommand."
     },
     {
       "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
@@ -23965,6 +26411,168 @@
       "description": "Summary counts returned by files detect-faces."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditCluster",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditCluster",
+      "description": "A deterministic candidate cluster that requires visual confirmation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditEntry",
+      "description": "Hashes, geometry, metadata presence, face scale, and advisory quality data for one source image."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditFaceMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditFaceMetrics",
+      "description": "Detected face count and primary-face scale measurements used only for review."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditManifest",
+      "description": "Deterministic image audit evidence; all scores and clusters are advisory."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditMetadataPresence",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditMetadataPresence",
+      "description": "Privacy-preserving metadata presence and orientation facts for a source image."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditOptions",
+      "description": "Validated inputs for a read-only image identity and quality audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditQualityMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditQualityMetrics",
+      "description": "Advisory luminance, clipping, color, entropy, and edge-energy measurements."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSimilarityPair",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSimilarityPair",
+      "description": "A candidate near-duplicate pair and its advisory perceptual and color distances."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSkippedEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSkippedEntry",
+      "description": "A non-image, unsafe, or unreadable direct source entry skipped by the audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSummary",
+      "description": "Machine-readable counts for a completed image audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "decodeImageAuditManifestJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationCrop",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationCrop",
+      "description": "A reviewed natural crop expressed in pixels after EXIF orientation is applied."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDecision",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDecision",
+      "description": "A human-reviewable source decision pinned to exact source bytes."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDecisionDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDecisionDocument",
+      "description": "A complete one-decision-per-source ledger for deterministic image curation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDisposition",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDisposition",
+      "description": "Closed set of canonical, holdout, reserve, and archive destinations."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationManifest",
+      "description": "Complete provenance map for canonical PNG derivatives and all archived or reserved derivatives."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationManifestEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationManifestEntry",
+      "description": "Verified mapping from immutable source bytes to a metadata-free orientation-corrected PNG."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationOptions",
+      "description": "Validated source, ledger, output, dry-run, and overwrite inputs for image curation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationSummary",
+      "description": "Counts by final disposition for a ledger validation or materialization run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "decodeImageCurationDecisionDocumentJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "decodeImageCurationManifestJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
       "symbol": "FfprobeOutput",
       "kind": "schema-class",
@@ -24361,196 +26969,6 @@
       "description": "One rendered goals-index row (slug, title, status, phase progress, updated, mission)."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
-      "symbol": "GraphitiProxyConfigLoadError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyConfigLoadError",
-      "description": "Raised when graphiti proxy config cannot be decoded from Effect Config values."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
-      "symbol": "GraphitiProxyOpsError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyOpsError",
-      "description": "Failure raised while managing the local Graphiti proxy."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
-      "symbol": "GraphitiProxyServiceInstallOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyServiceInstallOptions",
-      "description": "Optional CLI flags used when installing the Graphiti proxy user service."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
-      "symbol": "GraphitiRestoreConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiRestoreConfig",
-      "description": "Resolved filesystem, container, and endpoint configuration for Graphiti stack restoration."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
-      "symbol": "GraphitiRestoreOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiRestoreOptions",
-      "description": "Optional CLI flags used by Graphiti restore and verify operations."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
-      "symbol": "ProxyEnsureConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyEnsureConfig",
-      "description": "Configuration for ensuring the Graphiti proxy service is running."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
-      "symbol": "ProxyServiceConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyServiceConfig",
-      "description": "Configuration for managing the Graphiti proxy service."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
-      "symbol": "GraphitiProxyConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyConfig",
-      "description": "Runtime configuration for Graphiti queue proxy command."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ContainerHealthState",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ContainerHealthState",
-      "description": "Container health status as reported by docker inspect."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "DependencyHealthDetails",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DependencyHealthDetails",
-      "description": "Dependency-level container health details."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "DependencyHealthSnapshot",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DependencyHealthSnapshot",
-      "description": "Cached dependency health snapshot."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "DependencyHealthState",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DependencyHealthState",
-      "description": "Dependency health status used by graphiti proxy."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "GraphitiMcpJsonRpcRequest",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiMcpJsonRpcRequest",
-      "description": "Subset of a JSON-RPC MCP request needed for Graphiti proxy lane selection."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "GraphitiMcpToolCallParams",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiMcpToolCallParams",
-      "description": "Subset of MCP tools/call params needed for proxy lane selection."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "GraphitiProxyFastMcpMethod",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyFastMcpMethod",
-      "description": "Cheap MCP methods allowed to bypass serialized Graphiti memory work."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "GraphitiProxyFastMcpToolName",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiProxyFastMcpToolName",
-      "description": "Cheap Graphiti MCP tools allowed to bypass serialized Graphiti memory work."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyErrorKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyErrorKind",
-      "description": "Structured graphiti proxy error identifiers."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyErrorPayload",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyErrorPayload",
-      "description": "Structured proxy error payload."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyHealthPayload",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyHealthPayload",
-      "description": "JSON payload returned by /healthz and /metrics routes."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyHealthStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyHealthStatus",
-      "description": "Health endpoint status values."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyLane",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyLane",
-      "description": "Graphiti proxy forwarding lanes."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "ProxyQueueStats",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyQueueStats",
-      "description": "Queue and throughput counters for graphiti proxy."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "decodeGraphitiMcpJsonRpcRequest",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-      "symbol": "urlSearchParamsSchema",
-      "kind": "codec",
-      "owner": "@beep/repo-cli",
-      "identity": "UrlSearchParamsToUrlParams",
-      "description": "Schema transformation from URLSearchParams into Effect UrlParams."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Image/Image.errors.ts",
       "symbol": "ImageCommandError",
       "kind": "tagged-error",
@@ -24669,6 +27087,30 @@
       "owner": "@beep/repo-cli",
       "identity": "EffectImportRulesSummary",
       "description": "Summary of effect import law migration results."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts",
+      "symbol": "FrozenGrantSetDiagnostic",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FrozenGrantSetDiagnostic",
+      "description": "Diagnostic emitted when FrozenGrantSet is constructed (make, new, or a syntactic alias of either) outside its defining module."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts",
+      "symbol": "FrozenGrantSetRulesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FrozenGrantSetRulesOptions",
+      "description": "Runtime options for the repo-local FrozenGrantSet construction law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts",
+      "symbol": "FrozenGrantSetRulesSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FrozenGrantSetRulesSummary",
+      "description": "Summary of repo-local FrozenGrantSet construction law results."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.errors.ts",
@@ -24831,6 +27273,14 @@
       "description": "Raised when the committed schema-first inventory cannot be parsed or decoded."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
+      "symbol": "TestTypecheckBaselineError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "TestTypecheckBaselineError",
+      "description": "Raised when the committed test-typecheck blind-spot baseline cannot be read, decoded, or written."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
       "symbol": "LiteralKitConstAssertionViolation",
       "kind": "schema-class",
@@ -24917,6 +27367,46 @@
       "owner": "@beep/repo-cli",
       "identity": "SchemaFirstPolicyRuleId",
       "description": "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "symbol": "PackageTestTypecheckOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PackageTestTypecheckOptions",
+      "description": "Options accepted by the package test-typecheck lint: baseline location and write mode."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "symbol": "TestTypecheckBlindSpot",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TestTypecheckBlindSpot",
+      "description": "A package with test/ sources that its own check script never typechecks."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "symbol": "TestTypecheckBlindSpotBaseline",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TestTypecheckBlindSpotBaseline",
+      "description": "Committed shrink-only baseline of packages whose check script skips their test sources."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "symbol": "TestTypecheckBlindSpotKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "TestTypecheckBlindSpotKind",
+      "description": "Whether a package owns no test-covering TypeScript project at all, or owns one its check script never runs."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "symbol": "TestTypecheckBlindSpotSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TestTypecheckBlindSpotSummary",
+      "description": "Deterministic per-kind count summary for test-typecheck blind spots."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
@@ -27321,7 +29811,7 @@
     {
       "file": "packages/workspace/domain/src/entities/Workspace/Workspace.values.ts",
       "symbol": "WorkspaceVaultRootPath",
-      "kind": "brand",
+      "kind": "codec",
       "owner": "@beep/workspace-domain",
       "identity": "WorkspaceVaultRootPath",
       "description": "Absolute local filesystem path configured as the workspace vault root."

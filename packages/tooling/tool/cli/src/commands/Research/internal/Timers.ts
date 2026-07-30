@@ -2,8 +2,8 @@
  * Systemd user-timer installation for the research pipeline.
  *
  * Renders service+timer unit pairs into `~/.config/systemd/user/` and
- * enables them, following the Graphiti proxy service-install pattern. The
- * daily unit runs `beep research daily`; a weekly unit refreshes repo cards.
+ * enables them. The daily unit runs `beep research daily`; a weekly unit
+ * refreshes repo cards.
  * Secrets (FIRECRAWL_API_KEY, NOTION_API_KEY, COGNEE_*) load from an optional
  * `~/.config/beep-research/env` EnvironmentFile.
  *

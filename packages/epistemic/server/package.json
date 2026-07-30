@@ -13,23 +13,31 @@
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx vitest run --coverage",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
+    "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
+    "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
+    "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
+    "./GovernedEgress": "./src/GovernedEgress/index.ts",
+    "./GovernedTierGate": "./src/GovernedTierGate/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -42,14 +50,28 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/api-transport": "workspace:^",
+    "@beep/epistemic-config": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
+    "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
+    "@beep/postgres": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/pglite": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-pg": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@electric-sql/pglite": "catalog:",
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

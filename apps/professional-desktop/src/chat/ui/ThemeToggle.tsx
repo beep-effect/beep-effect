@@ -1,10 +1,10 @@
 /**
  * A small theme toggle button for the desktop chat header.
  *
- * Flips between the green-workbench light and dark schemes via
- * {@link useThemeMode}. When the resolved scheme is dark, the control offers a
- * sun (switch to light); when light, a moon (switch to dark). The chosen mode is
- * persisted by the provider's MUI storage manager.
+ * Reads {@link resolvedWorkbenchThemeModeAtom} and dispatches
+ * {@link toggleWorkbenchThemeAtom}. When the resolved scheme is dark, the
+ * control offers a sun (switch to light); when light, a moon (switch to dark).
+ * The chosen mode is schema-persisted by the Atom-owned theme store.
  *
  * @packageDocumentation
  * @category components
@@ -13,7 +13,9 @@
 "use client";
 
 import { Button } from "@beep/ui/components/button";
-import { ThemeMode, useThemeMode } from "@beep/ui/themes";
+import { ThemeMode } from "@beep/ui/themes";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { resolvedWorkbenchThemeModeAtom, toggleWorkbenchThemeAtom } from "@/theme/Theme.atoms";
 import type { JSX } from "react";
 
 /**
@@ -30,12 +32,13 @@ import type { JSX } from "react";
  * @since 0.0.0
  */
 export function ThemeToggle(): JSX.Element {
-  const { resolvedMode, toggleMode } = useThemeMode();
+  const resolvedMode = useAtomValue(resolvedWorkbenchThemeModeAtom);
+  const toggleMode = useAtomSet(toggleWorkbenchThemeAtom);
   const isDark = ThemeMode.is.dark(resolvedMode);
   const label = isDark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
-    <Button variant="ghost" size="icon" onClick={toggleMode} aria-label={label} title={label}>
+    <Button variant="ghost" size="icon" onClick={() => toggleMode(void 0)} aria-label={label} title={label}>
       {isDark ? (
         // Incidental cross-app sun glyph: oip-web's ThemeModeToggle draws the same icon.
         // The correct dedup is a shared @beep/ui icon (which would also touch oip-web),

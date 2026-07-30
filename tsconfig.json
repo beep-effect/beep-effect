@@ -593,9 +593,6 @@
       "@beep/repo-cli/commands/Files": [
         "./packages/tooling/tool/cli/src/commands/Files/index.ts"
       ],
-      "@beep/repo-cli/commands/Graphiti": [
-        "./packages/tooling/tool/cli/src/commands/Graphiti/index.ts"
-      ],
       "@beep/repo-cli/commands/Image": [
         "./packages/tooling/tool/cli/src/commands/Image/index.ts"
       ],
@@ -634,9 +631,6 @@
       ],
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
-      ],
-      "@beep/repo-cli/test/Graphiti": [
-        "./packages/tooling/tool/cli/src/test/Graphiti.test-kit.ts"
       ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
@@ -1560,7 +1554,176 @@
       ],
       "@beep/schema/JSONSchema": [
         "./packages/foundation/modeling/schema/src/JSONSchema/index.ts"
-      ]
+      ],
+      "@beep/epistemic-domain/entities/ClaimDisposition": [
+        "./packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EdgeVersion": [
+        "./packages/epistemic/domain/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimDispositionStatus": [
+        "./packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeEndpoint": [
+        "./packages/epistemic/domain/src/values/EdgeEndpoint/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeRelation": [
+        "./packages/epistemic/domain/src/values/EdgeRelation/index.ts"
+      ],
+      "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
+        "./packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"
+      ],
+      "@beep/epistemic-server/ClaimDisposition": [
+        "./packages/epistemic/server/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-server/EdgeAuthority": [
+        "./packages/epistemic/server/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/CandidateClaim": [
+        "./packages/epistemic/tables/src/entities/CandidateClaim/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/ClaimDisposition": [
+        "./packages/epistemic/tables/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EdgeVersion": [
+        "./packages/epistemic/tables/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Evidence": [
+        "./packages/epistemic/tables/src/entities/Evidence/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimDisposition": [
+        "./packages/epistemic/use-cases/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-use-cases/EdgeAuthority": [
+        "./packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/cosmos/browser": ["./packages/drivers/cosmos/src/browser.ts"],
+      "@beep/ontology-use-cases/worker": [
+        "./packages/ontology/use-cases/src/worker.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionGrant": [
+        "./packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionRecord": [
+        "./packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionVerdict": [
+        "./packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
+      ],
+      "@beep/epistemic-domain/values/GrantSet": [
+        "./packages/epistemic/domain/src/values/GrantSet/index.ts"
+      ],
+      "@beep/epistemic-config": ["./packages/epistemic/config/src/index.ts"],
+      "@beep/epistemic-config/layer": [
+        "./packages/epistemic/config/src/layer.ts"
+      ],
+      "@beep/epistemic-config/public": [
+        "./packages/epistemic/config/src/public.ts"
+      ],
+      "@beep/epistemic-config/secrets": [
+        "./packages/epistemic/config/src/secrets.ts"
+      ],
+      "@beep/epistemic-config/server": [
+        "./packages/epistemic/config/src/server.ts"
+      ],
+      "@beep/epistemic-config/test": [
+        "./packages/epistemic/config/src/test.ts"
+      ],
+      "@beep/epistemic-server/ExecutionLedger": [
+        "./packages/epistemic/server/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "./packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "./packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/chalk/internal/*": [
+        "./packages/foundation/capability/chalk/src/internal/*"
+      ],
+      "@beep/dock-react/internal/*": [
+        "./packages/foundation/ui-system/dock-react/src/internal/*"
+      ],
+      "@beep/dock/internal/*": [
+        "./packages/foundation/ui-system/dock/src/internal/*"
+      ],
+      "@beep/form/components/*": [
+        "./packages/foundation/ui-system/form/src/components/*"
+      ],
+      "@beep/form/core/*": ["./packages/foundation/ui-system/form/src/core/*"],
+      "@beep/form/fields/*": [
+        "./packages/foundation/ui-system/form/src/fields/*"
+      ],
+      "@beep/form/hooks/*": [
+        "./packages/foundation/ui-system/form/src/hooks/*"
+      ],
+      "@beep/nlp-processing/Backend/*": [
+        "./packages/foundation/capability/nlp-processing/src/Backend/*"
+      ],
+      "@beep/nlp-processing/Core/*": [
+        "./packages/foundation/capability/nlp-processing/src/Core/*"
+      ],
+      "@beep/nlp-processing/Graph/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/*"
+      ],
+      "@beep/nlp-processing/Graph/GraphOperations/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/*"
+      ],
+      "@beep/nlp-processing/Tools/*": [
+        "./packages/foundation/capability/nlp-processing/src/Tools/*"
+      ],
+      "@beep/nlp/Algebra/*": [
+        "./packages/foundation/modeling/nlp/src/Algebra/*"
+      ],
+      "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
+      "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
+      "@beep/nlp/Handoff/*": [
+        "./packages/foundation/modeling/nlp/src/Handoff/*"
+      ],
+      "@beep/nlp/Ontology/*": [
+        "./packages/foundation/modeling/nlp/src/Ontology/*"
+      ],
+      "@beep/nlp/Operations/*": [
+        "./packages/foundation/modeling/nlp/src/Operations/*"
+      ],
+      "@beep/repo-cli/commands/*": [
+        "./packages/tooling/tool/cli/src/commands/*"
+      ],
+      "@beep/repo-configs/internal/*": [
+        "./packages/tooling/policy-pack/repo-configs/src/internal/*"
+      ],
+      "@beep/schema/SchemaUtils/*": [
+        "./packages/foundation/modeling/schema/src/SchemaUtils/*"
+      ],
+      "@beep/ui/components/*": [
+        "./packages/foundation/ui-system/ui/src/components/*"
+      ],
+      "@beep/ui/components/ui/*": [
+        "./packages/foundation/ui-system/ui/src/components/ui/*"
+      ],
+      "@beep/ui/hooks/*": ["./packages/foundation/ui-system/ui/src/hooks/*"],
+      "@beep/ui/lib/*": ["./packages/foundation/ui-system/ui/src/lib/*"],
+      "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "./packages/epistemic/server/src/GovernedTierGate/index.ts"
+      ],
+      "@beep/epistemic-server/GovernedEgress": [
+        "./packages/epistemic/server/src/GovernedEgress/index.ts"
+      ],
+      "@beep/law-practice-tables": [
+        "./packages/law-practice/tables/src/index.ts"
+      ],
+      "@beep/law-practice-tables/tables": [
+        "./packages/law-practice/tables/src/Tables.ts"
+      ],
+      "@beep/law-practice-tables/entities": [
+        "./packages/law-practice/tables/src/entities/index.ts"
+      ],
+      "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
     }
   }
 }

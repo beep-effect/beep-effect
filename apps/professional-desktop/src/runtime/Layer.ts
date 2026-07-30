@@ -34,20 +34,16 @@ import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageMode
 import { Box, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
-  FILING_DECISION_DEFAULT_MODEL,
-  FILING_DECISION_MODEL_ENV,
-  FilingDecisionLlmConfigLayer,
-} from "@beep/documents-server/aggregates/Document";
-import {
   BoxMirrorConfigLayer,
   DmsMirrorAvailabilityBoxLayer,
   DmsMirrorBoxLive,
-} from "@beep/documents-server/aggregates/Sync";
-import {
   DocumentsServerLive,
   DocumentsServerLlmLive,
   DocumentsSyncDrizzleLive,
   DocumentsSyncFixtureLive,
+  FILING_DECISION_DEFAULT_MODEL,
+  FILING_DECISION_MODEL_ENV,
+  FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/layer";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
@@ -66,7 +62,7 @@ import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
 import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
-import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server";
+import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
 
 /**
@@ -237,8 +233,9 @@ const DocumentsSyncLive = selectByChatAgent(
  * @example
  * ```ts
  * import { RuntimeLive } from "@/runtime/Layer"
+ * import { Layer } from "effect"
  *
- * console.log(RuntimeLive)
+ * console.log(Layer.isLayer(RuntimeLive)) // true
  * ```
  *
  * @category layers
@@ -269,8 +266,9 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
  * @example
  * ```ts
  * import { RuntimeTest } from "@/runtime/Layer"
+ * import { Layer } from "effect"
  *
- * console.log(RuntimeTest)
+ * console.log(Layer.isLayer(RuntimeTest)) // true
  * ```
  *
  * @category layers

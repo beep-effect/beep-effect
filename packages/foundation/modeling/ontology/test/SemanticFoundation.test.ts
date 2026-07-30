@@ -11,10 +11,13 @@ import {
   TaxonomySeed,
   VendorManifestEntry,
   VendorSliceParseError,
+  VendorSlicePathEscape,
   VendorSliceReadError,
   VendorSliceUnvetted,
 } from "@beep/ontology";
 import { IRIReference } from "@beep/rdf";
+import { provideScopedLayer } from "@beep/test-utils";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
@@ -32,7 +35,9 @@ const loadWith = Effect.fnUntraced(function* (readFileString: FileSystem.FileSys
   const loader = yield* TaxonomyLoader;
   return yield* loader
     .load(manifestPath, vendorRoot)
-    .pipe(Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({ readFileString })));
+    .pipe(
+      Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({ readFileString, realPath: Effect.succeed }))
+    );
 });
 
 layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
@@ -149,6 +154,125 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       ).pipe(Effect.flip);
       expect(S.is(VendorSliceParseError)(error)).toBe(true);
     })
+  );
+
+  it.effect(
+    "rejects a vetted slice symlink that resolves outside the vendor root",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const loader = yield* TaxonomyLoader;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-vendor-" });
+      const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-outside-" });
+      const outsideSlice = `${outside}/outside.jsonld`;
+      const linkedSlice = `${root}/linked.jsonld`;
+      const manifest = `${root}/manifest.jsonl`;
+      const entry = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "linked-slice",
+          loadStatus: "VETTED",
+          path: "linked.jsonld",
+        })
+      );
+      const slice = yield* encodeSeed(
+        TaxonomySeed.make({
+          concepts: [],
+          filingRoots: [],
+          pathTemplateSegments: ["root", "client", "matter", "taxonomy-concept", "document-class", "file-name"],
+          schemeIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/taxonomy/outside"),
+          title: "Outside vendor slice",
+        })
+      );
+      yield* fs.writeFileString(outsideSlice, slice);
+      yield* fs.symlink(outsideSlice, linkedSlice);
+      yield* fs.writeFileString(manifest, entry);
+
+      const error = yield* loader.load(manifest, root).pipe(Effect.flip);
+      expect(S.is(VendorSlicePathEscape)(error)).toBe(true);
+    }, provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect(
+    "accepts a canonical Windows vendor root with a trailing separator",
+    Effect.fnUntraced(function* () {
+      const loader = yield* TaxonomyLoader;
+      const canonicalRoot = "C:\\vendor\\";
+      const canonicalSlice = `${canonicalRoot}fixture-slice.jsonld`;
+      const manifest = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "windows-slice",
+          loadStatus: "VETTED",
+          path: "fixture-slice.jsonld",
+        })
+      );
+      const slice = yield* encodeSeed(
+        TaxonomySeed.make({
+          concepts: [],
+          filingRoots: [],
+          pathTemplateSegments: ["root", "client", "matter", "taxonomy-concept", "document-class", "file-name"],
+          schemeIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/taxonomy/windows"),
+          title: "Windows vendor slice",
+        })
+      );
+      const loaded = yield* loader.load(manifestPath, vendorRoot).pipe(
+        Effect.provideService(
+          FileSystem.FileSystem,
+          FileSystem.makeNoop({
+            readFileString: (path) => Effect.succeed(path === manifestPath ? manifest : slice),
+            realPath: (path) => Effect.succeed(path === vendorRoot ? canonicalRoot : canonicalSlice),
+          })
+        )
+      );
+
+      expect(loaded.concepts).toHaveLength(SemanticFoundationSeed.concepts.length);
+    })
+  );
+
+  it.effect(
+    "maps a missing vendor root realpath to a typed slice read error",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const loader = yield* TaxonomyLoader;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-manifest-" });
+      const missingRoot = `${root}/missing-vendor`;
+      const manifest = `${root}/manifest.jsonl`;
+      const entry = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "missing-root",
+          loadStatus: "VETTED",
+          path: "slice.jsonld",
+        })
+      );
+      yield* fs.writeFileString(manifest, entry);
+
+      const error = yield* loader.load(manifest, missingRoot).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "VendorSliceReadError", id: "missing-root", path: missingRoot });
+    }, provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect(
+    "maps a missing vendor slice realpath to a typed slice read error",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const loader = yield* TaxonomyLoader;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-vendor-" });
+      const missingSlice = `${root}/missing.jsonld`;
+      const manifest = `${root}/manifest.jsonl`;
+      const entry = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "missing-slice",
+          loadStatus: "VETTED",
+          path: "missing.jsonld",
+        })
+      );
+      yield* fs.writeFileString(manifest, entry);
+
+      const error = yield* loader.load(manifest, root).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "VendorSliceReadError", id: "missing-slice", path: missingSlice });
+    }, provideScopedLayer(BunFileSystem.layer))
   );
 
   it.effect(

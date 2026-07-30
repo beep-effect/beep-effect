@@ -27,35 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/api-transport": [
-        "../../../../packages/foundation/capability/api-transport/src/index.ts"
-      ],
-      "@beep/api-transport/*": [
-        "../../../../packages/foundation/capability/api-transport/src/*.ts"
-      ],
-      "@beep/identity": [
-        "../../../../packages/foundation/modeling/identity/src/index.ts"
-      ],
-      "@beep/identity/*": [
-        "../../../../packages/foundation/modeling/identity/src/*.ts"
-      ],
-      "@beep/identity/packages": [
-        "../../../../packages/foundation/modeling/identity/src/packages.ts"
-      ],
-      "@beep/test-utils": [
-        "../../../../packages/tooling/test-kit/test-utils/src/index.ts"
-      ],
-      "@beep/test-utils/*": [
-        "../../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ],
-      "@beep/utils": [
-        "../../../../packages/foundation/modeling/utils/src/index.ts"
-      ],
-      "@beep/utils/*": [
-        "../../../../packages/foundation/modeling/utils/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

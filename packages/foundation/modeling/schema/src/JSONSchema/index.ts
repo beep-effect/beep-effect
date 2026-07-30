@@ -11,8 +11,8 @@
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const node = S.decodeUnknownSync(NodeCodec)({ type: "object", "x-vendor": 1 })
- * console.log(node.extensions["x-vendor"])
+ * const node = S.decodeUnknownResult(NodeCodec)({ type: "object", "x-vendor": 1 })
+ * console.log(node._tag)
  * ```
  *
  * @packageDocumentation
@@ -40,10 +40,12 @@ export {
  * @since 0.0.0
  */
 export {
+  AbsoluteUriString,
   AnchorName,
   CanonicalKeyword,
   ExtensionKey,
   ExtensionsBag,
+  IdUriReferenceString,
   isCanonicalKeyword,
   JsonValue,
   NonNegativeCount,

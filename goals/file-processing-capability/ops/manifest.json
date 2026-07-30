@@ -3,11 +3,14 @@
   "initiative": {
     "id": "file-processing-capability",
     "title": "File Processing Capability",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-02",
-    "updated": "2026-07-14",
+    "updated": "2026-07-27",
     "packetAnchorDocument": "SPEC.md"
   },
+  "lifecycle": "completed-retained",
+  "statusNote": "Closed 2026-07-27: all five phases complete; capability handed to legal-document-intake P4 (see history/outputs/p5-implementation-notes.md).",
+  "reflectionRequired": true,
   "mission": "Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo CLI proof.",
   "currentSourceOfTruth": [
     "standards/ARCHITECTURE.md",
@@ -25,7 +28,7 @@
       "command": "/goal follow the instructions in goals/file-processing-capability/GOAL.md"
     }
   ],
-  "currentTargetPhase": "P2",
+  "currentTargetPhase": "P5",
   "reportDirectory": "research",
   "rawOutputDirectory": "history/outputs",
   "phaseStatusMeaning": {
@@ -64,7 +67,7 @@
     {
       "id": "pst-fixture",
       "question": "What real or public PST fixture should prove libpff export beyond the synthetic P1 child-artifact path?",
-      "default": "Keep the P1 typed engine-unavailable and synthetic export proof until P3 selects a public/generated fixture."
+      "default": "Resolved in P3: stub-based deterministic fixtures cover the driver logic; the opt-in BEEP_TEST_LIBPFF_PST live lane (documented public sample: Apache Tika testPST.pst, Apache-2.0, pinned by commit URL and sha256 in packages/drivers/libpff/README.md) covers real PSTs. No PST binary is committed."
     },
     {
       "id": "node-entrypoint",
@@ -78,10 +81,9 @@
     }
   ],
   "knownGaps": [
-    "P1 packages and consumers are scaffolded and merged; the remaining work is breadth, real-engine hardening, and corpus calibration.",
-    "Broad Tika coverage for every non-PST V1 format family is pending.",
-    "Real/public PST export coverage beyond the typed engine-unavailable and synthetic child-artifact P1 proof is pending.",
-    "Optional operator-local corpus profiling remains pending.",
+    "All five phases are complete; remaining items below are recorded handoff debt, not open packet work.",
+    "Real-PST proof runs only through the opt-in BEEP_TEST_LIBPFF_PST live lane; no PST binary is committed (public repo).",
+    "Archive-export engine warnings have no manifest record home (no FileProcessingWarningRecord in the capability); the CLI surfaces an aggregate warning count in its summary line and the schema gap is recorded for P5 handoff.",
     "HTML was promoted into V1 during packet hardening because the local corpus contains substantial exported email HTML.",
     "The local corpus has XLS/XLSX and DOCM inputs that are known non-core inputs for V1.",
     "PDF text-layer status for the local corpus has not been verified."
@@ -267,30 +269,34 @@
     {
       "id": "P2",
       "name": "Tika Driver Completion",
-      "status": "pending",
-      "exitCriteriaSummary": "@beep/tika implements broad extraction and metadata capabilities for all non-PST V1 formats, including HTML."
+      "status": "complete",
+      "exitCriteriaSummary": "@beep/tika implements broad extraction and metadata capabilities for all non-PST V1 formats, including HTML; Tika Server HTTP engine, shared error translation, and stubbed-HTTP proof landed 2026-07-26 (live doc/docx calibration deferred to P5 per the P2 design contract)."
     },
     {
       "id": "P3",
       "name": "libpff Driver Completion",
-      "status": "pending",
-      "exitCriteriaSummary": "@beep/libpff exports PST files into child EML artifacts and JSONL metadata, or records an explicit typed fixture/engine deferral."
+      "status": "complete",
+      "exitCriteriaSummary": "@beep/libpff exports PST files into child EML artifacts and JSONL metadata: pffexport -V version capture, mode-derived .export/.orphans/.recovered walking, deterministic Message.eml assembly, PffexportMessageRecord messages.jsonl, existingExportPolicy, and shared error translation landed 2026-07-26 (design contract research/p3-libpff-design.md; real-PST proof via the opt-in BEEP_TEST_LIBPFF_PST live lane)."
     },
     {
       "id": "P4",
       "name": "Repo CLI Proof Completion",
-      "status": "pending",
-      "exitCriteriaSummary": "beep files process writes a schema-encoded manifest tree for generated fixtures and optional coverage profiling."
+      "status": "complete",
+      "exitCriteriaSummary": "beep files process composes the real Tika App/Server and pffexport engines (lazy per-family construction, SPEC 0/1/2 exit codes, content-digest dedupe, output-root-rebased children) and proves the schema-encoded manifest tree through hermetic stub-engine lanes; landed 2026-07-27 (design contract research/p4-files-process-design.md). Corpus profiling: point --input at an operator-local corpus; coverage.json is the profile."
     },
     {
       "id": "P5",
       "name": "Quality And Handoff",
-      "status": "pending",
-      "exitCriteriaSummary": "Affected quality gates pass and implementation evidence is recorded."
+      "status": "complete",
+      "exitCriteriaSummary": "Live doc/docx Tika calibration landed in the opt-in BEEP_TEST_TIKA_URL lane (runtime-generated OLE2 .doc and OOXML .docx fixtures, 11/11 live tests against Apache Tika 3.3.1); real-PST end-to-end `beep files process` proof covered every V1 family (10 succeeded, 1 skipped known non-core, 0 failed); affected quality gates green; evidence and handoff notes recorded under history/outputs/; closeout reflection landed 2026-07-27."
     }
   ],
-  "nextAction": "Advance P2-P5 as needed: broaden Tika extraction over filed documents, deepen libpff PST/email export, calibrate files process against generated or operator-local corpus inputs, and hand the verified capability to legal-document-intake P4.",
-  "researchReports": ["research/SOURCES.md"],
+  "nextAction": "None — packet closed 2026-07-27. Consumers start from history/outputs/p5-implementation-notes.md; follow-up debt (FileProcessingWarningRecord, streaming digests) is recorded there and in the closeout reflection.",
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p3-libpff-design.md",
+    "research/p4-files-process-design.md"
+  ],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

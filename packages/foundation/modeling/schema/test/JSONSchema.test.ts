@@ -1,9 +1,11 @@
 import {
+  AbsoluteUriString,
   AnchorName,
   CanonicalKeyword,
   Document,
   ExtensionKey,
   ExtensionsBag,
+  IdUriReferenceString,
   isCanonicalKeyword,
   Node,
   NodeCodec,
@@ -21,17 +23,27 @@ import {
 } from "@beep/schema/JSONSchema";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeNode = S.decodeUnknownEffect(NodeCodec);
-const decodeNodeSync = S.decodeUnknownSync(NodeCodec);
-const encodeNodeSync = S.encodeSync(NodeCodec);
-const decodeDocumentSync = S.decodeUnknownSync(Document);
-const encodeDocumentSync = S.encodeSync(Document);
+const encodeNode = S.encodeEffect(NodeCodec);
+const decodeDocument = S.decodeUnknownEffect(Document);
+const encodeDocument = S.encodeEffect(Document);
+const decodeNodeResult = S.decodeUnknownResult(NodeCodec);
+const encodeNodeResult = S.encodeResult(NodeCodec);
+const decodeDocumentResult = S.decodeUnknownResult(Document);
+const encodeDocumentResult = S.encodeResult(Document);
+const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
+const encodeSubSchemaResult = S.encodeResult(SubSchema);
+const decodeJsonResult = S.decodeUnknownResult(S.UnknownFromJsonString);
+const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const isAbsoluteUriString = S.is(AbsoluteUriString);
+const isIdUriReferenceString = S.is(IdUriReferenceString);
+const isUriReferenceString = S.is(UriReferenceString);
 
 const NodeArbitrary = S.toArbitrary(Node);
 const SubSchemaArbitrary = S.toArbitrary(SubSchema);
@@ -40,7 +52,37 @@ const nodeEquivalence = S.toEquivalence(Node);
 const subSchemaEquivalence = S.toEquivalence(SubSchema);
 const documentEquivalence = S.toEquivalence(Document);
 
-describe("JSONSchema", () => {
+const nodeRoundTrips = (node: Node.Type): boolean =>
+  Result.match(Result.flatMap(encodeNodeResult(node), decodeNodeResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => nodeEquivalence(decoded, node),
+  });
+
+const subSchemaRoundTrips = (schema: SubSchema.Type): boolean =>
+  Result.match(Result.flatMap(encodeSubSchemaResult(schema), decodeSubSchemaResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => subSchemaEquivalence(decoded, schema),
+  });
+
+const documentRoundTrips = (document: Document.Type): boolean =>
+  Result.match(Result.flatMap(encodeDocumentResult(document), decodeDocumentResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => documentEquivalence(decoded, document),
+  });
+
+const nodeJsonRoundTrips = (node: Node.Type): boolean =>
+  Result.match(
+    Result.flatMap(
+      Result.flatMap(Result.flatMap(encodeNodeResult(node), encodeJsonResult), decodeJsonResult),
+      decodeNodeResult
+    ),
+    {
+      onFailure: () => false,
+      onSuccess: (decoded) => nodeEquivalence(decoded, node),
+    }
+  );
+
+describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
   describe("NodeCodec decoding", () => {
     it.effect(
       "decodes canonical keywords into Option fields and preserves unknown keys",
@@ -111,6 +153,53 @@ describe("JSONSchema", () => {
         expect(yield* rejects({ pattern: "[unclosed" })).toBe(true);
         expect(yield* rejects({ patternProperties: { "[bad": true } })).toBe(true);
         expect(yield* rejects({ $ref: "has whitespace" })).toBe(true);
+        expect(yield* rejects({ $ref: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $ref: "1:foo" })).toBe(true);
+        expect(yield* rejects({ $ref: "a[b" })).toBe(true);
+        expect(yield* rejects({ $ref: "?q=[x]" })).toBe(true);
+        expect(yield* rejects({ $ref: "#foo#bar" })).toBe(true);
+        expect(yield* rejects({ $dynamicRef: "%" })).toBe(true);
+        expect(yield* rejects({ $id: "#fragment" })).toBe(true);
+        expect(yield* rejects({ $id: "https://example.com/schema#fragment" })).toBe(true);
+        expect(yield* rejects({ $id: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $id: "schema[1].json" })).toBe(true);
+        expect(yield* rejects({ $id: "#" })).toBe(false);
+        expect(yield* rejects({ $id: "schema.json" })).toBe(false);
+        expect(yield* rejects({ $id: "https://example.com/schema" })).toBe(false);
+        expect(yield* rejects({ $ref: "other.json#/$defs/T" })).toBe(false);
+        expect(yield* rejects({ $ref: "foo:bar" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::1]/schema" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::]/" })).toBe(false);
+        expect(yield* rejects({ $ref: "//user:pass@example.com:8080/a:b" })).toBe(false);
+        expect(yield* rejects({ $ref: "?q=x/y?z" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::gg]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//[::1:]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//[0000:a::ffff:1:a:]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//host:not-a-port/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//user@@host/" })).toBe(true);
+        expect(yield* rejects({ $ref: "relative%ZZ" })).toBe(true);
+        expect(yield* rejects({ $schema: "meta/schema" })).toBe(true);
+        expect(yield* rejects({ $schema: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://example.com/[x]" })).toBe(true);
+        expect(yield* rejects({ $schema: "HTTPS://JSON-SCHEMA.ORG/draft/2020-12/schema" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/%73chema" })).toBe(true);
+        expect(yield* rejects({ $schema: "foo://example.com/a/../schema" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/schema" })).toBe(false);
+        expect(yield* rejects({ $schema: "foo://[v1.a]/" })).toBe(false);
+        expect(yield* rejects({ $schema: "foo://" })).toBe(false);
+        expect(yield* rejects({ $vocabulary: { relative: true } })).toBe(true);
+        expect(yield* rejects({ $vocabulary: { "foo://EXAMPLE.com/path": true } })).toBe(true);
+        expect(yield* rejects({ $vocabulary: { "foo://example.com/path": true } })).toBe(false);
+        expect(
+          yield* rejects({
+            $vocabulary: { "https://json-schema.org/draft/2020-12/vocab/%63ore": true },
+          })
+        ).toBe(true);
+        expect(
+          yield* rejects({
+            $vocabulary: { "https://json-schema.org/draft/2020-12/vocab/core": true },
+          })
+        ).toBe(false);
         expect(yield* rejects({ required: ["a", "a"] })).toBe(true);
         expect(yield* rejects({ dependentRequired: { a: ["b", "b"] } })).toBe(true);
         expect(yield* rejects({ type: [] })).toBe(true);
@@ -142,7 +231,7 @@ describe("JSONSchema", () => {
         const node = yield* decodeNode(wire);
         expect(Object.getOwnPropertyDescriptor(node.extensions, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
-        const back = encodeNodeSync(node);
+        const back = yield* encodeNode(node);
         expect(Object.getOwnPropertyDescriptor(back, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(Object.keys(back).sort()).toEqual(["__proto__", "x-a"]);
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
@@ -151,62 +240,51 @@ describe("JSONSchema", () => {
   });
 
   describe("wire round-trips", () => {
-    it("restores hand-written documents exactly", () => {
-      const wires: ReadonlyArray<Record<string, unknown>> = [
-        { type: "object", properties: { a: { type: "string" } }, required: ["a"], "x-k": 1 },
-        { items: false, prefixItems: [{ type: "number" }], minItems: 1 },
-        { if: { type: "string" }, then: { minLength: 1 }, else: { not: {} } },
-        { extensions: { nested: true }, type: "null" },
-        { $defs: { A: true }, $ref: "#/$defs/A", $comment: "self-contained" },
-        { enum: [1, "two", null, { three: [3] }], const: { deep: [true] } },
-        { pattern: "\\p" },
-        {},
-      ];
-      for (const wire of wires) {
-        expect(encodeNodeSync(decodeNodeSync(wire))).toEqual(wire);
-      }
-    });
+    it.effect(
+      "restores hand-written documents exactly",
+      Effect.fnUntraced(function* () {
+        const wires: ReadonlyArray<Record<string, unknown>> = [
+          { type: "object", properties: { a: { type: "string" } }, required: ["a"], "x-k": 1 },
+          { items: false, prefixItems: [{ type: "number" }], minItems: 1 },
+          { if: { type: "string" }, then: { minLength: 1 }, else: { not: {} } },
+          { extensions: { nested: true }, type: "null" },
+          { $defs: { A: true }, $ref: "#/$defs/A", $comment: "self-contained" },
+          { enum: [1, "two", null, { three: [3] }], const: { deep: [true] } },
+          { pattern: "\\p" },
+          {},
+        ];
+        for (const wire of wires) {
+          const decoded = yield* decodeNode(wire);
+          expect(yield* encodeNode(decoded)).toEqual(wire);
+        }
+      })
+    );
 
-    it("defaults make() to empty options and an empty extensions bag", () => {
-      const node = Node.make({});
-      expect(O.isNone(node.type)).toBe(true);
-      expect(O.isNone(node.$ref)).toBe(true);
-      expect(node.extensions).toEqual({});
-      expect(encodeNodeSync(node)).toEqual({});
-    });
+    it.effect(
+      "defaults make() to empty options and an empty extensions bag",
+      Effect.fnUntraced(function* () {
+        const node = Node.make({});
+        expect(O.isNone(node.type)).toBe(true);
+        expect(O.isNone(node.$ref)).toBe(true);
+        expect(node.extensions).toEqual({});
+        expect(yield* encodeNode(node)).toEqual({});
+      })
+    );
 
     it("property: encode then decode returns an equivalent node", () => {
-      fc.assert(
-        fc.property(NodeArbitrary, (node) => nodeEquivalence(decodeNodeSync(encodeNodeSync(node)), node)),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(NodeArbitrary, nodeRoundTrips), fcRuns(100));
     });
 
     it("property: SubSchema round-trips booleans and nodes", () => {
-      const encode = S.encodeSync(SubSchema);
-      const decode = S.decodeUnknownSync(SubSchema);
-      fc.assert(
-        fc.property(SubSchemaArbitrary, (value) => subSchemaEquivalence(decode(encode(value)), value)),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(SubSchemaArbitrary, subSchemaRoundTrips), fcRuns(100));
     });
 
     it("property: Document round-trips through its envelope", () => {
-      fc.assert(
-        fc.property(DocumentArbitrary, (document) =>
-          documentEquivalence(decodeDocumentSync(encodeDocumentSync(document)), document)
-        ),
-        fcRuns(50)
-      );
+      fc.assert(fc.property(DocumentArbitrary, documentRoundTrips), fcRuns(50));
     });
 
     it("property: nodes survive a JSON string boundary", () => {
-      fc.assert(
-        fc.property(NodeArbitrary, (node) =>
-          nodeEquivalence(decodeNodeSync(JSON.parse(JSON.stringify(encodeNodeSync(node)))), node)
-        ),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(NodeArbitrary, nodeJsonRoundTrips), fcRuns(100));
     });
   });
 
@@ -290,7 +368,10 @@ describe("JSONSchema", () => {
       );
 
     const referenceGrammarValid = (doc: EncodedDoc): boolean =>
-      ["$id", "$ref", "$dynamicRef"].every((key) => doc[key] === undefined || !/\s/.test(doc[key] as string));
+      ["$ref", "$dynamicRef"].every((key) => doc[key] === undefined || isUriReferenceString(doc[key])) &&
+      (doc.$id === undefined || isIdUriReferenceString(doc.$id)) &&
+      (doc.$schema === undefined || isAbsoluteUriString(doc.$schema)) &&
+      (doc.$vocabulary === undefined || Object.keys(doc.$vocabulary as EncodedDoc).every(isAbsoluteUriString));
 
     const isAbsentOrSubschemaRecord = (input: unknown): boolean =>
       input === undefined || Object.values(input as EncodedDoc).every((entry) => isValidEncodedSchema(entry));
@@ -330,16 +411,23 @@ describe("JSONSchema", () => {
 
     it("property: every generated node encodes to a valid draft-2020-12 document", () => {
       fc.assert(
-        fc.property(NodeArbitrary, (node) => isValidEncodedSchema(encodeNodeSync(node))),
+        fc.property(NodeArbitrary, (node) =>
+          Result.match(encodeNodeResult(node), {
+            onFailure: () => false,
+            onSuccess: isValidEncodedSchema,
+          })
+        ),
         fcRuns(100)
       );
     });
 
     it("property: leaf schemas generate values that decode to themselves", () => {
       for (const leaf of [
+        AbsoluteUriString,
         AnchorName,
         ExtensionKey,
         ExtensionsBag,
+        IdUriReferenceString,
         NonNegativeCount,
         PositiveNumber,
         RegexPatternString,
@@ -388,56 +476,86 @@ describe("JSONSchema", () => {
       Tree,
     ];
 
-    it("round-trips S.toJsonSchemaDocument output for a representative battery", () => {
-      for (const schema of battery) {
-        const document = S.toJsonSchemaDocument(schema);
-        const decoded = decodeDocumentSync(document);
-        expect(encodeDocumentSync(decoded)).toEqual({
-          dialect: document.dialect,
-          schema: document.schema,
-          definitions: document.definitions,
-        });
-      }
-    });
+    it.effect(
+      "round-trips S.toJsonSchemaDocument output for a representative battery",
+      Effect.fnUntraced(function* () {
+        for (const schema of battery) {
+          const document = S.toJsonSchemaDocument(schema);
+          const decoded = yield* decodeDocument(document);
+          expect(yield* encodeDocument(decoded)).toEqual({
+            dialect: document.dialect,
+            schema: document.schema,
+            definitions: document.definitions,
+          });
+        }
+      })
+    );
 
-    it("decodes generator output for recursive schemas into resolvable references", () => {
-      const document = Tree.pipe(S.toJsonSchemaDocument, decodeDocumentSync);
-      const root = resolveDocumentRef(document);
-      expect(O.isSome(root)).toBe(true);
-    });
+    it.effect(
+      "decodes generator output for recursive schemas into resolvable references",
+      Effect.fnUntraced(function* () {
+        const document = yield* Tree.pipe(S.toJsonSchemaDocument, decodeDocument);
+        const root = resolveDocumentRef(document);
+        expect(O.isSome(root)).toBe(true);
+      })
+    );
   });
 
   describe("resolvers", () => {
     it("resolveLocalRef handles hits, escapes, and misses", () => {
-      const defs = { User: { kind: "user" }, "a/b": { kind: "slash" }, "til~de": { kind: "tilde" } };
+      const defs = {
+        User: { kind: "user" },
+        "a b": { kind: "space" },
+        "a/b": { kind: "slash" },
+        café: { kind: "utf8" },
+        "til~de": { kind: "tilde" },
+        "100%": { kind: "percent" },
+      };
       expect(O.getOrThrow(resolveLocalRef("#/$defs/User", defs))).toEqual({ kind: "user" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/a%20b", defs))).toEqual({ kind: "space" });
+      expect(O.getOrThrow(resolveLocalRef("#/%24defs/a%20b", defs))).toEqual({ kind: "space" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/a~1b", defs))).toEqual({ kind: "slash" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/caf%C3%A9", defs))).toEqual({ kind: "utf8" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/til~0de", defs))).toEqual({ kind: "tilde" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/100%25", defs))).toEqual({ kind: "percent" });
       expect(O.isNone(resolveLocalRef("#/$defs/Missing", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/definitions/User", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/$defs/a/b", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/a%2Fb", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/$defs/", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/bad~2escape", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/%", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("https://example.com/schema.json", defs))).toBe(true);
     });
 
-    it("resolveNodeRef follows a node's own $ref into its sibling $defs", () => {
-      const hit = decodeNodeSync({ $ref: "#/$defs/User", $defs: { User: { type: "object" } } });
-      const target = O.getOrThrow(resolveNodeRef(hit));
-      expect(typeof target === "boolean" ? target : O.getOrThrow(target.type)).toBe("object");
-      expect(O.isNone(resolveNodeRef(decodeNodeSync({ $ref: "#/$defs/User" })))).toBe(true);
-      expect(O.isNone(resolveNodeRef(decodeNodeSync({ $defs: { User: {} } })))).toBe(true);
-    });
+    it.effect(
+      "resolveNodeRef follows a node's own $ref into its sibling $defs",
+      Effect.fnUntraced(function* () {
+        const hit = yield* decodeNode({ $ref: "#/$defs/User", $defs: { User: { type: "object" } } });
+        const target = O.getOrThrow(resolveNodeRef(hit));
+        expect(typeof target === "boolean" ? target : O.getOrThrow(target.type)).toBe("object");
+        expect(O.isNone(resolveNodeRef(yield* decodeNode({ $ref: "#/$defs/User" })))).toBe(true);
+        expect(O.isNone(resolveNodeRef(yield* decodeNode({ $defs: { User: {} } })))).toBe(true);
+      })
+    );
 
-    it("resolveDocumentRef resolves the top-level reference", () => {
-      const document = decodeDocumentSync({
-        dialect: "draft-2020-12",
-        schema: { $ref: "#/$defs/User" },
-        definitions: { User: { type: "object" } },
-      });
-      expect(O.isSome(resolveDocumentRef(document))).toBe(true);
-      const bare = decodeDocumentSync({ dialect: "draft-2020-12", schema: { type: "null" }, definitions: {} });
-      expect(O.isNone(resolveDocumentRef(bare))).toBe(true);
-    });
+    it.effect(
+      "resolveDocumentRef resolves the top-level reference",
+      Effect.fnUntraced(function* () {
+        const document = yield* decodeDocument({
+          dialect: "draft-2020-12",
+          schema: { $ref: "#/$defs/User" },
+          definitions: { User: { type: "object" } },
+        });
+        expect(O.isSome(resolveDocumentRef(document))).toBe(true);
+        const bare = yield* decodeDocument({
+          dialect: "draft-2020-12",
+          schema: { type: "null" },
+          definitions: {},
+        });
+        expect(O.isNone(resolveDocumentRef(bare))).toBe(true);
+      })
+    );
   });
 
   describe("vocabulary drift guard", () => {
