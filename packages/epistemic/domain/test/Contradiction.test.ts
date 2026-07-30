@@ -168,6 +168,22 @@ describe("Contradiction domain invariants", () => {
     expect(canonical.matchBasis.rightEvidenceIds).toStrictEqual(rightEvidenceIds);
   });
 
+  it("keys detector identities and versions independently", () => {
+    const originalKey = contradictionCandidateKey(pair, matchBasis);
+    const otherDetectorKey = contradictionCandidateKey(
+      pair,
+      ContradictionMatchBasis.make({ ...matchBasis, detector: "independent-detector" })
+    );
+    const otherVersionKey = contradictionCandidateKey(
+      pair,
+      ContradictionMatchBasis.make({ ...matchBasis, detectorVersion: "0.0.1" })
+    );
+
+    expect(otherDetectorKey).not.toBe(originalKey);
+    expect(otherVersionKey).not.toBe(originalKey);
+    expect(otherDetectorKey).not.toBe(otherVersionKey);
+  });
+
   it("derives only constructive unique collections and canonical pairs", () => {
     fc.assert(
       fc.property(

@@ -108,6 +108,9 @@ const browserSidecarTransport = (): SidecarTransport => {
     : SidecarTransport.make({ ipc: false, rpcSessionToken: token });
 };
 
+const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
+  transport.ipc || P.isNotUndefined(transport.rpcSessionToken);
+
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
 // the Tauri Promise boundary and schema-decoded — and in a plain browser it is
@@ -473,7 +476,8 @@ export const SurfaceBoundary = ({
 
 const makePanelRenderers = (
   graph: DesktopDockGraph,
-  appRegistry: AppRegistry
+  appRegistry: AppRegistry,
+  desktopRpcAvailable: boolean
 ): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
   const wrap = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
@@ -487,7 +491,17 @@ const makePanelRenderers = (
     home: () => wrap("Home", <HomeSurface graph={graph} />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
-    "contradiction-triage": () => wrap("Contradiction Triage", <ContradictionTriagePanel />),
+    "contradiction-triage": () =>
+      wrap(
+        "Contradiction Triage",
+        desktopRpcAvailable ? (
+          <ContradictionTriagePanel />
+        ) : (
+          <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">
+            Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
+          </div>
+        )
+      ),
     "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
     "ontology-document": () => wrap("Document", <OntologyDocumentRegion />),
     "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
@@ -503,8 +517,12 @@ const makePanelRenderers = (
 // The family owns one renderer map per graph. Reading the professional registry
 // inside the atom keeps renderer identity stable without module-global state.
 const panelRendererAtoms = Atom.family((graph: DesktopDockGraph) =>
-  Atom.readable((get) =>
-    AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) => makePanelRenderers(graph, appRegistry))
+  Atom.family((desktopRpcAvailable: boolean) =>
+    Atom.readable((get) =>
+      AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) =>
+        makePanelRenderers(graph, appRegistry, desktopRpcAvailable)
+      )
+    )
   )
 );
 
@@ -647,6 +665,8 @@ const DesktopShell = ({
   const initializeDockApi = useAtomSet(initializeDockApiAtom);
   const navigatePanel = useAtomSet(navigateDesktopPanelAtom);
   const focusedGroup = useAtomValue(focusedDockGroupAtom(graph)(dockApi));
+  const desktopRpcAvailable = hasDesktopRpcAccess(transport);
+  const shellNavPanels = A.filter(SHELL_NAV_PANELS, ({ key }) => key !== "contradiction-triage" || desktopRpcAvailable);
   // One current page: the panel active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
   const isPanelCurrent = (key: DesktopPanelKey): boolean =>
@@ -660,7 +680,7 @@ const DesktopShell = ({
   const navigate = (key: DesktopPanelKey): void => {
     navigatePanel({ api: dockApi, graph, key, workspace });
   };
-  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)));
+  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)(desktopRpcAvailable)));
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
@@ -677,7 +697,7 @@ const DesktopShell = ({
         <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
-            {A.map(SHELL_NAV_PANELS, (item) => (
+            {A.map(shellNavPanels, (item) => (
               <Button
                 key={item.key}
                 aria-current={isPanelCurrent(item.key) ? "page" : undefined}

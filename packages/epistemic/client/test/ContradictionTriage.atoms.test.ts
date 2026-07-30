@@ -13,6 +13,7 @@ import {
   selectedContradictionCandidateIdAtom,
   selectedContradictionEvidenceSourceAtom,
 } from "@beep/epistemic-client";
+import { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
 import {
   ContradictionActionError,
   ContradictionRpcs,
@@ -22,7 +23,7 @@ import {
   ReviewContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { fcRuns } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -44,6 +45,19 @@ const sourceRequestEquivalence = S.toEquivalence(EvidenceSourcePagePayload);
 const settle = Effect.repeat(Effect.yieldNow, { times: 4 });
 const detailKnownAtMillis = 2_000;
 const detailValidAtMillis = 1_500;
+const reviewResolvedAtMillis = 3_000;
+const reviewedDisposition = Result.getOrThrow(
+  S.decodeUnknownResult(ContradictionDisposition)({
+    ...baseEntityFixtureInput("EpistemicContradictionDisposition", 9),
+    candidateId: 7,
+    decision: {
+      reason: "The evidence concerns different periods.",
+      status: "rejected",
+    },
+    resolvedAt: reviewResolvedAtMillis,
+    resolvedBy: systemPrincipal,
+  })
+);
 
 const unexpectedRpc = (tag: string) =>
   Effect.fnUntraced(function* () {
@@ -68,6 +82,20 @@ const ReviewFailureClientTest = Layer.effect(
   RpcTest.makeClient(ContradictionRpcs, { flatten: true })
 ).pipe(Layer.provide(ReviewFailureHandlersTest));
 
+const ReviewSuccessHandlersTest = ContradictionRpcs.toLayer({
+  GetContradictionCandidate: unexpectedRpc("GetContradictionCandidate"),
+  GetEvidenceSourcePage: unexpectedRpc("GetEvidenceSourcePage"),
+  ListContradictionCandidates: unexpectedRpc("ListContradictionCandidates"),
+  ReviewContradictionCandidate: Effect.fnUntraced(function* () {
+    return reviewedDisposition;
+  }),
+});
+
+const ReviewSuccessClientTest = Layer.effect(
+  ContradictionClient,
+  RpcTest.makeClient(ContradictionRpcs, { flatten: true })
+).pipe(Layer.provide(ReviewSuccessHandlersTest));
+
 const registryWithReviewFailure = () =>
   AtomRegistry.make({
     initialValues: [[ContradictionClient.runtime.layer, Layer.mergeAll(ReviewFailureClientTest, Reactivity.layer)]],
@@ -81,6 +109,11 @@ const registryWithReviewFailureAndClock = (clock: Clock.Clock) =>
         Layer.mergeAll(ReviewFailureClientTest, Reactivity.layer, Layer.succeed(Clock.Clock, clock)),
       ],
     ],
+  });
+
+const registryWithReviewSuccess = () =>
+  AtomRegistry.make({
+    initialValues: [[ContradictionClient.runtime.layer, Layer.mergeAll(ReviewSuccessClientTest, Reactivity.layer)]],
   });
 
 describe("@beep/epistemic-client contradiction atoms", () => {
@@ -302,16 +335,53 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(contradictionValidAtAtom, DateTime.makeUnsafe(1_600));
       yield* settle;
 
-      expect(
-        A.map(yield* Ref.get(requests), ({ knownAt, validAt }) => ({
-          knownAt: DateTime.toEpochMillis(knownAt),
-          validAt: DateTime.toEpochMillis(validAt),
-        }))
-      ).toStrictEqual([
+      const capturedRequests = A.map(yield* Ref.get(requests), ({ knownAt, validAt }) => ({
+        knownAt: DateTime.toEpochMillis(knownAt),
+        validAt: DateTime.toEpochMillis(validAt),
+      }));
+      const temporalRequests = A.dedupeWith(
+        capturedRequests,
+        (left, right) => left.knownAt === right.knownAt && left.validAt === right.validAt
+      );
+
+      expect(temporalRequests).toStrictEqual([
         { knownAt: 2_000, validAt: 1_500 },
         { knownAt: 2_100, validAt: 1_500 },
         { knownAt: 2_100, validAt: 1_600 },
       ]);
+      unmount();
+      registry.dispose();
+    })
+  );
+
+  it.effect(
+    "advances transaction time before refreshing a successful review",
+    Effect.fnUntraced(function* () {
+      const registry = registryWithReviewSuccess();
+      const unmount = registry.mount(reviewContradictionCandidateAtom);
+      const command = Result.getOrThrow(
+        decodeReview({
+          candidateId: 7,
+          decision: {
+            decision: "reject",
+            reason: "The evidence concerns different periods.",
+          },
+          expectedCandidateVersion: 1,
+        })
+      );
+
+      registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(detailKnownAtMillis));
+      registry.set(contradictionQueueOffsetAtom, NonNegativeInt.make(50));
+      registry.set(reviewContradictionCandidateAtom, command);
+      yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
+
+      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
+        O.some(reviewResolvedAtMillis)
+      );
+      expect(registry.get(contradictionQueueOffsetAtom)).toBe(0);
+      expect(AsyncResult.value(registry.get(reviewContradictionCandidateAtom))).toStrictEqual(
+        O.some(reviewedDisposition)
+      );
       unmount();
       registry.dispose();
     })

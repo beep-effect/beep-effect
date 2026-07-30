@@ -403,6 +403,17 @@ describe("EpistemicTables", () => {
     expect(canonicalInsert.span.endChar).toBe(57);
   });
 
+  it("rejects malformed Evidence rows with a schema error", () => {
+    const evidence = S.decodeUnknownSync(EvidenceModel)(evidenceInput(10));
+    const malformedRow = {
+      ...Evidence.toEvidenceInsert(evidence),
+      id: 10,
+      span: null,
+    } as unknown as Evidence.EvidenceRow;
+
+    expect(() => Evidence.fromEvidenceRow(malformedRow)).toThrow(S.SchemaError);
+  });
+
   // Exhaustive per-column assertion walk over the widest table in the slice;
   // branch count is the column count, not logic to simplify.
   // fallow-ignore-next-line complexity -- exhaustive assertions cover every column of the slice's widest table

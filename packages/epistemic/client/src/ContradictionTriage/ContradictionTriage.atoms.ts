@@ -540,10 +540,18 @@ export const reviewContradictionCandidateAtom = ContradictionClient.runtime.fn<R
   Effect.fn("ContradictionTriage.reviewCandidate")(function* (command, ctx) {
     const client = yield* ContradictionClient;
     ctx.set(contradictionReviewCandidateIdAtom, O.some(command.candidateId));
-    return yield* Reactivity.mutation(client("ReviewContradictionCandidate", command), [
-      CONTRADICTION_QUEUE_KEY,
-      detailKey(command.candidateId),
-    ]);
+    return yield* Reactivity.mutation(
+      client("ReviewContradictionCandidate", command).pipe(
+        Effect.tap((disposition) =>
+          Effect.sync(() => {
+            ctx.set(contradictionKnownAtAtom, disposition.resolvedAt);
+            ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
+            ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
+          })
+        )
+      ),
+      [CONTRADICTION_QUEUE_KEY, detailKey(command.candidateId)]
+    );
   }),
   { concurrent: false }
 );

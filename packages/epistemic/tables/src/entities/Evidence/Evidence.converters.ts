@@ -122,9 +122,6 @@ const normalizeLegacyEvidenceSpan = (row: EvidenceRow): EvidenceRow =>
     })
   );
 
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-
 /**
  * Convert an Evidence entity into its persistence insert row.
  *
@@ -167,7 +164,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * @since 0.0.0
  */
 export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
-  const { id: _id, ...rest } = Result.getOrThrowWith(encodeEvidence(evidence), schemaIssueToError);
+  const { id: _id, ...rest } = Result.getOrThrow(encodeEvidence(evidence));
   return rest;
 };
 
@@ -209,4 +206,4 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  * @since 0.0.0
  */
 export const fromEvidenceRow = (row: EvidenceRow): Evidence =>
-  Result.getOrThrowWith(decodeEvidenceRow(normalizeLegacyEvidenceSpan(row)), schemaIssueToError);
+  Result.getOrThrow(decodeEvidenceRow(normalizeLegacyEvidenceSpan(row)));

@@ -457,6 +457,94 @@ function QueueRow({
   );
 }
 
+const queuePageLabel = (
+  page: ContradictionTriage.ContradictionCandidatePage,
+  offset: ContradictionTriage.ContradictionListPayload["offset"]
+): string =>
+  A.match(page.items, {
+    onEmpty: () => `${page.total} total`,
+    onNonEmpty: (items) => `${offset + 1}–${N.min(offset + items.length, page.total)} of ${page.total}`,
+  });
+
+function QueueSuccess({
+  onCandidateSelect,
+  onNextQueuePage,
+  onPreviousQueuePage,
+  page,
+  query,
+  selectedCandidateId,
+  waiting,
+}: Pick<
+  QueuePaneProps,
+  "onCandidateSelect" | "onNextQueuePage" | "onPreviousQueuePage" | "query" | "selectedCandidateId"
+> & {
+  readonly page: ContradictionTriage.ContradictionCandidatePage;
+  readonly waiting: boolean;
+}): JSX.Element {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col" data-testid="contradiction-queue-success">
+      {waiting ? (
+        <div className="px-3 pt-3">
+          <Badge variant="secondary">
+            <ArrowClockwiseIcon aria-hidden="true" data-icon="inline-start" />
+            Refreshing queue
+          </Badge>
+        </div>
+      ) : null}
+      {A.match(page.items, {
+        onEmpty: () => (
+          <Empty className="border-0" data-testid="contradiction-queue-empty">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CheckCircleIcon aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>No matching contradictions</EmptyTitle>
+              <EmptyDescription>
+                No candidates match this disposition and bitemporal view. Adjust the filters or reset to now.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ),
+        onNonEmpty: (items) => (
+          <div className="grid min-h-0 flex-1 content-start gap-1 overflow-y-auto p-2">
+            {A.map(items, (item) => (
+              <QueueRow
+                item={item}
+                key={item.candidate.id}
+                onCandidateSelect={onCandidateSelect}
+                selected={O.exists(selectedCandidateId, (id) => Eq.equals(id, item.candidate.id))}
+              />
+            ))}
+          </div>
+        ),
+      })}
+      <div className="flex items-center justify-between gap-2 border-t p-3">
+        <Button
+          disabled={query.offset === 0 || waiting}
+          onClick={onPreviousQueuePage}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Previous
+        </Button>
+        <span className="text-xs text-muted-foreground" aria-live="polite">
+          {queuePageLabel(page, query.offset)}
+        </span>
+        <Button
+          disabled={query.offset + page.items.length >= page.total || waiting}
+          onClick={onNextQueuePage}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function QueuePane({
   onCandidateSelect,
   onNextQueuePage,
@@ -478,67 +566,17 @@ function QueuePane({
         <DefectAlert onRetry={onQueueRetry} testId="contradiction-queue-error" />
       </div>
     ),
-    onSuccess: ({ value, waiting }) =>
-      A.match(value.items, {
-        onEmpty: () => (
-          <Empty className="border-0" data-testid="contradiction-queue-empty">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <CheckCircleIcon aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>No matching contradictions</EmptyTitle>
-              <EmptyDescription>
-                No candidates match this disposition and bitemporal view. Adjust the filters or reset to now.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ),
-        onNonEmpty: (items) => (
-          <div className="flex min-h-0 flex-1 flex-col" data-testid="contradiction-queue-success">
-            {waiting ? (
-              <div className="px-3 pt-3">
-                <Badge variant="secondary">
-                  <ArrowClockwiseIcon aria-hidden="true" data-icon="inline-start" />
-                  Refreshing queue
-                </Badge>
-              </div>
-            ) : null}
-            <div className="grid min-h-0 flex-1 content-start gap-1 overflow-y-auto p-2">
-              {A.map(items, (item) => (
-                <QueueRow
-                  item={item}
-                  key={item.candidate.id}
-                  onCandidateSelect={onCandidateSelect}
-                  selected={O.exists(selectedCandidateId, (id) => Eq.equals(id, item.candidate.id))}
-                />
-              ))}
-            </div>
-            <div className="flex items-center justify-between gap-2 border-t p-3">
-              <Button
-                disabled={query.offset === 0 || waiting}
-                onClick={onPreviousQueuePage}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <span className="text-xs text-muted-foreground" aria-live="polite">
-                {query.offset + 1}–{N.min(query.offset + value.items.length, value.total)} of {value.total}
-              </span>
-              <Button
-                disabled={query.offset + value.items.length >= value.total || waiting}
-                onClick={onNextQueuePage}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        ),
-      }),
+    onSuccess: ({ value, waiting }) => (
+      <QueueSuccess
+        onCandidateSelect={onCandidateSelect}
+        onNextQueuePage={onNextQueuePage}
+        onPreviousQueuePage={onPreviousQueuePage}
+        page={value}
+        query={query}
+        selectedCandidateId={selectedCandidateId}
+        waiting={waiting}
+      />
+    ),
   });
 
   return (

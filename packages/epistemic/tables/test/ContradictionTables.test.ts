@@ -1,4 +1,8 @@
-import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction";
+import {
+  ContradictionCandidate,
+  ContradictionDisposition,
+  ContradictionReceipt,
+} from "@beep/epistemic-domain/entities/Contradiction";
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
@@ -21,7 +25,11 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity";
 import {
   fromContradictionCandidateRow,
+  fromContradictionDispositionRow,
+  fromContradictionReceiptRow,
   toContradictionCandidateInsert,
+  toContradictionDispositionInsert,
+  toContradictionReceiptInsert,
 } from "@beep/epistemic-tables/entities/Contradiction";
 import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
@@ -111,6 +119,28 @@ const candidate = Result.getOrThrow(
     validTo: null,
   })
 );
+const systemPrincipal = { component: "Runtime", kind: "System" } as const;
+const receipt = Result.getOrThrow(
+  S.decodeUnknownResult(ContradictionReceipt)({
+    ...baseEntityFixtureInput("EpistemicContradictionReceipt", 2),
+    candidateId: candidate.id,
+    receiptKey: Str.repeat(64)("7"),
+    receivedAt: 0,
+    receivedBy: systemPrincipal,
+  })
+);
+const disposition = Result.getOrThrow(
+  S.decodeUnknownResult(ContradictionDisposition)({
+    ...baseEntityFixtureInput("EpistemicContradictionDisposition", 3),
+    candidateId: candidate.id,
+    decision: {
+      reason: "The passages concern different obligations.",
+      status: "rejected",
+    },
+    resolvedAt: 0,
+    resolvedBy: systemPrincipal,
+  })
+);
 
 const otherCandidateKey = ContradictionCandidateKey.make(Str.repeat(64)("e"));
 const otherCandidateDigest = ContradictionCandidateDigest.make(Str.repeat(64)("f"));
@@ -156,6 +186,20 @@ describe("Contradiction candidate row converters", () => {
     expect(Result.getOrThrow(decoded.hasValidSeals())).toBe(true);
     expect(decoded.candidateKey).toBe(candidate.candidateKey);
     expect(decoded.assessment.proposals).toHaveLength(2);
+  });
+
+  it("round-trips receipt and disposition rows without generated identifiers", () => {
+    const receiptInsert = Result.getOrThrow(toContradictionReceiptInsert(receipt));
+    const dispositionInsert = Result.getOrThrow(toContradictionDispositionInsert(disposition));
+    const decodedReceipt = Result.getOrThrow(fromContradictionReceiptRow({ ...receiptInsert, id: receipt.id }));
+    const decodedDisposition = Result.getOrThrow(
+      fromContradictionDispositionRow({ ...dispositionInsert, id: disposition.id })
+    );
+
+    expect("id" in receiptInsert).toBe(false);
+    expect("id" in dispositionInsert).toBe(false);
+    expect(decodedReceipt.receiptKey).toBe(receipt.receiptKey);
+    expect(decodedDisposition.decision).toEqual(disposition.decision);
   });
 
   it("rejects each tampered seal before writing", () => {

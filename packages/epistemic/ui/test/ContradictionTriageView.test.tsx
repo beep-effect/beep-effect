@@ -172,6 +172,12 @@ const emptyQueuePage = Result.getOrThrow(
     total: 0,
   })
 );
+const staleEmptyQueuePage = Result.getOrThrow(
+  S.decodeUnknownResult(ContradictionTriage.ContradictionCandidatePage)({
+    items: [],
+    total: 1,
+  })
+);
 
 const query = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload)({
@@ -186,6 +192,10 @@ const query = Result.getOrThrow(
 const queryAfterReview = ContradictionTriage.ContradictionListPayload.make({
   ...query,
   knownAt: Result.getOrThrow(S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload.fields.knownAt)(3_000)),
+});
+const queryAfterEmptyPage = ContradictionTriage.ContradictionListPayload.make({
+  ...query,
+  offset: ContradictionTriage.ContradictionListPayload.fields.offset.make(50),
 });
 
 const sourceRequest = Result.getOrThrow(
@@ -547,6 +557,26 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       expect(container.querySelector('[data-testid="contradiction-proposal-resolved"]')).not.toBeNull();
       return flushMicrotaskUpdates();
     }));
+
+  it("keeps backward navigation available on an empty noninitial page", () => {
+    const onPreviousQueuePage = vi.fn();
+
+    return renderView(
+      root,
+      makeProps({
+        onPreviousQueuePage,
+        query: queryAfterEmptyPage,
+        queueResult: AsyncResult.success(staleEmptyQueuePage),
+      })
+    ).then(() => {
+      const previous = requireButton(container, "Previous");
+      expect(previous.disabled).toBe(false);
+
+      act(() => previous.click());
+      expect(onPreviousQueuePage).toHaveBeenCalledOnce();
+      expect(container.textContent).toContain("1 total");
+    });
+  });
 
   it("treats a successful review as authoritative at or after its resolution time", () =>
     renderView(

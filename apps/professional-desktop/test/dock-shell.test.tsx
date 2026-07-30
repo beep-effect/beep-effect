@@ -169,6 +169,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       .findByTestId("chat-app")
       .then((chatApp) => {
         expect(chatApp).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Beliefs" })).toBeNull();
 
         const homeButton = screen.getByRole("button", { name: "Home" });
         fireEvent.click(homeButton);

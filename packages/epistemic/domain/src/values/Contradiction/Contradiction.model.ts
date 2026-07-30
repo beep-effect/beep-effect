@@ -957,6 +957,8 @@ export const contradictionCandidateKey: ContradictionCandidateKeyFn = dual(
         encodeBeliefRef(normalized.pair.right),
         normalized.matchBasis.kind,
         normalized.matchBasis.evidenceDigest,
+        normalized.matchBasis.detector,
+        normalized.matchBasis.detectorVersion,
       ],
       "|"
     );
