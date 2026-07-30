@@ -14,6 +14,7 @@
 import { SessionStore } from "@beep/qa-capture";
 import { A, O } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { decodeQaInventory, encodeQaInventory } from "./Inventory.schemas.ts";
@@ -82,8 +83,10 @@ export const INVENTORY_MARKDOWN_FILE = "inventory.md";
  * @category utilities
  * @since 0.0.0
  */
-export const inventoryJsonPath = (path: Path.Path, layout: RoundLayout): string =>
-  path.join(layout.root, INVENTORY_JSON_FILE);
+export const inventoryJsonPath: {
+  (layout: RoundLayout): (path: Path.Path) => string;
+  (path: Path.Path, layout: RoundLayout): string;
+} = dual(2, (path: Path.Path, layout: RoundLayout): string => path.join(layout.root, INVENTORY_JSON_FILE));
 
 /**
  * Parse noisy judge output into a schema-valid inventory.

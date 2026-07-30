@@ -13,15 +13,19 @@
 
 import { ExtractFramesAtRequest, RenderContactSheetRequest, RenderGifRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Match, MutableHashMap, Number as N, Order, pipe } from "effect";
+import { flow, Match, MutableHashMap, Number as N, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { ActionEvent } from "./ActionEvent.models.ts";
 import {
   ArtifactBudget,
   DroppedWindow,
   defaultExtractionRules,
   ExtractFramesAtPlanned,
   ExtractionPlan,
+  ExtractionRuleSet,
   ExtractionWindow,
   GifSpec,
   RenderContactSheetPlanned,
@@ -29,18 +33,12 @@ import {
 } from "./ExtractionPlan.models.ts";
 import { ClockSync } from "./QaCapture.models.ts";
 import type {
-  ActionEvent,
   CssAnimationEvent,
   CssTransitionEvent,
   PointerDownEvent,
   PointerEnterEvent,
 } from "./ActionEvent.models.ts";
-import type {
-  ExtractionRule,
-  ExtractionRuleKind,
-  ExtractionRuleSet,
-  QaDriverRequest,
-} from "./ExtractionPlan.models.ts";
+import type { ExtractionRule, ExtractionRuleKind, QaDriverRequest } from "./ExtractionPlan.models.ts";
 
 const $I = $QaCaptureId.create("ExtractionPlanner");
 
@@ -50,10 +48,8 @@ const $I = $QaCaptureId.create("ExtractionPlanner");
  * @example
  * ```ts
  * import { OVERLAP_MERGE_GAP_MS } from "@beep/qa-capture"
- *
  * console.log(OVERLAP_MERGE_GAP_MS)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -65,10 +61,8 @@ export const OVERLAP_MERGE_GAP_MS = 250;
  * @example
  * ```ts
  * import { FRAME_ESTIMATED_BYTES } from "@beep/qa-capture"
- *
  * console.log(FRAME_ESTIMATED_BYTES)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -85,10 +79,8 @@ export const FRAME_ESTIMATED_BYTES = 60000;
  * @example
  * ```ts
  * import { GIF_BYTES_PER_WIDTH_PIXEL_FRAME } from "@beep/qa-capture"
- *
  * console.log(GIF_BYTES_PER_WIDTH_PIXEL_FRAME)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -102,10 +94,8 @@ export const GIF_BYTES_PER_WIDTH_PIXEL_FRAME = 24;
  * @example
  * ```ts
  * import { SHEET_ESTIMATED_BYTES } from "@beep/qa-capture"
- *
  * console.log(SHEET_ESTIMATED_BYTES)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -117,10 +107,8 @@ export const SHEET_ESTIMATED_BYTES = 320000;
  * @example
  * ```ts
  * import { MIN_GIF_SECONDS } from "@beep/qa-capture"
- *
  * console.log(MIN_GIF_SECONDS)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -142,8 +130,7 @@ const byBudgetDropOrder = Order.combine(
   Order.mapInput(Order.Number, (window: ExtractionWindow) => -window.startEpochMs)
 );
 
-const sortedUnique = (values: ReadonlyArray<number>): ReadonlyArray<number> =>
-  pipe(values, A.dedupe, A.sort(Order.Number));
+const sortedUnique: (values: ReadonlyArray<number>) => ReadonlyArray<number> = flow(A.dedupe, A.sort(Order.Number));
 
 const enabledRule = (rules: ExtractionRuleSet, kind: ExtractionRuleKind): O.Option<ExtractionRule> =>
   A.findFirst(rules, (rule) => rule.kind === kind && rule.enabled);
@@ -199,21 +186,19 @@ const distancePx = (down: PointerDownEvent, x: number, y: number): number => Mat
  * @example
  * ```ts
  * import { defaultExtractionRules, MarkerEvent, planWindows } from "@beep/qa-capture"
- *
  * const windows = planWindows(
  *   [MarkerEvent.make({ kind: "marker", label: "scenario:start", seq: 1, tEpochMs: 1753838000000 })],
  *   defaultExtractionRules
  * )
  * console.log(windows.length)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
-export const planWindows = (
-  events: ReadonlyArray<ActionEvent>,
-  rules: ExtractionRuleSet
-): ReadonlyArray<ExtractionWindow> => {
+export const planWindows: {
+  (rules: ExtractionRuleSet): (events: ReadonlyArray<ActionEvent>) => ReadonlyArray<ExtractionWindow>;
+  (events: ReadonlyArray<ActionEvent>, rules: ExtractionRuleSet): ReadonlyArray<ExtractionWindow>;
+} = dual(2, (events: ReadonlyArray<ActionEvent>, rules: ExtractionRuleSet): ReadonlyArray<ExtractionWindow> => {
   const state: PlanState = {
     openAnimations: MutableHashMap.empty(),
     openHovers: MutableHashMap.empty(),
@@ -282,31 +267,27 @@ export const planWindows = (
       "pointer-leave": (event) => {
         const open = MutableHashMap.get(state.openHovers, event.selectorPath);
         MutableHashMap.remove(state.openHovers, event.selectorPath);
-        O.match(open, {
+        O.match(O.all({ enter: open, rule: hoverRule }), {
           onNone: () => undefined,
-          onSome: (enter) =>
-            O.match(hoverRule, {
-              onNone: () => undefined,
-              onSome: (rule) => {
-                const dwellMs = event.tEpochMs - enter.tEpochMs;
-                if (dwellMs < rule.minDwellMs) {
-                  return undefined;
-                }
-                const startEpochMs = Math.max(0, enter.tEpochMs - rule.preRollMs);
-                const endEpochMs = event.tEpochMs + rule.postRollMs;
-                // The hover strip is anchored, not fractional: enter-50,
-                // enter+150, leave+50 per the planner doctrine.
-                pushSpan(
-                  hoverRule,
-                  enter.tEpochMs,
-                  event.tEpochMs,
-                  `hover:${event.selectorPath}`,
-                  [enter.seq, event.seq],
-                  sortedUnique([startEpochMs, Math.min(startEpochMs + HOVER_MID_OFFSET_MS, endEpochMs), endEpochMs])
-                );
-                return undefined;
-              },
-            }),
+          onSome: ({ enter, rule }) => {
+            const dwellMs = event.tEpochMs - enter.tEpochMs;
+            if (dwellMs < rule.minDwellMs) {
+              return undefined;
+            }
+            const startEpochMs = Math.max(0, enter.tEpochMs - rule.preRollMs);
+            const endEpochMs = event.tEpochMs + rule.postRollMs;
+            // The hover strip is anchored, not fractional: enter-50,
+            // enter+150, leave+50 per the planner doctrine.
+            pushSpan(
+              hoverRule,
+              enter.tEpochMs,
+              event.tEpochMs,
+              `hover:${event.selectorPath}`,
+              [enter.seq, event.seq],
+              sortedUnique([startEpochMs, Math.min(startEpochMs + HOVER_MID_OFFSET_MS, endEpochMs), endEpochMs])
+            );
+            return undefined;
+          },
         });
       },
       "pointer-move": (event) => {
@@ -327,10 +308,7 @@ export const planWindows = (
           onNone: () => undefined,
           onSome: (tracked) => {
             const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
-            const isDrag = O.match(dragRule, {
-              onNone: () => false,
-              onSome: (rule) => travelled >= rule.minDistancePx,
-            });
+            const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
             if (isDrag) {
               pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag:${tracked.down.selectorPath}`, [
                 tracked.down.seq,
@@ -385,26 +363,37 @@ export const planWindows = (
   );
 
   return A.sort(state.windows, byStart);
-};
+});
 
 /**
- * Result of an overlap merge or budget fit over extraction windows.
+ * Result of an overlap merge over extraction windows.
  *
  * @example
  * ```ts
- * import type { WindowFitResult } from "@beep/qa-capture"
- *
- * const empty: WindowFitResult = { dropped: [], windows: [] }
- * console.log(empty)
+ * import { WindowFitResult } from "@beep/qa-capture"
+ * const empty = WindowFitResult.make({ dropped: [], windows: [] })
+ * console.log(empty.windows.length) // 0
  * ```
- *
  * @category models
  * @since 0.0.0
  */
-export type WindowFitResult = {
-  readonly dropped: ReadonlyArray<DroppedWindow>;
-  readonly windows: ReadonlyArray<ExtractionWindow>;
-};
+export class WindowFitResult extends S.Class<WindowFitResult>($I`WindowFitResult`)(
+  {
+    dropped: S.Array(DroppedWindow).pipe(
+      $I.annoteKey("WindowFitResult.dropped", {
+        description: "Windows absorbed by the merge, each with the reason it was dropped.",
+      })
+    ),
+    windows: S.Array(ExtractionWindow).pipe(
+      $I.annoteKey("WindowFitResult.windows", {
+        description: "Surviving windows in start order.",
+      })
+    ),
+  },
+  $I.annote("WindowFitResult", {
+    description: "Overlap-merge outcome: the windows that survived and the ones they absorbed.",
+  })
+) {}
 
 const droppedFrom = (window: ExtractionWindow, reason: DroppedWindow["reason"], detail: string): DroppedWindow =>
   DroppedWindow.make({
@@ -417,14 +406,7 @@ const droppedFrom = (window: ExtractionWindow, reason: DroppedWindow["reason"], 
   });
 
 const mergeGifSpecs = (left: O.Option<GifSpec>, right: O.Option<GifSpec>): O.Option<GifSpec> =>
-  O.match(left, {
-    onNone: () => right,
-    onSome: (a) =>
-      O.match(right, {
-        onNone: () => left,
-        onSome: (b) => O.some(a.fps >= b.fps ? a : b),
-      }),
-  });
+  O.firstSomeOf([O.zipWith(left, right, (a, b) => (a.fps >= b.fps ? a : b)), left, right]);
 
 const mergeTwo = (kept: ExtractionWindow, next: ExtractionWindow): ExtractionWindow =>
   ExtractionWindow.make({
@@ -445,14 +427,14 @@ const mergeTwo = (kept: ExtractionWindow, next: ExtractionWindow): ExtractionWin
  * Every absorbed window is recorded in `dropped` with reason
  * `overlap-merged`.
  *
+ * @param windows - Planned windows in any order; merging sorts them by start time.
+ * @returns The surviving windows plus every window they absorbed.
  * @example
  * ```ts
  * import { mergeOverlappingWindows } from "@beep/qa-capture"
- *
  * const result = mergeOverlappingWindows([])
  * console.log(result.windows.length)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
@@ -488,7 +470,7 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
     });
   });
 
-  return { dropped, windows: kept };
+  return WindowFitResult.make({ dropped, windows: kept });
 };
 
 /**
@@ -499,7 +481,6 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
  * ```ts
  * import { ArtifactBudget, estimateWindowBytes, ExtractionWindow } from "@beep/qa-capture"
  * import * as O from "effect/Option"
- *
  * const bytes = estimateWindowBytes(
  *   ExtractionWindow.make({
  *     endEpochMs: 1000,
@@ -515,11 +496,13 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
  * )
  * console.log(bytes)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
-export const estimateWindowBytes = (window: ExtractionWindow, budget: ArtifactBudget): number => {
+export const estimateWindowBytes: {
+  (budget: ArtifactBudget): (window: ExtractionWindow) => number;
+  (window: ExtractionWindow, budget: ArtifactBudget): number;
+} = dual(2, (window: ExtractionWindow, budget: ArtifactBudget): number => {
   const frameBytes = A.length(window.frameTimesEpochMs) * FRAME_ESTIMATED_BYTES;
   const gifBytes = O.match(window.gif, {
     onNone: () => 0,
@@ -532,7 +515,7 @@ export const estimateWindowBytes = (window: ExtractionWindow, budget: ArtifactBu
     },
   });
   return frameBytes + gifBytes;
-};
+});
 
 const estimateTotal = (windows: ReadonlyArray<ExtractionWindow>, budget: ArtifactBudget): number =>
   A.reduce(windows, 0, (total, window) => total + estimateWindowBytes(window, budget));
@@ -554,20 +537,35 @@ const withGif = (window: ExtractionWindow, gif: O.Option<GifSpec>): ExtractionWi
  *
  * @example
  * ```ts
- * import type { BudgetFitResult } from "@beep/qa-capture"
- *
- * const empty: BudgetFitResult = { dropped: [], estimatedTotalBytes: 0, windows: [] }
- * console.log(empty)
+ * import { BudgetFitResult } from "@beep/qa-capture"
+ * const empty = BudgetFitResult.make({ dropped: [], estimatedTotalBytes: 0, windows: [] })
+ * console.log(empty.estimatedTotalBytes) // 0
  * ```
- *
  * @category models
  * @since 0.0.0
  */
-export type BudgetFitResult = {
-  readonly dropped: ReadonlyArray<DroppedWindow>;
-  readonly estimatedTotalBytes: number;
-  readonly windows: ReadonlyArray<ExtractionWindow>;
-};
+export class BudgetFitResult extends S.Class<BudgetFitResult>($I`BudgetFitResult`)(
+  {
+    dropped: S.Array(DroppedWindow).pipe(
+      $I.annoteKey("BudgetFitResult.dropped", {
+        description: "Every window the budget ladder degraded or dropped, with its reason.",
+      })
+    ),
+    estimatedTotalBytes: S.Finite.pipe(
+      $I.annoteKey("BudgetFitResult.estimatedTotalBytes", {
+        description: "Estimated byte cost of the surviving windows.",
+      })
+    ),
+    windows: S.Array(ExtractionWindow).pipe(
+      $I.annoteKey("BudgetFitResult.windows", {
+        description: "Windows that fit the budget, in start order.",
+      })
+    ),
+  },
+  $I.annote("BudgetFitResult", {
+    description: "Budget-fit outcome: surviving windows, their estimated cost, and every omission.",
+  })
+) {}
 
 /**
  * Fit windows under a byte budget via the degradation ladder.
@@ -580,15 +578,16 @@ export type BudgetFitResult = {
  * @example
  * ```ts
  * import { applyBudget, ArtifactBudget } from "@beep/qa-capture"
- *
  * const result = applyBudget([], ArtifactBudget.make({}))
  * console.log(result.estimatedTotalBytes)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
-export const applyBudget = (windows: ReadonlyArray<ExtractionWindow>, budget: ArtifactBudget): BudgetFitResult => {
+export const applyBudget: {
+  (budget: ArtifactBudget): (windows: ReadonlyArray<ExtractionWindow>) => BudgetFitResult;
+  (windows: ReadonlyArray<ExtractionWindow>, budget: ArtifactBudget): BudgetFitResult;
+} = dual(2, (windows: ReadonlyArray<ExtractionWindow>, budget: ArtifactBudget): BudgetFitResult => {
   const dropped: Array<DroppedWindow> = [];
   let current: ReadonlyArray<ExtractionWindow> = windows;
 
@@ -680,38 +679,73 @@ export const applyBudget = (windows: ReadonlyArray<ExtractionWindow>, budget: Ar
   }
   current = A.sort(ordered, byStart);
 
-  return { dropped, estimatedTotalBytes: estimateTotal(current, budget), windows: current };
-};
+  return BudgetFitResult.make({ dropped, estimatedTotalBytes: estimateTotal(current, budget), windows: current });
+});
+
+/**
+ * Inputs of one {@link buildExtractionPlan} run.
+ *
+ * Both the budget and the rule set carry defaults, so a caller that only has
+ * witness events still gets the canonical planner behavior.
+ *
+ * @example
+ * ```ts
+ * import { BuildExtractionPlanOptions } from "@beep/qa-capture"
+ * const options = BuildExtractionPlanOptions.make({ events: [] })
+ * console.log(options.rules.length > 0) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptions>($I`BuildExtractionPlanOptions`)(
+  {
+    budget: ArtifactBudget.pipe(
+      SchemaUtils.withKeyDefaults(ArtifactBudget.make({})),
+      $I.annoteKey("BuildExtractionPlanOptions.budget", {
+        description: "Artifact byte budget the plan must fit inside.",
+      })
+    ),
+    events: S.Array(ActionEvent).pipe(
+      $I.annoteKey("BuildExtractionPlanOptions.events", {
+        description: "Witness events the plan is derived from.",
+      })
+    ),
+    rules: ExtractionRuleSet.pipe(
+      SchemaUtils.withKeyDefaults(defaultExtractionRules),
+      $I.annoteKey("BuildExtractionPlanOptions.rules", {
+        description: "Extraction rules deciding which spans become windows.",
+      })
+    ),
+  },
+  $I.annote("BuildExtractionPlanOptions", {
+    description: "Witness events plus the budget and rules one extraction plan is built under.",
+  })
+) {}
 
 /**
  * Build a complete, budget-fitted {@link ExtractionPlan} from witness events.
  *
+ * @param options - Witness events plus the budget and rules to plan under.
+ * @returns A budget-fitted extraction plan.
  * @example
  * ```ts
- * import { ArtifactBudget, buildExtractionPlan, MarkerEvent } from "@beep/qa-capture"
- *
- * const plan = buildExtractionPlan({
- *   budget: ArtifactBudget.make({}),
- *   events: [MarkerEvent.make({ kind: "marker", label: "scenario:start", seq: 1, tEpochMs: 1753838000000 })]
- * })
+ * import { BuildExtractionPlanOptions, buildExtractionPlan, MarkerEvent } from "@beep/qa-capture"
+ * const plan = buildExtractionPlan(
+ *   BuildExtractionPlanOptions.make({
+ *     events: [MarkerEvent.make({ kind: "marker", label: "scenario:start", seq: 1, tEpochMs: 1753838000000 })]
+ *   })
+ * )
  * console.log(plan.windows.length)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
-export const buildExtractionPlan = (options: {
-  readonly budget?: ArtifactBudget | undefined;
-  readonly events: ReadonlyArray<ActionEvent>;
-  readonly rules?: ExtractionRuleSet | undefined;
-}): ExtractionPlan => {
-  const budget = options.budget ?? ArtifactBudget.make({});
-  const rules = options.rules ?? defaultExtractionRules;
-  const planned = planWindows(options.events, rules);
+export const buildExtractionPlan = (options: BuildExtractionPlanOptions): ExtractionPlan => {
+  const planned = planWindows(options.events, options.rules);
   const merged = mergeOverlappingWindows(planned);
-  const fitted = applyBudget(merged.windows, budget);
+  const fitted = applyBudget(merged.windows, options.budget);
   return ExtractionPlan.make({
-    budget,
+    budget: options.budget,
     dropped: [...merged.dropped, ...fitted.dropped],
     estimatedTotalBytes: fitted.estimatedTotalBytes,
     schemaVersion: "beep.qa.extraction-plan.v1",
@@ -726,7 +760,6 @@ export const buildExtractionPlan = (options: {
  * @example
  * ```ts
  * import { ClockSync, epochToVideoSeconds } from "@beep/qa-capture"
- *
  * const toVideo = epochToVideoSeconds(
  *   ClockSync.make({
  *     confidence: "high",
@@ -739,14 +772,18 @@ export const buildExtractionPlan = (options: {
  * )
  * console.log(toVideo(1753838001500))
  * ```
- *
  * @category planning
  * @since 0.0.0
  */
-export const epochToVideoSeconds =
+export const epochToVideoSeconds: {
+  (videoDurationSeconds: number): (clockSync: ClockSync) => (epochMs: number) => number;
+  (clockSync: ClockSync, videoDurationSeconds: number): (epochMs: number) => number;
+} = dual(
+  2,
   (clockSync: ClockSync, videoDurationSeconds: number) =>
-  (epochMs: number): number =>
-    N.round(Math.min(Math.max((clockSync.slope * epochMs + clockSync.offsetMs) / 1000, 0), videoDurationSeconds), 3);
+    (epochMs: number): number =>
+      N.round(Math.min(Math.max((clockSync.slope * epochMs + clockSync.offsetMs) / 1000, 0), videoDurationSeconds), 3)
+);
 
 /**
  * Input options for {@link planDriverRequests}.
@@ -759,7 +796,6 @@ export const epochToVideoSeconds =
  *   ExtractionPlan,
  *   PlanDriverRequestsOptions
  * } from "@beep/qa-capture"
- *
  * const options = PlanDriverRequestsOptions.make({
  *   clipsDir: "/round/clips",
  *   clockSync: ClockSync.make({
@@ -783,7 +819,6 @@ export const epochToVideoSeconds =
  * })
  * console.log(options.videoPath)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -846,6 +881,8 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  * clock confidence is `low`, windows are padded by an extra 250 ms on both
  * sides before mapping onto the video timeline.
  *
+ * @param options - Fitted plan, clock sync, video path, and the artifact directories.
+ * @returns One driver request per planned artifact, plus the whole-video contact sheet.
  * @example
  * ```ts
  * import {
@@ -855,7 +892,6 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  *   PlanDriverRequestsOptions,
  *   planDriverRequests
  * } from "@beep/qa-capture"
- *
  * const requests = planDriverRequests(
  *   PlanDriverRequestsOptions.make({
  *     clipsDir: "/round/clips",
@@ -881,7 +917,6 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  * )
  * console.log(requests.length)
  * ```
- *
  * @category planning
  * @since 0.0.0
  */

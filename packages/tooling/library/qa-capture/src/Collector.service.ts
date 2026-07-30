@@ -13,7 +13,7 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, UnknownRecord } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { BunHttpServer } from "@effect/platform-bun";
 import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
@@ -42,14 +42,19 @@ const $I = $QaCaptureId.create("Collector.service");
  * @example
  * ```ts
  * import { SERVER_MARKER_SEQ_BASE } from "@beep/qa-capture"
- *
  * console.log(SERVER_MARKER_SEQ_BASE)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
 export const SERVER_MARKER_SEQ_BASE = 1000000;
+
+// The witness encodes its own `seq`, but only the collector knows the canonical
+// session-wide one. Re-reading the encoded line through a schema keeps the
+// rewrite schema-owned rather than a raw JSON.parse round trip.
+const EventLine = S.fromJsonString(UnknownRecord);
+const decodeEventLine = S.decodeUnknownEffect(EventLine);
+const encodeEventLine = S.encodeUnknownEffect(EventLine);
 
 /**
  * TCP port a collector may bind, including `0` for an ephemeral port.
@@ -57,11 +62,9 @@ export const SERVER_MARKER_SEQ_BASE = 1000000;
  * @example
  * ```ts
  * import { CollectorBindPort } from "@beep/qa-capture"
- *
  * const port = CollectorBindPort.make(0)
  * console.log(port)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -101,11 +104,9 @@ export const CollectorBindPort = S.Int.check(
  * ```ts
  * import { CollectorBindPort } from "@beep/qa-capture"
  * import type { CollectorBindPort as CollectorBindPortValue } from "@beep/qa-capture"
- *
  * const port: CollectorBindPortValue = CollectorBindPort.make(43117)
  * console.log(port)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -118,7 +119,6 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
  * ```ts
  * import { CollectorServeOptions } from "@beep/qa-capture"
  * import * as O from "effect/Option"
- *
  * const options = CollectorServeOptions.make({
  *   eventsPath: "/repo/.beep/qa/round-1/events.ndjson",
  *   handlePath: O.none(),
@@ -128,7 +128,6 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
  * })
  * console.log(options.port)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -193,11 +192,9 @@ export class CollectorServeOptions extends S.Class<CollectorServeOptions>($I`Col
  * @example
  * ```ts
  * import type { CollectorRunning } from "@beep/qa-capture"
- *
  * const inspect = (running: CollectorRunning) => running.port
  * console.log(inspect)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -216,11 +213,9 @@ export interface CollectorRunning {
  * ```ts
  * import type { CollectorShape } from "@beep/qa-capture"
  * import { Effect } from "effect"
- *
  * const service: CollectorShape = { serve: () => Effect.die("not implemented") }
  * console.log(service)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -271,7 +266,9 @@ const makeService = Effect.fnUntraced(function* () {
     // ingest, and the on-disk value is the only one evidence may reference.
     const appendEvent = ([event, seq]: readonly [ActionEvent, number]) =>
       encodeActionEventJson(event).pipe(
-        Effect.map((line) => JSON.stringify({ ...(JSON.parse(line) as Record<string, unknown>), seq })),
+        Effect.flatMap(decodeEventLine),
+        Effect.map((fields) => ({ ...fields, seq })),
+        Effect.flatMap(encodeEventLine),
         Effect.flatMap((line) => fs.writeFileString(options.eventsPath, `${line}\n`, { flag: "a" })),
         Effect.catchCause((cause) => Effect.logWarning("qa collector failed to append an event", cause))
       );
@@ -309,6 +306,18 @@ const makeService = Effect.fnUntraced(function* () {
       return EventsAccepted.make({ accepted, rejected });
     });
 
+    const acceptMarker = Effect.fnUntraced(function* (label: string) {
+      const seq = yield* acceptEvent(
+        MarkerEvent.make({
+          kind: "marker",
+          label,
+          seq: SERVER_MARKER_SEQ_BASE,
+          tEpochMs: yield* Clock.currentTimeMillis,
+        })
+      );
+      return MarkAccepted.make({ seq });
+    });
+
     const handlers = HttpApiBuilder.group(QaCollectorApi, "collector", (group) =>
       group
         .handle("health", () =>
@@ -326,19 +335,7 @@ const makeService = Effect.fnUntraced(function* () {
         )
         .handle("witnessJs", () => Effect.succeed(script))
         .handle("events", ({ payload }) => ingestBatch(payload))
-        .handle("mark", ({ payload }) =>
-          Effect.gen(function* () {
-            const seq = yield* acceptEvent(
-              MarkerEvent.make({
-                kind: "marker",
-                label: payload.label,
-                seq: SERVER_MARKER_SEQ_BASE,
-                tEpochMs: yield* Clock.currentTimeMillis,
-              })
-            );
-            return MarkAccepted.make({ seq });
-          })
-        )
+        .handle("mark", ({ payload }) => acceptMarker(payload.label))
         .handle("stop", () =>
           Deferred.succeed(stopped, undefined).pipe(Effect.as(StopAccepted.make({ status: "stopping" })))
         )
@@ -410,11 +407,9 @@ const makeService = Effect.fnUntraced(function* () {
  * @example
  * ```ts
  * import { Collector } from "@beep/qa-capture"
- *
  * const layer = Collector.layer
  * console.log(layer)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -425,11 +420,9 @@ export class Collector extends Context.Service<Collector, CollectorShape>()($I`C
    * @example
    * ```ts
    * import { Collector } from "@beep/qa-capture"
-   *
    * const layer = Collector.layer
    * console.log(layer)
    * ```
-   *
    * @category layers
    * @since 0.0.0
    */

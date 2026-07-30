@@ -534,7 +534,7 @@ export class ReadTagsResult extends S.Class<ReadTagsResult>($I`ReadTagsResult`)(
  * ```ts
  * import { TagAssignment } from "@beep/exiftool"
  *
- * const assignment = TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "sess-1" })
+ * const assignment = TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "qa-round-1-1754000000000" })
  * console.log(assignment)
  * ```
  *
@@ -567,7 +567,7 @@ export class TagAssignment extends S.Class<TagAssignment>($I`TagAssignment`)(
  * import { TagAssignment, WriteTagsRequest } from "@beep/exiftool"
  *
  * const request = WriteTagsRequest.make({
- *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "sess-1" })],
+ *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "qa-round-1-1754000000000" })],
  *   filePath: "./frame.png"
  * })
  * console.log(request)
@@ -639,7 +639,7 @@ export class WriteTagsResult extends S.Class<WriteTagsResult>($I`WriteTagsResult
  *   actionId: "act-9",
  *   capturedAtEpochMs: 1753900000000,
  *   scenarioName: "sash-drag",
- *   sessionId: "sess-1"
+ *   sessionId: "qa-round-1-1754000000000"
  * })
  * console.log(provenance)
  * ```
@@ -712,7 +712,7 @@ export class BeepQaProvenance extends S.Class<BeepQaProvenance>($I`BeepQaProvena
  *     actionId: "act-9",
  *     capturedAtEpochMs: 1753900000000,
  *     scenarioName: "sash-drag",
- *     sessionId: "sess-1"
+ *     sessionId: "qa-round-1-1754000000000"
  *   })
  * })
  * console.log(request)
@@ -765,7 +765,7 @@ export const decodeReadTagsRequest = ReadTagsRequest.decodeEffect;
  * import { decodeWriteTagsRequest } from "@beep/exiftool"
  *
  * const effect = decodeWriteTagsRequest({
- *   assignments: [{ tagName: "XMP-beepQA:sessionId", value: "sess-1" }],
+ *   assignments: [{ tagName: "XMP-beepQA:sessionId", value: "qa-round-1-1754000000000" }],
  *   filePath: "./frame.png"
  * })
  * console.log(effect)
@@ -789,7 +789,7 @@ export const decodeWriteTagsRequest = WriteTagsRequest.decodeEffect;
  *     actionId: "act-9",
  *     capturedAtEpochMs: 1753900000000,
  *     scenarioName: "sash-drag",
- *     sessionId: "sess-1"
+ *     sessionId: "qa-round-1-1754000000000"
  *   }
  * })
  * console.log(effect)

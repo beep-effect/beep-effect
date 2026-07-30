@@ -38,6 +38,7 @@ import { runToExit } from "../../internal/process/index.ts";
 import { artifactBudgetPath, writeArtifactBudget } from "./Extract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import {
+  CaptureTargetRequest,
   collectToolVersions,
   makeSessionId,
   qaRootPath,
@@ -49,6 +50,7 @@ import {
   writeRecordStartHint,
 } from "./Qa.session.ts";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
+import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { QaRecordOptions } from "./Qa.schemas.ts";
@@ -61,18 +63,13 @@ const DEFAULT_VIEWPORT = Viewport.make({ height: 1000, width: 1600 });
 const OBS_PASSWORD_ENV = "OBS_WEBSOCKET_PASSWORD";
 
 /**
- * Environment the lane A harness is spawned with.
- *
- * These names are the contract with `.beep/qa-capture.mjs`; the template reads
- * exactly `QA_ROUND`, `QA_URL`, `QA_COLLECTOR_URL`, `QA_SESSION_ID`, and
- * `QA_VIDEO_DIR`. `QA_CURSOR` and `QA_BEACON` forward the witness feature
- * flags for templates that honour them.
+ * Everything the lane A harness needs on its environment.
  *
  * @example
  * ```ts
- * import { harnessEnv } from "@beep/repo-cli/commands/Qa/Record"
+ * import { HarnessEnvOptions } from "@beep/repo-cli/commands/Qa/Record"
  *
- * const env = harnessEnv({
+ * const options = HarnessEnvOptions.make({
  *   beacon: true,
  *   collectorUrl: "http://127.0.0.1:43117",
  *   cursor: true,
@@ -81,20 +78,85 @@ const OBS_PASSWORD_ENV = "OBS_WEBSOCKET_PASSWORD";
  *   url: "http://storybook.beep.localhost:1355/",
  *   videoDir: "/repo/.beep/qa/round-2/video"
  * })
+ * console.log(options.round) // 2
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class HarnessEnvOptions extends S.Class<HarnessEnvOptions>($I`HarnessEnvOptions`)(
+  {
+    beacon: S.Boolean.pipe(
+      $I.annoteKey("HarnessEnvOptions.beacon", {
+        description: "Whether the witness paints the clock-sync beacon.",
+      })
+    ),
+    collectorUrl: S.String.pipe(
+      $I.annoteKey("HarnessEnvOptions.collectorUrl", {
+        description: "Base URL the witness posts events to.",
+      })
+    ),
+    cursor: S.Boolean.pipe(
+      $I.annoteKey("HarnessEnvOptions.cursor", {
+        description: "Whether the witness renders its synthetic cursor overlay.",
+      })
+    ),
+    round: S.Int.pipe(
+      $I.annoteKey("HarnessEnvOptions.round", {
+        description: "Round number the harness records into.",
+      })
+    ),
+    sessionId: S.String.pipe(
+      $I.annoteKey("HarnessEnvOptions.sessionId", {
+        description: "Session identifier stamped into every artifact.",
+      })
+    ),
+    url: S.String.pipe(
+      $I.annoteKey("HarnessEnvOptions.url", {
+        description: "Page the harness navigates to.",
+      })
+    ),
+    videoDir: S.String.pipe(
+      $I.annoteKey("HarnessEnvOptions.videoDir", {
+        description: "Directory the harness writes its recorded video into.",
+      })
+    ),
+  },
+  $I.annote("HarnessEnvOptions", {
+    description: "Inputs of the lane A harness environment contract.",
+  })
+) {}
+
+/**
+ * Environment the lane A harness is spawned with.
+ *
+ * These names are the contract with `.beep/qa-capture.mjs`; the template reads
+ * exactly `QA_ROUND`, `QA_URL`, `QA_COLLECTOR_URL`, `QA_SESSION_ID`, and
+ * `QA_VIDEO_DIR`. `QA_CURSOR` and `QA_BEACON` forward the witness feature
+ * flags for templates that honour them.
+ *
+ * @param options - Collector URL, session identity, and the witness feature flags.
+ * @returns The environment variables the harness template reads.
+ * @example
+ * ```ts
+ * import { harnessEnv, HarnessEnvOptions } from "@beep/repo-cli/commands/Qa/Record"
+ *
+ * const env = harnessEnv(
+ *   HarnessEnvOptions.make({
+ *     beacon: true,
+ *     collectorUrl: "http://127.0.0.1:43117",
+ *     cursor: true,
+ *     round: 2,
+ *     sessionId: "qa-round-2-1754000000000",
+ *     url: "http://storybook.beep.localhost:1355/",
+ *     videoDir: "/repo/.beep/qa/round-2/video"
+ *   })
+ * )
  * console.log(env.QA_ROUND) // "2"
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const harnessEnv = (options: {
-  readonly beacon: boolean;
-  readonly collectorUrl: string;
-  readonly cursor: boolean;
-  readonly round: number;
-  readonly sessionId: string;
-  readonly url: string;
-  readonly videoDir: string;
-}): Record<string, string> => ({
+export const harnessEnv = (options: HarnessEnvOptions): Record<string, string> => ({
   QA_BEACON: options.beacon ? "1" : "0",
   QA_COLLECTOR_URL: options.collectorUrl,
   QA_CURSOR: options.cursor ? "1" : "0",
@@ -201,15 +263,17 @@ const runPlaywrightLane = Effect.fn("QaRecord.runPlaywrightLane")(function* (
   const exitCode = yield* runToExit({
     args: [options.scenario],
     command: "bun",
-    env: harnessEnv({
-      beacon: options.beacon,
-      collectorUrl: `http://127.0.0.1:${running.port}`,
-      cursor: options.cursor,
-      round: layout.round,
-      sessionId,
-      url: target.url,
-      videoDir: layout.videoDir,
-    }),
+    env: harnessEnv(
+      HarnessEnvOptions.make({
+        beacon: options.beacon,
+        collectorUrl: `http://127.0.0.1:${running.port}`,
+        cursor: options.cursor,
+        round: layout.round,
+        sessionId,
+        url: target.url,
+        videoDir: layout.videoDir,
+      })
+    ),
     extendEnv: true,
     stdio: "inherit",
   }).pipe(QaCommandError.mapError(`qa record could not spawn the capture harness at ${options.scenario}.`));
@@ -277,13 +341,12 @@ const runObsLane = Effect.fn("QaRecord.runObsLane")(function* (
   running: CollectorRunning,
   target: CaptureTarget,
   options: QaRecordOptions
-): Effect.fn.Return<RecordOutcome, QaCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<RecordOutcome, QaCommandError, ChildProcessSpawner.ChildProcessSpawner | Scope.Scope> {
   const layer = yield* obsLayer();
-  // The OBS layer is built here, not at the CLI entry point, so the playwright
-  // lane never requires an obs-websocket connection to record.
-  return yield* runObsSession(layout, running, target, options).pipe(
-    // @effect-diagnostics-next-line strictEffectProvide:off
-    Effect.provide(layer),
+  // The OBS connection is built into the round's own scope rather than at the
+  // CLI entry point, so the playwright lane never opens an obs-websocket
+  // socket, and Ctrl-C tears the connection down with the collector.
+  const context = yield* Layer.build(layer).pipe(
     Effect.catchTag("ObsError", (cause) =>
       Effect.fail(
         QaCommandError.new(
@@ -293,6 +356,7 @@ const runObsLane = Effect.fn("QaRecord.runObsLane")(function* (
       )
     )
   );
+  return yield* runObsSession(layout, running, target, options).pipe(Effect.provideContext(context));
 });
 
 const serveAndRun = Effect.fn("QaRecord.serveAndRun")(function* (
@@ -368,7 +432,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
   const layout = yield* store
     .prepareRound(qaRoot, round)
     .pipe(QaCommandError.mapError(`qa record could not prepare ${qaRoot}/round-${round}.`));
-  const target = yield* resolveCaptureTarget(options);
+  const target = yield* resolveCaptureTarget(CaptureTargetRequest.make({ app: options.app, url: options.url }));
   yield* writeArtifactBudget(
     artifactBudgetPath(path, layout),
     ArtifactBudget.make({ maxTotalBytes: options.budgetMb * BYTES_PER_MIB })
@@ -386,7 +450,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
     lane: options.lane,
     layout,
     scenario: CaptureLane.$match(options.lane, {
-      obs: () => O.none<string>(),
+      obs: O.none<string>,
       playwright: () => O.some(options.scenario),
     }),
     sessionId,

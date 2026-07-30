@@ -22,11 +22,9 @@ const $I = $QaCaptureId.create("ActionEvent.models");
  * @example
  * ```ts
  * import { SequenceNumber } from "@beep/qa-capture"
- *
  * const seq = SequenceNumber.make(1)
  * console.log(seq)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -51,11 +49,9 @@ export const SequenceNumber = S.Int.check(
  * ```ts
  * import { SequenceNumber } from "@beep/qa-capture"
  * import type { SequenceNumber as SequenceNumberValue } from "@beep/qa-capture"
- *
  * const seq: SequenceNumberValue = SequenceNumber.make(1)
  * console.log(seq)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -70,11 +66,9 @@ export type SequenceNumber = typeof SequenceNumber.Type;
  * @example
  * ```ts
  * import { EpochMilliseconds } from "@beep/qa-capture"
- *
  * const t = EpochMilliseconds.make(1753838000000.25)
  * console.log(t)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -99,11 +93,9 @@ export const EpochMilliseconds = S.Finite.check(
  * ```ts
  * import { EpochMilliseconds } from "@beep/qa-capture"
  * import type { EpochMilliseconds as EpochMillisecondsValue } from "@beep/qa-capture"
- *
  * const t: EpochMillisecondsValue = EpochMilliseconds.make(1753838000000)
  * console.log(t)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -115,11 +107,9 @@ export type EpochMilliseconds = typeof EpochMilliseconds.Type;
  * @example
  * ```ts
  * import { PixelPosition } from "@beep/qa-capture"
- *
  * const x = PixelPosition.make(120.5)
  * console.log(x)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -137,11 +127,9 @@ export const PixelPosition = S.Finite.pipe(
  * ```ts
  * import { PixelPosition } from "@beep/qa-capture"
  * import type { PixelPosition as PixelPositionValue } from "@beep/qa-capture"
- *
  * const x: PixelPositionValue = PixelPosition.make(120.5)
  * console.log(x)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -153,11 +141,9 @@ export type PixelPosition = typeof PixelPosition.Type;
  * @example
  * ```ts
  * import { DurationMilliseconds } from "@beep/qa-capture"
- *
  * const duration = DurationMilliseconds.make(150)
  * console.log(duration)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -182,11 +168,9 @@ export const DurationMilliseconds = S.Finite.check(
  * ```ts
  * import { DurationMilliseconds } from "@beep/qa-capture"
  * import type { DurationMilliseconds as DurationMillisecondsValue } from "@beep/qa-capture"
- *
  * const duration: DurationMillisecondsValue = DurationMilliseconds.make(150)
  * console.log(duration)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -198,11 +182,9 @@ export type DurationMilliseconds = typeof DurationMilliseconds.Type;
  * @example
  * ```ts
  * import { NonNegativePixels } from "@beep/qa-capture"
- *
  * const width = NonNegativePixels.make(240)
  * console.log(width)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -227,11 +209,9 @@ export const NonNegativePixels = S.Finite.check(
  * ```ts
  * import { NonNegativePixels } from "@beep/qa-capture"
  * import type { NonNegativePixels as NonNegativePixelsValue } from "@beep/qa-capture"
- *
  * const width: NonNegativePixelsValue = NonNegativePixels.make(240)
  * console.log(width)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -243,11 +223,9 @@ export type NonNegativePixels = typeof NonNegativePixels.Type;
  * @example
  * ```ts
  * import { SelectorPath } from "@beep/qa-capture"
- *
  * const selector = SelectorPath.make("[data-qa=\"dock-sash\"]")
  * console.log(selector)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -272,11 +250,9 @@ export const SelectorPath = S.String.check(
  * ```ts
  * import { SelectorPath } from "@beep/qa-capture"
  * import type { SelectorPath as SelectorPathValue } from "@beep/qa-capture"
- *
  * const selector: SelectorPathValue = SelectorPath.make("#root")
  * console.log(selector)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -291,11 +267,9 @@ export type SelectorPath = typeof SelectorPath.Type;
  * @example
  * ```ts
  * import { NonPrintableKey } from "@beep/qa-capture"
- *
  * const key = NonPrintableKey.make("Escape")
  * console.log(key)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -320,11 +294,9 @@ export const NonPrintableKey = S.String.check(
  * ```ts
  * import { NonPrintableKey } from "@beep/qa-capture"
  * import type { NonPrintableKey as NonPrintableKeyValue } from "@beep/qa-capture"
- *
  * const key: NonPrintableKeyValue = NonPrintableKey.make("Escape")
  * console.log(key)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -336,10 +308,8 @@ export type NonPrintableKey = typeof NonPrintableKey.Type;
  * @example
  * ```ts
  * import { ActionEventKind } from "@beep/qa-capture"
- *
  * console.log(ActionEventKind.Enum["pointer-down"])
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -370,11 +340,9 @@ export const ActionEventKind = LiteralKit([
  * ```ts
  * import { ActionEventKind } from "@beep/qa-capture"
  * import type { ActionEventKind as ActionEventKindValue } from "@beep/qa-capture"
- *
  * const kind: ActionEventKindValue = ActionEventKind.Enum.marker
  * console.log(kind)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -386,10 +354,8 @@ export type ActionEventKind = typeof ActionEventKind.Type;
  * @example
  * ```ts
  * import { TransitionPhase } from "@beep/qa-capture"
- *
  * console.log(TransitionPhase.Enum.start)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -406,11 +372,9 @@ export const TransitionPhase = LiteralKit(["cancel", "end", "start"]).pipe(
  * ```ts
  * import { TransitionPhase } from "@beep/qa-capture"
  * import type { TransitionPhase as TransitionPhaseValue } from "@beep/qa-capture"
- *
  * const phase: TransitionPhaseValue = TransitionPhase.Enum.end
  * console.log(phase)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -422,11 +386,9 @@ export type TransitionPhase = typeof TransitionPhase.Type;
  * @example
  * ```ts
  * import { DomRect } from "@beep/qa-capture"
- *
  * const rect = DomRect.make({ height: 32, width: 240, x: 8, y: 64 })
  * console.log(rect)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -464,7 +426,6 @@ export class DomRect extends S.Class<DomRect>($I`DomRect`)(
  * @example
  * ```ts
  * import { PointerDownEvent } from "@beep/qa-capture"
- *
  * const event = PointerDownEvent.make({
  *   button: 0,
  *   kind: "pointer-down",
@@ -477,7 +438,6 @@ export class DomRect extends S.Class<DomRect>($I`DomRect`)(
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -541,7 +501,6 @@ export class PointerDownEvent extends S.Class<PointerDownEvent>($I`PointerDownEv
  * @example
  * ```ts
  * import { PointerUpEvent } from "@beep/qa-capture"
- *
  * const event = PointerUpEvent.make({
  *   button: 0,
  *   kind: "pointer-up",
@@ -554,7 +513,6 @@ export class PointerDownEvent extends S.Class<PointerDownEvent>($I`PointerDownEv
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -618,7 +576,6 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
  * @example
  * ```ts
  * import { PointerMoveEvent } from "@beep/qa-capture"
- *
  * const event = PointerMoveEvent.make({
  *   kind: "pointer-move",
  *   pointerId: 1,
@@ -629,7 +586,6 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -677,7 +633,6 @@ export class PointerMoveEvent extends S.Class<PointerMoveEvent>($I`PointerMoveEv
  * @example
  * ```ts
  * import { PointerEnterEvent } from "@beep/qa-capture"
- *
  * const event = PointerEnterEvent.make({
  *   kind: "pointer-enter",
  *   selectorPath: "button",
@@ -686,7 +641,6 @@ export class PointerMoveEvent extends S.Class<PointerMoveEvent>($I`PointerMoveEv
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -730,7 +684,6 @@ export class PointerEnterEvent extends S.Class<PointerEnterEvent>($I`PointerEnte
  * @example
  * ```ts
  * import { PointerLeaveEvent } from "@beep/qa-capture"
- *
  * const event = PointerLeaveEvent.make({
  *   kind: "pointer-leave",
  *   selectorPath: "button",
@@ -739,7 +692,6 @@ export class PointerEnterEvent extends S.Class<PointerEnterEvent>($I`PointerEnte
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -777,7 +729,6 @@ export class PointerLeaveEvent extends S.Class<PointerLeaveEvent>($I`PointerLeav
  * @example
  * ```ts
  * import { FocusInEvent } from "@beep/qa-capture"
- *
  * const event = FocusInEvent.make({
  *   kind: "focus-in",
  *   selectorPath: "input",
@@ -786,7 +737,6 @@ export class PointerLeaveEvent extends S.Class<PointerLeaveEvent>($I`PointerLeav
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -824,7 +774,6 @@ export class FocusInEvent extends S.Class<FocusInEvent>($I`FocusInEvent`)(
  * @example
  * ```ts
  * import { FocusOutEvent } from "@beep/qa-capture"
- *
  * const event = FocusOutEvent.make({
  *   kind: "focus-out",
  *   selectorPath: "input",
@@ -833,7 +782,6 @@ export class FocusInEvent extends S.Class<FocusInEvent>($I`FocusInEvent`)(
  * })
  * console.log(event.kind)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -871,7 +819,6 @@ export class FocusOutEvent extends S.Class<FocusOutEvent>($I`FocusOutEvent`)(
  * @example
  * ```ts
  * import { KeyDownEvent } from "@beep/qa-capture"
- *
  * const event = KeyDownEvent.make({
  *   key: "Escape",
  *   kind: "key-down",
@@ -881,7 +828,6 @@ export class FocusOutEvent extends S.Class<FocusOutEvent>($I`FocusOutEvent`)(
  * })
  * console.log(event.key)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -930,7 +876,6 @@ export class KeyDownEvent extends S.Class<KeyDownEvent>($I`KeyDownEvent`)(
  * @example
  * ```ts
  * import { CssTransitionEvent } from "@beep/qa-capture"
- *
  * const event = CssTransitionEvent.make({
  *   durationMs: 200,
  *   kind: "transition",
@@ -942,7 +887,6 @@ export class KeyDownEvent extends S.Class<KeyDownEvent>($I`KeyDownEvent`)(
  * })
  * console.log(event.phase)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -995,7 +939,6 @@ export class CssTransitionEvent extends S.Class<CssTransitionEvent>($I`CssTransi
  * @example
  * ```ts
  * import { CssAnimationEvent } from "@beep/qa-capture"
- *
  * const event = CssAnimationEvent.make({
  *   animationName: "pulse",
  *   durationMs: 400,
@@ -1007,7 +950,6 @@ export class CssTransitionEvent extends S.Class<CssTransitionEvent>($I`CssTransi
  * })
  * console.log(event.animationName)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -1061,7 +1003,6 @@ export class CssAnimationEvent extends S.Class<CssAnimationEvent>($I`CssAnimatio
  * ```ts
  * import { ScrollEvent } from "@beep/qa-capture"
  * import * as O from "effect/Option"
- *
  * const event = ScrollEvent.make({
  *   kind: "scroll",
  *   scrollLeft: 0,
@@ -1072,7 +1013,6 @@ export class CssAnimationEvent extends S.Class<CssAnimationEvent>($I`CssAnimatio
  * })
  * console.log(event.scrollTop)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -1121,7 +1061,6 @@ export class ScrollEvent extends S.Class<ScrollEvent>($I`ScrollEvent`)(
  * @example
  * ```ts
  * import { MarkerEvent } from "@beep/qa-capture"
- *
  * const event = MarkerEvent.make({
  *   kind: "marker",
  *   label: "scenario:sash-drag/start",
@@ -1130,7 +1069,6 @@ export class ScrollEvent extends S.Class<ScrollEvent>($I`ScrollEvent`)(
  * })
  * console.log(event.label)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -1178,7 +1116,6 @@ export class MarkerEvent extends S.Class<MarkerEvent>($I`MarkerEvent`)(
  * @example
  * ```ts
  * import { BeaconEvent } from "@beep/qa-capture"
- *
  * const event = BeaconEvent.make({
  *   flipIndex: 0,
  *   isWhite: true,
@@ -1189,7 +1126,6 @@ export class MarkerEvent extends S.Class<MarkerEvent>($I`MarkerEvent`)(
  * })
  * console.log(event.flipIndex)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -1245,12 +1181,10 @@ export class BeaconEvent extends S.Class<BeaconEvent>($I`BeaconEvent`)(
  * ```ts
  * import { ActionEvent } from "@beep/qa-capture"
  * import type { ActionEvent as ActionEventValue } from "@beep/qa-capture"
- *
  * const kindOf = (event: ActionEventValue) => event.kind
  * console.log(kindOf)
  * console.log(ActionEvent)
  * ```
- *
  * @category events
  * @since 0.0.0
  */
@@ -1282,11 +1216,9 @@ export const ActionEvent = S.Union([
  * @example
  * ```ts
  * import type { ActionEvent } from "@beep/qa-capture"
- *
  * const seqOf = (event: ActionEvent) => event.seq
  * console.log(seqOf)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -1298,13 +1230,11 @@ export type ActionEvent = typeof ActionEvent.Type;
  * @example
  * ```ts
  * import { decodeActionEventJson } from "@beep/qa-capture"
- *
  * const effect = decodeActionEventJson(
  *   "{\"kind\":\"marker\",\"label\":\"scenario:start\",\"seq\":1,\"tEpochMs\":1753838000000}"
  * )
  * console.log(effect)
  * ```
- *
  * @category decoding
  * @since 0.0.0
  */
@@ -1316,13 +1246,11 @@ export const decodeActionEventJson = S.decodeUnknownEffect(S.fromJsonString(Acti
  * @example
  * ```ts
  * import { encodeActionEventJson, MarkerEvent } from "@beep/qa-capture"
- *
  * const effect = encodeActionEventJson(
  *   MarkerEvent.make({ kind: "marker", label: "scenario:start", seq: 1, tEpochMs: 1753838000000 })
  * )
  * console.log(effect)
  * ```
- *
  * @category encoding
  * @since 0.0.0
  */

@@ -12,7 +12,7 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Number as N, Path, pipe } from "effect";
+import { Context, Effect, FileSystem, flow, Layer, Number as N, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { QaCaptureError } from "./QaCapture.errors.ts";
 import {
@@ -32,11 +32,9 @@ const $I = $QaCaptureId.create("SessionStore.service");
  * @example
  * ```ts
  * import { RoundDirName } from "@beep/qa-capture"
- *
  * const name = RoundDirName.make("round-3")
  * console.log(name)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -60,11 +58,9 @@ export const RoundDirName = S.String.check(
  * ```ts
  * import { RoundDirName } from "@beep/qa-capture"
  * import type { RoundDirName as RoundDirNameValue } from "@beep/qa-capture"
- *
  * const name: RoundDirNameValue = RoundDirName.make("round-3")
  * console.log(name)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -78,7 +74,6 @@ const isRoundDirName = S.is(RoundDirName);
  * @example
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
- *
  * const layout = RoundLayout.make({
  *   clipsDir: "/repo/.beep/qa/round-1/clips",
  *   eventsPath: "/repo/.beep/qa/round-1/events.ndjson",
@@ -92,7 +87,6 @@ const isRoundDirName = S.is(RoundDirName);
  * })
  * console.log(layout.root)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -155,11 +149,9 @@ export class RoundLayout extends S.Class<RoundLayout>($I`RoundLayout`)(
  * @example
  * ```ts
  * import type { SessionStoreShape } from "@beep/qa-capture"
- *
  * const use = (store: SessionStoreShape) => store.collectorHandlePath("/repo/.beep/qa")
  * console.log(use)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -178,7 +170,7 @@ export interface SessionStoreShape {
   ) => Effect.Effect<void, QaCaptureError>;
 }
 
-const roundNumberOf = (name: string): O.Option<number> => pipe(name, Str.split("-"), A.last, O.flatMap(N.parse));
+const roundNumberOf: (name: string) => O.Option<number> = flow(Str.split("-"), A.last, O.flatMap(N.parse));
 
 const makeService = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -389,11 +381,9 @@ const makeService = Effect.fnUntraced(function* () {
  * @example
  * ```ts
  * import { SessionStore } from "@beep/qa-capture"
- *
  * const layer = SessionStore.layer
  * console.log(layer)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -404,11 +394,9 @@ export class SessionStore extends Context.Service<SessionStore, SessionStoreShap
    * @example
    * ```ts
    * import { SessionStore } from "@beep/qa-capture"
-   *
    * const layer = SessionStore.layer
    * console.log(layer)
    * ```
-   *
    * @category layers
    * @since 0.0.0
    */

@@ -32,7 +32,6 @@ const NonNegativeCount = S.Int.check(
  * @example
  * ```ts
  * import { CollectorHealth } from "@beep/qa-capture"
- *
  * const health = CollectorHealth.make({
  *   eventsWritten: 12,
  *   rejected: 0,
@@ -42,7 +41,6 @@ const NonNegativeCount = S.Int.check(
  * })
  * console.log(health.eventsWritten)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -85,11 +83,9 @@ export class CollectorHealth extends S.Class<CollectorHealth>($I`CollectorHealth
  * @example
  * ```ts
  * import { EventsAccepted } from "@beep/qa-capture"
- *
  * const accepted = EventsAccepted.make({ accepted: 12, rejected: 1 })
  * console.log(accepted)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -117,11 +113,9 @@ export class EventsAccepted extends S.Class<EventsAccepted>($I`EventsAccepted`)(
  * @example
  * ```ts
  * import { MarkRequest } from "@beep/qa-capture"
- *
  * const request = MarkRequest.make({ label: "scenario:sash-drag/start" })
  * console.log(request.label)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -151,11 +145,9 @@ export class MarkRequest extends S.Class<MarkRequest>($I`MarkRequest`)(
  * @example
  * ```ts
  * import { MarkAccepted } from "@beep/qa-capture"
- *
  * const accepted = MarkAccepted.make({ seq: 1000000 })
  * console.log(accepted.seq)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -178,11 +170,9 @@ export class MarkAccepted extends S.Class<MarkAccepted>($I`MarkAccepted`)(
  * @example
  * ```ts
  * import { StopAccepted } from "@beep/qa-capture"
- *
  * const accepted = StopAccepted.make({ status: "stopping" })
  * console.log(accepted.status)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -206,11 +196,9 @@ export class StopAccepted extends S.Class<StopAccepted>($I`StopAccepted`)(
  * ```ts
  * import { NdjsonPayload } from "@beep/qa-capture"
  * import * as S from "effect/Schema"
- *
  * const effect = S.decodeUnknownEffect(NdjsonPayload)("{\"kind\":\"marker\"}")
  * console.log(effect)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -227,11 +215,9 @@ export const NdjsonPayload = S.String.pipe(
  * @example
  * ```ts
  * import type { NdjsonPayload } from "@beep/qa-capture"
- *
  * const body: NdjsonPayload = "{\"kind\":\"marker\"}"
  * console.log(body)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -244,11 +230,9 @@ export type NdjsonPayload = typeof NdjsonPayload.Type;
  * ```ts
  * import { WitnessScriptBody } from "@beep/qa-capture"
  * import * as S from "effect/Schema"
- *
  * const effect = S.decodeUnknownEffect(WitnessScriptBody)("(()=>{})();")
  * console.log(effect)
  * ```
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -265,11 +249,9 @@ export const WitnessScriptBody = S.String.pipe(
  * @example
  * ```ts
  * import type { WitnessScriptBody } from "@beep/qa-capture"
- *
  * const body: WitnessScriptBody = "(()=>{})();"
  * console.log(body)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -281,10 +263,8 @@ export type WitnessScriptBody = typeof WitnessScriptBody.Type;
  * @example
  * ```ts
  * import { QaCollectorApiGroup } from "@beep/qa-capture"
- *
  * console.log(QaCollectorApiGroup.identifier)
  * ```
- *
  * @category api
  * @since 0.0.0
  */
@@ -301,10 +281,8 @@ export const QaCollectorApiGroup = HttpApiGroup.make("collector")
  * @example
  * ```ts
  * import { QaCollectorApi } from "@beep/qa-capture"
- *
  * console.log(QaCollectorApi.identifier)
  * ```
- *
  * @category api
  * @since 0.0.0
  */

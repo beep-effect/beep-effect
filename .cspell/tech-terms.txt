@@ -22,6 +22,7 @@ bgsound
 Bifunctor
 BIGSERIAL
 bimap
+binarizes
 bivariance
 bivariant
 BM25
@@ -68,6 +69,7 @@ DBUS
 Decoratable
 Deque
 describedby
+desync
 dfns
 docgen
 DPAPI
@@ -144,6 +146,7 @@ Kiota
 Kleisli
 knip
 labelledby
+lanczos
 LangExtract
 lavfi
 lede
@@ -157,6 +160,8 @@ lerp
 lgtm
 libc
 libpff
+libvpx
+libx
 llms
 LLMs
 loadmodule
@@ -165,12 +170,17 @@ logql
 lokka
 lostpixel
 ltrim
+luma
+lumas
 macaddr
 MAPI
+matroska
 maxclients
 Mcpjson
 mdns
 Mdns
+mebibyte
+mebibytes
 Merkle
 metas
 milli
@@ -179,11 +189,14 @@ monoid
 Monoid
 monoidal
 monorepo
+movflags
 mpga
 msal
 msgraph
 msvc
 msword
+muxed
+muxer
 NAMEDATALEN
 ndjson
 networkidle
@@ -277,6 +290,7 @@ PUNCT
 pxls
 pxlsx
 qjhr
+quantizer
 rasterizes
 rdfc
 RDFC
@@ -288,6 +302,9 @@ readyz
 recompiles
 reconstructibility
 redeployments
+remux
+remuxed
+remuxing
 replayable
 reprojection
 repros
@@ -316,6 +333,7 @@ SCONJ
 sentencization
 sentencize
 Sentencize
+seqs
 sfixed
 shacl
 SHACL
@@ -367,6 +385,7 @@ TTFB
 turbopack
 tzdata
 tzdb
+ucfirst
 udouble
 ufloat
 Uncommitted
@@ -406,4 +425,5 @@ worktree
 worktrees
 xhigh
 xlink
+yavg
 zenity

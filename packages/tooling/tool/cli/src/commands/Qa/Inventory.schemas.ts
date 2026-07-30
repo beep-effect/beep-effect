@@ -363,6 +363,8 @@ export class QaFinding extends S.Class<QaFinding>($I`QaFinding`)(
 /**
  * Whether a finding counts toward the required (blocking) total.
  *
+ * @param severity - Severity to classify.
+ * @returns True for P0 and P1, false for P2.
  * @example
  * ```ts
  * import { isRequiredSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
@@ -383,6 +385,8 @@ export const isRequiredSeverity = (severity: QaSeverity): boolean =>
 /**
  * Count the findings that block the QA loop from closing.
  *
+ * @param findings - Findings to count, in any order.
+ * @returns How many findings carry a required severity.
  * @example
  * ```ts
  * import { requiredFindingCount } from "@beep/repo-cli/commands/Qa/Inventory.schemas"

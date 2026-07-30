@@ -11,70 +11,70 @@
 /**
  * Witness action-event model exports.
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./ActionEvent.models.ts";
 /**
  * Clock correlator service exports.
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./ClockCorrelator.service.ts";
 /**
  * Collector HttpApi contract exports.
  *
- * @since 0.0.0
  * @category api
+ * @since 0.0.0
  */
 export * from "./Collector.api.ts";
 /**
  * Collector service exports.
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./Collector.service.ts";
 /**
  * Extraction plan model exports.
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./ExtractionPlan.models.ts";
 /**
  * Extraction planner exports.
  *
- * @since 0.0.0
  * @category planning
+ * @since 0.0.0
  */
 export * from "./ExtractionPlanner.ts";
 /**
  * QA capture error exports.
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export * from "./QaCapture.errors.ts";
 /**
  * Session, clock-sync, provenance, and collector-handle model exports.
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./QaCapture.models.ts";
 /**
  * Session directory store exports.
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./SessionStore.service.ts";
 /**
  * Witness bundling service exports.
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./Witness.service.ts";

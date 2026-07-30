@@ -112,6 +112,8 @@ export class QaProbe extends S.Class<QaProbe>($I`QaProbe`)(
 /**
  * Whether a probe blocks the recorded-QA pipeline.
  *
+ * @param probe - Probe result to classify.
+ * @returns True when the probe is required and failed.
  * @example
  * ```ts
  * import { isBlockingProbe, QaProbe } from "@beep/repo-cli/commands/Qa/Doctor"
@@ -139,6 +141,8 @@ const statusMark = (status: QaProbeStatus): string =>
 /**
  * Render the doctor probe table.
  *
+ * @param probes - Probe results in display order.
+ * @returns Report lines, heading first, one row per probe.
  * @example
  * ```ts
  * import { QaProbe, renderDoctorReport } from "@beep/repo-cli/commands/Qa/Doctor"
@@ -175,7 +179,7 @@ const probeBinary = Effect.fn("QaDoctor.probeBinary")(function* (
 ): Effect.fn.Return<QaProbe, never, ChildProcessSpawner.ChildProcessSpawner> {
   const captured = yield* runCaptured({ args, command: name, source: "stdout", trim: true }).pipe(
     Effect.map(O.some),
-    Effect.orElseSucceed(() => O.none<{ readonly exitCode: number; readonly output: string }>())
+    Effect.orElseSucceed(O.none<{ readonly exitCode: number; readonly output: string }>)
   );
   return O.match(captured, {
     onNone: () => QaProbe.make({ detail: remediation, name, required, status: "fail" }),

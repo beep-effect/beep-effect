@@ -52,6 +52,7 @@ import type { UnknownRecord } from "@beep/schema";
 import type * as Scope from "effect/Scope";
 import type { ObsConfig, ObsConfigInputOptions } from "./Obs.models.ts";
 import type {
+  ObsAuthChallenge,
   ObsEvent,
   ObsEventEnvelope,
   ObsHello,
@@ -256,6 +257,33 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
     )
   );
 
+  const authenticatedIdentify = (challenge: ObsAuthChallenge): Effect.Effect<ObsIdentify, ObsError> =>
+    O.match(config.password, {
+      onNone: () =>
+        Effect.fail(
+          ObsError.make({
+            message:
+              "obs-websocket requires authentication but no password is configured. " +
+              "Provide ObsConfigInput.password (for example from OBS_WEBSOCKET_PASSWORD).",
+            operation: "connect",
+          })
+        ),
+      onSome: (password) =>
+        Effect.succeed(
+          ObsIdentify.make({
+            authentication: O.some(
+              computeObsAuthentication({
+                challenge: challenge.challenge,
+                password: Redacted.value(password),
+                salt: challenge.salt,
+              })
+            ),
+            eventSubscriptions: config.eventSubscriptions,
+            rpcVersion: OBS_RPC_VERSION,
+          })
+        ),
+    });
+
   const buildIdentify = (hello: ObsHello): Effect.Effect<ObsIdentify, ObsError> =>
     O.match(hello.authentication, {
       onNone: () =>
@@ -266,32 +294,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
             rpcVersion: OBS_RPC_VERSION,
           })
         ),
-      onSome: (challenge) =>
-        O.match(config.password, {
-          onNone: () =>
-            Effect.fail(
-              ObsError.make({
-                message:
-                  "obs-websocket requires authentication but no password is configured. " +
-                  "Provide ObsConfigInput.password (for example from OBS_WEBSOCKET_PASSWORD).",
-                operation: "connect",
-              })
-            ),
-          onSome: (password) =>
-            Effect.succeed(
-              ObsIdentify.make({
-                authentication: O.some(
-                  computeObsAuthentication({
-                    challenge: challenge.challenge,
-                    password: Redacted.value(password),
-                    salt: challenge.salt,
-                  })
-                ),
-                eventSubscriptions: config.eventSubscriptions,
-                rpcVersion: OBS_RPC_VERSION,
-              })
-            ),
-        }),
+      onSome: authenticatedIdentify,
     });
 
   const handleHello = Effect.fn($I`handleHello`)(function* (hello: ObsHello) {

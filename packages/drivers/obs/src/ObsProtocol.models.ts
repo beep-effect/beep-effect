@@ -2,10 +2,11 @@
  * Schema-first obs-websocket v5 protocol models.
  *
  * Wire reference: obs-websocket `docs/generated/protocol.md` (protocol v5,
- * RPC version 1). Every message rides the base envelope `{ "op": number,
- * "d": object }`; this module models the envelope subset the driver speaks
- * (Hello, Identify, Identified, Event, Request, RequestResponse) plus the
- * request/response payload subset used for QA recording control.
+ * RPC version 1). Every message rides the base envelope
+ * `{ "op": number, "d": object }`; this module models the envelope subset the
+ * driver speaks (Hello, Identify, Identified, Event, Request,
+ * RequestResponse) plus the request/response payload subset used for QA
+ * recording control.
  *
  * @packageDocumentation
  * @since 0.0.0

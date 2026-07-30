@@ -9,10 +9,9 @@
  * @since 0.0.0
  */
 
-import { A, O, Str } from "@beep/utils";
-import { pipe } from "effect";
-import * as HashMap from "effect/HashMap";
-import * as N from "effect/Number";
+import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
+import { HashMap, Number as N, pipe } from "effect";
+import { dual } from "effect/Function";
 import { isRequiredSeverity } from "./Inventory.schemas.ts";
 import type { ActionEvent, CaptureArtifact, ExtractionPlan, SessionManifest } from "@beep/qa-capture";
 import type { QaFinding, QaInventory } from "./Inventory.schemas.ts";
@@ -23,6 +22,8 @@ const BYTES_PER_MIB = 1024 * 1024;
 /**
  * Render a byte count as fixed-precision mebibytes.
  *
+ * @param bytes - Byte count to format.
+ * @returns The count in mebibytes, to two decimal places.
  * @example
  * ```ts
  * import { formatMib } from "@beep/repo-cli/commands/Qa/Qa.render"
@@ -100,6 +101,15 @@ const warnings = (
 const bulletList = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.isReadonlyArrayNonEmpty(lines) ? A.map(lines, (line) => `- ${line}`) : ["_none_"];
 
+const droppedLine = (dropped: ExtractionPlan["dropped"][number]): string => {
+  const detail = pipe(
+    dropped.detail,
+    O.map((value) => `: ${value}`),
+    O.getOrElse(thunkEmptyStr)
+  );
+  return `\`${dropped.ruleKind}\` ${dropped.priority} [${dropped.startEpochMs}, ${dropped.endEpochMs}] — ${dropped.reason}${detail}`;
+};
+
 /**
  * Render a round's `report.md` from its decoded session manifest.
  *
@@ -137,11 +147,10 @@ const bulletList = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
  * @category formatting
  * @since 0.0.0
  */
-export const renderRoundReport = (
-  manifest: SessionManifest,
-  eventLog: QaEventLog,
-  plan: O.Option<ExtractionPlan>
-): string => {
+export const renderRoundReport: {
+  (eventLog: QaEventLog, plan: O.Option<ExtractionPlan>): (manifest: SessionManifest) => string;
+  (manifest: SessionManifest, eventLog: QaEventLog, plan: O.Option<ExtractionPlan>): string;
+} = dual(3, (manifest: SessionManifest, eventLog: QaEventLog, plan: O.Option<ExtractionPlan>): string => {
   const session = manifest.session;
   const budgetBytes = O.match(plan, { onNone: () => 0, onSome: (value) => value.budget.maxTotalBytes });
   const usedBytes = artifactBytes(manifest.artifacts);
@@ -181,18 +190,11 @@ export const renderRoundReport = (
     "## Dropped",
     "",
     ...bulletList(
-      O.match(plan, {
-        onNone: (): ReadonlyArray<string> => [],
-        onSome: (value) =>
-          A.map(
-            value.dropped,
-            (dropped) =>
-              `\`${dropped.ruleKind}\` ${dropped.priority} [${dropped.startEpochMs}, ${dropped.endEpochMs}] — ${dropped.reason}${O.match(
-                dropped.detail,
-                { onNone: () => "", onSome: (detail) => `: ${detail}` }
-              )}`
-          ),
-      })
+      pipe(
+        plan,
+        O.map((value) => A.map(value.dropped, droppedLine)),
+        O.getOrElse(thunkEmptyReadonlyArray<string>())
+      )
     ),
     "",
     "## Warnings",
@@ -201,7 +203,7 @@ export const renderRoundReport = (
     "",
   ];
   return A.join(lines, "\n");
-};
+});
 
 /**
  * Render the planner's window table for a `--dry-run` extraction.
@@ -223,32 +225,38 @@ export const renderRoundReport = (
  * @category formatting
  * @since 0.0.0
  */
-export const renderExtractionPlanTable = (plan: ExtractionPlan, driverRequestCount: number): ReadonlyArray<string> => [
-  `qa extract --dry-run: ${A.length(plan.windows)} window(s), ${driverRequestCount} driver request(s)`,
-  ...table(
-    ["label", "rule", "priority", "start", "end", "frames", "gif"],
-    A.map(plan.windows, (window) => [
-      window.label,
-      window.ruleKind,
-      window.priority,
-      `${window.startEpochMs}`,
-      `${window.endEpochMs}`,
-      `${A.length(window.frameTimesEpochMs)}`,
-      O.match(window.gif, { onNone: () => "-", onSome: (gif) => `${gif.width}px@${gif.fps}fps` }),
-    ])
-  ),
-  `estimated: ${formatMib(plan.estimatedTotalBytes)} of ${formatMib(plan.budget.maxTotalBytes)} budget`,
-  ...A.map(
-    plan.dropped,
-    (dropped) =>
-      `dropped ${dropped.ruleKind} ${dropped.priority} [${dropped.startEpochMs}, ${dropped.endEpochMs}] — ${dropped.reason}`
-  ),
-];
+export const renderExtractionPlanTable: {
+  (driverRequestCount: number): (plan: ExtractionPlan) => ReadonlyArray<string>;
+  (plan: ExtractionPlan, driverRequestCount: number): ReadonlyArray<string>;
+} = dual(
+  2,
+  (plan: ExtractionPlan, driverRequestCount: number): ReadonlyArray<string> => [
+    `qa extract --dry-run: ${A.length(plan.windows)} window(s), ${driverRequestCount} driver request(s)`,
+    ...table(
+      ["label", "rule", "priority", "start", "end", "frames", "gif"],
+      A.map(plan.windows, (window) => [
+        window.label,
+        window.ruleKind,
+        window.priority,
+        `${window.startEpochMs}`,
+        `${window.endEpochMs}`,
+        `${A.length(window.frameTimesEpochMs)}`,
+        O.match(window.gif, { onNone: () => "-", onSome: (gif) => `${gif.width}px@${gif.fps}fps` }),
+      ])
+    ),
+    `estimated: ${formatMib(plan.estimatedTotalBytes)} of ${formatMib(plan.budget.maxTotalBytes)} budget`,
+    ...A.map(
+      plan.dropped,
+      (dropped) =>
+        `dropped ${dropped.ruleKind} ${dropped.priority} [${dropped.startEpochMs}, ${dropped.endEpochMs}] — ${dropped.reason}`
+    ),
+  ]
+);
 
 const evidenceLine = (finding: QaFinding): ReadonlyArray<string> =>
   A.map(finding.evidence, (evidence) => {
     const range = O.match(evidence.frameRange, {
-      onNone: () => "",
+      onNone: thunkEmptyStr,
       onSome: ([first, last]) => ` frames ${first}–${last}`,
     });
     const events = A.isReadonlyArrayNonEmpty(evidence.eventIds)
@@ -282,6 +290,8 @@ const findingSection = (finding: QaFinding): ReadonlyArray<string> => [
  * count comes from the decoded inventory, which the schema already proved
  * consistent with its findings.
  *
+ * @param inventory - Decoded inventory to render.
+ * @returns Markdown lines ending in the machine-readable verdict.
  * @example
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"

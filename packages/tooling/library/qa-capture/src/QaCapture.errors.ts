@@ -32,11 +32,9 @@ const existingQaCaptureError = (cause: unknown): O.Option<QaCaptureError> =>
  * @example
  * ```ts
  * import { QaCaptureError } from "@beep/qa-capture"
- *
  * const error = QaCaptureError.make({ message: "collector failed to bind", operation: "collectorServe" })
  * console.log(error.message)
  * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -78,13 +76,11 @@ export class QaCaptureError extends TaggedErrorClass<QaCaptureError>($I`QaCaptur
    * @example
    * ```ts
    * import { QaCaptureError } from "@beep/qa-capture"
-   *
    * const error = QaCaptureError.fromUnknown("sessionStore", "could not read session.json", {
    *   cause: new Error("boom")
    * })
    * console.log(error)
    * ```
-   *
    * @category errors
    * @since 0.0.0
    */

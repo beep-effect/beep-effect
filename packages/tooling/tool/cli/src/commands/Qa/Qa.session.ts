@@ -12,12 +12,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
-import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, Path, pipe } from "effect";
+import { SchemaUtils } from "@beep/schema";
+import { A, O, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
+import { Effect, FileSystem, flow, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { runCaptured } from "../../internal/process/index.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
+import type { R } from "@beep/utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Qa/Qa.session");
@@ -50,11 +53,16 @@ export const PORTLESS_PORT = 1355;
  * @category utilities
  * @since 0.0.0
  */
-export const qaRootPath = (path: Path.Path, cwd: string): string => path.join(cwd, ".beep", "qa");
+export const qaRootPath: {
+  (cwd: string): (path: Path.Path) => string;
+  (path: Path.Path, cwd: string): string;
+} = dual(2, (path: Path.Path, cwd: string): string => path.join(cwd, ".beep", "qa"));
 
 /**
  * Portless URL of a repo dev-server app.
  *
+ * @param app - Portless app name, for example storybook.
+ * @returns The app's canonical portless dev-server URL.
  * @example
  * ```ts
  * import { portlessUrlForApp } from "@beep/repo-cli/commands/Qa/Qa.session"
@@ -109,27 +117,60 @@ const originsOf = (url: URL): ReadonlyArray<string> => {
 };
 
 /**
+ * The `--url` / `--app` pair {@link resolveCaptureTarget} resolves a page from.
+ *
+ * @example
+ * ```ts
+ * import { CaptureTargetRequest } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import * as O from "effect/Option"
+ *
+ * const request = CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() })
+ * console.log(O.isSome(request.app)) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`CaptureTargetRequest`)(
+  {
+    app: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("CaptureTargetRequest.app", {
+        description: "Portless app name to expand into a dev-server URL.",
+      })
+    ),
+    url: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("CaptureTargetRequest.url", {
+        description: "Absolute URL, which wins over `app` when both are supplied.",
+      })
+    ),
+  },
+  $I.annote("CaptureTargetRequest", {
+    description: "Unresolved capture target as the operator supplied it on the command line.",
+  })
+) {}
+
+/**
  * Resolve `--url` / `--app` into the page a round drives.
  *
  * `--url` wins when both are supplied; `--app` expands through the portless
  * naming mandate rather than a numeric localhost port.
  *
+ * @param options - The --url / --app pair as supplied on the command line.
+ * @returns An Effect resolving the capture target, failing when neither flag yields a usable URL.
  * @example
  * ```ts
- * import { resolveCaptureTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import { CaptureTargetRequest, resolveCaptureTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * const program = resolveCaptureTarget({ app: O.some("storybook"), url: O.none() })
+ * const program = resolveCaptureTarget(CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() }))
  * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
  */
-export const resolveCaptureTarget = (options: {
-  readonly app: O.Option<string>;
-  readonly url: O.Option<string>;
-}): Effect.Effect<CaptureTarget, QaCommandError> =>
+export const resolveCaptureTarget = (options: CaptureTargetRequest): Effect.Effect<CaptureTarget, QaCommandError> =>
   pipe(
     O.orElse(options.url, () => O.map(options.app, portlessUrlForApp)),
     O.match({
@@ -297,7 +338,7 @@ export const readEventLog = Effect.fn("QaSession.readEventLog")(function* (
 const capturedText = (command: string, args: ReadonlyArray<string>) =>
   runCaptured({ args, command, source: "stdout", trim: true }).pipe(
     Effect.map((step) => (step.exitCode === 0 ? O.some(step.output) : O.none<string>())),
-    Effect.orElseSucceed(() => O.none<string>())
+    Effect.orElseSucceed(O.none<string>)
   );
 
 /**
@@ -357,9 +398,16 @@ export const readCommitProvenance = Effect.fn("QaSession.readCommitProvenance")(
   });
 });
 
-const firstLineVersion = (text: string): string => pipe(text, Str.split("\n"), A.head, O.getOrElse(thunkUnknown));
-
 const thunkUnknown = (): string => "unknown";
+
+const firstLineVersion: (text: string) => string = flow(Str.split("\n"), A.head, O.getOrElse(thunkUnknown));
+
+const toolVersion = (tool: string, output: O.Option<string>): R.ReadonlyRecord<string, string> =>
+  pipe(
+    output,
+    O.map((text): R.ReadonlyRecord<string, string> => ({ [tool]: firstLineVersion(text) })),
+    O.getOrElse(thunkEmptyReadonlyRecord<string, string>)
+  );
 
 /**
  * Best-effort versions of the native tools a round depends on.
@@ -388,14 +436,8 @@ export const collectToolVersions = Effect.fn("QaSession.collectToolVersions")(fu
   );
   return {
     bun: Bun.version,
-    ...O.match(ffmpeg, {
-      onNone: () => ({}),
-      onSome: (text) => ({ ffmpeg: firstLineVersion(text) }),
-    }),
-    ...O.match(exiftool, {
-      onNone: () => ({}),
-      onSome: (text) => ({ exiftool: firstLineVersion(text) }),
-    }),
+    ...toolVersion("ffmpeg", ffmpeg),
+    ...toolVersion("exiftool", exiftool),
   };
 });
 
@@ -411,8 +453,13 @@ export const collectToolVersions = Effect.fn("QaSession.collectToolVersions")(fu
  * @category utilities
  * @since 0.0.0
  */
-export const makeSessionId = (round: number, startedAtEpochMs: number): SessionId =>
-  SessionId.make(`qa-round-${round}-${startedAtEpochMs}`);
+export const makeSessionId: {
+  (startedAtEpochMs: number): (round: number) => SessionId;
+  (round: number, startedAtEpochMs: number): SessionId;
+} = dual(
+  2,
+  (round: number, startedAtEpochMs: number): SessionId => SessionId.make(`qa-round-${round}-${startedAtEpochMs}`)
+);
 
 /**
  * Path of the recording-start hint the playwright harness writes.
@@ -443,8 +490,10 @@ export const makeSessionId = (round: number, startedAtEpochMs: number): SessionI
  * @category utilities
  * @since 0.0.0
  */
-export const recordHintPath = (path: Path.Path, layout: RoundLayout): string =>
-  path.join(layout.videoDir, "record-hint.json");
+export const recordHintPath: {
+  (layout: RoundLayout): (path: Path.Path) => string;
+  (path: Path.Path, layout: RoundLayout): string;
+} = dual(2, (path: Path.Path, layout: RoundLayout): string => path.join(layout.videoDir, "record-hint.json"));
 
 const RecordHint = S.Struct({
   recordStartHintEpochMs: S.Finite,
@@ -472,7 +521,7 @@ export const readRecordStartHint = Effect.fn("QaSession.readRecordStartHint")(fu
   return yield* fs.readFileString(hintPath).pipe(
     Effect.flatMap(S.decodeUnknownEffect(RecordHintJson)),
     Effect.map((hint) => O.some(hint.recordStartHintEpochMs)),
-    Effect.orElseSucceed(() => O.none<number>())
+    Effect.orElseSucceed(O.none<number>)
   );
 });
 

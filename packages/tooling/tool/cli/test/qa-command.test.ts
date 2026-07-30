@@ -18,6 +18,7 @@ import {
   JUDGE_PER_FILE_BUDGET_BYTES,
   JUDGE_TOTAL_BUDGET_BYTES,
   JudgeEvidenceFile,
+  JudgePromptValues,
   QaEventLog,
   QaInventory,
   QaJudgeRef,
@@ -208,12 +209,15 @@ describe("commands/Qa JudgePack budget", () => {
   });
 
   it("fills every placeholder in the judge prompt template", () => {
-    const rendered = renderJudgePrompt("round {{ROUND}} of {{SURFACE}} in {{ROUND_DIR}}\n{{SCENARIO_NOTES}}", {
-      round: 7,
-      roundDir: "/repo/.beep/qa/round-7",
-      scenarioNotes: "- drag the sash",
-      surface: "storybook",
-    });
+    const rendered = renderJudgePrompt(
+      "round {{ROUND}} of {{SURFACE}} in {{ROUND_DIR}}\n{{SCENARIO_NOTES}}",
+      JudgePromptValues.make({
+        round: 7,
+        roundDir: "/repo/.beep/qa/round-7",
+        scenarioNotes: "- drag the sash",
+        surface: "storybook",
+      })
+    );
     expect(rendered).toBe("round 7 of storybook in /repo/.beep/qa/round-7\n- drag the sash");
     expect(rendered).not.toContain("{{");
   });

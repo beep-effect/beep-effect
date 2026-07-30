@@ -17,19 +17,17 @@
 
 import { FFmpeg, ProbeVideoRequest } from "@beep/ffmpeg";
 import { $RepoCliId } from "@beep/identity/packages";
-import { epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
+import { ClockSync, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, Match, Path, pipe } from "effect";
-import * as N from "effect/Number";
-import * as Order from "effect/Order";
+import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
+import { Effect, FileSystem, Match, Number as N, Order, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { QaCommandError } from "./Qa.errors.ts";
-import { discoverRecordedVideo, qaRootPath, readEventLog } from "./Qa.session.ts";
-import type { ActionEvent, ClockSync, RoundLayout, SessionManifest } from "@beep/qa-capture";
+import { discoverRecordedVideo, QaEventLog, qaRootPath, readEventLog } from "./Qa.session.ts";
+import type { ActionEvent, RoundLayout, SessionManifest } from "@beep/qa-capture";
 import type { QaJudgePackOptions } from "./Qa.schemas.ts";
-import type { QaEventLog } from "./Qa.session.ts";
 
 const $I = $RepoCliId.create("commands/Qa/JudgePack");
 
@@ -185,6 +183,83 @@ export class JudgeDroppedFile extends S.Class<JudgeDroppedFile>($I`JudgeDroppedF
 ) {}
 
 /**
+ * Outcome of fitting evidence candidates into the judge byte budget.
+ *
+ * @example
+ * ```ts
+ * import { JudgeEvidenceSelection } from "@beep/repo-cli/commands/Qa/JudgePack"
+ *
+ * const selection = JudgeEvidenceSelection.make({ dropped: [], files: [] })
+ * console.log(selection.files.length) // 0
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class JudgeEvidenceSelection extends S.Class<JudgeEvidenceSelection>($I`JudgeEvidenceSelection`)(
+  {
+    dropped: S.Array(JudgeDroppedFile).pipe(
+      $I.annoteKey("JudgeEvidenceSelection.dropped", {
+        description: "Candidates the budget could not afford, each with its omission reason.",
+      })
+    ),
+    files: S.Array(JudgeEvidenceFile).pipe(
+      $I.annoteKey("JudgeEvidenceSelection.files", {
+        description: "Candidates that fit the budget, in stable path order.",
+      })
+    ),
+  },
+  $I.annote("JudgeEvidenceSelection", {
+    description: "Budget-fitted judge evidence split into what is bundled and what was dropped.",
+  })
+) {}
+
+/**
+ * Placeholder values substituted into the committed judge prompt template.
+ *
+ * @example
+ * ```ts
+ * import { JudgePromptValues } from "@beep/repo-cli/commands/Qa/JudgePack"
+ *
+ * const values = JudgePromptValues.make({
+ *   round: 3,
+ *   roundDir: "/repo/.beep/qa/round-3",
+ *   scenarioNotes: "",
+ *   surface: "dock"
+ * })
+ * console.log(values.surface) // "dock"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class JudgePromptValues extends S.Class<JudgePromptValues>($I`JudgePromptValues`)(
+  {
+    round: S.Int.pipe(
+      $I.annoteKey("JudgePromptValues.round", {
+        description: "Round number the bundle judges.",
+      })
+    ),
+    roundDir: S.String.pipe(
+      $I.annoteKey("JudgePromptValues.roundDir", {
+        description: "Absolute round directory the judge reads evidence from.",
+      })
+    ),
+    scenarioNotes: S.String.pipe(
+      $I.annoteKey("JudgePromptValues.scenarioNotes", {
+        description: "Pre-rendered scenario notes block, empty when the round has none.",
+      })
+    ),
+    surface: S.String.pipe(
+      $I.annoteKey("JudgePromptValues.surface", {
+        description: "Surface under review, used to scope the judge's lens.",
+      })
+    ),
+  },
+  $I.annote("JudgePromptValues", {
+    description: "Round placeholders filled into `prompt.md` before a judge run.",
+  })
+) {}
+
+/**
  * The exact evidence set handed to one judge run.
  *
  * @example
@@ -274,11 +349,13 @@ export const readLegacyManifest = Effect.fn("QaJudgePack.readLegacyManifest")(fu
   manifestPath: string
 ): Effect.fn.Return<O.Option<typeof LegacyManifest.Type>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(manifestPath).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(LegacyManifestJson)),
-    Effect.map(O.some),
-    Effect.orElseSucceed(() => O.none<typeof LegacyManifest.Type>())
-  );
+  return yield* fs
+    .readFileString(manifestPath)
+    .pipe(
+      Effect.flatMap(S.decodeUnknownEffect(LegacyManifestJson)),
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<typeof LegacyManifest.Type>)
+    );
 });
 
 const scenarioIsGreen = (scenario: typeof LegacyScenario.Type): boolean =>
@@ -318,35 +395,96 @@ const eventLine = (event: ActionEvent, toVideo: (epochMs: number) => number): st
   return `- t=${seconds} seq=${event.seq} ${event.kind} ${detail}`;
 };
 
+/**
+ * Everything {@link renderTimeline} needs to place one round on the video clock.
+ *
+ * @example
+ * ```ts
+ * import { ClockSync } from "@beep/qa-capture"
+ * import { RenderTimelineOptions } from "@beep/repo-cli/commands/Qa/JudgePack"
+ * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import * as O from "effect/Option"
+ *
+ * const options = RenderTimelineOptions.make({
+ *   clockSync: ClockSync.make({
+ *     confidence: "high",
+ *     method: "beacon",
+ *     offsetMs: 0,
+ *     residualRmsMs: 4,
+ *     slope: 1
+ *   }),
+ *   eventLog: QaEventLog.make({ events: [], rejectedCount: 0 }),
+ *   legacy: O.none(),
+ *   round: 2,
+ *   videoDurationSeconds: 30
+ * })
+ * console.log(options.round) // 2
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class RenderTimelineOptions extends S.Class<RenderTimelineOptions>($I`RenderTimelineOptions`)(
+  {
+    clockSync: ClockSync.pipe(
+      $I.annoteKey("RenderTimelineOptions.clockSync", {
+        description: "Correlation mapping witness epochs onto video seconds.",
+      })
+    ),
+    eventLog: QaEventLog.pipe(
+      $I.annoteKey("RenderTimelineOptions.eventLog", {
+        description: "Decoded witness events the timeline segments.",
+      })
+    ),
+    legacy: S.OptionFromOptionalKey(LegacyManifest).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("RenderTimelineOptions.legacy", {
+        description: "Legacy screenshot-harness manifest supplying scenario notes, when the round produced one.",
+      })
+    ),
+    round: S.Int.pipe(
+      $I.annoteKey("RenderTimelineOptions.round", {
+        description: "Round number the timeline heads with.",
+      })
+    ),
+    videoDurationSeconds: S.Finite.pipe(
+      $I.annoteKey("RenderTimelineOptions.videoDurationSeconds", {
+        description: "Probed video duration clamping every rendered timestamp.",
+      })
+    ),
+  },
+  $I.annote("RenderTimelineOptions", {
+    description: "Inputs of one `judge/timeline.md` rendering.",
+  })
+) {}
+
 const isScenarioMarker = (event: ActionEvent): boolean =>
   event.kind === "marker" && Str.startsWith("scenario:")(event.label);
 
+const assertionDetailSuffix = (detail: string | undefined): string =>
+  pipe(
+    O.fromUndefinedOr(detail),
+    O.map((value) => ` (${value})`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
+const scenarioNoteLines = (scenario: (typeof LegacyManifest.Type)["scenarios"][number]): ReadonlyArray<string> => [
+  ...A.map(scenario.notes, (note) => `> note: ${note}`),
+  ...pipe(
+    scenario.assertions,
+    A.filter((assertion) => !assertion.ok),
+    A.map((assertion) => `> FAILED ASSERTION: ${assertion.name}${assertionDetailSuffix(assertion.detail)}`)
+  ),
+];
+
 const scenarioNotesFor = (name: string, legacy: O.Option<typeof LegacyManifest.Type>): ReadonlyArray<string> =>
-  O.match(legacy, {
-    onNone: (): ReadonlyArray<string> => [],
-    onSome: (value) =>
-      pipe(
-        value.scenarios,
-        A.findFirst((scenario) => Str.includes(scenario.name)(name) || Str.includes(name)(scenario.name)),
-        O.match({
-          onNone: (): ReadonlyArray<string> => [],
-          onSome: (scenario) => [
-            ...A.map(scenario.notes, (note) => `> note: ${note}`),
-            ...pipe(
-              scenario.assertions,
-              A.filter((assertion) => !assertion.ok),
-              A.map(
-                (assertion) =>
-                  `> FAILED ASSERTION: ${assertion.name}${O.match(O.fromUndefinedOr(assertion.detail), {
-                    onNone: () => "",
-                    onSome: (detail) => ` (${detail})`,
-                  })}`
-              )
-            ),
-          ],
-        })
-      ),
-  });
+  pipe(
+    legacy,
+    O.flatMap((value) =>
+      A.findFirst(value.scenarios, (scenario) => Str.includes(scenario.name)(name) || Str.includes(name)(scenario.name))
+    ),
+    O.map(scenarioNoteLines),
+    O.getOrElse(thunkEmptyReadonlyArray<string>())
+  );
 
 /**
  * Render `judge/timeline.md` for one round.
@@ -355,6 +493,8 @@ const scenarioNotesFor = (name: string, legacy: O.Option<typeof LegacyManifest.T
  * timeline segments exactly the way the harness did — no re-derivation, no
  * guessing.
  *
+ * @param options - Round number, witness events, clock sync, video duration, and legacy manifest.
+ * @returns Markdown body of the round timeline in video seconds.
  * @example
  * ```ts
  * import { ClockSync } from "@beep/qa-capture"
@@ -369,19 +509,20 @@ const scenarioNotesFor = (name: string, legacy: O.Option<typeof LegacyManifest.T
  *   residualRmsMs: 4,
  *   slope: 1
  * })
- * const timeline = renderTimeline(2, QaEventLog.make({ events: [], rejectedCount: 0 }), clock, 30, O.none())
+ * const timeline = renderTimeline({
+ *   clockSync: clock,
+ *   eventLog: QaEventLog.make({ events: [], rejectedCount: 0 }),
+ *   legacy: O.none(),
+ *   round: 2,
+ *   videoDurationSeconds: 30
+ * })
  * console.log(timeline.startsWith("# Round 2 timeline")) // true
  * ```
  * @category formatting
  * @since 0.0.0
  */
-export const renderTimeline = (
-  round: number,
-  eventLog: QaEventLog,
-  clockSync: ClockSync,
-  videoDurationSeconds: number,
-  legacy: O.Option<typeof LegacyManifest.Type>
-): string => {
+export const renderTimeline = (options: RenderTimelineOptions): string => {
+  const { clockSync, eventLog, legacy, round, videoDurationSeconds } = options;
   const toVideo = epochToVideoSeconds(clockSync, videoDurationSeconds);
   const boundaries = A.reduce(eventLog.events, [] as ReadonlyArray<number>, (acc, event, index) =>
     isScenarioMarker(event) ? [...acc, index] : acc
@@ -437,22 +578,18 @@ export const renderTimeline = (
  * @category formatting
  * @since 0.0.0
  */
-export const renderJudgePrompt = (
-  template: string,
-  values: {
-    readonly round: number;
-    readonly roundDir: string;
-    readonly scenarioNotes: string;
-    readonly surface: string;
-  }
-): string =>
+export const renderJudgePrompt: {
+  (values: JudgePromptValues): (template: string) => string;
+  (template: string, values: JudgePromptValues): string;
+} = dual(2, (template: string, values: JudgePromptValues): string =>
   pipe(
     template,
     Str.replaceAll("{{ROUND_DIR}}", values.roundDir),
     Str.replaceAll("{{ROUND}}", `${values.round}`),
     Str.replaceAll("{{SCENARIO_NOTES}}", values.scenarioNotes),
     Str.replaceAll("{{SURFACE}}", values.surface)
-  );
+  )
+);
 
 const byPath: Order.Order<JudgeEvidenceFile> = Order.mapInput(Order.String, (file: JudgeEvidenceFile) => file.path);
 
@@ -483,46 +620,54 @@ const keepPriority = (kind: JudgeEvidenceKind, green: boolean): number =>
  * @category use-cases
  * @since 0.0.0
  */
-export const selectJudgeEvidence = (
-  candidates: ReadonlyArray<JudgeEvidenceFile>,
-  greenScreenshotNames: ReadonlyArray<string>
-): { readonly dropped: ReadonlyArray<JudgeDroppedFile>; readonly files: ReadonlyArray<JudgeEvidenceFile> } => {
-  const oversized = A.filter(candidates, (file) => file.bytes > JUDGE_PER_FILE_BUDGET_BYTES);
-  const affordable = A.filter(candidates, (file) => file.bytes <= JUDGE_PER_FILE_BUDGET_BYTES);
-  const isGreen = (file: JudgeEvidenceFile): boolean =>
-    A.contains(greenScreenshotNames, Str.replace(/^.*\//, "")(file.path));
-  const byKeepPriority: Order.Order<JudgeEvidenceFile> = Order.combine(
-    Order.mapInput(Order.Number, (file: JudgeEvidenceFile) => keepPriority(file.kind, isGreen(file))),
-    byPath
-  );
-  const ordered = A.sort(affordable, byKeepPriority);
+export const selectJudgeEvidence: {
+  (
+    greenScreenshotNames: ReadonlyArray<string>
+  ): (candidates: ReadonlyArray<JudgeEvidenceFile>) => JudgeEvidenceSelection;
+  (candidates: ReadonlyArray<JudgeEvidenceFile>, greenScreenshotNames: ReadonlyArray<string>): JudgeEvidenceSelection;
+} = dual(
+  2,
+  (
+    candidates: ReadonlyArray<JudgeEvidenceFile>,
+    greenScreenshotNames: ReadonlyArray<string>
+  ): JudgeEvidenceSelection => {
+    const oversized = A.filter(candidates, (file) => file.bytes > JUDGE_PER_FILE_BUDGET_BYTES);
+    const affordable = A.filter(candidates, (file) => file.bytes <= JUDGE_PER_FILE_BUDGET_BYTES);
+    const isGreen = (file: JudgeEvidenceFile): boolean =>
+      A.contains(greenScreenshotNames, Str.replace(/^.*\//, "")(file.path));
+    const byKeepPriority: Order.Order<JudgeEvidenceFile> = Order.combine(
+      Order.mapInput(Order.Number, (file: JudgeEvidenceFile) => keepPriority(file.kind, isGreen(file))),
+      byPath
+    );
+    const ordered = A.sort(affordable, byKeepPriority);
 
-  const fitted = A.reduce(
-    ordered,
-    { dropped: [] as ReadonlyArray<JudgeDroppedFile>, kept: [] as ReadonlyArray<JudgeEvidenceFile>, total: 0 },
-    (state, file) =>
-      state.total + file.bytes <= JUDGE_TOTAL_BUDGET_BYTES
-        ? { dropped: state.dropped, kept: [...state.kept, file], total: state.total + file.bytes }
-        : {
-            dropped: [
-              ...state.dropped,
-              JudgeDroppedFile.make({ bytes: file.bytes, path: file.path, reason: "total-budget" }),
-            ],
-            kept: state.kept,
-            total: state.total,
-          }
-  );
+    const fitted = A.reduce(
+      ordered,
+      { dropped: A.empty<JudgeDroppedFile>(), kept: A.empty<JudgeEvidenceFile>(), total: 0 },
+      (state, file) =>
+        state.total + file.bytes <= JUDGE_TOTAL_BUDGET_BYTES
+          ? { dropped: state.dropped, kept: [...state.kept, file], total: state.total + file.bytes }
+          : {
+              dropped: [
+                ...state.dropped,
+                JudgeDroppedFile.make({ bytes: file.bytes, path: file.path, reason: "total-budget" }),
+              ],
+              kept: state.kept,
+              total: state.total,
+            }
+    );
 
-  return {
-    dropped: [
-      ...A.map(oversized, (file) =>
-        JudgeDroppedFile.make({ bytes: file.bytes, path: file.path, reason: "per-file-budget" })
-      ),
-      ...fitted.dropped,
-    ],
-    files: A.sort(fitted.kept, byPath),
-  };
-};
+    return JudgeEvidenceSelection.make({
+      dropped: [
+        ...A.map(oversized, (file) =>
+          JudgeDroppedFile.make({ bytes: file.bytes, path: file.path, reason: "per-file-budget" })
+        ),
+        ...fitted.dropped,
+      ],
+      files: A.sort(fitted.kept, byPath),
+    });
+  }
+);
 
 const IMAGE_EXTENSIONS: ReadonlyArray<string> = [".jpeg", ".jpg", ".png"];
 
@@ -547,7 +692,7 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
             })
           )
         ),
-        Effect.orElseSucceed(() => O.none<JudgeEvidenceFile>())
+        Effect.orElseSucceed(O.none<JudgeEvidenceFile>)
       );
     });
   });
@@ -636,7 +781,15 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
     totalBytes: A.reduce(selection.files, 0, (total, file) => total + file.bytes),
   });
 
-  const timeline = renderTimeline(options.round, eventLog, clockSync, Math.max(videoDurationSeconds, 0.001), legacy);
+  const timeline = renderTimeline(
+    RenderTimelineOptions.make({
+      clockSync,
+      eventLog,
+      legacy,
+      round: options.round,
+      videoDurationSeconds: Math.max(videoDurationSeconds, 0.001),
+    })
+  );
   const templatePath = path.join(cwd, JUDGE_PROMPT_TEMPLATE);
   const template = yield* fs
     .readFileString(templatePath)
@@ -653,12 +806,15 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
         "\n"
       ),
   });
-  const prompt = renderJudgePrompt(template, {
-    round: options.round,
-    roundDir: layout.root,
-    scenarioNotes,
-    surface: O.getOrElse(options.surface, () => manifest.session.url),
-  });
+  const prompt = renderJudgePrompt(
+    template,
+    JudgePromptValues.make({
+      round: options.round,
+      roundDir: layout.root,
+      scenarioNotes,
+      surface: O.getOrElse(options.surface, () => manifest.session.url),
+    })
+  );
 
   const manifestJson = yield* S.encodeEffect(JudgeManifestJson)(judgeManifest).pipe(
     QaCommandError.mapError("qa judge-pack could not encode the judge manifest.")

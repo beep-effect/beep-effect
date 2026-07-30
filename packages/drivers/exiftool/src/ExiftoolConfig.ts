@@ -380,7 +380,7 @@ export const beepQaRawTagKey = (name: BeepQaTagName): string => `${BEEP_QA_XMP_G
  *   actionId: "act-9",
  *   capturedAtEpochMs: 1753900000000,
  *   scenarioName: "sash-drag",
- *   sessionId: "sess-1"
+ *   sessionId: "qa-round-1-1754000000000"
  * }))
  * console.log(assignments)
  * ```
@@ -450,7 +450,7 @@ const rawNumberAt = (raw: Readonly<Record<string, unknown>>, name: BeepQaTagName
  *   "XMP-beepQA:ActionId": "act-9",
  *   "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
  *   "XMP-beepQA:ScenarioName": "sash-drag",
- *   "XMP-beepQA:SessionId": "sess-1"
+ *   "XMP-beepQA:SessionId": "qa-round-1-1754000000000"
  * })
  * console.log(provenance)
  * ```

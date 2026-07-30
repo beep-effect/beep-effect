@@ -23,11 +23,13 @@ import { $RepoCliId } from "@beep/identity/packages";
 import {
   ArtifactBudget,
   BeaconEvent,
+  BuildExtractionPlanOptions,
   buildExtractionPlan,
   CaptureArtifact,
   ClockCorrelator,
   CorrelateClockRequest,
   decodeExtractionPlan,
+  defaultExtractionRules,
   encodeExtractionPlanJson,
   PlanDriverRequestsOptions,
   planDriverRequests,
@@ -36,8 +38,8 @@ import {
   SessionStore,
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Match, Path, pipe } from "effect";
-import * as N from "effect/Number";
+import { Console, Effect, FileSystem, flow, Match, Number as N, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -99,8 +101,10 @@ const CONTAINER_EXTENSIONS: ReadonlyArray<string> = ["mkv", "mp4", "webm"];
  * @category utilities
  * @since 0.0.0
  */
-export const extractionPlanPath = (path: Path.Path, layout: RoundLayout): string =>
-  path.join(layout.root, EXTRACTION_PLAN_FILE);
+export const extractionPlanPath: {
+  (layout: RoundLayout): (path: Path.Path) => string;
+  (path: Path.Path, layout: RoundLayout): string;
+} = dual(2, (path: Path.Path, layout: RoundLayout): string => path.join(layout.root, EXTRACTION_PLAN_FILE));
 
 /**
  * Path of the round artifact budget `beep qa record --budget-mb` persisted.
@@ -134,8 +138,10 @@ export const extractionPlanPath = (path: Path.Path, layout: RoundLayout): string
  * @category utilities
  * @since 0.0.0
  */
-export const artifactBudgetPath = (path: Path.Path, layout: RoundLayout): string =>
-  path.join(layout.root, ARTIFACT_BUDGET_FILE);
+export const artifactBudgetPath: {
+  (layout: RoundLayout): (path: Path.Path) => string;
+  (path: Path.Path, layout: RoundLayout): string;
+} = dual(2, (path: Path.Path, layout: RoundLayout): string => path.join(layout.root, ARTIFACT_BUDGET_FILE));
 
 /**
  * Persist the round artifact budget chosen at record time.
@@ -180,11 +186,13 @@ export const readArtifactBudget = Effect.fn("QaExtract.readArtifactBudget")(func
   budgetPath: string
 ): Effect.fn.Return<O.Option<ArtifactBudget>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(budgetPath).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(ArtifactBudgetJson)),
-    Effect.map(O.some),
-    Effect.orElseSucceed(() => O.none<ArtifactBudget>())
-  );
+  return yield* fs
+    .readFileString(budgetPath)
+    .pipe(
+      Effect.flatMap(S.decodeUnknownEffect(ArtifactBudgetJson)),
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<ArtifactBudget>)
+    );
 });
 
 /**
@@ -204,12 +212,40 @@ export const readExtractionPlan = Effect.fn("QaExtract.readExtractionPlan")(func
   planPath: string
 ): Effect.fn.Return<O.Option<ExtractionPlan>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(planPath).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.UnknownFromJsonString)),
-    Effect.flatMap(decodeExtractionPlan),
-    Effect.map(O.some),
-    Effect.orElseSucceed(() => O.none<ExtractionPlan>())
-  );
+  return yield* fs
+    .readFileString(planPath)
+    .pipe(
+      Effect.flatMap(S.decodeUnknownEffect(S.UnknownFromJsonString)),
+      Effect.flatMap(decodeExtractionPlan),
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<ExtractionPlan>)
+    );
+});
+
+const roundNumberOfDirName: (base: string) => O.Option<number> = flow(
+  Str.match(/^round-([0-9]+)$/),
+  O.flatMap((groups) => A.get(groups, 1)),
+  O.flatMap(N.parse)
+);
+
+const layoutOfSessionDir = Effect.fnUntraced(function* (
+  resolved: string
+): Effect.fn.Return<RoundLayout, QaCommandError, Path.Path | SessionStore> {
+  const path = yield* Path.Path;
+  const store = yield* SessionStore;
+  const round = yield* O.match(roundNumberOfDirName(path.basename(resolved)), {
+    onNone: () =>
+      Effect.fail(
+        QaCommandError.make({
+          message: `qa --session expects a round-N directory under .beep/qa; got "${resolved}".`,
+        })
+      ),
+    onSome: (value) =>
+      S.decodeUnknownEffect(RoundNumber)(value).pipe(
+        QaCommandError.mapError(`qa --session directory "${resolved}" has an invalid round number.`)
+      ),
+  });
+  return store.roundLayout(path.dirname(resolved), round);
 });
 
 /**
@@ -241,28 +277,7 @@ export const resolveRoundLayout = Effect.fn("QaExtract.resolveRoundLayout")(func
       Effect.map(resolveExistingRound(qaRootPath(path, cwd), O.none()), (round) =>
         store.roundLayout(qaRootPath(path, cwd), round)
       ),
-    onSome: (dir) => {
-      const resolved = path.resolve(dir);
-      const base = path.basename(resolved);
-      return pipe(
-        base,
-        Str.match(/^round-([0-9]+)$/),
-        O.flatMap((groups) => A.get(groups, 1)),
-        O.flatMap(N.parse),
-        O.match({
-          onNone: () =>
-            Effect.fail(
-              QaCommandError.make({
-                message: `qa --session expects a round-N directory under .beep/qa; got "${resolved}".`,
-              })
-            ),
-          onSome: (round) =>
-            Effect.map(S.decodeUnknownEffect(RoundNumber)(round), (value) =>
-              store.roundLayout(path.dirname(resolved), value)
-            ).pipe(QaCommandError.mapError(`qa --session directory "${resolved}" has an invalid round number.`)),
-        })
-      );
-    },
+    onSome: (dir) => layoutOfSessionDir(path.resolve(dir)),
   });
 });
 
@@ -367,13 +382,11 @@ const prepareVideo = Effect.fn("QaExtract.prepareVideo")(function* (
   });
 });
 
-const windowIndexOfLabel = (label: string): O.Option<number> =>
-  pipe(
-    label,
-    Str.match(/-w([0-9]+)$/),
-    O.flatMap((groups) => A.get(groups, 1)),
-    O.flatMap(N.parse)
-  );
+const windowIndexOfLabel: (label: string) => O.Option<number> = flow(
+  Str.match(/-w([0-9]+)$/),
+  O.flatMap((groups) => A.get(groups, 1)),
+  O.flatMap(N.parse)
+);
 
 /**
  * Recover the witness sequence numbers an artifact label was planned from.
@@ -399,15 +412,21 @@ const windowIndexOfLabel = (label: string): O.Option<number> =>
  * @category utilities
  * @since 0.0.0
  */
-export const windowSeqsForLabel = (plan: ExtractionPlan, label: string): ReadonlyArray<number> =>
-  pipe(
-    windowIndexOfLabel(label),
-    O.flatMap((index) => A.get(plan.windows, index)),
-    O.match({
-      onNone: (): ReadonlyArray<number> => [],
-      onSome: (window) => window.sourceSeqs,
-    })
-  );
+export const windowSeqsForLabel: {
+  (label: string): (plan: ExtractionPlan) => ReadonlyArray<number>;
+  (plan: ExtractionPlan, label: string): ReadonlyArray<number>;
+} = dual(
+  2,
+  (plan: ExtractionPlan, label: string): ReadonlyArray<number> =>
+    pipe(
+      windowIndexOfLabel(label),
+      O.flatMap((index) => A.get(plan.windows, index)),
+      O.match({
+        onNone: (): ReadonlyArray<number> => [],
+        onSome: (window) => window.sourceSeqs,
+      })
+    )
+);
 
 const windowStartForLabel = (plan: ExtractionPlan, label: string, fallbackEpochMs: number): number =>
   pipe(
@@ -542,7 +561,7 @@ const fileSize = Effect.fn("QaExtract.fileSize")(function* (
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.stat(filePath).pipe(
     Effect.map((info) => O.some(Number(info.size))),
-    Effect.orElseSucceed(() => O.none<number>())
+    Effect.orElseSucceed(O.none<number>)
   );
 });
 
@@ -738,11 +757,13 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
     onNone: () => O.getOrElse(recordedBudget, () => ArtifactBudget.make({})),
     onSome: (mib) => ArtifactBudget.make({ maxTotalBytes: mib * BYTES_PER_MIB }),
   });
-  const plan = buildExtractionPlan({
-    budget,
-    events: eventLog.events,
-    rules: O.getOrUndefined(options.rules),
-  });
+  const plan = buildExtractionPlan(
+    BuildExtractionPlanOptions.make({
+      budget,
+      events: eventLog.events,
+      rules: O.getOrElse(options.rules, () => defaultExtractionRules),
+    })
+  );
   const requests = planDriverRequests(
     PlanDriverRequestsOptions.make({
       clipsDir: layout.clipsDir,

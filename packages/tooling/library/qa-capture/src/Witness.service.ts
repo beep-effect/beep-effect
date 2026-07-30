@@ -57,11 +57,9 @@ const bundleWitness: Effect.Effect<string, QaCaptureError> = Effect.tryPromise({
  * ```ts
  * import type { WitnessShape } from "@beep/qa-capture"
  * import { Effect } from "effect"
- *
  * const service: WitnessShape = { script: Effect.succeed("(()=>{})();") }
  * console.log(service)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -75,11 +73,9 @@ export interface WitnessShape {
  * @example
  * ```ts
  * import { Witness } from "@beep/qa-capture"
- *
  * const layer = Witness.layer
  * console.log(layer)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -90,11 +86,9 @@ export class Witness extends Context.Service<Witness, WitnessShape>()($I`Witness
    * @example
    * ```ts
    * import { Witness } from "@beep/qa-capture"
-   *
    * const layer = Witness.layer
    * console.log(layer)
    * ```
-   *
    * @category layers
    * @since 0.0.0
    */
@@ -106,14 +100,14 @@ export class Witness extends Context.Service<Witness, WitnessShape>()($I`Witness
   /**
    * Fixed-script witness layer for tests and offline fallbacks.
    *
+   * @param script - Witness IIFE source served verbatim to the page.
+   * @returns A layer serving exactly that script.
    * @example
    * ```ts
    * import { Witness } from "@beep/qa-capture"
-   *
    * const layer = Witness.layerScript("(()=>{})();")
    * console.log(layer)
    * ```
-   *
    * @category layers
    * @since 0.0.0
    */

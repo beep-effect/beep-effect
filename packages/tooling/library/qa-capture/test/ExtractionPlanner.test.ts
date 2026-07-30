@@ -1,6 +1,7 @@
 import {
   ArtifactBudget,
   applyBudget,
+  BuildExtractionPlanOptions,
   buildExtractionPlan,
   ClockSync,
   CssTransitionEvent,
@@ -183,7 +184,7 @@ describe("@beep/qa-capture extraction planner", () => {
   it("budget law: the fitted estimate never exceeds the budget", () => {
     fc.assert(
       fc.property(eventsArbitrary, budgetArbitrary, (events, budget) => {
-        const plan = buildExtractionPlan({ budget, events });
+        const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
         expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
       }),
       fcRuns(50)
@@ -210,7 +211,7 @@ describe("@beep/qa-capture extraction planner", () => {
       ...eventsForGesture({ distancePx: 40, durationMs: 1000, kind: "drag", startOffsetMs: 500 }, 0),
       ...eventsForGesture({ distancePx: 0, durationMs: 0, kind: "marker", startOffsetMs: 5000 }, 1),
     ];
-    const plan: ExtractionPlan = buildExtractionPlan({ events });
+    const plan: ExtractionPlan = buildExtractionPlan(BuildExtractionPlanOptions.make({ events }));
     const requests = planDriverRequests(
       PlanDriverRequestsOptions.make({
         clipsDir: "/round/clips",

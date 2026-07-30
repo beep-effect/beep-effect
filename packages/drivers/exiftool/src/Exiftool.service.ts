@@ -245,7 +245,7 @@ export const buildReadTagsArgs: (options: BuildReadTagsArgsOptions) => ReadonlyA
  * import { BuildWriteTagsArgsOptions, TagAssignment } from "@beep/exiftool"
  *
  * const options = BuildWriteTagsArgsOptions.make({
- *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "sess-1" })],
+ *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "qa-round-1-1754000000000" })],
  *   configPath: "/tmp/beepqa.config",
  *   outputPath: "./frames/.tmp/frame.png",
  *   sourcePath: "./frames/frame.png"
@@ -301,7 +301,7 @@ const BuildWriteTagsArgs = Fn({
  * import { buildWriteTagsArgs, TagAssignment } from "@beep/exiftool"
  *
  * const args = buildWriteTagsArgs({
- *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "sess-1" })],
+ *   assignments: [TagAssignment.make({ tagName: "XMP-beepQA:sessionId", value: "qa-round-1-1754000000000" })],
  *   configPath: "/tmp/beepqa.config",
  *   outputPath: "./frames/.tmp/frame.png",
  *   sourcePath: "./frames/frame.png"

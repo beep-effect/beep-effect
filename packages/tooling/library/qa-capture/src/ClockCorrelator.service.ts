@@ -18,6 +18,7 @@ import { $QaCaptureId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { BeaconEvent, EpochMilliseconds } from "./ActionEvent.models.ts";
 import { ClockSync } from "./QaCapture.models.ts";
@@ -31,10 +32,8 @@ const $I = $QaCaptureId.create("ClockCorrelator.service");
  * @example
  * ```ts
  * import { BEACON_MIN_CONTRAST } from "@beep/qa-capture"
- *
  * console.log(BEACON_MIN_CONTRAST)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -47,10 +46,8 @@ export const BEACON_MIN_CONTRAST = 64;
  * @example
  * ```ts
  * import { BEACON_HIGH_CONFIDENCE_RMS_MS } from "@beep/qa-capture"
- *
  * console.log(BEACON_HIGH_CONFIDENCE_RMS_MS)
  * ```
- *
  * @category constants
  * @since 0.0.0
  */
@@ -66,11 +63,9 @@ const BEACON_HIGH_MIN_PAIRS = 4;
  * @example
  * ```ts
  * import { BeaconEdge } from "@beep/qa-capture"
- *
  * const edge = BeaconEdge.make({ timeSeconds: 0.433, toWhite: true })
  * console.log(edge)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -106,26 +101,26 @@ export class BeaconEdge extends S.Class<BeaconEdge>($I`BeaconEdge`)(
  * around the midpoint, and reports the frame times where the binary state
  * changes.
  *
+ * @param samples - Per-frame corner-region luma samples, in frame order.
+ * @param minContrast - Minimum luma spread the samples must show before any edge is reported.
+ * @returns Frame times where the beacon changed state, in ascending order.
  * @example
  * ```ts
  * import { LuminanceSample } from "@beep/ffmpeg"
  * import { detectBeaconEdges } from "@beep/qa-capture"
- *
  * const edges = detectBeaconEdges([
  *   LuminanceSample.make({ frameIndex: 0, meanLuma: 16, ptsTimeSeconds: 0 }),
  *   LuminanceSample.make({ frameIndex: 1, meanLuma: 235, ptsTimeSeconds: 0.033 })
  * ])
  * console.log(edges.length)
  * ```
- *
  * @category correlation
  * @since 0.0.0
  */
 export const detectBeaconEdges = (
   samples: ReadonlyArray<LuminanceSample>,
-  options?: { readonly minContrast?: number | undefined }
+  minContrast: number = BEACON_MIN_CONTRAST
 ): ReadonlyArray<BeaconEdge> => {
-  const minContrast = options?.minContrast ?? BEACON_MIN_CONTRAST;
   if (A.length(samples) < 2) {
     return [];
   }
@@ -168,18 +163,16 @@ const byEdgeTime = Order.mapInput(Order.Number, (edge: BeaconEdge) => edge.timeS
  * @example
  * ```ts
  * import { BeaconEdge, fitBeaconClockSync } from "@beep/qa-capture"
- *
  * const sync = fitBeaconClockSync([BeaconEdge.make({ timeSeconds: 0.4, toWhite: true })], [])
  * console.log(sync)
  * ```
- *
  * @category correlation
  * @since 0.0.0
  */
-export const fitBeaconClockSync = (
-  edges: ReadonlyArray<BeaconEdge>,
-  flips: ReadonlyArray<BeaconEvent>
-): O.Option<ClockSync> => {
+export const fitBeaconClockSync: {
+  (flips: ReadonlyArray<BeaconEvent>): (edges: ReadonlyArray<BeaconEdge>) => O.Option<ClockSync>;
+  (edges: ReadonlyArray<BeaconEdge>, flips: ReadonlyArray<BeaconEvent>): O.Option<ClockSync>;
+} = dual(2, (edges: ReadonlyArray<BeaconEdge>, flips: ReadonlyArray<BeaconEvent>): O.Option<ClockSync> => {
   const sortedFlips = A.sort(flips, byPaintTime);
   const sortedEdges = A.sort(edges, byEdgeTime);
   const firstFlip = A.head(sortedFlips);
@@ -215,7 +208,7 @@ export const fitBeaconClockSync = (
       );
     });
   });
-};
+});
 
 /**
  * Request accepted by {@link ClockCorrelator} `correlate`.
@@ -224,7 +217,6 @@ export const fitBeaconClockSync = (
  * ```ts
  * import { CorrelateClockRequest } from "@beep/qa-capture"
  * import * as O from "effect/Option"
- *
  * const request = CorrelateClockRequest.make({
  *   assumedStartEpochMs: 1753838000000,
  *   beaconEvents: [],
@@ -234,7 +226,6 @@ export const fitBeaconClockSync = (
  * })
  * console.log(request.videoPath)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -309,11 +300,9 @@ export class CorrelateClockRequest extends S.Class<CorrelateClockRequest>($I`Cor
  * ```ts
  * import type { ClockCorrelatorShape } from "@beep/qa-capture"
  * import { Effect } from "effect"
- *
  * const service: ClockCorrelatorShape = { correlate: () => Effect.die("not implemented") }
  * console.log(service)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -420,11 +409,9 @@ const makeService = Effect.fnUntraced(function* () {
  * @example
  * ```ts
  * import { ClockCorrelator } from "@beep/qa-capture"
- *
  * const layer = ClockCorrelator.layer
  * console.log(layer)
  * ```
- *
  * @category services
  * @since 0.0.0
  */
@@ -435,11 +422,9 @@ export class ClockCorrelator extends Context.Service<ClockCorrelator, ClockCorre
    * @example
    * ```ts
    * import { ClockCorrelator } from "@beep/qa-capture"
-   *
    * const layer = ClockCorrelator.layer
    * console.log(layer)
    * ```
-   *
    * @category layers
    * @since 0.0.0
    */
