@@ -1,9 +1,0 @@
-/* stylelint-disable scss/at-rule-no-unknown */
-
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@beep/ui/styles/globals.css";
-
-@source "../";
-@source "../../../packages/foundation/ui-system";

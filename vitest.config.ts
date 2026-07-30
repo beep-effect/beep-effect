@@ -1,23 +1,27 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config"
 
-const isBun = process.versions.bun !== undefined;
+const isDeno = process.versions.deno !== undefined
+const isBun = process.versions.bun !== undefined
+const isNode = typeof process !== "undefined" &&
+  process.release.name === "node" &&
+  !isDeno &&
+  !isBun
 
 export default defineConfig({
   test: {
-    coverage: {
-      provider: isBun ? "istanbul" : "v8",
-    },
     projects: [
       "packages/*/vitest.config.ts",
       "packages/*/*/vitest.config.ts",
-      "packages/tooling/*/*/vitest.config.ts",
-      "apps/*/vitest.config.ts",
-      ...(isBun
-        ? [
-            // Exclude Node-specific packages when running with Bun
-            // Add exclusions here as needed
-          ]
-        : []),
-    ],
-  },
-});
+      ...(isDeno ?
+        [
+          "!packages/platform-node-shared",
+          "!packages/sql/d1",
+          "!packages/sql/sqlite-node"
+        ] :
+        []),
+      ...(!isDeno ? ["!packages/platform-deno"] : []),
+      ...(!isBun ? ["!packages/platform-bun"] : []),
+      ...(!isNode ? ["!packages/platform-node"] : [])
+    ]
+  }
+})

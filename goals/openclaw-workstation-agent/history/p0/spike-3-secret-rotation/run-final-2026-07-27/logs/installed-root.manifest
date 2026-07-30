@@ -1,7 +1,0 @@
-path='' type=directory meta=755:0:0:224 sha256=- target=-
-path=574a19439c9a0a8034d2e48369cb80691f76a2313891f2f03a1941b754f70d6a type=directory meta=755:0:0:72 sha256=- target=-
-path=574a19439c9a0a8034d2e48369cb80691f76a2313891f2f03a1941b754f70d6a/.beep-spike3-generation type=regular\ file meta=644:0:0:24 sha256=357cf621199aa5aba08f50faa444c4ace887695af46047369109cf224b05bf11 target=-
-path=574a19439c9a0a8034d2e48369cb80691f76a2313891f2f03a1941b754f70d6a/openclaw.json type=regular\ file meta=644:0:0:2549 sha256=574a19439c9a0a8034d2e48369cb80691f76a2313891f2f03a1941b754f70d6a target=-
-path=.beep-spike3-root type=regular\ file meta=644:0:0:24 sha256=357cf621199aa5aba08f50faa444c4ace887695af46047369109cf224b05bf11 target=-
-path=current type=symbolic\ link meta=777:0:0:64 sha256=- target=574a19439c9a0a8034d2e48369cb80691f76a2313891f2f03a1941b754f70d6a
-path=op-service-account-token type=regular\ file meta=440:0:1000:837 sha256=REDACTED_BOOTSTRAP_CREDENTIAL target=-

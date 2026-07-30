@@ -1,8 +1,0 @@
-{
-  "schemaVersion": "fallow-zero-dead-code/review-rounds/v1",
-  "updated": "2026-06-11",
-  "validatorVersion": "fallow-zero-dead-code-validator/v1",
-  // Critic/review rounds are appended during P4 closeout. The packet is not
-  // closeable until the latest round records openRequiredFindingCount: 0.
-  "rounds": []
-}
