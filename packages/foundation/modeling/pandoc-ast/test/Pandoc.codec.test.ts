@@ -130,6 +130,144 @@ describe("Pandoc.codec", () => {
     }
   });
 
+  it("rejects malformed known constructors in table captions and cells and reports their exact paths", () => {
+    const malformed = [
+      {
+        expected: "/blocks/0/c/1/1/0/c/0",
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                ["", [], []],
+                [null, [{ c: [{ c: 42, extension: "retained", t: "Str" }], t: "Plain" }]],
+                [],
+                [["", [], []], []],
+                [],
+                [["", [], []], []],
+              ],
+              t: "Table",
+            },
+          ],
+          meta: {},
+        },
+      },
+      {
+        expected: "/blocks/0/c/4/0/3/0/1/0/4/0/c/0",
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                ["", [], []],
+                [null, []],
+                [],
+                [["", [], []], []],
+                [
+                  [
+                    ["", [], []],
+                    0,
+                    [],
+                    [
+                      [
+                        ["", [], []],
+                        [
+                          [
+                            ["", [], []],
+                            { t: "AlignDefault" },
+                            1,
+                            1,
+                            [{ c: [{ c: 42, extension: "retained", t: "Str" }], t: "Para" }],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                [["", [], []], []],
+              ],
+              t: "Table",
+            },
+          ],
+          meta: {},
+        },
+      },
+    ];
+
+    for (const { expected, wire } of malformed) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        ["Str", "inline", expected],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
+  it("retains exact future constructors and extension fields inside table captions and cells", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const wire = {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                ["", [], []],
+                [
+                  null,
+                  [
+                    {
+                      c: [{ c: "Caption", extension: { exact: true }, t: "Str" }],
+                      t: "Plain",
+                    },
+                    { c: { exact: "caption" }, extension: [1, 2, 3], t: "FutureCaptionBlock" },
+                  ],
+                ],
+                [],
+                [["", [], []], []],
+                [
+                  [
+                    ["", [], []],
+                    0,
+                    [],
+                    [
+                      [
+                        ["", [], []],
+                        [
+                          { c: { exact: "cell" }, extension: true, t: "FutureCell" },
+                          [
+                            ["", [], []],
+                            { t: "AlignDefault" },
+                            1,
+                            1,
+                            [{ c: { exact: "block" }, extension: "retained", t: "FutureCellBlock" }],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                [["", [], []], []],
+              ],
+              t: "Table",
+            },
+          ],
+          meta: {},
+        };
+        const semantic = yield* decodePandocJsonStrict(wire);
+        const table = semantic.blocks[0];
+        expect(table?._tag).toBe("table");
+        if (table?._tag === "table") {
+          expect(table.payload).toEqual(wire.blocks[0]?.c);
+        }
+        expect(yield* encodePandocJson(semantic)).toEqual(wire);
+
+        const lossless = yield* decodePandocJsonLossless(wire);
+        expect(lossless.issues).toEqual([]);
+        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      })
+    ));
+
   it("retains exact future constructors, including absent payloads and extension fields", () =>
     Effect.runPromise(
       Effect.gen(function* () {

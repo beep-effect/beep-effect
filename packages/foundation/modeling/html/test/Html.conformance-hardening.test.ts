@@ -7,6 +7,7 @@ import {
 } from "@beep/html/Html.meta";
 import {
   A as Anchor,
+  Area,
   Audio,
   Body,
   Button,
@@ -29,8 +30,10 @@ import {
   Img,
   Input,
   Legend,
+  MapElement,
   Optgroup,
   Option,
+  P,
   Picture,
   Rp,
   Rt,
@@ -128,11 +131,78 @@ describe("@beep/html generated special-child grammars", () => {
     expect(inspectConformance(Head.make({ children: [Title.make({ content: "one" })] }))).toStrictEqual([]);
   });
 
-  it("enforces edge, conditional, media, and alternative grammars", () => {
+  it("composes mixed transparent child alternatives with inherited fallback content", () => {
+    const mixedTransparent = Object.values(ELEMENT_META).filter(
+      (meta) => meta.children.includes("transparent") && meta.children.length > 1
+    );
+    expect(mixedTransparent).toHaveLength(3);
+    expect(mixedTransparent.map((meta) => meta.tag)).toEqual(expect.arrayContaining(["audio", "map", "video"]));
+
+    const valid = [
+      Div.make({
+        children: [
+          Audio.make({
+            children: [
+              Source.make({ src: O.some("/sound.mp3") }),
+              Track.make({}),
+              Anchor.make({ children: [text("fallback")] }),
+            ],
+          }),
+        ],
+      }),
+      P.make({
+        children: [
+          Video.make({
+            children: [
+              Source.make({ src: O.some("/movie.mp4") }),
+              Track.make({}),
+              Anchor.make({ children: [text("fallback")] }),
+            ],
+          }),
+        ],
+      }),
+      MapElement.make({ children: [Area.make({})] }),
+    ];
+    for (const root of valid) {
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+  });
+
+  it("requires exactly one first summary while keeping other edge grammars optional", () => {
     const invalid = [
+      Details.make({ children: [] }),
+      Details.make({ children: [Div.make({ children: [] })] }),
+      Details.make({
+        children: [Summary.make({ children: [] }), Summary.make({ children: [] })],
+      }),
       Details.make({
         children: [Div.make({ children: [] }), Summary.make({ children: [] })],
       }),
+    ];
+    for (const root of invalid) {
+      expect(hasRule(root, "elementOrder")).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    const validDetails = Details.make({
+      children: [Summary.make({ children: [text("summary")] }), Div.make({ children: [] })],
+    });
+    expect(inspectConformance(validDetails)).toStrictEqual([]);
+    expect(Exit.isSuccess(Effect.runSyncExit(conform(validDetails)))).toBe(true);
+
+    for (const root of [
+      Fieldset.make({ children: [] }),
+      Figure.make({ children: [] }),
+      Optgroup.make({ children: [] }),
+    ]) {
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+  });
+
+  it("enforces edge, conditional, media, and alternative grammars", () => {
+    const invalid = [
       Fieldset.make({
         children: [Div.make({ children: [] }), Legend.make({ children: [] })],
       }),
@@ -154,6 +224,9 @@ describe("@beep/html generated special-child grammars", () => {
       Video.make({
         children: [Track.make({}), Source.make({ src: O.some("/movie.mp4") })],
       }),
+      Video.make({
+        children: [Anchor.make({ children: [text("fallback")] }), Track.make({})],
+      }),
       Datalist.make({
         children: [Option.make({ children: [text("one")] }), text("mixed")],
       }),
@@ -172,12 +245,10 @@ describe("@beep/html generated special-child grammars", () => {
     ];
     for (const root of invalid) {
       expect(hasRule(root, "elementOrder")).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
     }
 
     const valid = [
-      Details.make({
-        children: [Summary.make({ children: [text("summary")] }), Div.make({ children: [] })],
-      }),
       Fieldset.make({
         children: [Legend.make({ children: [text("legend")] }), Div.make({ children: [] })],
       }),
@@ -249,7 +320,7 @@ describe("@beep/html generated special-child grammars", () => {
         fc.constantFrom(
           Head.make({ children: [Title.make({ content: "title" })] }),
           Dl.make({ children: [] }),
-          Details.make({ children: [] }),
+          Details.make({ children: [Summary.make({ children: [] })] }),
           Fieldset.make({ children: [] }),
           Figure.make({ children: [] }),
           Colgroup.make({ children: [] }),

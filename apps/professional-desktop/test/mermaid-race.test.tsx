@@ -85,6 +85,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           )
         )
       );
+      expect(within(view.container).getByTestId("mermaid-diagram")).toHaveStyle({ contain: "paint" });
 
       yield* Effect.sync(() => {
         act(() => firstRender?.resolve({ svg: mermaidSvg(firstRender.id, '<g data-source="first"></g>') }));
@@ -128,7 +129,15 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       expect(mermaidStub.initialize).toHaveBeenCalledWith(
         expect.objectContaining({
           htmlLabels: false,
-          secure: expect.arrayContaining(["htmlLabels", "securityLevel"]),
+          secure: expect.arrayContaining([
+            "htmlLabels",
+            "securityLevel",
+            "themeCSS",
+            "themeVariables",
+            "fontFamily",
+            "altFontFamily",
+            "fontSize",
+          ]),
         })
       );
 
@@ -201,6 +210,11 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           stylesheet: (renderId: string) =>
             `#${renderId} .spinner { background-image: url("https://attacker.invalid/pixel"); }`,
         },
+        {
+          key: "root-layout-escape",
+          stylesheet: (renderId: string) =>
+            `#${renderId} { position: fixed; inset: 0; z-index: 2147483647; pointer-events: all; }`,
+        },
       ];
 
       for (const attack of attacks) {
@@ -230,6 +244,53 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
         expect(view.container.querySelector("svg, style")).toBeNull();
         expect(within(view.container).getByText("Outside diagram")).toBeVisible();
         expect(globalThis.getComputedStyle(document.body).display).not.toBe("none");
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "rejects root stylesheet and inline-style layout escape declarations",
+    Effect.fnUntraced(function* () {
+      const declarations = [
+        ["fixed", "position: fixed"],
+        ["inset", "inset: 0"],
+        ["z-index", "z-index: 2147483647"],
+        ["pointer-events", "pointer-events: all"],
+        ["absolute-viewport-default-pointer-capture", "position: absolute; width: 100vw; height: 100vh; z-index: 100"],
+        ["transform", "transform: translate(-100vw, -100vh) scale(100)"],
+        ["individual-transforms", "translate: -100vw -100vh; scale: 100"],
+        ["negative-margin", "margin: -100vh -100vw"],
+        ["viewport-sizing", "min-width: 100vw; min-height: 100vh; max-width: none; max-height: none"],
+      ] as const;
+      const attacks = declarations.flatMap(([key, declaration]) => [
+        {
+          key: `stylesheet-${key}`,
+          svg: (renderId: string) => mermaidSvg(renderId, `<style>#${renderId} { ${declaration}; }</style>`),
+        },
+        {
+          key: `inline-${key}`,
+          svg: (renderId: string) =>
+            `<svg xmlns="http://www.w3.org/2000/svg" id="${renderId}" role="${mermaidRootRole}" style="${declaration}"><g></g></svg>`,
+        },
+      ]);
+
+      for (const attack of attacks) {
+        const source = `graph TD\nLayout-->${attack.key}`;
+        const view = render(<MermaidView renderKey={attack.key} source={source} />);
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() => pending.resolve({ svg: attack.svg(pending.id) }));
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, style")).toBeNull();
         view.unmount();
       }
     })

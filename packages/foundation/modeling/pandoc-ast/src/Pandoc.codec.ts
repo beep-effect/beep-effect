@@ -401,6 +401,11 @@ const NotePayloadWire = S.Array(S.Unknown);
 const MathPayloadWire = S.Tuple([PandocConstructorWire, S.String]);
 const OrderedListPayloadWire = S.Tuple([S.Tuple([S.Int, S.Unknown, S.Unknown]), S.Unknown]);
 const BlockItemsWire = S.Unknown.pipe(S.Array, S.Array);
+const TableCaptionPairWire = S.Tuple([S.Unknown.pipe(S.Array, S.NullOr), S.Array(S.Unknown)]);
+const TableCellWire = S.Tuple([AttrWire, S.Unknown, S.Int, S.Int, S.Array(S.Unknown)]);
+const TableRowWire = S.Tuple([AttrWire, S.Array(S.Unknown)]);
+const TableHeadWire = S.Tuple([AttrWire, S.Array(S.Unknown)]);
+const TableBodyWire = S.Tuple([AttrWire, S.Int, S.Array(S.Unknown), S.Array(S.Unknown)]);
 type AttrWireValue = Readonly<[string, ReadonlyArray<string>, ReadonlyArray<PandocKeyValue>]>;
 type TargetWireValue = Readonly<[string, string]>;
 
@@ -453,6 +458,13 @@ const decodeMathPayloadWire = S.decodeUnknownEffect(MathPayloadWire);
 const decodeOrderedListPayloadWire = S.decodeUnknownEffect(OrderedListPayloadWire);
 const decodeBlockItemsWire = S.decodeUnknownEffect(BlockItemsWire);
 const decodeTablePayloadWire = S.decodeUnknownEffect(PandocTablePayload);
+const decodeTableCaptionPairWire = S.decodeUnknownEffect(TableCaptionPairWire);
+const decodeTableCaptionPairOption = S.decodeUnknownOption(TableCaptionPairWire);
+const decodeTableCellWire = S.decodeUnknownEffect(TableCellWire);
+const decodeTableRowWire = S.decodeUnknownEffect(TableRowWire);
+const decodeTableHeadWire = S.decodeUnknownEffect(TableHeadWire);
+const decodeTableBodyWire = S.decodeUnknownEffect(TableBodyWire);
+const decodeConstructorOption = S.decodeUnknownOption(PandocConstructorWire);
 const decodeListNumberStyle = S.decodeUnknownEffect(PandocListNumberStyle);
 const decodeListNumberDelimiter = S.decodeUnknownEffect(PandocListNumberDelimiter);
 const decodeMathType = S.decodeUnknownOption(PandocMathType);
@@ -675,7 +687,19 @@ const decodeOrderedListBlock = (payload: unknown): Effect.Effect<PandocBlock.Typ
   );
 
 const decodeTableBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
-  Effect.map(decodeTablePayloadWire(payload), (decoded) => Table.make({ payload: decoded }));
+  Effect.flatMap(decodeTablePayloadWire(payload), (decoded) =>
+    Effect.flatMap(inspectTablePayload(decoded, []), (issues) =>
+      A.isReadonlyArrayNonEmpty(issues)
+        ? Effect.fail(
+            new S.SchemaError(
+              new SchemaIssue.InvalidValue(O.some(payload), {
+                message: issues[0].message,
+              })
+            )
+          )
+        : Effect.succeed(Table.make({ payload: decoded }))
+    )
+  );
 
 const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
   Effect.flatMap(decodeConstructor(input), (wire) =>
@@ -1148,6 +1172,92 @@ const inspectOrderedList = (payload: unknown, path: JsonPathType): LosslessInspe
     )
   );
 
+const inspectTableComponent = (
+  input: unknown,
+  path: JsonPathType,
+  inspect: (value: unknown, path: JsonPathType) => LosslessInspection
+): LosslessInspection =>
+  O.match(decodeConstructorOption(input), {
+    onNone: () => inspect(input, path),
+    onSome: (wire) => inspectUnmatchedConstructor(wire, "block", path),
+  });
+
+const inspectTableCaptionPair = (
+  [shortCaption, longCaption]: typeof TableCaptionPairWire.Type,
+  path: JsonPathType
+): LosslessInspection =>
+  Effect.zipWith(
+    shortCaption === null ? Effect.succeed([]) : inspectChildren(shortCaption, appendPath(path, 0), inspectInline),
+    inspectChildren(longCaption, appendPath(path, 1), inspectBlock),
+    (shortIssues, longIssues) => [...shortIssues, ...longIssues]
+  );
+
+const inspectTableCaptionPayload = (input: unknown, path: JsonPathType): LosslessInspection =>
+  O.match(decodeTableCaptionPairOption(input), {
+    onNone: () => inspectBlockArray(input, path, "block", "Table", path),
+    onSome: (caption) => inspectTableCaptionPair(caption, path),
+  });
+
+const inspectTableCaption = (input: unknown, path: JsonPathType): LosslessInspection =>
+  O.match(decodeConstructorOption(input), {
+    onNone: () => inspectTableCaptionPayload(input, path),
+    onSome: (wire) =>
+      wire.t === "TableCaption"
+        ? inspectDecoded(decodeTableCaptionPairWire(wire.c), "block", wire.t, path, (caption) =>
+            inspectTableCaptionPair(caption, appendPath(path, "c"))
+          )
+        : inspectUnmatchedConstructor(wire, "block", path),
+  });
+
+const inspectTableCell = (input: unknown, path: JsonPathType): LosslessInspection =>
+  inspectTableComponent(input, path, (value, cellPath) =>
+    inspectDecoded(decodeTableCellWire(value), "block", "Table", cellPath, ([, , , , blocks]) =>
+      inspectChildren(blocks, appendPath(cellPath, 4), inspectBlock)
+    )
+  );
+
+const inspectTableRow = (input: unknown, path: JsonPathType): LosslessInspection =>
+  inspectTableComponent(input, path, (value, rowPath) =>
+    inspectDecoded(decodeTableRowWire(value), "block", "Table", rowPath, ([, cells]) =>
+      inspectChildren(cells, appendPath(rowPath, 1), inspectTableCell)
+    )
+  );
+
+const inspectTableRows = (rows: ReadonlyArray<unknown>, path: JsonPathType): LosslessInspection =>
+  inspectChildren(rows, path, inspectTableRow);
+
+const inspectTableHeadOrFoot = (input: unknown, path: JsonPathType): LosslessInspection =>
+  A.isArray(input) && A.isReadonlyArrayEmpty(input)
+    ? Effect.succeed([])
+    : inspectTableComponent(input, path, (value, sectionPath) =>
+        inspectDecoded(decodeTableHeadWire(value), "block", "Table", sectionPath, ([, rows]) =>
+          inspectTableRows(rows, appendPath(sectionPath, 1))
+        )
+      );
+
+const inspectTableBody = (input: unknown, path: JsonPathType): LosslessInspection =>
+  inspectTableComponent(input, path, (value, bodyPath) =>
+    inspectDecoded(decodeTableBodyWire(value), "block", "Table", bodyPath, ([, , headRows, bodyRows]) =>
+      Effect.zipWith(
+        inspectTableRows(headRows, appendPath(bodyPath, 2)),
+        inspectTableRows(bodyRows, appendPath(bodyPath, 3)),
+        (headIssues, bodyIssues) => [...headIssues, ...bodyIssues]
+      )
+    )
+  );
+
+function inspectTablePayload(payload: PandocTablePayload, path: JsonPathType): LosslessInspection {
+  return Effect.map(
+    Effect.all([
+      inspectTableCaption(payload[1], appendPath(path, 1)),
+      inspectTableHeadOrFoot(payload[3], appendPath(path, 3)),
+      inspectChildren(payload[4], appendPath(path, 4), inspectTableBody),
+      inspectTableHeadOrFoot(payload[5], appendPath(path, 5)),
+    ]),
+    A.flatten
+  );
+}
+
 function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
   return decodeConstructor(input).pipe(
     Effect.matchEffect({
@@ -1171,7 +1281,11 @@ function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
               inspectChildren(children, appendPath(path, "c", 1), inspectBlock)
             )
           ),
-          Match.when("Table", () => inspectDecoded(decodeTablePayloadWire(wire.c), "block", wire.t, path)),
+          Match.when("Table", () =>
+            inspectDecoded(decodeTablePayloadWire(wire.c), "block", wire.t, path, (payload) =>
+              inspectTablePayload(payload, appendPath(path, "c"))
+            )
+          ),
           Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
         ),
     })
