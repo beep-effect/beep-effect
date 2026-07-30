@@ -24,15 +24,15 @@ import { Command, Flag } from "effect/unstable/cli";
 
 const $I = $PracticeKgMcpId.create("package");
 
-const DuckDbVersion = "1.5.5-r.1";
+const DuckDbVersion = "1.5.5-r.2";
 /*
  * sha512 integrity for the win32 bindings tarball, copied from bun.lock's
- * entry for @duckdb/node-bindings-win32-x64@1.5.5-r.1. The download is
+ * entry for @duckdb/node-bindings-win32-x64@1.5.5-r.2. The download is
  * verified against this pin before anything is extracted into a
  * user-installed artifact; a DuckDB catalog bump must update both constants.
  */
 const WindowsBindingsSha512 =
-  "7KAdShoWQz7YXKvUneIu9ujxIVCSSA6pJ5QSZBDkNUCW+7RBLV/aH2Uy3K0Vl04reaFedaS3aewfstX2SQS5XQ==";
+  "r5V6Q0zcv5HSHGDXsd6M+t3jakhm6S11TNH5vydKGeq8JBWj4v3ZTof/mF3R8Rly+90Z205KoI9ujblg/jN04g==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
 class BindingsManifest extends S.Class<BindingsManifest>($I`BindingsManifest`)(
   { version: S.String },
