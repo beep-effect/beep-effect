@@ -13,18 +13,20 @@ import {
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Duration, Effect, Layer, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 
 const binaryPath = "/opt/openclaw/node_modules/.bin/openclaw";
 const gatewayUrl = "ws://127.0.0.1:19031";
 const gatewayTokenValue = "gateway-token-value";
+const encoder = new TextEncoder();
 
 const baseContext = OpenclawInvocationContext.make({
   binaryPath,
@@ -69,6 +71,13 @@ const agentTurnJson =
   '{"status":"ok","runId":"run-1753","result":{"meta":{"stopReason":"stop","aborted":false,' +
   '"agentMeta":{"provider":"ollama","model":"gemma3:4b"}},"payloads":[{"text":"PONG"}]},' +
   '"executionTrace":{"runner":"embedded"}}';
+const skillsListJson =
+  '{"workspaceDir":"/etc/beep/openclaw/current/workspace","skills":[' +
+  '{"name":"beep-proof-ping","description":"Return one fixed synthetic sentinel for the P3 declarative-skill proof.",' +
+  '"eligible":true,"source":"openclaw-workspace"}]}';
+const messageSendJson =
+  '{"action":"send","channel":"telegram","dryRun":false,"handledBy":"plugin",' +
+  '"messageId":"synthetic-message-id","payload":{"ok":true,"messageId":"synthetic-message-id"}}';
 
 const successStdout: Record<string, string> = {
   "--version": versionLine,
@@ -78,7 +87,9 @@ const successStdout: Record<string, string> = {
   "config validate": "Configuration is valid.\n",
   "doctor --non-interactive": "All checks passed.\n",
   "gateway call": gatewayHealthJson,
+  "message send": messageSendJson,
   "secrets reload": reloadSuccessJson,
+  "skills list": skillsListJson,
 };
 
 const commandKey = (request: OpenclawProcessRequest): string => A.join(A.take(request.args, 2), " ");
@@ -125,7 +136,56 @@ const spawnFailureRunner: OpenclawCliRunner = (request) =>
     })
   );
 
+const liveSpawnerLayer = Layer.succeed(
+  ChildProcessSpawner.ChildProcessSpawner,
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("Expected a standard OpenClaw command");
+    }
+
+    expect(command.command).toBe(binaryPath);
+    expect(command.args).toEqual(["--version"]);
+    expect(command.options.extendEnv).toBe(false);
+    expect(command.options.stdin).toBe("ignore");
+    expect(command.options.stdout).toBe("pipe");
+    expect(command.options.stderr).toBe("pipe");
+    const forceKillAfter = command.options.forceKillAfter;
+    expect(forceKillAfter).toBeDefined();
+    if (forceKillAfter !== undefined) {
+      expect(Duration.toMillis(forceKillAfter)).toBe(2_000);
+    }
+
+    return Effect.succeed(
+      ChildProcessSpawner.makeHandle({
+        pid: ChildProcessSpawner.ProcessId(1),
+        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+        isRunning: Effect.succeed(false),
+        kill: () => Effect.void,
+        unref: Effect.succeed(Effect.void),
+        stdin: Sink.drain,
+        stdout: Stream.make(encoder.encode(versionLine)),
+        stderr: Stream.empty,
+        all: Stream.empty,
+        getInputFd: () => Sink.drain,
+        getOutputFd: () => Stream.empty,
+      })
+    );
+  })
+);
+
 describe("@beep/openclaw OpenclawCli service", () => {
+  layer(OpenclawCli.makeLayer().pipe(Layer.provide(liveSpawnerLayer)))((it) => {
+    it.effect(
+      "configures live child-process ownership and timeout escalation",
+      Effect.fnUntraced(function* () {
+        const cli = yield* OpenclawCli;
+        const info = yield* cli.version(baseContext);
+
+        expect(info.version).toBe("2026.7.1-2");
+      })
+    );
+  });
+
   layer(OpenclawCli.makeLayerFromRunner(successRunner))((it) => {
     it.effect(
       "runs --version hermetically and parses the pinned version line",
@@ -143,6 +203,42 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(request.env).toEqual(expectedHermeticEnv);
         expect(request.stdin).toBe("ignore");
         expect(O.getOrThrow(request.timeoutMs)).toBe(10_000);
+      })
+    );
+
+    it.effect(
+      "lists eligible skills with the pinned argv and decoded workspace source",
+      Effect.fnUntraced(function* () {
+        const cli = yield* OpenclawCli;
+        const inventory = yield* cli.skillsList(baseContext, { agentId: "workstation", eligible: true });
+
+        expect(inventory.skills).toHaveLength(1);
+        expect(inventory.skills[0]?.source).toBe("openclaw-workspace");
+        expect(lastSuccessRequest().args).toEqual(["skills", "list", "--json", "--eligible", "--agent", "workstation"]);
+      })
+    );
+
+    it.effect(
+      "sends a synthetic Telegram message with the pinned argv and returns a receipt",
+      Effect.fnUntraced(function* () {
+        const cli = yield* OpenclawCli;
+        const result = yield* cli.messageSend(gatewayContext, {
+          message: "P3 synthetic nonce",
+          target: "redacted-target",
+        });
+
+        expect(result.messageId).toBe("synthetic-message-id");
+        expect(lastSuccessRequest().args).toEqual([
+          "message",
+          "send",
+          "--channel",
+          "telegram",
+          "--target",
+          "redacted-target",
+          "--message",
+          "P3 synthetic nonce",
+          "--json",
+        ]);
       })
     );
 

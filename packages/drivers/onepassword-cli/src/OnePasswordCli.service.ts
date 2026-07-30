@@ -8,8 +8,7 @@
 import { $OnepasswordCliId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
-import { collectProcessOutput } from "@beep/utils/Stream";
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Context, Effect, Layer, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -65,6 +64,7 @@ const runNative = (
   args: ReadonlyArray<string>
 ): Effect.Effect<OnePasswordCliProcessResult, OnePasswordCliError> => {
   const command = ChildProcess.make(commandPath, A.fromIterable(args), {
+    // fallow-ignore-next-line code-duplication -- The approved process-hardening spec keeps output ownership inside each driver boundary.
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -73,7 +73,14 @@ const runNative = (
   return Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+          handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
 
       return OnePasswordCliProcessResult.make({ exitCode, stderr, stdout });
     })

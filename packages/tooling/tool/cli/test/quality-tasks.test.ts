@@ -72,6 +72,7 @@ const isString = (value: unknown): value is string => typeof value === "string";
 const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
+    stdin: "ignore",
     stdout: "ignore",
     stderr: "ignore",
   });
@@ -1080,7 +1081,11 @@ describe("quality task adapter", () => {
       args: expectedRootTurboArgs("lint:fix", passthroughTasks),
       env: {
         BEEP_FC_SEED: "20260708",
+        CI: "true",
+        GITHUB_ACTIONS: "true",
         NODE_OPTIONS: "--no-experimental-webstorage",
+        TERM_PROGRAM: undefined,
+        TERM_PROGRAM_VERSION: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
@@ -1097,7 +1102,11 @@ describe("quality task adapter", () => {
       args: expectedRootTurboArgs("coverage", []),
       env: {
         BEEP_FC_SEED: "20260708",
+        CI: "true",
+        GITHUB_ACTIONS: "true",
         NODE_OPTIONS: "--no-experimental-webstorage",
+        TERM_PROGRAM: undefined,
+        TERM_PROGRAM_VERSION: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
@@ -1139,7 +1148,11 @@ describe("quality task adapter", () => {
       args: expectedTurboArgs("coverage", ["--concurrency=1"]),
       env: {
         BEEP_FC_SEED: "20260708",
+        CI: "true",
+        GITHUB_ACTIONS: "true",
         NODE_OPTIONS: "--no-experimental-webstorage",
+        TERM_PROGRAM: undefined,
+        TERM_PROGRAM_VERSION: undefined,
         VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },

@@ -7,7 +7,6 @@
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { Command } from "effect/unstable/cli";
 import { docgenCommand } from "./CLI.ts";
@@ -16,7 +15,7 @@ import * as InternalVersion from "./internal/version.ts";
 
 const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 
-const DerivedLayers = Layer.mergeAll(NodeChildProcessSpawner.layer, FsUtilsLive).pipe(Layer.provideMerge(BaseLayers));
+const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 
 const program = Effect.scoped(
   Layer.build(DerivedLayers).pipe(

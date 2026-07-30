@@ -20,7 +20,6 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
  * @example
  * ```ts
  * import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as BunServices from "@effect/platform-bun/BunServices"
  * import { Effect, Layer } from "effect"
  * import { makePracticeKgBuildLayer } from "../../src/runtime/Layer.ts"
@@ -32,7 +31,6 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
  *     bundleOut,
  *     corpusRoot: "/corpus",
  *     includeRefresh: true,
- *     maxTextBytes: NonNegativeInt.make(2_097_152),
  *     overwrite: true,
  *     skipEmails: false
  *   })

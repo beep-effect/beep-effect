@@ -3,7 +3,6 @@ import { FsUtilsLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -16,11 +15,7 @@ import { describe, expect, it } from "vitest";
 
 const runTsconfigSyncCommand = Command.runWith(tsconfigSyncCommand, { version: "0.0.0" });
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeServices.layer);
-const TestLayer = Layer.mergeAll(
-  PlatformLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)),
-  FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer))
-);
+const TestLayer = Layer.mergeAll(PlatformLayer, FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer)));
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
 

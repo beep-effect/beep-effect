@@ -36,8 +36,12 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
     const path = yield* Path.Path;
     const command = ChildProcess.make("bun", ["run", yield* mockPeerPath], {
       cwd: path.join(import.meta.dirname, "../.."),
+      extendEnv: true,
       shell: process.platform === "win32",
-      ...O.getSomesStruct({ env: O.map(O.fromUndefinedOr(env), (env) => ({ ...process.env, ...env })) }),
+      stdin: "pipe",
+      stderr: "inherit",
+      stdout: "pipe",
+      ...O.getSomesStruct({ env: O.fromUndefinedOr(env) }),
     });
     return yield* spawner.spawn(command);
   });

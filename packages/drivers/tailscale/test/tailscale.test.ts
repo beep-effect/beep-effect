@@ -15,6 +15,7 @@ import {
 } from "@beep/tailscale";
 import { assert, describe, it, layer } from "@effect/vitest";
 import * as Cause from "effect/Cause";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -62,13 +63,17 @@ function neverFinishingMockHandle() {
 }
 
 function mockSpawnerLayer(
-  handler: (command: string, args: ReadonlyArray<string>) => { stdout?: string; stderr?: string; code?: number }
+  handler: (
+    command: string,
+    args: ReadonlyArray<string>,
+    options: ChildProcess.CommandOptions
+  ) => { stdout?: string; stderr?: string; code?: number }
 ) {
   return Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) =>
       ChildProcess.isStandardCommand(command)
-        ? Effect.succeed(mockHandle(handler(command.command, command.args)))
+        ? Effect.succeed(mockHandle(handler(command.command, command.args, command.options)))
         : Effect.die("Expected a standard tailscale command")
     )
   );
@@ -150,9 +155,13 @@ describe("tailscale", () => {
   );
 
   layer(
-    mockSpawnerLayer((command, args) => {
+    mockSpawnerLayer((command, args, options) => {
       assert.equal(command, "tailscale");
       assert.deepEqual(args, ["status", "--json"]);
+      assert.equal(options.stdin, "ignore");
+      assert.equal(options.stdout, "pipe");
+      assert.equal(options.stderr, "pipe");
+      assert.equal(options.forceKillAfter === undefined ? undefined : Duration.toMillis(options.forceKillAfter), 2_000);
       return {
         stdout: tailscaleStatusWithSingleIpJson,
       };
@@ -257,9 +266,13 @@ describe("tailscale", () => {
   });
 
   layer(
-    mockSpawnerLayer((command, args) => {
+    mockSpawnerLayer((command, args, options) => {
       assert.equal(command, "tailscale");
       assert.deepEqual(args, ["serve", "--bg", "--https=8443", "http://127.0.0.1:13773"]);
+      assert.equal(options.stdin, "ignore");
+      assert.equal(options.stdout, "ignore");
+      assert.equal(options.stderr, "pipe");
+      assert.equal(options.forceKillAfter === undefined ? undefined : Duration.toMillis(options.forceKillAfter), 2_000);
       return {};
     })
   )("with a successful tailscale serve process", (it) => {

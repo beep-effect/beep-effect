@@ -28,6 +28,7 @@ const OpenclawProcessStdinBase = LiteralKit(["ignore"]);
 const OpenclawSystemdActiveStateBase = LiteralKit(["active", "inactive", "failed", "activating", "deactivating"]);
 const OpenclawHttpProbeStatusBase = LiteralKit(["healthy", "unreachable"]);
 const OpenclawSchemaPlaceholderReasonBase = LiteralKit(["missing", "placeholder"]);
+const OpenclawLiveAcceptanceStepBase = LiteralKit(["hosted-model", "local-model", "skill", "reload", "telegram"]);
 const withActiveStateDecodeOption = SchemaUtils.withStatics((schema: typeof OpenclawSystemdActiveStateBase) => ({
   decodeOption: S.decodeUnknownOption(schema),
 }));
@@ -754,6 +755,402 @@ export class OpenclawAgentTurn extends S.Class<OpenclawAgentTurn>($I`OpenclawAge
     description: "Tolerant projection of a completed `agent --json` turn.",
   })
 ) {}
+
+/**
+ * One entry from the pinned `skills list --json` inventory.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawSkillInventoryEntry } from "@beep/openclaw"
+ *
+ * const skill = OpenclawSkillInventoryEntry.make({
+ *   description: "Returns the fixed P3 proof sentinel.",
+ *   eligible: true,
+ *   name: "beep-proof-ping",
+ *   source: "openclaw-workspace"
+ * })
+ * console.log(skill.eligible) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawSkillInventoryEntry extends S.Class<OpenclawSkillInventoryEntry>($I`OpenclawSkillInventoryEntry`)(
+  {
+    description: S.NonEmptyString,
+    eligible: S.Boolean,
+    name: S.NonEmptyString,
+    source: S.NonEmptyString,
+  },
+  $I.annote("OpenclawSkillInventoryEntry", {
+    description: "Skill identity, eligibility, and source projected from the pinned CLI inventory.",
+  })
+) {}
+
+/**
+ * Pinned `skills list --json` output projection.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawAbsolutePath, OpenclawSkillInventory, OpenclawSkillInventoryEntry } from "@beep/openclaw"
+ *
+ * const inventory = OpenclawSkillInventory.make({
+ *   skills: [
+ *     OpenclawSkillInventoryEntry.make({
+ *       description: "Returns the fixed P3 proof sentinel.",
+ *       eligible: true,
+ *       name: "beep-proof-ping",
+ *       source: "openclaw-workspace"
+ *     })
+ *   ],
+ *   workspaceDir: OpenclawAbsolutePath.make("/var/lib/beep/openclaw/workspace")
+ * })
+ * console.log(inventory.skills.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawSkillInventory extends S.Class<OpenclawSkillInventory>($I`OpenclawSkillInventory`)(
+  {
+    skills: S.Array(OpenclawSkillInventoryEntry),
+    workspaceDir: OpenclawAbsolutePath,
+  },
+  $I.annote("OpenclawSkillInventory", {
+    description: "Workspace and skill entries returned by the pinned skills inventory command.",
+  })
+) {}
+
+/**
+ * Nested Telegram receipt payload emitted by the pinned message CLI.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawTelegramSendPayload } from "@beep/openclaw"
+ *
+ * const payload = OpenclawTelegramSendPayload.make({
+ *   messageId: "telegram-message-42",
+ *   ok: true
+ * })
+ * console.log(payload.messageId) // "telegram-message-42"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawTelegramSendPayload extends S.Class<OpenclawTelegramSendPayload>($I`OpenclawTelegramSendPayload`)(
+  {
+    messageId: S.NonEmptyString,
+    ok: S.Literal(true),
+  },
+  $I.annote("OpenclawTelegramSendPayload", {
+    description: "Successful Telegram plugin receipt payload.",
+  })
+) {}
+
+/**
+ * Sanitized successful `message send --json` result.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawTelegramSendPayload, OpenclawTelegramSendResult } from "@beep/openclaw"
+ *
+ * const result = OpenclawTelegramSendResult.make({
+ *   action: "send",
+ *   channel: "telegram",
+ *   dryRun: false,
+ *   handledBy: "telegram",
+ *   messageId: "telegram-message-42",
+ *   payload: OpenclawTelegramSendPayload.make({
+ *     messageId: "telegram-message-42",
+ *     ok: true
+ *   })
+ * })
+ * console.log(result.payload.ok) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawTelegramSendResult extends S.Class<OpenclawTelegramSendResult>($I`OpenclawTelegramSendResult`)(
+  {
+    action: S.Literal("send"),
+    channel: S.Literal("telegram"),
+    dryRun: S.Boolean,
+    handledBy: S.NonEmptyString,
+    messageId: S.NonEmptyString,
+    payload: OpenclawTelegramSendPayload,
+  },
+  $I.annote("OpenclawTelegramSendResult", {
+    description: "Successful Telegram message receipt without target or token data.",
+  })
+) {}
+
+/**
+ * One OpenAI-compatible model entry returned by a local `/models` endpoint.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLocalModelEntry } from "@beep/openclaw"
+ *
+ * const model = OpenclawLocalModelEntry.make({ id: "gemma3:4b" })
+ * console.log(model.id) // "gemma3:4b"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawLocalModelEntry extends S.Class<OpenclawLocalModelEntry>($I`OpenclawLocalModelEntry`)(
+  { id: S.NonEmptyString },
+  $I.annote("OpenclawLocalModelEntry", {
+    description: "Configured model identifier projected from a local OpenAI-compatible endpoint.",
+  })
+) {}
+
+/**
+ * OpenAI-compatible local `/models` response projection.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLocalModelEntry, OpenclawLocalModels } from "@beep/openclaw"
+ *
+ * const models = OpenclawLocalModels.make({
+ *   data: [OpenclawLocalModelEntry.make({ id: "gemma3:4b" })]
+ * })
+ * console.log(models.data[0]?.id) // "gemma3:4b"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawLocalModels extends S.Class<OpenclawLocalModels>($I`OpenclawLocalModels`)(
+  { data: S.Array(OpenclawLocalModelEntry) },
+  $I.annote("OpenclawLocalModels", {
+    description: "Model inventory returned by a local OpenAI-compatible `/models` endpoint.",
+  })
+) {}
+
+/**
+ * Acceptance sequence step names.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
+ *
+ * console.log(OpenclawLiveAcceptanceStep.Options)
+ * // ["hosted-model", "local-model", "skill", "reload", "telegram"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpenclawLiveAcceptanceStep = OpenclawLiveAcceptanceStepBase.pipe(
+  $I.annoteSchema("OpenclawLiveAcceptanceStep", {
+    description: "Named P3 live acceptance sequence step.",
+  }),
+  SchemaUtils.withLiteralKitStatics(OpenclawLiveAcceptanceStepBase)
+);
+
+/**
+ * Runtime type for {@link OpenclawLiveAcceptanceStep}.
+ *
+ * @example
+ * ```ts
+ * import type { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
+ *
+ * const step: OpenclawLiveAcceptanceStep = "skill"
+ * console.log(step)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenclawLiveAcceptanceStep = typeof OpenclawLiveAcceptanceStep.Type;
+
+/**
+ * Fully decoded inputs consumed by the pure P3 acceptance coordinator.
+ *
+ * @example
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import {
+ *   OpenclawAbsolutePath,
+ *   OpenclawAgentTurn,
+ *   OpenclawLiveAcceptanceInput,
+ *   OpenclawLocalModelEntry,
+ *   OpenclawLocalModels,
+ *   OpenclawSecretsReloaded,
+ *   OpenclawSkillInventory,
+ *   OpenclawSkillInventoryEntry,
+ *   OpenclawTelegramSendPayload,
+ *   OpenclawTelegramSendResult
+ * } from "@beep/openclaw"
+ *
+ * const input = OpenclawLiveAcceptanceInput.make({
+ *   channelAccounts: [],
+ *   hostedModelId: "legal-primary",
+ *   hostedProviderId: "hosted",
+ *   hostedTurn: OpenclawAgentTurn.make({ status: "ok" }),
+ *   localModels: OpenclawLocalModels.make({
+ *     data: [OpenclawLocalModelEntry.make({ id: "gemma3:4b" })]
+ *   }),
+ *   localModelId: "gemma3:4b",
+ *   restoredReload: OpenclawSecretsReloaded.make({
+ *     _tag: "Reloaded",
+ *     warningCount: NonNegativeInt.make(0)
+ *   }),
+ *   skillInventory: OpenclawSkillInventory.make({
+ *     skills: [
+ *       OpenclawSkillInventoryEntry.make({
+ *         description: "Returns the fixed P3 proof sentinel.",
+ *         eligible: true,
+ *         name: "beep-proof-ping",
+ *         source: "openclaw-workspace"
+ *       })
+ *     ],
+ *     workspaceDir: OpenclawAbsolutePath.make("/var/lib/beep/openclaw/workspace")
+ *   }),
+ *   skillTurn: OpenclawAgentTurn.make({ status: "ok" }),
+ *   telegramSend: OpenclawTelegramSendResult.make({
+ *     action: "send",
+ *     channel: "telegram",
+ *     dryRun: false,
+ *     handledBy: "telegram",
+ *     messageId: "telegram-message-42",
+ *     payload: OpenclawTelegramSendPayload.make({
+ *       messageId: "telegram-message-42",
+ *       ok: true
+ *     })
+ *   })
+ * })
+ * console.log(input.localModelId) // "gemma3:4b"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawLiveAcceptanceInput extends S.Class<OpenclawLiveAcceptanceInput>($I`OpenclawLiveAcceptanceInput`)(
+  {
+    channelAccounts: S.Array(OpenclawChannelAccountStatus),
+    hostedModelId: S.NonEmptyString,
+    hostedProviderId: S.NonEmptyString,
+    hostedTurn: OpenclawAgentTurn,
+    localModels: OpenclawLocalModels,
+    localModelId: S.NonEmptyString,
+    restoredReload: OpenclawSecretsReload,
+    skillInventory: OpenclawSkillInventory,
+    skillTurn: OpenclawAgentTurn,
+    telegramSend: OpenclawTelegramSendResult,
+  },
+  $I.annote("OpenclawLiveAcceptanceInput", {
+    description: "Decoded hosted, local, skill, reload, and Telegram probe results.",
+  })
+) {}
+
+/**
+ * Successful result from the pure P3 acceptance coordinator.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLiveAcceptancePassed } from "@beep/openclaw"
+ *
+ * const result = OpenclawLiveAcceptancePassed.make({
+ *   _tag: "Passed",
+ *   steps: ["hosted-model", "local-model", "skill", "reload", "telegram"]
+ * })
+ * console.log(result._tag) // "Passed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawLiveAcceptancePassed extends S.Class<OpenclawLiveAcceptancePassed>(
+  $I`OpenclawLiveAcceptancePassed`
+)(
+  {
+    _tag: S.tag("Passed"),
+    steps: S.Array(OpenclawLiveAcceptanceStep),
+  },
+  $I.annote("OpenclawLiveAcceptancePassed", {
+    description: "All supplied P3 acceptance assertions passed.",
+  })
+) {}
+
+/**
+ * Failed result from the pure P3 acceptance coordinator.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLiveAcceptanceFailed } from "@beep/openclaw"
+ *
+ * const result = OpenclawLiveAcceptanceFailed.make({
+ *   _tag: "Failed",
+ *   diagnostics: "Hosted model assertion failed.",
+ *   step: "hosted-model"
+ * })
+ * console.log(result.step) // "hosted-model"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawLiveAcceptanceFailed extends S.Class<OpenclawLiveAcceptanceFailed>(
+  $I`OpenclawLiveAcceptanceFailed`
+)(
+  {
+    _tag: S.tag("Failed"),
+    diagnostics: OpenclawDiagnosticText,
+    step: OpenclawLiveAcceptanceStep,
+  },
+  $I.annote("OpenclawLiveAcceptanceFailed", {
+    description: "One named P3 acceptance assertion failed closed.",
+  })
+) {}
+
+/**
+ * Tagged result returned by the pure P3 acceptance coordinator.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawLiveAcceptancePassed, OpenclawLiveAcceptanceResult } from "@beep/openclaw"
+ * import * as S from "effect/Schema"
+ *
+ * const result = OpenclawLiveAcceptancePassed.make({
+ *   _tag: "Passed",
+ *   steps: ["local-model"]
+ * })
+ * console.log(S.is(OpenclawLiveAcceptanceResult)(result)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpenclawLiveAcceptanceResult = S.Union([OpenclawLiveAcceptancePassed, OpenclawLiveAcceptanceFailed]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("OpenclawLiveAcceptanceResult", {
+    description: "Passed or failed P3 live acceptance result.",
+  })
+);
+
+/**
+ * Runtime type for {@link OpenclawLiveAcceptanceResult}.
+ *
+ * @example
+ * ```ts
+ * import type { OpenclawLiveAcceptanceResult } from "@beep/openclaw"
+ * import { OpenclawLiveAcceptancePassed } from "@beep/openclaw"
+ *
+ * const result: OpenclawLiveAcceptanceResult = OpenclawLiveAcceptancePassed.make({
+ *   _tag: "Passed",
+ *   steps: ["local-model"]
+ * })
+ * console.log(result._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenclawLiveAcceptanceResult = typeof OpenclawLiveAcceptanceResult.Type;
 
 /**
  * Invocation context shared by every OpenClaw CLI operation.

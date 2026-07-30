@@ -1,11 +1,13 @@
 import { OpenclawSchemaPlaceholderFinding } from "@beep/openclaw/Openclaw.models";
 import {
   OpenclawAgentIntent,
+  OpenclawControlUiIntent,
   OpenclawDeploymentIntent,
   OpenclawGatewayIntent,
   OpenclawLoggingIntent,
   OpenclawModelDeclaration,
   OpenclawModelProviderIntent,
+  OpenclawPersonaIntent,
   OpenclawProviderApiKeyPlaceholder,
   OpenclawProviderApiKeySecretRef,
   OpenclawSecretReference,
@@ -52,12 +54,21 @@ const minimalIntent = OpenclawDeploymentIntent.make({
     name: "P0 Spike 1",
     workspace: "/var/lib/beep/openclaw/workspace",
   }),
+  controlUi: OpenclawControlUiIntent.make({
+    allowedOrigins: ["http://127.0.0.1:19021", "http://localhost:19021"],
+    enabled: true,
+  }),
   gateway: OpenclawGatewayIntent.make({
     authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
     port: 19021,
   }),
   logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/openclaw/state/log/openclaw.log" }),
   openclawVersion: "2026.7.1-2",
+  persona: OpenclawPersonaIntent.make({
+    clientDataPolicy: "synthetic-only",
+    confidentialityPolicy: "advisory",
+    soulMarkdown: "# Synthetic legal assistant",
+  }),
   providers: [],
   secretsResolver: OpenclawSecretsResolverIntent.make({
     commandPath: "/opt/beep/openclaw/op-resolver.sh",
@@ -112,6 +123,10 @@ describe("@beep/openclaw render adapter", () => {
       gateway: {
         auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
         bind: "loopback",
+        controlUi: {
+          allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+          enabled: true,
+        },
         mode: "local",
         reload: { mode: "off" },
       },
@@ -147,6 +162,10 @@ describe("@beep/openclaw render adapter", () => {
       gateway: {
         auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
         bind: "loopback",
+        controlUi: {
+          allowedOrigins: ["http://127.0.0.1:19021", "http://localhost:19021"],
+          enabled: true,
+        },
         mode: "local",
         port: 19021,
         reload: { mode: "off" },
@@ -172,9 +191,11 @@ describe("@beep/openclaw render adapter", () => {
     const rendered = renderOpenclawConfig(
       OpenclawDeploymentIntent.make({
         agent: minimalIntent.agent,
+        controlUi: minimalIntent.controlUi,
         gateway: minimalIntent.gateway,
         logging: minimalIntent.logging,
         openclawVersion: "2026.7.1-2",
+        persona: minimalIntent.persona,
         providers: [
           OpenclawModelProviderIntent.make({
             api: "openai-compat",
@@ -213,20 +234,26 @@ describe("@beep/openclaw render adapter", () => {
   });
 
   it("declares extension surfaces per intent", () => {
-    expect(declaredExtensionSurfaces(goldenDeploymentIntent)).toEqual(["channels.telegram", "models.providers.ollama"]);
-    expect(declaredExtensionSurfaces(minimalIntent)).toEqual([]);
+    expect(declaredExtensionSurfaces(goldenDeploymentIntent)).toEqual([
+      "gateway.controlUi",
+      "channels.telegram",
+      "models.providers.ollama",
+    ]);
+    expect(declaredExtensionSurfaces(minimalIntent)).toEqual(["gateway.controlUi"]);
     expect(
       declaredExtensionSurfaces(
         OpenclawDeploymentIntent.make({
           agent: minimalIntent.agent,
+          controlUi: minimalIntent.controlUi,
           gateway: minimalIntent.gateway,
           logging: minimalIntent.logging,
           openclawVersion: "2026.7.1-2",
+          persona: minimalIntent.persona,
           providers: [ollamaProvider("ollama"), ollamaProvider("ollama-backup")],
           secretsResolver: minimalIntent.secretsResolver,
         })
       )
-    ).toEqual(["models.providers.ollama"]);
+    ).toEqual(["gateway.controlUi", "models.providers.ollama"]);
   });
 
   it("accepts rich schema exports for every declared surface", () => {
@@ -235,6 +262,16 @@ describe("@beep/openclaw render adapter", () => {
         channels: {
           properties: {
             telegram: {
+              additionalProperties: false,
+              properties: { enabled: { type: "boolean" } },
+              type: "object",
+            },
+          },
+          type: "object",
+        },
+        gateway: {
+          properties: {
+            controlUi: {
               additionalProperties: false,
               properties: { enabled: { type: "boolean" } },
               type: "object",

@@ -1,4 +1,4 @@
-import { appendTurboSummary } from "@beep/repo-cli/commands/Ci";
+import { appendTurboSummary, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -44,6 +44,23 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   ).pipe(provideScopedLayer(TestLayer));
 
 describe("CI commands", () => {
+  it("fails local planning when Git cannot resolve the current branch", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const error = yield* runCiLocal({
+            affected: false,
+            base: "origin/main",
+            fast: false,
+            lanes: O.some("lint"),
+          }).pipe(Effect.flip);
+
+          expect(error._tag).toBe("CiCommandError");
+          expect(error.message).toBe("git branch --show-current failed with exit code 128.");
+        })
+      )
+    ));
+
   it("renders current Turbo summary files whose tasks are arrays", () =>
     Effect.runPromise(
       withTempRepo(

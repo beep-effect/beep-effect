@@ -111,15 +111,18 @@ const config = {
   },
   updateGroups: [
     {
-      // Held back from `deps:update`. typescript stays ^6: the catalog
-      // deliberately splits classic typescript (JS compiler API for
-      // typescript-eslint et al.) from @typescript/native (TS7).
+      // Held back from `deps:update`. Classic typescript stays ^6 for JS
+      // compiler API consumers such as typescript-eslint, while
+      // @typescript/native provides the TS7 compiler. Microsoft's
+      // @typescript/typescript6 bridge is blocked by oven-sh/bun#33834.
       // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
       // @nodable/flexible-xml-parser, which references Buffer at module
       // scope and breaks every browser bundle.
       // @effect/tsgo 0.20+ ships new rules (missingPipeableSignature,
-      // schemaOpaqueInstanceMember, syncToSucceed) whose global enforcement
-      // surfaces ~756 violations; adopting it is its own remediation campaign.
+      // preferSchemaTypeProperty, schemaOpaqueInstanceMember, syncToSucceed)
+      // whose global enforcement surfaces ~756 violations; adopting them is
+      // its own remediation campaign. Platform binaries stay independently
+      // pinned to the build matching the installed native compiler.
       label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
       dependencies: ["typescript", "fast-xml-validator", "detailed-xml-validator", "@effect/tsgo"],
       isIgnored: true,

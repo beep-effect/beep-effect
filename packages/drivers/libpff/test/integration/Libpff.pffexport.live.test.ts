@@ -11,9 +11,9 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, Effect, FileSystem, Layer, Option as O, Path } from "effect";
+import { Config, Effect, FileSystem, Option as O, Path } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
@@ -27,7 +27,7 @@ const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 // README; no PST binary is committed to this public repository.
 const livePstPath = Config.string(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 
-const provideLive = provideScopedLayer(NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)));
+const provideLive = provideScopedLayer(NodeServices.layer);
 
 const skipNotice = Effect.logInfo(
   `Skipping the live pffexport lane because ${BEEP_TEST_LIBPFF_PST_ENV} is not configured.`

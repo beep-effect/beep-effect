@@ -9,15 +9,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, flow, Order, pipe, Stream } from "effect";
+import { A, Str } from "@beep/utils";
+import { Console, Effect, flow, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
+import { runCaptured, runCapturedStreams, runToExit } from "../../../internal/process/StepExec.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
@@ -378,32 +378,20 @@ const turboArgsForSelectedPackages = (
   "--ui=stream",
 ];
 
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
-
 const runGitLines = Effect.fn("DocgenLocal.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stderr: "ignore",
-        stdout: "pipe",
-      });
-      const text = yield* collectText(handle.stdout);
-      const exitCode = yield* handle.exitCode;
-      if (exitCode !== 0) {
-        return yield* DomainError.make({
-          message: `git ${A.join(args, " ")} failed with exit code ${exitCode}: ${Str.trim(text)}`,
-        });
-      }
-      return text;
-    })
-  );
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  });
+  if (result.exitCode !== 0) {
+    return yield* DomainError.make({
+      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}: ${Str.trim(result.output)}`,
+    });
+  }
 
-  return pipe(Str.split(/\r?\n/)(output), A.map(normalizedFilePath), A.filter(isNonEmptyLine));
+  return pipe(Str.split(/\r?\n/)(result.output), A.map(normalizedFilePath), A.filter(isNonEmptyLine));
 });
 
 const collectChangedFiles = Effect.fn("DocgenLocal.collectChangedFiles")(function* (
@@ -518,17 +506,12 @@ const runStep = Effect.fn("DocgenLocal.runStep")(function* (
 ) {
   const cmdTxt = commandText(command, args);
   yield* Console.log(`[docgen:local] ${label}: ${cmdTxt}`);
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+  const exitCode = yield* runToExit({
+    command,
+    args,
+    cwd,
+    stdio: "inherit",
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
 
   if (exitCode !== 0) {
     return yield* DomainError.make({
@@ -544,29 +527,21 @@ const collectStepOutput = Effect.fn("DocgenLocal.collectStepOutput")(function* (
   cwd: string
 ) {
   yield* Console.log(`[docgen:local] ${label}: ${commandText(command, args)}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      const [output, errorOutput, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      if (exitCode !== 0) {
-        const details = pipe([Str.trim(output), Str.trim(errorOutput)], A.filter(Str.isNonEmpty), A.join("\n"));
-        return yield* DomainError.make({
-          message:
-            details.length > 0
-              ? `${label} failed with exit code ${exitCode}: ${details}`
-              : `${label} failed with exit code ${exitCode}.`,
-        });
-      }
-      return output;
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to collect ${label} output.`)));
+  const result = yield* runCapturedStreams({
+    command,
+    args,
+    cwd,
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to collect ${label} output.`)));
+  if (result.exitCode !== 0) {
+    const details = pipe([Str.trim(result.stdout), Str.trim(result.stderr)], A.filter(Str.isNonEmpty), A.join("\n"));
+    return yield* DomainError.make({
+      message:
+        details.length > 0
+          ? `${label} failed with exit code ${result.exitCode}: ${details}`
+          : `${label} failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.stdout;
 });
 
 const decodeTurboDryRun = Effect.fn("DocgenLocal.decodeTurboDryRun")(function* (output: string) {

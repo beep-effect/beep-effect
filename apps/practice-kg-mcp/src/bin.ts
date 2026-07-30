@@ -22,8 +22,6 @@ import "../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type
 const bundleDir = Flag.directory("bundle-dir", { mustExist: true }).pipe(Flag.optional);
 const corpusRoot = Flag.directory("corpus-root", { mustExist: true }).pipe(Flag.optional);
 
-const firstSome = <A>(...values: ReadonlyArray<O.Option<A>>): O.Option<A> => O.firstSomeOf(values);
-
 const serverCommand = Command.make(
   "practice-kg-mcp",
   { bundleDir, corpusRoot },
@@ -31,7 +29,7 @@ const serverCommand = Command.make(
     const configuredBundleDir = yield* Config.option(Config.string("PRACTICE_KG_BUNDLE_DIR"));
     const shortBundleDir = yield* Config.option(Config.string("BUNDLE_DIR"));
     const configuredCorpusRoot = yield* Config.option(Config.string("PRACTICE_KG_CORPUS_ROOT"));
-    const resolvedBundleDir = yield* firstSome(flags.bundleDir, configuredBundleDir, shortBundleDir).pipe(
+    const resolvedBundleDir = yield* O.firstSomeOf([flags.bundleDir, configuredBundleDir, shortBundleDir]).pipe(
       O.match({
         onNone: () =>
           PracticeKgHostError.make({
@@ -40,7 +38,7 @@ const serverCommand = Command.make(
         onSome: Effect.succeed,
       })
     );
-    const resolvedCorpusRoot = O.getOrUndefined(firstSome(flags.corpusRoot, configuredCorpusRoot));
+    const resolvedCorpusRoot = O.getOrUndefined(O.firstSomeOf([flags.corpusRoot, configuredCorpusRoot]));
     const context = yield* loadPracticeKgBundleContext(resolvedBundleDir, resolvedCorpusRoot);
     return yield* Layer.launch(makePracticeKgHostLayer(context));
   })

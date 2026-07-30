@@ -369,7 +369,6 @@ const spawnFields = (options: SpawnFields) =>
     cwd: O.fromUndefinedOr(options.cwd),
     env: O.fromUndefinedOr(options.env),
     extendEnv: O.fromUndefinedOr(options.extendEnv),
-    stdin: O.fromUndefinedOr(options.stdin),
   });
 
 const decodedText = <E>(stream: Stream.Stream<Uint8Array, E>): Stream.Stream<string, E> =>
@@ -441,7 +440,9 @@ export type RunCapturedOptions = SpawnFields & {
  * Nonzero exit codes are represented in the result; only spawn/stream failures
  * reach the `PlatformError` channel (map them to a domain error at the call
  * site). Set `bound` to cap the buffer, `trim` to trim the captured text, and
- * `tee` to stream chunks to the parent stdout while capturing.
+ * `tee` to stream chunks to the parent stdout while capturing. Stdin defaults
+ * to `"ignore"` so noninteractive capture cannot inherit or leave an unread
+ * pipe accidentally.
  *
  * @param options - Command, spawn fields, and capture configuration.
  * @returns Captured combined output, exit code, and truncation flag.
@@ -470,6 +471,7 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
@@ -503,7 +505,8 @@ export type RunCapturedStreamsOptions = SpawnFields & {
  * Spawn a command and capture stdout and stderr as separate strings.
  *
  * Used by call sites that need to keep the two streams apart (for example
- * distinct error excerpts). Nonzero exit codes are represented in the result.
+ * distinct error excerpts). Nonzero exit codes are represented in the result,
+ * and stdin defaults to `"ignore"`.
  *
  * @param options - Command, spawn fields, and capture configuration.
  * @returns Captured stdout, stderr, and exit code.
@@ -529,6 +532,7 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });
@@ -565,7 +569,8 @@ export type RunToExitOptions = SpawnFields & {
  * Spawn a command with inherited or ignored stdio and return its exit code.
  *
  * The `inherited-stdio` variant: nothing is captured, output flows straight to
- * the parent (or is discarded). Nonzero exit codes are returned, not raised.
+ * the parent (or is discarded). Stdin defaults to the selected stdio mode.
+ * Nonzero exit codes are returned, not raised.
  *
  * @param options - Command, spawn fields, and stdio disposition.
  * @returns The subprocess exit code.
@@ -591,6 +596,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,
       });

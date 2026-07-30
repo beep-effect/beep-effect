@@ -8,7 +8,7 @@ import {
   researchStatus,
 } from "@beep/repo-cli/commands/Research";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -30,11 +30,9 @@ const fakeFirecrawlClient = {
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
     Layer.provideMerge(
-      Layer.mergeAll(
-        Firecrawl.makeLayerFromClient(fakeFirecrawlClient),
-        NodeChildProcessSpawner.layer,
-        FetchHttpClient.layer
-      ).pipe(Layer.provideMerge(NodeServices.layer))
+      Layer.mergeAll(Firecrawl.makeLayerFromClient(fakeFirecrawlClient), FetchHttpClient.layer).pipe(
+        Layer.provideMerge(NodeServices.layer)
+      )
     )
   ),
   NodeServices.layer

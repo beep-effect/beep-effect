@@ -26,9 +26,9 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { applyJsoncModification as applySharedJsoncModification } from "../../internal/cli/Jsonc.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { runToExit } from "../../internal/process/StepExec.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import {
   createFileGenerationPlanService,
@@ -734,17 +734,12 @@ const rootWorkspaceEntryNeeded = Effect.fn(function* (repoRoot: string, packageP
 const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(function* (repoRoot: string) {
   const args = ["install", "--lockfile-only"] as const;
   yield* Console.log(`[create-package] Refreshing bun.lock: bun ${A.join(args, " ")}`);
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", [...args], {
-        cwd: repoRoot,
-        stdin: "ignore",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bun ${A.join(args, " ")}.`)));
+  const exitCode = yield* runToExit({
+    command: "bun",
+    args,
+    cwd: repoRoot,
+    stdio: "inherit",
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bun ${A.join(args, " ")}.`)));
 
   if (exitCode !== 0) {
     return yield* DomainError.make({

@@ -47,6 +47,8 @@ import {
   OpenclawSecretsReloadDegraded,
   OpenclawSecretsReloaded,
   OpenclawSecretsReloadOutput,
+  OpenclawSkillInventory,
+  OpenclawTelegramSendResult,
   OpenclawVersionInfo,
 } from "./Openclaw.models.ts";
 import type { OpenclawCliError } from "./Openclaw.errors.ts";
@@ -275,6 +277,8 @@ const decodeChannelsStatusWire = S.decodeUnknownEffect(S.fromJsonString(Openclaw
 const decodeGatewayHealthWire = S.decodeUnknownEffect(S.fromJsonString(OpenclawGatewayHealthWire));
 const decodeJsonDocument = S.decodeUnknownEffect(S.UnknownFromJsonString);
 const decodeSecretsReloadOutput = S.decodeUnknownEffect(S.fromJsonString(OpenclawSecretsReloadOutput));
+const decodeSkillInventory = S.decodeUnknownEffect(S.fromJsonString(OpenclawSkillInventory));
+const decodeTelegramSendResult = S.decodeUnknownEffect(S.fromJsonString(OpenclawTelegramSendResult));
 
 const isFlagToken = Str.startsWith("-");
 const firstNonBlank = (primary: string, fallback: string): string =>
@@ -434,10 +438,18 @@ interface OpenclawCliShape {
     ctx: OpenclawInvocationContext,
     options?: { readonly timeoutMs?: number | undefined }
   ) => Effect.Effect<OpenclawGatewayHealth, OpenclawCliError>;
+  readonly messageSend: (
+    ctx: OpenclawInvocationContext,
+    options: { readonly message: string; readonly target: string }
+  ) => Effect.Effect<OpenclawTelegramSendResult, OpenclawCliError>;
   readonly secretsReload: (
     ctx: OpenclawInvocationContext,
     options?: { readonly timeoutMs?: number | undefined }
   ) => Effect.Effect<OpenclawSecretsReload, OpenclawCliError>;
+  readonly skillsList: (
+    ctx: OpenclawInvocationContext,
+    options: { readonly agentId: string; readonly eligible: true }
+  ) => Effect.Effect<OpenclawSkillInventory, OpenclawCliError>;
   readonly version: (ctx: OpenclawInvocationContext) => Effect.Effect<OpenclawVersionInfo, OpenclawCliError>;
 }
 
@@ -647,6 +659,42 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     );
   });
 
+  const skillsList = Effect.fn("OpenclawCli.skillsList")(function* (
+    ctx: OpenclawInvocationContext,
+    options: { readonly agentId: string; readonly eligible: true }
+  ) {
+    const result = yield* execute(
+      ctx,
+      "skills list",
+      ["skills", "list", "--json", "--eligible", "--agent", options.agentId],
+      OPENCLAW_VALIDATE_TIMEOUT
+    );
+    if (result.exitCode !== 0) {
+      return yield* exitFailure(ctx.binaryPath, "skills list", result, O.none());
+    }
+    return yield* decodeSkillInventory(result.stdout).pipe(
+      Effect.mapError(parseFailure(ctx.binaryPath, "skills list", result.stdout))
+    );
+  });
+
+  const messageSend = Effect.fn("OpenclawCli.messageSend")(function* (
+    ctx: OpenclawInvocationContext,
+    options: { readonly message: string; readonly target: string }
+  ) {
+    const result = yield* execute(
+      ctx,
+      "message send",
+      ["message", "send", "--channel", "telegram", "--target", options.target, "--message", options.message, "--json"],
+      OPENCLAW_CHANNEL_PROBE_TIMEOUT
+    );
+    if (result.exitCode !== 0) {
+      return yield* exitFailure(ctx.binaryPath, "message send", result, O.none());
+    }
+    return yield* decodeTelegramSendResult(result.stdout).pipe(
+      Effect.mapError(parseFailure(ctx.binaryPath, "message send", result.stdout))
+    );
+  });
+
   return {
     agentTurn,
     channelsStatus,
@@ -654,7 +702,9 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     configValidate,
     doctor,
     gatewayHealth,
+    messageSend,
     secretsReload,
+    skillsList,
     version,
   };
 };

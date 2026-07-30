@@ -95,7 +95,7 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
     const command = ChildProcess.make(config.javaPath, ["-jar", config.jarPath, "-J", "-t", sourcePath], {
       forceKillAfter: `${defaultForceKillAfterMillis} millis`,
       stdin: "ignore",
-      stderr: "pipe",
+      stderr: "ignore",
       stdout: "pipe",
     });
 

@@ -11,13 +11,13 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, Encoding, FileSystem, Path, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const testLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
 

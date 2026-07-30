@@ -19,7 +19,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
-import { buildDuckDb } from "./PracticeKg.fts.ts";
+import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
 import { PracticeKgCatalogRow, PracticeKgEnrichmentRow, stripPrefix, withDuckDb } from "./PracticeKg.rows.ts";
 import {
   encodePracticeKgBundleManifestJson,
@@ -30,12 +30,13 @@ import {
   PracticeKgCounts,
   PracticeKgEdgeRow,
   PracticeKgNodeRow,
+  PracticeKgOptions,
   PracticeKgSchemaVersions,
   PracticeKgSourceRuns,
   PracticeKgSummary,
 } from "./PracticeKg.schemas.ts";
 import type { KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
-import type { PracticeKgEmailHeaderRow, PracticeKgOptions, PracticeKgProvenanceKind } from "./PracticeKg.schemas.ts";
+import type { PracticeKgEmailHeaderRow, PracticeKgProvenanceKind } from "./PracticeKg.schemas.ts";
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
@@ -196,7 +197,7 @@ VALUES ($1, $2, $3, $4, $5, $6)`;
 
 const graphIri = (kind: KgNodeKind, naturalKey: string): string => graphIdentity.create(kind).create(naturalKey).iri;
 
-const nullable = <A>(value: A | null): A | undefined => value ?? undefined;
+const edgeKey = (edge: PracticeKgEdgeRow): string => `${edge.subjectIri}\u0000${edge.predicate}\u0000${edge.objectIri}`;
 
 const splitList = (value: string): ReadonlyArray<string> =>
   A.filter(A.map(Str.split(" | ")(value), Str.trim), Str.isNonEmpty);
@@ -245,13 +246,12 @@ const createNode = (
   provenanceKind: PracticeKgProvenanceKind,
   provenanceRef: string,
   options: {
-    readonly client?: string | undefined;
-    readonly docketFamily?: string | undefined;
+    readonly client?: string | null | undefined;
+    readonly docketFamily?: string | null | undefined;
     readonly payload?: Readonly<Record<string, unknown>> | undefined;
   } = {}
 ): PracticeKgNodeRow =>
   PracticeKgNodeRow.make({
-    epistemicStatus: "derived-from-official-records",
     iri: graphIri(kind, naturalKey),
     kind,
     label,
@@ -260,8 +260,8 @@ const createNode = (
     provenanceKind,
     provenanceRef,
     ...O.getSomesStruct({
-      client: O.fromUndefinedOr(options.client),
-      docketFamily: O.fromUndefinedOr(options.docketFamily),
+      client: O.fromNullishOr(options.client),
+      docketFamily: O.fromNullishOr(options.docketFamily),
     }),
   });
 
@@ -275,7 +275,6 @@ const createEdge = (
   provenanceRef: string
 ): PracticeKgEdgeRow =>
   PracticeKgEdgeRow.make({
-    epistemicStatus: "derived-from-official-records",
     objectIri: graphIri(objectKind, objectKey),
     predicate,
     provenanceKind,
@@ -297,13 +296,11 @@ const buildGraphRows = (
     MutableHashMap.set(nodes, node.iri, node);
   };
   const addEdge = (edge: PracticeKgEdgeRow): void => {
-    MutableHashMap.set(edges, `${edge.subjectIri}\u0000${edge.predicate}\u0000${edge.objectIri}`, edge);
+    MutableHashMap.set(edges, edgeKey(edge), edge);
   };
 
   A.forEach(catalogRows, (row) => {
-    const docketFamily = nullable(row.docketFamily);
-    const docket = nullable(row.docket);
-    const client = nullable(row.client);
+    const { client, docket, docketFamily } = row;
     addNode(
       createNode("document", row.digest, row.effectiveName, "catalog-digest", row.digest, {
         client,
@@ -324,9 +321,9 @@ const buildGraphRows = (
         })
       );
     }
-    if (docketFamily !== undefined) {
+    if (docketFamily !== null) {
       addNode(createNode("docket_family", docketFamily, docketFamily, "organize-row", docketFamily, { client }));
-      if (docket === undefined) {
+      if (docket === null) {
         addEdge(
           createEdge(
             "docket_family",
@@ -340,14 +337,14 @@ const buildGraphRows = (
         );
       }
     }
-    if (docket !== undefined && docketFamily !== undefined) {
+    if (docket !== null && docketFamily !== null) {
       addNode(createNode("docket", docket, docket, "organize-row", row.sourceRelativePath, { client, docketFamily }));
       addEdge(createEdge("docket_family", docketFamily, "has_docket", "docket", docket, "organize-row", docket));
       addEdge(createEdge("docket", docket, "has_document", "document", row.digest, "catalog-digest", row.digest));
       const familyDockets = pipe(MutableHashMap.get(docketsByFamily, docketFamily), O.getOrElse(A.empty<string>));
       MutableHashMap.set(docketsByFamily, docketFamily, A.dedupe(A.append(familyDockets, docket)));
     }
-    if (client !== undefined && docketFamily !== undefined) {
+    if (client !== null && docketFamily !== null) {
       addNode(createNode("client", client, client, "organize-row", row.sourceLabel));
       addEdge(
         createEdge(
@@ -367,26 +364,18 @@ const buildGraphRows = (
     if (row.status !== "resolved") {
       return;
     }
-    const application = nullable(row.applicationNumber);
-    const patent = nullable(row.patentNumber);
+    const { applicationNumber: application, patentNumber: patent } = row;
     const families = splitList(row.docketFamilies);
     const parents = splitList(row.parentApplicationNumbers);
-    if (application !== undefined) {
+    if (application !== null) {
       addNode(
-        createNode(
-          "application",
-          application,
-          nullable(row.inventionTitle) ?? application,
-          "uspto-anchor",
-          application,
-          {
-            payload: {
-              firstApplicantName: row.firstApplicantName,
-              firstInventorName: row.firstInventorName,
-              inventionTitle: row.inventionTitle,
-            },
-          }
-        )
+        createNode("application", application, row.inventionTitle ?? application, "uspto-anchor", application, {
+          payload: {
+            firstApplicantName: row.firstApplicantName,
+            firstInventorName: row.firstInventorName,
+            inventionTitle: row.inventionTitle,
+          },
+        })
       );
       A.forEach(families, (family) => {
         addNode(createNode("docket_family", family, family, "uspto-anchor", application));
@@ -412,13 +401,13 @@ const buildGraphRows = (
         );
       });
     }
-    if (patent !== undefined) {
+    if (patent !== null) {
       addNode(
-        createNode("patent", patent, nullable(row.inventionTitle) ?? patent, "uspto-anchor", patent, {
+        createNode("patent", patent, row.inventionTitle ?? patent, "uspto-anchor", patent, {
           payload: { inventionTitle: row.inventionTitle },
         })
       );
-      if (application !== undefined) {
+      if (application !== null) {
         addEdge(createEdge("application", application, "granted_as", "patent", patent, "uspto-anchor", patent));
       }
     }
@@ -452,13 +441,7 @@ const buildGraphRows = (
   });
 
   return {
-    edges: A.sort(
-      A.fromIterable(MutableHashMap.values(edges)),
-      Order.mapInput(
-        Order.String,
-        (edge: PracticeKgEdgeRow) => `${edge.subjectIri}\u0000${edge.predicate}\u0000${edge.objectIri}`
-      )
-    ),
+    edges: A.sort(A.fromIterable(MutableHashMap.values(edges)), Order.mapInput(Order.String, edgeKey)),
     nodes: A.sort(
       A.fromIterable(MutableHashMap.values(nodes)),
       Order.mapInput(Order.String, (node: PracticeKgNodeRow) => node.iri)
@@ -527,11 +510,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
 const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function* (
   corpusRoot: string,
   includeRefresh: boolean
-): Effect.fn.Return<
-  ReadonlyArray<{ readonly sourcesPath: string; readonly textGlob: string }>,
-  never,
-  FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<ReadonlyArray<GraphTextSourceSpec>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const roots = includeRefresh ? ["staging/extract", "staging/extract-2026-07-refresh"] : ["staging/extract"];
@@ -541,7 +520,9 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
     return Effect.all([fs.exists(sourcesPath), fs.exists(textDir)]).pipe(
       Effect.orElseSucceed(() => [false, false]),
       Effect.map(([sourcesExist, textExists]) =>
-        sourcesExist && textExists ? O.some({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") }) : O.none()
+        sourcesExist && textExists
+          ? O.some(GraphTextSourceSpec.make({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") }))
+          : O.none()
       )
     );
   });
@@ -564,7 +545,6 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
  * @example
  * ```ts
  * import { PracticeKgOptions } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  * import { buildPracticeKgBundleImpl } from "../../src/PracticeKg.projections.ts"
  *
@@ -573,7 +553,6 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
  *     bundleOut: "/corpus/staging/practice-kg-bundle",
  *     corpusRoot: "/corpus",
  *     includeRefresh: true,
- *     maxTextBytes: NonNegativeInt.make(2_097_152),
  *     overwrite: true,
  *     skipEmails: false
  *   })
@@ -597,10 +576,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (options.maxTextBytes <= 0) {
-    return yield* PracticeKgProjectionError.make({ message: "--max-text-bytes must be greater than zero." });
-  }
-  const bundleOut = options.bundleOut ?? path.join(options.corpusRoot, "staging", "practice-kg-bundle");
+  const bundleOut = PracticeKgOptions.resolveBundleOut(options, path);
   const catalogPath = path.join(options.corpusRoot, "catalog", "corpus.duckdb");
   const reportsDir = path.join(options.corpusRoot, "catalog", "reports");
   const summaryPath = path.join(reportsDir, "graph-summary.json");
@@ -695,7 +671,6 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
  * @example
  * ```ts
  * import { PracticeKgOptions, PracticeKgProjections } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const edgeCount = Effect.gen(function* () {
@@ -704,7 +679,6 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
  *     PracticeKgOptions.make({
  *       corpusRoot: "/corpus",
  *       includeRefresh: true,
- *       maxTextBytes: NonNegativeInt.make(2_097_152),
  *       overwrite: true,
  *       skipEmails: false
  *     })
@@ -779,7 +753,6 @@ export const PracticeKgProjectionsLive = Layer.effect(
  * ```ts
  * import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgProjectionsLive } from "@beep/law-practice-server"
  * import * as Pglite from "@beep/pglite"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as BunServices from "@effect/platform-bun/BunServices"
  * import { Effect } from "effect"
  *
@@ -788,7 +761,6 @@ export const PracticeKgProjectionsLive = Layer.effect(
  *     bundleOut: "/corpus/staging/practice-kg-bundle",
  *     corpusRoot: "/corpus",
  *     includeRefresh: true,
- *     maxTextBytes: NonNegativeInt.make(2_097_152),
  *     overwrite: true,
  *     skipEmails: false
  *   })

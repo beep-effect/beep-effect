@@ -14,8 +14,7 @@ import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
-import { collectText } from "../../../internal/process/index.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -238,30 +237,24 @@ const runGitLines = Effect.fn("PackageVerify.runGitLines")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stderr: "ignore",
-        stdout: "pipe",
-      });
-      const output = yield* collectText(handle.stdout);
-      const exitCode = yield* handle.exitCode;
-      if (exitCode !== 0) {
-        return yield* QualityScriptCommandError.new(`git ${A.join(args, " ")} failed with exit code ${exitCode}.`, {
-          command: commandText("git", args),
-          exitCode,
-        })(`git ${A.join(args, " ")} failed`);
-      }
-      return output;
-    })
-  ).pipe(
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to spawn git ${A.join(args, " ")}.`, {
       command: commandText("git", args),
     })
   );
+  if (result.exitCode !== 0) {
+    return yield* QualityScriptCommandError.new(`git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`, {
+      command: commandText("git", args),
+      exitCode: result.exitCode,
+    })(`git ${A.join(args, " ")} failed`);
+  }
 
-  return linesFromText(result);
+  return linesFromText(result.output);
 });
 
 const collectPackageVerifyChangedFiles = Effect.fn("PackageVerify.collectPackageVerifyChangedFiles")(function* (
@@ -422,22 +415,12 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   QualityScriptCommandError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd,
-        extendEnv: true,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* collectText(handle.all);
-      const exitCode = yield* handle.exitCode;
-      return {
-        exitCode,
-        output,
-      };
-    })
-  ).pipe(
+  return yield* runCaptured({
+    command,
+    args,
+    cwd,
+    extendEnv: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to spawn ${commandText(command, args)}.`, {
       command: commandText(command, args),
     })
