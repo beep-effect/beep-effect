@@ -282,6 +282,111 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
   );
 
   it.effect(
+    "rejects string URL image functions in inline styles and stylesheets",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        ["image-set", 'image-set("https://attacker.invalid/image-set")'],
+        ["webkit-image-set", '-webkit-image-set("https://attacker.invalid/webkit-image-set")'],
+        ["image", 'image("https://attacker.invalid/image")'],
+        ["src", 'src("https://attacker.invalid/src")'],
+        ["commented-image-set", 'image/**/-set("https://attacker.invalid/commented-image-set")'],
+        ["commented-src", 's/**/rc("https://attacker.invalid/commented-src")'],
+        ["escaped-image-set", 'im\\61 ge-set("https://attacker.invalid/escaped-image-set")'],
+        ["escaped-webkit-image-set", '-webk\\69 t-image-set("https://attacker.invalid/escaped-webkit-image-set")'],
+        ["escaped-image", 'im\\61 ge("https://attacker.invalid/escaped-image")'],
+        ["escaped-src", 's\\72 c("https://attacker.invalid/escaped-src")'],
+      ] as const;
+
+      for (const [key, value] of attacks) {
+        for (const placement of ["inline", "stylesheet"] as const) {
+          const source = `graph TD\nImageResource-->${placement}-${key}`;
+          const view = render(<MermaidView renderKey={`${placement}-${key}`} source={source} />);
+          yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+          const pending = getPendingRender(source);
+
+          yield* Effect.sync(() => {
+            const contents =
+              placement === "inline"
+                ? `<g style='background-image: ${value}'></g>`
+                : `<style>#${pending.id} .resource { background-image: ${value}; }</style><g class="resource"></g>`;
+            act(() => pending.resolve({ svg: mermaidSvg(pending.id, contents) }));
+          });
+          yield* Effect.promise(() =>
+            waitFor(() =>
+              expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+            )
+          );
+
+          expect(view.container.querySelector("svg, style")).toBeNull();
+          view.unmount();
+        }
+      }
+    })
+  );
+
+  it.effect(
+    "rejects image resource functions hidden behind CSS custom properties",
+    Effect.fnUntraced(function* () {
+      const resource = 'image-set("https://attacker.invalid/custom-property")';
+
+      for (const placement of ["inline", "stylesheet"] as const) {
+        const source = `graph TD\nCustomProperty-->${placement}`;
+        const view = render(<MermaidView renderKey={`custom-property-${placement}`} source={source} />);
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          const declaration = `--resource: ${resource}; background-image: var(--resource)`;
+          const contents =
+            placement === "inline"
+              ? `<g style='${declaration}'></g>`
+              : `<style>#${pending.id} .resource { ${declaration}; }</style><g class="resource"></g>`;
+          act(() => pending.resolve({ svg: mermaidSvg(pending.id, contents) }));
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, style")).toBeNull();
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "retains fragment paint references and image-free stylesheet rules",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nSafe-->CSS";
+      const view = render(<MermaidView renderKey="safe-css-controls" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<style>#${pending.id} .safe-paint { stroke: currentColor; }</style><path class="safe-paint" data-safe-css-control="yes" style='fill: url("#paint")' d="M0 0L1 1"></path>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-safe-css-control]"))
+        )
+      );
+
+      const path = view.container.querySelector("[data-safe-css-control]");
+      expect(path).toHaveAttribute("style", 'fill: url("#paint")');
+      expect(view.container.querySelector("style")).toHaveTextContent("stroke: currentColor");
+      expect(view.container.querySelector("svg")).toHaveAccessibleName("Mermaid diagram");
+    })
+  );
+
+  it.effect(
     "rejects stylesheet rules that can affect the containing document",
     Effect.fnUntraced(function* () {
       const attacks = [
