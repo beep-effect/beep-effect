@@ -115,22 +115,38 @@ type TypeConstructorAnnotation = {
   readonly _tag: string;
 };
 
+type RepresentationAnnotation = {
+  readonly id: string;
+};
+
 const isTypeConstructorAnnotation = (value: unknown): value is TypeConstructorAnnotation =>
   P.isObject(value) && P.hasProperty(value, "_tag") && P.isString(value._tag);
 
-const typeConstructorTag = (ast: AST.Declaration): string | undefined => {
+const isRepresentationAnnotation = (value: unknown): value is RepresentationAnnotation =>
+  P.isObject(value) && P.hasProperty(value, "id") && P.isString(value.id);
+
+const declarationTag = (ast: AST.Declaration): string | undefined => {
+  const representation = ast.annotations?.representation;
+  if (isRepresentationAnnotation(representation)) {
+    return representation.id;
+  }
   const annotation = ast.annotations?.typeConstructor;
   return isTypeConstructorAnnotation(annotation) ? annotation._tag : undefined;
 };
 
 const isJsonDeclaration = (ast: AST.Declaration): boolean => {
-  const tag = typeConstructorTag(ast);
-  return tag === "effect/Json" || tag === "effect/MutableJson";
+  const tag = declarationTag(ast);
+  return (
+    tag === "effect/schema/Json" ||
+    tag === "effect/schema/MutableJson" ||
+    tag === "effect/Json" ||
+    tag === "effect/MutableJson"
+  );
 };
 
 const isKnownRequiredDeclaration = (ast: AST.Declaration): boolean => {
-  const tag = typeConstructorTag(ast);
-  return tag === "Date" || tag === "Uint8Array";
+  const tag = declarationTag(ast);
+  return tag === "effect/schema/Date" || tag === "effect/schema/Uint8Array" || tag === "Date" || tag === "Uint8Array";
 };
 
 const astAbsence: (input: AST.AST) => AstAbsence = Match.type<AST.AST>().pipe(

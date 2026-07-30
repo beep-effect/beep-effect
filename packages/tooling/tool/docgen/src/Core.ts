@@ -85,7 +85,7 @@ const readSourceFiles = Effect.gen(function* () {
   const path = yield* Path.Path;
   const patterns = resolveSourceGlobs(config, path);
   const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern, config.exclude), {
-    concurrency: "inherit",
+    concurrency: "unbounded",
   }).pipe(Effect.map(flow(A.flatten, A.filter(isDocgenSourceFile), A.dedupe, A.sort(Order.String))));
   yield* Effect.logInfo(chalk.bold(`${paths.length} module(s) found`));
 
@@ -100,7 +100,7 @@ const readSourceFiles = Effect.gen(function* () {
           })
         )
       ),
-    { concurrency: "inherit" }
+    { concurrency: "unbounded" }
   );
 });
 
@@ -664,7 +664,7 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
     path.normalize(path.join(config.outDir, "**", `*${extension}.md`))
   );
   yield* Effect.logDebug(`Deleting ${chalk.black(A.join(patterns, ", "))}...`);
-  const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern), { concurrency: "inherit" }).pipe(
+  const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern), { concurrency: "unbounded" }).pipe(
     Effect.map(flow(A.flatten, A.dedupe))
   );
   yield* Effect.forEach(

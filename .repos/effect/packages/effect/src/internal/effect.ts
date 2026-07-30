@@ -85,7 +85,6 @@ import * as doNotation from "./doNotation.ts"
 import * as InternalMetric from "./metric.ts"
 import * as InternalRecord from "./record.ts"
 import {
-  CurrentConcurrency,
   CurrentErrorReporters,
   CurrentLogAnnotations,
   CurrentLogLevel,
@@ -99,7 +98,6 @@ import {
 } from "./references.ts"
 import { getStackTraceLimit, setStackTraceLimit } from "./stackTraceLimit.ts"
 import { addSpanStackTrace, makeStackCleaner } from "./tracer.ts"
-import { version } from "./version.ts"
 
 // ----------------------------------------------------------------------------
 // Cause
@@ -491,7 +489,7 @@ const renderErrorCause = (cause: Error, prefix: string) => {
 // ----------------------------------------------------------------------------
 
 /** @internal */
-export const FiberTypeId = `~effect/Fiber/${version}` as const
+export const FiberTypeId = "~effect/Fiber" as const
 
 const fiberVariance = {
   _A: identity,
@@ -2113,6 +2111,32 @@ export const updateService: {
 )
 
 /** @internal */
+export const updateServiceScoped = <I, A>(
+  service: Context.Key<I, A>,
+  update: (value: A) => A,
+  options?: {
+    readonly reset?: ((original: A, updated: A, current: A) => A) | undefined
+  } | undefined
+): Effect.Effect<void, never, I | Scope.Scope> =>
+  uninterruptible(withFiber((fiber) => {
+    const original = Context.getUnsafe(fiber.context, service)
+    const updated = update(original)
+    fiber.setContext(Context.add(fiber.context, service, updated))
+    return scopeAddFinalizerExit(Context.getUnsafe(fiber.context, scopeTag), (_) => {
+      const current = Context.getUnsafe(fiber.context, service)
+      let next: A
+      if (options?.reset === undefined) {
+        if (current !== updated) return void_
+        next = original
+      } else {
+        next = options.reset(original, updated, current)
+      }
+      fiber.setContext(Context.add(fiber.context, service, next))
+      return void_
+    })
+  }))
+
+/** @internal */
 export const context = <R = never>(): Effect.Effect<Context.Context<R>> => getContext as any
 const getContext = withFiber((fiber) => succeed(fiber.context))
 
@@ -2222,17 +2246,6 @@ export const provideServiceEffect: {
   ): Effect.Effect<A, E | E2, Exclude<R, I> | R2> =>
     flatMap(acquire, (implementation) => provideService(self, service, implementation))
 )
-
-/** @internal */
-export const withConcurrency: {
-  (
-    concurrency: "unbounded" | number
-  ): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
-  <A, E, R>(
-    self: Effect.Effect<A, E, R>,
-    concurrency: "unbounded" | number
-  ): Effect.Effect<A, E, R>
-} = provideService(CurrentConcurrency)
 
 // ----------------------------------------------------------------------------
 // zipping
@@ -4616,10 +4629,8 @@ export const forEach: {
     readonly discard?: boolean | undefined
   }
 ): Effect.Effect<any, E, R> =>
-  withFiber((parent) => {
-    const concurrencyOption = options?.concurrency === "inherit"
-      ? parent.getRef(CurrentConcurrency)
-      : (options?.concurrency ?? 1)
+  suspend(() => {
+    const concurrencyOption = options?.concurrency ?? 1
     const concurrency = concurrencyOption === "unbounded"
       ? Number.POSITIVE_INFINITY
       : Math.max(1, concurrencyOption)
@@ -4668,7 +4679,6 @@ const forEachSequential = <A, B, E, R>(
 
 type IterateEagerOptions = {
   readonly concurrency?: number | undefined
-  readonly start?: number | undefined
   readonly end?: number | undefined
   readonly orderedStep?: boolean | undefined
 }
@@ -4684,14 +4694,37 @@ const iterateEagerImpl = <S, A, X, E, R, E2>(options: {
   const onItem = options.onItem
   const step = options.step
 
+  const runSequential = (
+    state: S,
+    items: ReadonlyArray<A>,
+    index: number,
+    end: number
+  ): Effect.Effect<void, E | E2, R> | undefined => {
+    for (; index < end; index++) {
+      const item = items[index]
+      const effect = onItem(state, item, index)
+      if (!effectIsExit(effect)) {
+        return flatMap(
+          exit(effect),
+          (itemExit) => step(state, item, itemExit, index) ?? runSequential(state, items, index + 1, end) ?? void_
+        )
+      }
+      const terminal = step(state, item, effect, index)
+      if (terminal) return terminal._tag === "Failure" ? terminal : undefined
+    }
+  }
+
   return (
     state: S,
     items: ReadonlyArray<A>,
     opts: IterateEagerOptions | undefined
   ): Effect.Effect<void, E | E2, R> | undefined => {
-    let index = opts?.start ?? 0
+    let index = 0
     const end = opts?.end ?? items.length
     const concurrency = opts?.concurrency ?? 1
+    if (concurrency === 1) {
+      return runSequential(state, items, 0, end)
+    }
     const orderedStep = opts?.orderedStep === true && concurrency > 1
     let done = false
     let parentFiber: Fiber.Fiber<any, any> | undefined
@@ -4737,14 +4770,6 @@ const iterateEagerImpl = <S, A, X, E, R, E2>(options: {
         if (effectIsExit(eff)) {
           terminal = runStep(item, eff, index)
           if (terminal) break
-
-          // Use flatMap for concurrency of 1
-        } else if (concurrency === 1) {
-          return flatMap(exit(eff), (exit) => {
-            terminal = runStep(item, exit, index)
-            index++
-            return terminal ?? go() ?? void_
-          })
 
           // We have an effect, so enter "async" mode
         } else if (!parentFiber) {
@@ -5192,16 +5217,17 @@ export const forkUnsafe = <FA, FE, A, E, R>(
   daemon = false,
   uninterruptible: boolean | "inherit" = false
 ): FiberImpl<A, E> => {
-  const interruptible = uninterruptible === "inherit" ? parent.interruptible : !uninterruptible
-  const child = new FiberImpl<A, E>(parent.context, interruptible)
+  const parentRuntime = parent as FiberImpl<FA, FE>
+  const interruptible = uninterruptible === "inherit" ? parentRuntime.interruptible : !uninterruptible
+  const child = new FiberImpl<A, E>(parentRuntime.context, interruptible)
   if (immediate) {
     child.evaluate(effect as any)
   } else {
-    parent.currentDispatcher.scheduleTask(() => child.evaluate(effect as any), 0)
+    parentRuntime.currentDispatcher.scheduleTask(() => child.evaluate(effect as any), 0)
   }
   if (!daemon && !child._exit) {
-    parent.children().add(child)
-    child.addObserver(() => parent._children!.delete(child))
+    parentRuntime.children().add(child)
+    child.addObserver(() => parentRuntime._children!.delete(child))
   }
   return child
 }
@@ -5490,7 +5516,7 @@ const succeedFalse = succeed(false)
 
 class Latch implements _Latch.Latch {
   waiters: Array<(_: Effect.Effect<void>) => void> = []
-  scheduled = false
+  scheduled: Array<(_: Effect.Effect<void>) => void> | undefined = undefined
   private _isOpen: boolean
 
   constructor(isOpen: boolean) {
@@ -5498,17 +5524,35 @@ class Latch implements _Latch.Latch {
   }
 
   private scheduleUnsafe(fiber: Fiber.Fiber<unknown, unknown>) {
-    if (this.scheduled || this.waiters.length === 0) {
+    if (this.waiters.length === 0) {
       return succeedTrue
     }
-    this.scheduled = true
-    fiber.currentDispatcher.scheduleTask(this.flushWaiters, 0)
+    if (this.scheduled === undefined) {
+      this.scheduled = this.waiters
+      fiber.currentDispatcher.scheduleTask(this.flushScheduled, 0)
+    } else {
+      for (let i = 0; i < this.waiters.length; i++) {
+        this.scheduled.push(this.waiters[i])
+      }
+    }
+    this.waiters = []
     return succeedTrue
   }
-  private flushWaiters = () => {
-    this.scheduled = false
+  private flushScheduled = () => {
+    if (this.scheduled === undefined) return
+    const waiters = this.scheduled
+    this.scheduled = undefined
+    for (let i = 0; i < waiters.length; i++) {
+      waiters[i](exitVoid)
+    }
+  }
+  private flushWaiters() {
+    // swap both arrays out before any resume runs: a resumed waiter can
+    // reentrantly close the latch and register new waiters, which must not
+    // be drained by this flush
     const waiters = this.waiters
     this.waiters = []
+    this.flushScheduled()
     for (let i = 0; i < waiters.length; i++) {
       waiters[i](exitVoid)
     }
@@ -5532,9 +5576,14 @@ class Latch implements _Latch.Latch {
     }
     this.waiters.push(resume)
     return sync(() => {
-      const index = this.waiters.indexOf(resume)
+      let index = this.waiters.indexOf(resume)
       if (index !== -1) {
         this.waiters.splice(index, 1)
+      } else if (this.scheduled !== undefined) {
+        index = this.scheduled.indexOf(resume)
+        if (index !== -1) {
+          this.scheduled.splice(index, 1)
+        }
       }
     })
   })

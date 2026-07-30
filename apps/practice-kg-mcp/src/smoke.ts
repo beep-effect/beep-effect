@@ -112,7 +112,7 @@ const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(functio
   yield* makeCatalog(path.join(catalogRoot, "corpus.duckdb"));
   yield* fs.writeFileString(
     path.join(extractRoot, "sources.jsonl"),
-    `{"artifactId":"artifact-smoke","digest":"${FixtureDigest}","engine":"tika","format":"text","operationId":"smoke","relativePath":"text/operation:smoke.txt","sizeBytes":13,"status":"succeeded"}\n`
+    `{"artifactId":"artifact-smoke","digest":"${FixtureDigest}","engine":"tika","format":"text","operationId":"operation:smoke","relativePath":"text/operation:smoke.txt","sizeBytes":13,"status":"succeeded"}\n`
   );
   yield* fs.writeFileString(path.join(textRoot, "operation:smoke.txt"), "smoke fixture");
   yield* Effect.scoped(
