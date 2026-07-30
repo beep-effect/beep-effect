@@ -53,6 +53,7 @@ const decodedYouTubeNode = (videoID: unknown, format: unknown = "") =>
   decodeYouTubeNode({ type: "youtube", version: 1, videoID, format });
 
 const invalidYouTubeNode = (): YouTubeNode => new YouTubeNode("");
+const youtubeWrapperAttribute = "data-lexical-youtube-wrapper";
 
 /**
  * Block-level Lexical decorator node for YouTube embeds.
@@ -85,6 +86,21 @@ export class YouTubeNode extends DecoratorBlockNode {
 
   static override importDOM(): DOMConversionMap | null {
     return {
+      figure: (node: Node) => {
+        const id = node instanceof HTMLElement ? node.getAttribute(youtubeWrapperAttribute) : null;
+        if (id === null) return null;
+        const decoded = decodedYouTubeNode(id);
+        return {
+          conversion: (): DOMConversionOutput => ({
+            after: () => [],
+            node: O.match(decoded, {
+              onNone: () => null,
+              onSome: ({ videoID }) => $createYouTubeNode(videoID),
+            }),
+          }),
+          priority: 1,
+        };
+      },
       iframe: (node: Node) => {
         const id = node instanceof HTMLIFrameElement ? node.getAttribute("data-lexical-youtube") : null;
         if (id === null || O.isNone(decodedYouTubeNode(id))) return null;
@@ -122,6 +138,7 @@ export class YouTubeNode extends DecoratorBlockNode {
       return { element: fallback };
     }
     const container = document.createElement("figure");
+    container.setAttribute(youtubeWrapperAttribute, decoded.value.videoID);
     const iframe = document.createElement("iframe");
     iframe.setAttribute("data-lexical-youtube", decoded.value.videoID);
     iframe.setAttribute("width", "560");

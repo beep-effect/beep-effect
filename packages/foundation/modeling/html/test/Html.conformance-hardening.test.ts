@@ -29,6 +29,7 @@ import {
   Html,
   Img,
   Input,
+  Label,
   Legend,
   MapElement,
   Optgroup,
@@ -40,6 +41,7 @@ import {
   Ruby,
   Select,
   Source,
+  Span,
   Summary,
   Table,
   Template,
@@ -221,8 +223,17 @@ describe("@beep/html generated special-child grammars", () => {
       Fieldset.make({
         children: [Div.make({ children: [] }), Legend.make({ children: [] })],
       }),
+      Fieldset.make({
+        children: [text("before"), Legend.make({ children: [] })],
+      }),
       Figure.make({
         children: [Figcaption.make({ children: [] }), Div.make({ children: [] }), Figcaption.make({ children: [] })],
+      }),
+      Figure.make({
+        children: [text("before"), Figcaption.make({ children: [] }), Div.make({ children: [] })],
+      }),
+      Figure.make({
+        children: [Div.make({ children: [] }), Figcaption.make({ children: [] }), text("after")],
       }),
       Html.make({
         children: [Body.make({ children: [] }), Head.make({ children: [Title.make({ content: "title" })] })],
@@ -265,7 +276,28 @@ describe("@beep/html generated special-child grammars", () => {
 
     const valid = [
       Fieldset.make({
-        children: [Legend.make({ children: [text("legend")] }), Div.make({ children: [] })],
+        children: [
+          Comment.make({ value: "comments are not content" }),
+          text(" \n\t "),
+          Legend.make({ children: [text("legend")] }),
+          Div.make({ children: [] }),
+        ],
+      }),
+      Figure.make({
+        children: [
+          Comment.make({ value: "comments are not content" }),
+          text(" \n\t "),
+          Figcaption.make({ children: [text("caption")] }),
+          Div.make({ children: [] }),
+        ],
+      }),
+      Figure.make({
+        children: [
+          Div.make({ children: [] }),
+          Figcaption.make({ children: [text("caption")] }),
+          text(" \n\t "),
+          Comment.make({ value: "comments are not content" }),
+        ],
       }),
       Colgroup.make({ children: [Col.make({})] }),
       Optgroup.make({
@@ -327,6 +359,75 @@ describe("@beep/html generated special-child grammars", () => {
     expect(hasRule(Button.make({ children: [Input.make({ type: O.some("text") })] }), "forbiddenDescendant")).toBe(
       true
     );
+  });
+
+  it("rejects tabindex descendants beneath anchors and buttons", () => {
+    const svg = ForeignElement.make({
+      namespace: "svg",
+      name: "svg",
+      attributes: O.some({ tabindex: "0" }),
+      children: [],
+    });
+    const math = ForeignElement.make({
+      namespace: "mathml",
+      name: "math",
+      attributes: O.some({ tabindex: "-1" }),
+      children: [],
+    });
+
+    expect(
+      hasRule(
+        Anchor.make({
+          href: O.some("/docs"),
+          children: [Span.make({ children: [Span.make({ tabindex: O.some(0), children: [] })] })],
+        }),
+        "forbiddenDescendant"
+      )
+    ).toBe(true);
+    expect(
+      hasRule(
+        Button.make({
+          children: [Span.make({ tabindex: O.some(-1), children: [] })],
+        }),
+        "forbiddenDescendant"
+      )
+    ).toBe(true);
+    expect(
+      hasRule(
+        Anchor.make({
+          href: O.some("/docs"),
+          children: [svg],
+        }),
+        "forbiddenDescendant"
+      )
+    ).toBe(true);
+    expect(hasRule(Button.make({ children: [math] }), "forbiddenDescendant")).toBe(true);
+    expect(
+      hasRule(
+        Anchor.make({
+          href: O.some("/docs"),
+          children: [Span.make({ children: [Span.make({ children: [] })] })],
+        }),
+        "forbiddenDescendant"
+      )
+    ).toBe(false);
+  });
+
+  it("allows at most one labelable descendant per label", () => {
+    const valid = Label.make({
+      children: [text("Name"), Span.make({ children: [Input.make({ type: O.some("text") })] })],
+    });
+    const validWithHiddenInput = Label.make({
+      children: [Input.make({ type: O.some("text") }), Input.make({ type: O.some("hidden") })],
+    });
+    const invalid = Label.make({
+      children: [Input.make({ type: O.some("text") }), Span.make({ children: [Input.make({ type: O.some("text") })] })],
+    });
+
+    expect(inspectConformance(valid)).toStrictEqual([]);
+    expect(inspectConformance(validWithHiddenInput)).toStrictEqual([]);
+    expect(hasRule(invalid, "forbiddenDescendant")).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(conform(invalid)))).toBe(true);
   });
 
   it("keeps schema-generated valid grammar fixtures free of grammar issues", () =>

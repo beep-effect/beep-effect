@@ -1877,6 +1877,7 @@
         "@beep/md": "workspace:^",
         "@effect/vitest": "catalog:",
         "@lexical/headless": "catalog:",
+        "@lexical/html": "catalog:",
         "@storybook/react-vite": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/jest-dom": "catalog:",

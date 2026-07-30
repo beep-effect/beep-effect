@@ -8,11 +8,15 @@ import { ARTIFACT_URI_PREFIX, documentToEditorState, SerializedEditorState } fro
 import * as MdModel from "@beep/md/Md.model";
 import { describe, expect, it } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
+import { $generateNodesFromDOM } from "@lexical/html";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { $getRoot } from "lexical";
 
 const text = (value: string) => MdModel.Text.make({ value });
+const syntheticYouTubeVideoId = "AbCdEfGhI12";
 
 /**
  * The fixture flows through the real pipeline: Md AST → schema codec →
@@ -127,7 +131,7 @@ describe("@beep/editor node registration", () => {
     expect(artifactLabel).toBeUndefined();
   });
 
-  it("exports YouTube DOM with the same least-privilege frame and visible watch fallback", () => {
+  it("round-trips YouTube DOM as one node with the least-privilege frame and visible watch fallback", () => {
     const editor = createHeadlessEditor({
       namespace: "beep-editor-youtube-export-test",
       nodes: [...editorNodes],
@@ -143,21 +147,90 @@ describe("@beep/editor node registration", () => {
           type: "youtube",
           version: 1,
           format: "",
-          videoID: "dQw4w9WgXcQ",
+          videoID: syntheticYouTubeVideoId,
         });
         const element = node.exportDOM().element;
         output.current = element instanceof HTMLElement ? element : null;
+        if (output.current === null) return;
+
+        const importedDocument = document.implementation.createHTMLDocument();
+        importedDocument.body.append(output.current.cloneNode(true));
+        $getRoot()
+          .clear()
+          .append(...$generateNodesFromDOM(editor, importedDocument));
       },
       { discrete: true }
     );
 
     const iframe = output.current?.querySelector("iframe");
     const watch = output.current?.querySelector("a");
-    expect(iframe?.getAttribute("src")).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(output.current?.getAttribute("data-lexical-youtube-wrapper")).toBe(syntheticYouTubeVideoId);
+    expect(iframe?.getAttribute("src")).toBe(`https://www.youtube-nocookie.com/embed/${syntheticYouTubeVideoId}`);
     expect(iframe?.getAttribute("sandbox")).toBe(YOUTUBE_EMBED_SANDBOX);
     expect(iframe?.getAttribute("referrerpolicy")).toBe("strict-origin-when-cross-origin");
-    expect(watch?.getAttribute("href")).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(watch?.getAttribute("href")).toBe(`https://www.youtube.com/watch?v=${syntheticYouTubeVideoId}`);
     expect(watch?.getAttribute("rel")).toBe("noreferrer noopener");
     expect(watch?.textContent).toBe("Watch on YouTube");
+
+    const roundTripped = Result.getOrThrow(
+      S.decodeUnknownResult(SerializedEditorState)(editor.getEditorState().toJSON())
+    );
+    expect(roundTripped.root.children).toEqual([
+      expect.objectContaining({ type: "youtube", videoID: syntheticYouTubeVideoId }),
+    ]);
+  });
+
+  it("drops every descendant of a malformed marked YouTube wrapper", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-youtube-malformed-wrapper-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    const importedDocument = document.implementation.createHTMLDocument();
+    const wrapper = importedDocument.createElement("figure");
+    wrapper.setAttribute("data-lexical-youtube-wrapper", "invalid");
+    const iframe = importedDocument.createElement("iframe");
+    iframe.setAttribute("data-lexical-youtube", syntheticYouTubeVideoId);
+    const watch = importedDocument.createElement("a");
+    watch.setAttribute("href", "javascript:alert(1)");
+    watch.textContent = "Unsafe fallback";
+    wrapper.append(iframe, watch);
+    importedDocument.body.append(wrapper);
+
+    editor.update(
+      () => {
+        $getRoot().append(...$generateNodesFromDOM(editor, importedDocument));
+      },
+      { discrete: true }
+    );
+
+    expect(editor.getEditorState().toJSON().root.children).toEqual([]);
+  });
+
+  it("continues to import a standalone legacy YouTube iframe", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-youtube-legacy-iframe-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    const importedDocument = document.implementation.createHTMLDocument();
+    const iframe = importedDocument.createElement("iframe");
+    iframe.setAttribute("data-lexical-youtube", syntheticYouTubeVideoId);
+    importedDocument.body.append(iframe);
+
+    editor.update(
+      () => {
+        $getRoot().append(...$generateNodesFromDOM(editor, importedDocument));
+      },
+      { discrete: true }
+    );
+
+    expect(editor.getEditorState().toJSON().root.children).toEqual([
+      expect.objectContaining({ type: "youtube", videoID: syntheticYouTubeVideoId }),
+    ]);
   });
 });

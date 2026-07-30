@@ -1959,7 +1959,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       ],
     ],
     obsoleteAttributes: ["align", "border", "hspace", "ismap", "usemap", "vspace"],
-    conditionalCategories: [{ attribute: "type", category: "interactive", condition: "not-equals", value: "hidden" }],
+    conditionalCategories: [
+      { attribute: "type", category: "interactive", condition: "not-equals", value: "hidden" },
+      { attribute: "type", category: "labelable", condition: "not-equals", value: "hidden" },
+    ],
   },
   ins: {
     tag: "ins",

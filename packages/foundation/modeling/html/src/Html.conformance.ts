@@ -36,6 +36,7 @@ class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
     href: S.Unknown.pipe(S.optionalKey),
     src: S.Unknown.pipe(S.optionalKey),
     srcset: S.Unknown.pipe(S.optionalKey),
+    tabindex: S.Unknown.pipe(S.optionalKey),
     target: S.Unknown.pipe(S.optionalKey),
     type: S.Unknown.pipe(S.optionalKey),
   },
@@ -292,20 +293,26 @@ const attributeEquals = (value: unknown, expected: string): boolean =>
 
 type ForbiddenDescendantConstraint = {
   readonly ancestor: HtmlTag;
+  readonly attributes: ReadonlyArray<keyof HtmlChildView>;
   readonly categories: ReadonlyArray<string>;
   readonly tags: ReadonlyArray<HtmlTag>;
 };
 
 const forbiddenDescendantConstraints: ReadonlyArray<ForbiddenDescendantConstraint> = [
-  { ancestor: "a", categories: ["interactive"], tags: ["a"] },
-  { ancestor: "address", categories: ["heading", "sectioning"], tags: ["address", "header", "footer"] },
-  { ancestor: "button", categories: ["interactive"], tags: [] },
-  { ancestor: "dt", categories: ["heading", "sectioning"], tags: ["header", "footer"] },
-  { ancestor: "form", categories: [], tags: ["form"] },
-  { ancestor: "label", categories: [], tags: ["label"] },
-  { ancestor: "meter", categories: [], tags: ["meter"] },
-  { ancestor: "progress", categories: [], tags: ["progress"] },
-  { ancestor: "th", categories: ["heading", "sectioning"], tags: ["header", "footer"] },
+  { ancestor: "a", attributes: ["tabindex"], categories: ["interactive"], tags: ["a"] },
+  {
+    ancestor: "address",
+    attributes: [],
+    categories: ["heading", "sectioning"],
+    tags: ["address", "header", "footer"],
+  },
+  { ancestor: "button", attributes: ["tabindex"], categories: ["interactive"], tags: [] },
+  { ancestor: "dt", attributes: [], categories: ["heading", "sectioning"], tags: ["header", "footer"] },
+  { ancestor: "form", attributes: [], categories: [], tags: ["form"] },
+  { ancestor: "label", attributes: [], categories: [], tags: ["label"] },
+  { ancestor: "meter", attributes: [], categories: [], tags: ["meter"] },
+  { ancestor: "progress", attributes: [], categories: [], tags: ["progress"] },
+  { ancestor: "th", attributes: [], categories: ["heading", "sectioning"], tags: ["header", "footer"] },
 ];
 
 type AttributeRelationship = {
@@ -342,14 +349,9 @@ const attributeRelationships: ReadonlyArray<AttributeRelationship> = [
   },
 ];
 
-const inspectForbiddenDescendants = (
-  node: HtmlChildView,
-  tag: HtmlTag,
-  path: ReadonlyArray<string>,
-  ancestors: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> => {
+const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<string> => {
   const meta = ELEMENT_META[tag];
-  const categories = A.filter(meta.categories, (category) => {
+  return A.filter(meta.categories, (category) => {
     const rules = A.filter(meta.conditionalCategories, (rule) => rule.category === category);
     return (
       rules.length === 0 ||
@@ -360,10 +362,35 @@ const inspectForbiddenDescendants = (
       )
     );
   });
+};
+
+const inspectForbiddenDescendants = (
+  node: HtmlChildView,
+  tag: HtmlTag,
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const categories = effectiveCategories(node, tag);
   return A.flatMap(forbiddenDescendantConstraints, (constraint) =>
-    A.contains(ancestors, constraint.ancestor) &&
-    (A.contains(constraint.tags, tag) || A.some(constraint.categories, (category) => A.contains(categories, category)))
-      ? [makeIssue(path, "forbiddenDescendant", `<${tag}> is forbidden beneath <${constraint.ancestor}>`)]
+    A.contains(ancestors, constraint.ancestor)
+      ? pipe(
+          constraint.attributes,
+          A.findFirst((attribute) => hasAttribute(node[attribute])),
+          O.match({
+            onNone: () =>
+              A.contains(constraint.tags, tag) ||
+              A.some(constraint.categories, (category) => A.contains(categories, category))
+                ? [makeIssue(path, "forbiddenDescendant", `<${tag}> is forbidden beneath <${constraint.ancestor}>`)]
+                : A.emptyReadonly(),
+            onSome: (attribute) => [
+              makeIssue(
+                A.append(path, `attributes.${attribute}`),
+                "forbiddenDescendant",
+                `<${tag} ${attribute}> is forbidden beneath <${constraint.ancestor}>`
+              ),
+            ],
+          })
+        )
       : A.emptyReadonly()
   );
 };
@@ -412,6 +439,21 @@ const inspectAttributeRelationships = (
 
 const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
   pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
+
+const countLabelableDescendants = (node: HtmlChildView): number =>
+  A.reduce(childrenOf(node), 0, (count, child) => {
+    const own = isHtmlTag(child._tag) && A.contains(effectiveCategories(child, child._tag), "labelable") ? 1 : 0;
+    return count + own + countLabelableDescendants(child);
+  });
+
+const inspectLabelableDescendants = (
+  node: HtmlChildView,
+  tag: HtmlTag,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> =>
+  tag === "label" && countLabelableDescendants(node) > 1
+    ? [makeIssue(path, "forbiddenDescendant", "<label> may contain at most one labelable descendant")]
+    : A.emptyReadonly();
 
 const effectiveContentTokens = (tokens: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.flatMap(tokens, (token) => HTML_CONTENT_TOKEN_EXPANSIONS[token] ?? [token]);
@@ -522,27 +564,28 @@ const inspectElementOrder = (
   );
   const elementTags = A.map(elementChildren, (child) => child._tag);
   const sequenceTags = A.filter(elementTags, (tag) => !isScriptSupporting(tag));
+  const significantChildren = A.filter(
+    children,
+    (child) =>
+      child._tag !== "#comment" &&
+      !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
+  );
   const significantText = A.some(
     children,
     (child) => child._tag === "#text" && isString(child.value) && Str.isNonEmpty(Str.trim(child.value))
   );
   // Content-model order ignores comments and inter-element whitespace; every
   // other direct child is significant.
-  const firstSignificantChild = A.findFirst(
-    children,
-    (child) =>
-      child._tag !== "#comment" &&
-      !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
-  );
+  const firstSignificantChild = A.head(significantChildren);
   const issue = (message: string): ReadonlyArray<HtmlConformanceIssue> => [makeIssue(path, "elementOrder", message)];
   const oneAtEdge = (tag: HtmlTag, edge: "first" | "either"): boolean => {
-    const first = A.findFirstIndex(elementTags, (candidate) => candidate === tag);
-    const last = A.findLastIndex(elementTags, (candidate) => candidate === tag);
+    const first = A.findFirstIndex(significantChildren, (candidate) => candidate._tag === tag);
+    const last = A.findLastIndex(significantChildren, (candidate) => candidate._tag === tag);
     return (
       (O.isNone(first) && O.isNone(last)) ||
       (O.isSome(first) &&
         O.contains(last, first.value) &&
-        (first.value === 0 || (edge === "either" && first.value === elementTags.length - 1)))
+        (first.value === 0 || (edge === "either" && first.value === significantChildren.length - 1)))
     );
   };
   const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean => {
@@ -607,12 +650,12 @@ const inspectElementOrder = (
     Match.when("fieldset", () =>
       oneAtEdge("legend", "first")
         ? A.emptyReadonly()
-        : issue("<legend> must be the first element child of <fieldset> and occur at most once")
+        : issue("<legend> must be the first significant child of <fieldset> and occur at most once")
     ),
     Match.when("figure", () =>
       oneAtEdge("figcaption", "either")
         ? A.emptyReadonly()
-        : issue("<figcaption> must be the first or last element child of <figure> and occur at most once")
+        : issue("<figcaption> must be the first or last significant child of <figure> and occur at most once")
     ),
     Match.when("colgroup", () =>
       hasAttribute((parent as unknown as Record<string, unknown>).span) &&
@@ -689,7 +732,7 @@ const inspectElementOrder = (
     Match.when("optgroup", () =>
       oneAtEdge("legend", "first")
         ? A.emptyReadonly()
-        : issue("<optgroup> may contain at most one <legend>, as its first element child")
+        : issue("<optgroup> may contain at most one <legend>, as its first significant child")
     ),
     Match.when("select", () => {
       const traditional = A.every(sequenceTags, (tag) => tag === "option" || tag === "optgroup" || tag === "hr");
@@ -821,14 +864,47 @@ const inspectForeignFixedPoints = (
   return A.appendAll(nameIssues, attributeIssues);
 };
 
+const inspectForbiddenForeignDescendantAttributes = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const attributeNames = pipe(
+    attributeValue(node.attributes),
+    O.filter(P.isObject),
+    O.map(Struct.keys),
+    O.getOrElse(A.empty)
+  );
+  return A.flatMap(forbiddenDescendantConstraints, (constraint) =>
+    A.contains(ancestors, constraint.ancestor)
+      ? A.flatMap(constraint.attributes, (attribute) =>
+          A.some(attributeNames, (name) => name === attribute)
+            ? [
+                makeIssue(
+                  A.append(path, `attributes.${attribute}`),
+                  "forbiddenDescendant",
+                  `Foreign attribute ${attribute} is forbidden beneath <${constraint.ancestor}>`
+                ),
+              ]
+            : A.emptyReadonly()
+        )
+      : A.emptyReadonly()
+  );
+};
+
 const inspectForeignChild = (
   node: HtmlChildView,
   path: ReadonlyArray<string>,
   ancestors: ReadonlyArray<string>,
   ancestorContentTokens: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> =>
-  A.appendAll(
-    A.appendAll(inspectForeignEntryPoint(node, path, ancestors), inspectForeignFixedPoints(node, path)),
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const local = [
+    ...inspectForeignEntryPoint(node, path, ancestors),
+    ...inspectForeignFixedPoints(node, path),
+    ...inspectForbiddenForeignDescendantAttributes(node, path, ancestors),
+  ];
+  return A.appendAll(
+    local,
     A.flatMap(childrenOf(node), (child, index) => {
       const pathToChild = childPath(path, index);
       return A.appendAll(
@@ -837,6 +913,7 @@ const inspectForeignChild = (
       );
     })
   );
+};
 
 const inspectChild = (
   node: HtmlChildView,
@@ -861,6 +938,7 @@ const inspectChild = (
       const local = [
         ...own,
         ...inspectForbiddenDescendants(node, tag, path, ancestors),
+        ...inspectLabelableDescendants(node, tag, path),
         ...inspectElementAttributes(node, tag, path),
         ...inspectAttributeRelationships(node, tag, path),
         ...inspectChildModel(node, children, path, ancestorContentTokens),

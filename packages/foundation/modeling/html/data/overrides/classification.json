@@ -219,6 +219,12 @@
         "category": "interactive",
         "condition": "not-equals",
         "value": "hidden"
+      },
+      {
+        "attribute": "type",
+        "category": "labelable",
+        "condition": "not-equals",
+        "value": "hidden"
       }
     ],
     "object": [

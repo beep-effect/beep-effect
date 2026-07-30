@@ -62,6 +62,7 @@
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@lexical/code": "^0.48.0",
     "@lexical/headless": "^0.48.0",
+    "@lexical/html": "^0.48.0",
     "@lexical/link": "^0.48.0",
     "@lexical/list": "^0.48.0",
     "@lexical/markdown": "^0.48.0",

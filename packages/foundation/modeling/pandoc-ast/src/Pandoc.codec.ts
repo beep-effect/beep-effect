@@ -98,10 +98,16 @@ const PandocMetaConstructorName = LiteralKit([
   "MetaMap",
 ]);
 
+const PandocTableAlignmentConstructorName = LiteralKit(["AlignLeft", "AlignRight", "AlignCenter", "AlignDefault"]);
+
+const PandocTableColumnWidthConstructorName = LiteralKit(["ColWidth", "ColWidthDefault"]);
+
 const PandocKnownConstructorName = S.Union([
   PandocInlineConstructorName,
   PandocBlockConstructorName,
   PandocMetaConstructorName,
+  PandocTableAlignmentConstructorName,
+  PandocTableColumnWidthConstructorName,
   PandocMathType,
   PandocListNumberStyle,
   PandocListNumberDelimiter,
@@ -109,6 +115,7 @@ const PandocKnownConstructorName = S.Union([
 ]);
 
 const isPandocKnownConstructorName = S.is(PandocKnownConstructorName);
+const isPandocTableAlignmentConstructorName = S.is(PandocTableAlignmentConstructorName);
 type PandocConstructorContext = "block" | "inline" | "meta";
 
 /**
@@ -447,6 +454,7 @@ const decodeJsonObject = S.decodeUnknownEffect(PandocJsonObject);
 const decodeJsonObjectFromString = S.decodeUnknownEffect(PandocJsonObjectFromString);
 const encodeJsonObjectToString = S.encodeEffect(PandocJsonObjectFromString);
 const decodeString = S.decodeUnknownEffect(S.String);
+const decodeFinite = S.decodeUnknownEffect(S.Finite);
 const decodeAttrWire = S.decodeUnknownEffect(PandocAttrFromWire);
 const decodeTargetWire = S.decodeUnknownEffect(PandocTargetFromWire);
 const decodeUnknownArray = S.decodeUnknownEffect(S.Array(S.Unknown));
@@ -1184,8 +1192,28 @@ const inspectTableComponent = (
     onSome: (wire) => inspectUnmatchedConstructor(wire, "block", path),
   });
 
-const inspectTableStructuralValue = (input: unknown, path: JsonPathType): LosslessInspection =>
-  inspectTableComponent(input, path, () => Effect.succeed([]));
+const inspectTableAlignment = (input: unknown, path: JsonPathType): LosslessInspection =>
+  O.match(decodeConstructorOption(input), {
+    onNone: () => Effect.succeed([]),
+    onSome: (wire) =>
+      Match.value(wire.t).pipe(
+        Match.when(isPandocTableAlignmentConstructorName, () =>
+          inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)
+        ),
+        Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
+      ),
+  });
+
+const inspectTableColumnWidth = (input: unknown, path: JsonPathType): LosslessInspection =>
+  O.match(decodeConstructorOption(input), {
+    onNone: () => Effect.succeed([]),
+    onSome: (wire) =>
+      Match.value(wire.t).pipe(
+        Match.when("ColWidth", () => inspectDecoded(decodeFinite(wire.c), "block", wire.t, path)),
+        Match.when("ColWidthDefault", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
+        Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
+      ),
+  });
 
 const inspectTableCaptionPair = (
   [shortCaption, longCaption]: typeof TableCaptionPairWire.Type,
@@ -1218,8 +1246,8 @@ const inspectTableColumnSpec = (input: unknown, path: JsonPathType): LosslessIns
   inspectTableComponent(input, path, (value, columnSpecPath) =>
     inspectDecoded(decodeTableColumnSpecWire(value), "block", "Table", columnSpecPath, ([alignment, width]) =>
       Effect.zipWith(
-        inspectTableStructuralValue(alignment, appendPath(columnSpecPath, 0)),
-        inspectTableStructuralValue(width, appendPath(columnSpecPath, 1)),
+        inspectTableAlignment(alignment, appendPath(columnSpecPath, 0)),
+        inspectTableColumnWidth(width, appendPath(columnSpecPath, 1)),
         (alignmentIssues, widthIssues) => [...alignmentIssues, ...widthIssues]
       )
     )
@@ -1229,7 +1257,7 @@ const inspectTableCell = (input: unknown, path: JsonPathType): LosslessInspectio
   inspectTableComponent(input, path, (value, cellPath) =>
     inspectDecoded(decodeTableCellWire(value), "block", "Table", cellPath, ([, alignment, , , blocks]) =>
       Effect.zipWith(
-        inspectTableStructuralValue(alignment, appendPath(cellPath, 1)),
+        inspectTableAlignment(alignment, appendPath(cellPath, 1)),
         inspectChildren(blocks, appendPath(cellPath, 4), inspectBlock),
         (alignmentIssues, blockIssues) => [...alignmentIssues, ...blockIssues]
       )

@@ -268,6 +268,28 @@ describe("Pandoc.codec", () => {
     }
   });
 
+  it("rejects malformed standard table constructors and retains their exact wire losslessly", () => {
+    const malformed = [
+      {
+        expected: ["AlignRight", "/blocks/0/c/4/0/3/0/1/0/1"],
+        wire: tableWire({ cellAlignment: { c: [], t: "AlignRight" } }),
+      },
+      {
+        expected: ["ColWidth", "/blocks/0/c/2/0/1"],
+        wire: tableWire({ columnWidth: { c: "wide", t: "ColWidth" } }),
+      },
+    ] as const;
+
+    for (const { expected, wire } of malformed) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        [expected[0], "block", expected[1]],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
   it("retains valid and future table structural constructors exactly", () => {
     const accepted = [
       tableWire(),
