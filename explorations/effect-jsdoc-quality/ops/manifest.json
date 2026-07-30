@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-jsdoc-quality",
+    "title": "Effect-level JSDoc quality",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Keep and evolve @beep/docgen, or lean on Effect's v4 stack (a Jsdocs.ts-style grammar validator)? Evidence favors keeping ours: theirs is private, currently toothless in CI, and v4 lost example typechecking.",
+      "How hard do we enforce markdown section templates (**When to use** / **Details** / **Gotchas** / titled **Example**): advisory, ratchet-on-new-code, or required — and per which symbol kinds?",
+      "Does every export still need a compilable example, or do we split the rule by symbol kind (Effect's Schema.ts documents only 14% of exports with examples yet hovers stay excellent)?",
+      "Example carrier: keep the @example tag under new sections (zero docgen change), or move to **Example** (Title) sections and teach @beep/docgen Parser.ts to harvest description fences (verified-localized change)?",
+      "Pilot scope: which 2-3 packages get the first Effect-style rewrite (proposal: foundation/modeling/schema + one tooling package + one domain slice)?",
+      "How do new grammar rules ride the existing jsdoc-inventory + fail-on-growth ratchet, and which .patterns/jsdoc-documentation.md laws change (@remarks vs sections collision, tag order, described-@see, @since stays 0.0.0)?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-30",
+    "updated": "2026-07-30"
+  }
+}
