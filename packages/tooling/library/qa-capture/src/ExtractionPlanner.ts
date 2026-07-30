@@ -72,12 +72,15 @@ export const OVERLAP_MERGE_GAP_MS = 250;
  * @category constants
  * @since 0.0.0
  */
-export const FRAME_ESTIMATED_BYTES = 220000;
+export const FRAME_ESTIMATED_BYTES = 60000;
 
 /**
  * Deterministic GIF byte estimate per width pixel per frame.
  *
- * A 640-wide 10 fps GIF estimates to roughly 512 KB per second.
+ * A 640-wide 10 fps GIF estimates to roughly 154 KB per second. Calibrated
+ * against the recorded-qa-acceptance round-1 measurements: palette-quantized
+ * GIFs of mostly-static UI compress far below photographic estimates, and the
+ * original 80 bytes/width-px/frame figure degraded every GIF to strips.
  *
  * @example
  * ```ts
@@ -89,7 +92,7 @@ export const FRAME_ESTIMATED_BYTES = 220000;
  * @category constants
  * @since 0.0.0
  */
-export const GIF_BYTES_PER_WIDTH_PIXEL_FRAME = 80;
+export const GIF_BYTES_PER_WIDTH_PIXEL_FRAME = 24;
 
 /**
  * Deterministic byte estimate for the whole-video contact sheet JPEG.

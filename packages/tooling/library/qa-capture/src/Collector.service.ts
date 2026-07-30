@@ -31,11 +31,13 @@ import type { ActionEvent } from "./ActionEvent.models.ts";
 const $I = $QaCaptureId.create("Collector.service");
 
 /**
- * First sequence number allocated to server-side markers (`POST /mark`).
+ * Placeholder sequence carried by server-side markers (`POST /mark`) before
+ * canonical re-sequencing.
  *
- * Witness sequence numbers count up from one inside the page; server-side
- * markers count up from this disjoint base so the two allocators can never
- * collide in one session.
+ * The collector rewrites EVERY accepted event's seq with one monotone
+ * session-wide counter at ingest (witness counters restart per navigation, so
+ * raw page-local seqs collide across page loads). This constant only fills
+ * the schema-required field on a server-minted marker until that rewrite.
  *
  * @example
  * ```ts
@@ -257,14 +259,19 @@ const makeService = Effect.fnUntraced(function* () {
       )
     );
 
-    const queue = yield* Queue.make<ActionEvent, Cause.Done>();
+    const queue = yield* Queue.make<readonly [ActionEvent, number], Cause.Done>();
     const stopped = yield* Deferred.make<void>();
     const acceptedRef = yield* Ref.make(0);
     const rejectedRef = yield* Ref.make(0);
-    const serverSeqRef = yield* Ref.make(SERVER_MARKER_SEQ_BASE);
+    const canonicalSeqRef = yield* Ref.make(1);
 
-    const appendEvent = (event: ActionEvent) =>
+    // The witness restarts its page-local counter on every navigation, so raw
+    // seqs collide across page loads. The collector owns the canonical
+    // session-wide sequence: every accepted event's seq is rewritten at
+    // ingest, and the on-disk value is the only one evidence may reference.
+    const appendEvent = ([event, seq]: readonly [ActionEvent, number]) =>
       encodeActionEventJson(event).pipe(
+        Effect.map((line) => JSON.stringify({ ...(JSON.parse(line) as Record<string, unknown>), seq })),
         Effect.flatMap((line) => fs.writeFileString(options.eventsPath, `${line}\n`, { flag: "a" })),
         Effect.catchCause((cause) => Effect.logWarning("qa collector failed to append an event", cause))
       );
@@ -282,7 +289,10 @@ const makeService = Effect.fnUntraced(function* () {
     yield* Effect.addFinalizer(() => Queue.end(queue).pipe(Effect.andThen(Fiber.join(writer)), Effect.ignore));
 
     const acceptEvent = (event: ActionEvent) =>
-      Queue.offer(queue, event).pipe(Effect.andThen(Ref.update(acceptedRef, (count) => count + 1)));
+      Ref.getAndUpdate(canonicalSeqRef, (current) => current + 1).pipe(
+        Effect.tap((seq) => Queue.offer(queue, [event, seq] as const)),
+        Effect.tap(() => Ref.update(acceptedRef, (count) => count + 1))
+      );
 
     const ingestLine = (line: string) =>
       decodeActionEventJson(line).pipe(
@@ -318,12 +328,11 @@ const makeService = Effect.fnUntraced(function* () {
         .handle("events", ({ payload }) => ingestBatch(payload))
         .handle("mark", ({ payload }) =>
           Effect.gen(function* () {
-            const seq = yield* Ref.getAndUpdate(serverSeqRef, (current) => current + 1);
-            yield* acceptEvent(
+            const seq = yield* acceptEvent(
               MarkerEvent.make({
                 kind: "marker",
                 label: payload.label,
-                seq,
+                seq: SERVER_MARKER_SEQ_BASE,
                 tEpochMs: yield* Clock.currentTimeMillis,
               })
             );

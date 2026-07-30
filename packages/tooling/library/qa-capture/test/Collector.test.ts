@@ -7,7 +7,6 @@ import {
   MarkAccepted,
   MarkerEvent,
   PointerDownEvent,
-  SERVER_MARKER_SEQ_BASE,
   Witness,
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
@@ -95,7 +94,10 @@ describe("@beep/qa-capture collector", () => {
               body: HttpBody.jsonUnsafe({ label: "agent:checkpoint" }),
             });
             const marked = yield* Effect.flatMap(markResponse.text, decodeMarkAccepted);
-            expect(marked.seq).toBe(SERVER_MARKER_SEQ_BASE);
+            // Canonical session-wide sequencing: two accepted batch events took
+            // seqs 1 and 2, so the server mark receives 3 — never the
+            // page-local or placeholder value.
+            expect(marked.seq).toBe(3);
 
             const stopFiber = yield* Effect.forkChild(running.awaitStop);
             yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
@@ -113,7 +115,8 @@ describe("@beep/qa-capture collector", () => {
         expect(A.length(lines)).toBe(3);
         const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line));
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
-        expect(decoded[2]?.seq).toBe(SERVER_MARKER_SEQ_BASE);
+        // On-disk seqs are the canonical rewrite: strictly monotone from 1.
+        expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
 
         yield* fs.remove(tmpDir, { force: true, recursive: true });
       }).pipe(provideScopedLayer(TestLayer)),

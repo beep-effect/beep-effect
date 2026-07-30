@@ -773,7 +773,9 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
       layout,
       plan,
       session: manifest.session,
-      sourceVideo: prepared.path,
+      // Session-relative: provenance is embedded into artifacts that may be
+      // committed to packets — absolute home paths must never ride along.
+      sourceVideo: path.relative(layout.root, prepared.path),
     })
   );
   const outcome = ExtractionOutcome.make({
