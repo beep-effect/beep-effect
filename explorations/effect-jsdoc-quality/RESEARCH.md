@@ -30,10 +30,12 @@ repo law requires namespace imports (`import * as S`) — ours wins.
 
 Full table with dispositions in `research/SOURCES.md` §4. Highlights:
 
-- `@beep/repo-docgen` (`packages/tooling/tool/docgen/`) — compiles every
-  `@example` via `tsc --noEmit`; `extractFencedCodeBlocks` already exists
-  (`Core.ts:268`), so section-based harvesting is a localized change;
-  `runExamples` exists, default false.
+- `@beep/repo-docgen` (`packages/tooling/tool/docgen/`) — compiles examples
+  via `tsc --noEmit`, and (correction 2026-07-30, surfaced by Codex review on
+  PR #516) ALREADY harvests description fences alongside `@example` tag
+  fences (`Core.ts:319-338` via `extractFencedCodeBlocks`) — so the B2
+  carrier needs a regression fixture, not new harvesting; `runExamples`
+  exists, default false.
 - JSDoc inventory (12 mechanical ts-morph rules) + fail-on-growth ratchet +
   required "JSDoc Ratchet" CI lane — the enforcement chassis new grammar
   rules ride on.

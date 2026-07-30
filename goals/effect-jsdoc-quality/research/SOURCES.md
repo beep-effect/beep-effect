@@ -68,7 +68,7 @@ reference screenshots are local-only paths recorded in `CAPTURE.md`
 
 | Brick | Path | Disposition |
 |-------|------|-------------|
-| `@beep/repo-docgen` (pre-v4 `@effect/docgen` port; compiles `@example` via `tsc --noEmit`) | `packages/tooling/tool/docgen/` (`Parser.ts:163`, `Core.ts:268-271,450-456`, `Configuration.ts:99-126`) | extend (optionally harvest `**Example**` fences; `runExamples` exists, default false) |
+| `@beep/repo-docgen` (pre-v4 `@effect/docgen` port; compiles examples via `tsc --noEmit`) | `packages/tooling/tool/docgen/` (`Parser.ts:163`, `Core.ts:268-271,319-338,450-456`, `Configuration.ts:99-126`) | already harvests BOTH carriers (`Core.ts:319-338` — description fences + tag fences; correction surfaced by Codex review on PR #516); extend = regression fixture only; `runExamples` exists, default false |
 | JSDoc inventory + 12 mechanical rules | `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts:272-478` | extend (new grammar rule codes) |
 | Fail-on-growth ratchet + required CI lane | `standards/jsdoc-totals.regression-baseline.jsonc:12-19`; `.github/workflows/check.yml:499-528` ("JSDoc Ratchet" is a required check) | reuse (new codes ride the same baseline) |
 | Example-quality scorer `deterministic-rubric-v1` (15 finding codes, advisory-only) | `packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts:177-192`, `Quality.rubric.ts:340-352` | extend / wire to CI (Option D) |
@@ -88,11 +88,14 @@ any `{@link}`-resolution check; any described-`@see` convention.
 
 ## 5. Cross-links & provenance
 
-- This packet: `RESEARCH.md` (synthesis), `research/effect-doc-pipeline.md`,
-  `research/diff-effect-vs-beep.md`, `research/quality-rubric.md`,
-  `research/options.md`, `DECISIONS.md` (pending grill).
-- Exploration ↔ goal links: none yet — graduation happens only after
-  `/grill-with-docs` (see `ops/manifest.json` `links.goals`).
+- Grill COMPLETE (2026-07-30): twelve decisions recorded in
+  `explorations/effect-jsdoc-quality/DECISIONS.md`; this goal's `SPEC.md`
+  encodes them normatively. Research legs live in the exploration packet's
+  `research/` (RESEARCH.md synthesis, effect-doc-pipeline, diff, rubric,
+  options).
+- Exploration ↔ goal: graduated 2026-07-30 — exploration manifest
+  `links.goals` → `goals/effect-jsdoc-quality`; this manifest
+  `provenance.exploration` → `explorations/effect-jsdoc-quality`.
 - Sibling prior art: `goals/jsdoc-worker-eval`, `goals/repo-codegraph-jsdoc`,
   `goals/quality-gate-ratchets`; killed packet `effect-capability-kg` (ATLAS
   history — resume-as-fresh precedent).

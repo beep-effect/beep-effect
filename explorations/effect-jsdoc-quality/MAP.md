@@ -24,8 +24,11 @@ scheduled until the pilot proves the grammar.
 
 ## First Vertical Slice
 
-Law rewrite (sections + described-@see + @remarks retirement) + ONE new
-inventory rule (section order/shape) + `foundation/modeling/schema` pilot
+Law rewrite (sections + described-@see + @remarks retirement) + TWO inventory
+updates shipped together — the section order/shape rule AND the
+section-or-tag example-presence update (`requiredExportTags`,
+`JSDocDocumentationInventory.ts:115`; without it, converting pilot exports to
+sections goes inventory-red) — + `foundation/modeling/schema` pilot
 conversion of a handful of exports, verified by: inventory green, docgen
 compile green, and a before/after WebStorm hover screenshot pair matching the
 Effect reference screenshots.

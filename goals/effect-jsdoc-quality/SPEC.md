@@ -19,12 +19,15 @@ grilled decisions in `explorations/effect-jsdoc-quality/DECISIONS.md`
 
 1. **Approach**: grammar port + ratchet (Option B). No mass migration.
 2. **Carrier — B2 transitional**: `**Example** (Title)` sections are the
-   canonical carrier for new/touched code. `@beep/docgen` harvests BOTH
-   carriers: keep the `@example` tag path (`Parser.ts:163`) and add
-   description-fence harvesting (reuse `extractFencedCodeBlocks`,
-   `Core.ts:268`); both feed the existing `tsc --noEmit` gate. Example
-   presence = section OR grandfathered tag. Existing 16,604 tags migrate
-   cleanup-on-touch only.
+   canonical carrier for new/touched code. `@beep/docgen` ALREADY harvests
+   both carriers — `Core.ts:319-338` extracts description fences alongside
+   `@example` tag fences into generated example files feeding the existing
+   `tsc --noEmit` gate (correction vs the exploration research, surfaced by
+   Codex review on PR #516) — so the docgen task is a REGRESSION FIXTURE
+   proving the section path, not new harvesting. The real code change is in
+   the inventory: example presence = section OR grandfathered tag (update
+   `requiredExportTags`, `JSDocDocumentationInventory.ts:115,605,667`).
+   Existing 16,604 tags migrate cleanup-on-touch only.
 3. **`@remarks` retired**: forbidden in new work; details/gotchas semantics
    move to body sections; touched files migrate their `@remarks` (491 exist).
 4. **Enforcement — shape-checked opt-in**: sections optional; when present
@@ -34,6 +37,13 @@ grilled decisions in `explorations/effect-jsdoc-quality/DECISIONS.md`
    with exactly one ts fence each, no loose ts fences outside Example
    sections, one-paragraph lead description. New rule codes ride
    `standards/jsdoc-totals.regression-baseline.jsonc` fail-on-growth.
+   **Diff-aware gate required**: the existing ratchet compares repo-wide
+   totals only (`JSDocRatchet.ts:426-445`), so it cannot enforce the
+   cleanup-on-touch promises (no-`@remarks`/grandfathered-tag migration in
+   touched files) — an untouched legacy finding passes and cleanup elsewhere
+   can offset new findings. P2 must add a changed-files-scoped check (the
+   quality tooling already has changed-files scoping) or the law text must
+   scope its touched-file promises to what the gate actually enforces.
 5. **Example law — kind-split**: value-level exports (functions, constants,
    classes, schemas, services) require an Example; pure type-level exports
    (type aliases, interfaces, namespaces, `.Encoded` companions) require
@@ -84,8 +94,8 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts`
   — ~6-8 new rules (mapping table:
   `explorations/effect-jsdoc-quality/research/diff-effect-vs-beep.md` §8).
-- `packages/tooling/tool/docgen/` — section-fence harvesting (`Parser.ts`,
-  `Core.ts`) + kind-aware presence interplay.
+- `packages/tooling/tool/docgen/` — regression fixture for the EXISTING
+  description-fence harvest (`Core.ts:319-338`); no new harvesting expected.
 - `tsdoc.json` — hygiene.
 - Pilot packages' JSDoc.
 - `standards/jsdoc-totals.regression-baseline.jsonc` — new tracked totals.
@@ -107,8 +117,11 @@ Higher sources outrank lower sources when they conflict.
 - [ ] New inventory rules enforce Binding decision 4's shape checks and the
       kind-aware presence rule; `bun run beep quality jsdoc-inventory` green;
       new codes present in the regression baseline.
-- [ ] `@beep/docgen` compiles examples from BOTH carriers (proven with a
-      section-only pilot file or fixture).
+- [ ] A regression fixture proves the existing description-fence harvest
+      path compiles section-carried examples (`Core.ts:319-338`).
+- [ ] The cleanup-on-touch rules are enforced by a changed-files-scoped
+      check, or the law's touched-file promises are scoped to match the
+      repo-wide ratchet.
 - [ ] Pilot trio converted; before/after hover screenshots recorded under
       `history/outputs/`; inventory + docgen + check battery green.
 - [ ] Hygiene fixes landed (tsdoc.json, line-848 bug, skill paths).
