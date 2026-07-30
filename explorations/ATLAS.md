@@ -40,19 +40,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`effect-jsdoc-quality`](./effect-jsdoc-quality/README.md) — research-stage:
-  close the JSDoc pedagogy gap so `@beep/*` IDE hovers teach like Effect
-  v4's. Opened 2026-07-30 from three WebStorm hover screenshots; same-day
-  mining found Effect's quality is a machine-enforced grammar
-  (`@effect/jsdocs`: **When to use**/**Details**/**Gotchas**/titled
-  **Example** sections, described `@see`, resolved `{@link}`) — and that v4
-  forbids `@example` and thereby lost example typechecking, which
-  `@beep/docgen` still has. Research artifacts + four options staged in
-  [`research/options.md`](./effect-jsdoc-quality/research/options.md)
-  (lead: grammar port riding the existing jsdoc-inventory ratchet);
-  next step is `/grill-with-docs`. Prior art cited:
-  `goals/jsdoc-worker-eval`, `goals/repo-codegraph-jsdoc`,
-  `goals/quality-gate-ratchets`.
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
@@ -310,6 +297,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`effect-jsdoc-quality`](./effect-jsdoc-quality/README.md) — graduated
+  2026-07-30 (capture→graduate in one day) into
+  [`effect-jsdoc-quality`](../goals/effect-jsdoc-quality/README.md): port
+  Effect v4's JSDoc section grammar (**When to use**/**Details**/**Gotchas**/
+  titled **Example** sections, described `@see`) into beep law + kind-aware
+  jsdoc-inventory rules on the existing fail-on-growth ratchet, keeping the
+  example compile validation Effect v4 lost when it banned `@example`. Twelve
+  decisions in [`DECISIONS.md`](./effect-jsdoc-quality/DECISIONS.md), carrier
+  choice settled by a WebStorm hover-fidelity lab (body sections render at
+  full Effect fidelity; the `@example` tag body renders degraded). Follow-on
+  candidates (link resolution, rubric CI lane, runExamples, category
+  vocabulary repair, LLMS corpus) mapped but NOT graduated in
+  [`MAP.md`](./effect-jsdoc-quality/MAP.md).
 - [`agent-execution-sandbox`](./agent-execution-sandbox/README.md) — graduated
   2026-07-25 (capture→graduate in one day) into
   [`agent-execution-authority`](../goals/agent-execution-authority/README.md):

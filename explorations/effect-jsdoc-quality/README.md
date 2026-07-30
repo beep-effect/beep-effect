@@ -2,10 +2,12 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated 2026-07-30 → [`goals/effect-jsdoc-quality/`](../../goals/effect-jsdoc-quality/README.md)
 
 ## Spark
 
@@ -17,12 +19,9 @@ hovers read like Effect's.
 
 ## Next Open Question
 
-Run `/grill-with-docs` with the human against `BRIEF.md` (drafted early as
-interview input) + `research/options.md` (lead: Option B — grammar port with
-compile validation preserved); record outcomes in `DECISIONS.md` and flip the
-manifest stage. Before or during the grill: the 2-minute WebStorm hover
-eyeball of `scratchpad/jsdoc-hover-lab.ts` (fills the pending rows of the
-hover-fidelity matrix in `research/diff-effect-vs-beep.md` §10).
+None — graduated. Execution continues in
+[`goals/effect-jsdoc-quality/`](../../goals/effect-jsdoc-quality/README.md)
+(launch via its `GOAL.md`); this packet is the research/decision record.
 
 ## Read This First
 
@@ -35,12 +34,18 @@ hover-fidelity matrix in `research/diff-effect-vs-beep.md` §10).
 
 ## Trail
 
+- 2026-07-30: `/grill-with-docs` session with the human closed all twelve
+  decisions (approach B; carrier B2 transitional; @remarks retired;
+  shape-checked opt-in enforcement; kind-split example law; pilot trio;
+  0.0.0 @since; namespace imports; described-@see day-one; hygiene rides the
+  law PR; no architecture ADR; decisions-before-implementation). Hover-lab
+  eyeball supplied the decisive carrier evidence. BRIEF finalized, MAP
+  decomposed, packet graduated to `goals/effect-jsdoc-quality/` in the same
+  PR — implementation deliberately NOT started.
 - 2026-07-30: research artifacts landed (pipeline map, diff, rubric, options
   A-D with Option B lead, RESEARCH synthesis, SOURCES ledger); BRIEF drafted
   early as grill input; DECISIONS pending grill; hover-fidelity lab written
   to `scratchpad/jsdoc-hover-lab.ts` awaiting the user's WebStorm eyeball.
-  Stopped at the exploration's hard stop: no goal packet before
-  `/grill-with-docs`.
 - 2026-07-30: packet opened at research stage. Effect v4 mining banked: the
   quality is a machine-enforced grammar (`@effect/jsdocs`), `@example` is
   forbidden upstream, and v4 lost example typechecking (which `@beep/docgen`
