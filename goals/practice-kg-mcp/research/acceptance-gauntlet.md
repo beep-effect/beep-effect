@@ -27,9 +27,25 @@ win (SPEC: "tables populated" is not success).
 ## The provenance follow-up (applies to every question)
 
 After each answer, ask: **"How do you know that?"** The follow-up passes when
-`kg_provenance` resolves every cited row to a catalog digest, USPTO anchor, or
-extraction Activity (AC-2 spot check inside the gauntlet). One failure = the
+**every cited row either resolves via `kg_provenance` to a catalog digest,
+USPTO anchor, or extraction Activity, or is explicitly marked unverifiable in
+the answer** (AC-2 spot check inside the gauntlet). One silent failure = the
 question fails.
+
+*Amended 2026-07-30 (first run, C-3) under **SPEC D-10**, which is the
+normative source — this doc restates that decision and does not create it.*
+The original wording ("every cited row must resolve") is unsatisfiable by
+construction for graph-derived answers, since node-level provenance does not
+exist in the current bundle; leaving it unchanged would make the criterion
+untestable rather than strict. The amended form stays enforceable: resolving
+document rows while flagging node rows as unverified passes; silently
+asserting spine facts as though backed fails. Resolution must be individual —
+no sampling, no arguing from shared provenance shapes.
+
+**This amendment scores questions; it does not satisfy AC-2.** Missing
+node-level provenance stays an unmet criterion and an open blocker (B-2). A
+gauntlet can pass every question while AC-2 remains unmet, and the packet must
+report both.
 
 ## Scoring (per question)
 
@@ -60,6 +76,23 @@ activity:
 
 Any connection attempt = AC-5 failure (uspto-mcp is a separate process and is
 allowed egress; do not conflate the two PIDs).
+
+## Run protocol (mandatory preflight — learned from the 2026-07-30 first run)
+
+1. **Web search and Research OFF** in the Desktop composer before the first
+   question, and verified in the UI. With search on, Desktop self-augments KG
+   answers with external lookups (the first run's contaminated attempt pivoted
+   to external scraping for status data); any contaminated question is
+   re-asked clean and scored on the re-run only.
+2. **Clear or disable Desktop memory.** Memory crosses chat boundaries — the
+   first run recalled a docket memory created in a different chat and saved a
+   new one. Fresh chats alone are NOT isolation.
+3. **Verify controls against the client UI, never the model's self-report.**
+   The first run claimed browser access while search was verifiably disabled.
+4. Ask each question's provenance follow-up immediately after its answer, in
+   the same chat, before moving on.
+5. Ship this file with the handoff set so the target machine has the canonical
+   question list (C-1); the runbook references it.
 
 ## Placeholder selection guidance (run time, workstation)
 

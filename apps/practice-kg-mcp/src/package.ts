@@ -217,6 +217,10 @@ const manifestFor = (platform: "linux" | "win32", executable: string): string =>
           command: `\${__dirname}/${executable}`,
           env: {
             BUNDLE_DIR: "${user_config.bundle_dir}",
+            // Bun-compiled executables resolve bare specifiers against the embedded virtual
+            // root (B:\~BUN\root / /$bunfs/root), never the exe-adjacent node_modules; the
+            // @duckdb native binding only loads when NODE_PATH points at the unpacked dir.
+            NODE_PATH: "${__dirname}/node_modules",
             PRACTICE_KG_CORPUS_ROOT: "${user_config.corpus_root}",
           },
         },

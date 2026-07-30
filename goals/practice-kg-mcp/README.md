@@ -50,12 +50,24 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Packet + spike: packet authored 2026-07-27 with the ROADMAP amendment in the
-same PR; R1 packaging spike (bun-windows-x64 compile embedding PGlite + DuckDB)
-running; same-day quick win is uspto-mcp into Tom's Claude Desktop config.
+P5 Acceptance evidence: the AC-4/AC-5 gauntlet ran 2026-07-30 on the Windows
+target — five provisional passes carrying a failed G-3 label item and two
+partial deliverables (correctness axis pending Tom), AC-5 zero egress met as
+specified on sampled observation, and **AC-2 not met** (graph nodes carry no
+provenance). P4 Distribution is complete. Next: P6 graph-integrity repair (two
+verified blocker mechanisms in family attribution) gates the AC-6 install; P7
+server hardening follows the defect register's B-items.
 
 ## Latest Evidence
 
+- 2026-07-30: **AC-4/AC-5 gauntlet run** — G-1..G-5 provisional PASS on the
+  document layer and epistemic conduct, with G-3's required label failing as
+  delivered; AC-5 sampled pass (2,326 samples / 85.7 min / zero rows);
+  document-level provenance 15/15, 11/11, 8/8; graph layer NOT trustworthy in
+  the shipped build (cross-client family contamination + mention-derived
+  cartesian joins, both verified locally same-day). Evidence:
+  [`history/p5/`](./history/p5/) (gauntlet record, defect register A/B/C,
+  code-session final report). Raw transcripts/logs out-of-repo.
 - 2026-07-27: **R1 packaging spike — GO.** Locked .mcpb layout: single
   `practice-kg-mcp.exe` (PGlite WASM assets embedded via `type: "file"`
   imports + `--asset-naming`) + DuckDB native sidecars

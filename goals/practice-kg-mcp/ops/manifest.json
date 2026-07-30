@@ -5,7 +5,7 @@
     "title": "Practice KG MCP",
     "status": "active",
     "created": "2026-07-27",
-    "updated": "2026-07-27",
+    "updated": "2026-07-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-kg-mcp",
@@ -68,10 +68,25 @@
     {
       "id": "P4",
       "name": "Distribution",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
+      "name": "Acceptance evidence",
+      "status": "in-progress"
+    },
+    {
+      "id": "P6",
+      "name": "Graph-integrity repair",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Server hardening",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
       "name": "Handoff + close",
       "status": "pending"
     }
