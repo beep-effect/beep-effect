@@ -32,6 +32,7 @@ import {
 } from "@beep/agents-client/Chat.atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
+import { MentionOption } from "@beep/editor/chat/config";
 import { defaultChatSlashItems } from "@beep/editor/chat/slash-items";
 import * as Md from "@beep/md/Md.model";
 import { Button } from "@beep/ui/components/button";
@@ -54,7 +55,7 @@ import {
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { EditTarget } from "@beep/agents-client/Chat.atoms";
 import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer";
-import type { AttachmentPort, MentionOption, MentionSource } from "@beep/editor/chat/config";
+import type { AttachmentPort, MentionSource } from "@beep/editor/chat/config";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { JSX } from "react";

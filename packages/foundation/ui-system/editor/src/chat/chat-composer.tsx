@@ -42,13 +42,13 @@ import { PaperPlaneRightIcon } from "@phosphor-icons/react/PaperPlaneRight";
 import { StopIcon } from "@phosphor-icons/react/Stop";
 import { Result } from "effect";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { useRef } from "react";
 import { editorNodes } from "../nodes.ts";
 import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
 import { editorTheme } from "../theme.ts";
 import { EditorWireViewer } from "../viewer.tsx";
 import {
+  attachmentSweepBindingAtom,
   attachmentsAtom,
   captureAttachmentsFn,
   featuresAtom,
@@ -61,7 +61,7 @@ import {
   sendCommandBindingAtom,
   unboundSend,
 } from "./atoms.ts";
-import { DEFAULT_MAX_ATTACHMENT_BYTES, revokeAttachment } from "./attachment-model.ts";
+import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./attachment-model.ts";
 import { AttachmentChips, AttachmentFailureNotice, AttachmentPlugin } from "./attachments.tsx";
 import { SEND_MESSAGE_COMMAND, STOP_MESSAGE_COMMAND } from "./commands.ts";
 import { ComposerFeatures, SlashItems } from "./config.ts";
@@ -537,22 +537,8 @@ function SendCommandBinding({ editor }: { readonly editor: LexicalEditor }): nul
   return null;
 }
 
-// Per-editor finalizer that revokes outstanding object URLs on unmount. Tracks
-// the latest captured attachments via subscription and sweeps them at teardown.
-const attachmentSweepBindingAtom = Atom.family((editor: LexicalEditor) =>
-  Atom.make((get) => {
-    let latest = get.once(attachmentsAtom(editor));
-    get.subscribe(attachmentsAtom(editor), (next) => {
-      latest = next;
-    });
-    get.addFinalizer(() => {
-      for (const attachment of latest) revokeAttachment(attachment);
-    });
-    return undefined;
-  })
-);
-
-// Mounts the unmount-sweep binding for the current editor.
+// Tracks the Lexical root lifetime so async attachment work cannot escape its
+// composer mount.
 function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
   useAtomMount(attachmentSweepBindingAtom(editor));
   return null;

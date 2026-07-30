@@ -1,11 +1,7 @@
 {
   "version": 1,
   "generatedOn": "2026-07-30",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -227,25 +223,25 @@
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "LexicalNodeWire",
       "kind": "object-struct-schema",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/lexical-schema",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+      "reason": "Lossless persistence and migration wire schema. S.StructWithRest must retain every unknown future node field, version, opaque child, and NodeState key exactly; an S.Class has a closed field set and would discard required wire data. Exact decode/encode identity is property-tested."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "SerializedEditorStateWire",
       "kind": "object-struct-schema",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/lexical-schema",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+      "reason": "Lossless editor-state envelope whose root and nested nodes admit arbitrary future extension keys. S.StructWithRest preserves those keys exactly; an S.Class would close the envelope and violate the property-tested wire identity contract."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "PandocUnknownConstructorWire",
       "kind": "object-struct-schema",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/pandoc-ast",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+      "reason": "Exact future-constructor wire schema. S.StructWithRest preserves every unknown top-level Pandoc JSON field unchanged; an S.Class cannot retain arbitrary future keys and would break strict/lossless interchange identity."
     },
     {
       "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
@@ -311,9 +307,9 @@
       "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
       "symbol": "ChatComposerMountConfig",
       "kind": "exported-interface",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/editor",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+      "reason": "React mount-time runtime contract containing non-serializable attachment and send callback ports. It is seeded into editor-scoped Atom state once per mount and is not persisted or admitted from an external data boundary."
     },
     {
       "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",

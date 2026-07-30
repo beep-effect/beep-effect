@@ -20,6 +20,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type {
+  ConformantHtml,
   ConformantHtmlNode,
   HtmlChildNode,
   HtmlConformanceError,
@@ -29,6 +30,7 @@ import type {
   HtmlSerializeError,
   HtmlTag,
   SafeHtml,
+  SafeHtmlAst,
   SafeHtmlNode,
   UntrustedHtml,
 } from "@beep/html";
@@ -102,5 +104,38 @@ describe("@beep/html contract", () => {
     // @ts-expect-error!
     const unsafe: SafeHtml = "<p>unsafe</p>";
     expect(unsafe).type.toBe<SafeHtml>();
+  });
+
+  it("rejects structural and cross-proof forgery", () => {
+    // @ts-expect-error!
+    const forgedConformant: ConformantHtml = {};
+    // @ts-expect-error!
+    const forgedSafeAst: SafeHtmlAst = {};
+    // @ts-expect-error!
+    const forgedSafeHtml: SafeHtml = {};
+
+    // @ts-expect-error!
+    const safeAstFromConformant: SafeHtmlAst = forgedConformant;
+    // @ts-expect-error!
+    const safeHtmlFromSafeAst: SafeHtml = forgedSafeAst;
+    // @ts-expect-error!
+    const conformantFromSafeHtml: ConformantHtml = forgedSafeHtml;
+
+    // @ts-expect-error!
+    const spreadConformant: ConformantHtml = { ...forgedConformant };
+    // @ts-expect-error!
+    const spreadSafeAst: SafeHtmlAst = { ...forgedSafeAst };
+    // @ts-expect-error!
+    const spreadSafeHtml: SafeHtml = { ...forgedSafeHtml };
+
+    expect(forgedConformant).type.toBe<ConformantHtml>();
+    expect(forgedSafeAst).type.toBe<SafeHtmlAst>();
+    expect(forgedSafeHtml).type.toBe<SafeHtml>();
+    expect(safeAstFromConformant).type.toBe<SafeHtmlAst>();
+    expect(safeHtmlFromSafeAst).type.toBe<SafeHtml>();
+    expect(conformantFromSafeHtml).type.toBe<ConformantHtml>();
+    expect(spreadConformant).type.toBe<ConformantHtml>();
+    expect(spreadSafeAst).type.toBe<SafeHtmlAst>();
+    expect(spreadSafeHtml).type.toBe<SafeHtml>();
   });
 });

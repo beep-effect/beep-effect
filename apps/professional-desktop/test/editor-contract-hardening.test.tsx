@@ -1,5 +1,13 @@
 import { draftAtoms } from "@beep/agents-client/Chat.atoms";
-import { isTypeaheadMenuVisible, TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat/atoms";
+import {
+  attachmentFailureAtom,
+  attachmentSweepBindingAtom,
+  attachmentsAtom,
+  captureAttachmentsFn,
+  isTypeaheadMenuVisible,
+  onAttachAtom,
+  TYPEAHEAD_MENU_ATTRIBUTE,
+} from "@beep/editor/chat/atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { ComposerFeatures } from "@beep/editor/chat/config";
 import { EditorWireComposer } from "@beep/editor/composer";
@@ -13,7 +21,7 @@ import { documentSafetyIssues, refineSafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
-import { RegistryProvider, useAtomValue } from "@effect/atom-react";
+import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -21,6 +29,7 @@ import { Deferred, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
 import { Composer, ComposerSafetyWarning } from "@/chat/ui/Composer";
@@ -31,6 +40,7 @@ import {
   normalizeLegacyRawDocument,
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
+import type { Atom } from "effect/unstable/reactivity";
 
 function SeedEditor({ label, text }: { readonly label: string; readonly text: string }) {
   const [editor] = useLexicalComposerContext();
@@ -66,6 +76,38 @@ function ConfirmationProbe({
   const confirmed = useAtomValue(composerConfirmedNormalizationAtoms(threadId)(document));
   return <output data-testid="normalization-confirmation">{O.isSome(confirmed) ? "confirmed" : "pending"}</output>;
 }
+
+function CaptureRuntimeKeeper(): null {
+  useAtomSet(captureAttachmentsFn);
+  return null;
+}
+
+function CaptureEditorInstance({ capture }: { readonly capture: (editor: ReturnType<typeof createEditor>) => void }) {
+  const [editor] = useLexicalComposerContext();
+  return (
+    <button type="button" aria-label="Capture editor instance" onClick={() => capture(editor)}>
+      Capture editor
+    </button>
+  );
+}
+
+const makeControlledScheduler = () => {
+  const pending = new Set<() => void>();
+  const schedule = (task: () => void): (() => void) => {
+    const run = () => {
+      pending.delete(run);
+      task();
+    };
+    pending.add(run);
+    return () => {
+      pending.delete(run);
+    };
+  };
+  const flush = (): void => {
+    for (const task of pending) task();
+  };
+  return { flush, schedule };
+};
 
 let rangeRectDescriptor: PropertyDescriptor | undefined;
 
@@ -226,6 +268,215 @@ describe("editor contract hardening", { concurrent: false }, () => {
 
       view.unmount();
       expect(revokeObjectUrl).toHaveBeenCalledTimes(3);
+    })
+  );
+
+  it.effect(
+    "aborts a pending attachment port on unmount without double-revoking or writing a late failure",
+    Effect.fnUntraced(function* () {
+      const port = yield* Deferred.make<void, Error>();
+      const context = yield* Effect.context<never>();
+      const runPromise = Effect.runPromiseWith(context);
+      const runSync = Effect.runSyncWith(context);
+      const registry = AtomRegistry.make({
+        defaultIdleTTL: 20,
+        scheduleTask,
+        timeoutResolution: 1,
+      });
+      let editor: ReturnType<typeof createEditor> | undefined;
+      const firstRevoke = yield* Deferred.make<void>();
+      vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:pending-unmount");
+      const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {
+        runSync(Deferred.succeed(firstRevoke, undefined));
+      });
+      const onAttach = vi.fn(() => runPromise(Deferred.await(port)));
+      const mounted = (showComposer: boolean) => (
+        <RegistryContext.Provider value={registry}>
+          <CaptureRuntimeKeeper />
+          {showComposer ? (
+            <ChatComposer mountConfig={{ onAttach }}>
+              <CaptureEditorInstance capture={(value) => (editor = value)} />
+            </ChatComposer>
+          ) : null}
+        </RegistryContext.Provider>
+      );
+      const view = render(mounted(true));
+      fireEvent.click(screen.getByRole("button", { name: "Capture editor instance" }));
+      const input = view.container.querySelector<HTMLInputElement>('input[type="file"]');
+      expect(input).not.toBeNull();
+
+      fireEvent.change(input!, {
+        target: {
+          files: [new File(["pending"], "pending.png", { type: "image/png" })],
+        },
+      });
+      yield* Effect.promise(() => waitFor(() => expect(onAttach).toHaveBeenCalledTimes(1)));
+      yield* Effect.promise(() =>
+        waitFor(() => expect(AsyncResult.isWaiting(registry.get(captureAttachmentsFn))).toBe(true))
+      );
+
+      view.rerender(mounted(false));
+      yield* Deferred.fail(port, new Error("private post-unmount detail"));
+      yield* Deferred.await(firstRevoke);
+      yield* Effect.promise(() =>
+        waitFor(() => expect(AsyncResult.isSuccess(registry.get(captureAttachmentsFn))).toBe(true))
+      );
+
+      expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
+      expect(editor).toBeDefined();
+      if (editor !== undefined) {
+        expect(registry.get(attachmentsAtom(editor))).toEqual([]);
+        expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+      }
+
+      view.unmount();
+      registry.dispose();
+      expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect(
+    "disposes a captured batch without reading or writing the registry from async teardown",
+    Effect.fnUntraced(function* () {
+      const editor = createEditor({ namespace: "attachment-disposal-boundary" });
+      const onAttach = vi.fn();
+      const registry = AtomRegistry.make({
+        defaultIdleTTL: 20,
+        initialValues: [[onAttachAtom(editor), onAttach]],
+        scheduleTask,
+        timeoutResolution: 1,
+      });
+      const attachmentSizes: Array<number> = [];
+      let disposed = false;
+      let postDisposeGets = 0;
+      let disposeSets = 0;
+      const originalGet = registry.get.bind(registry);
+      const originalSet = registry.set.bind(registry);
+      Object.defineProperty(registry, "get", {
+        configurable: true,
+        value: <A,>(atom: Atom.Atom<A>): A => {
+          if (disposed) postDisposeGets += 1;
+          return originalGet(atom);
+        },
+      });
+      Object.defineProperty(registry, "set", {
+        configurable: true,
+        value: <R, W>(atom: Atom.Writable<R, W>, value: W): void => {
+          if (disposed) disposeSets += 1;
+          originalSet(atom, value);
+        },
+      });
+      vi.spyOn(URL, "createObjectURL").mockImplementation(() => {
+        queueMicrotask(() => {
+          disposed = true;
+          registry.dispose();
+        });
+        return "blob:dispose-before-port";
+      });
+      const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+
+      registry.mount(captureAttachmentsFn);
+      registry.mount(onAttachAtom(editor));
+      editor.setRootElement(document.createElement("div"));
+      registry.mount(attachmentSweepBindingAtom(editor));
+      registry.subscribe(
+        attachmentsAtom(editor),
+        (attachments) => {
+          attachmentSizes.push(attachments.length);
+        },
+        { immediate: false }
+      );
+      registry.set(captureAttachmentsFn, {
+        editor,
+        files: [new File(["pending"], "dispose-before-port.png", { type: "image/png" })],
+      });
+
+      yield* Effect.callback<void>((resume) => {
+        queueMicrotask(() => queueMicrotask(() => resume(Effect.void)));
+      });
+
+      expect(onAttach).not.toHaveBeenCalled();
+      expect(revokeObjectUrl).toHaveBeenCalledExactlyOnceWith("blob:dispose-before-port");
+      expect(attachmentSizes).toEqual([1]);
+      expect(postDisposeGets).toBe(0);
+      expect(disposeSets).toBe(0);
+    })
+  );
+
+  it.effect(
+    "isolates a pending capture from a same-editor remount before scheduled atom removal",
+    Effect.fnUntraced(function* () {
+      const port = yield* Deferred.make<void, Error>();
+      const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+      const scheduler = makeControlledScheduler();
+      const editor = createEditor({ namespace: "attachment-rapid-remount" });
+      const onAttach = vi.fn((files: ReadonlyArray<File>): void | Promise<void> =>
+        files[0]?.name === "rapid-remount.png" ? runPromise(Deferred.await(port)) : undefined
+      );
+      const registry = AtomRegistry.make({
+        defaultIdleTTL: 20,
+        initialValues: [[onAttachAtom(editor), onAttach]],
+        scheduleTask: scheduler.schedule,
+        timeoutResolution: 1,
+      });
+      const createObjectUrl = vi
+        .spyOn(URL, "createObjectURL")
+        .mockReturnValueOnce("blob:rapid-remount")
+        .mockReturnValueOnce("blob:new-mount");
+      const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+      registry.mount(captureAttachmentsFn);
+      registry.mount(onAttachAtom(editor));
+      const binding = attachmentSweepBindingAtom(editor);
+      editor.setRootElement(document.createElement("div"));
+      const releaseFirstMount = registry.mount(binding);
+      registry.set(captureAttachmentsFn, {
+        editor,
+        files: [new File(["pending"], "rapid-remount.png", { type: "image/png" })],
+      });
+      scheduler.flush();
+      yield* Effect.promise(() => waitFor(() => expect(onAttach).toHaveBeenCalledTimes(1)));
+
+      editor.setRootElement(null);
+      releaseFirstMount();
+      expect(revokeObjectUrl).toHaveBeenCalledExactlyOnceWith("blob:rapid-remount");
+      expect(registry.get(attachmentsAtom(editor))).toEqual([]);
+
+      // No lifecycle exists between the null transition and the remount, so an
+      // event captured in that window is rejected before minting an object URL.
+      registry.set(captureAttachmentsFn, {
+        editor,
+        files: [new File(["orphan"], "orphan.png", { type: "image/png" })],
+      });
+
+      editor.setRootElement(document.createElement("div"));
+      const releaseSecondMount = registry.mount(binding);
+      scheduler.flush();
+      expect(createObjectUrl).toHaveBeenCalledTimes(1);
+      registry.set(captureAttachmentsFn, {
+        editor,
+        files: [new File(["new"], "new-mount.png", { type: "image/png" })],
+      });
+      scheduler.flush();
+      yield* Effect.promise(() => waitFor(() => expect(onAttach).toHaveBeenCalledTimes(2)));
+      yield* Effect.promise(() =>
+        waitFor(() => expect(registry.get(attachmentsAtom(editor))[0]?.file.name).toBe("new-mount.png"))
+      );
+
+      yield* Deferred.fail(port, new Error("private prior-mount detail"));
+      scheduler.flush();
+      yield* Effect.promise(() =>
+        waitFor(() => expect(AsyncResult.isSuccess(registry.get(captureAttachmentsFn))).toBe(true))
+      );
+
+      expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+      expect(registry.get(attachmentsAtom(editor))[0]?.file.name).toBe("new-mount.png");
+      expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
+
+      editor.setRootElement(null);
+      releaseSecondMount();
+      scheduler.flush();
+      registry.dispose();
+      expect(revokeObjectUrl.mock.calls).toEqual([["blob:rapid-remount"], ["blob:new-mount"]]);
     })
   );
 
@@ -856,6 +1107,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
     const confirm = vi.fn();
     const source = `</pre><script data-normalization-xss="no">alert(1)</script>`;
     const view = render(
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag -- Intentional hostile preview fixture; assertions prove it remains escaped and creates no script node.
       <ComposerSafetyWarning message="Review the escaped literal copy." preview={source} onConfirm={confirm} />
     );
 

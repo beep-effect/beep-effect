@@ -81,15 +81,21 @@ export type UntrustedHtml = typeof UntrustedHtml.Type;
 const safeHtmlIssuer = new WeakSet<SafeHtmlValue>();
 const safeHtmlStrings = new WeakMap<SafeHtmlValue, string>();
 
-type SafeHtmlValue = object;
+declare const safeHtmlProof: unique symbol;
 
-const isSafeHtmlValue = (value: unknown): value is SafeHtmlValue => P.isObject(value) && safeHtmlIssuer.has(value);
+declare class SafeHtmlValue {
+  private readonly [safeHtmlProof]: true;
+}
+
+const isSafeHtmlValue = (value: unknown): value is SafeHtmlValue =>
+  P.isObject(value) && safeHtmlIssuer.has(value as unknown as SafeHtmlValue);
 
 const issueSafeHtml = (html: string): SafeHtmlValue => {
   const value = Object.create(null) as SafeHtmlValue;
   safeHtmlStrings.set(value, html);
   safeHtmlIssuer.add(value);
-  return Object.freeze(value);
+  Object.freeze(value);
+  return value;
 };
 
 /**
@@ -227,7 +233,26 @@ type RuntimeNode = {
   readonly _tag: string;
 };
 
+type RuntimeForeignNode = RuntimeNode & {
+  readonly name: ForeignElementName;
+  readonly namespace: "svg" | "mathml";
+};
+
+type RuntimeStringNode = RuntimeNode & {
+  readonly value: string;
+};
+
 const isRuntimeNode = (value: unknown): value is RuntimeNode => P.isObject(value) && P.isString(value._tag);
+
+const isRuntimeStringNode = (node: RuntimeNode, tag: "#comment" | "#text"): node is RuntimeStringNode =>
+  node._tag === tag && P.isString(node.value);
+
+const isRuntimeForeignNode = (node: RuntimeNode): node is RuntimeForeignNode =>
+  node._tag === "#foreign" &&
+  P.isString(node.name) &&
+  isForeignElementName(node.name) &&
+  (node.namespace === "svg" || node.namespace === "mathml") &&
+  isForeignElementNameFixedPoint(node.namespace, node.name);
 
 const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> =>
   A.isArray(node.children) ? A.filter(node.children, isRuntimeNode) : A.emptyReadonly();
@@ -409,14 +434,40 @@ const serializeElement = Effect.fn("Html.serializeElement")(function* (
   return `${opening}${content}</${tag}>`;
 });
 
+const serializeForeignNode = (
+  node: RuntimeForeignNode,
+  path: ReadonlyArray<string>
+): Effect.Effect<string, HtmlSerializeError> => {
+  const [prefix] = Str.split(":")(node.name);
+  if (
+    Str.includes(":")(node.name) &&
+    !((node.namespace === "svg" && prefix === "svg") || (node.namespace === "mathml" && prefix === "mathml"))
+  ) {
+    return Effect.fail(
+      makeError(path, "invalidNode", `Foreign name ${node.name} does not match namespace ${node.namespace}`)
+    );
+  }
+  const attributes =
+    node.attributes === undefined
+      ? Effect.succeed("")
+      : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
+  return Effect.all([
+    Effect.succeed(`<${node.name}`),
+    attributes,
+    Effect.succeed(">"),
+    serializeChildren(runtimeChildren(node), path),
+    Effect.succeed(`</${node.name}>`),
+  ]).pipe(Effect.map(A.join("")));
+};
+
 const serializeRuntimeNode = (
   node: RuntimeNode,
   path: ReadonlyArray<string>
 ): Effect.Effect<string, HtmlSerializeError> => {
-  if (node._tag === "#text" && P.isString(node.value)) {
+  if (isRuntimeStringNode(node, "#text")) {
     return validateScalarString(node.value, A.append(path, "value"), "Text node").pipe(Effect.map(escapeText));
   }
-  if (node._tag === "#comment" && P.isString(node.value)) {
+  if (isRuntimeStringNode(node, "#comment")) {
     return validateScalarString(node.value, A.append(path, "value"), "Comment node").pipe(
       Effect.map((value) => `<!--${value}-->`)
     );
@@ -428,34 +479,7 @@ const serializeRuntimeNode = (
     const doctype = node.doctype === undefined ? Effect.succeed("") : serializeCanonicalDoctype(node.doctype, path);
     return Effect.all([doctype, serializeChildren(runtimeChildren(node), path)]).pipe(Effect.map(A.join("")));
   }
-  if (
-    node._tag === "#foreign" &&
-    P.isString(node.name) &&
-    isForeignElementName(node.name) &&
-    (node.namespace === "svg" || node.namespace === "mathml") &&
-    isForeignElementNameFixedPoint(node.namespace, node.name)
-  ) {
-    const [prefix] = Str.split(":")(node.name);
-    if (
-      Str.includes(":")(node.name) &&
-      !((node.namespace === "svg" && prefix === "svg") || (node.namespace === "mathml" && prefix === "mathml"))
-    ) {
-      return Effect.fail(
-        makeError(path, "invalidNode", `Foreign name ${node.name} does not match namespace ${node.namespace}`)
-      );
-    }
-    const attributes =
-      node.attributes === undefined
-        ? Effect.succeed("")
-        : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
-    return Effect.all([
-      Effect.succeed(`<${node.name}`),
-      attributes,
-      Effect.succeed(">"),
-      serializeChildren(runtimeChildren(node), path),
-      Effect.succeed(`</${node.name}>`),
-    ]).pipe(Effect.map(A.join("")));
-  }
+  if (isRuntimeForeignNode(node)) return serializeForeignNode(node, path);
   return isHtmlTag(node._tag)
     ? serializeElement(node, node._tag, path)
     : Effect.fail(makeError(path, "invalidNode", `Unknown HTML AST node ${node._tag}`));

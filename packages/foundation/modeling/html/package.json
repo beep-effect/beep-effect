@@ -1,7 +1,7 @@
 {
   "name": "@beep/html",
   "version": "0.0.0",
-  "description": "HTML modeling package",
+  "description": "Schema-first HTML conformance, safety policy, and deterministic serialization",
   "license": "MIT",
   "private": true,
   "type": "module",

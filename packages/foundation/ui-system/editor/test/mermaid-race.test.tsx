@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { it } from "@effect/vitest";
 import { act, cleanup, render, waitFor, within } from "@testing-library/react";
@@ -262,6 +263,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const source = `graph TD\nA["</desc><script data-diagram-xss='no'>alert(1)</script>&done"]`;
       const view = render(<MermaidView renderKey="fallback-accessibility-escaping" source={source} />);
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag -- Intentional hostile Mermaid fixture; mermaidStub is a local test double and assertions prove the source becomes text only.
       yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
       const pending = getPendingRender(source);
 

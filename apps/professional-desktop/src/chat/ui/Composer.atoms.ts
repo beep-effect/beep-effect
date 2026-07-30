@@ -83,25 +83,9 @@ const ComposerNotice = ComposerNoticeKind.mapMembers(
 
 type ComposerNotice = typeof ComposerNotice.Type;
 
-/**
- * Inline refusal emitted when a draft contains trusted raw nodes or a URL that
- * is outside the user-content allow list. The general draft remains untouched.
- *
- * @example
- * ```ts
- * import { ComposerSafetyRefusal } from "@/chat/ui/Composer.atoms"
- *
- * const refusal = ComposerSafetyRefusal.make({
- *   issueCount: 1,
- *   message: "This draft contains content that cannot be sent safely.",
- * })
- * console.log(refusal.issueCount) // 1
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`ComposerSafetyRefusal`)(
+// Inline refusal emitted when a draft contains trusted raw nodes or a URL that
+// is outside the user-content allow list. The general draft remains untouched.
+class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`ComposerSafetyRefusal`)(
   {
     issueCount: S.Int.check(S.isGreaterThan(0)),
     message: S.NonEmptyString,

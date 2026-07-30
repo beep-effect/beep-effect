@@ -429,16 +429,21 @@ export class HtmlPolicyError extends TaggedErrorClass<HtmlPolicyError>($I`HtmlPo
 const safeHtmlAstIssuer = new WeakSet<SafeHtmlAstValue>();
 const safeHtmlAstConformantValues = new WeakMap<SafeHtmlAstValue, ConformantHtml>();
 
-type SafeHtmlAstValue = object;
+declare const safeHtmlAstProof: unique symbol;
+
+declare class SafeHtmlAstValue {
+  private readonly [safeHtmlAstProof]: true;
+}
 
 const isSafeHtmlAstValue = (value: unknown): value is SafeHtmlAstValue =>
-  P.isObject(value) && safeHtmlAstIssuer.has(value);
+  P.isObject(value) && safeHtmlAstIssuer.has(value as unknown as SafeHtmlAstValue);
 
 const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
   const value = Object.create(null) as SafeHtmlAstValue;
   safeHtmlAstConformantValues.set(value, conformant);
   safeHtmlAstIssuer.add(value);
-  return Object.freeze(value);
+  Object.freeze(value);
+  return value;
 };
 
 /**
@@ -625,7 +630,7 @@ const isCompatibleAriaAttribute = (tag: string, name: string): boolean =>
 const makeIssue = (path: ReadonlyArray<string>, rule: HtmlPolicyRule, message: string): HtmlPolicyIssue =>
   HtmlPolicyIssue.make({ path, rule, message });
 
-const inspectAttribute = (
+const inspectAttributeCompatibility = (
   node: RuntimeNode,
   name: string,
   value: unknown,
@@ -642,13 +647,25 @@ const inspectAttribute = (
       makeIssue(A.append(path, name), "deniedAttribute", `Attribute ${name} is not compatible with <${node._tag}>`),
     ];
   }
-  const safeUrl =
-    (name === "href" || name === "cite") && P.isString(value)
-      ? isSafeUrlAttribute(value)
-      : name === "src" && node._tag === "img" && P.isString(value)
-        ? isSafeImageUrlAttribute(value)
-        : name !== "href" && name !== "cite" && name !== "src";
-  if (!safeUrl) {
+  return A.emptyReadonly();
+};
+
+const isSafeAttributeUrl = (node: RuntimeNode, name: string, value: unknown): boolean =>
+  (name === "href" || name === "cite") && P.isString(value)
+    ? isSafeUrlAttribute(value)
+    : name === "src" && node._tag === "img" && P.isString(value)
+      ? isSafeImageUrlAttribute(value)
+      : name !== "href" && name !== "cite" && name !== "src";
+
+const inspectAttribute = (
+  node: RuntimeNode,
+  name: string,
+  value: unknown,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlPolicyIssue> => {
+  const compatibilityIssues = inspectAttributeCompatibility(node, name, value, path);
+  if (compatibilityIssues.length > 0) return compatibilityIssues;
+  if (!isSafeAttributeUrl(node, name, value)) {
     return [makeIssue(A.append(path, name), "unsafeUrl", `Attribute ${name} contains an unsafe URL`)];
   }
   return A.emptyReadonly();

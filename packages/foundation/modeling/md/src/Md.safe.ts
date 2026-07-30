@@ -28,15 +28,22 @@ import type { Block, ListItemChild } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.safe");
 
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+
 /**
  * A stable path segment locating a safety violation in the Markdown AST.
  *
  * @example
  * ```ts
  * import { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownSync(DocumentSafetyPathSegment)(2)) // 2
+ * const decoded = S.decodeUnknownResult(DocumentSafetyPathSegment)(2)
+ * if (Result.isSuccess(decoded)) {
+ *   console.log(decoded.success) // 2
+ * }
  * ```
  *
  * @category models
@@ -517,7 +524,8 @@ export const decodeSafeDocumentEffect = S.decodeUnknownEffect(SafeDocument);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument => S.decodeUnknownSync(SafeDocument)(input);
+export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument =>
+  Result.getOrThrowWith(decodeSafeDocument(input), schemaIssueToError);
 
 /**
  * Narrows an already-decoded document after reporting structured issues.

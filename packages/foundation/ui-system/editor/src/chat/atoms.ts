@@ -342,6 +342,26 @@ export const maxAttachmentBytesAtom = Atom.family((_editor: LexicalEditor) =>
  */
 export const onAttachAtom = Atom.family((_editor: LexicalEditor) => Atom.make<AttachmentPort>(() => undefined));
 
+interface AttachmentLifecycle {
+  readonly controller: AbortController;
+}
+
+// Private mount provenance for the attachment surface. Every Lexical root
+// mount gets a fresh controller; pending capture fibers retain that exact
+// controller so an older mount can never mutate a later one.
+const attachmentLifecycleAtom = Atom.family((_editor: LexicalEditor) =>
+  Atom.make<O.Option<AttachmentLifecycle>>(O.none())
+);
+
+const closeAttachmentLifecycle = (
+  lifecycle: AttachmentLifecycle,
+  outstanding: ReadonlyArray<ComposerAttachment>
+): void => {
+  if (lifecycle.controller.signal.aborted) return;
+  lifecycle.controller.abort();
+  for (const attachment of outstanding) revokeAttachment(attachment);
+};
+
 /**
  * The composer's `@effect/atom` runtime. Empty-layered: the composer's mutation
  * logic needs no services, only the `FnContext` to read/write the per-editor
@@ -372,11 +392,11 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * Capture-attachments mutation, modeled as a runtime `fn` atom. Writing
  * `{ editor, files }` runs the capture pipeline entirely inside the runtime: it
  * decodes each file through {@link fileToAttachment} (a `Result` per file),
- * logs any tagged {@link AttachmentRejection}s through the runtime, notifies the
- * per-editor {@link onAttachAtom} upload-port with accepted files only, then
- * appends the captured attachments to {@link attachmentsAtom}. The size bound is
- * read from {@link maxAttachmentBytesAtom}. Both the footer picker and the
- * drag-drop binding drive this same path.
+ * logs any tagged {@link AttachmentRejection}s through the runtime, appends the
+ * accepted files to {@link attachmentsAtom}, and notifies the per-editor
+ * {@link onAttachAtom} upload port. A rejected port rolls back only its batch.
+ * The size bound is read from {@link maxAttachmentBytesAtom}. Both the footer
+ * picker and the drag-drop binding drive this same path.
  *
  * @example
  * ```tsx
@@ -408,8 +428,12 @@ export const captureAttachmentsFn = composerRuntime.fn<{
     // their FnContext. Its registry remains stable for the whole operation and
     // is therefore the correct mutation boundary after the port await.
     const registry = get.registry;
+    const lifecycle = registry.get(attachmentLifecycleAtom(editor));
+    if (O.isNone(lifecycle) || lifecycle.value.controller.signal.aborted) return;
+    const onAttach = registry.get(onAttachAtom(editor));
+    const maxAttachmentBytes = registry.get(maxAttachmentBytesAtom(editor));
     registry.set(attachmentFailureAtom(editor), O.none());
-    const results = A.map(files, (file) => fileToAttachment(file, registry.get(maxAttachmentBytesAtom(editor))));
+    const results = A.map(files, (file) => fileToAttachment(file, maxAttachmentBytes));
     // Surface (rather than silently drop) why a file was declined; the failure
     // channel is the whole reason `fromFile` returns `Result` not `O.Option`.
     const rejections = A.getSomes(A.map(results, Result.getFailure));
@@ -428,9 +452,10 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       registry.update(attachmentsAtom(editor), (current) => [...current, ...captured]);
       yield* Effect.tryPromise({
         try: () =>
-          Promise.resolve().then(() =>
-            registry.get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file))
-          ),
+          Promise.resolve().then(() => {
+            if (lifecycle.value.controller.signal.aborted) return;
+            return onAttach(A.map(captured, (attachment) => attachment.file));
+          }),
         catch: (cause) =>
           AttachmentPortFailed.make({
             message: "Files could not be attached. Please try again.",
@@ -439,7 +464,11 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       }).pipe(
         Effect.catch(
           Effect.fnUntraced(function* (failure) {
-            yield* Effect.logError("ChatComposer upload port rejected captured attachments", failure);
+            // The sweep aborts this exact mount controller before revoking its
+            // URLs. A late port rejection must not read from a disposed registry,
+            // revoke the same batch twice, or paint failure state onto a later
+            // mount of the composer.
+            if (lifecycle.value.controller.signal.aborted) return;
             const current = registry.get(attachmentsAtom(editor));
             const rolledBack = A.filter(current, (attachment) =>
               A.some(captured, (candidate) => candidate.id === attachment.id)
@@ -450,6 +479,7 @@ export const captureAttachmentsFn = composerRuntime.fn<{
               A.filter(current, (attachment) => !A.some(captured, (candidate) => candidate.id === attachment.id))
             );
             registry.set(attachmentFailureAtom(editor), O.some(failure));
+            yield* Effect.logError("ChatComposer upload port rejected captured attachments", failure);
           })
         )
       );
@@ -459,6 +489,64 @@ export const captureAttachmentsFn = composerRuntime.fn<{
   // behavior would interrupt an older port notification after its attachments
   // had already been appended, preventing that batch's rejection rollback.
   { concurrent: true }
+);
+
+/**
+ * Per-editor attachment lifetime and object-URL sweep.
+ *
+ * Lexical reports every root-element transition synchronously, including the
+ * current root when the binding mounts. Each non-null root installs a fresh
+ * abort controller consumed by {@link captureAttachmentsFn}; a null transition
+ * aborts that exact mount before revoking its outstanding object URLs and
+ * clearing attachment state. The registry finalizer retains only closure state,
+ * so registry disposal performs the same idempotent sweep without reading or
+ * writing a disposed registry.
+ *
+ * @example
+ * ```tsx
+ * import { attachmentSweepBindingAtom } from "@beep/editor/chat/atoms"
+ * import { useAtomMount } from "@effect/atom-react"
+ * import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+ *
+ * function AttachmentLifetime() {
+ *   const [editor] = useLexicalComposerContext()
+ *   useAtomMount(attachmentSweepBindingAtom(editor))
+ *   return null
+ * }
+ * ```
+ *
+ * @effects Aborts the mount-lifetime signal retained by pending attachment-port
+ * work, revokes outstanding object URLs, and clears the per-editor attachment
+ * collection on teardown.
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const attachmentSweepBindingAtom = Atom.family((editor: LexicalEditor) =>
+  Atom.make((get) => {
+    const lifecycleAtom = attachmentLifecycleAtom(editor);
+    get.mount(lifecycleAtom);
+    let lifecycle = O.none<AttachmentLifecycle>();
+    let latest = get.once(attachmentsAtom(editor));
+    get.subscribe(attachmentsAtom(editor), (next) => {
+      latest = next;
+    });
+    const unregisterRootListener = editor.registerRootListener((rootElement) => {
+      if (O.isSome(lifecycle)) closeAttachmentLifecycle(lifecycle.value, latest);
+      lifecycle = O.none();
+      get.set(lifecycleAtom, lifecycle);
+      get.set(attachmentsAtom(editor), []);
+      get.set(attachmentFailureAtom(editor), O.none());
+      if (rootElement === null) return;
+      lifecycle = O.some({ controller: new AbortController() });
+      get.set(lifecycleAtom, lifecycle);
+    });
+    get.addFinalizer(() => {
+      unregisterRootListener();
+      if (O.isSome(lifecycle)) closeAttachmentLifecycle(lifecycle.value, latest);
+    });
+    return undefined;
+  }).pipe(Atom.setIdleTTL(0))
 );
 
 /**

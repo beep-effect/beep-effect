@@ -193,155 +193,157 @@ const isSafeMermaidRootStyle = (style: CSSStyleDeclaration): boolean => {
   return maxWidth.length === 0 || safeMermaidRootMaxWidth.test(maxWidth);
 };
 
+type CssSelectorScanState = {
+  bracketDepth: number;
+  escaped: boolean;
+  parenthesisDepth: number;
+  quote: "'" | '"' | undefined;
+};
+
+const makeCssSelectorScanState = (): CssSelectorScanState => ({
+  bracketDepth: 0,
+  escaped: false,
+  parenthesisDepth: 0,
+  quote: undefined,
+});
+
+const isCompleteCssSelectorScan = (state: CssSelectorScanState): boolean =>
+  state.bracketDepth === 0 && state.parenthesisDepth === 0 && state.quote === undefined && !state.escaped;
+
+const scanCssSelectorGroup = (state: CssSelectorScanState, character: string | undefined): boolean | undefined => {
+  if (character === "[") {
+    state.bracketDepth += 1;
+    return false;
+  }
+  if (character === "]") {
+    if (state.bracketDepth === 0) return undefined;
+    state.bracketDepth -= 1;
+    return false;
+  }
+  if (character === "(") {
+    state.parenthesisDepth += 1;
+    return false;
+  }
+  if (character === ")") {
+    if (state.parenthesisDepth === 0) return undefined;
+    state.parenthesisDepth -= 1;
+    return false;
+  }
+  return state.bracketDepth === 0 && state.parenthesisDepth === 0;
+};
+
+const scanCssSelectorCharacter = (state: CssSelectorScanState, character: string | undefined): boolean | undefined => {
+  if (state.escaped) {
+    state.escaped = false;
+    return false;
+  }
+  if (character === "\\") {
+    state.escaped = true;
+    return false;
+  }
+  if (state.quote !== undefined) {
+    if (character === state.quote) state.quote = undefined;
+    return false;
+  }
+  if (character === "'" || character === '"') {
+    state.quote = character;
+    return false;
+  }
+  return scanCssSelectorGroup(state, character);
+};
+
+const selectorSlice = (value: string, start: number, end?: number): string | undefined => {
+  const selector = value.slice(start, end).trim();
+  return selector.length === 0 ? undefined : selector;
+};
+
 const splitSelectorList = (value: string): undefined | ReadonlyArray<string> => {
   const selectors: Array<string> = [];
-  let bracketDepth = 0;
-  let parenthesisDepth = 0;
-  let quote: "'" | '"' | undefined;
-  let escaped = false;
+  const state = makeCssSelectorScanState();
   let start = 0;
 
   for (let index = 0; index < value.length; index += 1) {
     const character = value[index];
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-    if (character === "\\") {
-      escaped = true;
-      continue;
-    }
-    if (quote !== undefined) {
-      if (character === quote) quote = undefined;
-      continue;
-    }
-    if (character === "'" || character === '"') {
-      quote = character;
-      continue;
-    }
-    if (character === "[") {
-      bracketDepth += 1;
-      continue;
-    }
-    if (character === "]") {
-      if (bracketDepth === 0) return undefined;
-      bracketDepth -= 1;
-      continue;
-    }
-    if (character === "(") {
-      parenthesisDepth += 1;
-      continue;
-    }
-    if (character === ")") {
-      if (parenthesisDepth === 0) return undefined;
-      parenthesisDepth -= 1;
-      continue;
-    }
-    if (character !== "," || bracketDepth !== 0 || parenthesisDepth !== 0) continue;
+    const isTopLevel = scanCssSelectorCharacter(state, character);
+    if (isTopLevel === undefined) return undefined;
+    if (!isTopLevel || character !== ",") continue;
 
-    const selector = value.slice(start, index).trim();
-    if (selector.length === 0) return undefined;
+    const selector = selectorSlice(value, start, index);
+    if (selector === undefined) return undefined;
     selectors.push(selector);
     start = index + 1;
   }
 
-  const selector = value.slice(start).trim();
-  if (selector.length === 0 || bracketDepth !== 0 || parenthesisDepth !== 0 || quote !== undefined || escaped) {
-    return undefined;
-  }
+  if (!isCompleteCssSelectorScan(state)) return undefined;
+  const selector = selectorSlice(value, start);
+  if (selector === undefined) return undefined;
   selectors.push(selector);
   return selectors;
 };
 
 const cssWhitespace = /\s/u;
+const rootSelectorBoundary = HashSet.make(".", "#", "[", ":", ">", "+", "~");
+
+const isRootSelectorBoundary = (character: string | undefined): boolean =>
+  character === undefined || cssWhitespace.test(character) || HashSet.has(rootSelectorBoundary, character);
+
+const isSiblingCombinator = (character: string | undefined): boolean => character === "+" || character === "~";
+
+const nextNonWhitespaceCharacter = (value: string, start: number): string | undefined => {
+  let index = start;
+  while (index < value.length && cssWhitespace.test(value[index] ?? "")) index += 1;
+  return value[index];
+};
+
+const rootScopeAfterCharacter = (
+  selector: string,
+  index: number,
+  character: string | undefined
+): boolean | undefined => {
+  if (isSiblingCombinator(character)) return undefined;
+  if (character === ">") return false;
+  if (!cssWhitespace.test(character ?? "")) return true;
+  return isSiblingCombinator(nextNonWhitespaceCharacter(selector, index + 1)) ? undefined : false;
+};
 
 const selectorTargetsRoot = (selector: string, rootSelector: string): boolean | undefined => {
   if (!selector.startsWith(rootSelector)) return undefined;
+  if (!isRootSelectorBoundary(selector[rootSelector.length])) return undefined;
 
-  const boundary = selector[rootSelector.length];
-  if (
-    boundary !== undefined &&
-    boundary !== "." &&
-    boundary !== "#" &&
-    boundary !== "[" &&
-    boundary !== ":" &&
-    boundary !== ">" &&
-    boundary !== "+" &&
-    boundary !== "~" &&
-    !cssWhitespace.test(boundary)
-  ) {
-    return undefined;
-  }
-
-  let bracketDepth = 0;
-  let parenthesisDepth = 0;
-  let quote: "'" | '"' | undefined;
-  let escaped = false;
+  const state = makeCssSelectorScanState();
   for (let index = rootSelector.length; index < selector.length; index += 1) {
     const character = selector[index];
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-    if (character === "\\") {
-      escaped = true;
-      continue;
-    }
-    if (quote !== undefined) {
-      if (character === quote) quote = undefined;
-      continue;
-    }
-    if (character === "'" || character === '"') {
-      quote = character;
-      continue;
-    }
-    if (character === "[") {
-      bracketDepth += 1;
-      continue;
-    }
-    if (character === "]") {
-      bracketDepth -= 1;
-      continue;
-    }
-    if (character === "(") {
-      parenthesisDepth += 1;
-      continue;
-    }
-    if (character === ")") {
-      parenthesisDepth -= 1;
-      continue;
-    }
-    if (bracketDepth !== 0 || parenthesisDepth !== 0) continue;
-    if (character === "+" || character === "~") return undefined;
-    if (character === ">") return false;
-    if (!cssWhitespace.test(character)) continue;
-
-    let nextIndex = index + 1;
-    while (nextIndex < selector.length && cssWhitespace.test(selector[nextIndex] ?? "")) nextIndex += 1;
-    const nextCharacter = selector[nextIndex];
-    return nextCharacter === "+" || nextCharacter === "~" ? undefined : false;
+    const isTopLevel = scanCssSelectorCharacter(state, character);
+    if (isTopLevel === undefined) return undefined;
+    if (!isTopLevel) continue;
+    const scope = rootScopeAfterCharacter(selector, index, character);
+    if (scope !== true) return scope;
   }
 
-  return bracketDepth === 0 && parenthesisDepth === 0 && quote === undefined && !escaped ? true : undefined;
+  return isCompleteCssSelectorScan(state) ? true : undefined;
 };
 
-const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
-  if (
-    (rule.cssRules?.length ?? 0) !== 0 ||
-    unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText)) ||
-    hasUnsafeLayoutStyle(rule.style)
-  ) {
-    return false;
-  }
-  const selectors = splitSelectorList(rule.selectorText);
-  if (selectors === undefined) return false;
-
+const selectorsTargetRoot = (selectors: ReadonlyArray<string>, rootSelector: string): boolean | undefined => {
   let targetsRoot = false;
   for (const selector of selectors) {
     const selectorScope = selectorTargetsRoot(selector, rootSelector);
-    if (selectorScope === undefined) return false;
+    if (selectorScope === undefined) return undefined;
     targetsRoot ||= selectorScope;
   }
+  return targetsRoot;
+};
+
+const hasUnsafeStyleRule = (rule: CSSStyleRule): boolean =>
+  (rule.cssRules?.length ?? 0) !== 0 ||
+  unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText)) ||
+  hasUnsafeLayoutStyle(rule.style);
+
+const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
+  if (hasUnsafeStyleRule(rule)) return false;
+  const selectors = splitSelectorList(rule.selectorText);
+  if (selectors === undefined) return false;
+  const targetsRoot = selectorsTargetRoot(selectors, rootSelector);
+  if (targetsRoot === undefined) return false;
   return !targetsRoot || isSafeMermaidRootStyle(rule.style);
 };
 
@@ -459,10 +461,8 @@ const prepareMermaidSvg = (svg: string, renderId: string, source: string): undef
   return root.outerHTML;
 };
 
-const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
-  const parsedDocument = new DOMParser().parseFromString(svg, "image/svg+xml");
-  const root = parsedDocument.documentElement;
-  if (
+const isSafeMermaidRoot = (parsedDocument: Document, root: Element, renderId: string): boolean =>
+  !(
     root.localName !== "svg" ||
     root.namespaceURI !== svgNamespace ||
     root.getAttribute("id") !== renderId ||
@@ -470,38 +470,44 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
     !hasAccessibleName(root) ||
     !hasAssociatedText(root, "aria-describedby") ||
     parsedDocument.querySelector("parsererror") !== null
-  ) {
+  );
+
+const isSafeMermaidInlineStyle = (element: Element, isRoot: boolean, normalizedValue: string): boolean => {
+  if (!(element instanceof SVGElement)) return false;
+  if (unsafeCss.test(normalizedValue) || hasUnsafeLayoutStyle(element.style)) return false;
+  return !isRoot || isSafeMermaidRootStyle(element.style);
+};
+
+const isSafeMermaidAttribute = (element: Element, attribute: Attr, isRoot: boolean): boolean => {
+  const name = attribute.name.toLowerCase();
+  const value = attribute.value.trim();
+  if (name.startsWith("on")) return false;
+  if (name === "role") return isRoot && value === mermaidRootRole;
+  if (HashSet.has(urlAttributes, name)) return value.startsWith("#");
+  const normalizedValue = normalizeCssTokens(value);
+  return name === "style"
+    ? isSafeMermaidInlineStyle(element, isRoot, normalizedValue)
+    : !unsafeCss.test(normalizedValue);
+};
+
+const isSafeMermaidElement = (element: Element, root: Element, renderId: string): boolean => {
+  if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
     return false;
-  }
+  if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId)) return false;
 
+  for (const attribute of element.attributes) {
+    if (!isSafeMermaidAttribute(element, attribute, element === root)) return false;
+  }
+  return true;
+};
+
+const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
+  const parsedDocument = new DOMParser().parseFromString(svg, "image/svg+xml");
+  const root = parsedDocument.documentElement;
+  if (!isSafeMermaidRoot(parsedDocument, root, renderId)) return false;
   for (const element of parsedDocument.querySelectorAll("*")) {
-    const isRoot = element === root;
-    const style = element instanceof SVGElement ? element.style : undefined;
-    if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
-      return false;
-
-    if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId)) return false;
-
-    for (const attribute of element.attributes) {
-      const name = attribute.name.toLowerCase();
-      const value = attribute.value.trim();
-      if (name.startsWith("on")) return false;
-      if (name === "role" && (element !== root || value !== mermaidRootRole)) return false;
-      if (HashSet.has(urlAttributes, name) && !value.startsWith("#")) return false;
-      const normalizedValue = normalizeCssTokens(value);
-      if (
-        name === "style" &&
-        (style === undefined ||
-          unsafeCss.test(normalizedValue) ||
-          hasUnsafeLayoutStyle(style) ||
-          (isRoot && !isSafeMermaidRootStyle(style)))
-      ) {
-        return false;
-      }
-      if (name !== "style" && unsafeCss.test(normalizedValue)) return false;
-    }
+    if (!isSafeMermaidElement(element, root, renderId)) return false;
   }
-
   return true;
 };
 
@@ -594,6 +600,7 @@ const renderFailure = (source: string, message: string): JSX.Element => (
   </div>
 );
 
+// cspell:ignore nosemgrep
 const renderSuccess = (svg: string): JSX.Element => (
   <div
     className="my-3 overflow-x-auto rounded border bg-background p-3"
@@ -603,7 +610,7 @@ const renderSuccess = (svg: string): JSX.Element => (
     // layout rule that the SVG policy does not recognize.
     style={{ contain: "paint" }}
     // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes at the browser parser boundary and the inert SVG policy revalidates the exact bytes injected here.
-    dangerouslySetInnerHTML={{ __html: svg }}
+    dangerouslySetInnerHTML={{ __html: svg }} // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- DOMPurify and the inert SVG policy validate the exact bytes before this sink.
   />
 );
 

@@ -151,16 +151,21 @@ export class HtmlConformanceError extends TaggedErrorClass<HtmlConformanceError>
 const conformantIssuer = new WeakSet<ConformantHtmlValue>();
 const conformantRoots = new WeakMap<ConformantHtmlValue, HtmlRoot.Type>();
 
-type ConformantHtmlValue = object;
+declare const conformantHtmlProof: unique symbol;
+
+declare class ConformantHtmlValue {
+  private readonly [conformantHtmlProof]: true;
+}
 
 const isConformantHtmlValue = (value: unknown): value is ConformantHtmlValue =>
-  P.isObject(value) && conformantIssuer.has(value);
+  P.isObject(value) && conformantIssuer.has(value as unknown as ConformantHtmlValue);
 
 const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
   const value = Object.create(null) as ConformantHtmlValue;
   conformantRoots.set(value, root);
   conformantIssuer.add(value);
-  return Object.freeze(value);
+  Object.freeze(value);
+  return value;
 };
 
 /**
@@ -429,20 +434,23 @@ const allowsText = (tokens: ReadonlyArray<string>, value: string): boolean =>
       token === "text" || token === "flow" || token === "phrasing" || token === "transparent" || token === "varies"
   );
 
+const allowedElementTokens = (tag: HtmlTag): ReadonlyArray<string> => {
+  const categories = ELEMENT_META[tag].categories;
+  return [
+    "transparent",
+    "varies",
+    tag,
+    ...categories,
+    ...(tag === "img" ? ["one img"] : []),
+    ...(isScriptSupporting(tag) ? ["script-supporting elements"] : []),
+    ...(A.contains(categories, "metadata") ? ["metadata content"] : []),
+    ...(A.contains(categories, "heading") ? ["heading content"] : []),
+  ];
+};
+
 const allowsElement = (tokens: ReadonlyArray<string>, tag: HtmlTag): boolean => {
-  const meta = ELEMENT_META[tag];
-  return A.some(
-    tokens,
-    (token) =>
-      token === "transparent" ||
-      token === "varies" ||
-      token === tag ||
-      (token === "one img" && tag === "img") ||
-      (token === "script-supporting elements" && isScriptSupporting(tag)) ||
-      (token === "metadata content" && A.contains(meta.categories, "metadata")) ||
-      (token === "heading content" && A.contains(meta.categories, "heading")) ||
-      A.contains(meta.categories, token)
-  );
+  const allowedTokens = allowedElementTokens(tag);
+  return A.some(tokens, (token) => A.contains(allowedTokens, token));
 };
 
 const inspectChildModel = (
@@ -754,6 +762,82 @@ const inspectForeignChildBoundary = (
     )
   );
 
+const inspectForeignEntryPoint = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const parent = A.last(ancestors);
+  const entersFromHtml = O.isNone(parent) || (O.isSome(parent) && isHtmlTag(parent.value));
+  const usesIntegrationElement =
+    (node.namespace === "svg" && node.name === "svg") || (node.namespace === "mathml" && node.name === "math");
+  return entersFromHtml && !usesIntegrationElement
+    ? [
+        makeIssue(
+          path,
+          "foreignIntegration",
+          "Foreign content must enter HTML through an <svg> or <math> integration element"
+        ),
+      ]
+    : A.emptyReadonly();
+};
+
+const inspectForeignFixedPoints = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const namespace = node.namespace;
+  const name = node.name;
+  if ((namespace !== "svg" && namespace !== "mathml") || !isString(name)) return A.emptyReadonly();
+
+  const nameIssues = isForeignElementNameFixedPoint(namespace, name)
+    ? A.emptyReadonly()
+    : [
+        makeIssue(
+          A.append(path, "name"),
+          "foreignIntegration",
+          `Foreign element name ${name} is not a browser parse fixed point`
+        ),
+      ];
+  const attributeIssues = pipe(
+    attributeValue(node.attributes),
+    O.filter(P.isObject),
+    O.match({
+      onNone: A.emptyReadonly,
+      onSome: (attributes) =>
+        A.flatMap(Struct.keys(attributes), (attributeName) =>
+          isForeignAttributeNameFixedPoint(namespace, attributeName)
+            ? A.emptyReadonly()
+            : [
+                makeIssue(
+                  A.append(path, `attributes.${attributeName}`),
+                  "foreignIntegration",
+                  `Foreign attribute name ${attributeName} is not a browser parse fixed point`
+                ),
+              ]
+        ),
+    })
+  );
+  return A.appendAll(nameIssues, attributeIssues);
+};
+
+const inspectForeignChild = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>,
+  ancestorContentTokens: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> =>
+  A.appendAll(
+    A.appendAll(inspectForeignEntryPoint(node, path, ancestors), inspectForeignFixedPoints(node, path)),
+    A.flatMap(childrenOf(node), (child, index) => {
+      const pathToChild = childPath(path, index);
+      return A.appendAll(
+        inspectForeignChildBoundary(node, child, pathToChild),
+        inspectChild(child, pathToChild, A.append(ancestors, "#foreign"), ancestorContentTokens)
+      );
+    })
+  );
+
 const inspectChild = (
   node: HtmlChildView,
   path: ReadonlyArray<string>,
@@ -763,64 +847,7 @@ const inspectChild = (
   Match.value(node._tag).pipe(
     Match.when("#text", (): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly()),
     Match.when("#comment", (): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly()),
-    Match.when("#foreign", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const parent = A.last(ancestors);
-      const entersFromHtml = O.isNone(parent) || (O.isSome(parent) && isHtmlTag(parent.value));
-      const integrationIssue: ReadonlyArray<HtmlConformanceIssue> =
-        entersFromHtml &&
-        !((node.namespace === "svg" && node.name === "svg") || (node.namespace === "mathml" && node.name === "math"))
-          ? [
-              makeIssue(
-                path,
-                "foreignIntegration",
-                "Foreign content must enter HTML through an <svg> or <math> integration element"
-              ),
-            ]
-          : A.empty<HtmlConformanceIssue>();
-      const fixedPointIssues =
-        (node.namespace === "svg" || node.namespace === "mathml") && isString(node.name)
-          ? [
-              ...(isForeignElementNameFixedPoint(node.namespace, node.name)
-                ? A.empty<HtmlConformanceIssue>()
-                : [
-                    makeIssue(
-                      A.append(path, "name"),
-                      "foreignIntegration",
-                      `Foreign element name ${node.name} is not a browser parse fixed point`
-                    ),
-                  ]),
-              ...pipe(
-                attributeValue(node.attributes),
-                O.filter(P.isObject),
-                O.match({
-                  onNone: A.emptyReadonly,
-                  onSome: (attributes) =>
-                    A.flatMap(Struct.keys(attributes), (name) =>
-                      isForeignAttributeNameFixedPoint(node.namespace as "svg" | "mathml", name)
-                        ? A.emptyReadonly()
-                        : [
-                            makeIssue(
-                              A.append(path, `attributes.${name}`),
-                              "foreignIntegration",
-                              `Foreign attribute name ${name} is not a browser parse fixed point`
-                            ),
-                          ]
-                    ),
-                })
-              ),
-            ]
-          : A.empty<HtmlConformanceIssue>();
-      return A.appendAll(
-        A.appendAll(integrationIssue, fixedPointIssues),
-        A.flatMap(childrenOf(node), (child, index) => {
-          const pathToChild = childPath(path, index);
-          return A.appendAll(
-            inspectForeignChildBoundary(node, child, pathToChild),
-            inspectChild(child, pathToChild, A.append(ancestors, "#foreign"), ancestorContentTokens)
-          );
-        })
-      );
-    }),
+    Match.when("#foreign", () => inspectForeignChild(node, path, ancestors, ancestorContentTokens)),
     Match.orElse((tag): ReadonlyArray<HtmlConformanceIssue> => {
       if (!isHtmlTag(tag)) return A.emptyReadonly();
       const meta = ELEMENT_META[tag];

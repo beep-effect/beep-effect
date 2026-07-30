@@ -1,7 +1,7 @@
 {
   "name": "@beep/md",
   "version": "0.0.2",
-  "description": "An Effect native markdown library",
+  "description": "Schema-first Markdown AST, trust provenance, URL policy, and safe rendering",
   "license": "MIT",
   "private": true,
   "type": "module",

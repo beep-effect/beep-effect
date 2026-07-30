@@ -718,9 +718,13 @@ const CanonicalAutocompleteAttribute = S.String.check(
  * @example
  * ```ts
  * import { AutocompleteAttribute } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownSync(AutocompleteAttribute)("SHIPPING  Email")) // "shipping email"
+ * const decoded = S.decodeUnknownResult(AutocompleteAttribute)("SHIPPING  Email")
+ * if (Result.isSuccess(decoded)) {
+ *   console.log(decoded.success) // "shipping email"
+ * }
  * ```
  *
  * @category schemas
