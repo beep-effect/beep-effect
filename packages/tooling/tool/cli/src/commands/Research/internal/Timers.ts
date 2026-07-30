@@ -12,11 +12,10 @@
  * @since 0.0.0
  */
 
-import { Config, Console, Effect, FileSystem, Path, Stream } from "effect";
+import { Config, Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
+import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -68,20 +67,11 @@ const renderTimer = (unit: UnitPair): string =>
 const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
   args: ReadonlyArray<string>
 ): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("systemctl", ["--user", ...args], { stderr: "pipe", stdout: "pipe" });
-      const output = yield* handle.all.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output: Str.trim(output) };
-    })
-  ).pipe(ResearchCommandError.mapError(`Failed running systemctl --user ${A.join(args, " ")}.`));
+  const result = yield* runCaptured({
+    command: "systemctl",
+    args: ["--user", ...args],
+    trim: true,
+  }).pipe(ResearchCommandError.mapError(`Failed running systemctl --user ${A.join(args, " ")}.`));
   if (result.exitCode !== 0) {
     return yield* ResearchCommandError.make({
       message: `systemctl --user ${A.join(args, " ")} exited with ${result.exitCode}: ${result.output}`,

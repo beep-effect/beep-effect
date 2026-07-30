@@ -710,7 +710,15 @@ const generateSchemas = Effect.fn("generateSchemas")(function* (skipDownload: bo
 
   const { generatedDir } = yield* getGeneratedPaths();
   yield* Effect.service(ChildProcessSpawner.ChildProcessSpawner).pipe(
-    Effect.flatMap((spawner) => spawner.spawn(ChildProcess.make("bunx", ["--bun", "oxfmt", generatedDir]))),
+    Effect.flatMap((spawner) =>
+      spawner.spawn(
+        ChildProcess.make("bunx", ["--bun", "oxfmt", generatedDir], {
+          stdin: "ignore",
+          stderr: "inherit",
+          stdout: "inherit",
+        })
+      )
+    ),
     Effect.flatMap((child) => child.exitCode),
     Effect.tap((code) =>
       code === 0

@@ -24,15 +24,15 @@ import { Command, Flag } from "effect/unstable/cli";
 
 const $I = $PracticeKgMcpId.create("package");
 
-const DuckDbVersion = "1.5.5-r.1";
+const DuckDbVersion = "1.5.5-r.2";
 /*
  * sha512 integrity for the win32 bindings tarball, copied from bun.lock's
- * entry for @duckdb/node-bindings-win32-x64@1.5.5-r.1. The download is
+ * entry for @duckdb/node-bindings-win32-x64@1.5.5-r.2. The download is
  * verified against this pin before anything is extracted into a
  * user-installed artifact; a DuckDB catalog bump must update both constants.
  */
 const WindowsBindingsSha512 =
-  "7KAdShoWQz7YXKvUneIu9ujxIVCSSA6pJ5QSZBDkNUCW+7RBLV/aH2Uy3K0Vl04reaFedaS3aewfstX2SQS5XQ==";
+  "r5V6Q0zcv5HSHGDXsd6M+t3jakhm6S11TNH5vydKGeq8JBWj4v3ZTof/mF3R8Rly+90Z205KoI9ujblg/jN04g==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
 class BindingsManifest extends S.Class<BindingsManifest>($I`BindingsManifest`)(
   { version: S.String },
@@ -64,6 +64,21 @@ const ForbiddenArchiveFragments = [
 const PackageTarget = S.Literals(["all", "linux-x64", "windows-x64"]);
 type PackageTarget = typeof PackageTarget.Type;
 
+const TargetSpecs = {
+  "linux-x64": {
+    bunTarget: "bun-linux-x64",
+    executable: "practice-kg-mcp",
+    nativePackage: "node-bindings-linux-x64",
+    platform: "linux",
+  },
+  "windows-x64": {
+    bunTarget: "bun-windows-x64",
+    executable: "practice-kg-mcp.exe",
+    nativePackage: "node-bindings-win32-x64",
+    platform: "win32",
+  },
+} as const satisfies Record<Exclude<PackageTarget, "all">, Record<string, string>>;
+
 class PackageFailure extends TaggedErrorClass<PackageFailure>($I`PackageFailure`)(
   "PackageFailure",
   {
@@ -75,9 +90,7 @@ class PackageFailure extends TaggedErrorClass<PackageFailure>($I`PackageFailure`
   })
 ) {}
 
-const target = Flag.choice("target", ["all", "linux-x64", "windows-x64"]).pipe(
-  Flag.withDefault("all" satisfies PackageTarget)
-);
+const target = Flag.choice("target", PackageTarget.literals).pipe(Flag.withDefault("all" satisfies PackageTarget));
 const output = Flag.directory("output").pipe(Flag.withDefault("apps/practice-kg-mcp/dist/mcpb"));
 
 const run = Effect.fn("PracticeKgPackage.run")(function* (
@@ -168,10 +181,10 @@ const ensureWindowsBindings = Effect.fn("PracticeKgPackage.ensureWindowsBindings
 /*
  * Tool names DERIVE from the canonical PracticeKgToolkit so the shipped
  * manifest cannot drift from the served surface; only the human-facing
- * descriptions live here, and a toolkit tool without a description entry
- * fails packaging.
+ * descriptions live here, and the keyed record type makes a toolkit tool
+ * without a description entry a compile error.
  */
-const ManifestToolDescriptions: Readonly<Record<string, string>> = {
+const ManifestToolDescriptions: Readonly<Record<keyof typeof PracticeKgToolkit.tools, string>> = {
   corpus_get_document: "Read a digest-addressed document.",
   corpus_search_text: "Search extracted corpus text.",
   email_search: "Search indexed correspondence headers.",
@@ -183,64 +196,50 @@ const ManifestToolDescriptions: Readonly<Record<string, string>> = {
   kg_provenance: "Resolve row provenance or report bundle status.",
 };
 
-const toolkitToolNames: ReadonlyArray<string> = R.keys(PracticeKgToolkit.tools);
+const toolkitToolNames = R.keys(PracticeKgToolkit.tools);
 
-const manifestToolsJson = A.join(
-  A.map(
-    toolkitToolNames,
-    (name) => `    { "name": "${name}", "description": "${ManifestToolDescriptions[name] ?? ""}" }`
-  ),
-  ",\n"
-);
-
-const assertManifestToolCoverage = Effect.fn("PracticeKgPackage.assertManifestToolCoverage")(function* () {
-  const undocumented = A.findFirst(toolkitToolNames, (name) => !(name in ManifestToolDescriptions));
-  if (O.isSome(undocumented)) {
-    return yield* PackageFailure.make({
-      message: `Toolkit tool "${undocumented.value}" has no manifest description; update ManifestToolDescriptions.`,
-    });
-  }
-});
-
-const manifestFor = (platform: "linux" | "win32", executable: string) => `{
-  "manifest_version": "0.3",
-  "name": "beep-practice-kg",
-  "display_name": "Beep Practice Knowledge Graph",
-  "version": "0.0.0",
-  "description": "Read-only local practice knowledge-graph queries over a separately supplied data bundle.",
-  "author": { "name": "Beep Effect contributors" },
-  "repository": { "type": "git", "url": "https://github.com/kriegcloud/beep-effect.git" },
-  "license": "MIT",
-  "compatibility": { "platforms": ["${platform}"] },
-  "server": {
-    "type": "binary",
-    "entry_point": "${executable}",
-    "mcp_config": {
-      "command": "\${__dirname}/${executable}",
-      "env": {
-        "BUNDLE_DIR": "\${user_config.bundle_dir}",
-        "PRACTICE_KG_CORPUS_ROOT": "\${user_config.corpus_root}"
-      }
-    }
-  },
-  "user_config": {
-    "bundle_dir": {
-      "type": "directory",
-      "title": "Practice KG data bundle",
-      "description": "Directory containing bundle.manifest.json, kg.pglite, and practice.duckdb.",
-      "required": true
+const manifestFor = (platform: "linux" | "win32", executable: string): string =>
+  JSON.stringify(
+    {
+      manifest_version: "0.3",
+      name: "beep-practice-kg",
+      display_name: "Beep Practice Knowledge Graph",
+      version: "0.0.0",
+      description: "Read-only local practice knowledge-graph queries over a separately supplied data bundle.",
+      author: { name: "Beep Effect contributors" },
+      repository: { type: "git", url: "https://github.com/kriegcloud/beep-effect.git" },
+      license: "MIT",
+      compatibility: { platforms: [platform] },
+      server: {
+        type: "binary",
+        entry_point: executable,
+        mcp_config: {
+          command: `\${__dirname}/${executable}`,
+          env: {
+            BUNDLE_DIR: "${user_config.bundle_dir}",
+            PRACTICE_KG_CORPUS_ROOT: "${user_config.corpus_root}",
+          },
+        },
+      },
+      user_config: {
+        bundle_dir: {
+          type: "directory",
+          title: "Practice KG data bundle",
+          description: "Directory containing bundle.manifest.json, kg.pglite, and practice.duckdb.",
+          required: true,
+        },
+        corpus_root: {
+          type: "directory",
+          title: "Practice corpus root",
+          description: "Optional corpus root used for click-through to source files and email bodies.",
+          required: false,
+        },
+      },
+      tools: A.map(toolkitToolNames, (name) => ({ name, description: ManifestToolDescriptions[name] })),
     },
-    "corpus_root": {
-      "type": "directory",
-      "title": "Practice corpus root",
-      "description": "Optional corpus root used for click-through to source files and email bodies.",
-      "required": false
-    }
-  },
-  "tools": [
-${manifestToolsJson}
-  ]
-}`;
+    null,
+    2
+  );
 
 // fallow-ignore-next-line complexity -- archive gate is deliberately explicit; exercised by package:mcpb on every build
 const assertArchive = Effect.fn("PracticeKgPackage.assertArchive")(function* (
@@ -299,19 +298,15 @@ const packageTarget = Effect.fn("PracticeKgPackage.packageTarget")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = path.resolve(import.meta.dir, "..", "..", "..");
-  const windows = targetName === "windows-x64";
-  const platform = windows ? "win32" : "linux";
-  const bunTarget = windows ? "bun-windows-x64" : "bun-linux-x64";
-  const executable = windows ? "practice-kg-mcp.exe" : "practice-kg-mcp";
-  const nativePackage = windows ? "node-bindings-win32-x64" : "node-bindings-linux-x64";
+  const { bunTarget, executable, nativePackage, platform } = TargetSpecs[targetName];
   const resolvedOutputRoot = path.resolve(repoRoot, outputRoot);
   const bundleDir = path.resolve(resolvedOutputRoot, targetName);
   const archivePath = path.resolve(resolvedOutputRoot, `practice-kg-mcp-${targetName}.mcpb`);
   const cacheDir = path.resolve(resolvedOutputRoot, ".cache");
-  const nativeSource = windows
-    ? yield* ensureWindowsBindings(cacheDir, repoRoot)
-    : path.resolve(repoRoot, "node_modules", "@duckdb", nativePackage);
-  yield* assertManifestToolCoverage();
+  const nativeSource =
+    targetName === "windows-x64"
+      ? yield* ensureWindowsBindings(cacheDir, repoRoot)
+      : path.resolve(repoRoot, "node_modules", "@duckdb", nativePackage);
   yield* fs.remove(bundleDir, { recursive: true, force: true });
   yield* fs.makeDirectory(bundleDir, { recursive: true });
   const manifest = manifestFor(platform, executable);

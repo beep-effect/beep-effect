@@ -17,9 +17,9 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:check:tests && bun run beep:test && bun run beep:test:integration && bun run type-test && bun run beep:lint",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run type-test && bun run beep:lint",
     "beep:build": "rm -rf dist && tsc -b tsconfig.json --force && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",

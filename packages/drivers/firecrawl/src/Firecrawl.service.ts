@@ -312,7 +312,7 @@ const runSdkCall = <Payload, Success>(
   payload: Payload,
   invoke: (payload: Payload) => Promise<unknown>
 ): Effect.Effect<Success, FirecrawlError> =>
-  decodeWith(method, payloadSchema, payload, FirecrawlCodecErrorReason.Enum["request encoding"]).pipe(
+  decodeWith(method, S.toType(payloadSchema), payload, FirecrawlCodecErrorReason.Enum["request encoding"]).pipe(
     Effect.flatMap((decoded) =>
       Effect.tryPromise({
         catch: (cause) => FirecrawlError.fromUnknown(method, cause),
@@ -712,7 +712,7 @@ const makeService = (client: FirecrawlSdkClient): FirecrawlShape => ({
     ),
   watcher: (payload) =>
     Stream.unwrap(
-      decodeWith("watcher", M.FirecrawlWatcherPayload, payload, "request encoding").pipe(
+      decodeWith("watcher", S.toType(M.FirecrawlWatcherPayload), payload, "request encoding").pipe(
         Effect.flatMap((decoded) =>
           Effect.try({
             catch: (cause) => FirecrawlError.fromUnknown("watcher", cause),

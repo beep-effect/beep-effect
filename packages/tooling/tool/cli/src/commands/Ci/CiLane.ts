@@ -16,12 +16,12 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, Match, Path, pipe, Stream } from "effect";
+import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -776,7 +776,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", A.empty<string>(), options)],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=3"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
@@ -855,19 +855,14 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(step.command, [...step.args], {
-        cwd: step.cwd,
-        env: step.env ?? {},
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
+  return yield* runToExit({
+    command: step.command,
+    args: step.args,
+    cwd: step.cwd,
+    env: step.env ?? {},
+    extendEnv: true,
+    stdio: "inherit",
+  }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
 });
 
 const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
@@ -1160,24 +1155,19 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
 const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   repoRoot: string
 ): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", ["branch", "--show-current"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      yield* handle.exitCode;
-      return Str.trim(output);
-    })
-  ).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["branch", "--show-current"],
+    cwd: repoRoot,
+    source: "stdout",
+    trim: true,
+  }).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git branch --show-current failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.output;
 });
 
 /**

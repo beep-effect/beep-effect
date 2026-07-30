@@ -1,6 +1,6 @@
 import { goalsCommand } from "@beep/repo-cli/test/Goals";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Ref } from "effect";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -12,11 +12,7 @@ const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const absoluteExplorationPath = "/etc/passwd";
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)),
-  TestConsole.layer
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 
 describe("goals doctor provenance path security", () => {
   it(

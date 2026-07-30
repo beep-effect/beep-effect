@@ -12,7 +12,6 @@ import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order,
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import {
   canUseLocalEnv,
   configStringEqualsSync,
@@ -21,7 +20,6 @@ import {
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
 import {
-  collectText,
   formatCommandLine,
   QualityTaskStep,
   qualityStepOutputBound,
@@ -516,9 +514,15 @@ const coverageFastCheckSeed = (): string =>
     O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
   );
 
-const coverageEnvironment = (): Record<string, string> => ({
+// Coverage is a hosted ratchet. Pin its CI identity and remove desktop terminal
+// metadata so local baseline generation exercises the same branches as GitHub.
+const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
+  CI: "true",
+  GITHUB_ACTIONS: "true",
   NODE_OPTIONS: coverageNodeOptions(),
+  TERM_PROGRAM: undefined,
+  TERM_PROGRAM_VERSION: undefined,
   VITEST_COVERAGE_RATCHET: "1",
 });
 
@@ -526,7 +530,7 @@ const coverageEnvironment = (): Record<string, string> => ({
 const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
-): Record<string, string> | undefined =>
+): Record<string, string | undefined> | undefined =>
   // fallow-ignore-next-line code-duplication
   includesTurboCoverageTask(tasks, args) ? coverageEnvironment() : undefined;
 
@@ -534,23 +538,18 @@ const linesFromText = (text: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
 const runGitLines = Effect.fn("QualityTasks.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stderr: "ignore",
-        stdout: "pipe",
-      });
-      const text = yield* collectText(handle.stdout);
-      const exitCode = yield* handle.exitCode;
-      if (exitCode !== 0) {
-        return yield* QualityTaskConfigurationError.new(`git ${A.join(args, " ")} failed with exit code ${exitCode}.`);
-      }
-      return text;
-    })
-  ).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn git ${A.join(args, " ")}`));
-
-  return linesFromText(output);
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn git ${A.join(args, " ")}`));
+  if (result.exitCode !== 0) {
+    return yield* QualityTaskConfigurationError.new(
+      `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`
+    );
+  }
+  return linesFromText(result.output);
 });
 
 const collectWorkingTreeChangedFiles = Effect.fn("QualityTasks.collectWorkingTreeChangedFiles")(function* (

@@ -98,9 +98,7 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
-const { BunChildProcessSpawner, BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import(
-  "@effect/platform-bun"
-);
+const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
 const { Cause, Effect, Exit, Layer, Runtime } = await import("effect");
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
@@ -191,9 +189,8 @@ if (canUseQualityTaskFastPath(argv)) {
 
   if (O.isSome(qualityTaskInvocation)) {
     handledByQualityFastPath = true;
-    const QualityLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
     const qualityProgram = Effect.scoped(
-      Layer.build(QualityLayers).pipe(
+      Layer.build(BaseLayers).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
             return yield* runQualityTask(qualityTaskInvocation.value).pipe(Effect.provide(context));
@@ -213,13 +210,12 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
     import("./commands/Ci/index.ts"),
     import("effect/unstable/cli"),
   ]);
-  const CiLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
   const ciRootCommand = Command.make("beep-cli").pipe(
     Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
     Command.withSubcommands([ciCommand])
   );
   const ciProgram = Effect.scoped(
-    Layer.build(CiLayers).pipe(
+    Layer.build(BaseLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
           return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
@@ -236,9 +232,7 @@ if (!handledByQualityFastPath && !handledByCiFastPath) {
     import("effect/unstable/cli"),
     import("./commands/Root.ts"),
   ]);
-  const DerivedLayers = Layer.mergeAll(BunChildProcessSpawner.layer, FsUtilsLive, TSMorphServiceLive).pipe(
-    Layer.provideMerge(BaseLayers)
-  );
+  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(BaseLayers));
   const commandProgram = Effect.scoped(
     Layer.build(DerivedLayers).pipe(
       Effect.flatMap(

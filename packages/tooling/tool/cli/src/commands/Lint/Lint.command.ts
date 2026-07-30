@@ -14,9 +14,9 @@ import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
@@ -467,22 +467,17 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
   const args = hasLocalEslint ? eslintArgs : (["eslint", ...eslintArgs] as const);
   yield* Console.log(`[lint:deprecated-apis] ${shard}: ${command} ${A.join(args, " ")}`);
 
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: process.cwd(),
-        env: {
-          BEEP_ESLINT_PROFILE: "deprecated-apis",
-          NODE_OPTIONS: DEPRECATED_API_LINT_NODE_OPTIONS,
-        },
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  );
+  const exitCode = yield* runToExit({
+    command,
+    args,
+    cwd: process.cwd(),
+    env: {
+      BEEP_ESLINT_PROFILE: "deprecated-apis",
+      NODE_OPTIONS: DEPRECATED_API_LINT_NODE_OPTIONS,
+    },
+    extendEnv: true,
+    stdio: "inherit",
+  });
 
   if (exitCode !== 0) {
     return yield* failWithReportedExit(`lint deprecated-apis: ${shard} failed with exit code ${exitCode}.`, exitCode);

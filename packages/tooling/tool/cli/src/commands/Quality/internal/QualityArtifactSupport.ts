@@ -9,9 +9,8 @@ import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { Node } from "ts-morph";
-import { collectText } from "../../../internal/process/index.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/QualityArtifactSupport");
@@ -475,18 +474,11 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
   FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const command = "bun run topo-sort";
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", ["run", "topo-sort"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* collectText(handle.all);
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output };
-    })
-  ).pipe(QualityArtifactGeneratorError.mapError(`Failed to run ${command}.`, { command, filePath: repoRoot }));
+  const result = yield* runCaptured({
+    command: "bun",
+    args: ["run", "topo-sort"],
+    cwd: repoRoot,
+  }).pipe(QualityArtifactGeneratorError.mapError(`Failed to run ${command}.`, { command, filePath: repoRoot }));
 
   if (result.exitCode !== 0) {
     return yield* QualityArtifactGeneratorError.make({

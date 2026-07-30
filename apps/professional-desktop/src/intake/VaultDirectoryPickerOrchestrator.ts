@@ -32,7 +32,13 @@ const pickWith = Effect.fn("professional_desktop.intake.pick_vault_directory_pro
     "professional_desktop.intake.vault_picker.provider": executable,
   });
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const child = yield* spawner.spawn(ChildProcess.make(executable, args));
+  const child = yield* spawner.spawn(
+    ChildProcess.make(executable, args, {
+      stdin: "ignore",
+      stderr: "ignore",
+      stdout: "pipe",
+    })
+  );
   const [stdout, exitCode] = yield* Effect.all([collectText(child.stdout), child.exitCode], {
     concurrency: "unbounded",
   });

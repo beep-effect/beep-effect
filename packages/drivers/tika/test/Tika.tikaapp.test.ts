@@ -5,14 +5,14 @@ import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText } from "@beep/tika";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Path, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
-const testLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
 const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig);

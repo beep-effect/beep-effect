@@ -35,7 +35,9 @@ import {
   OpenclawSecretsReloadDegraded,
   OpenclawSecretsReloaded,
   OpenclawSecretsReloadOutput,
+  OpenclawSkillInventory,
   OpenclawSystemdUnitState,
+  OpenclawTelegramSendResult,
   OpenclawVersionInfo,
 } from "@beep/openclaw/Openclaw.models";
 import { NonNegativeInt } from "@beep/schema";
@@ -155,6 +157,27 @@ describe("@beep/openclaw models", () => {
     expect(O.getOrThrow(turn.text)).toBe("PONG");
     expect(O.getOrThrow(turn.provider)).toBe("ollama");
     expect(O.getOrThrow(turn.model)).toBe("gemma3:4b");
+  });
+
+  it("decodes sanitized pinned skill-list and Telegram-send shapes", () => {
+    const inventory = Result.getOrThrow(
+      S.decodeUnknownResult(S.fromJsonString(OpenclawSkillInventory))(
+        '{"workspaceDir":"/etc/beep/openclaw/current/workspace","skills":[' +
+          '{"name":"beep-proof-ping","description":"Return one fixed synthetic sentinel for the P3 declarative-skill proof.",' +
+          '"eligible":true,"source":"openclaw-workspace"}]}'
+      )
+    );
+    const send = Result.getOrThrow(
+      S.decodeUnknownResult(S.fromJsonString(OpenclawTelegramSendResult))(
+        '{"action":"send","channel":"telegram","dryRun":false,"handledBy":"plugin",' +
+          '"messageId":"synthetic-message-id","payload":{"ok":true,"messageId":"synthetic-message-id"}}'
+      )
+    );
+
+    expect(inventory.skills[0]?.name).toBe("beep-proof-ping");
+    expect(inventory.skills[0]?.source).toBe("openclaw-workspace");
+    expect(send.messageId).toBe("synthetic-message-id");
+    expect(send.payload.ok).toBe(true);
   });
 
   it("keeps encoded wire shapes byte-identical", () => {

@@ -27,6 +27,8 @@ const OpenclawModelInputKindBase = LiteralKit(["text", "image"]);
 const OpenclawAuthProfileModeBase = LiteralKit(["api_key", "oauth"]);
 const OpenclawTelegramDmPolicyBase = LiteralKit(["pairing", "disabled", "open"]);
 const OpenclawTelegramGroupPolicyBase = LiteralKit(["open", "disabled"]);
+const OpenclawConfidentialityPolicyBase = LiteralKit(["advisory"]);
+const OpenclawClientDataPolicyBase = LiteralKit(["synthetic-only"]);
 
 /**
  * Driver-local 1Password secret reference (`op://vault/item/field`).
@@ -265,6 +267,134 @@ export class OpenclawGatewayIntent extends S.Class<OpenclawGatewayIntent>($I`Ope
   },
   $I.annote("OpenclawGatewayIntent", {
     description: "Desired OpenClaw gateway configuration with a secret-referenced auth token.",
+  })
+) {}
+
+/**
+ * Legal-workstation confidentiality handling policy.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawConfidentialityPolicy } from "@beep/openclaw"
+ *
+ * console.log(OpenclawConfidentialityPolicy.Options) // ["advisory"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpenclawConfidentialityPolicy = OpenclawConfidentialityPolicyBase.pipe(
+  $I.annoteSchema("OpenclawConfidentialityPolicy", {
+    description: "Advisory-only confidentiality handling policy.",
+  }),
+  SchemaUtils.withLiteralKitStatics(OpenclawConfidentialityPolicyBase)
+);
+
+/**
+ * Runtime type for {@link OpenclawConfidentialityPolicy}.
+ *
+ * @example
+ * ```ts
+ * import type { OpenclawConfidentialityPolicy } from "@beep/openclaw"
+ *
+ * const policy: OpenclawConfidentialityPolicy = "advisory"
+ * console.log(policy)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenclawConfidentialityPolicy = typeof OpenclawConfidentialityPolicy.Type;
+
+/**
+ * Client-data handling policy for the legal-workstation persona.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawClientDataPolicy } from "@beep/openclaw"
+ *
+ * console.log(OpenclawClientDataPolicy.Options) // ["synthetic-only"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpenclawClientDataPolicy = OpenclawClientDataPolicyBase.pipe(
+  $I.annoteSchema("OpenclawClientDataPolicy", {
+    description: "Synthetic-only client-data handling policy.",
+  }),
+  SchemaUtils.withLiteralKitStatics(OpenclawClientDataPolicyBase)
+);
+
+/**
+ * Runtime type for {@link OpenclawClientDataPolicy}.
+ *
+ * @example
+ * ```ts
+ * import type { OpenclawClientDataPolicy } from "@beep/openclaw"
+ *
+ * const policy: OpenclawClientDataPolicy = "synthetic-only"
+ * console.log(policy)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenclawClientDataPolicy = typeof OpenclawClientDataPolicy.Type;
+
+/**
+ * Declarative persona artifact and its handling policies.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawPersonaIntent } from "@beep/openclaw"
+ *
+ * const persona = OpenclawPersonaIntent.make({
+ *   clientDataPolicy: "synthetic-only",
+ *   confidentialityPolicy: "advisory",
+ *   soulMarkdown: "Use synthetic examples only."
+ * })
+ * console.log(persona.confidentialityPolicy) // "advisory"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawPersonaIntent extends S.Class<OpenclawPersonaIntent>($I`OpenclawPersonaIntent`)(
+  {
+    clientDataPolicy: OpenclawClientDataPolicy,
+    confidentialityPolicy: OpenclawConfidentialityPolicy,
+    soulMarkdown: S.NonEmptyString,
+  },
+  $I.annote("OpenclawPersonaIntent", {
+    description: "Legal-workstation persona artifact with explicit confidentiality and client-data policies.",
+  })
+) {}
+
+/**
+ * Loopback Control UI configuration.
+ *
+ * @example
+ * ```ts
+ * import { OpenclawControlUiIntent } from "@beep/openclaw"
+ *
+ * const controlUi = OpenclawControlUiIntent.make({
+ *   allowedOrigins: ["http://openclaw.beep.localhost:1355"],
+ *   enabled: true
+ * })
+ * console.log(controlUi.enabled) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenclawControlUiIntent extends S.Class<OpenclawControlUiIntent>($I`OpenclawControlUiIntent`)(
+  {
+    allowedOrigins: S.Array(S.NonEmptyString),
+    enabled: S.Literal(true),
+  },
+  $I.annote("OpenclawControlUiIntent", {
+    description: "Enabled Control UI with an explicit origin allowlist.",
   })
 ) {}
 
@@ -973,9 +1103,11 @@ export class OpenclawLoggingIntent extends S.Class<OpenclawLoggingIntent>($I`Ope
  * ```ts
  * import {
  *   OpenclawAgentIntent,
+ *   OpenclawControlUiIntent,
  *   OpenclawDeploymentIntent,
  *   OpenclawGatewayIntent,
  *   OpenclawLoggingIntent,
+ *   OpenclawPersonaIntent,
  *   OpenclawSecretReference,
  *   OpenclawSecretsResolverIntent
  * } from "@beep/openclaw/OpenclawIntent.models"
@@ -987,12 +1119,21 @@ export class OpenclawLoggingIntent extends S.Class<OpenclawLoggingIntent>($I`Ope
  *     name: "Spike 3",
  *     workspace: "/var/lib/beep/spike3"
  *   }),
+ *   controlUi: OpenclawControlUiIntent.make({
+ *     allowedOrigins: ["http://127.0.0.1:19031"],
+ *     enabled: true
+ *   }),
  *   gateway: OpenclawGatewayIntent.make({
  *     authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
  *     port: 19031
  *   }),
  *   logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/spike3/log/openclaw.log" }),
  *   openclawVersion: "2026.7.1-2",
+ *   persona: OpenclawPersonaIntent.make({
+ *     clientDataPolicy: "synthetic-only",
+ *     confidentialityPolicy: "advisory",
+ *     soulMarkdown: "Use synthetic examples only."
+ *   }),
  *   providers: [],
  *   secretsResolver: OpenclawSecretsResolverIntent.make({
  *     commandPath: "/opt/beep/openclaw/op-resolver.sh",
@@ -1014,6 +1155,9 @@ export class OpenclawDeploymentIntent extends S.Class<OpenclawDeploymentIntent>(
     authProfiles: S.Array(OpenclawAuthProfileIntent).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
       description: "Non-secret auth.profiles metadata entries.",
     }),
+    controlUi: OpenclawControlUiIntent.annotateKey({
+      description: "Loopback Control UI configuration.",
+    }),
     gateway: OpenclawGatewayIntent.annotateKey({
       description: "Gateway listener and auth-token configuration.",
     }),
@@ -1027,6 +1171,9 @@ export class OpenclawDeploymentIntent extends S.Class<OpenclawDeploymentIntent>(
     }),
     openclawVersion: OpenclawTargetVersion.annotateKey({
       description: "Pinned OpenClaw version the render adapter targets.",
+    }),
+    persona: OpenclawPersonaIntent.annotateKey({
+      description: "Legal-workstation persona and handling policies.",
     }),
     providers: S.Array(OpenclawModelProviderIntent).annotateKey({
       description: "Model providers rendered into models.providers.",

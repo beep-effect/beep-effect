@@ -13,8 +13,7 @@ import { Effect, Order, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
-import { collectText } from "../../../internal/process/index.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
@@ -411,19 +410,11 @@ const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CommandOutput, TurboConfigProofError, ChildProcessSpawner.ChildProcessSpawner> {
   const renderedCommand = commandText(command, args);
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: repoRoot,
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* collectText(handle.all);
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output };
-    })
-  ).pipe(
+  const result = yield* runCaptured({
+    command,
+    args,
+    cwd: repoRoot,
+  }).pipe(
     Effect.mapError(TurboConfigProofError.mapError(`Failed to spawn ${renderedCommand}.`, { command: renderedCommand }))
   );
 

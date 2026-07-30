@@ -1,12 +1,14 @@
 import {
   OpenclawAgentIntent,
   OpenclawAuthProfileIntent,
+  OpenclawControlUiIntent,
   OpenclawDeploymentIntent,
   OpenclawGatewayIntent,
   OpenclawLoggingIntent,
   OpenclawModelDeclaration,
   OpenclawModelProviderIntent,
   OpenclawModelProviderParams,
+  OpenclawPersonaIntent,
   OpenclawProviderApiKey,
   OpenclawProviderApiKeyPlaceholder,
   OpenclawProviderApiKeySecretRef,
@@ -69,12 +71,21 @@ const minimalIntent = OpenclawDeploymentIntent.make({
     name: "Spike 3",
     workspace: "/var/lib/beep/spike3",
   }),
+  controlUi: OpenclawControlUiIntent.make({
+    allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+    enabled: true,
+  }),
   gateway: OpenclawGatewayIntent.make({
     authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
     port: 19031,
   }),
   logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/spike3/log/openclaw.log" }),
   openclawVersion: "2026.7.1-2",
+  persona: OpenclawPersonaIntent.make({
+    clientDataPolicy: "synthetic-only",
+    confidentialityPolicy: "advisory",
+    soulMarkdown: "# Synthetic legal assistant",
+  }),
   providers: [ollamaProvider],
   secretsResolver: OpenclawSecretsResolverIntent.make({
     commandPath: "/opt/beep/openclaw/op-resolver.sh",
@@ -106,6 +117,10 @@ describe("@beep/openclaw intent models", () => {
         workspace: "/var/lib/beep/spike3",
       },
       authProfiles: [],
+      controlUi: {
+        allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+        enabled: true,
+      },
       gateway: {
         authTokenRef: "op://beep-p0-spike3/spike3-rotating/password",
         bind: "loopback",
@@ -114,6 +129,11 @@ describe("@beep/openclaw intent models", () => {
       guardrails: { toolsDeny: ["*"] },
       logging: { filePath: "/var/lib/beep/spike3/log/openclaw.log" },
       openclawVersion: "2026.7.1-2",
+      persona: {
+        clientDataPolicy: "synthetic-only",
+        confidentialityPolicy: "advisory",
+        soulMarkdown: "# Synthetic legal assistant",
+      },
       providers: [
         {
           api: "ollama",

@@ -2,14 +2,11 @@ import { DualArityRulesOptions, runDualArityRules } from "@beep/repo-cli/test/La
 import { FsUtilsLive } from "@beep/repo-utils";
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
 import { A, Str } from "@beep/utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 
-const PlatformLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
-);
+const PlatformLayer = NodeServices.layer;
 const testLayer = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(PlatformLayer));
 
 const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>

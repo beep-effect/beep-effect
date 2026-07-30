@@ -8,13 +8,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { buildRepoDependencyIndex, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, HashMap, Order, Path, pipe, Stream } from "effect";
+import { Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { runCaptured } from "../../internal/process/StepExec.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
 
 const $I = $RepoCliId.create("commands/Fallow/Fallow.command");
@@ -317,31 +317,12 @@ const runFallowBoundaryReport = Effect.fn("Fallow.runFallowBoundaryReport")(func
     "json",
     "--quiet",
   ] as const;
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", [...args], {
-        cwd: repoRoot,
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [text] = yield* Effect.all(
-        [
-          handle.all.pipe(
-            Stream.decodeText(),
-            Stream.runFold(
-              () => "",
-              (acc, chunk) => acc + chunk
-            )
-          ),
-          handle.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      return text;
-    })
-  );
+  const { output } = yield* runCaptured({
+    command: "bun",
+    args,
+    cwd: repoRoot,
+    extendEnv: true,
+  });
   const jsonText = yield* pipe(
     extractJsonDocumentText(output),
     O.match({

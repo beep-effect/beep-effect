@@ -21,7 +21,7 @@ import {
 } from "@beep/repo-cli/commands/Corpus";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -30,9 +30,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const testLayer = Layer.mergeAll(
-  CorpusCommandServiceLive.pipe(
-    Layer.provideMerge(NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)))
-  ),
+  CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
   NodeServices.layer
 );
 

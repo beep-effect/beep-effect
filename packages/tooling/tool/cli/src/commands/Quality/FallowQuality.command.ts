@@ -16,9 +16,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
-import { collectText } from "../../internal/process/index.ts";
+import { runCapturedStreams } from "../../internal/process/index.ts";
 import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
 import {
   FallowAttributionKinds,
@@ -785,30 +784,22 @@ const collectProcessOutput = Effect.fn("FallowQuality.collectProcessOutput")(fun
   command: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<ProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: repoRoot,
-        extendEnv: true,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      return {
-        stdout,
-        stderr,
-        output: combineProcessOutput(stdout, stderr),
-        exitCode,
-      };
-    })
-  ).pipe(
+  const result = yield* runCapturedStreams({
+    command,
+    args,
+    cwd: repoRoot,
+    extendEnv: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to run ${commandText(command, args)}.`, {
       command: commandText(command, args),
     })
   );
+  return {
+    stdout: result.stdout,
+    stderr: result.stderr,
+    output: combineProcessOutput(result.stdout, result.stderr),
+    exitCode: result.exitCode,
+  };
 });
 
 const collectOptionalOutput = Effect.fn("FallowQuality.collectOptionalOutput")(function* (

@@ -114,6 +114,11 @@ describe("ciLaneStepsForTesting", () => {
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
   });
 
+  it("matches coverage baseline regeneration concurrency", () => {
+    const coverage = firstOf(ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions));
+    expect([...coverage.args]).toEqual(["run", "coverage", "--", "--concurrency=3", "--affected", "--summarize"]);
+  });
+
   it("runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "jsdoc-ratchet", baseOptions);
     const labels = A.map(steps, (step) => step.label);
