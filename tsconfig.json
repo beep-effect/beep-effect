@@ -1723,7 +1723,45 @@
         "./packages/law-practice/tables/src/entities/index.ts"
       ],
       "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
-      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"],
+      "@beep/epistemic-domain/identity": [
+        "./packages/epistemic/domain/src/identity/index.ts"
+      ],
+      "@beep/epistemic-domain/identity/Epistemic": [
+        "./packages/epistemic/domain/src/identity/Epistemic.ts"
+      ],
+      "@beep/epistemic-client": ["./packages/epistemic/client/src/index.ts"],
+      "@beep/epistemic-domain/entities/Contradiction": [
+        "./packages/epistemic/domain/src/entities/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-domain/values/Contradiction": [
+        "./packages/epistemic/domain/src/values/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Contradiction": [
+        "./packages/epistemic/tables/src/entities/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-ui": ["./packages/epistemic/ui/src/index.ts"],
+      "@beep/file-processing/SourceText": [
+        "./packages/foundation/capability/file-processing/src/SourceText/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EvidenceVerification": [
+        "./packages/epistemic/domain/src/entities/EvidenceVerification/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EvidenceVerification": [
+        "./packages/epistemic/domain/src/values/EvidenceVerification/index.ts"
+      ],
+      "@beep/epistemic-server/ContradictionTriage": [
+        "./packages/epistemic/server/src/ContradictionTriage/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EvidenceVerification": [
+        "./packages/epistemic/tables/src/entities/EvidenceVerification/index.ts"
+      ],
+      "@beep/langextract/VerifiedSpan": [
+        "./packages/foundation/capability/langextract/src/VerifiedSpan/index.ts"
+      ],
+      "@beep/workspace-server/SourceText": [
+        "./packages/workspace/server/src/SourceText/index.ts"
+      ]
     }
   }
 }

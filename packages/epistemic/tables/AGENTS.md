@@ -12,6 +12,7 @@ projection backing the real UsageRecord sink and the bitemporal
 | `src/entities/ClaimDisposition/` | `Table`, `toClaimDispositionInsert`, `fromClaimDispositionRow` | ClaimDisposition table metadata and row converters |
 | `src/entities/EdgeVersion/` | `Table`, `toEdgeVersionInsert`, `fromEdgeVersionRow` | Bitemporal EdgeVersion table metadata and row converters |
 | `src/entities/Evidence/` | `Table`, `toEvidenceInsert`, `fromEvidenceRow` | Evidence table metadata and row converters |
+| `src/entities/EvidenceVerification/` | `Table`, `toEvidenceVerificationInsert`, `fromEvidenceVerificationRow` | Append-only verified-evidence sidecar metadata and row converters |
 | `src/entities/UsageRecord/` | `Table`, `toUsageRecordInsert`, `fromUsageRecordRow` | UsageRecord table metadata and row converters |
 
 CHECK, EXCLUDE, and partial-index constraints on these tables are owned by the

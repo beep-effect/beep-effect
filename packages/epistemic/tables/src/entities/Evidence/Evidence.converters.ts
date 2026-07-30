@@ -7,8 +7,15 @@
  */
 
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
+import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $EpistemicTablesId } from "@beep/identity/packages";
+import { identity, pipe, Result } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { Table } from "./Evidence.table.ts";
+
+const $I = $EpistemicTablesId.create("entities/Evidence/Evidence.converters");
 
 /**
  * Selected epistemic Evidence row.
@@ -30,11 +37,11 @@ import type { Table } from "./Evidence.table.ts";
  *   source: "Agent",
  *   span: {
  *     confidence: 0.92,
- *     endChar: 48,
+ *     endChar: 57,
  *     quote: "a processor configured to receive sensor data",
  *     startChar: 12
  *   },
- *   spanFixtureKey: "span:oa-1:12-48",
+ *   spanFixtureKey: "span:oa-1:12-57",
  *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceRow
@@ -66,11 +73,11 @@ export type EvidenceRow = typeof Table.$inferSelect;
  *   source: "Agent",
  *   span: {
  *     confidence: 0.92,
- *     endChar: 48,
+ *     endChar: 57,
  *     quote: "a processor configured to receive sensor data",
  *     startChar: 12
  *   },
- *   spanFixtureKey: "span:oa-1:12-48",
+ *   spanFixtureKey: "span:oa-1:12-57",
  *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceInsert
@@ -83,8 +90,40 @@ export type EvidenceRow = typeof Table.$inferSelect;
  */
 export type EvidenceInsert = typeof Table.$inferInsert;
 
-const encodeEvidence = S.encodeSync(Evidence);
-const decodeEvidenceRow = S.decodeUnknownSync(Evidence);
+const encodeEvidence = S.encodeResult(Evidence);
+const decodeEvidenceRow = S.decodeUnknownResult(Evidence);
+class LegacyEvidenceSpan extends S.Class<LegacyEvidenceSpan>($I`LegacyEvidenceSpan`)(
+  {
+    confidence: EvidenceSpan.fields.confidence,
+    endChar: EvidenceSpan.fields.endChar,
+    quote: EvidenceSpan.fields.quote,
+    startChar: EvidenceSpan.fields.startChar,
+  },
+  $I.annote("LegacyEvidenceSpan", {
+    description:
+      "Persistence-read compatibility shape for evidence spans written before endChar became a derived strict width.",
+  })
+) {}
+const isLegacyEvidenceSpan = S.is(LegacyEvidenceSpan.mapFields(identity));
+
+const normalizeLegacyEvidenceSpan = (row: EvidenceRow): EvidenceRow =>
+  pipe(
+    row.span,
+    O.liftPredicate(isLegacyEvidenceSpan),
+    O.match({
+      onNone: () => row,
+      onSome: (span) => ({
+        ...row,
+        span: {
+          ...span,
+          endChar: span.startChar + Str.length(span.quote),
+        },
+      }),
+    })
+  );
+
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 /**
  * Convert an Evidence entity into its persistence insert row.
@@ -111,11 +150,11 @@ const decodeEvidenceRow = S.decodeUnknownSync(Evidence);
  *   source: "Agent",
  *   span: {
  *     confidence: 0.92,
- *     endChar: 48,
+ *     endChar: 57,
  *     quote: "a processor configured to receive sensor data",
  *     startChar: 12
  *   },
- *   spanFixtureKey: "span:oa-1:12-48",
+ *   spanFixtureKey: "span:oa-1:12-57",
  *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceRow
@@ -128,8 +167,8 @@ const decodeEvidenceRow = S.decodeUnknownSync(Evidence);
  * @since 0.0.0
  */
 export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
-  const { id: _id, ...rest } = encodeEvidence(evidence);
-  return rest as EvidenceInsert;
+  const { id: _id, ...rest } = Result.getOrThrowWith(encodeEvidence(evidence), schemaIssueToError);
+  return rest;
 };
 
 /**
@@ -153,11 +192,11 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  *   source: "Agent",
  *   span: {
  *     confidence: 0.92,
- *     endChar: 48,
+ *     endChar: 57,
  *     quote: "a processor configured to receive sensor data",
  *     startChar: 12
  *   },
- *   spanFixtureKey: "span:oa-1:12-48",
+ *   spanFixtureKey: "span:oa-1:12-57",
  *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceRow
@@ -169,4 +208,5 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  * @category tables
  * @since 0.0.0
  */
-export const fromEvidenceRow = (row: EvidenceRow): Evidence => decodeEvidenceRow(row);
+export const fromEvidenceRow = (row: EvidenceRow): Evidence =>
+  Result.getOrThrowWith(decodeEvidenceRow(normalizeLegacyEvidenceSpan(row)), schemaIssueToError);

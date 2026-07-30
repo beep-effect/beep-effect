@@ -13,9 +13,16 @@
  */
 import { $ProvenanceId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
+import { identity, Number as N } from "effect";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ProvenanceId.create("TextAnchor");
+const isNonNegativeInt = S.is(NonNegativeInt);
+const isHighSurrogate = N.between({ minimum: 0xd800, maximum: 0xdbff });
+const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
 
 /**
  * The field schemas of a {@link TextAnchor}. Exported so consumers can spread
@@ -25,9 +32,12 @@ const $I = $ProvenanceId.create("TextAnchor");
  * @example
  * ```ts
  * import * as S from "effect/Schema"
- * import { TextAnchorFields } from "@beep/provenance/TextAnchor"
+ * import {
+ *   TextAnchorFields,
+ *   TextAnchorWidthCheck,
+ * } from "@beep/provenance/TextAnchor"
  *
- * const Span = S.Struct({ ...TextAnchorFields })
+ * const Span = S.Struct({ ...TextAnchorFields }).check(TextAnchorWidthCheck)
  * console.log(Object.keys(Span.fields)) // ["startChar", "endChar", "quote"]
  * ```
  *
@@ -46,30 +56,107 @@ export const TextAnchorFields = {
   }),
 };
 
+class TextAnchorStruct extends S.Class<TextAnchorStruct>($I`TextAnchorStruct`)(
+  TextAnchorFields,
+  $I.annote("TextAnchorStruct", {
+    description: "Internal structural base for a half-open UTF-16 text range and its exact quote.",
+  })
+) {}
+const hasConsistentTextAnchorWidth = (anchor: {
+  readonly endChar: number;
+  readonly quote: string;
+  readonly startChar: number;
+}): boolean => anchor.startChar < anchor.endChar && anchor.endChar - anchor.startChar === Str.length(anchor.quote);
+
+/**
+ * Reusable cross-field check for schemas that flatten {@link TextAnchorFields}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor"
+ *
+ * const FlatAnchor = S.Struct(TextAnchorFields).check(TextAnchorWidthCheck)
+ * console.log(S.is(FlatAnchor)({ startChar: 0, endChar: 4, quote: "fact" })) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const TextAnchorWidthCheck = S.makeFilter(hasConsistentTextAnchorWidth, {
+  identifier: $I`TextAnchorWidthCheck`,
+  title: "Text Anchor Width",
+  description: "Checks that a non-empty half-open anchor range has the same UTF-16 width as its quote.",
+  message: "Expected endChar - startChar to equal the non-empty quote's UTF-16 code-unit length.",
+});
+
+/**
+ * Tests whether an offset falls between complete UTF-16 code points.
+ *
+ * Zero and the source-text length are valid boundaries. An offset between the
+ * high and low surrogates of one supplementary code point is not.
+ *
+ * @example
+ * ```ts
+ * import { isUtf16Boundary } from "@beep/provenance/TextAnchor"
+ *
+ * const sourceText = "A😀B"
+ * console.log(isUtf16Boundary(sourceText, 1)) // true
+ * console.log(isUtf16Boundary(sourceText, 2)) // false
+ * console.log(isUtf16Boundary(sourceText, 3)) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const isUtf16Boundary: {
+  (sourceText: string, boundary: number): boolean;
+  (boundary: number): (sourceText: string) => boolean;
+} = dual(2, (sourceText: string, boundary: number): boolean => {
+  const splitsSurrogatePair =
+    O.exists(Str.charCodeAt(sourceText, boundary - 1), isHighSurrogate) &&
+    O.exists(Str.charCodeAt(sourceText, boundary), isLowSurrogate);
+  return isNonNegativeInt(boundary) && N.isLessThanOrEqualTo(boundary, Str.length(sourceText)) && !splitsSurrogatePair;
+});
+
+const TextAnchorSchema = TextAnchorStruct.mapFields(identity)
+  .check(TextAnchorWidthCheck)
+  .annotate({
+    toArbitrary: () => (fc) =>
+      fc.tuple(fc.nat(10_000), fc.string({ minLength: 1, maxLength: 256 })).map(([startChar, quote]) =>
+        TextAnchorStruct.make({
+          startChar: NonNegativeInt.make(startChar),
+          endChar: NonNegativeInt.make(startChar + Str.length(quote)),
+          quote,
+        })
+      ),
+  });
+
 /**
  * A half-open character-offset anchor into a source document.
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { TextAnchor } from "@beep/provenance/TextAnchor"
  * import * as S from "effect/Schema"
  *
- * const anchor = S.decodeUnknownSync(TextAnchor)({
+ * const program = S.decodeUnknownEffect(TextAnchor)({
  *   startChar: 0,
  *   endChar: 14,
  *   quote: "a claimed fact",
  * })
- * console.log(anchor.quote) // "a claimed fact"
+ * Effect.runPromise(program).then((anchor) => console.log(anchor.quote))
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
-  TextAnchorFields,
+  TextAnchorSchema,
   $I.annote("TextAnchor", {
     description:
-      "A half-open character range [startChar, endChar) into a source document, with the exact quoted substring.",
+      "A non-empty half-open character range [startChar, endChar) whose UTF-16 width equals its exact quote.",
   })
 ) {
   /**
@@ -104,17 +191,12 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
    */
   static readonly isInternallyConsistent = (
     anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar" | "quote">
-  ): boolean => anchor.startChar < anchor.endChar && anchor.endChar - anchor.startChar === anchor.quote.length;
+  ): boolean => hasConsistentTextAnchorWidth(anchor);
 }
 
 /**
  * Whether an anchor is well-ordered: `startChar <= endChar`. A malformed anchor
  * (start after end) is a defect at the producing boundary.
- *
- * Encoded as a predicate rather than a baked schema filter because
- * `TextAnchorFields` is a public spread surface; schema-level enforcement needs
- * a same-sweep update for spread consumers. Producers should assert this when
- * constructing anchors.
  *
  * @example
  * ```ts

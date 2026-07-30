@@ -798,6 +798,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/EpistemicContradictionTriage.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/src/migrations/DocumentsSync.ts",
     writer: "template",
   }),
@@ -852,6 +858,30 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260730042420_epistemic_contradiction_triage/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260730042420_epistemic_contradiction_triage/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260730043536_epistemic_evidence_verification/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260730043536_epistemic_evidence_verification/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/drizzle/20260725222615_baseline/migration.sql",
     writer: "template",
   }),
@@ -883,6 +913,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "db-admin",
     stage: "persistence",
     path: "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({

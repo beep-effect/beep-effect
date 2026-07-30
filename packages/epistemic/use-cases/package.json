@@ -52,7 +52,9 @@
   "sideEffects": [],
   "dependencies": {
     "@beep/epistemic-domain": "workspace:^",
+    "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/shared-domain": "workspace:^",

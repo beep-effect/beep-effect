@@ -211,6 +211,9 @@
       "path": "packages/drivers/xai"
     },
     {
+      "path": "packages/epistemic/client"
+    },
+    {
       "path": "packages/epistemic/config"
     },
     {
@@ -221,6 +224,9 @@
     },
     {
       "path": "packages/epistemic/tables"
+    },
+    {
+      "path": "packages/epistemic/ui"
     },
     {
       "path": "packages/epistemic/use-cases"

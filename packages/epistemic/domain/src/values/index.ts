@@ -71,6 +71,13 @@ export * from "./ClaimLifecycle/index.ts";
  */
 export * from "./ClaimProjection/index.ts";
 /**
+ * Contradiction identity, assessment, and disposition value exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./Contradiction/index.ts";
+/**
  * Edge endpoint value exports.
  *
  * @example
@@ -130,6 +137,20 @@ export * from "./EpistemicFixtureKey/index.ts";
  * @since 0.0.0
  */
 export * from "./EvidenceSpan/index.ts";
+/**
+ * Evidence-verification manifestation value exports.
+ *
+ * @example
+ * ```ts
+ * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values"
+ *
+ * console.log(EvidenceVerificationManifestationKey.is("a".repeat(64)))
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./EvidenceVerification/index.ts";
 /**
  * Execution grant value exports.
  *

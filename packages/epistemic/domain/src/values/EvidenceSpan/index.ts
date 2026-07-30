@@ -10,16 +10,17 @@
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import * as S from "effect/Schema"
  *
- * const span = S.decodeUnknownSync(EvidenceSpan)({
+ * const program = S.decodeUnknownEffect(EvidenceSpan)({
  *   confidence: 0.92,
- *   endChar: 48,
+ *   endChar: 26,
  *   quote: "a claimed fact",
  *   startChar: 12
  * })
- * console.log(span.quote)
+ * Effect.runPromise(program).then((span) => console.log(span.quote))
  * ```
 
  * @category value-objects

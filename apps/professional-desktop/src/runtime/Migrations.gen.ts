@@ -627,4 +627,182 @@ CREATE TRIGGER epistemic_execution_outcome_block_truncate
   FOR EACH STATEMENT EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();
 `,
   },
+  {
+    name: "20260730042420_epistemic_contradiction_triage",
+    sql: `CREATE TABLE "epistemic_contradiction_candidate" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_key" text NOT NULL,
+	"candidate_digest" text NOT NULL,
+	"assessment" jsonb NOT NULL,
+	"match_basis" jsonb NOT NULL,
+	"belief_pair" jsonb NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"valid_from" bigint NOT NULL,
+	"valid_to" bigint,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_contradiction_disposition" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_id" integer NOT NULL,
+	"decision" jsonb NOT NULL,
+	"resolved_at" bigint NOT NULL,
+	"resolved_by" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_contradiction_receipt" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_id" integer NOT NULL,
+	"receipt_key" text NOT NULL,
+	"received_at" bigint NOT NULL,
+	"received_by" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_org_id_btree_idx" ON "epistemic_contradiction_candidate" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_source_btree_idx" ON "epistemic_contradiction_candidate" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_candidate_candidate_key_unique_idx" ON "epistemic_contradiction_candidate" ("candidate_key");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_recorded_at_btree_idx" ON "epistemic_contradiction_candidate" ("recorded_at");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_valid_from_btree_idx" ON "epistemic_contradiction_candidate" ("valid_from");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_candidate_public_id_unique_idx" ON "epistemic_contradiction_candidate" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_disposition_org_id_btree_idx" ON "epistemic_contradiction_disposition" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_disposition_source_btree_idx" ON "epistemic_contradiction_disposition" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_disposition_candidate_id_unique_idx" ON "epistemic_contradiction_disposition" ("candidate_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_disposition_public_id_unique_idx" ON "epistemic_contradiction_disposition" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_org_id_btree_idx" ON "epistemic_contradiction_receipt" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_source_btree_idx" ON "epistemic_contradiction_receipt" ("source");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_candidate_id_btree_idx" ON "epistemic_contradiction_receipt" ("candidate_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_receipt_org_id_receipt_key_unique_idx" ON "epistemic_contradiction_receipt" ("org_id", "receipt_key");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_receipt_public_id_unique_idx" ON "epistemic_contradiction_receipt" ("public_id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate"
+	ADD CONSTRAINT "epistemic_contradiction_candidate_valid_interval_ordered"
+	CHECK ("valid_to" IS NULL OR "valid_from" < "valid_to");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate"
+	ADD CONSTRAINT "epistemic_contradiction_candidate_key_sha256"
+	CHECK ("candidate_key" ~ '^[0-9a-f]{64}$');--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate"
+	ADD CONSTRAINT "epistemic_contradiction_candidate_digest_sha256"
+	CHECK ("candidate_digest" ~ '^[0-9a-f]{64}$');--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_receipt"
+	ADD CONSTRAINT "epistemic_contradiction_receipt_key_sha256"
+	CHECK ("receipt_key" ~ '^[0-9a-f]{64}$');--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate"
+	ADD CONSTRAINT "epistemic_contradiction_candidate_org_id_id_unique"
+	UNIQUE ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_receipt"
+	ADD CONSTRAINT "epistemic_contradiction_receipt_candidate_fk"
+	FOREIGN KEY ("org_id", "candidate_id")
+	REFERENCES "epistemic_contradiction_candidate" ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_disposition"
+	ADD CONSTRAINT "epistemic_contradiction_disposition_candidate_fk"
+	FOREIGN KEY ("org_id", "candidate_id")
+	REFERENCES "epistemic_contradiction_candidate" ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_disposition"
+	ADD CONSTRAINT "epistemic_contradiction_disposition_status_bounded"
+	CHECK ("decision" ->> 'status' IN ('rejected', 'superseded'));--> statement-breakpoint
+CREATE FUNCTION epistemic_contradiction_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+	RAISE EXCEPTION 'epistemic contradiction records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_candidate_append_only
+	BEFORE UPDATE OR DELETE ON "epistemic_contradiction_candidate"
+	FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_receipt_append_only
+	BEFORE UPDATE OR DELETE ON "epistemic_contradiction_receipt"
+	FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_disposition_append_only
+	BEFORE UPDATE OR DELETE ON "epistemic_contradiction_disposition"
+	FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_candidate_block_truncate
+	BEFORE TRUNCATE ON "epistemic_contradiction_candidate"
+	FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_receipt_block_truncate
+	BEFORE TRUNCATE ON "epistemic_contradiction_receipt"
+	FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_disposition_block_truncate
+	BEFORE TRUNCATE ON "epistemic_contradiction_disposition"
+	FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();
+`,
+  },
+  {
+    name: "20260730043536_epistemic_evidence_verification",
+    sql: `CREATE TABLE "epistemic_evidence_verification" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"evidence_id" integer NOT NULL,
+	"manifestation_key" text NOT NULL,
+	"verified_anchor" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_org_id_btree_idx" ON "epistemic_evidence_verification" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_source_btree_idx" ON "epistemic_evidence_verification" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_evidence_verification_public_id_unique_idx" ON "epistemic_evidence_verification" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_as_of_idx"
+	ON "epistemic_evidence_verification" ("org_id", "evidence_id", "created_at", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence"
+	ADD CONSTRAINT "epistemic_evidence_org_id_id_unique"
+	UNIQUE ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification"
+	ADD CONSTRAINT "epistemic_evidence_verification_evidence_fk"
+	FOREIGN KEY ("org_id", "evidence_id")
+	REFERENCES "epistemic_evidence" ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification"
+	ADD CONSTRAINT "epistemic_evidence_verification_manifestation_unique"
+	UNIQUE ("org_id", "manifestation_key");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification"
+	ADD CONSTRAINT "epistemic_evidence_verification_manifestation_sha256"
+	CHECK ("manifestation_key" ~ '^[0-9a-f]{64}$');--> statement-breakpoint
+CREATE FUNCTION epistemic_evidence_verification_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+	RAISE EXCEPTION 'epistemic evidence verification records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER epistemic_evidence_verification_append_only
+	BEFORE UPDATE OR DELETE ON "epistemic_evidence_verification"
+	FOR EACH ROW EXECUTE FUNCTION epistemic_evidence_verification_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_evidence_verification_block_truncate
+	BEFORE TRUNCATE ON "epistemic_evidence_verification"
+	FOR EACH STATEMENT EXECUTE FUNCTION epistemic_evidence_verification_block_mutation();
+`,
+  },
 ];

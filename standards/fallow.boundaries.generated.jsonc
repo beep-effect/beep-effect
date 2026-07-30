@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/epistemic-client",
+        "patterns": [
+          "packages/epistemic/client/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-config",
         "patterns": [
           "packages/epistemic/config/src/**"
@@ -255,6 +261,12 @@
         "name": "@beep/epistemic-tables",
         "patterns": [
           "packages/epistemic/tables/src/**"
+        ]
+      },
+      {
+        "name": "@beep/epistemic-ui",
+        "patterns": [
+          "packages/epistemic/ui/src/**"
         ]
       },
       {
@@ -1464,6 +1476,23 @@
         ]
       },
       {
+        "from": "@beep/epistemic-client",
+        "allow": [
+          "@beep/epistemic-client",
+          "@beep/epistemic-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemic-client",
+          "@beep/epistemic-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/epistemic-config",
         "allow": [
           "@beep/epistemic-config",
@@ -1506,9 +1535,12 @@
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/file-processing",
           "@beep/mcp-kit",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1522,9 +1554,12 @@
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/file-processing",
           "@beep/mcp-kit",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1548,11 +1583,36 @@
         ]
       },
       {
+        "from": "@beep/epistemic-ui",
+        "allow": [
+          "@beep/epistemic-client",
+          "@beep/epistemic-domain",
+          "@beep/epistemic-ui",
+          "@beep/epistemic-use-cases",
+          "@beep/identity",
+          "@beep/provenance",
+          "@beep/schema",
+          "@beep/ui"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemic-client",
+          "@beep/epistemic-domain",
+          "@beep/epistemic-ui",
+          "@beep/epistemic-use-cases",
+          "@beep/identity",
+          "@beep/provenance",
+          "@beep/schema",
+          "@beep/ui"
+        ]
+      },
+      {
         "from": "@beep/epistemic-use-cases",
         "allow": [
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
+          "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1561,7 +1621,9 @@
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
+          "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1627,6 +1689,7 @@
         "allow": [
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -1634,6 +1697,7 @@
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -1781,6 +1845,7 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -1789,6 +1854,7 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -2513,10 +2579,12 @@
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
+          "@beep/epistemic-client",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
+          "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
@@ -2534,6 +2602,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/provenance",
           "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
@@ -2557,10 +2626,12 @@
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
+          "@beep/epistemic-client",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
+          "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
@@ -2578,6 +2649,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/provenance",
           "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
@@ -3141,8 +3213,12 @@
       {
         "from": "@beep/workspace-server",
         "allow": [
+          "@beep/doc-text",
+          "@beep/file-processing",
+          "@beep/identity",
           "@beep/md",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils",
@@ -3153,8 +3229,12 @@
           "@beep/workspace-use-cases"
         ],
         "allowTypeOnly": [
+          "@beep/doc-text",
+          "@beep/file-processing",
+          "@beep/identity",
           "@beep/md",
           "@beep/postgres",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils",

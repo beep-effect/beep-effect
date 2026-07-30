@@ -5,13 +5,13 @@
     "title": "Citation Verified Span Substrate",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-verified-span-substrate",
   "lifecycle": "active",
   "mission": "Deliver generic matter-scoped verified TextAnchor construction with canonical UTF-16 raw offsets, deterministic locator mapping, straddle, and fail-closed source-drift behavior.",
-  "statusNote": "P0 hard gate: hostile Unicode, duplicate, page-boundary, and source-drift fixtures must lock the conversion contract before implementation.",
+  "statusNote": "P0 passed 9/9; P1 provenance, langextract, source resolver, live re-verification, and coordinated consumer proof are green. Re-anchor history and negative-attempt persistence remain active.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -51,12 +51,12 @@
     {
       "id": "P0",
       "name": "Hostile-text fixture spike",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

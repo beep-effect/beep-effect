@@ -13,9 +13,11 @@ import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-util
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -50,11 +52,11 @@ const evidenceInput = (id: number) => ({
   artifactFixtureKey: "artifact:oa-1",
   span: {
     confidence: 0.92,
-    endChar: 48,
+    endChar: 57,
     quote: "a processor configured to receive sensor data",
     startChar: 12,
   },
-  spanFixtureKey: "span:oa-1:12-48",
+  spanFixtureKey: "span:oa-1:12-57",
 });
 
 // Exactly the decode input documented on EdgeVersion.model.ts: both temporal
@@ -279,6 +281,9 @@ describe("EpistemicTables", () => {
     expect(DbSchema.usageRecord).toBe(UsageRecord.Table);
     expect(DbSchema.candidateClaim).toBe(CandidateClaim.Table);
     expect(DbSchema.claimDisposition).toBe(ClaimDisposition.Table);
+    expect(DbSchema.contradictionCandidate).toBe(Entities.Contradiction.candidateTable);
+    expect(DbSchema.contradictionDisposition).toBe(Entities.Contradiction.dispositionTable);
+    expect(DbSchema.contradictionReceipt).toBe(Entities.Contradiction.receiptTable);
     expect(DbSchema.edgeVersion).toBe(EdgeVersion.Table);
     expect(DbSchema.evidence).toBe(Evidence.Table);
     expect(Entities.UsageRecord.Table).toBe(UsageRecord.Table);
@@ -286,6 +291,15 @@ describe("EpistemicTables", () => {
     expect(Entities.ClaimDisposition.Table).toBe(ClaimDisposition.Table);
     expect(Entities.EdgeVersion.Table).toBe(EdgeVersion.Table);
     expect(Entities.Evidence.Table).toBe(Evidence.Table);
+  });
+
+  it("leaves organization-scoped receipt-key uniqueness to the raw migration", () => {
+    const indexNames = A.map(
+      getTableConfig(DbSchema.contradictionReceipt).indexes,
+      (indexConfig) => indexConfig.config.name
+    );
+
+    expect(indexNames).not.toContain("epistemic_contradiction_receipt_receipt_key_unique_idx");
   });
 
   it("round-trips a UsageRecord row through the converters", () => {
@@ -348,10 +362,10 @@ describe("EpistemicTables", () => {
     expect("id" in insert).toBe(false);
     expect(insert.entityType).toBe("EpistemicEvidence");
     expect(insert.artifactFixtureKey).toBe("artifact:oa-1");
-    expect(insert.spanFixtureKey).toBe("span:oa-1:12-48");
+    expect(insert.spanFixtureKey).toBe("span:oa-1:12-57");
     expect(insert.span).toStrictEqual({
       confidence: 0.92,
-      endChar: 48,
+      endChar: 57,
       quote: "a processor configured to receive sensor data",
       startChar: 12,
     });
@@ -360,6 +374,31 @@ describe("EpistemicTables", () => {
     expect(decoded.id).toBe(10);
     expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
     expect(decoded.span.confidence).toBe(0.92);
+  });
+
+  it("normalizes legacy Evidence span widths on read and writes only the strict width", () => {
+    const evidence = Result.getOrThrow(S.decodeUnknownResult(EvidenceModel)(evidenceInput(10)));
+    const insert = Evidence.toEvidenceInsert(evidence);
+    const legacyRow = {
+      ...insert,
+      id: 10,
+      span: {
+        ...insert.span,
+        endChar: 48,
+      },
+      spanFixtureKey: "span:oa-1:12-48",
+    };
+
+    expect(Result.isFailure(S.decodeUnknownResult(EvidenceModel)(legacyRow))).toBe(true);
+
+    const decoded = Evidence.fromEvidenceRow(legacyRow);
+    const canonicalInsert = Evidence.toEvidenceInsert(decoded);
+
+    expect(decoded.span.startChar).toBe(12);
+    expect(decoded.span.endChar).toBe(57);
+    expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
+    expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
+    expect(canonicalInsert.span.endChar).toBe(57);
   });
 
   // Exhaustive per-column assertion walk over the widest table in the slice;

@@ -58,6 +58,7 @@ const expectedConstraintNames: ReadonlyArray<string> = [
   "epistemic_edge_target_evidence_fk",
   "epistemic_edge_txn_ordered",
   "epistemic_edge_valid_ordered",
+  "epistemic_evidence_org_id_id_unique",
 ];
 
 const expectedIndexNames: ReadonlyArray<string> = [
@@ -157,7 +158,7 @@ if (!shouldRunPgliteIntegration) {
             artifactFixtureKey: "artifact:oa-1",
             span: {
               confidence: 0.92,
-              endChar: 48,
+              endChar: 57,
               quote: "a processor configured to receive sensor data",
               startChar: 12,
             },

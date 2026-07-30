@@ -77,6 +77,24 @@ describe("@beep/epistemic-domain", () => {
     expect(CandidateClaim.definition.persisted.snapshot.storageKind).toBe("jsonb");
   });
 
+  it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: 13,
+          quote: "a claimed fact",
+          startChar: 12,
+        })
+      )
+    ).toBe(true);
+
+    fc.assert(
+      fc.property(S.toArbitrary(EvidenceSpan), (span) => EvidenceSpan.isInternallyConsistent(span)),
+      fcRuns(25)
+    );
+  });
+
   it("decodes and constructs a CandidateClaim row", () => {
     const decoded = S.decodeUnknownSync(CandidateClaim)({
       ...baseEntityFixtureInput("EpistemicCandidateClaim", 3),
@@ -136,7 +154,7 @@ describe("@beep/epistemic-domain", () => {
       artifactFixtureKey: "artifact.office-action",
       span: {
         confidence: 0.92,
-        endChar: 48,
+        endChar: 57,
         quote: "a processor configured to receive sensor data",
         startChar: 12,
       },

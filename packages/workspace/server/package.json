@@ -34,6 +34,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
+    "./SourceText": "./src/SourceText/index.ts",
     "./test": "./src/test.ts",
     "./aggregates/Thread": "./src/aggregates/Thread/index.ts",
     "./aggregates/Workspace": "./src/aggregates/Workspace/index.ts",
@@ -54,6 +55,7 @@
     "exports": {
       ".": "./dist/index.ts",
       "./layer": "./dist/Layer.js",
+      "./SourceText": "./dist/SourceText/index.js",
       "./test": "./dist/test.js",
       "./aggregates/Thread": "./dist/aggregates/Thread/index.js",
       "./aggregates/Workspace": "./dist/aggregates/Workspace/index.js",
@@ -62,8 +64,12 @@
     }
   },
   "dependencies": {
+    "@beep/doc-text": "workspace:^",
+    "@beep/file-processing": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/postgres": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
@@ -78,6 +84,7 @@
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "docx": "catalog:"
   }
 }

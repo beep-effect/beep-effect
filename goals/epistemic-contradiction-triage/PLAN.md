@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending` (P0 fixture spike not started)
+Status: `active` (P0-P1 complete; P2 verification in progress)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Fixture spike | pending | Prove the matching, symmetry, suppression, visibility, and transition rules against the real core before any schema commitment. | All five spike-B assertions plus the folded boundary fixtures pass in the PGlite lane at minimum, with pass/fail per assertion archived under `history/p0/`. |
-| P1 Implement | pending | Build the candidate domain, additive tables, use-case ports/commands, and server repository. | `SPEC.md` acceptance criteria met; candidate writes never touch the core's authority tables. |
-| P2 Verify | pending | Prove two-axis candidate queries, the approval race lane, and restart recovery. | Focused suites green (or blockers documented) and `bun run beep yeet verify` SUCCESS. |
+| P0 Fixture spike | complete (2026-07-29) | Prove the matching, symmetry, suppression, visibility, and transition rules against the real core before any schema commitment. | PASS — all five spike-B assertions plus the folded boundary fixtures passed in PGlite; evidence is archived in `history/p0/2026-07-29-fixture-spike.md`. |
+| P1 Implement | complete (2026-07-29) | Build the candidate domain, additive tables, use-case ports/commands, server repository, and coordinated full-source human-triage surface. | PASS — the schema/Effect/Atom implementation and browser QA are archived in `history/p1/2026-07-29-implementation-and-browser-qa.md`; candidate writes never touch the core's authority tables. |
+| P2 Verify | in progress | Prove two-axis candidate queries, the approval race lane, restart recovery, and repo-quality compliance. | Focused suites and browser QA are green; formal quality-review closure and `bun run beep yeet verify` remain. |
 | P3 Yeet: PR to mergeable | pending | Drive the work to mergeable through `bun run beep yeet publish --pr` and `monitor`. | Hosted required checks green; PR mergeable. |
 | P4 Close | pending | Closeout reflection and same-PR packet-state flip. | Reflection passes `bun run beep lint reflection-artifacts`; manifest/README state flipped in the same PR as the final work. |
 
@@ -64,10 +64,9 @@ Do not begin P1 on an unproven gate.
   constraints are not altered.
 - Add `@beep/epistemic-use-cases` ports and commands: candidate submission,
   duplicate-suppressed upsert, open-candidate query, and the approval command
-  composing the core's existing supersession path. The `conflicted` member joins
-  `ClaimDispositionStatus` here — deliberately deferred out of the core until
-  this packet needed it
-  ([`ops/handoffs/p0-to-p1-handoff.md`](../epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md)).
+  composing the core's existing supersession path. Add the slice-local
+  `ContradictionDispositionStatus` (`rejected | superseded`) and leave
+  `ClaimDispositionStatus` unchanged.
 - Implement the `@beep/epistemic-server` repository and layer wiring so approval
   writes the disposition and the supersession in one transaction.
 - Register the migration target through the existing `@beep/db-admin`

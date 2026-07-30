@@ -44,6 +44,7 @@ import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, N, O } from "@beep/utils";
 import { and, eq, gt, isNull, lte, or } from "drizzle-orm";
 import { DateTime, Effect, Equal, Match, Order, pipe, Semaphore } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion";
@@ -53,6 +54,9 @@ import type {
   RecordEdgeFact,
   SupersedeEdgeFact,
 } from "@beep/epistemic-use-cases/EdgeAuthority";
+import type { EffectPgQueryEffectHKT, EffectPgQueryResultHKT } from "drizzle-orm/effect-postgres/session";
+import type { PgEffectTransaction } from "drizzle-orm/pg-core/effect/session";
+import type { EmptyRelations } from "drizzle-orm/relations";
 
 const EDGE_TABLE_NAME = "epistemic_edge_version" as const;
 const edgeTable = DbSchema.edgeVersion;
@@ -269,6 +273,79 @@ const persistedOrSeed = (rows: ReadonlyArray<EdgeVersionRow>, seed: EdgeVersion)
     O.getOrElse(() => seed)
   );
 
+type EdgeAuthorityTransaction = PgEffectTransaction<EffectPgQueryEffectHKT, EffectPgQueryResultHKT, EmptyRelations>;
+
+type SupersedeEdgeFactInTransaction = {
+  (command: SupersedeEdgeFact): (tx: EdgeAuthorityTransaction) => Effect.Effect<EdgeVersion, EdgeAuthorityError>;
+  (tx: EdgeAuthorityTransaction, command: SupersedeEdgeFact): Effect.Effect<EdgeVersion, EdgeAuthorityError>;
+};
+
+/**
+ * Execute the conflict-safe close-and-insert supersession primitive inside a
+ * caller-owned transaction.
+ *
+ * @remarks
+ * This is intentionally server-private: it lets higher-level workflows append
+ * their own outcome record in the same transaction without duplicating edge
+ * authority logic or exposing a transaction handle through a public port.
+ *
+ * @example
+ * ```ts
+ * import { supersedeEdgeFactInTransaction } from "./EdgeAuthority.repo.ts"
+ *
+ * const runInsideCallerTransaction = (
+ *   tx: Parameters<typeof supersedeEdgeFactInTransaction>[0],
+ *   command: Parameters<typeof supersedeEdgeFactInTransaction>[1]
+ * ) => supersedeEdgeFactInTransaction(tx, command)
+ *
+ * console.log(typeof runInsideCallerTransaction) // "function"
+ * ```
+ *
+ * @effects Locks and closes the current edge head, then inserts its replacement
+ * inside the caller-owned transaction.
+ * @internal
+ * @category repositories
+ * @since 0.0.0
+ */
+export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = dual(
+  2,
+  (tx: EdgeAuthorityTransaction, command: SupersedeEdgeFact): Effect.Effect<EdgeVersion, EdgeAuthorityError> => {
+    const logicalKey = logicalEdgeKey(command.identity);
+    return Effect.gen(function* () {
+      const currentRows = yield* tx
+        .select()
+        .from(edgeTable)
+        .where(and(eq(edgeTable.logicalKey, logicalKey), isNull(edgeTable.expiredAt)))
+        .for("update");
+      const head = supersessionHeadOf(A.map(currentRows, fromEdgeVersionRow));
+      if (O.isNone(head)) {
+        return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
+      }
+      if (!Equal.equals(head.value.version, command.expectedVersion)) {
+        return yield* SupersessionConflict.staleVersion(logicalKey, command.expectedVersion, head.value.version);
+      }
+
+      const closed = yield* tx
+        .update(edgeTable)
+        .set({ expiredAt: DateTime.toEpochMillis(command.recordedAt) })
+        .where(and(eq(edgeTable.id, head.value.id), isNull(edgeTable.expiredAt)))
+        .returning();
+      if (A.length(closed) === 0) {
+        return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
+      }
+
+      const seed = buildEdgeVersion(command, {
+        logicalKey,
+        supersedesId: O.some(head.value.id),
+        validTo: command.validTo,
+        version: PosInt.make(head.value.version + 1),
+      });
+      const inserted = yield* tx.insert(edgeTable).values(toEdgeVersionInsert(seed)).returning();
+      return persistedOrSeed(inserted, seed);
+    }).pipe(writeFailure("supersede", logicalKey, command.expectedVersion));
+  }
+);
+
 /**
  * Build the Drizzle-backed bitemporal edge authority repository.
  *
@@ -365,49 +442,7 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
       const logicalKey = logicalEdgeKey(command.identity);
       return yield* writeSemaphore.withPermit(
         db
-          .transaction(
-            Effect.fnUntraced(function* (tx) {
-              const currentRows = yield* tx
-                .select()
-                .from(edgeTable)
-                .where(and(eq(edgeTable.logicalKey, logicalKey), isNull(edgeTable.expiredAt)))
-                .for("update");
-              const head = supersessionHeadOf(A.map(currentRows, fromEdgeVersionRow));
-              if (O.isNone(head)) {
-                return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
-              }
-              if (!Equal.equals(head.value.version, command.expectedVersion)) {
-                return yield* SupersessionConflict.staleVersion(
-                  logicalKey,
-                  command.expectedVersion,
-                  head.value.version
-                );
-              }
-
-              // Metadata-only close, guarded on the row still being open. The
-              // guard is what makes the close idempotent: an already-expired
-              // head is never re-stamped, and `valid_to` is not touched at all —
-              // when the fact itself became false, the replacement carries that
-              // instant, not the row being retired.
-              const closed = yield* tx
-                .update(edgeTable)
-                .set({ expiredAt: DateTime.toEpochMillis(command.recordedAt) })
-                .where(and(eq(edgeTable.id, head.value.id), isNull(edgeTable.expiredAt)))
-                .returning();
-              if (A.length(closed) === 0) {
-                return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
-              }
-
-              const seed = buildEdgeVersion(command, {
-                logicalKey,
-                supersedesId: O.some(head.value.id),
-                validTo: command.validTo,
-                version: PosInt.make(head.value.version + 1),
-              });
-              const inserted = yield* tx.insert(edgeTable).values(toEdgeVersionInsert(seed)).returning();
-              return persistedOrSeed(inserted, seed);
-            })
-          )
+          .transaction((tx) => supersedeEdgeFactInTransaction(tx, command))
           .pipe(writeFailure("supersede", logicalKey, command.expectedVersion))
       );
     }),

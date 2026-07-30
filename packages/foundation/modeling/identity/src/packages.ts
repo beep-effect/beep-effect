@@ -179,7 +179,9 @@ const generatedComposers = $I.compose(
   "epistemic-config",
   "law-practice-tables",
   "practice-kg-mcp",
-  "openclaw"
+  "openclaw",
+  "epistemic-client",
+  "epistemic-ui"
 );
 
 const composers = {
@@ -2241,3 +2243,33 @@ export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"
  * @category configuration
  */
 export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composers.$OpenclawId;
+
+/**
+ * Identity composer for `@beep/epistemic-client`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicClientId } from "@beep/identity"
+ *
+ * console.log($EpistemicClientId.make("ContradictionTriage"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-client"> = composers.$EpistemicClientId;
+
+/**
+ * Identity composer for `@beep/epistemic-ui`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicUiId } from "@beep/identity"
+ *
+ * console.log($EpistemicUiId.make("ContradictionTriage"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = composers.$EpistemicUiId;

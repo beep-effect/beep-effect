@@ -1,4 +1,10 @@
-import { DocTextError, DocTextErrorOptions, DocTextErrorReason, DocTextFileProcessingEngine } from "@beep/doc-text";
+import {
+  DOC_TEXT_ENGINE_VERSION,
+  DocTextError,
+  DocTextErrorOptions,
+  DocTextErrorReason,
+  DocTextFileProcessingEngine,
+} from "@beep/doc-text";
 import {
   ArtifactId,
   ArtifactLocator,
@@ -127,6 +133,7 @@ describe("@beep/doc-text", () => {
       expect(result.text).toContain("PDF fixture text");
       expect(result.metadata["pdf.totalPages"]).toBe("1");
       expect(result.engine).toBe("doc-text-js");
+      expect(result.engineVersion).toBe(DOC_TEXT_ENGINE_VERSION);
     })
   );
 
@@ -154,6 +161,7 @@ describe("@beep/doc-text", () => {
 
       expect(result.text).toContain("DOCX fixture text");
       expect(result.engine).toBe("doc-text-js");
+      expect(result.engineVersion).toBe(DOC_TEXT_ENGINE_VERSION);
     })
   );
 

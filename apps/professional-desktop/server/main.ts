@@ -29,21 +29,18 @@
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { DocumentsRpcs, VaultSyncRpcs } from "@beep/documents-use-cases/public";
 import { EpistemicConfigLive } from "@beep/epistemic-config/layer";
 import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
-import { OntologyRpcs } from "@beep/ontology-use-cases/public";
-import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
-import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { DesktopRpcs } from "./DesktopRpcs.ts";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
@@ -55,16 +52,8 @@ import type { DesktopStartupError } from "@/runtime/Layer";
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
 
-const DesktopRpcs = ChatRpcs.merge(
-  WorkspaceVaultRpcs,
-  DocumentsRpcs,
-  VaultSyncRpcs,
-  OntologyRpcs,
-  VaultDirectoryPickerRpcs
-);
-
 // The full desktop group includes write-capable workspace vault, document
-// intake, vault sync, and ontology workbench RPCs. HTTP only exposes that
+// intake, vault sync, ontology workbench, and contradiction-triage RPCs. HTTP only exposes that
 // group when the per-launch bearer token is configured; otherwise dev HTTP falls back to
 // chat-only RPCs so loopback HTTP never exposes non-chat writes without an
 // unguessable shell-issued token.

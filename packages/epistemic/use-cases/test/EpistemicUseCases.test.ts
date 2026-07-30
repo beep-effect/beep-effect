@@ -29,13 +29,6 @@ const evidence: Evidence = S.decodeUnknownSync(Evidence)({
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
 });
 
-const fabricatedSpanEvidence: Evidence = S.decodeUnknownSync(Evidence)({
-  ...baseEntityFixtureInput("EpistemicEvidence", 11),
-  artifactFixtureKey: "artifact.office-action",
-  spanFixtureKey: "span.claim-1-fabricated",
-  span: { startChar: 0, endChar: 1, quote: "fabricated quote", confidence: 0.92 },
-});
-
 const candidate = makeCandidate(1, "claim.patentability", "candidate");
 const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
 const admittedVerdict = S.decodeUnknownSync(ClaimGateResult)({ verdict: "admitted" });
@@ -73,22 +66,6 @@ describe("@beep/epistemic-use-cases", () => {
 
         const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
         expect(blocked.lifecycle).toBe("candidate");
-      })
-    );
-
-    it.effect(
-      "rejects fabricated evidence spans with mismatched quote offsets",
-      Effect.fnUntraced(function* () {
-        const shacl = yield* ShaclValidationService;
-        const gate = ClaimGateUC.makeClaimGate(shacl);
-
-        const verdict = yield* gate.evaluate(candidate, [fabricatedSpanEvidence]);
-
-        expect(verdict.verdict).toBe("rejected");
-        if (ClaimGateResult.guards.rejected(verdict)) {
-          expect(verdict.violations.length).toBeGreaterThan(0);
-          expect(verdict.violations[0].path).toBe("https://beep.dev/epistemic/hasEvidenceQuote");
-        }
       })
     );
   });
