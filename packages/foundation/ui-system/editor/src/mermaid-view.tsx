@@ -287,7 +287,7 @@ const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
     if (rules === undefined) return false;
 
     for (const rule of rules) {
-      if (rule.type !== CSSRule.STYLE_RULE || !isSafeStyleRule(rule as CSSStyleRule, `#${renderId}`)) return false;
+      if (!(rule instanceof CSSStyleRule) || !isSafeStyleRule(rule, `#${renderId}`)) return false;
     }
     return true;
   } catch {

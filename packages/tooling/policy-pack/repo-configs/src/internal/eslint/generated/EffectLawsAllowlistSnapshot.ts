@@ -30,6 +30,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
+      "kind": "object-method",
+      "reason": "Generated conformance registries are public plain-object APIs consumed directly by foreign-name and child-grammar validation. Object.freeze prevents JavaScript consumers from mutating the authoritative tables after validation code imports them.",
+      "owner": "@beep/html",
+      "issue": "HTML-GENERATED-CONFORMANCE-REGISTRY-IMMUTABILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/html/src/Html.policy.ts",
       "kind": "new-map-set",
       "reason": "SafeHtmlAst provenance uses private weak issuer membership and weak proof-to-conformant-value storage so callers cannot forge safe values and the module does not strongly retain every accepted document. Effect collections do not provide weak identity semantics.",

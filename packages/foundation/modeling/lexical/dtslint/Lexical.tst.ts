@@ -187,8 +187,8 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
       version: 2,
       pluginData: { enabled: true },
     };
-    expect(decodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json | undefined>();
-    expect(encodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json | undefined>();
+    expect(decodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json>();
+    expect(encodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json>();
     expect<SerializedEditorState.Encoded["root"]["type"]>().type.toBe<"root">();
     expect<SansChildren<SerializedEditorState.Encoded["root"]>>().type.toBeAssignableTo<
       SansChildren<LexicalSerializedEditorState["root"]>
