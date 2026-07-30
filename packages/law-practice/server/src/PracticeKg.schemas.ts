@@ -19,6 +19,16 @@ import type { Path } from "effect";
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
 
+/*
+ * Constructor-only default: these projection classes are written exclusively
+ * by the deterministic spine (SPEC D-2a), so the settled label is the
+ * invariant, not a guess — candidate rows live in the epistemic tables and
+ * must never be written through kg_node/kg_edge.
+ */
+const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
+  SchemaUtils.withConstantDefault<PracticeKgEpistemicStatus>("derived-from-official-records")
+);
+
 /**
  * Practice knowledge-graph literal domains, re-exported from the domain tier
  * where they are defined alongside {@link KgNodeKind}.
@@ -32,11 +42,12 @@ export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-p
  * Validated options used by `corpus graph`.
  *
  * @remarks
- * `bundleOut` is the only optional key: omitting it puts the bundle under
- * `<corpusRoot>/staging/practice-kg-bundle` (see {@link PracticeKgOptions.resolveBundleOut}).
- * `maxTextBytes` is a positive byte budget defaulting to 2 MiB. `overwrite` is
- * what distinguishes a rebuild from an accidental clobber — without it a build
- * refuses to run against an existing bundle.
+ * Omitting `bundleOut` puts the bundle under
+ * `<corpusRoot>/staging/practice-kg-bundle` (see {@link PracticeKgOptions.resolveBundleOut}),
+ * and omitting `maxTextBytes` applies the 2 MiB positive byte budget for both
+ * construction and decode. `overwrite` is what distinguishes a rebuild from an
+ * accidental clobber — without it a build refuses to run against an existing
+ * bundle.
  *
  * @example
  * ```ts
@@ -124,7 +135,9 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
  * `iri` is the node's identity across the whole graph and the join target for
  * both edge endpoints; `naturalKey` is the human-facing key it was minted from.
  * `client` and `docketFamily` are absent — not empty — for nodes that belong to
- * neither, such as an email archive.
+ * neither, such as an email archive. `epistemicStatus` defaults at construction
+ * to the settled spine label because these rows are written only by the
+ * deterministic projection; candidate material never flows through this class.
  *
  * @example
  * ```ts
@@ -153,9 +166,7 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
   {
     client: S.optionalKey(S.String),
     docketFamily: S.optionalKey(S.String),
-    epistemicStatus: PracticeKgEpistemicStatus.pipe(
-      SchemaUtils.withConstantDefault<PracticeKgEpistemicStatus>("derived-from-official-records")
-    ),
+    epistemicStatus: spineEpistemicStatus,
     iri: S.NonEmptyString,
     kind: KgNodeKind,
     label: S.String,
@@ -175,7 +186,8 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
  * @remarks
  * The `(subjectIri, predicate, objectIri)` triple is the row's identity, so the
  * same assertion derived twice collapses to one edge. Both IRIs must name nodes
- * that exist in the same bundle.
+ * that exist in the same bundle. `epistemicStatus` carries the same
+ * spine-writers-only constructor default as {@link PracticeKgNodeRow}.
  *
  * @example
  * ```ts
@@ -198,9 +210,7 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
  */
 export class PracticeKgEdgeRow extends S.Class<PracticeKgEdgeRow>($I`PracticeKgEdgeRow`)(
   {
-    epistemicStatus: PracticeKgEpistemicStatus.pipe(
-      SchemaUtils.withConstantDefault<PracticeKgEpistemicStatus>("derived-from-official-records")
-    ),
+    epistemicStatus: spineEpistemicStatus,
     objectIri: S.NonEmptyString,
     predicate: KgEdgePredicate,
     provenanceKind: PracticeKgProvenanceKind,

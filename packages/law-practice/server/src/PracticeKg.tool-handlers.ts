@@ -44,6 +44,7 @@ import type * as Tool from "effect/unstable/ai/Tool";
 import type * as SqlClient from "effect/unstable/sql/SqlClient";
 
 const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-records"];
+const candidateStatus = PracticeKgEpistemicStatus.Enum["candidate-unreviewed"];
 const emailLinkageNote =
   "Matter linkage is archive-level confidence only; a matching message header is not message-level matter proof.";
 const tierOrder = A.reverse(FieldTierName.Options);
@@ -160,7 +161,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         const rows = yield* queryPglite(
           sql,
           PracticeKgQueries.find,
-          [`%${request.query}%`],
+          [likePattern(request.query)],
           decodePracticeKgGraphRows
         ).pipe(Effect.mapError(toolFailure("kg_find")));
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
@@ -215,7 +216,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             return PracticeKgCandidateClaimsNotLoadedResult.make({
               available: false,
               bundle_version: version,
-              epistemic_status: "candidate-unreviewed",
+              epistemic_status: candidateStatus,
               reason: "claims batch not yet loaded",
             });
           }
@@ -231,7 +232,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             request.budgetBytes,
             version,
             undefined,
-            "candidate-unreviewed"
+            candidateStatus
           );
         },
         Effect.mapError(toolFailure("kg_candidate_claims"))
