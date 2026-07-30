@@ -1,69 +1,71 @@
-# GOAL: deliver the Effect-native citation extraction engine
+# GOAL: deliver eyecite capability parity as an Effect-native citation engine
 
 Repo root is the current `beep-effect` checkout. Use repo-relative paths.
 
-Outcome: a pinned, attributed eyecite parity corpus proves an Effect-native
-pipeline that emits the existing law-practice citation values for full, short,
-Id., supra, 35 U.S.C., and 37 C.F.R. forms with exact verified spans and stable
-versioned court/reporter identities.
+Outcome: an attributed, schema-first, Effect-native implementation has
+observable parity with pinned Free Law Project eyecite 2.7.6, adopts only proven
+TypeScript extensions, preserves verified source evidence, and exposes lawful
+schema transformations including a Bluebook-style proof.
 
 Read first:
 
-- `goals/citation-extraction-engine/README.md`
-- `goals/citation-extraction-engine/SPEC.md`
-- `goals/citation-extraction-engine/PLAN.md`
-- `goals/citation-extraction-engine/ops/manifest.json`
+- the packet's `README.md`, `SPEC.md`, `PLAN.md`, and `GOAL.md`
+- `ops/manifest.json` and all files under `research/`
 - `AGENTS.md`, `CLAUDE.md`, dependency contracts, and named standards
+
+Normative oracle:
+
+- Official Python eyecite commit
+  `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e` (version 2.7.6).
+- Default read-only clone:
+  `/home/elpresidank/YeeBois/research/law_stuff/repos/eyecite`.
+- `eyecite-ts` and `eyecite-js` are differential/extension references only.
 
 Blocked by:
 
 - `goals/citation-verified-span-substrate`
 - `goals/court-reporter-vocabulary`
 
-P0 provenance/parity/regex research may proceed, but do not freeze contracts or
-start P1 until both public dependency surfaces are available and compatible.
+P0 source/accounting work may proceed. Do not freeze or implement public engine
+contracts until both dependencies are public and compatible.
 
-Scope:
+Required interpretation:
 
-- In: pinned eyecite code/fixture corpus; stage-level parity harness; pure
-  Effect extraction over existing law-practice values; 35 U.S.C./37 C.F.R.
-  fixtures; branded UnitInterval confidence repair; stable artifact-version/ID
-  and verified-anchor integration; regex-safety evidence; notice metadata.
-- Out: `eyecite-js`, MPEP patterns, raw vocabulary imports, court resolver,
-  guard orchestration, claim lifecycle changes, wall enforcement, hosted truth,
-  citator/good-law, editor annotation, unrelated packages, and `goals/INDEX.md`.
-
-Workflow:
-
-1. Inspect both prerequisites, the exploration, existing citation values, live
-   worktree, and source/barrels before adding symbols.
-2. Execute P0: pin source/corpus, inventory licensing, fill the root notice,
-   define per-stage parity, and scan all patterns for compatibility/timing.
-3. Stop at the P1 gate unless both dependencies expose compatible public
-   contracts; never consume raw generated files.
-4. Port the smallest schema-first/Effect-first pipeline into the existing
-   taxonomy. Do not create a second hierarchy or add `eyecite-js`.
-5. Decode `CitationBase.confidence` as branded `@beep/schema/UnitInterval`.
-6. Prove full/short/Id./supra and 35 U.S.C./37 C.F.R. outputs, canonical
-   half-open UTF-16 spans, and verified-anchor fidelity on Bun.
-7. Preserve unrelated changes and update packet state only from evidence.
-8. At P3, write a reflection and run reflection lint.
+1. Port behavior and coverage, not Python classes or file layout.
+2. Account for every canonical capability and upstream test case. No canonical
+   row may be rejected or deferred.
+3. Give every unique TypeScript-port capability an evidenced disposition:
+   adopted, subsumed, rejected, or follow-up. Adopt only licensed, tested,
+   coherent extensions that preserve bounded deterministic execution.
+4. Rebuild existing provisional schemas freely. Keep durable legal concepts;
+   remove copied implementation shapes and parallel truth.
+5. Separate semantic citations, source mentions/anchors, resolution, document
+   grouping, and run diagnostics.
+6. Model public/inter-stage data as annotated Effect schemas. Extraction is an
+   Effect API, not a reversible codec.
+7. Bidirectional transforms require round-trip equality; canonicalizing
+   transforms prove semantic equivalence; lossy/partial directions fail typed.
+8. Replace the static best-effort Bluebook formatter with structured
+   `BluebookCitation`, `BluebookFromFullCitation`, and text transformations.
+   This proves supported transformations, not full manual compliance.
+9. Use case/Id./supra/35 U.S.C./37 C.F.R. as the first internal slice; complete
+   canonical parity and accepted extensions before publishing.
+10. Deliver packet, code, corpus, transforms, proof, and closeout in one PR.
+    Use reviewable local commits; publish after local gates are green.
 
 Acceptance:
 
-- [ ] Every `SPEC.md` criterion passes.
-- [ ] Both blockers are cleared before P1.
-- [ ] Parity is stage-attributable and span fidelity passes on Bun.
-- [ ] Regex strategy and BSD-2 attribution are complete.
-- [ ] Required package/repo/Yeet proof passes with no unrelated churn.
+- [ ] Every canonical capability/test row is ported or intentionally subsumed
+      with equivalent proof; none is unreviewed, rejected, or deferred.
+- [ ] Every unique TypeScript extension has a final evidenced disposition.
+- [ ] Schema-disposition and transformation-law gates pass.
+- [ ] Exact UTF-16 source anchors, resolution, cleaning, extraction, annotation,
+      regex safety, property laws, docs, and differential parity pass.
+- [ ] No runtime Python, `eyecite-js`, `eyecite-ts`, hosted-parser, raw
+      vocabulary, or native Hyperscan dependency exists.
+- [ ] The one implementation PR is mergeable through Yeet and includes the
+      packet state change plus reflection.
 
-Verification:
-
-```sh
-test "$(wc -m < goals/citation-extraction-engine/GOAL.md)" -le 4000
-jq . goals/citation-extraction-engine/ops/manifest.json
-git diff --check -- goals/citation-extraction-engine THIRD_PARTY_NOTICES.md
-```
-
-Done only when all acceptance passes and the PR is mergeable through Yeet; if a
-blocker remains, report it with file/command evidence without weakening scope.
+Stop rather than weaken scope when a dependency contract is unavailable,
+proven parity cannot be reproduced, or safety/fidelity would require an
+unrecorded divergence.

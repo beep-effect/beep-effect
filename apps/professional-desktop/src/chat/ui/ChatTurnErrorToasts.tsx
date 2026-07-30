@@ -50,9 +50,7 @@ function PresentChatTurnError({ failure }: { readonly failure: ChatActionError }
  */
 export function ChatTurnErrorToasts(): JSX.Element | null {
   return useAtomValue(turnErrorAtom).pipe(
-    O.match({
-      onNone: () => null,
-      onSome: (failure) => <PresentChatTurnError failure={failure} />,
-    })
+    O.map((failure) => <PresentChatTurnError failure={failure} />),
+    O.getOrNull
   );
 }
