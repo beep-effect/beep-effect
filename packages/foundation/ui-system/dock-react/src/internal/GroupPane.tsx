@@ -107,6 +107,10 @@ const Tab = (props: {
       // a `user-select: none` tab, then extends it across panel content as
       // the drag leaves the strip — cancel the default before capturing.
       event.preventDefault();
+      // preventDefault also suppresses the native click-to-focus transfer;
+      // restore it so roving tab focus and Enter/Space track the clicked tab
+      // instead of re-activating the previously focused one.
+      node.focus({ preventScroll: true });
       node.setPointerCapture?.(event.pointerId);
       const pointer = relativePositionOf(props.state, event);
       props.graph.registry.set(

@@ -111,6 +111,9 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // An unpromoted press shows no drag chrome: neither indicator nor ghost.
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
       expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
+      // preventDefault on the press suppresses native focus transfer; the
+      // handler restores it so keyboard activation tracks the clicked tab.
+      expect(document.activeElement).toBe(tab(panel2.id));
       pointer(tab(panel2.id), "pointerMove", 100, 16);
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
       const ghost = screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]");
