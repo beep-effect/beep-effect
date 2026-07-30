@@ -1306,6 +1306,10 @@ export const Md = {
   tableCell,
   tableRow,
   taskItem,
+  /**
+   * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+   * ambiguous strings and object shapes for compatibility.
+   */
   taskList: taskListCompatibility,
   taskListFromItems,
   text,
