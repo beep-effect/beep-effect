@@ -5,19 +5,17 @@
  * @since 0.0.0
  */
 
+import { SchemaAST as AST, Struct } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type { TUnsafe } from "@beep/types";
-import type { Cause, Struct } from "effect";
+import type { Cause } from "effect";
 
 type TaggedErrorFields = S.Struct.Fields;
 type TaggedErrorStruct = S.Struct<TaggedErrorFields>;
 type TaggedErrorCause<Brand> = Cause.YieldableError & Brand;
-type TaggedErrorClassLike = (new (
-  ...args: ReadonlyArray<TUnsafe.Any>
-) => TUnsafe.Any) & {
-  readonly Type: TUnsafe.Any;
-  readonly fields: TaggedErrorFields;
-  readonly "~type.parameters": readonly [TaggedErrorStruct];
+type TaggedErrorClassInput = {
+  readonly "~type.make.in": unknown;
 };
 
 type TaggedStructFromFields<Tag extends string, Fields extends TaggedErrorFields> = S.TaggedStruct<Tag, Fields>;
@@ -31,32 +29,7 @@ type TaggedStructFromSchema<Tag extends string, Schema extends TaggedErrorStruct
 
 type TaggedErrorBase<Self, Schema extends TaggedErrorStruct, Brand> = S.Class<Self, Schema, TaggedErrorCause<Brand>>;
 
-type TaggedErrorSchema<ErrorClass extends TaggedErrorClassLike> = ErrorClass["~type.parameters"] extends readonly [
-  infer Schema extends TaggedErrorStruct,
-]
-  ? Schema
-  : never;
-type TaggedErrorSelf<ErrorClass extends TaggedErrorClassLike> = ErrorClass["Type"];
-
-type TaggedErrorExtendedSchema<ErrorClass extends TaggedErrorClassLike, NewFields extends TaggedErrorFields> = S.Struct<
-  Struct.Simplify<Struct.Assign<TaggedErrorSchema<ErrorClass>["fields"], NewFields>>
->;
-
-type TaggedErrorMissingSelfGeneric<Usage extends string> =
-  `Missing \`Self\` generic - use \`class Self extends ${Usage}<Self>(...)\``;
-
-type TaggedErrorInheritStaticMembers<ClassType, Static> = ClassType &
-  Pick<Static, Exclude<keyof Static, keyof ClassType>>;
-type TaggedErrorConstructorArgs<ErrorClass extends TaggedErrorClassLike> = ErrorClass extends new (
-  ...args: infer Args
-) => TUnsafe.Any
-  ? Args
-  : never;
-type TaggedErrorInstance<ErrorClass extends TaggedErrorClassLike> = ErrorClass extends new (
-  ...args: ReadonlyArray<TUnsafe.Any>
-) => infer Instance
-  ? Instance
-  : never;
+type TaggedErrorInputWithoutTag<Input> = Input extends void ? Input : Omit<Input, "_tag">;
 
 /**
  * Input type for constructing a tagged error, omitting the discriminator `_tag`.
@@ -81,37 +54,9 @@ type TaggedErrorInstance<ErrorClass extends TaggedErrorClassLike> = ErrorClass e
  * @category models
  * @since 0.0.0
  */
-export type TaggedErrorNewInput<ErrorClass extends TaggedErrorClassLike> = Omit<
-  S.Schema.Type<TaggedErrorSchema<ErrorClass>>,
-  "_tag"
+export type TaggedErrorNewInput<ErrorClass extends TaggedErrorClassInput> = TaggedErrorInputWithoutTag<
+  ErrorClass["~type.make.in"]
 >;
-
-type TaggedErrorExtendMethod<ErrorClass extends TaggedErrorClassLike> = <Extended = never, Static = {}, Brand = {}>(
-  identifier: string
-) => <NewFields extends TaggedErrorFields>(
-  fields: NewFields,
-  annotations?: S.Annotations.Declaration<Extended, readonly [TaggedErrorExtendedSchema<ErrorClass, NewFields>]>
-) => [Extended] extends [never]
-  ? TaggedErrorMissingSelfGeneric<"Base.extend">
-  : TaggedErrorInheritStaticMembers<
-      TaggedErrorClassWithExtend<
-        S.Class<Extended, TaggedErrorExtendedSchema<ErrorClass, NewFields>, TaggedErrorSelf<ErrorClass> & Brand>
-      >,
-      Static
-    >;
-
-/**
- * A tagged error class with constructor input inferred from the schema and a typed `extend(...)` API.
- *
- * @since 0.0.0
- * @category models
- */
-type TaggedErrorClassWithExtend<ErrorClass extends TaggedErrorClassLike> = (new (
-  ...args: TaggedErrorConstructorArgs<ErrorClass>
-) => TaggedErrorInstance<ErrorClass>) &
-  Omit<ErrorClass, "extend"> & {
-    extend: TaggedErrorExtendMethod<ErrorClass>;
-  };
 
 /**
  * Tagged error class type derived from a fields object.
@@ -145,7 +90,7 @@ export type TaggedErrorClassFromFields<
   Tag extends string,
   Fields extends TaggedErrorFields,
   Brand = {},
-> = TaggedErrorClassWithExtend<TaggedErrorBase<Self, TaggedStructFromFields<Tag, Fields>, Brand>>;
+> = TaggedErrorBase<Self, TaggedStructFromFields<Tag, Fields>, Brand>;
 
 /**
  * Tagged error class type derived from a struct schema.
@@ -177,7 +122,7 @@ export type TaggedErrorClassFromSchema<
   Tag extends string,
   Schema extends TaggedErrorStruct,
   Brand = {},
-> = TaggedErrorClassWithExtend<TaggedErrorBase<Self, TaggedStructFromSchema<Tag, Schema>, Brand>>;
+> = TaggedErrorBase<Self, TaggedStructFromSchema<Tag, Schema>, Brand>;
 
 /**
  * Factory interface returned by {@link TaggedErrorClass} that accepts a tag, fields, and optional annotations.
@@ -246,12 +191,113 @@ export type TaggedErrorClassConstructor = <Self, Brand = {}>(
 ) => TaggedErrorClassFactory<Self, Brand>;
 
 type UnsafeTaggedErrorClassFactory = TaggedErrorClassFactory<TUnsafe.Any, TUnsafe.Any>;
+type UnsafeTaggedErrorAnnotations = S.Annotations.Declaration<TUnsafe.Any, readonly [TaggedErrorStruct]>;
+type UnsafeTaggedErrorToEquivalence = NonNullable<UnsafeTaggedErrorAnnotations["toEquivalence"]>;
+type UnsafeTaggedErrorEquivalence = ReturnType<UnsafeTaggedErrorToEquivalence>;
+type UnsafeTaggedErrorExtend = (
+  this: UnsafeTaggedErrorClass,
+  identifier: string
+) => (
+  schema: TaggedErrorFields | TaggedErrorStruct,
+  annotations?: UnsafeTaggedErrorAnnotations
+) => UnsafeTaggedErrorClass;
+
+interface UnsafeTaggedErrorClass {
+  readonly extend: UnsafeTaggedErrorExtend;
+  readonly fields: TaggedErrorFields;
+  new (...args: ReadonlyArray<TUnsafe.Any>): TUnsafe.Any;
+}
+
+const isTaggedErrorStruct = (schema: TaggedErrorFields | TaggedErrorStruct): schema is TaggedErrorStruct =>
+  S.isSchema(schema);
+
+const taggedErrorFields = (schema: TaggedErrorFields | TaggedErrorStruct): TaggedErrorFields =>
+  isTaggedErrorStruct(schema) ? schema.fields : schema;
+
+const taggedErrorToEquivalence = (schema: TaggedErrorStruct): UnsafeTaggedErrorToEquivalence | undefined =>
+  AST.resolve(schema.ast)?.toEquivalence as UnsafeTaggedErrorToEquivalence | undefined;
+
+const withFieldEquivalence = (
+  schema: TaggedErrorFields | TaggedErrorStruct,
+  annotations?: UnsafeTaggedErrorAnnotations,
+  schemaToEquivalence: UnsafeTaggedErrorToEquivalence | undefined = isTaggedErrorStruct(schema)
+    ? taggedErrorToEquivalence(schema)
+    : undefined
+): UnsafeTaggedErrorAnnotations =>
+  annotations?.toEquivalence === undefined
+    ? {
+        ...annotations,
+        toEquivalence:
+          schemaToEquivalence ?? (() => S.toEquivalence(isTaggedErrorStruct(schema) ? schema : S.Struct(schema))),
+      }
+    : annotations;
+
+const fieldsToEquivalence = (fields: TaggedErrorFields): UnsafeTaggedErrorEquivalence =>
+  (withFieldEquivalence(fields).toEquivalence as () => UnsafeTaggedErrorEquivalence)();
+
+const combineExtensionEquivalence = (
+  inheritedEquivalence: UnsafeTaggedErrorEquivalence,
+  extensionSchema: TaggedErrorFields | TaggedErrorStruct
+): UnsafeTaggedErrorToEquivalence => {
+  const extensionToEquivalence = withFieldEquivalence(extensionSchema).toEquivalence as UnsafeTaggedErrorToEquivalence;
+
+  return (typeParameters) => {
+    const extensionEquivalence = extensionToEquivalence(typeParameters);
+
+    return (self, that) => inheritedEquivalence(self, that) && extensionEquivalence(self, that);
+  };
+};
+
+const preserveFieldEquivalenceOnExtend = (errorClass: UnsafeTaggedErrorClass): UnsafeTaggedErrorClass => {
+  const originalExtend = errorClass.extend;
+  const extendWithFieldEquivalence: UnsafeTaggedErrorExtend = function (identifier) {
+    const extend = originalExtend.call(this, identifier);
+
+    return (schema, annotations) => {
+      const extensionFields = taggedErrorFields(schema);
+      const extensionKeys = Reflect.ownKeys(extensionFields);
+      // A class-level comparator cannot be decomposed safely after a field is
+      // replaced. Compare untouched inherited fields structurally and let the
+      // extension schema own every replacement.
+      const inheritedEquivalence = (
+        A.some(extensionKeys, (key) => Reflect.has(this.fields, key))
+          ? fieldsToEquivalence(Struct.omit(this.fields, extensionKeys))
+          : S.toEquivalence(this as never)
+      ) as UnsafeTaggedErrorEquivalence;
+
+      return preserveFieldEquivalenceOnExtend(
+        extend(
+          schema,
+          withFieldEquivalence(
+            {
+              ...this.fields,
+              ...extensionFields,
+            },
+            annotations,
+            combineExtensionEquivalence(inheritedEquivalence, schema)
+          )
+        )
+      );
+    };
+  };
+
+  Reflect.defineProperty(errorClass, "extend", {
+    configurable: true,
+    enumerable: false,
+    value: extendWithFieldEquivalence,
+    writable: true,
+  });
+
+  return errorClass;
+};
 
 /**
  * Create a tagged error class with `_tag` discrimination and constructor input inferred from the schema.
  *
- * Wraps `S.TaggedErrorClass` and automatically prepends a `_tag` field while
- * preserving a typed `extend(...)` API for derived tagged error classes.
+ * Delegates class construction and extension to `S.TaggedErrorClass`. The
+ * local delta is a declared-field equivalence fallback that ignores transient
+ * `Error` metadata, follows recursive `extend(...)` calls, and yields to an
+ * explicit caller-supplied `toEquivalence` annotation.
  *
  * @example
  * ```ts
@@ -299,24 +345,11 @@ export const TaggedErrorClass: TaggedErrorClassConstructor = (identifier?: undef
     schema: TaggedErrorFields | TaggedErrorStruct,
     annotations?: S.Annotations.Declaration<TUnsafe.Any, readonly [TaggedErrorStruct]>
   ) => {
-    // Tagged errors extend `Error`, so effect's `Data.Error` machinery captures
-    // transient stack metadata (`stack`/`line`/`column`/`sourceURL`/...) as
-    // enumerable own properties. The structural equivalence derived by
-    // `S.toEquivalence` includes those, so two errors with IDENTICAL schema
-    // fields are never equivalent across construction sites (e.g. `make` vs
-    // `decode`) — which breaks every schema round-trip property test. Derive the
-    // equivalence from the DECLARED FIELDS only (each via its own schema), so
-    // `S.toEquivalence(ThisError)` is stack-independent and round-trip-safe.
-    // Only the derived equivalence changes; `Equal.equals`/`Hash` (identity and
-    // keying) are untouched.
-    const fieldsStruct = S.isSchema(schema) ? (schema as TaggedErrorStruct) : S.Struct(schema as TaggedErrorFields);
-    const withFieldEquivalence = {
-      ...(annotations ?? {}),
-      toEquivalence: () => S.toEquivalence(fieldsStruct as never),
-    };
-    return S.TaggedErrorClass<TUnsafe.Any, TUnsafe.Any>(identifier)(
+    const errorClass = S.TaggedErrorClass<TUnsafe.Any, TUnsafe.Any>(identifier)(
       tagValue,
       schema as never,
-      withFieldEquivalence as never
+      withFieldEquivalence(schema, annotations) as never
     );
+
+    return preserveFieldEquivalenceOnExtend(errorClass);
   }) as unknown as UnsafeTaggedErrorClassFactory;

@@ -250,7 +250,7 @@ export type DateTimeInputNumber = typeof DateTimeInputNumber.Type;
  * @since 0.0.0
  * @category constructors
  */
-export const DateTimeInputDate = S.DateValid.pipe(
+export const DateTimeInputDate = S.Date.pipe(
   $I.annoteSchema("DateTimeInputDate", {
     description: "A valid JavaScript Date accepted by Effect DateTime.make.",
   }),
