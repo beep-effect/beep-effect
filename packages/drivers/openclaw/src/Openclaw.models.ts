@@ -28,6 +28,7 @@ const OpenclawProcessStdinBase = LiteralKit(["ignore"]);
 const OpenclawSystemdActiveStateBase = LiteralKit(["active", "inactive", "failed", "activating", "deactivating"]);
 const OpenclawHttpProbeStatusBase = LiteralKit(["healthy", "unreachable"]);
 const OpenclawSchemaPlaceholderReasonBase = LiteralKit(["missing", "placeholder"]);
+const OpenclawLiveAcceptanceStepBase = LiteralKit(["hosted-model", "local-model", "skill", "reload", "telegram"]);
 const withActiveStateDecodeOption = SchemaUtils.withStatics((schema: typeof OpenclawSystemdActiveStateBase) => ({
   decodeOption: S.decodeUnknownOption(schema),
 }));
@@ -754,6 +755,140 @@ export class OpenclawAgentTurn extends S.Class<OpenclawAgentTurn>($I`OpenclawAge
     description: "Tolerant projection of a completed `agent --json` turn.",
   })
 ) {}
+
+/** One entry from the pinned `skills list --json` inventory. */
+export class OpenclawSkillInventoryEntry extends S.Class<OpenclawSkillInventoryEntry>($I`OpenclawSkillInventoryEntry`)(
+  {
+    description: S.NonEmptyString,
+    eligible: S.Boolean,
+    name: S.NonEmptyString,
+    source: S.NonEmptyString,
+  },
+  $I.annote("OpenclawSkillInventoryEntry", {
+    description: "Skill identity, eligibility, and source projected from the pinned CLI inventory.",
+  })
+) {}
+
+/** Pinned `skills list --json` output projection. */
+export class OpenclawSkillInventory extends S.Class<OpenclawSkillInventory>($I`OpenclawSkillInventory`)(
+  {
+    skills: S.Array(OpenclawSkillInventoryEntry),
+    workspaceDir: OpenclawAbsolutePath,
+  },
+  $I.annote("OpenclawSkillInventory", {
+    description: "Workspace and skill entries returned by the pinned skills inventory command.",
+  })
+) {}
+
+/** Nested Telegram receipt payload emitted by the pinned message CLI. */
+export class OpenclawTelegramSendPayload extends S.Class<OpenclawTelegramSendPayload>($I`OpenclawTelegramSendPayload`)(
+  {
+    messageId: S.NonEmptyString,
+    ok: S.Literal(true),
+  },
+  $I.annote("OpenclawTelegramSendPayload", {
+    description: "Successful Telegram plugin receipt payload.",
+  })
+) {}
+
+/** Sanitized successful `message send --json` result. */
+export class OpenclawTelegramSendResult extends S.Class<OpenclawTelegramSendResult>($I`OpenclawTelegramSendResult`)(
+  {
+    action: S.Literal("send"),
+    channel: S.Literal("telegram"),
+    dryRun: S.Boolean,
+    handledBy: S.NonEmptyString,
+    messageId: S.NonEmptyString,
+    payload: OpenclawTelegramSendPayload,
+  },
+  $I.annote("OpenclawTelegramSendResult", {
+    description: "Successful Telegram message receipt without target or token data.",
+  })
+) {}
+
+/** One OpenAI-compatible model entry returned by a local `/models` endpoint. */
+export class OpenclawLocalModelEntry extends S.Class<OpenclawLocalModelEntry>($I`OpenclawLocalModelEntry`)(
+  { id: S.NonEmptyString },
+  $I.annote("OpenclawLocalModelEntry", {
+    description: "Configured model identifier projected from a local OpenAI-compatible endpoint.",
+  })
+) {}
+
+/** OpenAI-compatible local `/models` response projection. */
+export class OpenclawLocalModels extends S.Class<OpenclawLocalModels>($I`OpenclawLocalModels`)(
+  { data: S.Array(OpenclawLocalModelEntry) },
+  $I.annote("OpenclawLocalModels", {
+    description: "Model inventory returned by a local OpenAI-compatible `/models` endpoint.",
+  })
+) {}
+
+/** Acceptance sequence step names. */
+export const OpenclawLiveAcceptanceStep = OpenclawLiveAcceptanceStepBase.pipe(
+  $I.annoteSchema("OpenclawLiveAcceptanceStep", {
+    description: "Named P3 live acceptance sequence step.",
+  }),
+  SchemaUtils.withLiteralKitStatics(OpenclawLiveAcceptanceStepBase)
+);
+
+/** Runtime type for {@link OpenclawLiveAcceptanceStep}. */
+export type OpenclawLiveAcceptanceStep = typeof OpenclawLiveAcceptanceStep.Type;
+
+/** Fully decoded inputs consumed by the pure P3 acceptance coordinator. */
+export class OpenclawLiveAcceptanceInput extends S.Class<OpenclawLiveAcceptanceInput>($I`OpenclawLiveAcceptanceInput`)(
+  {
+    channelAccounts: S.Array(OpenclawChannelAccountStatus),
+    hostedModelId: S.NonEmptyString,
+    hostedProviderId: S.NonEmptyString,
+    hostedTurn: OpenclawAgentTurn,
+    localModels: OpenclawLocalModels,
+    localModelId: S.NonEmptyString,
+    restoredReload: OpenclawSecretsReload,
+    skillInventory: OpenclawSkillInventory,
+    skillTurn: OpenclawAgentTurn,
+    telegramSend: OpenclawTelegramSendResult,
+  },
+  $I.annote("OpenclawLiveAcceptanceInput", {
+    description: "Decoded hosted, local, skill, reload, and Telegram probe results.",
+  })
+) {}
+
+/** Successful result from the pure P3 acceptance coordinator. */
+export class OpenclawLiveAcceptancePassed extends S.Class<OpenclawLiveAcceptancePassed>(
+  $I`OpenclawLiveAcceptancePassed`
+)(
+  {
+    _tag: S.tag("Passed"),
+    steps: S.Array(OpenclawLiveAcceptanceStep),
+  },
+  $I.annote("OpenclawLiveAcceptancePassed", {
+    description: "All supplied P3 acceptance assertions passed.",
+  })
+) {}
+
+/** Failed result from the pure P3 acceptance coordinator. */
+export class OpenclawLiveAcceptanceFailed extends S.Class<OpenclawLiveAcceptanceFailed>(
+  $I`OpenclawLiveAcceptanceFailed`
+)(
+  {
+    _tag: S.tag("Failed"),
+    diagnostics: OpenclawDiagnosticText,
+    step: OpenclawLiveAcceptanceStep,
+  },
+  $I.annote("OpenclawLiveAcceptanceFailed", {
+    description: "One named P3 acceptance assertion failed closed.",
+  })
+) {}
+
+/** Tagged result returned by the pure P3 acceptance coordinator. */
+export const OpenclawLiveAcceptanceResult = S.Union([OpenclawLiveAcceptancePassed, OpenclawLiveAcceptanceFailed]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("OpenclawLiveAcceptanceResult", {
+    description: "Passed or failed P3 live acceptance result.",
+  })
+);
+
+/** Runtime type for {@link OpenclawLiveAcceptanceResult}. */
+export type OpenclawLiveAcceptanceResult = typeof OpenclawLiveAcceptanceResult.Type;
 
 /**
  * Invocation context shared by every OpenClaw CLI operation.

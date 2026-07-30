@@ -1,5 +1,8 @@
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  makeOpenClawBundleHash,
+  makeOpenClawDeploymentIntent,
   makeOpenClawGeneration,
   makeOpenClawStackArgsFromConfigValues,
   OpenClawBackupConfig,
@@ -12,6 +15,7 @@ import {
   renderOpenClawBackupShipScript,
   renderOpenClawDriftAuditScript,
   renderOpenClawGenerationTree,
+  renderOpenClawLiveAcceptanceScript,
   renderOpenClawPreflightScript,
   renderOpenClawProbeScript,
   renderOpenClawRollbackScript,
@@ -19,14 +23,22 @@ import {
   renderOpenClawStageScript,
   renderOpenClawUnit,
 } from "@beep/infra";
+import { OpenclawSha256Hex } from "@beep/openclaw";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
-import { Effect, pipe } from "effect";
+import { Effect, pipe, Result } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
+import {
+  openClawLegalSoulMarkdown,
+  openClawProofSkillMarkdown,
+  openClawProofSkillRelativePath,
+  openClawSoulRelativePath,
+} from "../src/OpenClawArtifacts.ts";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const identity = OpenClawExpectedIdentity.make({
@@ -45,10 +57,40 @@ const identityConfigValues = {
   expectedRuntimeDir: "/run/user/1000",
   expectedUid: 1000,
   expectedUsername: "elpresidank",
+  hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+  hostedProviderBaseUrl: "https://hosted.example.test/v1",
+  hostedProviderId: "hosted",
+  hostedProviderModelId: "hosted-model",
+  hostedProviderModelName: "Hosted Model",
+  localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+  localProviderId: "local",
+  localProviderModelId: "local-model",
+  localProviderModelName: "Local Model",
+  telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token",
 };
 
-const defaultArgs = OpenClawStackArgs.new(identity);
+const deploymentConfig = OpenClawDeploymentConfig.make({
+  hostedProvider: {
+    apiKeyRef: "op://beep-openclaw/hosted/api-key",
+    baseUrl: "https://hosted.example.test/v1",
+    modelId: "hosted-model",
+    modelName: "Hosted Model",
+    providerId: "hosted",
+  },
+  localProvider: {
+    baseUrl: "http://127.0.0.1:11434/v1",
+    modelId: "local-model",
+    modelName: "Local Model",
+    providerId: "local",
+  },
+  telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token",
+});
+const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
+const parseDocument = (json: string): { readonly [key: string]: unknown } =>
+  O.getOrThrow(
+    pipe(Result.getOrThrow(S.decodeUnknownResult(S.UnknownFromJsonString)(json)), O.liftPredicate(P.isObject))
+  );
 
 /**
  * Unwrap a rendered `/bin/bash -lc '<body>'` command back into the body the
@@ -86,7 +128,7 @@ Environment=HOME=/home/elpresidank
 Environment=OPENCLAW_CONFIG_PATH=/etc/beep/openclaw/current/openclaw.json
 Environment=OPENCLAW_STATE_DIR=/var/lib/beep/openclaw
 Environment=OPENCLAW_NIX_MODE=1
-LoadCredential=gateway-token:/home/elpresidank/.config/beep/openclaw/credentials/gateway-token
+LoadCredential=op-service-account-token:/etc/beep/openclaw/credentials/op-service-account-token
 UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN
 ExecStartPre=/etc/beep/openclaw/current/run.sh preflight
 ExecStart=/etc/beep/openclaw/current/run.sh
@@ -107,6 +149,8 @@ describe("@beep/infra OpenClaw", () => {
     expect(defaultArgs.deployment.gatewayPort).toBe(19_031);
     expect(defaultArgs.deployment.openclawVersion).toBe("2026.7.1-2");
     expect(defaultArgs.deployment.gatewayAuthTokenRef).toBe("op://beep-openclaw/gateway/token");
+    expect(defaultArgs.deployment.telegramDmPolicy).toBe("pairing");
+    expect(defaultArgs.deployment.telegramGroupPolicy).toBe("disabled");
     expect(O.isNone(defaultArgs.backup)).toBe(true);
   });
 
@@ -120,13 +164,53 @@ describe("@beep/infra OpenClaw", () => {
     expect(O.isNone(args.backup)).toBe(true);
   });
 
+  it("renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI", () => {
+    const intent = makeOpenClawDeploymentIntent(deploymentConfig);
+    const document = parseDocument(defaultGeneration.canonicalJson);
+
+    expect(intent.agent.model).toBe("hosted/hosted-model");
+    expect(intent.agent.workspace).toBe("/etc/beep/openclaw/current/workspace");
+    expect(intent.providers).toHaveLength(2);
+    expect(intent.providers[0]?.id).toBe("hosted");
+    expect(intent.providers[1]?.id).toBe("local");
+    expect(intent.providers[1]?.baseUrl).toBe("http://127.0.0.1:11434/v1");
+    expect(intent.skills).toHaveLength(1);
+    expect(intent.skills[0]?.name).toBe("beep-proof-ping");
+    expect(O.getOrThrow(intent.telegram).groups).toEqual({});
+    expect(document).toMatchObject({
+      channels: { telegram: { configWrites: false, groups: {} } },
+      gateway: {
+        controlUi: {
+          allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+          enabled: true,
+        },
+      },
+      models: {
+        providers: {
+          hosted: {
+            api: "openai-compat",
+            apiKey: { id: "value", provider: "op_provider_hosted", source: "exec" },
+          },
+          local: {
+            api: "openai-compat",
+            apiKey: "local-no-secret",
+            baseUrl: "http://127.0.0.1:11434/v1",
+          },
+        },
+      },
+    });
+    expect(defaultGeneration.canonicalJson).toContain("op://beep-openclaw/hosted/api-key");
+    expect(defaultGeneration.canonicalJson).not.toContain("raw-credential");
+    expect(defaultGeneration.canonicalJson).not.toContain("allowInsecureAuth");
+    expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyDisableDeviceAuth");
+    expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyAllowHostHeaderOriginFallback");
+  });
+
   it("applies every Pulumi config override including backup shipping", () => {
     const args = makeOpenClawStackArgsFromConfigValues({
       ...identityConfigValues,
       agentId: "docket",
-      agentModel: "ollama/gemma3:12b",
       agentName: "Docket Agent",
-      agentWorkspace: "/srv/beep/openclaw/workspace",
       backupPassphraseSecretRef: "op://beep-openclaw/backup/passphrase",
       backupRemoteDir: "/srv/data/openclaw-archive",
       backupSshAgentSocketPath: "/run/user/1000/gcr/ssh",
@@ -135,6 +219,15 @@ describe("@beep/infra OpenClaw", () => {
       configRoot: "/srv/beep/openclaw",
       gatewayAuthTokenRef: "op://beep-openclaw/gateway/rotating",
       gatewayPort: 19_040,
+      hostedProviderApiKeyRef: "op://beep-openclaw/hosted/rotating",
+      hostedProviderBaseUrl: "https://hosted.example.test/v2",
+      hostedProviderId: "hosted-two",
+      hostedProviderModelId: "hosted-model-two",
+      hostedProviderModelName: "Hosted Model Two",
+      localProviderBaseUrl: "http://127.0.0.1:11435/v1",
+      localProviderId: "local-two",
+      localProviderModelId: "local-model-two",
+      localProviderModelName: "Local Model Two",
       logFilePath: "/srv/beep/openclaw/log/openclaw.log",
       nodeBinDir: "/opt/node/bin",
       openclawVersion: "2026.7.1-2",
@@ -142,11 +235,12 @@ describe("@beep/infra OpenClaw", () => {
       resolverOpBinaryPath: "/opt/beep/openclaw/bin/op-cli",
       resolverTrustedDir: "/opt/beep/openclaw/trusted",
       stateDir: "/srv/beep/openclaw/state",
+      telegramBotTokenRef: "op://beep-openclaw/telegram/rotating",
       unitName: "beep-openclaw.service",
     });
 
     expect(args.deployment.agentId).toBe("docket");
-    expect(args.deployment.agentWorkspace).toBe("/srv/beep/openclaw/workspace");
+    expect(args.deployment.hostedProvider.providerId).toBe("hosted-two");
     expect(args.deployment.gatewayAuthTokenRef).toBe("op://beep-openclaw/gateway/rotating");
     expect(args.deployment.gatewayPort).toBe(19_040);
     expect(args.deployment.resolverTrustedDir).toBe("/opt/beep/openclaw/trusted");
@@ -174,6 +268,14 @@ describe("@beep/infra OpenClaw", () => {
     expect(() =>
       Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ expectedMachineId: "not-a-machine-id" }))
     ).toThrow();
+    expect(() =>
+      Effect.runSync(
+        OpenClawPulumiConfigValues.decodeEffect({ localProviderBaseUrl: "https://remote.example.test/v1" })
+      )
+    ).toThrow();
+    expect(Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ configWrites: true }))).not.toHaveProperty(
+      "configWrites"
+    );
   });
 
   it("rejects an invalid openclaw:openclawVersion config value", () => {
@@ -228,20 +330,31 @@ describe("@beep/infra OpenClaw", () => {
     expectSchemaRoundTrip(OpenClawBackupConfig);
   });
 
-  it("addresses a generation by the sha256 of its own canonical config bytes", () => {
-    expect(defaultGeneration.generationId).toBe(
+  it("addresses a generation by the length-delimited config/persona/skill/compatibility bundle", () => {
+    expect(defaultGeneration.configHash).toBe(
       createHash("sha256").update(defaultGeneration.canonicalJson, "utf8").digest("hex")
     );
+    expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
     expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
     expect(makeOpenClawGeneration(defaultArgs).generationId).toBe(defaultGeneration.generationId);
   });
 
   it("re-addresses the generation when the deployment intent changes", () => {
     const other = makeOpenClawGeneration(
-      OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ gatewayPort: 19_040 }))
+      OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
     );
 
     expect(other.generationId).not.toBe(defaultGeneration.generationId);
+  });
+
+  it("re-addresses the generation when only SOUL bytes change", () => {
+    const changedSoulHash = OpenclawSha256Hex.make(
+      createHash("sha256").update(`${openClawLegalSoulMarkdown}\n`, "utf8").digest("hex")
+    );
+
+    expect(
+      makeOpenClawBundleHash(defaultGeneration.configHash, changedSoulHash, defaultGeneration.proofSkillHash)
+    ).not.toBe(defaultGeneration.generationId);
   });
 
   it("renders the systemd unit byte-identically to the recorded golden text", () => {
@@ -253,21 +366,37 @@ describe("@beep/infra OpenClaw", () => {
 
     expect(runScript.startsWith("#!/usr/bin/env bash\n# BEEP_OPENCLAW_MANAGED\nset -euo pipefail\n")).toBe(true);
     expect(runScript).toContain('generation_dir="$(dirname "$(readlink -f "$0")")"');
-    expect(runScript).toContain('preflight) exec "${openclaw_bin}" config validate ;;');
+    expect(runScript).toContain("unset OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN");
+    expect(runScript).toContain('"${op_binary}" whoami >/dev/null');
+    expect(runScript).toContain('export OP_SERVICE_ACCOUNT_TOKEN="$(cat "${credential_file}")"');
+    expect(runScript).toContain('exec "${openclaw_bin}" config validate');
     expect(runScript).toContain('gateway) exec "${openclaw_bin}" gateway ;;');
   });
 
   it("renders the generation tree with exact paths and modes", () => {
     const tree = renderOpenClawGenerationTree(defaultGeneration);
 
-    expect(A.sort(R.keys(tree), Str.Order)).toEqual(["manifest.json", "openclaw.json", "run.sh"]);
+    expect(A.sort(R.keys(tree), Str.Order)).toEqual([
+      "manifest.json",
+      "openclaw.json",
+      "run.sh",
+      openClawSoulRelativePath,
+      openClawProofSkillRelativePath,
+    ]);
     expect(tree["openclaw.json"]?.mode).toBe("0644");
     expect(tree["manifest.json"]?.mode).toBe("0644");
     expect(tree["run.sh"]?.mode).toBe("0755");
+    expect(tree[openClawSoulRelativePath]?.mode).toBe("0644");
+    expect(tree[openClawProofSkillRelativePath]?.mode).toBe("0644");
+    expect(tree[openClawSoulRelativePath]?.content).toBe(openClawLegalSoulMarkdown);
+    expect(tree[openClawProofSkillRelativePath]?.content).toBe(openClawProofSkillMarkdown);
     expect(tree["openclaw.json"]?.content).toBe(defaultGeneration.canonicalJson);
     expect(tree["manifest.json"]?.content).toContain(`"openclawVersion": "2026.7.1-2"`);
     expect(tree["manifest.json"]?.content).toContain(`"nodeVersion": "24.16.0"`);
     expect(tree["manifest.json"]?.content).toContain(`"generationId": "${defaultGeneration.generationId}"`);
+    expect(tree["manifest.json"]?.content).toContain(`"configHash": "${defaultGeneration.configHash}"`);
+    expect(tree["manifest.json"]?.content).toContain(`"soulSha256": "${defaultGeneration.soulHash}"`);
+    expect(tree["manifest.json"]?.content).toContain(`"proofSkillSha256": "${defaultGeneration.proofSkillHash}"`);
   });
 
   it("stages every generation file root-owned with its declared mode", () => {
@@ -277,6 +406,13 @@ describe("@beep/infra OpenClaw", () => {
     expect(script).toContain(`sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/openclaw.json'`);
     expect(script).toContain(`sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/manifest.json'`);
     expect(script).toContain(`sudo -n install -o root -g root -m 0755 /dev/stdin '${generationDir}/run.sh'`);
+    expect(script).toContain(
+      `sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawSoulRelativePath}'`
+    );
+    expect(script).toContain(
+      `sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawProofSkillRelativePath}'`
+    );
+    expect(script).toContain("STAGE-FAIL: symlink parent");
     expect(script).toContain("BEEP_OPENCLAW_CONFIG");
     expect(script).toContain("BEEP_OPENCLAW_MANIFEST");
     expect(script).toContain("BEEP_OPENCLAW_RUN");
@@ -453,6 +589,24 @@ describe("@beep/infra OpenClaw", () => {
     expect(script).toContain("ALERT: OPENCLAW_CONFIG_DRIFT");
     expect(script).toContain("PROBE-COMPLETE");
     expect(script.endsWith("exit 0")).toBe(true);
+  });
+
+  it("renders a separate fail-closed live acceptance command", () => {
+    const script = scriptBody(renderOpenClawLiveAcceptanceScript(defaultGeneration));
+
+    expect(script).toContain("LIVE-ACCEPTANCE-FAIL");
+    expect(script).toContain("skills list --json --eligible --agent");
+    expect(script).toContain("message send --channel telegram");
+    expect(script).toContain("channels status --channel telegram --probe --json");
+    expect(script).toContain("secrets reload --json");
+    expect(script).toContain("P3_MODEL_OK");
+    expect(script).toContain("P3_SKILL_OK");
+    expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
+    expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
+    expect(script.trimEnd().endsWith("exit 0")).toBe(false);
+    const missingPhase = spawnSync("/bin/bash", ["-lc", script], { encoding: "utf8" });
+    expect(missingPhase.status).toBe(1);
+    expect(missingPhase.stderr).toContain("usage: live-acceptance degraded|restored");
   });
 
   it("encrypts snapshot archives locally and verifies a remote sha256 receipt", () => {

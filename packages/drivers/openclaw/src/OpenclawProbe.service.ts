@@ -8,13 +8,26 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as N, pipe } from "effect";
+import { Effect, Number as N, pipe, String as Str } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
 import { OPENCLAW_HTTP_PROBE_TIMEOUT } from "./Openclaw.config.ts";
-import { OpenclawHttpProbe } from "./Openclaw.models.ts";
+import {
+  OpenclawDiagnosticText,
+  OpenclawHttpProbe,
+  OpenclawLiveAcceptanceFailed,
+  OpenclawLiveAcceptancePassed,
+  OpenclawLocalModels,
+} from "./Openclaw.models.ts";
 import type { Duration } from "effect";
-import type { HttpClientResponse } from "effect/unstable/http";
+import type {
+  OpenclawLiveAcceptanceInput,
+  OpenclawLiveAcceptanceResult,
+  OpenclawLiveAcceptanceStep,
+} from "./Openclaw.models.ts";
 
 const defaultProbeHost = "127.0.0.1";
 
@@ -97,3 +110,88 @@ export const probeOpenclawLiveness = makeEndpointProbe("Openclaw.probeLiveness",
  * @since 0.0.0
  */
 export const probeOpenclawReadiness = makeEndpointProbe("Openclaw.probeReadiness", "/ready");
+
+const sameString = S.toEquivalence(S.String);
+const acceptanceFailure = (step: OpenclawLiveAcceptanceStep, diagnostics: string): OpenclawLiveAcceptanceFailed =>
+  OpenclawLiveAcceptanceFailed.make({
+    _tag: "Failed",
+    diagnostics: OpenclawDiagnosticText.fromUnknown(diagnostics),
+    step,
+  });
+
+/**
+ * Probe a local OpenAI-compatible `/models` endpoint and require one exact model id.
+ *
+ * @category clients
+ * @since 0.0.0
+ */
+export const probeOpenclawLocalModels = Effect.fn("Openclaw.probeLocalModels")(function* (input: {
+  readonly baseUrl: string;
+  readonly modelId: string;
+  readonly timeout?: Duration.Input | undefined;
+}): Effect.fn.Return<OpenclawLiveAcceptanceResult, never, HttpClient.HttpClient> {
+  const client = yield* HttpClient.HttpClient;
+  const endpoint = `${input.baseUrl}/models`;
+  const models = yield* client
+    .execute(HttpClientRequest.get(endpoint))
+    .pipe(
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(OpenclawLocalModels)),
+      Effect.timeoutOption(input.timeout ?? OPENCLAW_HTTP_PROBE_TIMEOUT),
+      Effect.orElseSucceed(O.none<OpenclawLocalModels>)
+    );
+  return O.match(models, {
+    onNone: () => acceptanceFailure("local-model", "Local /models request or schema decode failed."),
+    onSome: (inventory) =>
+      A.some(inventory.data, (model) => sameString(model.id, input.modelId))
+        ? OpenclawLiveAcceptancePassed.make({ _tag: "Passed", steps: ["local-model"] })
+        : acceptanceFailure("local-model", "Local /models omitted the configured model id."),
+  });
+});
+
+/**
+ * Coordinate already-decoded P3 acceptance results without performing mutation.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coordinateOpenclawLiveAcceptance = (input: OpenclawLiveAcceptanceInput): OpenclawLiveAcceptanceResult => {
+  const hostedOk =
+    sameString(input.hostedTurn.status, "ok") &&
+    O.exists(input.hostedTurn.text, (text) => sameString(text, "P3_MODEL_OK")) &&
+    O.exists(input.hostedTurn.runId, Str.isNonEmpty) &&
+    O.exists(input.hostedTurn.stopReason, (reason) => sameString(reason, "stop")) &&
+    O.exists(input.hostedTurn.aborted, (aborted) => !aborted) &&
+    O.exists(input.hostedTurn.provider, (provider) => sameString(provider, input.hostedProviderId)) &&
+    O.exists(input.hostedTurn.model, (model) => sameString(model, input.hostedModelId));
+  const localOk = A.some(input.localModels.data, (model) => sameString(model.id, input.localModelId));
+  const eligibleProofSkills = A.filter(
+    input.skillInventory.skills,
+    (skill) =>
+      skill.eligible && sameString(skill.name, "beep-proof-ping") && sameString(skill.source, "openclaw-workspace")
+  );
+  const skillOk =
+    A.length(eligibleProofSkills) === 1 &&
+    sameString(input.skillTurn.status, "ok") &&
+    O.exists(input.skillTurn.text, (text) => sameString(text, "P3_SKILL_OK"));
+  const reloadOk = P.isTagged("Reloaded")(input.restoredReload) && input.restoredReload.warningCount === 0;
+  const channelOk =
+    A.length(input.channelAccounts) === 1 &&
+    sameString(input.channelAccounts[0]?.accountId ?? "", "default") &&
+    O.exists(input.channelAccounts[0]?.probeOk ?? O.none(), (ok) => ok) &&
+    O.isNone(input.channelAccounts[0]?.probeError ?? O.none());
+  const failures = A.getSomes([
+    hostedOk ? O.none() : O.some(acceptanceFailure("hosted-model", "Hosted model assertion failed.")),
+    localOk ? O.none() : O.some(acceptanceFailure("local-model", "Local model assertion failed.")),
+    skillOk ? O.none() : O.some(acceptanceFailure("skill", "Proof skill assertion failed.")),
+    reloadOk ? O.none() : O.some(acceptanceFailure("reload", "Restored reload assertion failed.")),
+    channelOk && input.telegramSend.payload.ok
+      ? O.none()
+      : O.some(acceptanceFailure("telegram", "Telegram send or channel assertion failed.")),
+  ]);
+  return O.getOrElse(A.head(failures), () =>
+    OpenclawLiveAcceptancePassed.make({
+      _tag: "Passed",
+      steps: ["hosted-model", "local-model", "skill", "reload", "telegram"],
+    })
+  );
+};

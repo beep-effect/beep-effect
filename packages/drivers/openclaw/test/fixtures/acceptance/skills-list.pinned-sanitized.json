@@ -1,0 +1,11 @@
+{
+  "workspaceDir": "/etc/beep/openclaw/current/workspace",
+  "skills": [
+    {
+      "name": "beep-proof-ping",
+      "description": "Return one fixed synthetic sentinel for the P3 declarative-skill proof.",
+      "eligible": true,
+      "source": "openclaw-workspace"
+    }
+  ]
+}
