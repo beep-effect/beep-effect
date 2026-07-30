@@ -47,7 +47,7 @@ import {
   Track,
   Video,
 } from "@beep/html/Html.model";
-import { Text } from "@beep/html/Html.nodes";
+import { Comment, Text } from "@beep/html/Html.nodes";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
@@ -169,10 +169,19 @@ describe("@beep/html generated special-child grammars", () => {
     }
   });
 
-  it("requires exactly one first summary while keeping other edge grammars optional", () => {
+  it("requires exactly one first significant summary while keeping other edge grammars optional", () => {
     const invalid = [
       Details.make({ children: [] }),
       Details.make({ children: [Div.make({ children: [] })] }),
+      Details.make({
+        children: [text("before"), Summary.make({ children: [] })],
+      }),
+      Details.make({
+        children: [
+          ForeignElement.make({ namespace: "svg", name: "svg", children: [] }),
+          Summary.make({ children: [] }),
+        ],
+      }),
       Details.make({
         children: [Summary.make({ children: [] }), Summary.make({ children: [] })],
       }),
@@ -186,7 +195,13 @@ describe("@beep/html generated special-child grammars", () => {
     }
 
     const validDetails = Details.make({
-      children: [Summary.make({ children: [text("summary")] }), Div.make({ children: [] })],
+      children: [
+        Comment.make({ value: "comments are not content" }),
+        text(" \n\t "),
+        Summary.make({ children: [text("summary")] }),
+        Div.make({ children: [] }),
+        ForeignElement.make({ namespace: "svg", name: "svg", children: [] }),
+      ],
     });
     expect(inspectConformance(validDetails)).toStrictEqual([]);
     expect(Exit.isSuccess(Effect.runSyncExit(conform(validDetails)))).toBe(true);

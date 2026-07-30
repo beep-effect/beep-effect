@@ -52,6 +52,40 @@ const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
     return yield* fs.readFileString(new URL(`./fixtures/${name}`, import.meta.url).pathname);
   }).pipe(provideBunFileSystem)
 );
+
+const tableWire = ({
+  cellAlignment = { t: "AlignDefault" },
+  columnAlignment = { t: "AlignDefault" },
+  columnWidth = { t: "ColWidthDefault" },
+}: {
+  readonly cellAlignment?: unknown;
+  readonly columnAlignment?: unknown;
+  readonly columnWidth?: unknown;
+} = {}) => ({
+  "pandoc-api-version": [1, 23, 1],
+  blocks: [
+    {
+      c: [
+        ["", [], []],
+        [null, []],
+        [[columnAlignment, columnWidth]],
+        [["", [], []], []],
+        [
+          [
+            ["", [], []],
+            0,
+            [],
+            [[["", [], []], [[["", [], []], cellAlignment, 1, 1, [{ c: [{ c: "ok", t: "Str" }], t: "Para" }]]]]],
+          ],
+        ],
+        [["", [], []], []],
+      ],
+      t: "Table",
+    },
+  ],
+  meta: {},
+});
+
 describe("Pandoc.codec", () => {
   it("keeps the established decode names as strict API aliases", () => {
     expect(decodePandocJson).toBe(decodePandocJsonStrict);
@@ -200,6 +234,60 @@ describe("Pandoc.codec", () => {
       expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["Str", "inline", expected],
       ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
+  it("rejects known constructors in table structural slots and reports their exact paths", () => {
+    const wrongContext = [
+      {
+        expected: ["Para", "/blocks/0/c/4/0/3/0/1/0/1"],
+        wire: tableWire({ cellAlignment: { c: [], t: "Para" } }),
+      },
+      {
+        expected: ["Str", "/blocks/0/c/4/0/3/0/1/0/1"],
+        wire: tableWire({ cellAlignment: { c: 42, t: "Str" } }),
+      },
+      {
+        expected: ["Para", "/blocks/0/c/2/0/0"],
+        wire: tableWire({ columnAlignment: { c: [], t: "Para" } }),
+      },
+      {
+        expected: ["Str", "/blocks/0/c/2/0/1"],
+        wire: tableWire({ columnWidth: { c: 42, t: "Str" } }),
+      },
+    ] as const;
+
+    for (const { expected, wire } of wrongContext) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        [expected[0], "block", expected[1]],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
+  it("retains valid and future table structural constructors exactly", () => {
+    const accepted = [
+      tableWire(),
+      tableWire({
+        cellAlignment: { t: "AlignRight" },
+        columnAlignment: { t: "AlignCenter" },
+        columnWidth: { c: 0.5, t: "ColWidth" },
+      }),
+      tableWire({
+        cellAlignment: { c: { exact: "cell" }, extension: true, t: "FutureCellAlignment" },
+        columnAlignment: { c: { exact: "column" }, extension: [1, 2], t: "FutureColumnAlignment" },
+        columnWidth: { c: { exact: "width" }, extension: { retained: true }, t: "FutureColumnWidth" },
+      }),
+    ];
+
+    for (const wire of accepted) {
+      const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+      expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues).toEqual([]);
       expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
     }
   });

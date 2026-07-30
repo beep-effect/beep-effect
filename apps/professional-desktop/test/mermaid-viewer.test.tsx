@@ -82,6 +82,11 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
       const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
       expect(svg?.id).toMatch(/^mermaid-/u);
       expect(svg).toHaveAttribute("role", "graphics-document document");
+      expect(svg).toHaveAccessibleName("Mermaid diagram");
+      expect(svg).toHaveAccessibleDescription("Mermaid diagram source:\ngraph TD A[Start] --> B[End]");
+      const description = svg?.querySelector("desc");
+      expect(description).toHaveAttribute("id", svg?.getAttribute("aria-describedby"));
+      expect(description).toHaveTextContent("graph TD A[Start] --> B[End]");
       expect(svg?.querySelector("style")?.textContent).not.toContain("@keyframes");
       expect(screen.queryByText("Diagram output did not satisfy the desktop safety policy.")).not.toBeInTheDocument();
 
@@ -89,6 +94,37 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
       // hide-and-inject path is back -- and that is the shape that renders a blank
       // gap in a real browser, where Lexical reconciles the injected div away.
       expect(container.querySelector("code[data-language='mermaid']")).toBeNull();
+    })
+  );
+
+  it.effect(
+    "preserves authored Mermaid accessibility text",
+    Effect.fnUntraced(function* () {
+      const source = [
+        "graph TD",
+        "accTitle: Checkout flow",
+        "accDescr: Start proceeds to End",
+        "A[Start] --> B[End]",
+      ].join("\n");
+      const { container } = render(<MermaidView renderKey="authored-accessibility" source={source} />);
+      const screen = within(container);
+
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(screen.getByTestId("mermaid-diagram").querySelector("svg")).toBeInTheDocument();
+        })
+      );
+
+      const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
+      const title = svg?.querySelector("title");
+      const description = svg?.querySelector("desc");
+      expect(title).toHaveTextContent("Checkout flow");
+      expect(description).toHaveTextContent("Start proceeds to End");
+      expect(svg).toHaveAccessibleName("Checkout flow");
+      expect(svg).toHaveAccessibleDescription("Start proceeds to End");
+      expect(svg).toHaveAttribute("aria-labelledby", title?.id);
+      expect(svg).toHaveAttribute("aria-describedby", description?.id);
+      expect(svg).not.toHaveAttribute("aria-label");
     })
   );
 

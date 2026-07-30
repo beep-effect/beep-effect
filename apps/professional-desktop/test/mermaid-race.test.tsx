@@ -189,6 +189,99 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
   );
 
   it.effect(
+    "rejects escaped external CSS URLs in SVG presentation attributes",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        ["fill", "u/**/\\72 l(https://attacker.invalid/fill)"],
+        ["filter", "u\\72 l(https://attacker.invalid/filter)"],
+        ["clip-path", "u\\72 l(https://attacker.invalid/clip-path)"],
+        ["marker-start", "u\\72 l(https://attacker.invalid/marker-start)"],
+      ] as const;
+
+      for (const [attribute, value] of attacks) {
+        const source = `graph TD\nPresentation-->${attribute}`;
+        const view = render(<MermaidView renderKey={`presentation-${attribute}`} source={source} />);
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() =>
+            pending.resolve({
+              svg: mermaidSvg(pending.id, `<path ${attribute}="${value}" d="M0 0L1 1"></path>`),
+            })
+          );
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, path")).toBeNull();
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "retains local-fragment CSS URLs in SVG presentation attributes",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nLocal-->Fragment";
+      const view = render(<MermaidView renderKey="local-fragment-presentation" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<path data-safe-fragments="yes" fill="u\\72 l(#paint)" filter="url(#shadow)" clip-path="url(&quot;#clip&quot;)" marker-start="url('#marker')" d="M0 0L1 1"></path>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-safe-fragments]"))
+        )
+      );
+
+      const path = view.container.querySelector("[data-safe-fragments]");
+      expect(path).toHaveAttribute("data-safe-fragments", "yes");
+      expect(path).toHaveAttribute("fill", "u\\72 l(#paint)");
+      expect(path).toHaveAttribute("filter", "url(#shadow)");
+      expect(path).toHaveAttribute("clip-path", 'url("#clip")');
+      expect(path).toHaveAttribute("marker-start", "url('#marker')");
+      expect(view.container.querySelector("svg")).toHaveAccessibleName("Mermaid diagram");
+    })
+  );
+
+  it.effect(
+    "adds an escaped programmatic text alternative without interpolating diagram source",
+    Effect.fnUntraced(function* () {
+      const source = `graph TD\nA["</desc><script data-diagram-xss='no'>alert(1)</script>&done"]`;
+      const view = render(<MermaidView renderKey="fallback-accessibility-escaping" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() => pending.resolve({ svg: mermaidSvg(pending.id) }));
+      });
+      yield* Effect.promise(() =>
+        waitFor(() => expect(within(view.container).getByTestId("mermaid-diagram").querySelector("svg")))
+      );
+
+      const svg = view.container.querySelector("svg");
+      const description = svg?.querySelector("desc");
+      expect(svg).toHaveAccessibleName("Mermaid diagram");
+      expect(description?.textContent).toBe(`Mermaid diagram source:\n${source}`);
+      expect(description).toHaveAttribute("id", svg?.getAttribute("aria-describedby"));
+      expect(view.container.querySelector("script, [data-diagram-xss]")).toBeNull();
+    })
+  );
+
+  it.effect(
     "rejects stylesheet rules that can affect the containing document",
     Effect.fnUntraced(function* () {
       const attacks = [

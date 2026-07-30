@@ -21,6 +21,8 @@ import type { JSX } from "react";
 const $I = $EditorId.create("mermaid-view");
 
 const fallbackErrorMessage = "Unable to render diagram.";
+const fallbackDiagramName = "Mermaid diagram";
+const fallbackDiagramDescription = (source: string): string => `Mermaid diagram source:\n${source}`;
 const invalidDiagramMessage = "Diagram could not be parsed.";
 const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety policy.";
 
@@ -366,7 +368,78 @@ const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
   }
 };
 
-const removeBuiltInMermaidKeyframes = (svg: string): undefined | string => {
+const elementHasText = (element: Element): boolean => (element.textContent?.trim().length ?? 0) > 0;
+
+const findElementById = (root: Element, id: string): Element | undefined => {
+  for (const element of root.querySelectorAll("[id]")) {
+    if (element.getAttribute("id") === id) return element;
+  }
+  return undefined;
+};
+
+const hasAssociatedText = (root: Element, attribute: "aria-describedby" | "aria-labelledby"): boolean => {
+  const references = root.getAttribute(attribute)?.trim().split(/\s+/u) ?? [];
+  return A.some(references, (id) => {
+    const element = findElementById(root, id);
+    return element !== undefined && elementHasText(element);
+  });
+};
+
+const hasAccessibleName = (root: Element): boolean =>
+  (root.getAttribute("aria-label")?.trim().length ?? 0) > 0 || hasAssociatedText(root, "aria-labelledby");
+
+const directTextChild = (root: Element, name: "desc" | "title"): Element | undefined => {
+  for (const child of root.children) {
+    if (child.localName === name && elementHasText(child)) return child;
+  }
+  return undefined;
+};
+
+const uniqueElementId = (root: Element, preferred: string): string => {
+  let candidate = preferred;
+  let suffix = 1;
+  while (findElementById(root, candidate) !== undefined) {
+    candidate = `${preferred}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+};
+
+const ensureElementId = (root: Element, element: Element, preferred: string): string => {
+  const existing = element.getAttribute("id")?.trim();
+  if (existing !== undefined && existing.length > 0) return existing;
+  const id = uniqueElementId(root, preferred);
+  element.setAttribute("id", id);
+  return id;
+};
+
+const ensureMermaidAccessibility = (root: Element, renderId: string, source: string): void => {
+  if (!hasAccessibleName(root)) {
+    const title = directTextChild(root, "title");
+    if (title === undefined) {
+      root.removeAttribute("aria-labelledby");
+      root.setAttribute("aria-label", fallbackDiagramName);
+    } else {
+      root.setAttribute("aria-labelledby", ensureElementId(root, title, `${renderId}-title`));
+    }
+  }
+
+  if (hasAssociatedText(root, "aria-describedby")) return;
+  const authoredDescription = directTextChild(root, "desc");
+  if (authoredDescription !== undefined) {
+    root.setAttribute("aria-describedby", ensureElementId(root, authoredDescription, `${renderId}-description`));
+    return;
+  }
+
+  const description = root.ownerDocument.createElementNS(svgNamespace, "desc");
+  const descriptionId = uniqueElementId(root, `${renderId}-description`);
+  description.setAttribute("id", descriptionId);
+  description.textContent = fallbackDiagramDescription(source);
+  root.prepend(description);
+  root.setAttribute("aria-describedby", descriptionId);
+};
+
+const prepareMermaidSvg = (svg: string, renderId: string, source: string): undefined | string => {
   const template = globalThis.document.createElement("template");
   template.innerHTML = svg;
   if (template.content.childElementCount !== 1) return undefined;
@@ -380,6 +453,7 @@ const removeBuiltInMermaidKeyframes = (svg: string): undefined | string => {
       style.textContent ?? ""
     );
   }
+  ensureMermaidAccessibility(root, renderId, source);
   return root.outerHTML;
 };
 
@@ -391,6 +465,8 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
     root.namespaceURI !== svgNamespace ||
     root.getAttribute("id") !== renderId ||
     root.getAttribute("role") !== mermaidRootRole ||
+    !hasAccessibleName(root) ||
+    !hasAssociatedText(root, "aria-describedby") ||
     parsedDocument.querySelector("parsererror") !== null
   ) {
     return false;
@@ -410,16 +486,17 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
       if (name.startsWith("on")) return false;
       if (name === "role" && (element !== root || value !== mermaidRootRole)) return false;
       if (HashSet.has(urlAttributes, name) && !value.startsWith("#")) return false;
+      const normalizedValue = normalizeCssTokens(value);
       if (
         name === "style" &&
         (style === undefined ||
-          unsafeCss.test(normalizeCssTokens(value)) ||
+          unsafeCss.test(normalizedValue) ||
           hasUnsafeLayoutStyle(style) ||
           (isRoot && !isSafeMermaidRootStyle(style)))
       ) {
         return false;
       }
-      if (name !== "style" && unsafeCss.test(value)) return false;
+      if (name !== "style" && unsafeCss.test(normalizedValue)) return false;
     }
   }
 
@@ -478,7 +555,7 @@ const renderMermaid = Effect.fnUntraced(function* (renderId: string, source: str
     DOMPurify.removed,
     (removal) => !("element" in removal && removal.element instanceof Element && removal.element.localName === "body")
   );
-  const inertSvg = removeBuiltInMermaidKeyframes(sanitizedSvg);
+  const inertSvg = prepareMermaidSvg(sanitizedSvg, renderId, source);
   if (removedUnsafeContent || inertSvg === undefined || !isSafeMermaidSvg(inertSvg, renderId)) {
     return yield* MermaidRenderError.make({ message: unsafeDiagramMessage });
   }
