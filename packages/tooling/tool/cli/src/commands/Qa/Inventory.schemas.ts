@@ -215,11 +215,9 @@ export type QaFindingId = typeof QaFindingId.Type;
  * @example
  * ```ts
  * import { QaEvidenceRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
- * import * as O from "effect/Option"
  *
  * const evidence = QaEvidenceRef.make({
  *   eventIds: [412, 418],
- *   frameRange: O.some([12, 18] as const),
  *   kind: "strip",
  *   path: "frames/drag-w3-0002.png"
  * })
