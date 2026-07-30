@@ -312,14 +312,14 @@ prototypes fail.
 | Schema-decoded Pulumi config | `infra/src/internal/PulumiConfigSchema.ts` (`optionalPulumiConfigFields`, `withPulumiConfigDecodeEffect`) | Same decode pattern for `openclaw:*` config namespace | reuse |
 | Tagged-union deploy target + preflight→apply→health chain | `infra/src/AIMetrics.ts` (`AiMetricsDeployTarget` local\|dankserver; `command.remote.Command` w/ triggers, stdout as `pulumi.secret`) | Decision 6: same shape, workstation target runs `command.local.Command` | reuse pattern |
 | Install-spec library precedent | `packages/tooling/library/ai-metrics` (`@beep/repo-ai-metrics` `install.ts`, `models.ts`, consumed by infra) | Precedent for where a deploy/install spec may live; openclaw likely keeps schema in the driver instead — align question | precedent |
-| 1Password CLI driver | `packages/drivers/onepassword-cli` (`probeReference`, `read` → `Redacted`, `whoami`; ChildProcessSpawner + `collectProcessOutput`) | Deploy-time secret probe/read; style model for the openclaw CLI wrapper | reuse |
+| 1Password CLI driver | `packages/drivers/onepassword-cli` (`probeReference`, `read` → `Redacted`, `whoami`; `ChildProcessSpawner` + driver-local concurrent stdout/stderr/exit collection) | Deploy-time secret probe/read; style model for the openclaw CLI wrapper | reuse |
 | Typed op:// reference value | `packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts` (pattern-validated `op://vault/item/field[/section]`) | Upgrade over AIMetrics' raw `S.String` secret refs — use for every `*SecretRef` field | reuse |
 | Tailscale driver | `packages/drivers/tailscale` (status/serve surfaces, `magicDnsName`, `baseUrl`) | dankserver-migration phase (remote executor); not needed for workstation v1 | reuse later |
 | Provider drivers | `packages/drivers/{anthropic,openai-compat,xai,venice-ai,ai-provider-cli}` | Not consumed by the deploy stack; relevant to the later SDK-adapter path only | out of scope |
 | Discord driver | `packages/drivers/discord` | Not needed — channel config is just OpenClaw config + a bot-token secret ref | out of scope |
 | Schema kits | `@beep/schema` (`LiteralKit`, `SchemaUtils.withKeyDefaults`/`withNoneDefault`/`withStatics`, `TaggedErrorClass`, `Model.Class`) | Everything schema-shaped in driver + stack | reuse |
 | Identity composers | `@beep/identity` (`$InfraId`, `$I.create`/`annote`/`annoteSchema`; new `$OpenclawId` needed) | Driver + stack identity | reuse/extend |
-| Process plumbing | `@beep/utils/Stream` `collectProcessOutput`; `effect/unstable/process` `ChildProcess`/`ChildProcessSpawner` | openclaw CLI wrapper | reuse |
+| Process plumbing | `effect/unstable/process` `ChildProcess`/`ChildProcessSpawner`; driver-local concurrent stream folds with `Effect.all` | openclaw CLI wrapper | reuse |
 | Vendored-subtree readiness | `.gitleaks.toml` allowlists `.repos/openclaw/**` | Deferred vendoring trigger (decision 11) | ready |
 
 **NOT FOUND** (net-new candidates):

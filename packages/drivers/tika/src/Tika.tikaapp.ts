@@ -111,7 +111,20 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
           )
         )
       )
-    ).pipe(Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "tika spawn failed" })));
+    ).pipe(
+      Effect.tapError((error) =>
+        Effect.logDebug("Tika App process failed").pipe(
+          Effect.annotateLogs({
+            "process.error_kind": error.reason._tag,
+            "process.method": error.reason.method,
+            "process.module": error.reason.module,
+            "tika.engine": "tika-app",
+            "tika.operation": "extract",
+          })
+        )
+      ),
+      Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "tika spawn failed" }))
+    );
 
     if (result.exitCode !== 0) {
       return yield* makeTikaError("response-status", { cause: `exit ${result.exitCode}` });

@@ -306,7 +306,11 @@ export const renderCropBordersPlanEntry = (entry: CropBordersPlanEntry): string 
 export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest")(function* (
   manifestPath: string,
   manifest: NormalizeManifestModel
-): Effect.fn.Return<string, FilesCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  FilesCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const encoded = yield* encodeNormalizeManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode normalize manifest for "${manifestPath}"`)
   );
@@ -403,7 +407,11 @@ export const makeArchivePoorCandidatesManifest = (
 export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchivePoorCandidatesManifest")(function* (
   manifestPath: string,
   manifest: ArchivePoorCandidatesManifestModel
-): Effect.fn.Return<string, FilesCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  FilesCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const encoded = yield* encodeArchivePoorCandidatesManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode archive manifest for "${manifestPath}"`)
   );
@@ -429,7 +437,11 @@ export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchiv
  */
 export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBordersReportJson")(function* (
   report: DetectBordersReport
-): Effect.fn.Return<string, FilesCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  FilesCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const encoded = yield* encodeDetectBordersReport(report).pipe(
     FilesCommandError.mapError("Failed to encode detect-borders report")
   );
@@ -457,7 +469,11 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
 export const renderDetectFacesReportJson = Effect.fn("Files.renderDetectFacesReportJson")(function* (
   report: DetectFacesReport,
   outputPath: string
-): Effect.fn.Return<string, FilesCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  FilesCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const encoded = yield* encodeDetectFacesReport(report).pipe(
     FilesCommandError.mapError(`Failed to encode detect-faces report for "${outputPath}"`)
   );

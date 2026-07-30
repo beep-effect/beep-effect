@@ -7,7 +7,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText } from "@beep/tika";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Path, Result } from "effect";
+import { Effect, FileSystem, Logger, Path, References, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
@@ -162,13 +162,34 @@ describe("makeTikaAppFileProcessingEngine", () => {
     Effect.fnUntraced(
       function* () {
         const { operation } = yield* fixture(stubJava, "pdf-text-layer");
+        const executable = "/nonexistent/java-missing";
+        const annotations: Array<Record<string, unknown>> = [];
+        const logger = Logger.make<unknown, void>((options) => {
+          annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+        });
         const engine = yield* makeTikaAppFileProcessingEngine(
-          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: "/nonexistent/java-missing" })
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: executable })
         );
 
-        const error = yield* engine.extract(operation).pipe(Effect.flip);
+        const error = yield* engine
+          .extract(operation)
+          .pipe(
+            Effect.provideService(Logger.CurrentLoggers, new Set([logger])),
+            Effect.provideService(References.MinimumLogLevel, "Debug"),
+            Effect.flip
+          );
 
         expect(error.reason).toBe("engine-unavailable");
+        expect(error.message).not.toContain(executable);
+        expect(annotations).toEqual([
+          {
+            "process.error_kind": "NotFound",
+            "process.method": "spawn",
+            "process.module": "ChildProcess",
+            "tika.engine": "tika-app",
+            "tika.operation": "extract",
+          },
+        ]);
       },
       Effect.scoped,
       provideTestLayer

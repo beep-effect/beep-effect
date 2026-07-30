@@ -125,3 +125,44 @@ The branch was then rebased without conflict onto `origin/main` at
 `4cee4def49`; that upstream commit had no path overlap with this goal. The
 rebased implementation commit is `a0a0d7994d`. The retained closeout reflection,
 packet-state flip, and regenerated goal index ship in the same PR.
+
+## Quality-review remediation
+
+A ten-role read-only quality review of the committed closeout baseline found
+four changed-scope blockers. All four were corrected:
+
+- Active OpenClaw research now describes driver-local concurrent stream and
+  exit collection instead of citing the removed
+  `@beep/utils/Stream.collectProcessOutput` helper.
+- `renderBiomeJson` drains stdout, stderr, and exit status concurrently. A
+  coordinated 1 MiB-per-stream regression fails under sequential collection
+  and passes under the corrected implementation.
+- `renderBiomeJson` exposes all three required services in its Effect
+  environment: `FileSystem`, `Path`, and `ChildProcessSpawner`. A dtslint
+  assertion locks that public contract, and `@beep/repo-utils` is included in
+  the changeset. The four repo CLI render wrappers propagate the same honest
+  environment.
+- The AI-provider CLI and tika-app adapters emit safe normalized process
+  diagnostics before translating `PlatformError`. Tests prove the public
+  errors remain sanitized and that executable paths and secret-adjacent AI
+  environment values are absent from log annotations.
+
+Focused remediation proof passed:
+
+- `@beep/repo-utils` source check, unit test, and dtslint;
+- `@beep/repo-cli` source check and docgen example typecheck;
+- `@beep/ai-provider-cli` check and 16 unit tests;
+- `@beep/tika` source/test check and 55 unit tests;
+- affected-file Biome checks, changeset-graph validation, goal doctor, and
+  diff whitespace validation.
+
+The remediation was then replayed from merged `origin/main` at `03d2f4ab62`
+on `feat/effect-child-process-review-hardening`. Full `bun run beep yeet
+verify` proof passed on that fresh baseline:
+
+- build, check, 138-file dtslint, and 591-file test typecheck;
+- Knip and JSDoc ratchets with zero introduced findings;
+- all 26 lint policy parts and docgen across 123 packages;
+- unit tests across 125 package tasks and integration across 167 tasks;
+- Fallow, changeset status/graph, secrets, OSV, Semgrep, Nix, and a frozen
+  lockfile install.

@@ -11,7 +11,7 @@ explicitly marked NET-NEW.
 
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
-| `openclaw-workstation-agent` | Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure — prototype gauntlet first, then driver, then live agent | none | reuse: `infra/` workspace + `infra/src/internal/PulumiConfigSchema.ts`, `infra/src/AIMetrics.ts` patterns, `@beep/onepassword-cli`, `OnePasswordReference` (`packages/shared/domain/src/values/OnePasswordReference`), `@beep/schema` kits, `@beep/identity`, `@beep/utils/Stream.collectProcessOutput`; NET-NEW: `@beep/openclaw` driver (desired-intent schema, render adapter, CLI wrapper, probes), OpenClawGeneration engine, workstation applicator, drift audit |
+| `openclaw-workstation-agent` | Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure — prototype gauntlet first, then driver, then live agent | none | reuse: `infra/` workspace + `infra/src/internal/PulumiConfigSchema.ts`, `infra/src/AIMetrics.ts` patterns, `@beep/onepassword-cli`, `OnePasswordReference` (`packages/shared/domain/src/values/OnePasswordReference`), `@beep/schema` kits, `@beep/identity`, driver-local concurrent stdout/stderr/exit collection over `effect/unstable/process`; NET-NEW: `@beep/openclaw` driver (desired-intent schema, render adapter, CLI wrapper, probes), OpenClawGeneration engine, workstation applicator, drift audit |
 
 Struck at GATE C (2026-07-25): `dankserver-openclaw-migration` — removed
 entirely, not deferred. dankserver's Ansible role keeps owning its instance

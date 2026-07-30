@@ -103,7 +103,8 @@ Full table with per-brick usage lives in [`../RESEARCH.md`](../RESEARCH.md)
 - reuse: `infra/` workspace + `infra/src/internal/PulumiConfigSchema.ts`;
   `infra/src/AIMetrics.ts` target/command patterns; `@beep/onepassword-cli`;
   `@beep/shared-domain` `OnePasswordReference` value; `@beep/schema` kits;
-  `@beep/identity` composers; `@beep/utils/Stream.collectProcessOutput`.
+  `@beep/identity` composers; driver-local concurrent stdout/stderr/exit
+  collection over `effect/unstable/process`.
 - reuse later (migration phase): `@beep/tailscale`.
 - NET-NEW: `packages/drivers/openclaw` (schema + CLI wrapper + health probe);
   target-agnostic renderer layer; local-vs-remote executor abstraction over
