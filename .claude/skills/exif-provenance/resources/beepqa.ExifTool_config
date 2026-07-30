@@ -1,0 +1,29 @@
+# ExifTool -config defining the XMP-beepQA namespace.
+# Mirror of the definition materialized by @beep/exiftool at layer build —
+# keep the two in sync (source of truth: packages/drivers/exiftool/src/ExiftoolConfig.ts).
+#
+# Usage:
+#   exiftool -config beepqa.ExifTool_config -G1 -a '-XMP-beepQA:*' <file>
+#   exiftool -config beepqa.ExifTool_config '-XMP-beepQA:sessionId=abc' -o out.png in.png
+
+%Image::ExifTool::UserDefined::beepQA = (
+    GROUPS => { 0 => 'XMP', 1 => 'XMP-beepQA', 2 => 'Image' },
+    NAMESPACE => { 'beepQA' => 'https://ns.beep.sh/qa/1.0/' },
+    WRITABLE => 'string',
+    sessionId         => { },
+    scenarioName      => { },
+    actionId          => { },
+    commitSha         => { },
+    capturedAtEpochMs => { },
+    sourceVideo       => { },
+    clockOffsetMs     => { },
+    toolVersions      => { },
+);
+
+%Image::ExifTool::UserDefined = (
+    'Image::ExifTool::XMP::Main' => {
+        beepQA => { SubDirectory => { TagTable => 'Image::ExifTool::UserDefined::beepQA' } },
+    },
+);
+
+1;  # end

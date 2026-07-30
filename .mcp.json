@@ -32,6 +32,11 @@
       "command": "bunx",
       "args": ["fallow-mcp"]
     },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["chrome-devtools-mcp@latest", "--slim"]
+    },
     "webstorm": {
       "url": "http://127.0.0.1:64542/stream",
       "type": "http",
