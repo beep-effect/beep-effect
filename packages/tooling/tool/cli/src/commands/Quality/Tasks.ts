@@ -516,9 +516,15 @@ const coverageFastCheckSeed = (): string =>
     O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
   );
 
-const coverageEnvironment = (): Record<string, string> => ({
+// Coverage is a hosted ratchet. Pin its CI identity and remove desktop terminal
+// metadata so local baseline generation exercises the same branches as GitHub.
+const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
+  CI: "true",
+  GITHUB_ACTIONS: "true",
   NODE_OPTIONS: coverageNodeOptions(),
+  TERM_PROGRAM: undefined,
+  TERM_PROGRAM_VERSION: undefined,
   VITEST_COVERAGE_RATCHET: "1",
 });
 
@@ -526,7 +532,7 @@ const coverageEnvironment = (): Record<string, string> => ({
 const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
-): Record<string, string> | undefined =>
+): Record<string, string | undefined> | undefined =>
   // fallow-ignore-next-line code-duplication
   includesTurboCoverageTask(tasks, args) ? coverageEnvironment() : undefined;
 

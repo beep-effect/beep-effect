@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T06:30:25.756Z",
-  "git_sha": "b1b99bca1d49a652df9c8047bb49bc571430e21d",
+  "generated_at": "2026-07-30T07:47:17.190Z",
+  "git_sha": "4794c6ddf9dede91e48cc9700fcadfd17b3d82eb",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -143,10 +143,10 @@
     },
     "@beep/chalk": {
       "path": "packages/foundation/capability/chalk",
-      "lines": 94.23,
-      "statements": 93.85,
+      "lines": 94.03,
+      "statements": 93.66,
       "branches": 82.05,
-      "functions": 86.29
+      "functions": 85.78
     },
     "@beep/colors": {
       "path": "packages/foundation/capability/colors",
@@ -683,9 +683,9 @@
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
       "lines": 67.7,
-      "statements": 67.41,
-      "branches": 52.38,
-      "functions": 59.06
+      "statements": 67.42,
+      "branches": 52.35,
+      "functions": 59.08
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",
