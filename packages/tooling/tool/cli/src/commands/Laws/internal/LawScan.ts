@@ -13,6 +13,7 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { A } from "@beep/utils";
 import { Effect, Order, Path } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
 import type { SourceFile } from "ts-morph";
@@ -40,13 +41,16 @@ const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspe
  * @category predicates
  * @since 0.0.0
  */
-export const isExcludedLawScanPath = (excludePaths: ReadonlyArray<string>, filePath: string): boolean => {
+export const isExcludedLawScanPath: {
+  (filePath: string): (excludePaths: ReadonlyArray<string>) => boolean;
+  (excludePaths: ReadonlyArray<string>, filePath: string): boolean;
+} = dual(2, (excludePaths: ReadonlyArray<string>, filePath: string): boolean => {
   const normalized = toPosixPath(filePath);
   return (
     A.some(excludePaths, (excludePath) => normalized === toPosixPath(excludePath)) ||
     isExcludedTypeScriptSourcePath(normalized)
   );
-};
+});
 
 /**
  * Inputs for a single supplemental-law project scan.

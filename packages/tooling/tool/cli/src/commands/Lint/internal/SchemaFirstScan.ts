@@ -94,8 +94,6 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const path = yield* Path.Path;
   const ownerResolver = yield* makeSchemaFirstOwnerResolver();
   const project = yield* makeSchemaFirstProject();
-  const thunkCandidate = () => "candidate" as const;
-  const thunkException = () => "exception" as const;
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
   const pushEntry = (
@@ -139,41 +137,42 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     }
 
     for (const declaration of sourceFile.getInterfaces()) {
-      if (!declaration.isExported()) {
+      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+      if (
+        !SchemaFirstDetectors.isEffectivelyExported(declaration, symbol) ||
+        !SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(declaration)
+      ) {
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectInterfaceReason(declaration);
       pushEntry(
         filePath,
-        declaration.getName(),
+        symbol,
         "exported-interface",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data interface should be modeled as an annotated schema."),
+        "candidate",
+        "Exported pure-data interface should be modeled as an annotated schema.",
         owner
       );
     }
 
     for (const declaration of sourceFile.getTypeAliases()) {
-      if (!declaration.isExported()) {
+      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+      if (!SchemaFirstDetectors.isEffectivelyExported(declaration, symbol)) {
         continue;
       }
       const typeNode = declaration.getTypeNode();
-      if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+      if (
+        typeNode === undefined ||
+        typeNode.getKind() !== SyntaxKind.TypeLiteral ||
+        !SchemaFirstDetectors.isTypeAliasSchemaFirstCandidate(declaration)
+      ) {
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectTypeAliasReason(declaration);
       pushEntry(
         filePath,
-        declaration.getName(),
+        symbol,
         "exported-type-literal",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data type alias should be modeled as an annotated schema."),
+        "candidate",
+        "Exported pure-data type alias should be modeled as an annotated schema.",
         owner
       );
     }
@@ -212,22 +211,24 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
         }
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectStructReason(callExpression);
+      if (!SchemaFirstDetectors.isStructSchemaFirstCandidate(callExpression)) {
+        continue;
+      }
       pushEntry(
         filePath,
         SchemaFirstDetectors.inferStructSymbol(callExpression),
         "object-struct-schema",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Object schema should prefer an annotated S.Class over S.Struct."),
+        "candidate",
+        "Object schema should prefer an annotated S.Class over S.Struct.",
         owner
       );
     }
 
     const functionLikeCandidates: ReadonlyArray<FunctionLikeDeclarationNode> = [
-      ...A.filter(sourceFile.getFunctions(), (declaration) => declaration.isExported()),
+      ...A.filter(sourceFile.getFunctions(), (declaration) => {
+        const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+        return SchemaFirstDetectors.isEffectivelyExported(declaration, symbol);
+      }),
       ...SchemaFirstDetectors.sourceExportedArrowFunctions(sourceFile),
     ];
     const hasFnSchemaSignal = SchemaFirstDetectors.sourceHasFnSchemaSignal(sourceFile);

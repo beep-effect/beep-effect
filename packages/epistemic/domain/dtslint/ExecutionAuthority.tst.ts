@@ -5,6 +5,7 @@ import type {
   DenialReason,
   DraftGrantSet,
   EgressClassification,
+  ExecutionRequestEvaluationOptions,
   ExecutionSettlement,
   ExecutionVerdict,
   evaluateExecutionRequest,
@@ -50,6 +51,7 @@ describe("ExecutionAuthority", () => {
   it("expresses the freeze invariant as parameter types", () => {
     expect<Parameters<typeof addGrant>[0]>().type.toBe<DraftGrantSet>();
     expect<Parameters<typeof evaluateExecutionRequest>[0]>().type.toBe<FrozenGrantSet>();
+    expect<Parameters<typeof evaluateExecutionRequest>[2]>().type.toBe<ExecutionRequestEvaluationOptions>();
   });
 
   it("keeps GrantSet the Draft/Frozen union", () => {

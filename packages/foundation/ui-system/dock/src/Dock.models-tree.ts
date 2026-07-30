@@ -17,18 +17,9 @@ import { AnchoredBox } from "./AnchoredBox.ts";
 import { GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
 import { DockSide } from "./Dock.placement.ts";
 import type { SplitPlacement, TabPlacement } from "./Dock.placement.ts";
+import type { Dual2, Dual3 } from "./internal/Dual.ts";
 
 const $I = $DockId.create("Dock.models-tree");
-
-type Dual2<Self, That, Result> = {
-  (self: Self, that: That): Result;
-  (that: That): (self: Self) => Result;
-};
-
-type Dual3<Self, First, Second, Result> = {
-  (self: Self, first: First, second: Second): Result;
-  (first: First, second: Second): (self: Self) => Result;
-};
 
 type Dual4<Self, First, Second, Third, Result> = {
   (self: Self, first: First, second: Second, third: Third): Result;
@@ -499,6 +490,12 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
     description: "A non-empty ordered tab zipper with one structurally active panel.",
   })
 ) {
+  /**
+   * Constructs a tab zipper from an ordered non-empty panel collection.
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly fromPanels: Dual4<GroupId, A.NonEmptyReadonlyArray<Panel>, PanelId, GroupMetadata, TabsNode> = dual(
     4,
     (

@@ -18,9 +18,11 @@
  */
 
 import { $ApiTransportId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Data, Effect, Number as N, Redacted, Ref, Schedule } from "effect";
+import { Effect, Number as N, Redacted, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -53,32 +55,58 @@ const $I = $ApiTransportId.create("Transport");
  * @category models
  * @since 0.0.0
  */
-export type ApiAuth = Data.TaggedEnum<{
-  NoAuth: {};
-  ApiKeyQueryAuth: { readonly param: string; readonly key: Redacted.Redacted<string> };
-  TokenHeaderAuth: { readonly key: Redacted.Redacted<string> };
-  ApiKeyHeaderAuth: { readonly header: string; readonly key: Redacted.Redacted<string> };
-}>;
+export const ApiAuth = S.TaggedUnion({
+  NoAuth: {},
+  ApiKeyQueryAuth: {
+    key: S.Redacted(S.String),
+    param: S.String,
+  },
+  TokenHeaderAuth: {
+    key: S.Redacted(S.String),
+  },
+  ApiKeyHeaderAuth: {
+    header: S.String,
+    key: S.Redacted(S.String),
+  },
+}).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    NoAuth: () => schema.cases.NoAuth.make({}),
+    ApiKeyQueryAuth: (fields: { readonly key: Redacted.Redacted<string>; readonly param: string }) =>
+      schema.cases.ApiKeyQueryAuth.make(fields),
+    TokenHeaderAuth: (fields: { readonly key: Redacted.Redacted<string> }) => schema.cases.TokenHeaderAuth.make(fields),
+    ApiKeyHeaderAuth: (fields: { readonly header: string; readonly key: Redacted.Redacted<string> }) =>
+      schema.cases.ApiKeyHeaderAuth.make(fields),
+    $is:
+      <Tag extends (typeof schema)["Type"]["_tag"]>(tag: Tag) =>
+      (value: unknown): value is Extract<(typeof schema)["Type"], { readonly _tag: Tag }> =>
+        P.isTagged(tag)(value),
+    $match: schema.match,
+  })),
+  $I.annoteSchema("ApiAuth", {
+    description: "Authentication strategy attached to requests made by the shared API transport.",
+  })
+);
 
 /**
- * Constructors and matchers for {@link ApiAuth}.
+ * Runtime authentication strategy represented by {@link ApiAuth}.
  *
  * @example
  * ```ts
  * import { ApiAuth } from "@beep/api-transport"
  *
- * console.log(ApiAuth.NoAuth()._tag)
+ * const auth: ApiAuth = ApiAuth.NoAuth()
+ * console.log(auth._tag)
  * ```
  *
- * @category constructors
+ * @category models
  * @since 0.0.0
  */
-export const ApiAuth = Data.taggedEnum<ApiAuth>();
+export type ApiAuth = typeof ApiAuth.Type;
 
 const applyAuth =
   (auth: ApiAuth) =>
   (request: HttpClientRequest.HttpClientRequest): HttpClientRequest.HttpClientRequest =>
-    ApiAuth.$match(auth, {
+    ApiAuth.match(auth, {
       ApiKeyHeaderAuth: ({ header, key }) => HttpClientRequest.setHeader(request, header, Redacted.value(key)),
       ApiKeyQueryAuth: ({ key, param }) => HttpClientRequest.setUrlParam(request, param, Redacted.value(key)),
       NoAuth: () => request,
@@ -161,6 +189,51 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
   static readonly fromHeaders = fromRateLimitHeaders;
 }
 
+const ApiTransportDurationNumber = S.declare<number>(P.isNumber, {
+  identifier: $I`ApiTransportDurationNumber`,
+  title: "API Transport Duration Number",
+  description: "A JavaScript number, including the special values accepted by Effect duration inputs.",
+});
+
+const ApiTransportDurationObject = S.Struct({
+  weeks: S.optional(ApiTransportDurationNumber),
+  days: S.optional(ApiTransportDurationNumber),
+  hours: S.optional(ApiTransportDurationNumber),
+  minutes: S.optional(ApiTransportDurationNumber),
+  seconds: S.optional(ApiTransportDurationNumber),
+  milliseconds: S.optional(ApiTransportDurationNumber),
+  microseconds: S.optional(ApiTransportDurationNumber),
+  nanoseconds: S.optional(ApiTransportDurationNumber),
+});
+
+type ApiTransportDurationString = Extract<Duration.Input, string>;
+
+const apiTransportDurationStringPattern =
+  /^(-?\d+(?:\.\d+)?)\s+(nanos?|micros?|millis?|seconds?|minutes?|hours?|days?|weeks?)$/;
+
+const ApiTransportDurationString = S.declare(
+  (input: unknown): input is ApiTransportDurationString =>
+    P.isString(input) &&
+    (input === "Infinity" || input === "-Infinity" || O.isSome(Str.match(apiTransportDurationStringPattern)(input)))
+).pipe(
+  $I.annoteSchema("ApiTransportDurationString", {
+    description: "A duration string accepted by Effect, including signed fractions, leading zeros, and infinities.",
+  })
+);
+
+const ApiTransportDurationInput = S.Union([
+  S.Duration,
+  ApiTransportDurationNumber,
+  S.BigInt,
+  S.Tuple([ApiTransportDurationNumber, ApiTransportDurationNumber]),
+  ApiTransportDurationString,
+  ApiTransportDurationObject,
+]).pipe(
+  $I.annoteSchema("ApiTransportDurationInput", {
+    description: "Every duration input shape accepted by Effect transport scheduling and rate limiting.",
+  })
+);
+
 /**
  * Options accepted by {@link makeApiTransport}.
  *
@@ -185,13 +258,45 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
  * @category models
  * @since 0.0.0
  */
-export interface ApiTransportOptions {
-  readonly auth: ApiAuth;
-  readonly key: string;
-  readonly rateLimit: { readonly limit: number; readonly window: Duration.Input };
-  readonly retryBaseDelay?: Duration.Input | undefined;
-  readonly retryTimes?: number | undefined;
-}
+export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTransportOptions`)(
+  {
+    auth: ApiAuth.pipe(
+      $I.annoteKey("ApiTransportOptions.auth", {
+        description: "Authentication strategy attached to every outgoing request.",
+      })
+    ),
+    key: S.String.pipe(
+      $I.annoteKey("ApiTransportOptions.key", {
+        description: "Stable key used to identify the transport's rate-limit bucket.",
+      })
+    ),
+    rateLimit: S.Struct({
+      limit: ApiTransportDurationNumber.pipe(
+        $I.annoteKey("ApiTransportOptions.rateLimit.limit", {
+          description: "Initial maximum number of requests permitted in the configured window.",
+        })
+      ),
+      window: ApiTransportDurationInput.pipe(
+        $I.annoteKey("ApiTransportOptions.rateLimit.window", {
+          description: "Initial rate-limit window accepted by Effect's duration APIs.",
+        })
+      ),
+    }),
+    retryBaseDelay: S.optional(ApiTransportDurationInput).pipe(
+      $I.annoteKey("ApiTransportOptions.retryBaseDelay", {
+        description: "Optional base delay for the jittered exponential retry schedule.",
+      })
+    ),
+    retryTimes: S.optional(ApiTransportDurationNumber).pipe(
+      $I.annoteKey("ApiTransportOptions.retryTimes", {
+        description: "Optional maximum number of transient transport retries.",
+      })
+    ),
+  },
+  $I.annote("ApiTransportOptions", {
+    description: "Authentication, rate-limit, and retry options for the shared API transport.",
+  })
+) {}
 
 /**
  * The shared transport transformer plus its observable rate-limit accessor.

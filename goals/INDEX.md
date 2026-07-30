@@ -12,7 +12,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | --- | --- | --- | --- | --- |
 | [agentic-professional-runtime](./agentic-professional-runtime/README.md) | Agentic Professional Runtime | 3/5 | 2026-07-14 | Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slice… |
 | [ai-metrics-stack](./ai-metrics-stack/README.md) | AI Metrics Stack | 6/8 | 2026-07-14 | — |
-| [citation-extraction-engine](./citation-extraction-engine/README.md) | Citation Extraction Engine | 0/4 | 2026-07-14 | Port the eyecite extraction pipeline into Effect over existing law-practice citation values with pinned parity, exact s… |
+| [citation-extraction-engine](./citation-extraction-engine/README.md) | Citation Extraction Engine | 0/6 | 2026-07-30 | Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, … |
 | [citation-verified-span-substrate](./citation-verified-span-substrate/README.md) | Citation Verified Span Substrate | 0/4 | 2026-07-14 | Deliver generic matter-scoped verified TextAnchor construction with canonical UTF-16 raw offsets, deterministic locator… |
 | [court-reporter-vocabulary](./court-reporter-vocabulary/README.md) | Court Reporter Vocabulary | 1/4 | 2026-07-25 | Deliver deterministic versioned courts-db and reporters-db artifacts with stable public IDs, lifecycle-safe drift, and … |
 | [effect-v4-workflow-engine-spike](./effect-v4-workflow-engine-spike/README.md) | Effect v4 Workflow Engine Spike | 0/4 | 2026-07-14 | Prove a persistence-backed Effect v4 WorkflowEngine adapter survives real process kill/restart and hand its explicit du… |

@@ -16,6 +16,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -265,7 +266,10 @@ const backfillFor = (slug: string): O.Option<GoalManifestBackfill> =>
  * @category constructors
  * @since 0.0.0
  */
-export const buildBackfillManifestText = (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string => {
+export const buildBackfillManifestText: {
+  (readmeText: O.Option<string>): (backfill: GoalManifestBackfill) => string;
+  (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string;
+} = dual(2, (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string => {
   const title = pipe(
     readmeText,
     O.flatMap(readmeTitle),
@@ -296,7 +300,7 @@ export const buildBackfillManifestText = (backfill: GoalManifestBackfill, readme
     },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;
-};
+});
 
 /**
  * Planned migration outcome for one goal packet.

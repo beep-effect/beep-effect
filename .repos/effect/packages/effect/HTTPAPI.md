@@ -1036,7 +1036,7 @@ Layer.launch(ApiLive).pipe(NodeRuntime.runMain)
 You can test the endpoint by sending the headers:
 
 ```sh
-curl -H "X-API-Key: 1234567890" -H "X-Request-ID: 1234567890" http://localhost:3000/users # gitleaks:allow
+curl -H "X-API-Key: 1234567890" -H "X-Request-ID: 1234567890" http://localhost:3000/users
 ```
 
 The server validates these headers against the declared schema before handling the request.

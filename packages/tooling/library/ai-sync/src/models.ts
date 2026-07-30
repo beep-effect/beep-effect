@@ -446,7 +446,7 @@ export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyn
   })
 ) {
   static readonly decodeArrayEffect = S.decodeUnknownEffect(S.Array(AiSyncSourceMetadata));
-  static readonly identityEquivalence = S.toEquivalence(AiSyncSourceMetadataIdentity);
+  static readonly identityEquivalence = SchemaUtils.toEquivalence(AiSyncSourceMetadataIdentity);
 
   static readonly toIdentity = (source: AiSyncSourceMetadata): AiSyncSourceMetadataIdentity =>
     AiSyncSourceMetadataIdentity.make({

@@ -1,6 +1,7 @@
 {
   "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
   "enabledMcpjsonServers": [],
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "serena@claude-plugins-official": false,

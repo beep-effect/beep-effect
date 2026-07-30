@@ -26,33 +26,57 @@ import { Clock, Context, Effect, HashMap, Layer, Ref } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NodeId } from "../EffectGraph.ts";
+import { NodeId, NodeMetadata } from "../EffectGraph.ts";
+import { ExecutionId, ExecutionMetrics } from "./Types.ts";
 import type { StorageError } from "./Errors.ts";
-import type { OperationResult } from "./Types.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/ResultStore");
+
+const AnyGraphNode = S.Struct({
+  data: S.Unknown,
+  id: NodeId,
+  metadata: S.Struct(NodeMetadata.fields),
+  parentId: S.Option(NodeId),
+}).pipe(
+  $I.annoteSchema("AnyGraphNode", {
+    description: "Graph node whose payload is intentionally type-erased at the result-store boundary.",
+  })
+);
 
 /**
  * Type-erased operation result stored in the cache.
  *
  * @remarks
- * The result store is heterogeneous: one execution may cache string children and
- * the next may cache entity nodes. Values therefore cross the cache boundary as
- * `unknown`; callers should rely on the operation they are running, or decode
- * with a schema, before treating cached payloads as a concrete node type.
+ * The result store is heterogeneous: one execution may cache string children
+ * and the next may cache entity nodes. Values therefore cross the cache
+ * boundary as `unknown`; callers should decode with their operation's schema
+ * before treating cached payloads as a concrete node type.
  *
  * @example
  * ```ts
- * import type { AnyOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
+ * import { AnyOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
+ * import * as S from "effect/Schema"
  *
- * const countErrors = (result: AnyOperationResult) => result.errors.length
- * console.log(countErrors)
+ * const isCachedResult = S.is(AnyOperationResult)
+ * console.log(isCachedResult)
  * ```
  *
  * @since 0.0.0
  * @category models
  */
-export type AnyOperationResult = OperationResult<unknown, unknown>;
+export class AnyOperationResult extends S.Class<AnyOperationResult>($I`AnyOperationResult`)(
+  {
+    errors: S.Array(S.Unknown),
+    executionId: ExecutionId,
+    metrics: S.Struct(ExecutionMetrics.fields),
+    newNodes: S.Array(AnyGraphNode),
+    originalGraph: S.Unknown,
+    timestamp: S.Finite,
+  },
+  $I.annote("AnyOperationResult", {
+    description: "Type-erased operation result stored in the heterogeneous graph-operation cache.",
+  })
+) {}
 
 // =============================================================================
 // Keys & Stored Values
@@ -111,12 +135,17 @@ export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
  * @since 0.0.0
  * @category models
  */
-export interface StoredResult {
-  readonly hits: number;
-  readonly key: ResultKey;
-  readonly result: AnyOperationResult;
-  readonly timestamp: number;
-}
+export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
+  {
+    hits: NonNegativeInt,
+    key: S.Struct(ResultKey.fields),
+    result: AnyOperationResult,
+    timestamp: S.Finite,
+  },
+  $I.annote("StoredResult", {
+    description: "Cached graph-operation result with its key, insertion timestamp, and accumulated hit count.",
+  })
+) {}
 
 /**
  * Snapshot of the in-memory result-store cache.
@@ -236,10 +265,14 @@ const makeResultStore = Effect.gen(function* () {
         onSome: (stored) =>
           Effect.as(
             Ref.update(storeRef, (m) =>
-              HashMap.set(m, keyStr, {
-                ...stored,
-                hits: stored.hits + 1,
-              })
+              HashMap.set(
+                m,
+                keyStr,
+                StoredResult.make({
+                  ...stored,
+                  hits: NonNegativeInt.make(stored.hits + 1),
+                })
+              )
             ),
             O.some(stored.result)
           ),
@@ -273,7 +306,12 @@ const makeResultStore = Effect.gen(function* () {
       2,
       Effect.fn("ResultStore.store")(function* (key: ResultKey, result: AnyOperationResult) {
         const timestamp = yield* Clock.currentTimeMillis;
-        const stored: StoredResult = { hits: 0, key, result, timestamp };
+        const stored = StoredResult.make({
+          hits: NonNegativeInt.make(0),
+          key,
+          result: AnyOperationResult.make(result),
+          timestamp,
+        });
         yield* Ref.update(storeRef, (map) => HashMap.set(map, ResultKey.toString(key), stored));
       })
     ),

@@ -9,8 +9,11 @@ import {
   makeOpenClawGeneration,
   makeOpenClawStackArgsFromConfigValues,
   OpenClawBackupConfig,
+  OpenClawBackupShipScriptInput,
+  OpenClawBundleHashInput,
   OpenClawDeploymentConfig,
   OpenClawExpectedIdentity,
+  OpenClawGenerationIdentityScriptInput,
   OpenClawPulumiConfigValues,
   OpenClawStackArgs,
   OpenClawWorkstationPaths,
@@ -333,6 +336,21 @@ describe("@beep/infra OpenClaw", () => {
     expectSchemaRoundTrip(OpenClawWorkstationPaths);
     expectSchemaRoundTrip(OpenClawDeploymentConfig);
     expectSchemaRoundTrip(OpenClawBackupConfig);
+    expectSchemaRoundTrip(OpenClawBundleHashInput);
+  });
+
+  it("models renderer input contracts as schemas", () => {
+    const backup = OpenClawBackupConfig.make({
+      passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+    });
+    const generationIdentityInput = OpenClawGenerationIdentityScriptInput.make({
+      generation: defaultGeneration,
+      identity,
+    });
+    const backupInput = OpenClawBackupShipScriptInput.make({ backup, generation: defaultGeneration });
+
+    expect(S.is(OpenClawGenerationIdentityScriptInput)(generationIdentityInput)).toBe(true);
+    expect(S.is(OpenClawBackupShipScriptInput)(backupInput)).toBe(true);
   });
 
   it("addresses a generation by the length-delimited config/persona/skill/compatibility bundle", () => {

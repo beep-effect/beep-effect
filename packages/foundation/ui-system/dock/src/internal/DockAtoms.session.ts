@@ -43,6 +43,12 @@ interface DockAtomSessionShape {
 /** Per-registry capability that serializes every stateful session operation. */
 export class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {}
 
+/**
+ * Constructs the session layer bound to one dock atom graph.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeDockAtomSessionLayer = (
   stateAtom: Atom.Writable<DockWorkspace>,
   operationResultAtom: Atom.Writable<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>,

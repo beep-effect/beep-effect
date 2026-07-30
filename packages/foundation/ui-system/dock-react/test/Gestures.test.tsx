@@ -55,7 +55,7 @@ const mount = Effect.fn("GesturesTest.mount")(function* (twoGroups = false) {
   const graph = yield* makeDockAtoms(workspace(twoGroups));
   let api: DockviewAdapterApi | undefined;
   render(<DockviewReact graph={graph} components={{}} options={{ gap: 8 }} onReady={(event) => (api = event.api)} />);
-  resize(screen.getByTestId("dockview-react"), 800, 400);
+  resize(screen.getByTestId("dockview-react"), { width: 800, height: 400 });
   return {
     graph,
     get api() {

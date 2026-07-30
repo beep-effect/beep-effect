@@ -174,30 +174,33 @@ const minimumFloatingExtent = 32;
  * @category projections
  * @since 0.0.0
  */
-export const resolveAnchoredBox = (anchoredBox: AnchoredBox, container: DockBox): DockBox => {
-  const width = N.min(container.width, N.max(minimumFloatingExtent, anchoredBox.width));
-  const height = N.min(container.height, N.max(minimumFloatingExtent, anchoredBox.height));
-  const rawLeft =
-    anchoredBox._tag === "TopLeft" || anchoredBox._tag === "BottomLeft"
-      ? N.sum(container.left, anchoredBox.left)
-      : N.subtract(N.sum(container.left, container.width), N.sum(anchoredBox.right, width));
-  const rawTop =
-    anchoredBox._tag === "TopLeft" || anchoredBox._tag === "TopRight"
-      ? N.sum(container.top, anchoredBox.top)
-      : N.subtract(N.sum(container.top, container.height), N.sum(anchoredBox.bottom, height));
-  return DockBox.make({
-    left: N.clamp(rawLeft, {
-      minimum: container.left,
-      maximum: N.subtract(N.sum(container.left, container.width), width),
-    }),
-    top: N.clamp(rawTop, {
-      minimum: container.top,
-      maximum: N.subtract(N.sum(container.top, container.height), height),
-    }),
-    width,
-    height,
-  });
-};
+export const resolveAnchoredBox: Dual2<AnchoredBox, DockBox, DockBox> = dual(
+  2,
+  (anchoredBox: AnchoredBox, container: DockBox): DockBox => {
+    const width = N.min(container.width, N.max(minimumFloatingExtent, anchoredBox.width));
+    const height = N.min(container.height, N.max(minimumFloatingExtent, anchoredBox.height));
+    const rawLeft =
+      anchoredBox._tag === "TopLeft" || anchoredBox._tag === "BottomLeft"
+        ? N.sum(container.left, anchoredBox.left)
+        : N.subtract(N.sum(container.left, container.width), N.sum(anchoredBox.right, width));
+    const rawTop =
+      anchoredBox._tag === "TopLeft" || anchoredBox._tag === "TopRight"
+        ? N.sum(container.top, anchoredBox.top)
+        : N.subtract(N.sum(container.top, container.height), N.sum(anchoredBox.bottom, height));
+    return DockBox.make({
+      left: N.clamp(rawLeft, {
+        minimum: container.left,
+        maximum: N.subtract(N.sum(container.left, container.width), width),
+      }),
+      top: N.clamp(rawTop, {
+        minimum: container.top,
+        maximum: N.subtract(N.sum(container.top, container.height), height),
+      }),
+      width,
+      height,
+    });
+  }
+);
 
 /**
  * Options for gaps, sash hit targets, and leaf minima.

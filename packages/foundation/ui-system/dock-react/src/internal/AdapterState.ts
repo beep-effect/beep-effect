@@ -142,6 +142,12 @@ export const makeOperation = (
   });
 };
 
+/**
+ * Returns the memoized adapter state for a graph and its geometry configuration.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const adapterState = (
   graph: DockAtomGraph,
   gap: number,

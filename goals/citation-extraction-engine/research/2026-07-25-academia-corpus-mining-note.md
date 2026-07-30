@@ -1,5 +1,14 @@
 # Corpus dispatch note — academia-corpus-mining (2026-07-25)
 
+> **Historical, non-normative input (clarified 2026-07-30).** This note predates
+> the 2026-07-29 capability-parity and free-schema-rebuild decisions. References
+> below to a “locked eyecite port,” preserved existing-value taxonomy, or an
+> exact narrow-v1 completion scope are superseded by `SPEC.md`. Current forms
+> are only the first implementation slice. Interpret durable stage identity as
+> document-local `CitationMentionId`/`CitationAuthorityId`, never persisted
+> `LawPractice.CitationId`. Argument-role ideas remain downstream research, not
+> engine scope.
+
 - **Route:** attach-to `goals/citation-extraction-engine` (high priority)
 
 - **Source packet:** `explorations/academia-corpus-mining` (align-stage dispatch)
@@ -12,9 +21,10 @@
 
 The routed insight is: preserve stage identity, exact anchors, ambiguity,
 alternative IRIs, argument roles, and unsupported slots. It sharpens the
-target's existing clean/tokenize/extract/group/resolve diagnostics without
-changing its locked eyecite port, existing-value output taxonomy, or v1 citation
-forms ([target README](../README.md); [target SPEC](../SPEC.md)).
+target's clean/tokenize/extract/group/resolve diagnostics. Its original
+assumptions about a locked implementation shape, preserved output taxonomy, and
+narrow completion scope no longer apply ([target README](../README.md);
+[target SPEC](../SPEC.md)).
 
 Across the clusters, extraction is consistently a sequence of reviewable
 candidate transformations rather than a jump from surface text to canonical
@@ -30,7 +40,7 @@ or interpretation is true.
 
 ## Distilled requirements
 
-1. **Keep one durable candidate identity across every pipeline stage.** A parity
+1. **Keep one document-local candidate identity across every pipeline stage.** A parity
    fixture should prove that clean, tokenize, extract, group, and resolve outputs
    can be joined to the same candidate while retaining the original surface form,
    source revision, producer/run identity, and stage-local outcome. Evidence:
@@ -139,10 +149,12 @@ or interpretation is true.
 
 ## Tensions and limits
 
-- The target's v1 scope remains exactly full/short/Id./supra case citations and
-  ratified 35 U.S.C./37 C.F.R. fixtures. Argument-role fixtures preserve inputs
-  for downstream consumers; they do not authorize a new argument ontology,
-  proof evaluator, or ground-before-cite workflow.
+- Full/short/Id./supra case citations and 35 U.S.C./37 C.F.R. fixtures are the
+  first internal slice, not the completion scope. Official U.S.C. behavior is
+  canonical `FullLawCitation`; C.F.R. classification remains a P0 audit.
+  Argument-role fixtures preserve inputs for downstream consumers; they do not
+  authorize a new argument ontology, proof evaluator, or ground-before-cite
+  workflow.
 
 - Exact UTF-16 anchors prove fidelity inside a named text coordinate space, not
   completeness for scans, tables, signatures, or image-only evidence. The

@@ -10,6 +10,7 @@
 
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
+import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
@@ -161,15 +162,40 @@ describe("Operation constructors", () => {
 });
 
 describe("ResultStore", () => {
-  const mkResult = Effect.gen(function* () {
+  const mkResultFixture = Effect.gen(function* () {
     const node = yield* EG.makeNode<unknown>("payload");
-    return yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+    const result = yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
       originalGraph: O.none(),
       newNodes: [node],
       errors: [],
       metrics: Types.ExecutionMetrics.empty(),
     });
+    return {
+      key: ResultStore.ResultKey.new("op", node.id),
+      result,
+    };
   });
+
+  const mkResult = Effect.map(mkResultFixture, ({ result }) => result);
+
+  it.effect(
+    "round-trips schema-backed cache entries with type-erased operation results",
+    Effect.fnUntraced(function* () {
+      const { key, result } = yield* mkResultFixture;
+      const stored = ResultStore.StoredResult.make({
+        hits: NonNegativeInt.make(0),
+        key,
+        result,
+        timestamp: result.timestamp,
+      });
+      const encoded = yield* S.encodeEffect(ResultStore.StoredResult)(stored);
+      const decoded = yield* S.decodeUnknownEffect(ResultStore.StoredResult)(encoded);
+
+      expect(S.is(ResultStore.StoredResult)(decoded)).toBe(true);
+      expect(S.is(ResultStore.AnyOperationResult)(decoded.result)).toBe(true);
+      expect(decoded.result.executionId).toBe(result.executionId);
+    })
+  );
 
   it.effect(
     "stores and retrieves a result, incrementing hits",

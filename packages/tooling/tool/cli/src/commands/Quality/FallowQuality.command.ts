@@ -10,6 +10,7 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn, NonNegativeInt } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -318,7 +319,6 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
     schema_version: S.Union([S.Finite, S.String]),
     version: S.String,
     elapsed_ms: S.Finite,
-
     summary: S.Struct({
       security_findings: S.Finite,
       unresolved_edge_files: S.Finite,
@@ -371,6 +371,10 @@ type FallowCommandOptions = {
   readonly base: string;
   readonly check: boolean;
   readonly out: string;
+  readonly quiet: boolean;
+};
+type FallowAuditDiffFallbackArgsOptions = {
+  readonly diffPath: string;
   readonly quiet: boolean;
 };
 type ProcessResult = {
@@ -938,41 +942,45 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
  * Build the fallback Fallow audit argv used when base-snapshot worktrees are unavailable.
  *
  * @param base - Base ref passed through to Fallow audit.
- * @param quiet - Whether the fallback should pass Fallow's `--quiet` flag.
- * @param diffPath - Path to the generated diff file consumed by Fallow audit.
+ * @param options - Diff path and whether the fallback should pass Fallow's `--quiet` flag.
  * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
  * @example
  * ```ts
  * import { fallowAuditDiffFallbackArgsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
- * const args = fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")
+ * const args = fallowAuditDiffFallbackArgsForTesting("origin/main", {
+ *   diffPath: "/tmp/audit.diff",
+ *   quiet: true
+ * })
  * console.log(args.includes("--diff-file"), args[args.length - 1])
  * // true all
  * ```
  * @category testing
  * @since 0.0.0
  */
-export const fallowAuditDiffFallbackArgsForTesting = (
-  base: string,
-  quiet: boolean,
-  diffPath: string
-): ReadonlyArray<string> => [
-  "run",
-  "fallow",
-  "--",
-  "audit",
-  "--config",
-  ".fallowrc.jsonc",
-  "--format",
-  "json",
-  ...(quiet ? ["--quiet"] : []),
-  "--base",
-  base,
-  "--diff-file",
-  diffPath,
-  "--gate",
-  "all",
-];
+export const fallowAuditDiffFallbackArgsForTesting: {
+  (options: FallowAuditDiffFallbackArgsOptions): (base: string) => ReadonlyArray<string>;
+  (base: string, options: FallowAuditDiffFallbackArgsOptions): ReadonlyArray<string>;
+} = dual(
+  2,
+  (base: string, options: FallowAuditDiffFallbackArgsOptions): ReadonlyArray<string> => [
+    "run",
+    "fallow",
+    "--",
+    "audit",
+    "--config",
+    ".fallowrc.jsonc",
+    "--format",
+    "json",
+    ...(options.quiet ? ["--quiet"] : []),
+    "--base",
+    base,
+    "--diff-file",
+    options.diffPath,
+    "--gate",
+    "all",
+  ]
+);
 
 const wrapperArgs = (feature: FallowFeature, options: FallowCommandOptions, out: string): ReadonlyArray<string> => [
   "quality",
@@ -1283,7 +1291,7 @@ const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiff
       return yield* collectProcessOutput(
         repoRoot,
         "bun",
-        fallowAuditDiffFallbackArgsForTesting(options.base, options.quiet, diffPath)
+        fallowAuditDiffFallbackArgsForTesting(options.base, { diffPath, quiet: options.quiet })
       );
     }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)

@@ -30,7 +30,7 @@ import {
   runTurnAtom,
   turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
-import { ChatComposer, defaultChatSlashItems } from "@beep/editor";
+import { ChatComposer, defaultChatSlashItems, MentionOption } from "@beep/editor";
 import { Button } from "@beep/ui/components/button";
 import { A, O, Str } from "@beep/utils";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
@@ -45,7 +45,7 @@ import {
 } from "./Composer.atoms.ts";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { EditTarget } from "@beep/agents-client/Chat.atoms";
-import type { MentionOption, MentionSource } from "@beep/editor";
+import type { MentionSource } from "@beep/editor";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as Md from "@beep/md/Md.model";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -65,14 +65,14 @@ const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.D
 // mentions. Real entity / prior-art / persona sources land with the knowledge
 // graph; mentions serialize to plain text, so swapping the source is additive.
 const MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
-  { id: "assistant", label: "assistant", hint: "the workspace agent" },
-  { id: "workspace", label: "workspace", hint: "the active workspace" },
-  { id: "thread", label: "thread", hint: "this conversation" },
+  MentionOption.make({ id: "assistant", label: "assistant", hint: "the workspace agent" }),
+  MentionOption.make({ id: "workspace", label: "workspace", hint: "the active workspace" }),
+  MentionOption.make({ id: "thread", label: "thread", hint: "this conversation" }),
 ];
 
 const mentionSource: MentionSource = (query) => {
-  const q = query.toLowerCase();
-  return A.filter(MENTION_CANDIDATES, (candidate) => Str.includes(q)(candidate.label.toLowerCase()));
+  const q = Str.toLowerCase(query);
+  return A.filter(MENTION_CANDIDATES, (candidate) => Str.includes(q)(Str.toLowerCase(candidate.label)));
 };
 
 /**

@@ -10,6 +10,7 @@ import { DEFAULT_AI_METRICS_DATA_ROOT } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import { decodeTaskManifestJson, encodeAgentEffectivenessEvalScoreReportJson } from "../AgentEffectiveness.schemas.ts";
@@ -79,12 +80,19 @@ export const aggregateLawFraction = (scores: Parameters<typeof EvalScoring.aggre
  * @category scoring
  * @since 0.0.0
  */
-export const buildAgentEffectivenessEvalScoreReport = (
-  task: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[0],
-  completion: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[1],
-  law: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[2]
-): ReturnType<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport> =>
-  EvalScoring.buildAgentEffectivenessEvalScoreReport(task, completion, law);
+export const buildAgentEffectivenessEvalScoreReport: {
+  (
+    completion: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[1],
+    law: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[2]
+  ): (
+    task: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[0]
+  ) => ReturnType<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>;
+  (
+    task: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[0],
+    completion: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[1],
+    law: Parameters<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>[2]
+  ): ReturnType<typeof EvalScoring.buildAgentEffectivenessEvalScoreReport>;
+} = dual(3, EvalScoring.buildAgentEffectivenessEvalScoreReport);
 
 /**
  * Score one SkillOpt eval fixture directory.

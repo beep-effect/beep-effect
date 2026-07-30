@@ -73,6 +73,18 @@ type PublicApiCandidate = {
   readonly callableType: Type;
 };
 
+type CallableValueCandidateInput = {
+  readonly file: string;
+  readonly qualifiedName: string;
+  readonly kind: DualArityEntryKind;
+  readonly owner: string;
+  readonly line: number;
+  readonly column: number;
+  readonly callableType: Type;
+  readonly parameterOwner: O.Option<ParameterOwner>;
+  readonly dualCall: O.Option<DualCallInfo>;
+};
+
 type PermanentDualArityExclusion = {
   readonly file: string;
   readonly qualifiedName: string;
@@ -240,7 +252,7 @@ const isFunctionExportInitializer = (
 };
 
 const SCHEMA_CALLABLE_VALUE_FACTORY_PATTERN =
-  /^(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)$/u;
+  /^(?:(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)|SchemaUtils\.toEquivalence)$/u;
 
 const isOrderValueType = (type: Type): boolean => {
   const typeText = type.getText();
@@ -290,11 +302,27 @@ const hasRestParameter = (parameters: ReadonlyArray<ParameterDeclaration>): bool
 const hasDeferredPublicParameterShape = (parameters: ReadonlyArray<ParameterDeclaration>): boolean =>
   hasRestParameter(parameters) || getRequiredParameterCount(parameters) < 2;
 
+const hasRequiredTypeSignatureShape = (callableType: Type): boolean =>
+  A.some(getNonTemplateCallSignatures(callableType), (signature) => {
+    const signatureParameters = signature.getParameters();
+    const declarations = pipe(
+      signatureParameters,
+      A.map((parameter) =>
+        pipe(O.fromNullishOr(parameter.getValueDeclaration()), O.filter(Node.isParameterDeclaration))
+      ),
+      A.getSomes
+    );
+    return declarations.length === signatureParameters.length && !hasDeferredPublicParameterShape(declarations);
+  });
+
 const shouldDeferPublicParameterShape = (
   parameters: ReadonlyArray<ParameterDeclaration>,
   callableType: Type,
   parameterCount: number
-): boolean => hasDeferredPublicParameterShape(parameters) && !hasDualSignatures(callableType, parameterCount);
+): boolean =>
+  (A.isReadonlyArrayEmpty(parameters)
+    ? !hasRequiredTypeSignatureShape(callableType)
+    : hasDeferredPublicParameterShape(parameters)) && !hasDualSignatures(callableType, parameterCount);
 
 const getCallableParameterCount = (
   callableType: Type,
@@ -574,6 +602,47 @@ const collectFunctionCandidate = (
   });
 };
 
+const collectCallableValueCandidate = ({
+  file,
+  qualifiedName,
+  kind,
+  owner,
+  line,
+  column,
+  callableType,
+  parameterOwner,
+  dualCall,
+}: CallableValueCandidateInput): O.Option<PublicApiCandidate> =>
+  pipe(
+    getCallableParameterCount(callableType, parameterOwner, dualCall),
+    O.filter((parameterCount) => parameterCount >= 2),
+    O.flatMap((parameterCount) =>
+      pipe(
+        parameterOwner,
+        O.map((ownerNode) => ownerNode.getParameters()),
+        O.getOrElse(A.empty),
+        O.liftPredicate((parameters) => !shouldDeferPublicParameterShape(parameters, callableType, parameterCount)),
+        O.map((parameters) => ({
+          file,
+          qualifiedName,
+          kind,
+          owner,
+          line,
+          column,
+          parameterCount,
+          firstParameterName: pipe(
+            A.get(parameters, 0),
+            O.map((parameter) => parameter.getName())
+          ),
+          restParameters: A.drop(parameters, 1),
+          thirdParameterType: getThirdParameterType(callableType, parameterOwner, parameterCount),
+          dualCall,
+          callableType,
+        }))
+      )
+    )
+  );
+
 const collectVariableCandidate = (
   sourceFile: SourceFile,
   filePath: string,
@@ -611,40 +680,17 @@ const collectVariableCandidate = (
   ) {
     return O.none();
   }
-  const parameterCount = getCallableParameterCount(callableType, parameterOwner, dualCall);
-  if (O.isNone(parameterCount) || parameterCount.value < 2) {
-    return O.none();
-  }
-
   const position = sourceFile.getLineAndColumnAtPos(nameNode.getStart());
-  const parameters = pipe(
-    parameterOwner,
-    O.map((ownerNode) => ownerNode.getParameters()),
-    O.getOrElse(A.empty)
-  );
-  if (
-    !A.isReadonlyArrayEmpty(parameters) &&
-    shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)
-  ) {
-    return O.none();
-  }
-
-  return O.some({
+  return collectCallableValueCandidate({
     file: filePath,
     qualifiedName: nameNode.getText(),
     kind: "exported-const-function",
     owner,
     line: position.line,
     column: position.column,
-    parameterCount: parameterCount.value,
-    firstParameterName: pipe(
-      A.get(parameters, 0),
-      O.map((parameter) => parameter.getName())
-    ),
-    restParameters: A.drop(parameters, 1),
-    thirdParameterType: getThirdParameterType(callableType, parameterOwner, parameterCount.value),
     dualCall,
     callableType,
+    parameterOwner,
   });
 };
 
@@ -723,6 +769,9 @@ const collectStaticPropertyCandidate = (
   if (P.isUndefined(initializer) && A.isReadonlyArrayEmpty(callableType.getCallSignatures())) {
     return O.none();
   }
+  if (!P.isUndefined(initializer) && isNonHelperCallableValue(initializer, callableType)) {
+    return O.none();
+  }
 
   const dualCall = P.isUndefined(initializer) ? O.none<DualCallInfo>() : getDualCallInfo(initializer, bindings);
   const parameterOwner = P.isUndefined(initializer)
@@ -731,40 +780,17 @@ const collectStaticPropertyCandidate = (
   if (isLegitimateConstructorFactory(property, callableType, parameterOwner)) {
     return O.none();
   }
-  const parameterCount = getCallableParameterCount(callableType, parameterOwner, dualCall);
-  if (O.isNone(parameterCount) || parameterCount.value < 2) {
-    return O.none();
-  }
-
   const position = sourceFile.getLineAndColumnAtPos(property.getNameNode().getStart());
-  const parameters = pipe(
-    parameterOwner,
-    O.map((ownerNode) => ownerNode.getParameters()),
-    O.getOrElse(A.empty)
-  );
-  if (
-    !A.isReadonlyArrayEmpty(parameters) &&
-    shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)
-  ) {
-    return O.none();
-  }
-
-  return O.some({
+  return collectCallableValueCandidate({
     file: filePath,
     qualifiedName,
     kind: "static-function-property",
     owner,
     line: position.line,
     column: position.column,
-    parameterCount: parameterCount.value,
-    firstParameterName: pipe(
-      A.get(parameters, 0),
-      O.map((parameter) => parameter.getName())
-    ),
-    restParameters: A.drop(parameters, 1),
-    thirdParameterType: getThirdParameterType(callableType, parameterOwner, parameterCount.value),
     dualCall,
     callableType,
+    parameterOwner,
   });
 };
 
@@ -815,25 +841,18 @@ const collectCandidatesForSourceFile = (
     }
 
     for (const member of classDeclaration.getMembers()) {
-      if (Node.isMethodDeclaration(member)) {
-        const qualifiedName = `${className}.${member.getName()}`;
-        const candidate = collectStaticMethodCandidate(sourceFile, filePath, owner, className, member);
-        if (O.isSome(candidate)) {
-          candidates = A.append(candidates, candidate.value);
-        } else if (isLegitimateConstructorStaticMember(filePath, qualifiedName, member, bindings)) {
-          excludedLegitimate += 1;
-        }
+      if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member)) {
         continue;
       }
 
-      if (Node.isPropertyDeclaration(member)) {
-        const qualifiedName = `${className}.${member.getName()}`;
-        const candidate = collectStaticPropertyCandidate(sourceFile, filePath, owner, className, member, bindings);
-        if (O.isSome(candidate)) {
-          candidates = A.append(candidates, candidate.value);
-        } else if (isLegitimateConstructorStaticMember(filePath, qualifiedName, member, bindings)) {
-          excludedLegitimate += 1;
-        }
+      const qualifiedName = `${className}.${member.getName()}`;
+      const candidate = Node.isMethodDeclaration(member)
+        ? collectStaticMethodCandidate(sourceFile, filePath, owner, className, member)
+        : collectStaticPropertyCandidate(sourceFile, filePath, owner, className, member, bindings);
+      if (O.isSome(candidate)) {
+        candidates = A.append(candidates, candidate.value);
+      } else if (isLegitimateConstructorStaticMember(filePath, qualifiedName, member, bindings)) {
+        excludedLegitimate += 1;
       }
     }
   }

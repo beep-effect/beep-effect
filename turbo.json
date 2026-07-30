@@ -60,6 +60,7 @@
         "_next/**",
         ".output/**",
         ".vercel/output/**",
+        "storybook-static/**",
         "**/node_modules/.tmp/*.tsbuildinfo",
         "!**/.turbo/**",
         "!.next/cache/**"

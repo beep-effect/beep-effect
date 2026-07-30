@@ -76,7 +76,7 @@ const mount = Effect.fn("FloatingTest.mount")(function* (floating = true, twoDoc
   const graph = yield* makeDockAtoms(workspace(floating, twoDocked));
   const Input = (props: DockPanelProps) => <input data-testid={`input-${props.api.id}`} defaultValue="kept" />;
   render(<DockviewReact graph={graph} components={{ input: Input }} options={{ gap: 8 }} />);
-  resize(screen.getByTestId("dockview-react"), 800, 500);
+  resize(screen.getByTestId("dockview-react"), { width: 800, height: 500 });
   if (P.isTruthy(floating)) {
     yield* Effect.promise(() =>
       waitFor(() => expect(query(`[data-floating-pane='${floating1Id}']`).style.width).toBe("240px"))

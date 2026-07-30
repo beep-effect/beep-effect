@@ -51,7 +51,7 @@ const mount = Effect.fn("MinimaTest.mount")(function* (
 ) {
   const graph = yield* makeDockAtoms(workspace(longTitle));
   render(<DockviewReact graph={graph} components={{}} options={options} />);
-  resize(screen.getByTestId("dockview-react"), containerWidth, 100);
+  resize(screen.getByTestId("dockview-react"), { width: containerWidth, height: 100 });
   return graph;
 });
 

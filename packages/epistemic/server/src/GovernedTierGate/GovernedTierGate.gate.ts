@@ -65,7 +65,12 @@ import {
   ExecutionRequest,
   ExecutionVerdict,
 } from "@beep/epistemic-domain/values/ExecutionVerdict";
-import { DraftGrantSet, evaluateExecutionRequest, freezeGrantSet } from "@beep/epistemic-domain/values/GrantSet";
+import {
+  DraftGrantSet,
+  ExecutionRequestEvaluationOptions,
+  evaluateExecutionRequest,
+  freezeGrantSet,
+} from "@beep/epistemic-domain/values/GrantSet";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { CurrentMcpCaller, TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit";
@@ -358,7 +363,11 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
           resolvedAudience: options.sink.audience,
           sinkClass: options.sink.sinkClass,
         });
-        const verdict = evaluateExecutionRequest(state.frozen, executionRequest, now, config.policyRevision);
+        const verdict = evaluateExecutionRequest(
+          state.frozen,
+          executionRequest,
+          ExecutionRequestEvaluationOptions.make({ currentPolicyRevision: config.policyRevision, now })
+        );
         const common = {
           audience: executionRequest.resolvedAudience,
           decidedAt: now,
