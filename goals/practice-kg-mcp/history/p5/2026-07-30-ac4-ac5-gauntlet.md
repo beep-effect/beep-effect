@@ -5,8 +5,15 @@ Date: 2026-07-30 · Phase: P5 Handoff (acceptance evidence) · Scope: the
 Windows test target against the staged `.mcpb` + real bundle. Raw transcripts,
 logs, and the full client-side engineering handoff are archived out-of-repo in
 the corpus staging area under `gauntlet-evidence/2026-07-30/`; this record
-carries counts, identifiers, and rulings only (no client names, no document
-text).
+carries counts, mechanisms, and rulings only.
+
+**Every live matter identifier is redacted.** Client prefixes appear as
+`CLIENT-A`…, docket families as `F-1`…, application serials as `APP-1`…, and
+patent numbers as `PAT-1`… — stable across all three P5 evidence documents so
+the findings remain cross-referenceable. The placeholder→real key lives beside
+the raw evidence out-of-repo (`gauntlet-evidence/2026-07-30/`), never here:
+this repository is public, and the cross-client mapping these identifiers
+encode is precisely the confidentiality hazard finding A-1 reports.
 
 ## Run metadata
 
@@ -20,6 +27,19 @@ text).
 | Mode | `corpus_root` empty — pointer-only citations (supported mode) |
 | Install | Settings → Extensions (no `.mcpb` file association exists; GUI-only path) |
 
+**Environment deviation from AC-4 as originally written (resolved by D-10).**
+AC-4 said the gauntlet runs "in Claude Desktop on the workstation … before
+install on Tom's machine". That is not achievable: Claude Desktop ships no
+Linux build and the workstation is Linux, so the workstation gate never
+existed as a runnable step. The run therefore happened in Claude Desktop on
+the Windows target with the packet operator driving remotely — closer to the
+delivered environment, and the sequencing intent (prove the build before Tom
+touches it) still holds, since AC-6 remains Tom installing and querying
+unassisted. The cost of the deviation is real and worth recording: the B-1
+packaging defect surfaced on Tom's machine rather than on a workstation gate,
+which is exactly what the original ordering was meant to prevent. The
+compiled-smoke lane, not a second Desktop run, is the durable fix — see B-1.
+
 The first `.mcpb` (SHA256 `AEA016B5…D6FA`) could not attach: the Bun-compiled
 exe resolved `@duckdb/node-bindings-win32-x64` against its embedded virtual
 root (`B:\~BUN\root\`) instead of the exe-adjacent `node_modules`, failing
@@ -30,24 +50,34 @@ directory masks it. Regression test recorded as B-1 in the defect register.
 
 ## Verdicts
 
-Status: PROVISIONAL — mechanical axes (provenance, labels, tool behavior,
-egress) are scored and final; answer-correctness for all five questions is
-deferred to Tom.
+Status: PROVISIONAL — answer-correctness for all five questions is deferred to
+Tom. **Scored against the SPEC D-10 revision (2026-07-30), not the original
+AC-2/AC-4/AC-5 wording**, and the criteria that revision leaves unmet are
+reported as unmet below rather than rolled into the pass count.
 
-| Item | Provenance | Required label | Deliverable | Correctness | Provisional verdict |
+| Item | Provenance (document layer) | Required label | Deliverable | Correctness | Provisional verdict |
 | --- | --- | --- | --- | --- | --- |
-| G-1 (family 10073 overview) | PASS (amended criterion) | n/a | No — unanswerable from bundle; root cause identified instead | pending (Tom) | PASS, pending correctness |
-| G-2 (patents 10440890 / 11058054 claims comparison) | PASS w/ limitation (8/8 docs, 0/7 nodes) | n/a | No — no US claim text in bundle | pending (Tom) | PASS, pending correctness |
-| G-3 (family 10013 OA rejections + location) | PASS (11/11) | FAIL as delivered (`kg_candidate_claims` never routed) | Partial — from the practice's own response, not examiner text | pending (Tom) | PASS, pending correctness |
-| G-4 (cross-matter technical-term search) | PASS (15/15, strict, no sampling) | n/a | Partial — "where it appears" defeated by B-8 | pending (Tom) | PASS, pending correctness |
-| G-5 (correspondence lookup, 2012–2014) | PASS w/ documented limitation (archive floor) | PASS — linkage-confidence note present | Yes | pending (Tom) | PASS, pending correctness |
-| AC-5 zero egress | — | — | — | — | **PASS — FINAL** |
+| G-1 (family F-1 overview) | PASS — node claims explicitly marked unverifiable | n/a | No — unanswerable from bundle; root cause identified instead | pending (Tom) | PASS, pending correctness |
+| G-2 (patents PAT-1 / PAT-2 claims comparison) | PASS 8/8 docs; **0/7 nodes failed** | n/a | No — no US claim text in bundle | pending (Tom) | PASS, pending correctness |
+| G-3 (family F-2 OA rejections + location) | PASS 11/11 | **FAIL as delivered** — `kg_candidate_claims` never routed | Partial — from the practice's own response, not examiner text | pending (Tom) | **PASS with a failed label item** |
+| G-4 (cross-matter technical-term search) | PASS 15/15, strict, no sampling | n/a | Partial — "where it appears" defeated by B-8 | pending (Tom) | PASS, pending correctness |
+| G-5 (correspondence lookup, 2012–2014) | PASS — archive-level floor (designed, D-2c) | PASS — linkage-confidence note present | Yes | pending (Tom) | PASS, pending correctness |
+| AC-5 zero egress | — | — | — | — | **PASS — sampled observation** (see limitation) |
 
-Placeholders: G-1 `10073`, G-2 `10440890`/`11058054`, G-3 `10013`, G-4 a
-technical term, G-5 an associate surname + 2012–2014 (term and name recorded
-in the out-of-repo evidence only).
+**Do not summarize this as a clean five-of-five.** Three qualifications travel
+with it: G-3's required-label item failed as delivered, G-2 and G-4 produced
+only partial deliverables, and **AC-2 is not met as a whole** — graph-node
+provenance does not exist in this build (0/7), so every question whose answer
+is spine-derived rests on unverifiable rows. The per-question passes cover the
+document layer and the epistemic conduct, which is what the revised criterion
+scores; the missing node-provenance capability is tracked as blocker B-2, not
+absorbed into a pass.
 
-## AC-5 — zero-egress observation (FINAL)
+Question subjects: G-1 family `F-1`, G-2 patents `PAT-1`/`PAT-2`, G-3 family
+`F-2`, G-4 a technical term, G-5 an associate surname over 2012–2014. Real
+values live only in the out-of-repo key.
+
+## AC-5 — zero-egress observation (sampled)
 
 Watch: every `practice-kg*` process, 2 s samples, `Get-NetTCPConnection` +
 `Get-NetUDPEndpoint`; `Claude.exe` deliberately out of scope; `uspto-mcp` not
@@ -63,10 +93,22 @@ installed.
 
 Both server PIDs (children of the Desktop process) stayed resident across all
 three windows with zero restarts; every scored interaction ran under watch.
-The server opened no network connection of any kind. Scope caveat: during the
-contaminated first G-1 attempt, `Claude.exe` itself performed external lookups
-(web search was still enabled) — outside AC-5 scope, and web search was
-disabled for the remainder.
+
+**What this evidence does and does not establish.** AC-5 as specified requires
+zero network calls "under observation", and interval sampling is observation —
+so the criterion is met, and 2,326 samples with the process continuously
+resident is strong evidence. It is not proof of the stronger claim: a socket
+that opens and closes entirely inside one 2 s interval leaves no row and is
+indistinguishable from silence. **Recorded as a sampled pass, not an absolute
+one.** Per D-10, enforced network isolation is the hard-proof upgrade — the
+gauntlet doc names `bwrap --unshare-net` for the Linux host, and a Windows
+firewall deny-rule or ETW capture is the equivalent on the target. Worth
+running once before the P8 handoff, since zero egress is the product's core
+promise rather than an incidental property.
+
+Scope caveat: during the contaminated first G-1 attempt, `Claude.exe` itself
+performed external lookups (web search was still enabled) — outside AC-5
+scope, and web search was disabled for the remainder.
 
 ## AC-4 — grep baseline
 
@@ -75,9 +117,9 @@ Ripgrep on the workstation SSD corpus copy, 10-minute timebox per question
 
 | Q | Pattern | Files matched | Time | Gap vs KG |
 | --- | --- | --- | --- | --- |
-| G-1 | `10073` | 1,275 | 21 s | collision flood; no chain/linkage/status |
+| G-1 | `F-1`'s bare family number | 1,275 | 21 s | collision flood; no chain/linkage/status |
 | G-2 | two bare patent numbers | **0** | 14 s | numbers absent as plain text; documents unlocatable |
-| G-3 | `10013` | 2,876 | 17 s | collision flood; no rejection enumeration or spans |
+| G-3 | `F-2`'s bare family number | 2,876 | 17 s | collision flood; no rejection enumeration or spans |
 | G-4 | technical term | 262 | 9 s | raw lines; no family aggregation |
 | G-5 | associate surname | 1,607 | 9 s | no sender-vs-mention, date, or archive attribution |
 
@@ -120,11 +162,11 @@ cannot; in G-2 grep could not even locate the documents.
   controls must be checked against the client UI, never model self-reports
   (C-2).
 - **Desktop memory crosses chats.** The G-1 re-run recalled a memory created
-  in the G-3 chat and saved a new family-10073 memory. This run was not
+  in the G-3 chat and saved a new family-F-1 memory. This run was not
   compromised (assessed in the raw evidence), but chat isolation alone is
   insufficient — clear/disable memory for clean re-runs (C-5).
 - **Superseded finding.** The earlier "bundle has a gap" claim (grant
-  `13292384 → 8386137` missing from 10073) was partially refuted on the
+  `APP-4 → PAT-3` missing from F-1) was partially refuted on the
   workstation, then superseded: it is a symptom of the A-12 mention-derived
   join defect, not an isolated record error.
 - **Epistemic behavior was the strongest result.** Under "How do you know
@@ -138,8 +180,8 @@ cannot; in G-2 grep could not even locate the documents.
 ## Structural findings (cross-cutting, both block AC-6)
 
 1. **The graph layer is not trustworthy in this build; the document layer is.**
-   Family attribution defective in 3 of 4 families probed (10073, 10003,
-   10013); document-level provenance resolved 15/15, 11/11, 8/8; email
+   Family attribution defective in 3 of 4 families probed (F-1, F-3,
+   F-2); document-level provenance resolved 15/15, 11/11, 8/8; email
    containers 4/4; graph nodes 0/7. Full mechanism and local verification in
    the defect register (A-1, A-12).
 2. **Provenance granularity.** `kg_provenance` resolves documents and PST
@@ -148,8 +190,15 @@ cannot; in G-2 grep could not even locate the documents.
 
 ## Disposition
 
-- AC-5: **complete** (final PASS). P4 exit criterion satisfied.
-- AC-4: provisionally passed ×5; correctness axis pending Tom's review.
+- AC-5: **met as specified** — zero calls under observation across 2,326
+  samples. Recorded as a sampled pass; the network-isolation hard proof (D-10)
+  is queued before the P8 handoff.
+- AC-4: five provisional passes on the document layer and epistemic conduct,
+  carrying G-3's failed label item and the G-2/G-4 partial deliverables;
+  correctness axis pending Tom's review.
+- **AC-2: not met.** Document and container rows resolve strictly; graph nodes
+  do not resolve at all (0/7). Tracked as blocker B-2, and the reason the P6
+  rebuild must be re-verified against provenance rather than counts alone.
 - **AC-6 deferred (2026-07-30)** until the P6 graph-integrity repair round
   rebuilds the bundle — handing Tom a build whose family answers are known to
   be wrong would burn trust in the honest layer that works.

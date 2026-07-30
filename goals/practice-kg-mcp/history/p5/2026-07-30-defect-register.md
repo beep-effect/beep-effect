@@ -21,8 +21,8 @@ verification sharpened this into **two independent pipeline defects**:
 1. **The client dimension is never extracted where it matters.**
    `documents.client` is populated on 81 of 7,330 rows — all from one
    hand-labeled demo subset, and *never* on a row that also carries
-   `docket_family`. Client-prefixed attorney references (e.g. `22500.10013`,
-   `35041.10003`) are present throughout the source corpus text, so the
+   `docket_family`. Client-prefixed attorney references (e.g. `CLIENT-B.F-2`,
+   `CLIENT-C.F-3`) are present throughout the source corpus text, so the
    dimension is extractable; the organizer simply does not extract it. Family
    nodes are then keyed on the bare family string
    (`PracticeKg.projections.ts:325` — the row's `client` field is in scope
@@ -44,9 +44,9 @@ One fix each, plus a rebuild, clears the two blockers.
 
 | # | Sev | Finding | Attribution | Status | Anchor / evidence |
 | --- | --- | --- | --- | --- | --- |
-| A-1 | Blocker | Cross-client contamination in a family: 10013 spans ≥3 inventions across ≥2 client prefixes (`27151`, `22500`, +1); a family-scoped query can surface one client's prosecution as another's — confidentiality hazard, warrants review independent of scoring | pipeline | CONFIRMED-data / -source / -code | root-cause §1; prefixes verified in corpus text; `documents.client` 81/7,330, never with `docket_family` |
-| A-2 | Blocker | Family 10013 application chain simultaneously contaminated (foreign application present) and incomplete (`15/641,188`, `14/658,971` in the practice's own response headers, absent from graph) | pipeline | OBSERVED | G-3/3b; falls out of A-1 fix + A-14 |
-| A-3 | High | Family attribution unreliable generally — defective in 3 of 4 families probed (10073, 10003, 10013) | pipeline | CONFIRMED-data | subsumed by root-cause §1+§2 |
+| A-1 | Blocker | Cross-client contamination in a family: F-2 spans ≥3 inventions across ≥2 client prefixes (`CLIENT-A`, `CLIENT-B`, +1); a family-scoped query can surface one client's prosecution as another's — confidentiality hazard, warrants review independent of scoring | pipeline | CONFIRMED-data / -source / -code | root-cause §1; prefixes verified in corpus text; `documents.client` 81/7,330, never with `docket_family` |
+| A-2 | Blocker | Family F-2 application chain simultaneously contaminated (foreign application present) and incomplete (`APP-2`, `APP-3` in the practice's own response headers, absent from graph) | pipeline | OBSERVED | G-3/3b; falls out of A-1 fix + A-14 |
+| A-3 | High | Family attribution unreliable generally — defective in 3 of 4 families probed (F-1, F-3, F-2) | pipeline | CONFIRMED-data | subsumed by root-cause §1+§2 |
 | A-4 | High | Dual-keyed enrichment divergence: 9 patents carry both app-keyed and patent-keyed rows; 5 of 9 have different family sets | pipeline | CONFIRMED-data | e.g. one patent: 16 families app-keyed vs 9 patent-keyed |
 | A-5 | High | Recycle-bin `$R*` restore stubs ingested as first-class documents and assigned dockets by content (6/15 in G-4; several in G-2/G-3; one has no meaningful source filename at all) | source (present) + pipeline (promoted) | OBSERVED | quarantine or tag with distinct epistemic status |
 | A-6 | High | Filename-derived docket labels indistinguishable from record-derived (one assignment's only family link is a docket string typed in its filename) | pipeline | OBSERVED | emit an attribution-source field |
@@ -55,7 +55,7 @@ One fix each, plus a rebuild, clears the two blockers.
 | A-9 | Medium | Manifest says `sourceRuns.refresh202607: "excluded"` while every observed provenance chain cites the 2026-07 refresh | ambiguous | OPEN (localized) | `PracticeKg.projections.ts:615–617` (`includeRefresh` flag); audit the actual build invocation in P6 |
 | A-10 | Medium | No per-message email provenance — floor is the PST container; blocks privilege-log / fee-dispute proof of a specific message | pipeline (design) | OBSERVED | D-2c disclosure exists; decide whether to raise the floor |
 | A-11 | Low | `builtAt` 2026-07-03 vs `bundleVersion` 2026-07-27-01 | pipeline | OPEN | reconcile stamp sources in the build |
-| A-12 | Blocker | Cartesian join: one application anchors **7** families (amends the run's observed 6 — the shipped array is `10065, 10068, 10070, 10073, 10083, 10113, 10114`); all patents/applications attach to every docket in each; 90 rows for 8 dockets | pipeline | CONFIRMED-data / -code | root-cause §2; systemic — 75/150 enrichment rows multi-family, max 16 |
+| A-12 | Blocker | Cartesian join: one application anchors **7** families (amends the run's observed 6 — the shipped array is `F-4, F-5, F-6, F-1, F-7, F-8, F-9`); all patents/applications attach to every docket in each; 90 rows for 8 dockets | pipeline | CONFIRMED-data / -code | root-cause §2; systemic — 75/150 enrichment rows multi-family, max 16 |
 | A-13 | Blocker | No USPTO prosecution status anywhere (no status, examiner, issue/abandonment, due dates); docket-status questions unanswerable by construction | scope decision | CONFIRMED-data | enrichment carries lookup status (`resolved`/`not-found`) + title/applicant/inventor only; ties to uspto-mcp promotion |
 | A-14 | High | Every application node has null `docketFamily`, so app→family resolution rides entirely on the defective A-12 anchor edges | pipeline | OBSERVED | populate during build once A-1/A-12 land |
 | A-15 | Medium | `uspto-anchor` semantics undocumented | pipeline (docs) | **RESOLVED (repo-side)** | it is a mention-derived enrichment anchor, not parentage — document it and stop deriving membership from it (A-12 fix) |
@@ -89,8 +89,8 @@ Read-only DuckDB queries against a copy of the shipped `practice.duckdb`:
 
 - Fan-out distribution: `SELECT LEN(docket_families), COUNT(*) FROM enrichment
   … GROUP BY 1` → 75/150 rows > 1 family; max 16.
-- A-12 row: candidate for application `13572982` → 7-family array (includes
-  `10070`, unobserved in the run).
+- A-12 row: candidate for application `APP-1` → 7-family array (includes
+  `F-6`, unobserved in the run).
 - Client coverage: `SELECT COUNT(*), COUNT(client) FROM documents` →
   7,330 / 81; the 81 all carry a null `docket_family`.
 - Dual-key divergence: 9 app+patent-keyed pairs, 5 with differing family sets.

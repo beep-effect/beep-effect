@@ -207,6 +207,12 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     )
   );
   const substitute = substituteManifestTokens(exeDir, bundleOut);
+  // bin.ts resolves PRACTICE_KG_BUNDLE_DIR ahead of the manifest's BUNDLE_DIR, so an ambient
+  // value in a developer or CI shell would aim the compiled host at another bundle and let the
+  // smoke pass without proving the staged artifact. Dropping both higher-precedence overrides
+  // also leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install.
+  const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
+  const hostEnv = R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT");
   const pipeScript =
     `{ printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"compiled-smoke","version":"0.0.0"}}}'; sleep 2; ` +
     `printf '%s\\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'; sleep 1; ` +
@@ -217,12 +223,11 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     try: () =>
       // Desktop-faithful spawn: a neutral cwd (Desktop never launches from the extension
       // dir, so resolution must not lean on cwd-adjacent node_modules) and configuration
-      // through the manifest env alone. PRACTICE_KG_CORPUS_ROOT stays unset to mirror the
-      // pointer-only install.
+      // through the manifest env alone.
       Bun.spawn(["sh", "-c", pipeScript, "practice-kg-smoke", executable], {
         cwd: neutralCwd,
         env: {
-          ...Bun.env,
+          ...hostEnv,
           BUNDLE_DIR: substitute(manifest.server.mcp_config.env.BUNDLE_DIR),
           NODE_PATH: substitute(manifest.server.mcp_config.env.NODE_PATH),
         },

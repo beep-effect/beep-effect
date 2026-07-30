@@ -36,14 +36,14 @@ Done. Both files are on `\\tsclient\handoff\`, hash-verified.
 **Open caveats:**
 
 1. **Correctness for all five** — Tom's, tomorrow. Every other axis is scored and final.
-2. **Two blockers.** A-1 cross-client contamination (family `10013` = 3 inventions, 2+ clients) and A-12 cartesian join (`13/572,982` anchors six families). The graph layer isn't trustworthy in this build; the document layer resolved cleanly every time — 15/15, 11/11, 8/8.
+2. **Two blockers.** A-1 cross-client contamination (family `F-2` = 3 inventions, 2+ clients) and A-12 cartesian join (`APP-1` anchors six families). The graph layer isn't trustworthy in this build; the document layer resolved cleanly every time — 15/15, 11/11, 8/8.
 3. **Confidentiality review** on A-1, independent of scoring. A family-scoped query can hand one client another client's prosecution.
 4. **A-9** manifest says the July refresh is excluded while every provenance chain cites it — unresolved, needs build-side eyes.
-5. **C-5** Desktop memory crosses chats. A "Docket 10073" memory now exists, so clear memory before any clean re-run — new chats alone aren't enough. My fault for not catching that before step 4.
+5. **C-5** Desktop memory crosses chats. A "Docket F-1" memory now exists, so clear memory before any clean re-run — new chats alone aren't enough. My fault for not catching that before step 4.
 
-**The most useful thing in the file for tomorrow** is the truncated-key hypothesis. Every contamination instance involves a shared bare docket number under *different* client prefixes — `27151.10013` vs `22500.10013`, `27151.10003` vs `35041.10003`. If the pipeline keys families on the docket number and drops the client prefix, that one bug explains both blockers, and one fix plus a rebuild clears them. You have the original corpus, so it's directly checkable — step-by-step test is in the analysis section.
+**The most useful thing in the file for tomorrow** is the truncated-key hypothesis. Every contamination instance involves a shared bare docket number under *different* client prefixes — `CLIENT-A.F-2` vs `CLIENT-B.F-2`, `CLIENT-A.F-3` vs `CLIENT-C.F-3`. If the pipeline keys families on the docket number and drops the client prefix, that one bug explains both blockers, and one fix plus a rebuild clears them. You have the original corpus, so it's directly checkable — step-by-step test is in the analysis section.
 
-Worth telling Tom that the strongest result wasn't a score: under challenge the system retracted its own published claims five separate times and ran control tests against its own conclusions. The clean G-1 re-run overturned the contaminated run's entire patent table as a join artifact and proved it against family `10065`.
+Worth telling Tom that the strongest result wasn't a score: under challenge the system retracted its own published claims five separate times and ran control tests against its own conclusions. The clean G-1 re-run overturned the contaminated run's entire patent table as a join artifact and proved it against family `F-4`.
 
 ---
 

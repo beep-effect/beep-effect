@@ -32,13 +32,20 @@ USPTO anchor, or extraction Activity, or is explicitly marked unverifiable in
 the answer** (AC-2 spot check inside the gauntlet). One silent failure = the
 question fails.
 
-*Amended 2026-07-30 (first run, C-3):* the original wording ("every cited row
-must resolve") is unsatisfiable by construction for graph-derived answers —
-node-level provenance does not exist in the current bundle — which would make
-the criterion untestable rather than strict. The amended form stays
-enforceable: resolving document rows while flagging node rows as unverified
-passes; silently asserting spine facts as though backed fails. Resolution must
-be individual — no sampling, no arguing from shared provenance shapes.
+*Amended 2026-07-30 (first run, C-3) under **SPEC D-10**, which is the
+normative source — this doc restates that decision and does not create it.*
+The original wording ("every cited row must resolve") is unsatisfiable by
+construction for graph-derived answers, since node-level provenance does not
+exist in the current bundle; leaving it unchanged would make the criterion
+untestable rather than strict. The amended form stays enforceable: resolving
+document rows while flagging node rows as unverified passes; silently
+asserting spine facts as though backed fails. Resolution must be individual —
+no sampling, no arguing from shared provenance shapes.
+
+**This amendment scores questions; it does not satisfy AC-2.** Missing
+node-level provenance stays an unmet criterion and an open blocker (B-2). A
+gauntlet can pass every question while AC-2 remains unmet, and the packet must
+report both.
 
 ## Scoring (per question)
 
