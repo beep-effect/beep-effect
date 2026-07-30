@@ -1723,7 +1723,15 @@
         "./packages/law-practice/tables/src/entities/index.ts"
       ],
       "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
-      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"],
+      "@beep/obs": ["./packages/drivers/obs/src/index.ts"],
+      "@beep/obs/*": ["./packages/drivers/obs/src/*"],
+      "@beep/exiftool": ["./packages/drivers/exiftool/src/index.ts"],
+      "@beep/exiftool/*": ["./packages/drivers/exiftool/src/*"],
+      "@beep/qa-capture": [
+        "./packages/tooling/library/qa-capture/src/index.ts"
+      ],
+      "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"]
     }
   }
 }

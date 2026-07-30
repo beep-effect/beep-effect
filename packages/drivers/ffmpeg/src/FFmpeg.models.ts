@@ -637,6 +637,18 @@ export class VideoProbe extends S.Class<VideoProbe>($I`VideoProbe`)(
         description: "Detected positive video height in pixels, when ffprobe reported one.",
       })
     ),
+    rFrameRate: S.OptionFromOptionalKey(PositiveFrameRate).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.rFrameRate", {
+        description: "Detected real base frame rate (ffprobe r_frame_rate), when ffprobe reported one.",
+      })
+    ),
+    startTimeSeconds: S.OptionFromOptionalKey(S.Finite).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.startTimeSeconds", {
+        description: "Detected stream or container start time in seconds, when ffprobe reported one.",
+      })
+    ),
     width: S.OptionFromOptionalKey(VideoDimension).pipe(
       SchemaUtils.withNoneDefault,
       $I.annoteKey("VideoProbe.width", {
