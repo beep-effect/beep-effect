@@ -32,7 +32,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
-import type * as Multipart_ from "effect/unstable/http/Multipart";
+import type { PayloadEncoding } from "effect/unstable/httpapi/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
 import type { CoreVocab, VocabShape } from "./Vocab.ts";
 
@@ -560,6 +560,29 @@ export type SchemaAnnotationExtras<
 > = S.Annotations.Bottom<SchemaType, TypeParameters>;
 
 /**
+ * Declaration annotation fields accepted by class and declaration constructors.
+ *
+ * Mirrors `S.Annotations.Declaration` so declaration-only hooks are checked
+ * against both the declared value and its schema type parameters.
+ *
+ * @example
+ * ```ts
+ * import type { DeclarationAnnotationExtras } from "@beep/identity"
+ * import * as S from "effect/Schema"
+ *
+ * const Fields = S.Struct({ value: S.String })
+ * type Extras = DeclarationAnnotationExtras<{ readonly value: string }, readonly [typeof Fields]>
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DeclarationAnnotationExtras<
+  T,
+  TypeParameters extends ReadonlyArray<S.Top> = readonly [],
+> = S.Annotations.Declaration<T, TypeParameters>;
+
+/**
  * Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
  *
  * @example
@@ -575,10 +598,7 @@ export type SchemaAnnotationExtras<
 export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
 
 /**
- * Mirrors the raw HTTP encoding annotation shape used by Effect's HttpApiSchema.
- *
- * The installed `effect@4.0.0-beta.28` runtime supports `~httpApiEncoding`, but
- * its published `.d.ts` does not currently export the upstream `Encoding` alias.
+ * Deprecated compatibility alias for Effect's request payload encoding metadata.
  *
  * @example
  * ```ts
@@ -587,20 +607,11 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
  * const enc: HttpApiEncoding = { _tag: "Json", contentType: "application/json" }
  * ```
  *
- * @since 0.0.0
+ * @deprecated Use {@link PayloadEncoding} from `effect/unstable/httpapi/HttpApiSchema` directly.
  * @category models
+ * @since 0.0.0
  */
-export type HttpApiEncoding =
-  | {
-      readonly _tag: "Multipart";
-      readonly mode: "buffered" | "stream";
-      readonly contentType: string;
-      readonly limits?: Multipart_.withLimits.Options | undefined;
-    }
-  | {
-      readonly _tag: "Json" | "FormUrlEncoded" | "Uint8Array" | "Text";
-      readonly contentType: string;
-    };
+export type HttpApiEncoding = PayloadEncoding;
 
 /**
  * Annotation fields accepted by `annoteHttp`, extending schema extras with HTTP API metadata.
@@ -622,7 +633,7 @@ export type HttpAnnotationExtras<
   TypeParameters extends ReadonlyArray<S.Top> = readonly [],
 > = SchemaAnnotationExtras<SchemaType, TypeParameters> & {
   readonly httpApiStatus?: number | undefined;
-  readonly "~httpApiEncoding"?: HttpApiEncoding | undefined;
+  readonly "~httpApiEncoding"?: PayloadEncoding | undefined;
 };
 
 /**
@@ -770,7 +781,7 @@ export type TaggedModuleRecord<
  *
  * An `IdentityComposer` holds a current identity path and provides methods to:
  * - Extend the path with child segments (`create`, `make`, template tag)
- * - Produce annotation records for Effect schemas (`annote`, `annoteSchema`, `annoteHttp`, `annoteKey`)
+ * - Produce annotation records for Effect schemas (`annote`, `annoteClass`, `annoteSchema`, `annoteHttp`, `annoteKey`)
  * - Batch-create named child composers (`compose`)
  *
  * @example
@@ -844,6 +855,40 @@ export interface IdentityComposer<
     identifier: SegmentValue<Next>,
     extras?: undefined | Extras
   ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras, Authority, Prefix>;
+
+  /**
+   * Produce a declaration-typed identity annotation record for a class constructor.
+   *
+   * @remarks
+   * Supply the declared schema and schema type-parameter tuple so
+   * declaration-only hooks such as `toArbitrary` and `toEquivalence` receive
+   * their real contextual types.
+   *
+   * @example
+   * ```ts
+   * import { make } from "@beep/identity"
+   * import * as S from "effect/Schema"
+   *
+   * const { $MyPkgId } = make("my-pkg")
+   * const Fields = S.Struct({ value: S.String })
+   * const ann = $MyPkgId.annoteClass<typeof Fields, readonly [typeof Fields]>("Value", {
+   *   toEquivalence: ([sameFields]) => (self, that) => sameFields(self, that)
+   * })
+   *
+   * console.log(ann.identifier)// "@beep/my-pkg/Value"
+   * ```
+   *
+   * @category combinators
+   * @since 0.0.0
+   */
+  annoteClass<
+    Schema extends S.Top,
+    TP extends ReadonlyArray<S.Top>,
+    const Next extends TString.NonEmpty = TString.NonEmpty,
+  >(
+    identifier: SegmentValue<Next>,
+    extras?: DeclarationAnnotationExtras<Schema["Type"], TP>
+  ): S.Annotations.Declaration<Schema["Type"], TP>;
 
   /**
    * Produce a schema annotation function with HTTP API metadata.
@@ -1414,9 +1459,9 @@ const createComposer = <
     } as IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Authority, Prefix>;
   };
 
-  const annote = <
+  const mergeIdentityAnnotation = <
     const Next extends TString.NonEmpty = TString.NonEmpty,
-    const Extras extends IdentityAnyAnnotationExtras<unknown> = {},
+    const Extras extends object = {},
   >(
     identifier: SegmentValue<Next>,
     extras?: undefined | Extras
@@ -1452,6 +1497,25 @@ const createComposer = <
           >,
       })
     );
+
+  const annote = <
+    const Next extends TString.NonEmpty = TString.NonEmpty,
+    const Extras extends IdentityAnyAnnotationExtras<unknown> = {},
+  >(
+    identifier: SegmentValue<Next>,
+    extras?: undefined | Extras
+  ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras, Authority, Prefix> =>
+    mergeIdentityAnnotation(identifier, extras);
+
+  const annoteClass = <
+    Schema extends S.Top,
+    TP extends ReadonlyArray<S.Top>,
+    const Next extends TString.NonEmpty = TString.NonEmpty,
+  >(
+    identifier: SegmentValue<Next>,
+    extras?: DeclarationAnnotationExtras<Schema["Type"], TP>
+  ): S.Annotations.Declaration<Schema["Type"], TP> =>
+    mergeIdentityAnnotation(identifier, extras) as S.Annotations.Declaration<Schema["Type"], TP>;
 
   const annoteSchema = <Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
@@ -1587,6 +1651,12 @@ const createComposer = <
     },
     annote: {
       value: annote,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    annoteClass: {
+      value: annoteClass,
       enumerable: true,
       writable: true,
       configurable: true,
