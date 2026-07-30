@@ -108,13 +108,20 @@ describe("dock pointer gestures", { concurrent: false }, () => {
     Effect.gen(function* () {
       const mounted = yield* mount();
       pointer(tab(panel2.id), "pointerDown", 600, 16);
-      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      // An unpromoted press shows no drag chrome: neither indicator nor ghost.
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
       pointer(tab(panel2.id), "pointerMove", 100, 16);
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      const ghost = screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]");
+      expect(ghost).not.toBeNull();
+      expect(ghost?.textContent).toBe(panel2.title);
       pointer(tab(panel2.id), "pointerUp", 100, 16);
       yield* mounted.graph.awaitIdle;
       const result = O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1)));
       expect(A.map(TabsNode.panels(result), (panel) => panel.id)).toEqual([panel2.id, panel1.id]);
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
       mounted.graph.dispose();
     })
   );

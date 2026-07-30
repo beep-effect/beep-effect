@@ -18,6 +18,7 @@ import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, freshFloatingSplitId, positionOf, pressStartsOnButton, topLeftBox } from "./DropCompiler.ts";
 import { GroupPane } from "./GroupPane.tsx";
+import { DockIcon } from "./Icons.tsx";
 import type { AnchoredBox, DockNode } from "@beep/dock";
 import type { DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
@@ -115,6 +116,9 @@ export const FloatingPane = (
       const down = (event: PointerEvent): void => {
         if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
         event.stopPropagation();
+        // Cancel the native selection drag the browser would otherwise anchor
+        // at the press point and smear across panel text while moving/resizing.
+        event.preventDefault();
         node.setPointerCapture?.(event.pointerId);
         props.graph.registry.set(
           props.state.floatingGestureAtom,
@@ -133,11 +137,13 @@ export const FloatingPane = (
       node.addEventListener("pointerdown", down);
       node.addEventListener("pointermove", move);
       node.addEventListener("pointerup", up);
+      node.addEventListener("pointercancel", cancel);
       document.addEventListener("keydown", keydown);
       return () => {
         node.removeEventListener("pointerdown", down);
         node.removeEventListener("pointermove", move);
         node.removeEventListener("pointerup", up);
+        node.removeEventListener("pointercancel", cancel);
         document.removeEventListener("keydown", keydown);
       };
     };
@@ -159,7 +165,7 @@ export const FloatingPane = (
       <div
         ref={gestureRef("move")}
         data-floating-header={groupId}
-        style={{ height: FLOATING_HEADER_HEIGHT, cursor: "move" }}
+        style={{ height: FLOATING_HEADER_HEIGHT, cursor: "move", touchAction: "none", userSelect: "none" }}
       >
         <span aria-hidden data-floating-grip="">
           ⣿
@@ -173,6 +179,7 @@ export const FloatingPane = (
         <button
           type="button"
           aria-label={`Dock group ${groupId}`}
+          title="Dock"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => {
             // Restore the pre-float placement (neighbor, side, share) when the
@@ -199,7 +206,7 @@ export const FloatingPane = (
             submit(makeOperation(DockFloatingGroupCommand.make({ groupId, target })));
           }}
         >
-          Dock
+          <DockIcon />
         </button>
       </div>
       {A.map(member.groups, (group) => (
@@ -226,6 +233,8 @@ export const FloatingPane = (
           width: 16,
           height: 16,
           cursor: "nwse-resize",
+          touchAction: "none",
+          userSelect: "none",
         }}
       />
     </div>

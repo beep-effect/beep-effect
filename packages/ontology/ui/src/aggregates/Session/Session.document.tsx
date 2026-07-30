@@ -36,6 +36,7 @@ import { O, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
+import { AsyncResult } from "effect/unstable/reactivity";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
@@ -84,6 +85,13 @@ export function OntologyDocumentRegion(): JSX.Element {
   const redoChange = useAtomSet(redoOntologyChangeAtom);
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
+  // The action atoms are AsyncResult fns: while an RPC is in flight the
+  // triggering button must say so and refuse re-entry, otherwise a slow open
+  // or save reads as "the button does nothing".
+  const opening = AsyncResult.isWaiting(useAtomValue(openOntologyDocumentAtom));
+  const saving = AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom));
+  const previewing = AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom));
+  const needsSessionHint = O.isNone(session) ? "Open a document first" : undefined;
 
   const runOpen = (): void => {
     pipe(
@@ -126,20 +134,30 @@ export function OntologyDocumentRegion(): JSX.Element {
           value={pathInput}
           onChange={(event) => setPathInput(valueFromEvent(event))}
         />
-        <Button size="sm" type="button" onClick={runOpen}>
-          Open
-        </Button>
-        <Button size="sm" type="button" variant="outline" disabled={O.isNone(session)} onClick={runSave}>
-          Save
+        <Button size="sm" type="button" aria-busy={opening} disabled={opening} onClick={runOpen}>
+          {opening ? "Opening…" : "Open"}
         </Button>
         <Button
           size="sm"
           type="button"
           variant="outline"
-          disabled={O.isNone(session)}
+          aria-busy={saving}
+          disabled={O.isNone(session) || saving}
+          title={needsSessionHint}
+          onClick={runSave}
+        >
+          {saving ? "Saving…" : "Save"}
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          aria-busy={previewing}
+          disabled={O.isNone(session) || previewing}
+          title={needsSessionHint}
           onClick={() => previewTurtle(undefined)}
         >
-          Preview
+          {previewing ? "Previewing…" : "Preview"}
         </Button>
         <Tooltip>
           <TooltipTrigger

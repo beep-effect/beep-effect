@@ -20,6 +20,10 @@ export const Sash = (props: {
   if (O.isNone(sash)) return null;
   const attach = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
+    const cancel = (): void => {
+      props.graph.registry.set(props.state.resizeAtom, O.none());
+      props.graph.registry.set(props.state.ratioOverrideAtom, O.none());
+    };
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.resizeAtom);
       if (O.isNone(current) || !SplitId.equals(current.value.splitId, props.splitId) || current.value.extent <= 0)
@@ -68,6 +72,11 @@ export const Sash = (props: {
       if (O.isNone(split)) return;
       const extent = splitExtent(props.graph, props.state, split.value);
       if (extent <= 0) return;
+      // Without this the browser anchors a native text selection at the
+      // press point and smears it across neighboring panels for the whole
+      // drag; over an existing selection it can even escalate to native
+      // drag-and-drop, which cancels the pointer stream mid-resize.
+      event.preventDefault();
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.resizeAtom,
@@ -84,10 +93,12 @@ export const Sash = (props: {
     node.addEventListener("pointerdown", down);
     node.addEventListener("pointermove", move);
     node.addEventListener("pointerup", up);
+    node.addEventListener("pointercancel", cancel);
     return () => {
       node.removeEventListener("pointerdown", down);
       node.removeEventListener("pointermove", move);
       node.removeEventListener("pointerup", up);
+      node.removeEventListener("pointercancel", cancel);
     };
   };
   return (
@@ -98,6 +109,8 @@ export const Sash = (props: {
       style={{
         ...boxStyle(sash.value.box),
         cursor: Eq.equals(sash.value.axis, "horizontal") ? "col-resize" : "row-resize",
+        touchAction: "none",
+        userSelect: "none",
       }}
     />
   );
