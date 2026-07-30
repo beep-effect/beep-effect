@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-28",
+  "generatedOn": "2026-07-30",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -2105,7 +2105,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@1281",
+      "symbol": "anonymous@1327",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
@@ -2113,7 +2113,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@314",
+      "symbol": "anonymous@310",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
@@ -2121,7 +2121,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@350",
+      "symbol": "anonymous@344",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
@@ -2129,7 +2129,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@362",
+      "symbol": "anonymous@356",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
@@ -2137,7 +2137,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@364",
+      "symbol": "anonymous@358",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
@@ -2145,7 +2145,7 @@
     },
     {
       "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "anonymous@378",
+      "symbol": "anonymous@372",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/law-practice-domain",
