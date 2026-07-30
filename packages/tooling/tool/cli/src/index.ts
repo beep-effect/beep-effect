@@ -223,6 +223,21 @@ export {
   purgeCommand,
 } from "./commands/Purge/index.ts";
 /**
+ * Recorded UI-verification command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Recorded UI-verification command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  qaCommand,
+} from "./commands/Qa/index.ts";
+/**
  * Repository operational quality command group.
  *
  * @category cli-commands
