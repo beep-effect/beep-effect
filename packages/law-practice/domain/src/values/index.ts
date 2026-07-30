@@ -436,6 +436,20 @@ export * from "./PatentOffice/index.ts";
  */
 export * from "./PinciteInfo/index.ts";
 /**
+ * Practice knowledge-graph epistemic-status exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PracticeKgEpistemicStatus/index.ts";
+/**
+ * Practice knowledge-graph provenance-kind exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PracticeKgProvenanceKind/index.ts";
+/**
  * Public-law-citation value-object exports.
  *
  * @example

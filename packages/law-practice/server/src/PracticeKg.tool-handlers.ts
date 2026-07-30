@@ -6,8 +6,10 @@
  */
 
 import { DuckDb } from "@beep/duckdb";
+import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgGraphToolRow,
   PracticeKgToolError,
   PracticeKgToolkit,
   PracticeKgToolResult,
@@ -28,16 +30,12 @@ import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
 import {
   addPracticeKgCorpusPointers,
-  candidateClaimToolRecord,
   decodePracticeKgCandidateClaimRows,
   decodePracticeKgDocumentRows,
   decodePracticeKgEmailRows,
   decodePracticeKgFamilyRows,
   decodePracticeKgGraphRows,
-  documentToolRecord,
-  emailToolRecord,
-  familyToolRecord,
-  graphToolRecord,
+  toToolRecord,
 } from "./PracticeKg.rows.ts";
 import type { FieldTierSet } from "@beep/mcp-kit";
 import type { Layer } from "effect";
@@ -45,10 +43,13 @@ import type * as S from "effect/Schema";
 import type * as Tool from "effect/unstable/ai/Tool";
 import type * as SqlClient from "effect/unstable/sql/SqlClient";
 
-const spineStatus = "derived-from-official-records";
+const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-records"];
 const emailLinkageNote =
   "Matter linkage is archive-level confidence only; a matching message header is not message-level matter proof.";
 const tierOrder = A.reverse(FieldTierName.Options);
+
+const likePattern = (value: string | undefined): string | null =>
+  O.map(O.fromUndefinedOr(value), (fragment) => `%${fragment}%`).pipe(O.getOrNull);
 
 const projectRows = (
   rows: ReadonlyArray<Record<string, unknown>>,
@@ -56,37 +57,35 @@ const projectRows = (
   budgetBytes: number,
   bundleVersion: string,
   note?: string | undefined,
-  epistemicStatus = spineStatus
+  epistemicStatus: PracticeKgEpistemicStatus = spineStatus
 ): PracticeKgToolResult => {
-  for (const tier of tierOrder) {
-    const data = toColumnarEnvelope(A.map(rows, (row) => projectFieldTier(row, tier, tiers)));
-    if (estimateJsonSize(data) <= budgetBytes) {
-      return PracticeKgToolResult.make({
-        bundle_version: bundleVersion,
-        data,
-        epistemic_status: epistemicStatus,
-        ...OptionUtils.getSomesStruct({ note: O.fromUndefinedOr(note) }),
-        tier,
-        total: NonNegativeInt.make(A.length(rows)),
-        truncated: false,
-      });
-    }
-  }
-
-  const minimalRows = A.map(rows, (row) => projectFieldTier(row, "minimal", tiers));
-  const fitting = A.findFirst(
-    A.reverse(A.range(0, A.length(minimalRows))),
-    (count) => estimateJsonSize(toColumnarEnvelope(A.take(minimalRows, count))) <= budgetBytes
-  ).pipe(O.getOrElse(() => 0));
-  return PracticeKgToolResult.make({
+  const shared = {
     bundle_version: bundleVersion,
-    data: toColumnarEnvelope(A.take(minimalRows, fitting)),
     epistemic_status: epistemicStatus,
     ...OptionUtils.getSomesStruct({ note: O.fromUndefinedOr(note) }),
-    tier: "minimal",
     total: NonNegativeInt.make(A.length(rows)),
-    truncated: fitting < A.length(rows),
-  });
+  };
+  return A.findFirst(tierOrder, (tier) => {
+    const data = toColumnarEnvelope(A.map(rows, projectFieldTier(tier, tiers)));
+    return estimateJsonSize(data) <= budgetBytes ? O.some({ data, tier }) : O.none();
+  }).pipe(
+    O.match({
+      onNone: () => {
+        const minimalRows = A.map(rows, projectFieldTier("minimal", tiers));
+        const fitting = A.findFirst(
+          A.reverse(A.range(0, A.length(minimalRows))),
+          (count) => estimateJsonSize(toColumnarEnvelope(A.take(minimalRows, count))) <= budgetBytes
+        ).pipe(O.getOrElse(() => 0));
+        return PracticeKgToolResult.make({
+          ...shared,
+          data: toColumnarEnvelope(A.take(minimalRows, fitting)),
+          tier: "minimal",
+          truncated: fitting < A.length(rows),
+        });
+      },
+      onSome: ({ data, tier }) => PracticeKgToolResult.make({ ...shared, data, tier, truncated: false }),
+    })
+  );
 };
 
 const toolFailure =
@@ -137,7 +136,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         const rows = yield* queryPglite(sql, PracticeKgQueries.clients, [], decodePracticeKgGraphRows).pipe(
           Effect.mapError(toolFailure("kg_clients"))
         );
-        return projectRows(A.map(rows, graphToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }),
       kg_docket_family: Effect.fn("PracticeKgTools.kg_docket_family")(function* (request) {
         const rows = yield* queryPglite(
@@ -146,7 +145,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           [request.family],
           decodePracticeKgFamilyRows
         ).pipe(Effect.mapError(toolFailure("kg_docket_family")));
-        return projectRows(A.map(rows, familyToolRecord), practiceKgFamilyFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgFamilyFieldTiers, request.budgetBytes, version);
       }),
       kg_application_lookup: Effect.fn("PracticeKgTools.kg_application_lookup")(function* (request) {
         const rows = yield* queryPglite(
@@ -155,7 +154,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           [request.application_number ?? null, request.patent_number ?? null, request.docket ?? null],
           decodePracticeKgGraphRows
         ).pipe(Effect.mapError(toolFailure("kg_application_lookup")));
-        return projectRows(A.map(rows, graphToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }),
       kg_find: Effect.fn("PracticeKgTools.kg_find")(function* (request) {
         const rows = yield* queryPglite(
@@ -164,7 +163,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           [`%${request.query}%`],
           decodePracticeKgGraphRows
         ).pipe(Effect.mapError(toolFailure("kg_find")));
-        return projectRows(A.map(rows, graphToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }),
       corpus_search_text: Effect.fn("PracticeKgTools.corpus_search_text")(function* (request) {
         const rows = yield* duckdb
@@ -174,32 +173,35 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_search_text"))
           );
-        return projectRows(A.map(rows, documentToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }),
       corpus_get_document: Effect.fn("PracticeKgTools.corpus_get_document")(function* (request) {
         const rows = yield* duckdb
           .query(PracticeKgQueries.getDocument, [
             request.digest ?? null,
             request.organized_path ?? null,
-            request.range?.start ?? 1,
-            request.range?.length ?? 2_097_152,
+            request.range.start,
+            request.range.length,
           ])
           .pipe(
             Effect.flatMap(decodePracticeKgDocumentRows),
             Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_get_document"))
           );
-        return projectRows(A.map(rows, documentToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
+        return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }),
       email_search: Effect.fn("PracticeKgTools.email_search")(function* (request) {
-        const like = O.map(O.fromUndefinedOr(request.query), (query) => `%${query}%`).pipe(O.getOrNull);
-        const sender = O.map(O.fromUndefinedOr(request.sender), (value) => `%${value}%`).pipe(O.getOrNull);
-        const family = O.map(O.fromUndefinedOr(request.family), (value) => `%${value}%`).pipe(O.getOrNull);
         const rows = yield* duckdb
-          .query(PracticeKgQueries.email, [like, sender, request.after ?? null, request.before ?? null, family])
+          .query(PracticeKgQueries.email, [
+            likePattern(request.query),
+            likePattern(request.sender),
+            request.after ?? null,
+            request.before ?? null,
+            likePattern(request.family),
+          ])
           .pipe(Effect.flatMap(decodePracticeKgEmailRows), Effect.mapError(toolFailure("email_search")));
         return projectRows(
-          A.map(rows, emailToolRecord),
+          A.map(rows, toToolRecord),
           practiceKgEmailFieldTiers,
           request.budgetBytes,
           version,
@@ -224,7 +226,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             decodePracticeKgCandidateClaimRows
           );
           return projectRows(
-            A.map(rows, candidateClaimToolRecord),
+            A.map(rows, toToolRecord),
             practiceKgCandidateClaimFieldTiers,
             request.budgetBytes,
             version,
@@ -238,7 +240,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         function* (request) {
           const hasKey = request.iri !== undefined || request.natural_key !== undefined || request.digest !== undefined;
           if (!hasKey) {
-            const statusRow: Record<string, unknown> = {
+            const statusRow = PracticeKgGraphToolRow.make({
               client: null,
               count: bundle.manifest.counts.nodes,
               docketFamily: null,
@@ -249,8 +251,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
               naturalKey: version,
               provenanceKind: "bundle-manifest",
               provenanceRef: bundle.bundleDir,
-            };
-            return projectRows([statusRow], practiceKgGraphFieldTiers, request.budgetBytes, version);
+            });
+            return projectRows([toToolRecord(statusRow)], practiceKgGraphFieldTiers, request.budgetBytes, version);
           }
           if (request.digest !== undefined) {
             const documents = yield* duckdb.query(PracticeKgQueries.provenanceDocument, [request.digest]).pipe(
@@ -258,7 +260,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
               Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path))
             );
             return projectRows(
-              A.map(documents, documentToolRecord),
+              A.map(documents, toToolRecord),
               practiceKgDocumentFieldTiers,
               request.budgetBytes,
               version
@@ -270,7 +272,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             [request.iri ?? null, request.natural_key ?? null, null],
             decodePracticeKgGraphRows
           );
-          return projectRows(A.map(rows, graphToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
+          return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
         },
         Effect.mapError(toolFailure("kg_provenance"))
       ),

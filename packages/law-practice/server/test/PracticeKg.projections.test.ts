@@ -21,7 +21,6 @@ import {
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
 import * as Pglite from "@beep/pglite";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -335,7 +334,6 @@ const graphOptions = (corpusRoot: string, bundleOut: string) =>
     bundleOut,
     corpusRoot,
     includeRefresh: false,
-    maxTextBytes: NonNegativeInt.make(2_097_152),
     overwrite: false,
     skipEmails: false,
   });
@@ -690,7 +688,6 @@ describe("practice KG projections", () => {
           bundleOut,
           corpusRoot,
           includeRefresh: false,
-          maxTextBytes: NonNegativeInt.make(2_097_152),
           overwrite: true,
           skipEmails: true,
         }),
@@ -708,7 +705,6 @@ describe("practice KG projections", () => {
           bundleOut: refreshBundleOut,
           corpusRoot,
           includeRefresh: true,
-          maxTextBytes: NonNegativeInt.make(2_097_152),
           overwrite: true,
           skipEmails: true,
         }),

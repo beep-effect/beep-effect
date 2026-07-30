@@ -22,7 +22,7 @@ import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Effect, FileSystem, Order, Path } from "effect";
+import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -46,8 +46,8 @@ const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const encodeUnknownJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
-const createClaimsTables = `
-CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
+const createClaimsTables = [
+  `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
   created_at BIGINT NOT NULL,
   created_by_principal JSONB NOT NULL,
   org_id INTEGER NOT NULL,
@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
   snapshot JSONB NOT NULL,
   entity_type TEXT NOT NULL,
   id SERIAL PRIMARY KEY
-);
-CREATE UNIQUE INDEX IF NOT EXISTS epistemic_candidate_claim_public_id_unique_idx
-  ON epistemic_candidate_claim (public_id);
-CREATE TABLE IF NOT EXISTS epistemic_evidence (
+)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS epistemic_candidate_claim_public_id_unique_idx
+  ON epistemic_candidate_claim (public_id)`,
+  `CREATE TABLE IF NOT EXISTS epistemic_evidence (
   created_at BIGINT NOT NULL,
   created_by_principal JSONB NOT NULL,
   org_id INTEGER NOT NULL,
@@ -80,9 +80,10 @@ CREATE TABLE IF NOT EXISTS epistemic_evidence (
   span_fixture_key TEXT NOT NULL,
   entity_type TEXT NOT NULL,
   id SERIAL PRIMARY KEY
-);
-CREATE UNIQUE INDEX IF NOT EXISTS epistemic_evidence_public_id_unique_idx
-  ON epistemic_evidence (public_id)`;
+)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS epistemic_evidence_public_id_unique_idx
+  ON epistemic_evidence (public_id)`,
+];
 
 const insertCandidate = `
 INSERT INTO epistemic_candidate_claim (
@@ -253,15 +254,13 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const path = yield* Path.Path;
     const review = yield* OfficeActionReview;
     const sql = (yield* SqlClientService).withoutTransforms();
-    yield* Effect.forEach(
-      A.filter(A.map(Str.split(";")(createClaimsTables), Str.trim), Str.isNonEmpty),
-      (statement) => sql.unsafe(statement),
-      { discard: true }
-    );
+    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
     const entries = A.sort(yield* fs.readDirectory(options.inputs), Order.String);
-    const skippedFiles = A.filter(entries, (filename) => O.isNone(docketFromFilename(filename)));
-    const docketedFiles = A.getSomes(
-      A.map(entries, (filename) => O.map(docketFromFilename(filename), (docket) => ({ docket, filename })))
+    const [skippedFiles, docketedFiles] = A.partition(entries, (filename) =>
+      O.match(docketFromFilename(filename), {
+        onNone: () => Result.fail(filename),
+        onSome: (docket) => Result.succeed({ docket, filename }),
+      })
     );
     if (A.isReadonlyArrayNonEmpty(skippedFiles)) {
       yield* Effect.logInfo("PracticeKgClaims.skippedInputs", {
@@ -327,8 +326,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       yield* persistCandidate(sql, candidate, evidence);
       return filename;
     });
-    const isExtractionQualityError = (error: unknown): boolean =>
-      S.is(IrToLawExtractionError)(error) || S.is(LangExtractError)(error);
+    const isExtractionQualityError = S.is(S.Union([IrToLawExtractionError, LangExtractError]));
     const outcomes = yield* Effect.forEach(
       docketedFiles,
       (entry) =>
@@ -343,8 +341,9 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
         ),
       { concurrency: 1 }
     );
-    const extractedFiles = A.filter(outcomes, (outcome) => outcome.extracted);
-    const failedExtractions = A.filter(outcomes, (outcome) => !outcome.extracted);
+    const [failedExtractions, extractedFiles] = A.partition(outcomes, (outcome) =>
+      outcome.extracted ? Result.succeed(outcome) : Result.fail(outcome)
+    );
     if (A.isReadonlyArrayNonEmpty(failedExtractions)) {
       yield* Effect.logWarning("PracticeKgClaims.failedExtractions", {
         count: A.length(failedExtractions),
