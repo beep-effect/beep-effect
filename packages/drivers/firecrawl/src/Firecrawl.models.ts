@@ -9,59 +9,34 @@ import { $FirecrawlId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Response from "./internal/Firecrawl.responses.ts";
 import type {
-  ActiveCrawlsResponse,
-  AgentResponse,
-  AgentStatusResponse,
   AgentWebhookConfig,
-  BatchScrapeJob,
   BatchScrapeOptions,
-  BatchScrapeResponse,
-  BrowserCreateResponse,
-  BrowserDeleteResponse,
-  BrowserExecuteResponse,
-  BrowserListResponse,
-  ConcurrencyCheck,
-  CrawlErrorsResponse,
-  CrawlJob,
   CrawlOptions,
-  CrawlResponse,
   CreateMonitorRequest,
-  CreditUsage,
-  CreditUsageHistoricalResponse,
-  Document,
   GetMonitorCheckOptions,
   ListMonitorChecksOptions,
   ListMonitorsOptions,
-  MapData,
   MapOptions,
-  Monitor,
-  MonitorCheck,
-  MonitorCheckDetail,
   PaginationConfig,
   ParseFile,
   ParseOptions,
-  QueueStatusResponse,
-  ScrapeBrowserDeleteResponse,
   ScrapeExecuteRequest,
-  ScrapeExecuteResponse,
   ScrapeOptions,
-  SearchData,
   SearchRequest,
-  TokenUsage,
-  TokenUsageHistoricalResponse,
   UpdateMonitorRequest,
   WatcherOptions,
 } from "firecrawl";
 
 const $I = $FirecrawlId.create("Firecrawl.models");
 
+const isSdkObject = S.is(S.Record(S.String, S.Unknown));
 const typedUnknown = <A>(name: string, description: string): S.Codec<A> =>
-  S.declare<A>((value: unknown): value is A => P.isUnknown(value), {
+  S.declare<A>((value: unknown): value is A => isSdkObject(value), {
     description,
-    expected: "FirecrawlSdkShape",
+    expected: "FirecrawlSdkObject",
   }).pipe(
     $I.annoteSchema(name, {
       description,
@@ -1162,10 +1137,7 @@ export type FirecrawlWatcherOptions = typeof FirecrawlWatcherOptions.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlDocument = typedUnknown<Document>(
-  "FirecrawlDocument",
-  "Opaque Firecrawl document returned by the SDK."
-);
+export const FirecrawlDocument = Response.FirecrawlDocument;
 /**
  * Type for {@link FirecrawlDocument}.
  *
@@ -1182,7 +1154,7 @@ export const FirecrawlDocument = typedUnknown<Document>(
  */
 export type FirecrawlDocument = typeof FirecrawlDocument.Type;
 /**
- * Firecrawl Search Data opaque SDK response schema.
+ * Structurally validated Firecrawl search response schema.
  *
  * @example
  * ```ts
@@ -1194,10 +1166,7 @@ export type FirecrawlDocument = typeof FirecrawlDocument.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlSearchData = typedUnknown<SearchData>(
-  "FirecrawlSearchData",
-  "Opaque Firecrawl search data returned by the SDK."
-);
+export const FirecrawlSearchData = Response.FirecrawlSearchData;
 /**
  * Type for {@link FirecrawlSearchData}.
  *
@@ -1214,7 +1183,7 @@ export const FirecrawlSearchData = typedUnknown<SearchData>(
  */
 export type FirecrawlSearchData = typeof FirecrawlSearchData.Type;
 /**
- * Firecrawl Map Data opaque SDK response schema.
+ * Structurally validated Firecrawl map response schema.
  *
  * @example
  * ```ts
@@ -1226,10 +1195,7 @@ export type FirecrawlSearchData = typeof FirecrawlSearchData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMapData = typedUnknown<MapData>(
-  "FirecrawlMapData",
-  "Opaque Firecrawl map data returned by the SDK."
-);
+export const FirecrawlMapData = Response.FirecrawlMapData;
 /**
  * Type for {@link FirecrawlMapData}.
  *
@@ -1246,7 +1212,7 @@ export const FirecrawlMapData = typedUnknown<MapData>(
  */
 export type FirecrawlMapData = typeof FirecrawlMapData.Type;
 /**
- * Firecrawl Crawl Response Data opaque SDK response schema.
+ * Structurally validated Firecrawl crawl-start response schema.
  *
  * @example
  * ```ts
@@ -1258,10 +1224,7 @@ export type FirecrawlMapData = typeof FirecrawlMapData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlCrawlResponseData = typedUnknown<CrawlResponse>(
-  "FirecrawlCrawlResponseData",
-  "Opaque Firecrawl crawl start response returned by the SDK."
-);
+export const FirecrawlCrawlResponseData = Response.FirecrawlCrawlResponseData;
 /**
  * Type for {@link FirecrawlCrawlResponseData}.
  *
@@ -1278,7 +1241,7 @@ export const FirecrawlCrawlResponseData = typedUnknown<CrawlResponse>(
  */
 export type FirecrawlCrawlResponseData = typeof FirecrawlCrawlResponseData.Type;
 /**
- * Firecrawl Crawl Job Data opaque SDK response schema.
+ * Structurally validated Firecrawl crawl-job response schema.
  *
  * @example
  * ```ts
@@ -1290,10 +1253,7 @@ export type FirecrawlCrawlResponseData = typeof FirecrawlCrawlResponseData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlCrawlJobData = typedUnknown<CrawlJob>(
-  "FirecrawlCrawlJobData",
-  "Opaque Firecrawl crawl job returned by the SDK."
-);
+export const FirecrawlCrawlJobData = Response.FirecrawlCrawlJobData;
 /**
  * Type for {@link FirecrawlCrawlJobData}.
  *
@@ -1310,7 +1270,7 @@ export const FirecrawlCrawlJobData = typedUnknown<CrawlJob>(
  */
 export type FirecrawlCrawlJobData = typeof FirecrawlCrawlJobData.Type;
 /**
- * Firecrawl Crawl Errors Data opaque SDK response schema.
+ * Structurally validated Firecrawl crawl-errors response schema.
  *
  * @example
  * ```ts
@@ -1322,10 +1282,7 @@ export type FirecrawlCrawlJobData = typeof FirecrawlCrawlJobData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlCrawlErrorsData = typedUnknown<CrawlErrorsResponse>(
-  "FirecrawlCrawlErrorsData",
-  "Opaque Firecrawl crawl errors response returned by the SDK."
-);
+export const FirecrawlCrawlErrorsData = Response.FirecrawlCrawlErrorsData;
 /**
  * Type for {@link FirecrawlCrawlErrorsData}.
  *
@@ -1342,7 +1299,7 @@ export const FirecrawlCrawlErrorsData = typedUnknown<CrawlErrorsResponse>(
  */
 export type FirecrawlCrawlErrorsData = typeof FirecrawlCrawlErrorsData.Type;
 /**
- * Firecrawl Active Crawls Data opaque SDK response schema.
+ * Structurally validated Firecrawl active-crawls response schema.
  *
  * @example
  * ```ts
@@ -1354,10 +1311,7 @@ export type FirecrawlCrawlErrorsData = typeof FirecrawlCrawlErrorsData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlActiveCrawlsData = typedUnknown<ActiveCrawlsResponse>(
-  "FirecrawlActiveCrawlsData",
-  "Opaque Firecrawl active crawls response returned by the SDK."
-);
+export const FirecrawlActiveCrawlsData = Response.FirecrawlActiveCrawlsData;
 /**
  * Type for {@link FirecrawlActiveCrawlsData}.
  *
@@ -1374,7 +1328,7 @@ export const FirecrawlActiveCrawlsData = typedUnknown<ActiveCrawlsResponse>(
  */
 export type FirecrawlActiveCrawlsData = typeof FirecrawlActiveCrawlsData.Type;
 /**
- * Firecrawl Monitor Data opaque SDK response schema.
+ * Structurally validated Firecrawl monitor response schema.
  *
  * @example
  * ```ts
@@ -1386,10 +1340,7 @@ export type FirecrawlActiveCrawlsData = typeof FirecrawlActiveCrawlsData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMonitorData = typedUnknown<Monitor>(
-  "FirecrawlMonitorData",
-  "Opaque Firecrawl monitor returned by the SDK."
-);
+export const FirecrawlMonitorData = Response.FirecrawlMonitorData;
 /**
  * Type for {@link FirecrawlMonitorData}.
  *
@@ -1406,7 +1357,7 @@ export const FirecrawlMonitorData = typedUnknown<Monitor>(
  */
 export type FirecrawlMonitorData = typeof FirecrawlMonitorData.Type;
 /**
- * Firecrawl Monitor List Data opaque SDK response schema.
+ * Structurally validated Firecrawl monitor-list response schema.
  *
  * @example
  * ```ts
@@ -1418,10 +1369,7 @@ export type FirecrawlMonitorData = typeof FirecrawlMonitorData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMonitorListData = typedUnknown<ReadonlyArray<Monitor>>(
-  "FirecrawlMonitorListData",
-  "Opaque Firecrawl monitor list returned by the SDK."
-);
+export const FirecrawlMonitorListData = Response.FirecrawlMonitorListData;
 /**
  * Type for {@link FirecrawlMonitorListData}.
  *
@@ -1438,7 +1386,7 @@ export const FirecrawlMonitorListData = typedUnknown<ReadonlyArray<Monitor>>(
  */
 export type FirecrawlMonitorListData = typeof FirecrawlMonitorListData.Type;
 /**
- * Firecrawl Monitor Check Data opaque SDK response schema.
+ * Structurally validated Firecrawl monitor-check response schema.
  *
  * @example
  * ```ts
@@ -1450,10 +1398,7 @@ export type FirecrawlMonitorListData = typeof FirecrawlMonitorListData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMonitorCheckData = typedUnknown<MonitorCheck>(
-  "FirecrawlMonitorCheckData",
-  "Opaque Firecrawl monitor check returned by the SDK."
-);
+export const FirecrawlMonitorCheckData = Response.FirecrawlMonitorCheckData;
 /**
  * Type for {@link FirecrawlMonitorCheckData}.
  *
@@ -1470,7 +1415,7 @@ export const FirecrawlMonitorCheckData = typedUnknown<MonitorCheck>(
  */
 export type FirecrawlMonitorCheckData = typeof FirecrawlMonitorCheckData.Type;
 /**
- * Firecrawl Monitor Check List Data opaque SDK response schema.
+ * Structurally validated Firecrawl monitor-check-list response schema.
  *
  * @example
  * ```ts
@@ -1482,10 +1427,7 @@ export type FirecrawlMonitorCheckData = typeof FirecrawlMonitorCheckData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMonitorCheckListData = typedUnknown<ReadonlyArray<MonitorCheck>>(
-  "FirecrawlMonitorCheckListData",
-  "Opaque Firecrawl monitor check list returned by the SDK."
-);
+export const FirecrawlMonitorCheckListData = Response.FirecrawlMonitorCheckListData;
 /**
  * Type for {@link FirecrawlMonitorCheckListData}.
  *
@@ -1502,7 +1444,7 @@ export const FirecrawlMonitorCheckListData = typedUnknown<ReadonlyArray<MonitorC
  */
 export type FirecrawlMonitorCheckListData = typeof FirecrawlMonitorCheckListData.Type;
 /**
- * Firecrawl Monitor Check Detail Data opaque SDK response schema.
+ * Structurally validated Firecrawl monitor-check-detail response schema.
  *
  * @example
  * ```ts
@@ -1514,10 +1456,7 @@ export type FirecrawlMonitorCheckListData = typeof FirecrawlMonitorCheckListData
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlMonitorCheckDetailData = typedUnknown<MonitorCheckDetail>(
-  "FirecrawlMonitorCheckDetailData",
-  "Opaque Firecrawl monitor check detail returned by the SDK."
-);
+export const FirecrawlMonitorCheckDetailData = Response.FirecrawlMonitorCheckDetailData;
 /**
  * Type for {@link FirecrawlMonitorCheckDetailData}.
  *
@@ -1534,7 +1473,7 @@ export const FirecrawlMonitorCheckDetailData = typedUnknown<MonitorCheckDetail>(
  */
 export type FirecrawlMonitorCheckDetailData = typeof FirecrawlMonitorCheckDetailData.Type;
 /**
- * Firecrawl Batch Scrape Response Data opaque SDK response schema.
+ * Structurally validated Firecrawl batch-scrape-start response schema.
  *
  * @example
  * ```ts
@@ -1546,10 +1485,7 @@ export type FirecrawlMonitorCheckDetailData = typeof FirecrawlMonitorCheckDetail
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBatchScrapeResponseData = typedUnknown<BatchScrapeResponse>(
-  "FirecrawlBatchScrapeResponseData",
-  "Opaque Firecrawl batch scrape start response returned by the SDK."
-);
+export const FirecrawlBatchScrapeResponseData = Response.FirecrawlBatchScrapeResponseData;
 /**
  * Type for {@link FirecrawlBatchScrapeResponseData}.
  *
@@ -1566,7 +1502,7 @@ export const FirecrawlBatchScrapeResponseData = typedUnknown<BatchScrapeResponse
  */
 export type FirecrawlBatchScrapeResponseData = typeof FirecrawlBatchScrapeResponseData.Type;
 /**
- * Firecrawl Batch Scrape Job Data opaque SDK response schema.
+ * Structurally validated Firecrawl batch-scrape-job response schema.
  *
  * @example
  * ```ts
@@ -1578,10 +1514,7 @@ export type FirecrawlBatchScrapeResponseData = typeof FirecrawlBatchScrapeRespon
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBatchScrapeJobData = typedUnknown<BatchScrapeJob>(
-  "FirecrawlBatchScrapeJobData",
-  "Opaque Firecrawl batch scrape job returned by the SDK."
-);
+export const FirecrawlBatchScrapeJobData = Response.FirecrawlBatchScrapeJobData;
 /**
  * Type for {@link FirecrawlBatchScrapeJobData}.
  *
@@ -1598,7 +1531,7 @@ export const FirecrawlBatchScrapeJobData = typedUnknown<BatchScrapeJob>(
  */
 export type FirecrawlBatchScrapeJobData = typeof FirecrawlBatchScrapeJobData.Type;
 /**
- * Firecrawl Agent Response Data opaque SDK response schema.
+ * Structurally validated Firecrawl agent-start response schema.
  *
  * @example
  * ```ts
@@ -1610,10 +1543,7 @@ export type FirecrawlBatchScrapeJobData = typeof FirecrawlBatchScrapeJobData.Typ
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlAgentResponseData = typedUnknown<AgentResponse>(
-  "FirecrawlAgentResponseData",
-  "Opaque Firecrawl agent start response returned by the SDK."
-);
+export const FirecrawlAgentResponseData = Response.FirecrawlAgentResponseData;
 /**
  * Type for {@link FirecrawlAgentResponseData}.
  *
@@ -1630,7 +1560,7 @@ export const FirecrawlAgentResponseData = typedUnknown<AgentResponse>(
  */
 export type FirecrawlAgentResponseData = typeof FirecrawlAgentResponseData.Type;
 /**
- * Firecrawl Agent Status Data opaque SDK response schema.
+ * Structurally validated Firecrawl agent-status response schema.
  *
  * @example
  * ```ts
@@ -1642,10 +1572,7 @@ export type FirecrawlAgentResponseData = typeof FirecrawlAgentResponseData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlAgentStatusData = typedUnknown<AgentStatusResponse>(
-  "FirecrawlAgentStatusData",
-  "Opaque Firecrawl agent status response returned by the SDK."
-);
+export const FirecrawlAgentStatusData = Response.FirecrawlAgentStatusData;
 /**
  * Type for {@link FirecrawlAgentStatusData}.
  *
@@ -1662,7 +1589,7 @@ export const FirecrawlAgentStatusData = typedUnknown<AgentStatusResponse>(
  */
 export type FirecrawlAgentStatusData = typeof FirecrawlAgentStatusData.Type;
 /**
- * Firecrawl Browser Create Data opaque SDK response schema.
+ * Structurally validated Firecrawl browser-create response schema.
  *
  * @example
  * ```ts
@@ -1674,10 +1601,7 @@ export type FirecrawlAgentStatusData = typeof FirecrawlAgentStatusData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBrowserCreateData = typedUnknown<BrowserCreateResponse>(
-  "FirecrawlBrowserCreateData",
-  "Opaque Firecrawl browser creation response returned by the SDK."
-);
+export const FirecrawlBrowserCreateData = Response.FirecrawlBrowserCreateData;
 /**
  * Type for {@link FirecrawlBrowserCreateData}.
  *
@@ -1694,7 +1618,7 @@ export const FirecrawlBrowserCreateData = typedUnknown<BrowserCreateResponse>(
  */
 export type FirecrawlBrowserCreateData = typeof FirecrawlBrowserCreateData.Type;
 /**
- * Firecrawl Browser Execute Data opaque SDK response schema.
+ * Structurally validated Firecrawl browser-execute response schema.
  *
  * @example
  * ```ts
@@ -1706,10 +1630,7 @@ export type FirecrawlBrowserCreateData = typeof FirecrawlBrowserCreateData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBrowserExecuteData = typedUnknown<BrowserExecuteResponse>(
-  "FirecrawlBrowserExecuteData",
-  "Opaque Firecrawl browser execution response returned by the SDK."
-);
+export const FirecrawlBrowserExecuteData = Response.FirecrawlBrowserExecuteData;
 /**
  * Type for {@link FirecrawlBrowserExecuteData}.
  *
@@ -1726,7 +1647,7 @@ export const FirecrawlBrowserExecuteData = typedUnknown<BrowserExecuteResponse>(
  */
 export type FirecrawlBrowserExecuteData = typeof FirecrawlBrowserExecuteData.Type;
 /**
- * Firecrawl Browser Delete Data opaque SDK response schema.
+ * Structurally validated Firecrawl browser-delete response schema.
  *
  * @example
  * ```ts
@@ -1738,10 +1659,7 @@ export type FirecrawlBrowserExecuteData = typeof FirecrawlBrowserExecuteData.Typ
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBrowserDeleteData = typedUnknown<BrowserDeleteResponse>(
-  "FirecrawlBrowserDeleteData",
-  "Opaque Firecrawl browser deletion response returned by the SDK."
-);
+export const FirecrawlBrowserDeleteData = Response.FirecrawlBrowserDeleteData;
 /**
  * Type for {@link FirecrawlBrowserDeleteData}.
  *
@@ -1758,7 +1676,7 @@ export const FirecrawlBrowserDeleteData = typedUnknown<BrowserDeleteResponse>(
  */
 export type FirecrawlBrowserDeleteData = typeof FirecrawlBrowserDeleteData.Type;
 /**
- * Firecrawl Browser List Data opaque SDK response schema.
+ * Structurally validated Firecrawl browser-list response schema.
  *
  * @example
  * ```ts
@@ -1770,10 +1688,7 @@ export type FirecrawlBrowserDeleteData = typeof FirecrawlBrowserDeleteData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBrowserListData = typedUnknown<BrowserListResponse>(
-  "FirecrawlBrowserListData",
-  "Opaque Firecrawl browser list response returned by the SDK."
-);
+export const FirecrawlBrowserListData = Response.FirecrawlBrowserListData;
 /**
  * Type for {@link FirecrawlBrowserListData}.
  *
@@ -1790,7 +1705,7 @@ export const FirecrawlBrowserListData = typedUnknown<BrowserListResponse>(
  */
 export type FirecrawlBrowserListData = typeof FirecrawlBrowserListData.Type;
 /**
- * Firecrawl Concurrency Data opaque SDK response schema.
+ * Structurally validated Firecrawl concurrency response schema.
  *
  * @example
  * ```ts
@@ -1802,10 +1717,7 @@ export type FirecrawlBrowserListData = typeof FirecrawlBrowserListData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlConcurrencyData = typedUnknown<ConcurrencyCheck>(
-  "FirecrawlConcurrencyData",
-  "Opaque Firecrawl concurrency response returned by the SDK."
-);
+export const FirecrawlConcurrencyData = Response.FirecrawlConcurrencyData;
 /**
  * Type for {@link FirecrawlConcurrencyData}.
  *
@@ -1822,7 +1734,7 @@ export const FirecrawlConcurrencyData = typedUnknown<ConcurrencyCheck>(
  */
 export type FirecrawlConcurrencyData = typeof FirecrawlConcurrencyData.Type;
 /**
- * Firecrawl Credit Usage Data opaque SDK response schema.
+ * Structurally validated Firecrawl credit-usage response schema.
  *
  * @example
  * ```ts
@@ -1834,10 +1746,7 @@ export type FirecrawlConcurrencyData = typeof FirecrawlConcurrencyData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlCreditUsageData = typedUnknown<CreditUsage>(
-  "FirecrawlCreditUsageData",
-  "Opaque Firecrawl credit usage response returned by the SDK."
-);
+export const FirecrawlCreditUsageData = Response.FirecrawlCreditUsageData;
 /**
  * Type for {@link FirecrawlCreditUsageData}.
  *
@@ -1854,7 +1763,7 @@ export const FirecrawlCreditUsageData = typedUnknown<CreditUsage>(
  */
 export type FirecrawlCreditUsageData = typeof FirecrawlCreditUsageData.Type;
 /**
- * Firecrawl Token Usage Data opaque SDK response schema.
+ * Structurally validated Firecrawl token-usage response schema.
  *
  * @example
  * ```ts
@@ -1866,10 +1775,7 @@ export type FirecrawlCreditUsageData = typeof FirecrawlCreditUsageData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlTokenUsageData = typedUnknown<TokenUsage>(
-  "FirecrawlTokenUsageData",
-  "Opaque Firecrawl token usage response returned by the SDK."
-);
+export const FirecrawlTokenUsageData = Response.FirecrawlTokenUsageData;
 /**
  * Type for {@link FirecrawlTokenUsageData}.
  *
@@ -1886,7 +1792,7 @@ export const FirecrawlTokenUsageData = typedUnknown<TokenUsage>(
  */
 export type FirecrawlTokenUsageData = typeof FirecrawlTokenUsageData.Type;
 /**
- * Firecrawl Credit Usage Historical Data opaque SDK response schema.
+ * Structurally validated Firecrawl historical credit-usage response schema.
  *
  * @example
  * ```ts
@@ -1898,10 +1804,7 @@ export type FirecrawlTokenUsageData = typeof FirecrawlTokenUsageData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlCreditUsageHistoricalData = typedUnknown<CreditUsageHistoricalResponse>(
-  "FirecrawlCreditUsageHistoricalData",
-  "Opaque Firecrawl historical credit usage response returned by the SDK."
-);
+export const FirecrawlCreditUsageHistoricalData = Response.FirecrawlCreditUsageHistoricalData;
 /**
  * Type for {@link FirecrawlCreditUsageHistoricalData}.
  *
@@ -1918,7 +1821,7 @@ export const FirecrawlCreditUsageHistoricalData = typedUnknown<CreditUsageHistor
  */
 export type FirecrawlCreditUsageHistoricalData = typeof FirecrawlCreditUsageHistoricalData.Type;
 /**
- * Firecrawl Token Usage Historical Data opaque SDK response schema.
+ * Structurally validated Firecrawl historical token-usage response schema.
  *
  * @example
  * ```ts
@@ -1930,10 +1833,7 @@ export type FirecrawlCreditUsageHistoricalData = typeof FirecrawlCreditUsageHist
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlTokenUsageHistoricalData = typedUnknown<TokenUsageHistoricalResponse>(
-  "FirecrawlTokenUsageHistoricalData",
-  "Opaque Firecrawl historical token usage response returned by the SDK."
-);
+export const FirecrawlTokenUsageHistoricalData = Response.FirecrawlTokenUsageHistoricalData;
 /**
  * Type for {@link FirecrawlTokenUsageHistoricalData}.
  *
@@ -1950,7 +1850,7 @@ export const FirecrawlTokenUsageHistoricalData = typedUnknown<TokenUsageHistoric
  */
 export type FirecrawlTokenUsageHistoricalData = typeof FirecrawlTokenUsageHistoricalData.Type;
 /**
- * Firecrawl Queue Status Data opaque SDK response schema.
+ * Structurally validated Firecrawl queue-status response schema.
  *
  * @example
  * ```ts
@@ -1962,10 +1862,7 @@ export type FirecrawlTokenUsageHistoricalData = typeof FirecrawlTokenUsageHistor
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlQueueStatusData = typedUnknown<QueueStatusResponse>(
-  "FirecrawlQueueStatusData",
-  "Opaque Firecrawl queue status response returned by the SDK."
-);
+export const FirecrawlQueueStatusData = Response.FirecrawlQueueStatusData;
 /**
  * Type for {@link FirecrawlQueueStatusData}.
  *
@@ -1982,7 +1879,7 @@ export const FirecrawlQueueStatusData = typedUnknown<QueueStatusResponse>(
  */
 export type FirecrawlQueueStatusData = typeof FirecrawlQueueStatusData.Type;
 /**
- * Firecrawl Interact Data opaque SDK response schema.
+ * Structurally validated Firecrawl interaction response schema.
  *
  * @example
  * ```ts
@@ -1994,10 +1891,7 @@ export type FirecrawlQueueStatusData = typeof FirecrawlQueueStatusData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlInteractData = typedUnknown<ScrapeExecuteResponse>(
-  "FirecrawlInteractData",
-  "Opaque Firecrawl interact response returned by the SDK."
-);
+export const FirecrawlInteractData = Response.FirecrawlInteractData;
 /**
  * Type for {@link FirecrawlInteractData}.
  *
@@ -2014,7 +1908,7 @@ export const FirecrawlInteractData = typedUnknown<ScrapeExecuteResponse>(
  */
 export type FirecrawlInteractData = typeof FirecrawlInteractData.Type;
 /**
- * Firecrawl Stop Interaction Data opaque SDK response schema.
+ * Structurally validated Firecrawl stop-interaction response schema.
  *
  * @example
  * ```ts
@@ -2026,10 +1920,7 @@ export type FirecrawlInteractData = typeof FirecrawlInteractData.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlStopInteractionData = typedUnknown<ScrapeBrowserDeleteResponse>(
-  "FirecrawlStopInteractionData",
-  "Opaque Firecrawl stop interaction response returned by the SDK."
-);
+export const FirecrawlStopInteractionData = Response.FirecrawlStopInteractionData;
 /**
  * Type for {@link FirecrawlStopInteractionData}.
  *
