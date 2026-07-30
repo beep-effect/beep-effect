@@ -64,7 +64,9 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       expect(firstRender?.id).not.toBe(secondRender?.id);
 
       yield* Effect.sync(() => {
-        act(() => secondRender?.resolve({ svg: '<svg data-source="second"></svg>' }));
+        act(() =>
+          secondRender?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-source="second"></svg>' })
+        );
       });
       yield* Effect.promise(() =>
         waitFor(() =>
@@ -76,7 +78,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       );
 
       yield* Effect.sync(() => {
-        act(() => firstRender?.resolve({ svg: '<svg data-source="first"></svg>' }));
+        act(() => firstRender?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-source="first"></svg>' }));
       });
       yield* Effect.promise(() =>
         waitFor(() =>
@@ -99,11 +101,43 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
 
       view.unmount();
       yield* Effect.sync(() => {
-        act(() => pending?.resolve({ svg: '<svg data-after-unmount="no"></svg>' }));
+        act(() => pending?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-after-unmount="no"></svg>' }));
       });
       yield* Effect.yieldNow;
 
       expect(view.container).toBeEmptyDOMElement();
+    })
+  );
+
+  it.effect(
+    "rejects active or foreign renderer output before the HTML sink",
+    Effect.fnUntraced(function* () {
+      const source = `graph TD\nA["<img src=x onerror=alert(1)>"] --> B`;
+      const view = render(<MermaidView renderKey="unsafe-renderer-output" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+
+      expect(mermaidStub.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          htmlLabels: false,
+          secure: expect.arrayContaining(["htmlLabels", "securityLevel"]),
+        })
+      );
+
+      yield* Effect.sync(() => {
+        act(() =>
+          mermaidStub.pending.get(source)?.resolve({
+            svg: '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><img src="x" onerror="alert(1)"></foreignObject></svg>',
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+        )
+      );
+
+      expect(view.container.querySelector("svg, foreignObject, img, [onerror]")).toBeNull();
+      expect(within(view.container).getByTestId("mermaid-diagram")).toHaveTextContent("<img");
     })
   );
 });

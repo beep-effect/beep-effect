@@ -11,7 +11,7 @@ import { $EditorId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
-import { Effect, Layer, Match } from "effect";
+import { Effect, HashSet, Layer, Match } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
@@ -27,6 +27,7 @@ type MermaidRenderState =
 const pendingState: MermaidRenderState = { _tag: "pending" };
 const fallbackErrorMessage = "Unable to render diagram.";
 const invalidDiagramMessage = "Diagram could not be parsed.";
+const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety policy.";
 
 /**
  * Typed Mermaid load, parse, or render failure. The optional defect is retained
@@ -72,6 +73,71 @@ const mermaidConfig = {
   securityLevel: "strict" as const,
   startOnLoad: false,
   suppressErrorRendering: true,
+  htmlLabels: false,
+  secure: ["secure", "securityLevel", "startOnLoad", "maxTextSize", "suppressErrorRendering", "maxEdges", "htmlLabels"],
+};
+
+const svgNamespace = "http://www.w3.org/2000/svg";
+const forbiddenSvgElements = HashSet.make(
+  "a",
+  "animate",
+  "animatemotion",
+  "animatetransform",
+  "audio",
+  "base",
+  "button",
+  "canvas",
+  "discard",
+  "embed",
+  "feimage",
+  "foreignobject",
+  "form",
+  "iframe",
+  "image",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "object",
+  "option",
+  "script",
+  "select",
+  "set",
+  "source",
+  "textarea",
+  "track",
+  "video"
+);
+const urlAttributes = HashSet.make("href", "poster", "src", "xlink:href");
+const unsafeCss = /@import|expression\s*\(|(?:data|javascript|vbscript)\s*:|url\s*\(\s*(?!#|["']#)/iu;
+
+const isSafeMermaidSvg = (svg: string): boolean => {
+  const document = new DOMParser().parseFromString(svg, "image/svg+xml");
+  const root = document.documentElement;
+  if (
+    root.localName !== "svg" ||
+    root.namespaceURI !== svgNamespace ||
+    document.querySelector("parsererror") !== null
+  ) {
+    return false;
+  }
+
+  for (const element of document.querySelectorAll("*")) {
+    if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
+      return false;
+
+    if (element.localName === "style" && unsafeCss.test(element.textContent ?? "")) return false;
+
+    for (const attribute of element.attributes) {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim();
+      if (name.startsWith("on")) return false;
+      if (HashSet.has(urlAttributes, name) && !value.startsWith("#")) return false;
+      if (unsafeCss.test(value)) return false;
+    }
+  }
+
+  return true;
 };
 
 const hashString = (value: string): string => {
@@ -124,6 +190,9 @@ const renderMermaid = Effect.fnUntraced(function* (renderId: string, source: str
     try: () => mermaid.render(renderId, source),
     catch: (cause) => MermaidRenderError.make({ message: fallbackErrorMessage, cause }),
   });
+  if (!isSafeMermaidSvg(rendered.svg)) {
+    return yield* MermaidRenderError.make({ message: unsafeDiagramMessage });
+  }
   return okState(rendered.svg);
 });
 

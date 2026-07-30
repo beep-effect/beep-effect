@@ -102,9 +102,9 @@ export const YouTubeWatchUrl = S.String.check(canonicalYouTubeWatchUrl).pipe(
 export type YouTubeWatchUrl = typeof YouTubeWatchUrl.Type;
 
 /**
- * Cancelable DOM event emitted before the watch fallback follows its normal
- * browser link. Desktop shells can intercept this event with an Atom-owned
- * listener and delegate to a scoped native opener.
+ * Cancelable DOM event emitted before the watch fallback opens a browser
+ * window. Desktop shells can intercept this event with an Atom-owned listener
+ * and delegate to a scoped native opener.
  *
  * @example
  * ```ts
@@ -164,8 +164,8 @@ export interface YouTubeEmbedProps {
 /**
  * Least-privilege frame policy. The embed is model-controlled content, so the
  * frame gets only what playback needs: scripts, its own origin (which is
- * YouTube's, not ours), fullscreen presentation, and the ability to open the
- * video in a new tab. It cannot navigate the top-level page or submit forms.
+ * YouTube's, not ours), and bounded popup escape for playback links. It cannot
+ * navigate the top-level page or submit forms.
  *
  * @example
  * ```ts
@@ -177,8 +177,7 @@ export interface YouTubeEmbedProps {
  * @category configuration
  * @since 0.0.0
  */
-export const YOUTUBE_EMBED_SANDBOX =
-  "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox";
+export const YOUTUBE_EMBED_SANDBOX = "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
 
 /**
  * Renders a privacy-enhanced YouTube iframe from a bare video id.
@@ -215,13 +214,20 @@ export function YouTubeEmbed({ videoID }: YouTubeEmbedProps): JSX.Element {
   const safeVideoID = decoded.value.videoID;
   const watchUrl = youtubeWatchUrl(safeVideoID);
   const onWatch = (event: MouseEvent<HTMLAnchorElement>): void => {
+    // Keep target=_blank out of the markup: WebKitGTK routes it through the
+    // generic shell opener before React can cancel the navigation. The scoped
+    // desktop event claims the request; ordinary browsers receive the explicit
+    // fallback while the click still owns a user gesture.
+    event.preventDefault();
     const request = new CustomEvent(YOUTUBE_WATCH_EVENT, {
       bubbles: true,
       cancelable: true,
       composed: true,
       detail: YouTubeWatchRequest.make({ url: watchUrl }),
     });
-    if (!event.currentTarget.dispatchEvent(request)) event.preventDefault();
+    if (event.currentTarget.dispatchEvent(request)) {
+      globalThis.open(watchUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -240,7 +246,6 @@ export function YouTubeEmbed({ videoID }: YouTubeEmbedProps): JSX.Element {
       <a
         className="text-muted-foreground hover:text-foreground mt-1 inline-block text-xs underline"
         href={watchUrl}
-        target="_blank"
         rel="noreferrer noopener"
         onClick={onWatch}
       >

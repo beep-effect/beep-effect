@@ -418,12 +418,22 @@ describe("editor contract hardening", { concurrent: false }, () => {
       if (event instanceof CustomEvent) request = event.detail as YouTubeWatchRequest;
       event.preventDefault();
     };
+    const browserFallback = vi.spyOn(window, "open").mockImplementation(() => null);
     window.addEventListener(YOUTUBE_WATCH_EVENT, onWatch);
     const valid = render(<YouTubeEmbed videoID="dQw4w9WgXcQ" />);
-    fireEvent.click(screen.getByRole("link", { name: "Watch on YouTube" }));
+    const watchLink = screen.getByRole("link", { name: "Watch on YouTube" });
+    expect(watchLink).not.toHaveAttribute("target");
+    fireEvent.click(watchLink);
     window.removeEventListener(YOUTUBE_WATCH_EVENT, onWatch);
 
     expect(request?.url).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(browserFallback).not.toHaveBeenCalled();
+    fireEvent.click(watchLink);
+    expect(browserFallback).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "_blank",
+      "noopener,noreferrer"
+    );
     expect(valid.container.querySelector("iframe")).toHaveAttribute(
       "src",
       "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
