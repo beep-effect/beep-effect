@@ -259,14 +259,27 @@ describe("@beep/firecrawl", () => {
         futureField: { enabled: true },
         markdown: "ok",
       });
+      const representativeSearchData = yield* S.decodeUnknownEffect(F.FirecrawlSearchData)({
+        web: [
+          { description: "result", url: "https://example.com/result" },
+          { futureField: { enabled: true }, markdown: "document" },
+        ],
+      });
 
       expect(documentWithFutureField).toEqual({
         futureField: { enabled: true },
         markdown: "ok",
       });
+      expect(representativeSearchData).toEqual({
+        web: [
+          { description: "result", url: "https://example.com/result" },
+          { futureField: { enabled: true }, markdown: "document" },
+        ],
+      });
       expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)(42))).toBe(true);
       expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)([]))).toBe(true);
       expect(O.isNone(S.decodeUnknownOption(F.FirecrawlDocument)({ markdown: 42 }))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlSearchData)({ web: [{ url: 42 }] }))).toBe(true);
       expect(O.isNone(S.decodeUnknownOption(F.FirecrawlMonitorListData)([42]))).toBe(true);
       expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeSuccess)({ data: 42 }))).toBe(true);
     })

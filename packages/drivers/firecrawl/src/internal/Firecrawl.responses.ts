@@ -104,10 +104,23 @@ class SearchResultImageShape extends S.Class<SearchResultImageShape>($I`SearchRe
   title: optionalString,
   url: optionalString,
 }) {}
+class SearchDocumentShape extends S.Class<SearchDocumentShape>($I`SearchDocumentShape`)({
+  ...DocumentShape.fields,
+  category: S.optionalKey(S.Never),
+  date: S.optionalKey(S.Never),
+  description: S.optionalKey(S.Never),
+  imageHeight: S.optionalKey(S.Never),
+  imageUrl: S.optionalKey(S.Never),
+  imageWidth: S.optionalKey(S.Never),
+  position: S.optionalKey(S.Never),
+  snippet: S.optionalKey(S.Never),
+  title: S.optionalKey(S.Never),
+  url: S.optionalKey(S.Never),
+}) {}
 class SearchDataShape extends S.Class<SearchDataShape>($I`SearchDataShape`)({
-  images: S.Union([SearchResultImageShape, DocumentShape]).pipe(S.Array, S.optionalKey),
-  news: S.Union([SearchResultNewsShape, DocumentShape]).pipe(S.Array, S.optionalKey),
-  web: S.Union([SearchResultWebShape, DocumentShape]).pipe(S.Array, S.optionalKey),
+  images: S.Union([SearchResultImageShape, SearchDocumentShape]).pipe(S.Array, S.optionalKey),
+  news: S.Union([SearchResultNewsShape, SearchDocumentShape]).pipe(S.Array, S.optionalKey),
+  web: S.Union([SearchResultWebShape, SearchDocumentShape]).pipe(S.Array, S.optionalKey),
 }) {}
 class MapDataShape extends S.Class<MapDataShape>($I`MapDataShape`)({
   id: optionalString,
