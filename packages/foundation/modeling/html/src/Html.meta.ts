@@ -9,7 +9,13 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+
+// WHATWG's tokenizer-lowercased attribute and event names are normative.
+// cspell:words numoctaves onpagereveal onpageswap pointsatx pointsaty pointsatz refx refy
+// cspell:words targetx targety xchannelselector ychannelselector
 
 const $I = $HtmlId.create("Html.meta");
 
@@ -404,7 +410,7 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
  * console.log(SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient) // "linearGradient"
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
@@ -456,7 +462,7 @@ export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Ob
  * console.log(SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox) // "viewBox"
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
@@ -530,7 +536,7 @@ export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = 
  * console.log(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl) // "definitionURL"
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
@@ -548,7 +554,7 @@ export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>>
  * console.log(XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href")) // true
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
@@ -578,7 +584,7 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * console.log(HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert")) // true
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
@@ -755,14 +761,26 @@ export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * console.log(HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"]) // ["phrasing"]
  * ```
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
-  "flow select element inner content elements": ["div", "hr", "optgroup", "option", "script-supporting elements"],
-  "optgroup element inner content elements": ["div", "optgroup", "option", "script-supporting elements"],
-  "option element inner content elements": ["phrasing"],
-  "select element inner content elements": ["div", "hr", "optgroup", "option", "script-supporting elements"],
+  "flow select element inner content elements": Object.freeze([
+    "div",
+    "hr",
+    "optgroup",
+    "option",
+    "script-supporting elements",
+  ]),
+  "optgroup element inner content elements": Object.freeze(["div", "optgroup", "option", "script-supporting elements"]),
+  "option element inner content elements": Object.freeze(["phrasing"]),
+  "select element inner content elements": Object.freeze([
+    "div",
+    "hr",
+    "optgroup",
+    "option",
+    "script-supporting elements",
+  ]),
 });
 
 /**
@@ -922,20 +940,17 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I`HtmlElementMeta
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
 
-/**
- * Metadata for every generated HTML element, keyed by tag name.
- *
- * @example
- * ```ts
- * import { ELEMENT_META } from "@beep/html/Html.meta"
- *
- * console.log(ELEMENT_META.div.interface) // "HTMLDivElement"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
+const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
+  Object.freeze({
+    ...value,
+    categories: Object.freeze(value.categories),
+    children: Object.freeze(value.children),
+    conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
+    currentAttributes: Object.freeze(value.currentAttributes),
+    obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+  });
+
+const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
   a: {
     tag: "a",
     interface: "HTMLAnchorElement",
@@ -3114,3 +3129,20 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     conditionalCategories: [],
   },
 };
+
+/**
+ * Metadata for every generated HTML element, keyed by tag name.
+ *
+ * @example
+ * ```ts
+ * import { ELEMENT_META } from "@beep/html/Html.meta"
+ *
+ * console.log(ELEMENT_META.div.interface) // "HTMLDivElement"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
+  R.map(elementMetaSource, freezeElementMeta)
+);

@@ -272,24 +272,26 @@ const optionalRuntime = (schema: string): string =>
 const literalUnion = (values: ReadonlyArray<string>): string =>
   values.map((value) => JSON.stringify(value)).join(" | ");
 
+type ReviewedCurrentAttributeGap = {
+  readonly pinned: ReadonlyArray<string>;
+  readonly reviewed: ReadonlyArray<string>;
+  readonly tag: string;
+  readonly webref: ReadonlyArray<string>;
+};
+
 /**
  * Requires every pinned current attribute missing from webref to have an exact
  * reviewed override, with no stale or speculative entries.
  *
  * @since 0.0.0
  */
-export const assertReviewedCurrentAttributeGap = (
-  tag: string,
-  pinned: ReadonlyArray<string>,
-  webref: ReadonlyArray<string>,
-  reviewed: ReadonlyArray<string>
-): void => {
-  const webrefNames = MutableHashSet.fromIterable(webref);
-  const missingFromWebref = pinned.filter((name) => !MutableHashSet.has(webrefNames, name)).sort();
-  const reviewedNames = [...reviewed].sort();
+export const assertReviewedCurrentAttributeGap = (input: ReviewedCurrentAttributeGap): void => {
+  const webrefNames = MutableHashSet.fromIterable(input.webref);
+  const missingFromWebref = input.pinned.filter((name) => !MutableHashSet.has(webrefNames, name)).sort();
+  const reviewedNames = [...input.reviewed].sort();
   if (JSON.stringify(missingFromWebref) !== JSON.stringify(reviewedNames)) {
     failGeneration(
-      `HTML generator current-attribute gap for <${tag}> requires an exact reviewed override; expected ${JSON.stringify(missingFromWebref)}, received ${JSON.stringify(reviewedNames)}`
+      `HTML generator current-attribute gap for <${input.tag}> requires an exact reviewed override; expected ${JSON.stringify(missingFromWebref)}, received ${JSON.stringify(reviewedNames)}`
     );
   }
 };
@@ -355,7 +357,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
     const pinnedSpecific = MutableHashSet.fromIterable(pinned.filter((name) => name !== "globals"));
     const reviewed = [...(classification.currentAttributeOverrides[tag] ?? [])].sort();
-    assertReviewedCurrentAttributeGap(tag, [...pinnedSpecific], [...webrefSpecific], reviewed);
+    assertReviewedCurrentAttributeGap({
+      pinned: [...pinnedSpecific],
+      reviewed,
+      tag,
+      webref: [...webrefSpecific],
+    });
     MutableHashMap.set(currentElemAttrs, tag, pinnedSpecific);
     MutableHashMap.set(
       obsoleteElemAttrs,
@@ -1001,6 +1008,10 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+
+// WHATWG's lowercase global event handler names are normative.
+// cspell:words onpagereveal onpageswap
+
 import {
   AutocompleteAttribute,
   BooleanAttribute,
@@ -1270,7 +1281,11 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
   const mathMlAttributeNameAdjustments = JSON.stringify(classification.mathMlAttributeNameAdjustments);
   const xmlAttributeNames = JSON.stringify([...classification.xmlAttributeNames].sort());
   const globalAttributeNames = JSON.stringify([...globalKeys].sort());
-  const contentTokenExpansions = JSON.stringify(classification.contentTokenExpansions);
+  const contentTokenExpansions = `{
+${R.toEntries(classification.contentTokenExpansions)
+  .map(([token, values]) => `  ${JSON.stringify(token)}: Object.freeze(${JSON.stringify(values)}),`)
+  .join("\n")}
+}`;
 
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
@@ -1283,7 +1298,13 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+
+// WHATWG's tokenizer-lowercased attribute and event names are normative.
+// cspell:words numoctaves onpagereveal onpageswap pointsatx pointsaty pointsatz refx refy
+// cspell:words targetx targety xchannelselector ychannelselector
 
 const $I = $HtmlId.create("Html.meta");
 
@@ -1462,7 +1483,7 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
  * console.log(SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient) // "linearGradient"
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
@@ -1479,7 +1500,7 @@ export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Ob
  * console.log(SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox) // "viewBox"
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
@@ -1496,7 +1517,7 @@ export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = 
  * console.log(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl) // "definitionURL"
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
@@ -1514,7 +1535,7 @@ export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>>
  * console.log(XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href")) // true
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(${xmlAttributeNames});
@@ -1532,7 +1553,7 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * console.log(HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert")) // true
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(${globalAttributeNames});
@@ -1548,7 +1569,7 @@ export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * console.log(HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"]) // ["phrasing"]
  * \`\`\`
  *
- * @category registries
+ * @category constants
  * @since 0.0.0
  */
 export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
@@ -1673,6 +1694,20 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
 
+const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
+  Object.freeze({
+    ...value,
+    categories: Object.freeze(value.categories),
+    children: Object.freeze(value.children),
+    conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
+    currentAttributes: Object.freeze(value.currentAttributes),
+    obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+  });
+
+const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
+${metaEntries}
+};
+
 /**
  * Metadata for every generated HTML element, keyed by tag name.
  *
@@ -1686,9 +1721,9 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
  * @category models
  * @since 0.0.0
  */
-export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
-${metaEntries}
-};
+export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
+  R.map(elementMetaSource, freezeElementMeta)
+);
 `;
 
   const conforming = els.filter((e) => !e.obsolete).length;

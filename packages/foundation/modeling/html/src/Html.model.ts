@@ -14,6 +14,10 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+
+// WHATWG's lowercase global event handler names are normative.
+// cspell:words onpagereveal onpageswap
+
 import {
   AutocompleteAttribute,
   BooleanAttribute,

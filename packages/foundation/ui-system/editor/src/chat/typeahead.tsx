@@ -590,7 +590,7 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
  * console.log(typeaheadMenuId(createEditor()).startsWith("typeahead-menu-")) // true
  * ```
  *
- * @category accessibility
+ * @category utilities
  * @since 0.0.0
  */
 export const typeaheadMenuId = (editor: LexicalEditor): string => `typeahead-menu-${editor.getKey()}`;
