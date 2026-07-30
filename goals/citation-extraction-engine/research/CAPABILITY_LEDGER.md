@@ -144,7 +144,7 @@ rows, but no extension becomes “proven” until its donor tests execute.
 | E-001 | Donor occurrence IDs, `byId`, string/parallel groups | Split/reuse by identity role | Use `CitationMentionId`/`CitationAuthorityId`; reserve shared `LawPractice.CitationId` for persisted entities | unresolved | audit |
 | E-002 | Cleaning `SegmentMap`/`TransformationMap` | Subsumed composition | Mapping is required, but canonical verified-span substrate owns raw normalization semantics | unresolved | audit |
 | E-003 | `extractCitationsAsync` | Subsumed | Effect represents asynchronous and synchronous execution without duplicate API | unresolved | audit |
-| E-004 | Typed `CitationParseError` and validation | Adopt concepts through closed action errors | Donor exception shapes cannot leak; boundary translation follows repo Effect law | unresolved | audit |
+| E-004 | Typed `CitationParseError` and validation | Adopt concepts through closed server failures | Donor exception shapes cannot leak; a future public action boundary translates separately | unresolved | audit |
 | E-005 | False-positive filters | Adopt when proved | Useful hardening after canonical results remain attributable | unresolved | audit |
 | E-006 | Granular full-form extractors beyond Python forms | Adopt when proved | Legal semantic extensions belong in the same tagged union, not a second hierarchy | unresolved | audit |
 | E-007 | State/federal statute and regulation special forms | Reconcile before adoption | 35 U.S.C. is canonical `FullLawCitation`; audit 37 C.F.R. and residual donor-only fields separately | unresolved | audit |
@@ -182,6 +182,9 @@ The P0 machine-readable oracle manifest must contain:
 10. proof command/result.
 
 Aggregate method coverage or line coverage cannot substitute for this manifest.
+The separate source inventory uses closed row kinds:
+`caseDeclaration | publicOperation | modelFamily | helperFamily | regexFamily |
+fixture`.
 
 ## Completion queries
 
@@ -194,8 +197,15 @@ Before P4 can pass, machine-check the ledger for:
 - zero extension exports/test families without a complete terminal disposition;
 - zero adopted extension rows without a regression test and source citation;
 - zero `follow-up` rows without an existing named `successorGoal`;
-- zero divergence rows without rationale and normalized comparison evidence; and
+- zero divergence rows without rationale and normalized comparison evidence;
 - zero incorporated fixtures without license/provenance metadata;
-- zero duplicate case IDs or proof-target IDs; and
-- exact set equality between independently generated source inventory, runtime
-  case export, and canonical manifest rows.
+- zero duplicate case IDs or proof-target IDs;
+- exact set equality between `caseDeclaration` expansion IDs, runtime case
+  events, and canonical case rows;
+- exactly one capability-row mapping for every source public-operation/model/
+  helper row, with zero unclassified source rows;
+- exact regex-family ID equality between source and regex inventories; and
+- exact fixture ID equality between source inventory and provenance records.
+
+The heterogeneous source inventory is never compared wholesale with the
+runtime-case set.

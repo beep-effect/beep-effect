@@ -77,7 +77,7 @@ P0 creates these committed, schema-decoded artifacts:
 
 - `packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json`
   from an AST/source walk of the pinned public API, tests, fixtures, model
-  families, and regex families;
+  families, and regex families, with a closed row-kind discriminator;
 - `canonical-cases.json`, independently produced from instrumented runtime
   oracle cases;
 - `typescript-extensions.json`, with every pinned donor export and
@@ -88,13 +88,25 @@ P0 creates these committed, schema-decoded artifacts:
 
 The schemas and test helpers are published only from
 `@beep/law-practice-use-cases/test`. Add a package script named
-`citation:parity-check` that independently reconciles source inventory, runtime
-cases, capability rows, fixtures, target tests, provenance, hashes, divergences,
-and regex families.
+`citation:parity-check` that independently reconciles compatible projections:
+
+- source `caseDeclaration` expansions, runtime case events, and canonical case
+  rows have exact case-ID set equality;
+- public operation/model/helper rows each map to exactly one canonical
+  capability row, with no unclassified source row;
+- source regex-family rows and regex inventory rows have exact family-ID set
+  equality; and
+- source fixture rows and fixture-provenance rows have exact fixture-ID set
+  equality.
+
+Target tests, provenance, hashes, divergences, and dispositions are then checked
+against the applicable projection. Do not compare the full heterogeneous source
+inventory directly with the runtime-case set.
 
 The checker must fail for:
 
 - a missing or duplicate canonical case;
+- an unclassified source row or a missing row in any compatible projection;
 - an unknown/composite disposition or workflow state;
 - a canonical row that is rejected, deferred, or lacks equivalent subsumption
   proof;
@@ -126,11 +138,23 @@ globally, or move an extension out of `audit` on source inspection alone.
 
 ### Runtime and regex safety
 
-Before P1, freeze the annotated `CitationEngineLimits` schema, numeric defaults
-and maxima, and execution strategy in evidence. It must bound source UTF-16
-length, candidates/mentions, pattern evaluations/matches, resolution edges,
-annotation replacements/output growth, concurrency, and stage deadlines using
-`Duration`. Requests may only tighten server-owned limits.
+Before P1, freeze the annotated `CitationEngineLimits` schema, absolute maxima,
+decoded effective-policy schema/default fixture, and execution strategy in
+evidence. The absolute maxima are non-configurable use-case safety invariants.
+It must bound source UTF-16 length, candidates/mentions, pattern evaluations/
+matches, resolution edges, annotation replacements/output growth, concurrency,
+and stage deadlines using `Duration`. Effective values cannot exceed the hard
+maxima; requests may only tighten them.
+
+This goal intentionally uses a typed constructor exported from
+`@beep/law-practice-server/layer` rather than creating a config package. The
+constructor requires the decoded effective policy. Test fixtures export through
+`@beep/law-practice-use-cases/test`; server tests prove the Layer has no ambient
+`ConfigProvider`/environment dependency. Direct `process.env` or Effect
+`Config` reads inside domain, use-cases, or server internals are forbidden. If
+ambient operator configuration becomes a requirement, stop and add the
+canonical `@beep/law-practice-config` `/server`, `/layer`, and `/test` contract
+instead of hiding a read.
 
 The adversarial lane uses geometric input sizes, recorded warmups/repetitions,
 runtime/tool/CPU metadata, and a stable pass rule: no accepted pattern family

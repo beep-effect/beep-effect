@@ -167,9 +167,10 @@ hand-authored data interfaces.
 | Surface | Canonical owner/export | Boundary rule |
 | --- | --- | --- |
 | `Citation`, derived full/short subsets, `CitationMention`, document-local IDs, resolution/document values, and structured Bluebook schemas | `@beep/law-practice-domain/values` through one citation concept barrel | Legal semantics and evidence composition only; no engine service, run telemetry, or callback values. |
-| Raw-text request, server options, `CitationEngineLimits`, `CitationEngineReport`, action errors, cleaner/tokenizer ports, and `CitationEngine` service contract | `@beep/law-practice-use-cases/server` | Server-only. Full source text and server services never export from package root or `/public`. |
+| Raw-text request, server options, hard `CitationEngineLimits`, `CitationEngineReport`, closed server failures, cleaner/tokenizer ports, and `CitationEngine` service contract | `@beep/law-practice-use-cases/server` | Server-only. Full source text and server services never export from package root or `/public`. |
 | Fixture schemas, fakes, oracle case helpers, and parity harness support | `@beep/law-practice-use-cases/test` | Test-only; production code cannot import this subpath. |
-| Live engine, cleaner/tokenizer adapters, and composed Layer | `@beep/law-practice-server/layer` | Implementation and dependency composition; no contract redefinition. |
+| Live engine plus cleaner/tokenizer adapter implementations | private modules inside `@beep/law-practice-server` | Never exported. Slice-local composition may use them; apps and other packages may not. |
+| One composed law-practice slice Layer (or typed constructor for it) | `@beep/law-practice-server/layer` | The only public server composition surface; it does not re-export implementations or individual adapters. |
 | Client-safe citation API | none in this goal | Add only after a concrete consumer and a redacted, raw-text-free contract pass separate boundary review. |
 
 Package `README.md`, `package.json` exports, source barrels, dtslint imports,
@@ -186,7 +187,7 @@ requires a reviewed schema.
 - `CitationResolution`: tagged `Resolved | Ambiguous | Unresolved` outcomes
   using brand-separated IDs, never array positions.
 - `CitationDocument`: mentions, authority groups, references, and resolution
-  relationships.
+  relationships. It is the sole encoded owner of group membership.
 - `CitationEngineInput`: server-only source identity/text plus schema-defined
   operation options.
 - `CitationEngineReport`: deterministic counts/versions/safety decisions and
@@ -211,7 +212,7 @@ the shared entity ID. Internal pre-mention candidates may use a private
 
 `CitationEngine` is a `Context.Service` exported from the server use-case
 subpath. It exposes cleaning, extraction, resolution, and annotation operations.
-Every method returns `Effect<Output, ClosedActionError, never>`: all
+Every method returns `Effect<Output, CitationEngineFailure, never>`: all
 dependencies are captured when constructing the live Layer.
 
 Named cleaning/tokenizer modes and options use schema literals. Canonical
@@ -231,8 +232,7 @@ Required outcomes:
 1. Remove `CitationBase` as a public catch-all. Do not inherit source evidence,
    grouping, telemetry, or warnings into every semantic citation.
 2. Move `text`, `matchedText`, source span, signals tied to the occurrence,
-   warnings, group membership, and footnote location into `CitationMention` or
-   document evidence.
+   warnings, and footnote location into `CitationMention` or document evidence.
 3. Move `processTimeMs` and `patternsChecked` into `CitationEngineReport`.
 4. Use bounded schemas for all confidence values and place them on the evidence
    or resolution assertion they qualify.
@@ -245,8 +245,10 @@ Required outcomes:
    segment-map, and durable-locator contracts where the verified-span
    prerequisite owns the same semantics. Retain citation-component anchors only
    as evidence-specific composition over the canonical anchor.
-9. Rebuild authority groups/history/parentheticals around stable IDs and avoid
-   recursive embedded citation copies.
+9. Make `CitationDocument` the only encoded owner of authority/parallel/string
+   group membership. Mention-level lookup is a derived projection. Rebuild
+   history/parentheticals around stable IDs and avoid recursive embedded
+   citation copies.
 10. Leave unrelated patent and knowledge-graph values unchanged.
 
 No deprecation or compatibility shim is currently required: the package is
@@ -304,13 +306,14 @@ not claim exhaustive compliance with the Bluebook manual, and it does not
 transcribe unlicensed rule text. A full rule/edition coverage program is a
 separate goal.
 
-## Action Errors and Boundary Translation
+## Server Failures and Boundary Translation
 
 Ambiguous, unresolved, unknown, filtered, and unsupported citation meanings are
 schema-modeled domain outcomes, not Effect failures.
 
-The server use-case subpath owns a closed union of annotated
-`TaggedErrorClass` action errors:
+This goal intentionally stops at a server-only service/port boundary: it has no
+client/protocol consumer. The server use-case subpath owns a closed union named
+`CitationEngineFailure`, composed of annotated `TaggedErrorClass` values:
 
 - `CitationInputError` for request/schema boundary failures;
 - `CitationPrerequisiteError` for incompatible or unavailable
@@ -321,18 +324,27 @@ The server use-case subpath owns a closed union of annotated
 - `CitationOperationUnsupported` only for an explicitly unsupported requested
   mode, never for a missing canonical capability.
 
-At the service boundary, translate schema issues and every prerequisite/port
-error into that closed union. Methods may not leak `ParseError`, donor
-exceptions, adapter errors, or open `unknown` failures. Defects are reserved for
-violated internal invariants. Each translator needs focused tests, including
-payload redaction. Emit a structured server log/span event when useful
-technical detail is intentionally dropped, without including raw source text.
+These are not public action failures and must not export from `/public`.
+Adapters translate driver/internal errors to their declared port failures. The
+`CitationEngine` service translates schema and prerequisite/port failures to
+`CitationEngineFailure`. Methods may not leak `ParseError`, donor exceptions,
+adapter errors, or open `unknown` failures. Defects are reserved for violated
+internal invariants. Each retained translator needs focused tests, including
+payload redaction.
+
+A future client/protocol consumer must separately add client-safe public action
+failures under `/public`, translate server failures to action failures in its
+use case, and translate action failures to protocol shapes. It may not expose
+or pass through this server union. Emit a structured server log/span event when
+useful technical detail is intentionally dropped, without including raw source
+text.
 
 ## Resource and Regex Safety
 
-P0 freezes an annotated `CitationEngineLimits` schema and its numeric
-defaults/maxima before P1. Server Layer configuration owns the caps; a request
-may only choose equal or tighter limits. At minimum, bound:
+P0 freezes an annotated `CitationEngineLimits` schema and its numeric absolute
+maxima before P1. These maxima are non-configurable use-case safety invariants.
+It also defines a schema-decoded effective policy whose values cannot exceed
+those maxima. At minimum, bound:
 
 - source UTF-16 code units;
 - candidate, token, mention, and authority counts;
@@ -346,6 +358,19 @@ Limit exhaustion fails with `CitationSafetyLimitExceeded`; never silently
 truncate a parity result. Use bounded Effect concurrency and Effect
 `Clock`/`Duration` services. A timeout around synchronous JavaScript regex does
 not make that regex interruptible.
+
+This goal does not create a slice config package. The exported
+`@beep/law-practice-server/layer` constructor requires the decoded effective
+policy explicitly; its private implementations receive no ambient
+configuration. Provide deterministic default/test fixtures through
+`@beep/law-practice-use-cases/test`, and test the slice Layer with an explicit
+fixture. Domain, use-cases, and server internals may not call `process.env`,
+`Config`, or an ambient `ConfigProvider`.
+
+If operator-configurable ambient defaults are later required, stop and create
+the optional canonical `@beep/law-practice-config` package with `/server`,
+`/layer`, and `/test` subpaths using Effect `Config`/`ConfigProvider`; do not
+smuggle environment reads into this implementation.
 
 Every accepted pattern family needs static compatibility review, a literal
 prefilter/routing decision, deterministic work caps, and a committed
@@ -382,9 +407,10 @@ bounds, never exact host milliseconds.
 
 ## Parity and Evidence Rules
 
-1. Independently enumerate the pinned source/tests/fixtures/regex families and
-   export instrumented runtime cases. Commit both inventories; reconcile their
-   case IDs rather than trusting one hand-written list.
+1. Independently enumerate the pinned source/tests/fixtures/regex families as
+   tagged row kinds and export instrumented runtime cases. Commit both
+   inventories; reconcile compatible projections rather than trusting one
+   hand-written list.
 2. Generate normalized fixtures from the pinned Python clone so CI does not
    depend on that external checkout.
 3. Record upstream commit/tree, source file/method/case ID, source-content hash,
@@ -405,12 +431,16 @@ bounds, never exact host milliseconds.
    A timeout wrapper alone is not proof that a JavaScript regex is interruptible
    or safe.
 
-P0 commits the exact artifacts and checker defined in `PLAN.md`. The
+P0 commits the exact artifacts and checker defined in `PLAN.md`. It compares
+case declarations/runtime events/canonical cases, capability/model sources/
+capability rows, regex-family sources/regex rows, and fixture sources/
+provenance rows as separate compatible projections. The
 `citation:parity-check` script independently rejects missing/duplicate cases,
-unknown or composite states, incomplete canonical proof, unproved adopted
-extensions, follow-ups without an existing successor goal, missing licenses/
-hashes/tests, unexplained divergences, and unaccounted regex families.
-Deliberately corrupted negative fixtures prove every rejection path.
+unclassified source rows, unknown or composite states, incomplete canonical
+proof, unproved adopted extensions, follow-ups without an existing successor
+goal, missing licenses/hashes/tests, unexplained divergences, and unaccounted
+regex families. Deliberately corrupted negative fixtures prove every rejection
+path.
 
 ## Delivery Constraint
 
@@ -469,8 +499,9 @@ instead of silently splitting delivery or weakening scope.
       annotation differential suites have zero unexplained differences.
 - [ ] Every transform's information law and decode/encode totality pass
       production-schema property tests and exact dtslint call proofs.
-- [ ] `CitationEngine` ownership, `R = never` methods, closed action errors, and
-      every boundary translator pass contract tests.
+- [ ] `CitationEngine` ownership, `R = never` methods, closed server failures,
+      explicit limits Layer input, and every retained boundary translator pass
+      contract tests.
 - [ ] `CitationEngineLimits`, bounded concurrency, regex compatibility,
       adversarial growth/negative control, and nontruncating limit failures
       justify the selected execution strategy.
@@ -494,7 +525,7 @@ instead of silently splitting delivery or weakening scope.
 | Differential parity | Zero unexplained stage-level differences |
 | Span fidelity | Exact raw substring at canonical UTF-16 half-open anchor |
 | Transform laws | Direction/type dtslint plus two-axis property tests from production schemas/arbitraries |
-| Service/errors | Boundary ownership, `R = never`, closed-error and translator tests |
+| Service/errors/config | Boundary ownership, `R = never`, closed server failures, explicit Layer policy, no ambient reads, and translator tests |
 | Regex/resources | Static inventory, exact work caps, adversarial growth gate, and catastrophic negative control |
 | Observability | Named spans, low-cardinality redaction, deterministic report and Effect Clock proof |
 | Package quality | Tests, type checks, lint, dtslint, and docgen green |

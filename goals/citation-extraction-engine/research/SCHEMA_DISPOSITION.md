@@ -52,7 +52,7 @@ union. Their tag literals are the only source of citation-type truth.
 - one semantic `Citation`;
 - canonical verified raw-source anchor and exact matched text;
 - optional component anchors;
-- occurrence signal, footnote zone, grouping membership, and typed warnings;
+- occurrence signal, footnote zone, and typed warnings;
 - evidence confidence only when the producer actually makes a confidence
   assertion.
 
@@ -76,7 +76,9 @@ boundary.
 uses bounded confidence when present, and carries case-specific diagnostics.
 
 `CitationDocument` owns mention order, parallel/string groups, authority
-resources, reference relationships, and resolution results.
+resources, reference relationships, resolution results, and every encoded group
+membership. A mention-level group lookup is derived from the document; it is
+never a second encoded field.
 
 ### Operations and diagnostics
 
@@ -84,13 +86,20 @@ resources, reference relationships, and resolution results.
 `CitationEngineReport` owns stage timings, pattern counts, tokenizer/filter
 statistics, regex diagnostics, and vocabulary/anchor artifact versions.
 
-The raw-text request, `CitationEngineLimits`, closed action errors,
+The raw-text request, hard `CitationEngineLimits`, closed
+`CitationEngineFailure` server union,
 cleaner/tokenizer ports, and `CitationEngine` `Context.Service` export from
 `@beep/law-practice-use-cases/server`. Fixture schemas/fakes export from
-`@beep/law-practice-use-cases/test`; the live Layer exports from
-`@beep/law-practice-server/layer`. This goal publishes no client-safe
-`/public` surface. Function-valued cleaner/tokenizer behavior is injected
-through server services/Layers, never stored in schemas.
+`@beep/law-practice-use-cases/test`; only the one composed Layer/typed
+constructor exports from `@beep/law-practice-server/layer`. Live engine and
+adapter implementations remain private server modules. This goal publishes no
+client-safe `/public` surface. Function-valued cleaner/tokenizer behavior is
+injected through server services/Layers, never stored in schemas.
+
+The Layer constructor receives a schema-decoded effective limit policy
+explicitly. Hard maxima remain use-case invariants; fixtures live under the
+use-case `/test` surface. Domain/use-cases/server internals perform no ambient
+configuration read.
 
 ## Mandatory removals and replacements
 
@@ -125,7 +134,7 @@ preserved.
 | --- | --- |
 | `Citation` | Rebuild as canonical semantic tagged union; split the current monolithic file as needed for comprehensibility. |
 | Local `CitationId` concept | Split by role: construct `CitationMentionId` once for a document occurrence, use `CitationAuthorityId` for authority groups, and reserve shared `LawPractice.CitationId` for persisted entities. |
-| `CitationSignal` | Retain as occurrence/document relationship evidence, not a base field inherited by semantic citations. |
+| `CitationSignal` | Retain occurrence signals on mentions and relationship signals on `CitationDocument`; do not duplicate document group membership on a mention. |
 | `CitationWarning` | Rebuild as a finite typed union with case-specific payloads; no free-form generic warning bag. |
 | `CourtInference` | Rebuild as vocabulary-backed evidence referencing stable court/reporter IDs and artifact version. |
 | `PinciteInfo` | Retain parsed locator semantics where canonical/extension fixtures prove them. |
@@ -244,6 +253,8 @@ removal test and cannot survive goal close.
 - No semantic citation contains source text/span, telemetry, grouping object,
   footnote location, or generic warning arrays.
 - No resolution result references citation array positions.
+- No encoded mention duplicates group membership owned by `CitationDocument`;
+  mention-level group access is derived.
 - No separate type literal list can drift from union tags.
 - No law-practice locator/span contract duplicates the prerequisite.
 - Every surviving citation form maps to canonical or adopted-extension cases.

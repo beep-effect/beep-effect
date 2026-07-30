@@ -6,11 +6,12 @@ Python object layout into the Effect-native domain model.
 ## Oracle production and independent accounting
 
 1. Run a static AST/source inventory over the detached pin, recording every
-   public operation, implementation/model/regex family, test method, assertion/
-   parameter/subtest source, fixture, and source-content hash.
+   public operation, implementation/model/helper family, regex family, test
+   method, assertion/parameter/subtest source, fixture, and source-content hash
+   with a closed row-kind discriminator.
 2. Independently run the pin with CPython 3.11 and an instrumented, versioned
    oracle exporter that emits schema-decoded normalized case records.
-3. Reconcile static source IDs, runtime case IDs, aggregate capability rows, and
+3. Reconcile compatible row-kind projections, aggregate capability rows, and
    target-test IDs with an executable checker.
 4. Commit the inventories, normalized records, schemas, and metadata; CI never
    requires the external Python clone.
@@ -33,6 +34,18 @@ Fixture schemas/helpers export only through
 negative-control tests proving it rejects every omission, duplicate,
 unknown/composite state, missing proof/license/hash/test, unexplained
 divergence, invalid follow-up, and unaccounted regex family.
+
+The row kinds and comparisons are:
+
+| Source row kind | Compared with | Law |
+| --- | --- | --- |
+| `caseDeclaration` | runtime case events and canonical case rows | Expansion IDs have exact set equality; each case has one target-test mapping. |
+| `publicOperation`, `modelFamily`, `helperFamily` | canonical capability rows | Every source row maps to exactly one capability row; one capability may cover multiple source rows. |
+| `regexFamily` | regex inventory rows | Family IDs have exact set equality. |
+| `fixture` | fixture provenance records | Fixture IDs have exact set equality and source/license/hash metadata. |
+
+The checker requires zero unclassified source rows. It never compares the full
+heterogeneous source inventory directly to runtime case events.
 
 Each oracle record includes:
 
@@ -302,6 +315,9 @@ Parity is complete only when:
 - every divergence is explained and tested;
 - every source anchor obeys the raw-slice law; and
 - every transformation passes both declared law axes.
+
+Completion also requires every compatible inventory projection above to pass;
+“exact set equality” never means equality between unlike row kinds.
 
 Passing a percentage threshold, a sample corpus, or only the four public wrapper
 operations cannot close the goal.
