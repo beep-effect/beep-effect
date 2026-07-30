@@ -458,7 +458,12 @@ const inspectChildModel = (
       onNone: A.emptyReadonly,
       onSome: (tag): ReadonlyArray<HtmlConformanceIssue> => {
         const ownTokens = effectiveContentTokens(ELEMENT_META[tag].children);
-        const tokens = A.contains(ownTokens, "transparent") ? ancestorContentTokens : ownTokens;
+        const tokens = A.contains(ownTokens, "transparent")
+          ? A.appendAll(
+              A.filter(ownTokens, (token) => token !== "transparent"),
+              ancestorContentTokens
+            )
+          : ownTokens;
         if (tag === "noscript") {
           return [
             makeIssue(
@@ -578,9 +583,9 @@ const inspectElementOrder = (
         : issue("<dl> children must be complete dt+ / dd+ groups, directly or in <div> wrappers");
     }),
     Match.when("details", () =>
-      oneAtEdge("summary", "first")
+      A.contains(elementTags, "summary") && oneAtEdge("summary", "first")
         ? A.emptyReadonly()
-        : issue("<summary> must be the first element child of <details> and occur at most once")
+        : issue("<details> must contain exactly one <summary> as its first element child")
     ),
     Match.when("fieldset", () =>
       oneAtEdge("legend", "first")

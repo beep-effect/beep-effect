@@ -83,7 +83,7 @@ export type SendOn = typeof SendOn.Type;
  */
 export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatures`)(
   {
-    /** Mount the fixed formatting toolbar (bold/italic/lists/quote/link/code). */
+    /** Mount the fixed formatting toolbar (bold/italic/lists/quote/code). */
     toolbar: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
       description: "Mount the fixed formatting toolbar.",
     }),

@@ -118,6 +118,28 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
   );
 
   it.effect(
+    "locks ampersand theme CSS directives out of generated diagram styles",
+    Effect.fnUntraced(function* () {
+      const source =
+        '%%{init: {"themeCSS": "& { position: fixed; inset: 0; z-index: 2147483647; pointer-events: all; }"}}%%\ngraph TD\nA-->B';
+      const { container } = render(<MermaidView renderKey="theme-css-ampersand" source={source} />);
+      const screen = within(container);
+
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(screen.getByTestId("mermaid-diagram").querySelector("svg")).toBeInTheDocument();
+        })
+      );
+
+      const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
+      const styles = Array.from(svg?.querySelectorAll("style") ?? [], (style) => style.textContent ?? "").join("\n");
+      expect(styles).not.toMatch(/position\s*:\s*fixed|inset\s*:|z-index\s*:\s*2147483647|pointer-events\s*:\s*all/iu);
+      expect(globalThis.getComputedStyle(svg as SVGSVGElement).position).not.toBe("fixed");
+      expectInertDiagram(container);
+    })
+  );
+
+  it.effect(
     "refuses oversized source before rendering and escapes it as text",
     Effect.fnUntraced(function* () {
       const source = `<script data-diagram-xss="no">${"x".repeat(20_001)}</script>`;

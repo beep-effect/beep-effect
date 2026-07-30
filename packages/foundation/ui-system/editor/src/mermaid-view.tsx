@@ -69,7 +69,20 @@ const mermaidConfig = {
   startOnLoad: false,
   suppressErrorRendering: true,
   htmlLabels: false,
-  secure: ["secure", "securityLevel", "startOnLoad", "maxTextSize", "suppressErrorRendering", "maxEdges", "htmlLabels"],
+  secure: [
+    "secure",
+    "securityLevel",
+    "startOnLoad",
+    "maxTextSize",
+    "suppressErrorRendering",
+    "maxEdges",
+    "htmlLabels",
+    "themeCSS",
+    "themeVariables",
+    "fontFamily",
+    "altFontFamily",
+    "fontSize",
+  ],
 };
 
 const mermaidSanitizerConfig = {
@@ -118,6 +131,24 @@ const unsafeCss = /@import|expression\s*\(|(?:data|javascript|vbscript)\s*:|url\
 const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
 const unsafeStylesheetToken = /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|url\s*\(/iu;
+const layoutOffsetProperties = HashSet.make(
+  "bottom",
+  "inset",
+  "inset-block",
+  "inset-block-end",
+  "inset-block-start",
+  "inset-inline",
+  "inset-inline-end",
+  "inset-inline-start",
+  "left",
+  "right",
+  "top"
+);
+const safePositionValues = HashSet.make("", "absolute", "relative", "static");
+const safePointerEventValues = HashSet.make("", "none");
+const safeZIndexValues = HashSet.make("", "0", "100", "auto");
+const safeMermaidRootStyleProperties = HashSet.make("fill", "font-family", "font-size", "max-width");
+const safeMermaidRootMaxWidth = /^(?:0|[1-9]\d*(?:\.\d+)?)px$/u;
 const mermaidBuiltInKeyframes = [
   "@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}",
   "@keyframes dash{to{stroke-dashoffset:0;}}",
@@ -131,6 +162,32 @@ const normalizeCssTokens = (value: string): string =>
       const codePoint = Number.parseInt(hexadecimal, 16);
       return String.fromCodePoint(codePoint === 0 || codePoint > 0x10ffff ? 0xfffd : codePoint);
     });
+
+const normalizedCssValue = (value: string): string => Str.toLowerCase(Str.trim(value));
+
+const hasUnsafeLayoutStyle = (style: CSSStyleDeclaration): boolean => {
+  if (
+    !HashSet.has(safePositionValues, normalizedCssValue(style.getPropertyValue("position"))) ||
+    !HashSet.has(safePointerEventValues, normalizedCssValue(style.getPropertyValue("pointer-events"))) ||
+    !HashSet.has(safeZIndexValues, normalizedCssValue(style.getPropertyValue("z-index")))
+  ) {
+    return true;
+  }
+
+  for (let index = 0; index < style.length; index += 1) {
+    if (HashSet.has(layoutOffsetProperties, normalizedCssValue(style.item(index)))) return true;
+  }
+  return false;
+};
+
+const isSafeMermaidRootStyle = (style: CSSStyleDeclaration): boolean => {
+  for (let index = 0; index < style.length; index += 1) {
+    if (!HashSet.has(safeMermaidRootStyleProperties, normalizedCssValue(style.item(index)))) return false;
+  }
+
+  const maxWidth = normalizedCssValue(style.getPropertyValue("max-width"));
+  return maxWidth.length === 0 || safeMermaidRootMaxWidth.test(maxWidth);
+};
 
 const splitSelectorList = (value: string): undefined | ReadonlyArray<string> => {
   const selectors: Array<string> = [];
@@ -194,8 +251,8 @@ const splitSelectorList = (value: string): undefined | ReadonlyArray<string> => 
 
 const cssWhitespace = /\s/u;
 
-const isRootedSelector = (selector: string, rootSelector: string): boolean => {
-  if (!selector.startsWith(rootSelector)) return false;
+const selectorTargetsRoot = (selector: string, rootSelector: string): boolean | undefined => {
+  if (!selector.startsWith(rootSelector)) return undefined;
 
   const boundary = selector[rootSelector.length];
   if (
@@ -209,7 +266,7 @@ const isRootedSelector = (selector: string, rootSelector: string): boolean => {
     boundary !== "~" &&
     !cssWhitespace.test(boundary)
   ) {
-    return false;
+    return undefined;
   }
 
   let bracketDepth = 0;
@@ -251,25 +308,37 @@ const isRootedSelector = (selector: string, rootSelector: string): boolean => {
       continue;
     }
     if (bracketDepth !== 0 || parenthesisDepth !== 0) continue;
-    if (character === "+" || character === "~") return false;
-    if (character === ">") return true;
+    if (character === "+" || character === "~") return undefined;
+    if (character === ">") return false;
     if (!cssWhitespace.test(character)) continue;
 
     let nextIndex = index + 1;
     while (nextIndex < selector.length && cssWhitespace.test(selector[nextIndex] ?? "")) nextIndex += 1;
     const nextCharacter = selector[nextIndex];
-    return nextCharacter !== "+" && nextCharacter !== "~";
+    return nextCharacter === "+" || nextCharacter === "~" ? undefined : false;
   }
 
-  return bracketDepth === 0 && parenthesisDepth === 0 && quote === undefined && !escaped;
+  return bracketDepth === 0 && parenthesisDepth === 0 && quote === undefined && !escaped ? true : undefined;
 };
 
 const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
-  if ((rule.cssRules?.length ?? 0) !== 0 || unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText))) {
+  if (
+    (rule.cssRules?.length ?? 0) !== 0 ||
+    unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText)) ||
+    hasUnsafeLayoutStyle(rule.style)
+  ) {
     return false;
   }
   const selectors = splitSelectorList(rule.selectorText);
-  return selectors !== undefined && A.every(selectors, (selector) => isRootedSelector(selector, rootSelector));
+  if (selectors === undefined) return false;
+
+  let targetsRoot = false;
+  for (const selector of selectors) {
+    const selectorScope = selectorTargetsRoot(selector, rootSelector);
+    if (selectorScope === undefined) return false;
+    targetsRoot ||= selectorScope;
+  }
+  return !targetsRoot || isSafeMermaidRootStyle(rule.style);
 };
 
 const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
@@ -328,6 +397,8 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
   }
 
   for (const element of parsedDocument.querySelectorAll("*")) {
+    const isRoot = element === root;
+    const style = element instanceof SVGElement ? element.style : undefined;
     if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
       return false;
 
@@ -339,7 +410,16 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
       if (name.startsWith("on")) return false;
       if (name === "role" && (element !== root || value !== mermaidRootRole)) return false;
       if (HashSet.has(urlAttributes, name) && !value.startsWith("#")) return false;
-      if (unsafeCss.test(value)) return false;
+      if (
+        name === "style" &&
+        (style === undefined ||
+          unsafeCss.test(normalizeCssTokens(value)) ||
+          hasUnsafeLayoutStyle(style) ||
+          (isRoot && !isSafeMermaidRootStyle(style)))
+      ) {
+        return false;
+      }
+      if (name !== "style" && unsafeCss.test(value)) return false;
     }
   }
 
@@ -439,6 +519,10 @@ const renderSuccess = (svg: string): JSX.Element => (
   <div
     className="my-3 overflow-x-auto rounded border bg-background p-3"
     data-testid="mermaid-diagram"
+    // Paint containment makes this trusted wrapper the fixed-position containing
+    // block and clipping boundary even if a future renderer emits a class-based
+    // layout rule that the SVG policy does not recognize.
+    style={{ contain: "paint" }}
     // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes at the browser parser boundary and the inert SVG policy revalidates the exact bytes injected here.
     dangerouslySetInnerHTML={{ __html: svg }}
   />
