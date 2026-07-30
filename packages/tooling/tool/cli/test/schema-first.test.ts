@@ -281,13 +281,24 @@ describe("fnSchemaEntryFromFunctionLike", () => {
 });
 
 describe("normalizationEntryFromCallExpression", () => {
-  it("fires for a trim() call inside a function body", () => {
+  it("fires for a trim() call beside a schema decode in the same exported function", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function normalizeName(name: string): string {", "  return name.trim();", "}"].join("\n")
+      [
+        'import * as S from "effect/Schema";',
+        "const Name = S.String;",
+        "export function normalizeName(input: unknown): string {",
+        "  return S.decodeUnknownSync(Name)(input).trim();",
+        "}",
+      ].join("\n")
     );
-    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const callExpression = sourceFile
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((candidate) => candidate.getExpression().getText().endsWith(".trim"));
+    if (callExpression === undefined) {
+      throw new Error("Expected trim call expression fixture.");
+    }
     const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
@@ -333,6 +344,27 @@ describe("nullReturnEntryFromFunctionLike", () => {
     });
 
     expect(O.isNone(entry)).toBe(true);
+  });
+
+  it("does not fire when nullish values are carried inside an approved return wrapper", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export function effectful(): Effect.Effect<string | undefined> { return Effect.void; }",
+        "export function optional(): O.Option<string | null> { return O.none(); }",
+        "export function result(): Result.Result<string | undefined> { return Result.succeed(undefined); }",
+        "export function exited(): Exit.Exit<string | null> { return Exit.succeed(null); }",
+      ].join("\n")
+    );
+
+    for (const functionDeclaration of sourceFile.getFunctions()) {
+      const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
+        file: "fixture.ts",
+        owner: "@beep/test",
+      });
+      expect(O.isNone(entry)).toBe(true);
+    }
   });
 });
 

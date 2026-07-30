@@ -10,8 +10,12 @@
  * @since 0.0.0
  */
 
+import { $FormId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+
+const $I = $FormId.create("core/Errors");
 
 /**
  * A single renderable field error, structurally compatible with `@beep/ui`'s
@@ -19,25 +23,32 @@ import * as P from "effect/Predicate";
  *
  * @example
  * ```ts
- * import type { FieldErrorEntry } from "@beep/form/core/Errors"
+ * import { FieldErrorEntry } from "@beep/form/core/Errors"
  *
- * const entry = { message: "Required" } satisfies FieldErrorEntry
+ * const entry = FieldErrorEntry.make({ message: "Required" })
  * console.log(entry.message) // "Required"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface FieldErrorEntry {
-  readonly message?: string | undefined;
-}
+export class FieldErrorEntry extends S.Class<FieldErrorEntry>($I`FieldErrorEntry`)(
+  {
+    message: S.String.pipe(S.UndefinedOr, S.optionalKey).annotateKey({
+      description: "Human-readable validation message rendered for a form field.",
+    }),
+  },
+  $I.annote("FieldErrorEntry", {
+    description: "A single renderable form-field validation error.",
+  })
+) {}
 
 const toEntries = (error: unknown): ReadonlyArray<FieldErrorEntry> => {
   if (P.isString(error)) {
-    return A.make({ message: error });
+    return A.make(FieldErrorEntry.make({ message: error }));
   }
   if (P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)) {
-    return A.make({ message: error.message });
+    return A.make(FieldErrorEntry.make({ message: error.message }));
   }
   return A.empty();
 };

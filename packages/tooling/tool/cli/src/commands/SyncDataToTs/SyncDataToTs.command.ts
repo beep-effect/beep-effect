@@ -15,11 +15,16 @@ import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
 import { formatJson } from "./internal/Source.ts";
-import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.schemas.ts";
+import {
+  SyncDataRunMode,
+  SyncDataTargetResult,
+  SyncDataToTsDriftError,
+  SyncDataToTsError,
+} from "./SyncDataToTs.schemas.ts";
 import { syncDataTargets } from "./targets/index.ts";
 import type { Crypto, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./SyncDataToTs.schemas.ts";
+import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
 const targetFlag = Flag.string("target").pipe(
   Flag.withAlias("t"),
@@ -270,7 +275,7 @@ const syncTarget = Effect.fn("syncTarget")(function* (
   );
   const changedFiles = pipe(fileResults, A.filter(Struct.get("changed")), A.map(Struct.get("path")));
 
-  return {
+  return SyncDataTargetResult.make({
     targetId: target.id,
     outputPaths: pipe(projection.files, A.map(Struct.get("path"))),
     changed: A.length(changedFiles) > 0,
@@ -282,8 +287,24 @@ const syncTarget = Effect.fn("syncTarget")(function* (
     sources: projection.sources,
     canonicalPath: projection.canonicalPath,
     canonicalPatch,
-  };
+  });
 });
+
+/**
+ * Test-only access to the per-target producer so schema proofs exercise the
+ * same construction path used by the command.
+ *
+ * @internal
+ * @example
+ * ```ts
+ * import { syncTargetForTesting } from "@beep/repo-cli/test/SyncDataToTs"
+ *
+ * console.log(typeof syncTargetForTesting) // "function"
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const syncTargetForTesting = syncTarget;
 
 const primaryOutputPath = (result: SyncDataTargetResult): string =>
   pipe(

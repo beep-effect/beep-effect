@@ -1,8 +1,8 @@
-import { RateLimitSnapshot } from "@beep/api-transport";
+import { ApiAuth, ApiTransportOptions, RateLimitSnapshot } from "@beep/api-transport";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -41,6 +41,67 @@ const hasAnyField = (snapshot: RateLimitSnapshot): boolean =>
   );
 
 describe("@beep/api-transport", () => {
+  it("keeps auth constructors and matching on schema-backed transport options", () => {
+    const options = ApiTransportOptions.make({
+      auth: ApiAuth.ApiKeyQueryAuth({
+        key: Redacted.make("secret"),
+        param: "api_key",
+      }),
+      key: "govinfo",
+      rateLimit: {
+        limit: 1000,
+        window: "1 hour",
+      },
+    });
+    const encoded = Effect.runSync(S.encodeEffect(ApiTransportOptions)(options));
+    const decoded = Effect.runSync(S.decodeUnknownEffect(ApiTransportOptions)(encoded));
+
+    expect(S.is(ApiTransportOptions)(decoded)).toBe(true);
+    expect(ApiAuth.$is("ApiKeyQueryAuth")(decoded.auth)).toBe(true);
+    expect(ApiAuth.$is("NoAuth")(decoded.auth)).toBe(false);
+    expect(ApiAuth.$is("ApiKeyQueryAuth")({ _tag: "ApiKeyQueryAuth" })).toBe(true);
+    expect(
+      ApiAuth.$match(decoded.auth, {
+        ApiKeyHeaderAuth: () => "header",
+        ApiKeyQueryAuth: ({ param }) => param,
+        NoAuth: () => "none",
+        TokenHeaderAuth: () => "token",
+      })
+    ).toBe("api_key");
+  });
+
+  it("preserves every legacy transport option input accepted by Effect Duration", () => {
+    const auth = ApiAuth.NoAuth();
+    const options = [
+      {
+        auth,
+        key: "explicit-undefined",
+        rateLimit: { limit: 1000, window: { seconds: undefined } },
+        retryBaseDelay: undefined,
+        retryTimes: undefined,
+      },
+      {
+        auth,
+        key: "signed-fraction",
+        rateLimit: { limit: Number.NaN, window: "-0.5 seconds" },
+        retryBaseDelay: "01 seconds",
+        retryTimes: Number.POSITIVE_INFINITY,
+      },
+      {
+        auth,
+        key: "negative-infinity",
+        rateLimit: { limit: Number.NEGATIVE_INFINITY, window: Number.POSITIVE_INFINITY },
+        retryTimes: Number.NEGATIVE_INFINITY,
+      },
+    ];
+
+    for (const option of options) {
+      const decoded = Effect.runSync(S.decodeUnknownEffect(ApiTransportOptions)(option));
+
+      expect(S.is(ApiTransportOptions)(decoded)).toBe(true);
+    }
+  });
+
   it("keeps RateLimitSnapshot encoded wire shape unchanged", () => {
     const encodedFull = Effect.runSync(
       encodeRateLimitSnapshot(RateLimitSnapshot.make({ limit: 1000, remaining: 42, reset: 60 }))

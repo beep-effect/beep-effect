@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import type { Crypto, Effect, JsonPatch } from "effect";
+import type { Crypto, Effect } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
@@ -127,6 +127,44 @@ export const SyncDataTargetAccess = SyncDataTargetAccessKit.pipe(
 export type SyncDataTargetAccess = typeof SyncDataTargetAccess.Type;
 
 /**
+ * Schema-backed metadata shared by every checked-in sync target.
+ *
+ * @example
+ * ```ts
+ * import { SyncDataTargetMetadata } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
+ *
+ * const metadata = SyncDataTargetMetadata.make({
+ *   access: "public",
+ *   description: "Official example dataset.",
+ *   id: "example",
+ *   sourceUrls: ["https://example.com/data.json"]
+ * })
+ * console.log(metadata.id) // "example"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class SyncDataTargetMetadata extends S.Class<SyncDataTargetMetadata>($I`SyncDataTargetMetadata`)(
+  {
+    access: SyncDataTargetAccess.annotateKey({
+      description: "Whether the target can be fetched publicly or requires authenticated source access.",
+    }),
+    description: S.String.annotateKey({
+      description: "Human-readable description shown in command discovery and diagnostics.",
+    }),
+    id: S.String.annotateKey({
+      description: "Stable target identifier accepted by the command line.",
+    }),
+    sourceUrls: S.Array(S.String).annotateKey({
+      description: "Upstream source URLs recorded in command reports.",
+    }),
+  },
+  $I.annote("SyncDataTargetMetadata", {
+    description: "Schema-backed metadata shared by every checked-in sync-data-to-ts target.",
+  })
+) {}
+
+/**
  * Stable source metadata recorded in generated sidecars and PR reports.
  *
  * @example
@@ -227,12 +265,8 @@ export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto;
  * @category models
  * @since 0.0.0
  */
-export interface SyncDataTarget {
-  readonly access: SyncDataTargetAccess;
+export interface SyncDataTarget extends SyncDataTargetMetadata {
   readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;
-  readonly description: string;
-  readonly id: string;
-  readonly sourceUrls: ReadonlyArray<string>;
 }
 
 /**
@@ -257,29 +291,75 @@ export class SyncDataFileResult extends S.Class<SyncDataFileResult>($I`SyncDataF
   })
 ) {}
 
+const SyncDataJsonPatchOperation = LiteralKit(["add", "remove", "replace"])
+  .toTaggedUnion("op")({
+    add: {
+      description: S.optionalKey(S.String),
+      path: S.String,
+      value: S.Json,
+    },
+    remove: {
+      description: S.optionalKey(S.String),
+      path: S.String,
+    },
+    replace: {
+      description: S.optionalKey(S.String),
+      path: S.String,
+      value: S.Json,
+    },
+  })
+  .pipe(
+    $I.annoteSchema("SyncDataJsonPatchOperation", {
+      description: "Add, remove, or replace operation emitted while diffing a sync target's canonical JSON.",
+    })
+  );
+
+const SyncDataJsonPatch = S.Array(SyncDataJsonPatchOperation).pipe(
+  $I.annoteSchema("SyncDataJsonPatch", {
+    description: "Ordered JSON Patch operations emitted for a sync target's canonical document.",
+  })
+);
+
 /**
  * Per-target command result after diffing or writing.
  *
  * @example
  * ```ts
- * import type { SyncDataTargetResult } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
+ * import { SyncDataTargetResult } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
- * const example: SyncDataTargetResult | undefined = undefined
- * console.log(example === undefined) // true
+ * const result = SyncDataTargetResult.make({
+ *   canonicalPatch: [],
+ *   canonicalPath: "src/generated/example.data.json",
+ *   changed: false,
+ *   changedFiles: [],
+ *   fileResults: [],
+ *   outputPaths: [],
+ *   recordCount: 0,
+ *   sources: [],
+ *   sourceUrls: [],
+ *   summary: "0 records",
+ *   targetId: "example"
+ * })
+ * console.log(result.changed) // false
  * ```
  * @category models
  * @since 0.0.0
  */
-export interface SyncDataTargetResult {
-  readonly canonicalPatch: JsonPatch.JsonPatch;
-  readonly canonicalPath: string;
-  readonly changed: boolean;
-  readonly changedFiles: ReadonlyArray<string>;
-  readonly fileResults: ReadonlyArray<SyncDataFileResult>;
-  readonly outputPaths: ReadonlyArray<string>;
-  readonly recordCount: number;
-  readonly sources: ReadonlyArray<SyncDataSourceMetadata>;
-  readonly sourceUrls: ReadonlyArray<string>;
-  readonly summary: string;
-  readonly targetId: string;
-}
+export class SyncDataTargetResult extends S.Class<SyncDataTargetResult>($I`SyncDataTargetResult`)(
+  {
+    canonicalPatch: SyncDataJsonPatch,
+    canonicalPath: S.String,
+    changed: S.Boolean,
+    changedFiles: S.Array(S.String),
+    fileResults: S.Array(SyncDataFileResult),
+    outputPaths: S.Array(S.String),
+    recordCount: S.Finite,
+    sources: S.Array(SyncDataSourceMetadata),
+    sourceUrls: S.Array(S.String),
+    summary: S.String,
+    targetId: S.String,
+  },
+  $I.annote("SyncDataTargetResult", {
+    description: "Per-target command result after diffing or writing generated data.",
+  })
+) {}

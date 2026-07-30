@@ -52,7 +52,7 @@ const writeSchemaFirstFileFixture = Effect.fn("writeSchemaFirstFileFixture")(fun
       workspaces: ["packages/*"],
     })}\n`
   );
-  yield* fs.writeFileString("tsconfig.json", `${encodeJson({ compilerOptions: {} })}\n`);
+  yield* fs.writeFileString("tsconfig.json", `${encodeJson({ compilerOptions: { strictNullChecks: true } })}\n`);
   yield* fs.makeDirectory(path.dirname(relativePath), { recursive: true });
   yield* fs.writeFileString(relativePath, sourceLines.join("\n"));
 });
@@ -816,54 +816,367 @@ describe("schema-first lint command", { concurrent: false }, () => {
   );
 
   it(
-    "does not suppress S.Struct candidates when a same-named field variable feeds an unrelated class",
+    "filters generic and wholly runtime declarations before inventory comparison",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              "interface BaseData { readonly inheritedId: string }",
+              "interface GenericBase<Value> { readonly value: Value }",
+              "interface AstNode { readonly type: string }",
+              "declare namespace O {",
+              '  type Option<Value> = { readonly _tag: "None" } | { readonly _tag: "Some"; readonly value: Value };',
+              "}",
+              "declare namespace pulumi { type Input<Value> = Value | Promise<Value> }",
+              "export interface Generic<Value> { readonly value: Value }",
+              "export interface GenericDerived<Value extends string = string> extends GenericBase<Value> {}",
+              "export type GenericAlias<Value = string> = { readonly value: Value };",
+              "export type PureAlias = { readonly id: string };",
+              "export type RuntimeAlias = { readonly node: AstNode; readonly visit: () => void };",
+              "export interface RuntimeOnly {",
+              "  readonly layer: Layer.Layer<never>;",
+              "  readonly run: (input: string) => Effect.Effect<void>;",
+              "}",
+              "interface D3Only extends d3.SimulationNodeDatum {}",
+              "export { D3Only };",
+              "export interface D3Mixed extends d3.SimulationNodeDatum { readonly id: string }",
+              "export interface OptionalRuntimeOnly {",
+              "  readonly signal?: AbortSignal;",
+              "  readonly secret?: pulumi.Input<string>;",
+              "}",
+              "export interface RpcRuntimeOnly {",
+              '  readonly client: RpcClient.Protocol["Service"];',
+              "  readonly incoming: Stream.Stream<string>;",
+              "  readonly notify: { (value: string): Effect.Effect<void> };",
+              "}",
+              "export type AstTraversal = {",
+              "  readonly object: O.Option<AstNode>;",
+              "  readonly property: AstNode | null;",
+              "};",
+              "export interface RuntimeContainers {",
+              "  readonly array: ReadonlyArray<AstNode>;",
+              "  readonly mutableArray: AstNode[];",
+              "  readonly tuple: readonly [AstNode];",
+              "  readonly set: ReadonlySet<AstNode>;",
+              "}",
+              "export interface PrimitiveContainers {",
+              "  readonly array: ReadonlyArray<string>;",
+              "  readonly mutableArray: number[];",
+              "  readonly tuple: readonly [string, number];",
+              "  readonly map: ReadonlyMap<string, number>;",
+              "}",
+              "export type RuntimeRecord = { readonly values: Readonly<Record<string, AstNode>> };",
+              "export type PrimitiveRecord = { readonly values: Readonly<Record<string, string>> };",
+              "export interface MixedContract {",
+              "  readonly id: string;",
+              "  readonly run: () => Effect.Effect<void>;",
+              "}",
+              "export interface CallableOnly { (): void }",
+              "export interface CallableMixed { (): void; readonly id: string }",
+              "export interface ConstructOnly { new (): RuntimeOnly }",
+              "export interface ConstructMixed { new (): RuntimeOnly; readonly id: string }",
+              "export interface UnionMixed { readonly state: string | AbortSignal }",
+              "export interface NestedMixed {",
+              "  readonly state: { readonly id: string; readonly signal: AbortSignal };",
+              "}",
+              "export interface ImmutableCollections {",
+              "  readonly map: HashMap.HashMap<string, string>;",
+              "  readonly set: HashSet.HashSet<string>;",
+              "}",
+              "declare function makePayload(): { readonly id: string };",
+              "export interface ReturnTypePayload { readonly payload: ReturnType<typeof makePayload> }",
+              "class SchemaFlags { readonly enabled!: boolean }",
+              "export interface InheritedMixed extends SchemaFlags { readonly run: () => Effect.Effect<void> }",
+              "export interface DerivedData extends BaseData {}",
+              "export interface BinaryPayload { readonly bytes: Uint8Array }",
+              "export interface JournalPayload { readonly entry: EventJournal.Entry }",
+              "export interface SuccessPayload { readonly success: Effect.Success<string, Error> }",
+              "export interface ResultPayload { readonly result: OperationResult }",
+              "export interface SchemaOwned { readonly id: string }",
+              'export const SchemaOwned: SchemaOwned = Field({ id: "schema" });',
+              "",
+            ]);
+
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            const exampleSourceDir = path.join("packages", "example", "src");
-            const workspaceFiles: ReadonlyArray<readonly [string, string]> = [
-              [
-                "package.json",
-                `${encodeJson({
-                  name: "@beep/test-root",
-                  private: true,
-                  type: "module",
-                  workspaces: ["packages/*"],
-                })}\n`,
-              ],
-              ["tsconfig.json", `${encodeJson({ compilerOptions: {} })}\n`],
-            ];
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
 
-            yield* Effect.forEach(workspaceFiles, ([filePath, contents]) => fs.writeFileString(filePath, contents), {
-              discard: true,
-            });
-            yield* fs.makeDirectory(exampleSourceDir, { recursive: true });
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "MixedContract"');
+            expect(inventory).toContain('"symbol": "D3Mixed"');
+            expect(inventory).toContain('"symbol": "CallableMixed"');
+            expect(inventory).toContain('"symbol": "ConstructMixed"');
+            expect(inventory).toContain('"symbol": "UnionMixed"');
+            expect(inventory).toContain('"symbol": "NestedMixed"');
+            expect(inventory).toContain('"symbol": "ImmutableCollections"');
+            expect(inventory).toContain('"symbol": "ReturnTypePayload"');
+            expect(inventory).toContain('"symbol": "InheritedMixed"');
+            expect(inventory).toContain('"symbol": "PrimitiveContainers"');
+            expect(inventory).toContain('"symbol": "PrimitiveRecord"');
+            expect(inventory).toContain('"symbol": "DerivedData"');
+            expect(inventory).toContain('"symbol": "BinaryPayload"');
+            expect(inventory).toContain('"symbol": "JournalPayload"');
+            expect(inventory).toContain('"symbol": "SuccessPayload"');
+            expect(inventory).toContain('"symbol": "ResultPayload"');
+            expect(inventory).toContain('"symbol": "PureAlias"');
+            expect(inventory).not.toContain('"symbol": "Generic"');
+            expect(inventory).not.toContain('"symbol": "GenericDerived"');
+            expect(inventory).not.toContain('"symbol": "GenericAlias"');
+            expect(inventory).not.toContain('"symbol": "CallableOnly"');
+            expect(inventory).not.toContain('"symbol": "ConstructOnly"');
+            expect(inventory).not.toContain('"symbol": "OptionalRuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "RpcRuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "AstTraversal"');
+            expect(inventory).not.toContain('"symbol": "RuntimeContainers"');
+            expect(inventory).not.toContain('"symbol": "RuntimeRecord"');
+            expect(inventory).not.toContain('"symbol": "RuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "D3Only"');
+            expect(inventory).not.toContain('"symbol": "RuntimeAlias"');
+            expect(inventory).not.toContain('"symbol": "SchemaOwned"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "limits normalization advisories to exported schema-boundary helpers",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const Model = S.Struct({ value: S.String });",
+              "const privateToken = (value: string): string => value.toLowerCase();",
+              "const unrelated = (value: string): string => value.trim();",
+              "const normalizeValue = (input: unknown): string =>",
+              "  S.decodeUnknownSync(Model)(input).value.trim();",
+              "class Normalizer {",
+              "  public normalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.toUpperCase();",
+              "  }",
+              "  private privateNormalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.toLowerCase();",
+              "  }",
+              "  protected protectedNormalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.trim();",
+              "  }",
+              "}",
+              "export { Normalizer, normalizeValue, unrelated };",
+              "void privateToken;",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
+
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "normalizeValue.trim"');
+            expect(inventory).toContain('"symbol": "Normalizer.toUpperCase"');
+            expect(inventory).not.toContain("privateToken.toLowerCase");
+            expect(inventory).not.toContain("unrelated.trim");
+            expect(inventory).not.toContain("privateNormalize");
+            expect(inventory).not.toContain("protectedNormalize");
+            expect(inventory).not.toContain("Normalizer.toLowerCase");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "omits render contracts without hiding pure data declared in TSX",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/example/src/Example.tsx", [
+              "export interface WidgetProps {",
+              "  readonly label: string;",
+              "  readonly children: React.ReactNode;",
+              "}",
+              "export type PanelProps = { readonly title: string };",
+              "export interface DataPayload { readonly id: string }",
+              "",
+            ]);
+            const fs = yield* FileSystem.FileSystem;
             yield* fs.writeFileString(
-              path.join(exampleSourceDir, "Example.ts"),
+              "packages/example/src/ReactProps.ts",
               [
-                'import * as S from "effect/Schema";',
-                "const buildClass = () => {",
-                "  const fields = { id: S.String };",
-                '  return S.Class<any>("Worker")(fields);',
+                'import type React from "react";',
+                "export type RendererProps = {",
+                "  readonly title: string;",
+                "  readonly component: React.FunctionComponent;",
                 "};",
-                "const fields = S.Struct({ id: S.String });",
-                "void buildClass;",
-                "void fields;",
                 "",
               ].join("\n")
             );
 
-            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
 
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "DataPayload"');
+            expect(inventory).not.toContain('"symbol": "WidgetProps"');
+            expect(inventory).not.toContain('"symbol": "PanelProps"');
+            expect(inventory).not.toContain('"symbol": "RendererProps"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "recognizes local export lists for declarations, schema companions, structs, and functions",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "interface ListedData { readonly id: string }",
+              "type ListedAlias = { readonly id: string };",
+              "interface AliasedData { readonly id: string }",
+              "export default interface DefaultData { readonly id: string }",
+              "interface ListedSchemaOwned { readonly id: string }",
+              'class ListedSchemaOwned extends S.Class<ListedSchemaOwned>("ListedSchemaOwned")({',
+              "  id: S.String,",
+              "}) {}",
+              "const ListedStruct = S.Struct({ id: S.String });",
+              "const AliasedStruct = S.Struct({ id: S.String });",
+              "function listedFunction(input: { readonly id: string }): void { void input; }",
+              "function aliasedFunction(input: { readonly id: string }): void { void input; }",
+              "const listedArrow = (input: { readonly id: string }): void => { void input; };",
+              "export {",
+              "  AliasedData as PublicData,",
+              "  AliasedStruct as PublicStruct,",
+              "  ListedAlias,",
+              "  ListedData,",
+              "  ListedSchemaOwned,",
+              "  ListedStruct,",
+              "  aliasedFunction as publicFunction,",
+              "  listedArrow,",
+              "  listedFunction,",
+              "};",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "ListedData"');
+            expect(inventory).toContain('"symbol": "ListedAlias"');
+            expect(inventory).toContain('"symbol": "AliasedData"');
+            expect(inventory).toContain('"symbol": "DefaultData"');
+            expect(inventory).toContain('"symbol": "ListedStruct"');
+            expect(inventory).toContain('"symbol": "AliasedStruct"');
+            expect(inventory).toContain('"symbol": "listedFunction"');
+            expect(inventory).toContain('"symbol": "aliasedFunction"');
+            expect(inventory).toContain('"symbol": "listedArrow"');
+            expect(inventory).not.toContain('"symbol": "ListedSchemaOwned"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "recognizes anonymous direct default exports with stable fallback symbols",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/example/src/DefaultInterface.ts", [
+              "export default interface { readonly id: string }",
+              "",
+            ]);
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultFunction.ts",
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default function(input: { readonly id: string }): void { void input; }",
+                "void Model;",
+                "",
+              ].join("\n")
+            );
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultArrow.ts",
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default (input: { readonly id: string }): void => { void input; };",
+                "void Model;",
+                "",
+              ].join("\n")
+            );
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultStruct.ts",
+              ['import * as S from "effect/Schema";', "export default S.Struct({ id: S.String });", ""].join("\n")
+            );
+
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+
+            expectReportedExit(exit);
+            expect(inventory.match(/"symbol": "default@\d+"/g)).toHaveLength(4);
+            expect(inventory).not.toContain('"symbol": ""');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "inventories only exported top-level plain S.Struct object models",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const fields = { id: S.String };",
+              "const internal = S.Struct({ id: S.String });",
+              "const nested = S.Struct({ child: S.Struct({ id: S.String }) });",
+              "const dynamic = S.Struct(fields);",
+              "const spread = S.Struct({ ...fields });",
+              "export const build = () => S.Struct({ id: S.String });",
+              "export const PublicModel = S.Struct({ id: S.String });",
+              "void internal;",
+              "void nested;",
+              "void dynamic;",
+              "void spread;",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
             const errorLines = yield* TestConsole.errorLines;
+
             expectReportedExit(exit);
             expect(errorLines).toContain("[schema-first] untracked live findings:");
-            expect(errorLines).toContain(
-              "- packages/example/src/Example.ts :: fields [object-struct-schema] Object schema should prefer an annotated S.Class over S.Struct."
-            );
+            expect(inventory).toContain('"symbol": "PublicModel"');
+            expect(inventory).not.toContain('"symbol": "internal"');
+            expect(inventory).not.toContain('"symbol": "nested"');
+            expect(inventory).not.toContain('"symbol": "dynamic"');
+            expect(inventory).not.toContain('"symbol": "spread"');
+            expect(inventory).not.toContain('"symbol": "build"');
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

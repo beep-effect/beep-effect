@@ -17,14 +17,18 @@ import {
   parseCsvSource,
   renderUnknownJsonModule,
   SyncDataFetchedSource,
+  SyncDataTargetMetadata,
   SyncDataTargetProjection,
+  SyncDataTargetResult,
   sourceMetadata,
   syncDataTargets,
+  syncTargetForTesting,
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
@@ -313,6 +317,46 @@ const csvTarget: SyncDataTarget = {
 };
 
 describe("sync-data-to-ts", { concurrent: false }, () => {
+  it("models flat target metadata and command results with schemas", () => {
+    const metadata = SyncDataTargetMetadata.make(csvTarget);
+    const result = SyncDataTargetResult.make({
+      canonicalPatch: [
+        { op: "add", path: "/first", value: 1 },
+        { op: "remove", path: "/second" },
+        { op: "replace", path: "/third", value: "updated" },
+      ],
+      canonicalPath: csvCanonicalOutputPath,
+      changed: true,
+      changedFiles: [csvCanonicalOutputPath],
+      fileResults: [],
+      outputPaths: [csvGeneratedOutputPath, csvCanonicalOutputPath],
+      recordCount: 2,
+      sources: [],
+      sourceUrls: [csvFixtureSourceUrl],
+      summary: "2 csv rows",
+      targetId: "test-csv",
+    });
+
+    expect(S.is(SyncDataTargetMetadata)(metadata)).toBe(true);
+    expect(metadata.id).toBe(csvTarget.id);
+    expect(S.is(SyncDataTargetResult)(result)).toBe(true);
+  });
+
+  it("round-trips a non-empty result from the real target producer", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const result = yield* syncTargetForTesting(process.cwd(), "dry-run", csvTarget);
+        const encoded = yield* S.encodeEffect(SyncDataTargetResult)(result);
+        const decoded = yield* S.decodeUnknownEffect(SyncDataTargetResult)(encoded);
+
+        expect(result.fileResults).toHaveLength(2);
+        expect(result.canonicalPatch.length).toBeGreaterThan(0);
+        expect(S.is(SyncDataTargetResult)(result)).toBe(true);
+        expect(S.is(SyncDataTargetResult)(decoded)).toBe(true);
+        expect(decoded.targetId).toBe(csvTarget.id);
+      }).pipe(provideCsvFixtureClient, withTempRepoCommand)
+    ));
+
   it.effect(
     "reports JSON normalization failures through the typed error channel",
     Effect.fnUntraced(function* () {

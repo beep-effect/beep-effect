@@ -874,6 +874,65 @@ export class OpenClawGeneration extends S.Class<OpenClawGeneration>($I`OpenClawG
   })
 ) {}
 
+/**
+ * Shared input for rendered scripts that bind a generation to its expected
+ * workstation identity.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawGenerationIdentityScriptInput } from "@beep/infra"
+ *
+ * console.log(typeof OpenClawGenerationIdentityScriptInput !== "undefined")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenClawGenerationIdentityScriptInput extends S.Class<OpenClawGenerationIdentityScriptInput>(
+  $I`OpenClawGenerationIdentityScriptInput`
+)(
+  {
+    generation: OpenClawGeneration.annotateKey({
+      description: "Content-addressed generation the rendered script operates on.",
+    }),
+    identity: OpenClawExpectedIdentity.annotateKey({
+      description: "Expected workstation identity the rendered script verifies.",
+    }),
+  },
+  $I.annote("OpenClawGenerationIdentityScriptInput", {
+    description: "Input shared by OpenClaw scripts that bind a generation to its expected workstation identity.",
+  })
+) {}
+
+/**
+ * Input for rendering an encrypted OpenClaw backup shipping script.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawBackupShipScriptInput } from "@beep/infra"
+ *
+ * console.log(typeof OpenClawBackupShipScriptInput !== "undefined")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenClawBackupShipScriptInput extends S.Class<OpenClawBackupShipScriptInput>(
+  $I`OpenClawBackupShipScriptInput`
+)(
+  {
+    backup: OpenClawBackupConfig.annotateKey({
+      description: "Encrypted backup shipping configuration.",
+    }),
+    generation: OpenClawGeneration.annotateKey({
+      description: "Content-addressed generation whose snapshot is shipped.",
+    }),
+  },
+  $I.annote("OpenClawBackupShipScriptInput", {
+    description: "Input for rendering an encrypted OpenClaw backup shipping script.",
+  })
+) {}
+
 const generationDir = (generation: OpenClawGeneration): string => `${generation.configRoot}/${generation.generationId}`;
 
 const pointerPath = (generation: OpenClawGeneration): string => `${generation.configRoot}/${generationPointerName}`;
@@ -1368,10 +1427,7 @@ export const renderOpenClawGenerationTree = (
 export const renderOpenClawPreflightScript = ({
   generation,
   identity,
-}: {
-  readonly generation: OpenClawGeneration;
-  readonly identity: OpenClawExpectedIdentity;
-}): string =>
+}: OpenClawGenerationIdentityScriptInput): string =>
   bashScript([
     ...scriptPreamble(generation),
     "fail() { printf 'PREFLIGHT-FAIL: %s\\n' \"$1\" >&2; exit 78; }",
@@ -1772,10 +1828,7 @@ export const renderOpenClawRollbackScript = (generation: OpenClawGeneration): st
     'printf \'ROLLBACK-OK pointer=%s\\n\' "$(readlink "${pointer}")"',
   ]);
 
-const driftAuditLines = (input: {
-  readonly generation: OpenClawGeneration;
-  readonly identity: OpenClawExpectedIdentity;
-}): ReadonlyArray<string> => {
+const driftAuditLines = (input: OpenClawGenerationIdentityScriptInput): ReadonlyArray<string> => {
   const generation = input.generation;
 
   return [
@@ -1895,10 +1948,7 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * @category serialization
  * @since 0.0.0
  */
-export const renderOpenClawDriftAuditScript = (input: {
-  readonly generation: OpenClawGeneration;
-  readonly identity: OpenClawExpectedIdentity;
-}): string =>
+export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentityScriptInput): string =>
   bashScript([
     "set -uo pipefail",
     trustedBasePath,
@@ -1951,10 +2001,7 @@ export const renderOpenClawDriftAuditScript = (input: {
  * @category serialization
  * @since 0.0.0
  */
-export const renderOpenClawProbeScript = (input: {
-  readonly generation: OpenClawGeneration;
-  readonly identity: OpenClawExpectedIdentity;
-}): string => {
+export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScriptInput): string => {
   const generation = input.generation;
 
   return bashScript([
@@ -2123,13 +2170,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * @category serialization
  * @since 0.0.0
  */
-export const renderOpenClawBackupShipScript = ({
-  backup,
-  generation,
-}: {
-  readonly backup: OpenClawBackupConfig;
-  readonly generation: OpenClawGeneration;
-}): string => {
+export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawBackupShipScriptInput): string => {
   const remote = `${backup.user}@${backup.host}`;
 
   return bashScript([
