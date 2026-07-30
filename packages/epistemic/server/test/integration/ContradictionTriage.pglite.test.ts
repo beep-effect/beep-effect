@@ -18,7 +18,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { DbSchema } from "@beep/epistemic-tables";
 import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim";
-import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
+import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
 import { GetContradictionCandidate, ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
 import {
@@ -109,24 +109,24 @@ const verifiedAnchorFor = (scenario: number, label: string) =>
 const insertVerification = Effect.fnUntraced(function* (
   scenario: number,
   ordinal: number,
-  evidenceId: number,
+  evidenceRow: EvidenceRow,
   createdAt: number
 ) {
   const db = yield* makeDrizzle();
-  const decodedEvidenceId = EpistemicIdentity.EvidenceId.make(evidenceId);
+  const evidence = fromEvidenceRow(evidenceRow);
   const verifiedAnchor = verifiedAnchorFor(scenario, `${ordinal}`);
   const manifestationKey = yield* Effect.fromResult(
-    EvidenceVerification.manifestationKeyFor(decodedEvidenceId, verifiedAnchor)
+    EvidenceVerification.manifestationKeyFor(evidence.id, verifiedAnchor)
   );
   const verification = decodeVerification({
     ...baseEntityFixtureInput("EpistemicEvidenceVerification", scenario * 100 + ordinal),
     createdAt,
-    evidenceId: decodedEvidenceId,
+    evidenceId: evidence.id,
     manifestationKey,
     updatedAt: createdAt,
     verifiedAnchor,
   });
-  const insert = yield* Effect.fromResult(toEvidenceVerificationInsert(verification));
+  const insert = yield* Effect.fromResult(toEvidenceVerificationInsert(verification, evidence));
   yield* db.insert(DbSchema.evidenceVerification).values(insert);
   return verification;
 });
@@ -268,6 +268,7 @@ interface SubmissionOptions {
   readonly confidence?: number;
   readonly leftEvidenceId?: EpistemicIdentity.EvidenceId;
   readonly receipt?: string;
+  readonly recordedAt?: number;
   readonly reversed?: boolean;
   readonly rightEvidenceId?: EpistemicIdentity.EvidenceId;
 }
@@ -286,6 +287,7 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
   const {
     confidence = 0.95,
     leftEvidenceId,
+    recordedAt = 1_200,
     receipt = `receipt-${scenario}`,
     reversed = false,
     rightEvidenceId,
@@ -328,7 +330,7 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     orgId: seeded.beliefA.orgId,
     pair,
     receiptKey: ContradictionReceiptKey.make(digest(receipt)),
-    recordedAt: instant(1_200),
+    recordedAt: instant(recordedAt),
     receivedBy: systemPrincipal,
     schemaVersion: seeded.beliefA.schemaVersion,
     source: "Agent",
@@ -372,7 +374,13 @@ if (!shouldRunPgliteIntegration) {
           expect(first.duplicateCandidate).toBe(false);
           expect(repeated.duplicateCandidate).toBe(true);
           expect(repeated.candidate.id).toBe(first.candidate.id);
-          const detail = yield* repository.get(GetContradictionCandidate.make({ candidateId: first.candidate.id }));
+          const detail = yield* repository.get(
+            GetContradictionCandidate.make({
+              candidateId: first.candidate.id,
+              knownAt: instant(1_500),
+              validAt: instant(1_500),
+            })
+          );
           expect(O.map(detail, (value) => value.receipts.length)).toStrictEqual(O.some(2));
 
           const conflict = yield* Effect.flip(
@@ -490,20 +498,88 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
+        "rejects candidates recorded before a referenced belief or evidence existed",
+        Effect.fnUntraced(function* () {
+          const repository = yield* ContradictionTriageRepository;
+          const beliefSeeded = yield* seedScenario(1);
+          const evidenceSeeded = yield* seedScenario(130);
+          const db = yield* makeDrizzle();
+          const before = yield* db.select().from(DbSchema.contradictionCandidate);
+
+          const beliefConflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(1, beliefSeeded, {
+                recordedAt: 1_050,
+                receipt: "receipt-1-before-belief",
+              })
+            )
+          );
+          expect(ContradictionSubmissionConflict.is(beliefConflict)).toBe(true);
+          expect(ContradictionSubmissionConflict.is(beliefConflict) && beliefConflict.reason).toBe(
+            "candidate-predates-input"
+          );
+
+          const evidenceConflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(130, evidenceSeeded, {
+                receipt: "receipt-130-before-evidence",
+              })
+            )
+          );
+          expect(ContradictionSubmissionConflict.is(evidenceConflict)).toBe(true);
+          expect(ContradictionSubmissionConflict.is(evidenceConflict) && evidenceConflict.reason).toBe(
+            "candidate-predates-input"
+          );
+
+          const after = yield* db.select().from(DbSchema.contradictionCandidate);
+          expect(after).toHaveLength(before.length);
+        }),
+        120_000
+      );
+
+      it.effect(
         "expands exact beliefs with organization-scoped verification as of candidate time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
+          const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
           const repository = yield* ContradictionTriageRepository;
-          yield* insertVerification(106, 1, seeded.evidenceA.id, 1_100);
-          yield* insertVerification(106, 2, seeded.evidenceA.id, 1_150);
-          const selected = yield* insertVerification(106, 3, seeded.evidenceA.id, 1_150);
+          const db = yield* makeDrizzle();
+          yield* insertVerification(106, 1, seeded.evidenceA, 1_100);
+          yield* insertVerification(106, 2, seeded.evidenceA, 1_150);
+          const selected = yield* insertVerification(106, 3, seeded.evidenceA, 1_150);
+          const unrelatedAnchor = TextAnchorVerificationReceipt.make({
+            anchor: TextAnchor.make({
+              ...selected.verifiedAnchor.anchor,
+              quote: "amount B",
+            }),
+            source: selected.verifiedAnchor.source,
+          });
+          const unrelatedVerification = decodeVerification({
+            ...baseEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
+            createdAt: 1_190,
+            evidenceId: decodedEvidenceA.id,
+            manifestationKey: Result.getOrThrow(
+              EvidenceVerification.manifestationKeyFor(decodedEvidenceA.id, unrelatedAnchor)
+            ),
+            updatedAt: 1_190,
+            verifiedAnchor: unrelatedAnchor,
+          });
+          // Simulate a legacy/corrupt row that bypassed the guarded converter:
+          // detail reads must still refuse to associate this unrelated anchor.
+          const encodedUnrelated = yield* Effect.fromResult(
+            S.encodeUnknownResult(EvidenceVerification)(unrelatedVerification)
+          );
+          const { id: _id, ...uncheckedUnrelatedInsert } = encodedUnrelated;
+          yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
           const submitted = yield* repository.submit(makeSubmission(106, seeded));
-          yield* insertVerification(106, 4, seeded.evidenceA.id, 1_300);
+          yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
 
           const expanded = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
+              knownAt: instant(1_500),
               orgId: submitted.candidate.orgId,
+              validAt: instant(1_500),
             })
           );
           expect(O.isSome(expanded)).toBe(true);
@@ -543,7 +619,9 @@ if (!shouldRunPgliteIntegration) {
           const wrongOrganization = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
+              knownAt: instant(1_500),
               orgId: SharedIdentity.OrganizationId.make(2),
+              validAt: instant(1_500),
             })
           );
           expect(wrongOrganization).toStrictEqual(O.none());
@@ -611,6 +689,80 @@ if (!shouldRunPgliteIntegration) {
               (item) => item.candidate.id === submitted.candidate.id
             )
           ).toBe(true);
+
+          const historicalDetail = yield* repository.get(
+            GetContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(1_999),
+              validAt: instant(1_500),
+            })
+          );
+          const currentDetail = yield* repository.get(
+            GetContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(2_000),
+              validAt: instant(1_500),
+            })
+          );
+          const outsideValidity = yield* repository.get(
+            GetContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(2_000),
+              validAt: instant(999),
+            })
+          );
+          const historicalExpanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(1_999),
+              orgId: submitted.candidate.orgId,
+              validAt: instant(1_500),
+            })
+          );
+          const currentExpanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(2_000),
+              orgId: submitted.candidate.orgId,
+              validAt: instant(1_500),
+            })
+          );
+          const outsideExpandedValidity = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(2_000),
+              orgId: submitted.candidate.orgId,
+              validAt: instant(999),
+            })
+          );
+          expect(
+            pipe(
+              historicalDetail,
+              O.flatMap((detail) => detail.disposition)
+            )
+          ).toStrictEqual(O.none());
+          expect(
+            pipe(
+              currentDetail,
+              O.flatMap((detail) => detail.disposition),
+              O.map((detail) => detail.decision.status)
+            )
+          ).toStrictEqual(O.some("rejected"));
+          expect(outsideValidity).toStrictEqual(O.none());
+          expect(
+            pipe(
+              historicalExpanded,
+              O.flatMap((expanded) => expanded.detail.disposition)
+            )
+          ).toStrictEqual(O.none());
+          expect(
+            pipe(
+              currentExpanded,
+              O.flatMap((expanded) => expanded.detail.disposition),
+              O.map((detail) => detail.decision.status)
+            )
+          ).toStrictEqual(O.some("rejected"));
+          expect(outsideExpandedValidity).toStrictEqual(O.none());
         }),
         120_000
       );

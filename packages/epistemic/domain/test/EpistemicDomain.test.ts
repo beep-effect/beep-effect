@@ -15,6 +15,7 @@ import {
   TurnFinalizationUsageAppend,
   UsageRecord,
 } from "@beep/epistemic-domain";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -93,6 +94,31 @@ describe("@beep/epistemic-domain", () => {
       fc.property(S.toArbitrary(EvidenceSpan), (span) => EvidenceSpan.isInternallyConsistent(span)),
       fcRuns(25)
     );
+  });
+
+  it("matches an evidence span only to its exact provenance anchor", () => {
+    const span = Result.getOrThrow(
+      S.decodeUnknownResult(EvidenceSpan)({
+        confidence: 0.92,
+        endChar: 8,
+        quote: "amount A",
+        startChar: 0,
+      })
+    );
+    const matching = Result.getOrThrow(
+      S.decodeUnknownResult(TextAnchor)({
+        endChar: 8,
+        quote: "amount A",
+        startChar: 0,
+      })
+    );
+    const unrelated = TextAnchor.make({
+      ...matching,
+      quote: "amount B",
+    });
+
+    expect(EvidenceSpan.matchesAnchor(span, matching)).toBe(true);
+    expect(EvidenceSpan.matchesAnchor(span, unrelated)).toBe(false);
   });
 
   it("decodes and constructs a CandidateClaim row", () => {

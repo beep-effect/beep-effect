@@ -711,7 +711,7 @@ const ensureVerification = Effect.fn("ContradictionQaSeed.ensureVerification")(f
     return;
   }
 
-  const insert = yield* Effect.fromResult(toEvidenceVerificationInsert(expected)).pipe(
+  const insert = yield* Effect.fromResult(toEvidenceVerificationInsert(expected, evidence)).pipe(
     storageUnavailable("encode evidence verification insert")
   );
   yield* db

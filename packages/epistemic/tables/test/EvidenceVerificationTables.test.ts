@@ -1,3 +1,4 @@
+import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceVerification as EvidenceVerificationModel } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { EvidenceVerificationManifestation } from "@beep/epistemic-domain/values/EvidenceVerification";
 import { DbSchema, Entities } from "@beep/epistemic-tables";
@@ -57,6 +58,20 @@ const input = {
   manifestationKey,
   verifiedAnchor: Result.getOrThrow(S.encodeUnknownResult(TextAnchorVerificationReceipt)(verifiedAnchor)),
 };
+const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
+  Result.getOrThrow(
+    S.decodeUnknownResult(Evidence)({
+      ...baseEntityFixtureInput("EpistemicEvidence", id),
+      artifactFixtureKey: `artifact:evidence-verification-${id}`,
+      id,
+      span: {
+        ...anchor,
+        confidence: 0.95,
+      },
+      spanFixtureKey: `span:evidence-verification-${id}`,
+    })
+  );
+const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
 describe("EvidenceVerificationTable", () => {
   it("projects the immutable sidecar column shape", () => {
@@ -109,7 +124,12 @@ describe("EvidenceVerificationTable", () => {
             ),
           })
         );
-        const insert = Result.getOrThrow(EvidenceVerification.toEvidenceVerificationInsert(verification));
+        const insert = Result.getOrThrow(
+          EvidenceVerification.toEvidenceVerificationInsert(
+            verification,
+            evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
+          )
+        );
         const decoded = Result.getOrThrow(
           EvidenceVerification.fromEvidenceVerificationRow({
             ...insert,
@@ -127,7 +147,7 @@ describe("EvidenceVerificationTable", () => {
 
   it("round-trips rows through schema-derived converters", () => {
     const verification = Result.getOrThrow(S.decodeUnknownResult(EvidenceVerificationModel)(input));
-    const insert = Result.getOrThrow(EvidenceVerification.toEvidenceVerificationInsert(verification));
+    const insert = Result.getOrThrow(EvidenceVerification.toEvidenceVerificationInsert(verification, evidence));
     const tamperedVerification = EvidenceVerificationModel.make({
       ...verification,
       manifestationKey: EvidenceVerificationModel.manifestationKeyFor(
@@ -145,7 +165,9 @@ describe("EvidenceVerificationTable", () => {
     expect(decoded.id).toBe(7);
     expect(Result.getOrThrow(decoded.hasValidManifestationKey())).toBe(true);
     expect(decoded.verifiedAnchor.anchor.quote).toBe("controlling fact");
-    expect(Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(tamperedVerification))).toBe(true);
+    expect(Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(tamperedVerification, evidence))).toBe(
+      true
+    );
     expect(
       Result.isFailure(
         EvidenceVerification.fromEvidenceVerificationRow({
@@ -163,7 +185,8 @@ describe("EvidenceVerificationTable", () => {
             EvidenceVerificationModel.make({
               ...verification,
               verifiedAnchor: mutatedAnchor,
-            })
+            }),
+            evidence
           )
         )
       ).toBe(true);
@@ -186,6 +209,29 @@ describe("EvidenceVerificationTable", () => {
           verifiedAnchor: {},
         })
       )
+    ).toBe(true);
+
+    const mismatchedAnchorVerification = EvidenceVerificationModel.make({
+      ...verification,
+      manifestationKey: Result.getOrThrow(
+        EvidenceVerificationModel.manifestationKeyFor(evidenceId, quoteMutatedAnchor)
+      ),
+      verifiedAnchor: quoteMutatedAnchor,
+    });
+    expect(
+      Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedAnchorVerification, evidence))
+    ).toBe(true);
+
+    const otherEvidenceId = Epistemic.EvidenceId.make(5);
+    const mismatchedEvidenceVerification = EvidenceVerificationModel.make({
+      ...verification,
+      evidenceId: otherEvidenceId,
+      manifestationKey: Result.getOrThrow(
+        EvidenceVerificationModel.manifestationKeyFor(otherEvidenceId, verifiedAnchor)
+      ),
+    });
+    expect(
+      Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedEvidenceVerification, evidence))
     ).toBe(true);
   });
 

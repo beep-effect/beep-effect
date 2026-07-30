@@ -11,6 +11,7 @@ import {
   ContradictionBeliefView,
   ContradictionCandidateDetailView,
   ContradictionEvidenceView,
+  EvidenceSourceHighlight,
   EvidenceSourcePage,
   EvidenceSourcePageSelector,
 } from "@beep/epistemic-use-cases/public";
@@ -34,11 +35,7 @@ import {
   SourceTextResolverErrorReason,
 } from "@beep/file-processing/SourceText";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import {
-  toTextAnchorVerificationReceipt,
-  VerifyTextAnchorInput,
-  verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
+import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Cause, Crypto, Effect, Layer, Match, pipe } from "effect";
 import * as A from "effect/Array";
@@ -126,14 +123,18 @@ const toCandidateDetailView = (expanded: ContradictionCandidateExpandedDetail): 
 const loadExpandedCandidate = Effect.fnUntraced(function* (
   repository: ContradictionTriageRepository["Service"],
   candidateId: GetContradictionCandidate["candidateId"],
+  knownAt: GetContradictionCandidate["knownAt"],
   orgId: ContradictionReviewScope["Service"]["orgId"],
+  validAt: GetContradictionCandidate["validAt"],
   context: string
 ) {
   const expanded = yield* repository
     .getExpanded(
       GetExpandedContradictionCandidate.make({
         candidateId,
+        knownAt,
         orgId,
+        validAt,
       })
     )
     .pipe(
@@ -206,8 +207,15 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
         );
     }),
 
-    getCandidate: Effect.fnUntraced(function* ({ candidateId }) {
-      return yield* loadExpandedCandidate(repository, candidateId, scope.orgId, "GetContradictionCandidate").pipe(
+    getCandidate: Effect.fnUntraced(function* ({ candidateId, knownAt, validAt }) {
+      return yield* loadExpandedCandidate(
+        repository,
+        candidateId,
+        knownAt,
+        scope.orgId,
+        validAt,
+        "GetContradictionCandidate"
+      ).pipe(
         Effect.map(toCandidateDetailView),
         Effect.tap(() => Effect.annotateCurrentSpan("epistemic.contradiction.outcome", "found")),
         Effect.tapError((error) =>
@@ -253,9 +261,16 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
       );
     }),
 
-    getEvidenceSourcePage: Effect.fnUntraced(function* ({ candidateId, evidenceId, selector }) {
+    getEvidenceSourcePage: Effect.fnUntraced(function* ({ candidateId, evidenceId, knownAt, selector, validAt }) {
       return yield* Effect.gen(function* () {
-        const expanded = yield* loadExpandedCandidate(repository, candidateId, scope.orgId, "GetEvidenceSourcePage");
+        const expanded = yield* loadExpandedCandidate(
+          repository,
+          candidateId,
+          knownAt,
+          scope.orgId,
+          validAt,
+          "GetEvidenceSourcePage"
+        );
         const evidence = yield* pipe(
           findCandidateEvidence(expanded, evidenceId),
           O.match({
@@ -314,8 +329,12 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
         });
         return EvidenceSourcePage.make({
           evidenceId,
+          highlight: EvidenceSourceHighlight.make({
+            endChar: verifiedAnchor.anchor.endChar,
+            source: verifiedAnchor.source,
+            startChar: verifiedAnchor.anchor.startChar,
+          }),
           page,
-          verifiedAnchor: toTextAnchorVerificationReceipt(verifiedAnchor),
         });
       }).pipe(
         Effect.tap(() => Effect.annotateCurrentSpan("epistemic.contradiction.outcome", "resolved")),

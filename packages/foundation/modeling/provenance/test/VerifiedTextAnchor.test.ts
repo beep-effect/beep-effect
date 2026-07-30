@@ -11,7 +11,9 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, flow, Result } from "effect";
+import { Effect, flow, Layer, Result } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -121,6 +123,42 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(failure.message).not.toContain("fact");
       expect(failure.message).not.toContain(emptyDigest);
     }, provideBunCrypto)
+  );
+
+  it.effect(
+    "sanitizes source-text digest failures",
+    Effect.fnUntraced(
+      function* () {
+        const source = identity({ textDigest: factDigest });
+        const failure = yield* verifyTextAnchor(
+          VerifyTextAnchorInput.make({
+            anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+            expectedSource: source,
+            source,
+            sourceText: "fact",
+          })
+        ).pipe(Effect.flip);
+
+        expect(failure.reason).toBe("stale-source");
+        expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
+      },
+      provideScopedLayer(
+        Layer.succeed(
+          Crypto.Crypto,
+          Crypto.make({
+            digest: () =>
+              Effect.fail(
+                PlatformError.systemError({
+                  _tag: "Unknown",
+                  method: "digest",
+                  module: "VerifiedTextAnchorTest",
+                })
+              ),
+            randomBytes: (size) => new Uint8Array(size),
+          })
+        )
+      )
+    )
   );
 
   it.effect(

@@ -390,7 +390,13 @@ if (Str.isEmpty(externalUrl)) {
           const persisted = yield* Effect.scoped(
             Effect.gen(function* () {
               const restarted = yield* openStack();
-              return yield* restarted.repository.get(GetContradictionCandidate.make({ candidateId }));
+              return yield* restarted.repository.get(
+                GetContradictionCandidate.make({
+                  candidateId,
+                  knownAt: DateTime.makeUnsafe(2_000),
+                  validAt: DateTime.makeUnsafe(2_000),
+                })
+              );
             })
           );
           expect(O.isSome(persisted)).toBe(true);
@@ -552,8 +558,20 @@ if (Str.isEmpty(externalUrl)) {
             Effect.gen(function* () {
               const restarted = yield* openStack();
               const candidates = yield* Effect.all([
-                restarted.repository.get(GetContradictionCandidate.make({ candidateId: firstId })),
-                restarted.repository.get(GetContradictionCandidate.make({ candidateId: secondId })),
+                restarted.repository.get(
+                  GetContradictionCandidate.make({
+                    candidateId: firstId,
+                    knownAt: DateTime.makeUnsafe(2_000),
+                    validAt: DateTime.makeUnsafe(2_000),
+                  })
+                ),
+                restarted.repository.get(
+                  GetContradictionCandidate.make({
+                    candidateId: secondId,
+                    knownAt: DateTime.makeUnsafe(2_000),
+                    validAt: DateTime.makeUnsafe(2_000),
+                  })
+                ),
               ]);
               const latest = yield* restarted.edges.readLatest(shared.logicalKey);
               const edgeCounts = yield* restarted.sql<{

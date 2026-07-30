@@ -7,6 +7,7 @@ import {
   ContradictionCandidateContent,
   ContradictionDispositionDecision,
   ContradictionMatchBasis,
+  ContradictionMatchBasisKind,
   ContradictionProposalContent,
   ContradictionProposalId,
   ContradictionResolutionProposal,
@@ -114,6 +115,31 @@ describe("Contradiction domain invariants", () => {
     expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] }))).toBe(true);
   });
 
+  it("requires independent evidence sets to be disjoint", () => {
+    const shared = Epistemic.EvidenceId.make(10);
+    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
+
+    expect(
+      Result.isFailure(
+        decode({
+          ...matchBasis,
+          leftEvidenceIds: [shared],
+          rightEvidenceIds: [shared],
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({
+          ...matchBasis,
+          kind: "same-source-overlap",
+          leftEvidenceIds: [shared],
+          rightEvidenceIds: [shared],
+        })
+      )
+    ).toBe(true);
+  });
+
   it("rejects duplicate proposal ids within one assessment", () => {
     expect(
       Result.isFailure(
@@ -151,6 +177,13 @@ describe("Contradiction domain invariants", () => {
         (basis, arbitraryAssessment, canonicalPair) => {
           expect(A.dedupe(basis.leftEvidenceIds)).toHaveLength(basis.leftEvidenceIds.length);
           expect(A.dedupe(basis.rightEvidenceIds)).toHaveLength(basis.rightEvidenceIds.length);
+          ContradictionMatchBasisKind.$match(basis.kind, {
+            "independent-evidence": () =>
+              expect(A.dedupe([...basis.leftEvidenceIds, ...basis.rightEvidenceIds])).toHaveLength(
+                basis.leftEvidenceIds.length + basis.rightEvidenceIds.length
+              ),
+            "same-source-overlap": () => undefined,
+          });
           expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
             arbitraryAssessment.proposals.length
           );

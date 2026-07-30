@@ -1440,7 +1440,6 @@
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/identity": "workspace:^",
-        "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/ui": "workspace:^",
         "@effect/atom-react": "catalog:",

@@ -1,6 +1,5 @@
 import { EvidenceSourcePanel } from "@beep/epistemic-ui";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -33,15 +32,16 @@ describe("EvidenceSourcePanel", () => {
         totalCodeUnits: 29,
       })
     );
-    const anchor = Result.getOrThrow(
-      S.decodeUnknownResult(TextAnchorVerificationReceipt)({
-        anchor: { endChar: 13, quote: "agreement", startChar: 4 },
+    const highlight = Result.getOrThrow(
+      S.decodeUnknownResult(ContradictionTriage.EvidenceSourceHighlight)({
+        endChar: 13,
         source,
+        startChar: 4,
       })
     );
 
     const markup = renderToStaticMarkup(
-      <EvidenceSourcePanel anchor={anchor} page={page} onPageChange={() => undefined} />
+      <EvidenceSourcePanel highlight={highlight} page={page} onPageChange={() => undefined} />
     );
 
     expect(markup).toContain("Verified source");

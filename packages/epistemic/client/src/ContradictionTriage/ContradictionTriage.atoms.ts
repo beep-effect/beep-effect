@@ -257,9 +257,17 @@ export const contradictionReviewCandidateIdAtom: Atom.Writable<
 > = Atom.make<O.Option<GetContradictionCandidate["candidateId"]>>(O.none()).pipe(Atom.keepAlive);
 
 const candidateDetailAtoms = Atom.family((candidateId: GetContradictionCandidate["candidateId"]) =>
-  ContradictionClient.query("GetContradictionCandidate", GetContradictionCandidate.make({ candidateId }), {
-    reactivityKeys: [detailKey(candidateId)],
-  })
+  Atom.family((validAt: DateTime.Utc) =>
+    Atom.family((knownAt: DateTime.Utc) =>
+      ContradictionClient.query(
+        "GetContradictionCandidate",
+        GetContradictionCandidate.make({ candidateId, knownAt, validAt }),
+        {
+          reactivityKeys: [detailKey(candidateId)],
+        }
+      )
+    )
+  )
 );
 
 const noCandidateDetail = AsyncResult.initial<ContradictionCandidateDetailView>();
@@ -287,7 +295,14 @@ const noCandidateDetail = AsyncResult.initial<ContradictionCandidateDetailView>(
 export const selectedContradictionCandidateAtom = Atom.readable((get) =>
   O.match(get(selectedContradictionCandidateIdAtom), {
     onNone: () => noCandidateDetail,
-    onSome: (candidateId) => get(candidateDetailAtoms(candidateId)),
+    onSome: (candidateId) =>
+      AsyncResult.flatMap(
+        AsyncResult.all({
+          knownAt: get(contradictionKnownAtAtom),
+          validAt: get(contradictionValidAtAtom),
+        }),
+        ({ knownAt, validAt }) => get(candidateDetailAtoms(candidateId)(validAt)(knownAt))
+      ),
   })
 );
 
@@ -314,10 +329,14 @@ export const selectedContradictionEvidenceSourceAtom: Atom.Writable<
 const evidenceSourcePageAtoms = Atom.family((candidateId: EvidenceSourcePagePayload["candidateId"]) =>
   Atom.family((evidenceId: EvidenceSourcePagePayload["evidenceId"]) =>
     Atom.family((selector: EvidenceSourcePageSelector) =>
-      ContradictionClient.query(
-        "GetEvidenceSourcePage",
-        EvidenceSourcePagePayload.make({ candidateId, evidenceId, selector }),
-        { reactivityKeys: [sourceKey(candidateId, evidenceId)] }
+      Atom.family((validAt: DateTime.Utc) =>
+        Atom.family((knownAt: DateTime.Utc) =>
+          ContradictionClient.query(
+            "GetEvidenceSourcePage",
+            EvidenceSourcePagePayload.make({ candidateId, evidenceId, knownAt, selector, validAt }),
+            { reactivityKeys: [sourceKey(candidateId, evidenceId)] }
+          )
+        )
       )
     )
   )
@@ -347,7 +366,12 @@ const noEvidenceSourcePage = AsyncResult.initial<EvidenceSourcePage>();
 export const contradictionEvidenceSourcePageAtom = Atom.readable((get) =>
   O.match(get(selectedContradictionEvidenceSourceAtom), {
     onNone: () => noEvidenceSourcePage,
-    onSome: (request) => get(evidenceSourcePageAtoms(request.candidateId)(request.evidenceId)(request.selector)),
+    onSome: (request) =>
+      get(
+        evidenceSourcePageAtoms(request.candidateId)(request.evidenceId)(request.selector)(request.validAt)(
+          request.knownAt
+        )
+      ),
   })
 );
 
@@ -428,6 +452,8 @@ export const resetContradictionTemporalViewAtom = ContradictionClient.runtime.fn
     ctx.set(contradictionValidAtAtom, now);
     ctx.set(contradictionKnownAtAtom, now);
     ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
+    ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
+    ctx.set(contradictionReviewCandidateIdAtom, O.none());
   })
 );
 

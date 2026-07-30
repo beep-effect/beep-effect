@@ -1,11 +1,7 @@
 {
   "version": 1,
   "generatedOn": "2026-07-30",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -23,7 +19,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 54,
+      "line": 56,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed contradiction RPC envelopes to prove handler wiring; schema-derived arbitrary coverage lives with the domain and use-case schemas."
     },

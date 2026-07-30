@@ -199,17 +199,17 @@ export class ContradictionCandidateDetail extends S.Class<ContradictionCandidate
 )(
   {
     candidate: ContradictionCandidate.annotateKey({
-      description: "Immutable candidate including its persisted proposals and exact belief pair.",
+      description: "Immutable candidate applicable at validAt and recorded no later than knownAt.",
     }),
     disposition: ContradictionDisposition.pipe(S.OptionFromNullOr).annotateKey({
-      description: "Recorded disposition, when review has resolved the candidate.",
+      description: "Recorded disposition only when its resolvedAt instant is no later than knownAt.",
     }),
     receipts: S.Array(ContradictionReceipt).annotateKey({
-      description: "Durable submission receipts in arrival order.",
+      description: "Durable submission receipts received no later than knownAt, in arrival order.",
     }),
   },
   $I.annote("ContradictionCandidateDetail", {
-    description: "Expanded candidate, disposition, and receipt history.",
+    description: "Two-axis-visible candidate, disposition, and receipt history.",
   })
 ) {}
 

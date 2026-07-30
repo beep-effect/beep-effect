@@ -172,7 +172,9 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
           yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
               candidateId: deadline.candidate.id,
+              knownAt: instant(1_767_225_610_000),
               orgId: 1,
+              validAt: instant(1_767_225_610_000),
             })
           ),
           "expected expanded deadline contradiction candidate"

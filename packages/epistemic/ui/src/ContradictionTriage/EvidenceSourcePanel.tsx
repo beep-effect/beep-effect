@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@beep/ui/components/ca
 import { VerifiedSourceTextViewer } from "@beep/ui/components/verified-source-text-viewer";
 import * as Str from "effect/String";
 import type { ContradictionTriage } from "@beep/epistemic-use-cases/public";
-import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import type { JSX } from "react";
 
 /**
@@ -33,7 +32,7 @@ import type { JSX } from "react";
  * @since 0.0.0
  */
 export interface EvidenceSourcePanelProps {
-  readonly anchor: TextAnchorVerificationReceipt;
+  readonly highlight: ContradictionTriage.EvidenceSourceHighlight;
   readonly loading?: boolean | undefined;
   readonly onPageChange: (pageIndex: number) => void;
   readonly page: ContradictionTriage.EvidenceSourcePage["page"];
@@ -65,12 +64,12 @@ const shortDigest = (digest: string): string => `${Str.slice(0, 18)(digest)}…`
  * @since 0.0.0
  */
 export function EvidenceSourcePanel({
-  anchor,
+  highlight,
   loading = false,
   onPageChange,
   page,
 }: EvidenceSourcePanelProps): JSX.Element {
-  const source = page.identity;
+  const source = highlight.source;
 
   return (
     <Card className="h-full min-h-0" data-testid="contradiction-source-panel">
@@ -99,7 +98,7 @@ export function EvidenceSourcePanel({
           <div className="flex gap-1">
             <dt>Anchor</dt>
             <dd className="font-mono">
-              {anchor.anchor.startChar}–{anchor.anchor.endChar}
+              {highlight.startChar}–{highlight.endChar}
             </dd>
           </div>
         </dl>
@@ -129,8 +128,8 @@ export function EvidenceSourcePanel({
           </Button>
         </div>
         <VerifiedSourceTextViewer
-          anchorEndOffset={anchor.anchor.endChar}
-          anchorStartOffset={anchor.anchor.startChar}
+          anchorEndOffset={highlight.endChar}
+          anchorStartOffset={highlight.startChar}
           aria-busy={loading}
           className="min-h-64 flex-1"
           pageStartOffset={page.startOffset}

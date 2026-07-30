@@ -42,9 +42,18 @@ import type { JSX } from "react";
 import type { ContradictionTriageTab, ContradictionTriageViewProps } from "./ContradictionTriageView.tsx";
 
 const activeTabAtom = Atom.make<ContradictionTriageTab>("queue").pipe(Atom.keepAlive);
-const reviewDialogOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
-const reviewReasonAtom = Atom.make("").pipe(Atom.keepAlive);
-const selectedProposalAtom = Atom.make<O.Option<ContradictionResolutionProposal>>(O.none()).pipe(Atom.keepAlive);
+
+interface ReviewDialogState {
+  readonly open: boolean;
+  readonly reason: string;
+  readonly selectedProposal: O.Option<ContradictionResolutionProposal>;
+}
+
+const reviewDialogAtom = Atom.make<ReviewDialogState>({
+  open: false,
+  reason: "",
+  selectedProposal: O.none(),
+}).pipe(Atom.keepAlive);
 const noVisibleReview = AsyncResult.initial<ContradictionDisposition, ContradictionTriage.ContradictionActionError>();
 const panelReadStateAtom = Atom.readable((get) => ({
   queueResult: get(contradictionQueueAtom),
@@ -145,9 +154,7 @@ export function ContradictionTriagePanel(): JSX.Element {
   const [disposition, setDisposition] = useAtom(contradictionDispositionFilterAtom);
   const [knownAt, setKnownAt] = useAtom(contradictionKnownAtAtom);
   const [offset, setOffset] = useAtom(contradictionQueueOffsetAtom);
-  const [reviewDialogOpen, setReviewDialogOpen] = useAtom(reviewDialogOpenAtom);
-  const [reviewReason, setReviewReason] = useAtom(reviewReasonAtom);
-  const [selectedProposal, setSelectedProposal] = useAtom(selectedProposalAtom);
+  const [reviewDialog, setReviewDialog] = useAtom(reviewDialogAtom);
   const [validAt, setValidAt] = useAtom(contradictionValidAtAtom);
   const {
     queueResult,
@@ -158,6 +165,7 @@ export function ContradictionTriagePanel(): JSX.Element {
     selectedSource,
     sourceResult,
   } = useAtomValue(panelReadStateAtom);
+  const { open: reviewDialogOpen, reason: reviewReason, selectedProposal } = reviewDialog;
 
   const refreshSource = useAtomSet(refreshContradictionEvidenceSourceAtom);
   const refreshTriage = useAtomSet(refreshContradictionTriageAtom);
@@ -165,6 +173,8 @@ export function ContradictionTriagePanel(): JSX.Element {
   const reviewCandidate = useAtomSet(reviewContradictionCandidateAtom);
   const selectCandidate = useAtomSet(selectContradictionCandidateAtom);
   const selectSource = useAtomSet(selectContradictionEvidenceSourceAtom);
+  const setReviewCandidateId = useAtomSet(contradictionReviewCandidateIdAtom);
+  const setSelectedSource = useAtomSet(selectedContradictionEvidenceSourceAtom);
 
   const visibleReviewResult = currentReviewResult(selectedCandidateId, reviewCandidateId, reviewResult);
 
@@ -173,16 +183,26 @@ export function ContradictionTriagePanel(): JSX.Element {
     setActiveTab("comparison");
   };
   const selectEvidenceSource = (evidence: ContradictionTriage.ContradictionEvidenceView): void => {
-    O.zipWith(selectedCandidateId, evidence.verifiedAnchor, (candidateId) => {
-      selectSource(
-        ContradictionTriage.EvidenceSourcePagePayload.make({
-          candidateId,
-          evidenceId: evidence.evidence.id,
-          selector: ContradictionTriage.EvidenceSourcePageSelector.cases.anchor.make({}),
-        })
-      );
-      setActiveTab("source");
-    });
+    O.zipWith(
+      O.all({
+        candidateId: selectedCandidateId,
+        knownAt: AsyncResult.value(knownAt),
+        validAt: AsyncResult.value(validAt),
+      }),
+      evidence.verifiedAnchor,
+      ({ candidateId, knownAt: selectedKnownAt, validAt: selectedValidAt }) => {
+        selectSource(
+          ContradictionTriage.EvidenceSourcePagePayload.make({
+            candidateId,
+            evidenceId: evidence.evidence.id,
+            knownAt: selectedKnownAt,
+            selector: ContradictionTriage.EvidenceSourcePageSelector.cases.anchor.make({}),
+            validAt: selectedValidAt,
+          })
+        );
+        setActiveTab("source");
+      }
+    );
   };
   const changeSourcePage = (pageIndex: number): void => {
     O.map(selectedSource, (request) =>
@@ -190,22 +210,28 @@ export function ContradictionTriagePanel(): JSX.Element {
         ContradictionTriage.EvidenceSourcePagePayload.make({
           candidateId: request.candidateId,
           evidenceId: request.evidenceId,
+          knownAt: request.knownAt,
           selector: ContradictionTriage.EvidenceSourcePageSelector.cases.page.make({
             pageIndex: NonNegativeInt.make(pageIndex),
           }),
+          validAt: request.validAt,
         })
       )
     );
   };
   const openRejectReview = (): void => {
-    setSelectedProposal(O.none());
-    setReviewReason("");
-    setReviewDialogOpen(true);
+    setReviewDialog({
+      open: true,
+      reason: "",
+      selectedProposal: O.none(),
+    });
   };
   const openSupersessionReview = (proposal: ContradictionResolutionProposal): void => {
-    setSelectedProposal(O.some(proposal));
-    setReviewReason("");
-    setReviewDialogOpen(true);
+    setReviewDialog({
+      open: true,
+      reason: "",
+      selectedProposal: O.some(proposal),
+    });
   };
   const confirmReview = (): void => {
     O.zipWith(selectedCandidateId, AsyncResult.value(selectedCandidate), (candidateId, detail) => {
@@ -223,12 +249,16 @@ export function ContradictionTriagePanel(): JSX.Element {
     O.map(O.fromNullishOr(value), (dateTime) => {
       setValidAt(dateTime.pipe(DateTime.toUtc));
       setOffset(NonNegativeInt.make(0));
+      setSelectedSource(O.none());
+      setReviewCandidateId(O.none());
     });
   };
   const changeKnownAt = (value: DateTime.DateTime | null): void => {
     O.map(O.fromNullishOr(value), (dateTime) => {
       setKnownAt(dateTime.pipe(DateTime.toUtc));
       setOffset(NonNegativeInt.make(0));
+      setSelectedSource(O.none());
+      setReviewCandidateId(O.none());
     });
   };
 
@@ -257,8 +287,8 @@ export function ContradictionTriagePanel(): JSX.Element {
         onRejectRequested: openRejectReview,
         onResetNow: resetTemporalView,
         onReviewConfirm: confirmReview,
-        onReviewDialogOpenChange: setReviewDialogOpen,
-        onReviewReasonChange: setReviewReason,
+        onReviewDialogOpenChange: (open) => setReviewDialog((current) => ({ ...current, open })),
+        onReviewReasonChange: (reason) => setReviewDialog((current) => ({ ...current, reason })),
         onSourcePageChange: changeSourcePage,
         onSourceRetry: refreshSource,
         onSupersedeRequested: openSupersessionReview,
