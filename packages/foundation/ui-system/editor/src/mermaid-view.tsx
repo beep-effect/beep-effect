@@ -128,11 +128,13 @@ const forbiddenSvgElements = HashSet.make(
   "video"
 );
 const urlAttributes = HashSet.make("href", "poster", "src", "xlink:href");
-const unsafeCss = /@import|expression\s*\(|(?:data|javascript|vbscript)\s*:|url\s*\(\s*(?!#|["']#)/iu;
+const unsafeCss =
+  /@import|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(\s*(?!#|["']#)/iu;
 
 const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
-const unsafeStylesheetToken = /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|url\s*\(/iu;
+const unsafeStylesheetToken =
+  /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(/iu;
 const layoutOffsetProperties = HashSet.make(
   "bottom",
   "inset",
