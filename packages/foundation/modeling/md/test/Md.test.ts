@@ -221,6 +221,60 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
     );
   });
 
+  it("projects every remaining safe block and inline variant", () => {
+    const document = Result.getOrThrow(
+      refineSafeDocument(
+        Md.make([
+          Md.h2([Md.em("Emphasis"), Md.text(" "), Md.del("Deleted")]),
+          Md.h3("Three"),
+          Md.h4("Four"),
+          Md.h5("Five"),
+          Md.h6("Six"),
+          Md.p([
+            Md.img("/logo.png", "Logo", { title: "Logo title" }),
+            Md.br,
+            Md.inlineMath("a+b"),
+            Md.footnoteRef("note"),
+          ]),
+          Md.blockquote([Md.pre("<code>")]),
+          Md.ul([Md.li([Md.text("Inline"), Md.p("Nested block")])]),
+          Md.ol(["Ordered"], { start: 3 }),
+          Md.table([["Body"]], { headerRow: false }),
+          Md.mathBlock("x<y"),
+          Md.footnoteDef("note", "Definition"),
+          Md.admonition("note", "Body", { title: "Title" }),
+          Md.embed("image", "https://example.com/image.png", {
+            title: "Image",
+            description: "Caption",
+          }),
+          Md.embed("link", "https://example.com"),
+          Md.hr,
+        ])
+      )
+    );
+    const html = safeHtmlValue(renderSafeHtml(document));
+
+    expect(html).toContain("<h2><em>Emphasis</em> <del>Deleted</del></h2>");
+    expect(html).toContain("<h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>");
+    expect(html).toContain('<img alt="Logo" src="/logo.png" title="Logo title"><br><code>a+b</code>');
+    expect(html).toContain('<sup><a href="#fn-note">note</a></sup>');
+    expect(html).toContain("<blockquote><pre><code>&lt;code&gt;</code></pre></blockquote>");
+    expect(html).toContain('<ul><li>Inline<p>Nested block</p></li></ul><ol start="3"><li>Ordered</li></ol>');
+    expect(html).toContain("<table><tbody><tr><td>Body</td></tr></tbody></table>");
+    expect(html).toContain('<section id="fn-note"><sup>note</sup><p>Definition</p></section>');
+    expect(html).toContain("<aside><p>Title</p><p>Body</p></aside>");
+    expect(html).toContain("<figcaption>Caption</figcaption>");
+    expect(html).toContain('<figure><a href="https://example.com">https://example.com</a></figure><hr>');
+  });
+
+  it("escapes raw nodes even when a forged SafeDocument reaches the defensive projection", () => {
+    const forged = Md.make([
+      Md.p([Md.rawMarkdown("*trusted*"), Md.rawHtml("<script>alert(1)</script>")]),
+    ]) as unknown as SafeDocument;
+
+    expect(safeHtmlValue(renderSafeHtml(forged))).toBe("<p>*trusted*&lt;script&gt;alert(1)&lt;/script&gt;</p>");
+  });
+
   it("keeps active HTML constructs outside the SafeDocument to SafeHtml path", () => {
     const unsafe = Md.make([
       Md.p(Md.rawHtml('<img src=x onerror="alert(1)">')),
@@ -731,6 +785,43 @@ Demo video`);
       expect(sanitizeUrlDestination(destination)).toBe("#");
       expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec)).toBe("#");
     }
+  });
+
+  it("applies a custom URL policy across every recursive render fold", () => {
+    const document = Md.make([
+      Md.p([
+        Md.strong("Strong"),
+        Md.em("Emphasis"),
+        Md.del("Deleted"),
+        Md.code("code"),
+        Md.img("https://example.com/image.png", "Image", { title: "Image title" }),
+        Md.br,
+        Md.inlineMath("a+b"),
+        Md.footnoteRef("note"),
+      ]),
+      Md.pre("const value = 1", { language: "ts" }),
+      Md.ol([Md.li([Md.p(Md.a("https://example.com/nested", "Nested"))])], { start: 2 }),
+      Md.taskListFromItems([Md.taskItem("Done", { checked: true }), Md.taskItem("Todo")]),
+      Md.table([["A"], [Md.a("https://example.com/cell", "B")]], { align: ["center"], headerRow: false }),
+      Result.getOrThrow(Md.youtube("abcDEF123_-")),
+      Md.mathBlock("<x>"),
+      Md.footnoteDef("note", "Footnote"),
+      Md.admonition("note", "Body", { title: "Title" }),
+      Md.embed("video", "https://example.com/video", { description: "Caption" }),
+      Md.hr,
+    ]);
+    const markdown = renderWithUnsafe(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), document);
+    const html = renderWithUnsafe(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), document);
+
+    expect(markdown).toContain('![Image](https://example.com/image.png "Image title")<br/>$a+b$[^note]');
+    expect(markdown).toContain("[Nested](https://example.com/nested)");
+    expect(markdown).toContain("[B](https://example.com/cell)");
+    expect(html).toContain("<strong>Strong</strong><em>Emphasis</em><del>Deleted</del><code>code</code>");
+    expect(html).toContain('<img src="https://example.com/image.png" alt="Image" title="Image title" /><br />');
+    expect(html).toContain('<ol start="2"><li><p><a href="https://example.com/nested">Nested</a></p></li></ol>');
+    expect(html).toContain('<td style="text-align:center"><a href="https://example.com/cell">B</a></td>');
+    expect(html).toContain('src="https://www.youtube-nocookie.com/embed/abcDEF123_-"');
+    expect(html).toContain("<figcaption>Caption</figcaption>");
   });
 
   it("refines user-authored documents without changing their encoded wire", () => {

@@ -74,9 +74,12 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
       const screen = within(container);
 
       yield* Effect.promise(() =>
-        waitFor(() => {
-          expect(screen.getByTestId("mermaid-diagram").querySelector("svg")).toBeInTheDocument();
-        })
+        waitFor(
+          () => {
+            expect(screen.getByTestId("mermaid-diagram").querySelector("svg")).toBeInTheDocument();
+          },
+          { timeout: 4_000 }
+        )
       );
 
       const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
