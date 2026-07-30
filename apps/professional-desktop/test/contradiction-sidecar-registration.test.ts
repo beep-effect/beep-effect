@@ -8,6 +8,7 @@ import {
   ContradictionListPayload,
   ContradictionReviewDecision,
   ContradictionRpcs,
+  EvidenceSourceHighlight,
   EvidenceSourcePagePayload,
   EvidenceSourcePageSelector,
   ReviewContradictionCandidate,
@@ -41,6 +42,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { RpcTest } from "effect/unstable/rpc";
+import type { DateTime } from "effect";
 
 const leftLogicalKey = Str.repeat(64)("a");
 const rightLogicalKey = Str.repeat(64)("b");
@@ -203,7 +205,9 @@ const makeExpanded = (verifiedAnchor: TextAnchorVerificationReceipt): Contradict
 };
 
 type Captures = {
+  expandedKnownAt?: DateTime.Utc;
   expandedOrgId?: number;
+  expandedValidAt?: DateTime.Utc;
   listOrgId?: number;
   resolverCalls: number;
   reviewer?: ContradictionReviewer["Service"];
@@ -215,7 +219,9 @@ const makeHandlersLayer = (expanded: ContradictionCandidateExpandedDetail, sourc
     get: Effect.fn("test.ContradictionTriageRepository.get")(() => Effect.die("get is not used")),
     getExpanded: Effect.fn("test.ContradictionTriageRepository.getExpanded")((query) =>
       Effect.sync(() => {
+        captures.expandedKnownAt = query.knownAt;
         captures.expandedOrgId = query.orgId;
+        captures.expandedValidAt = query.validAt;
         return O.some(expanded);
       })
     ),
@@ -271,7 +277,9 @@ const sourcePayload = (selector: EvidenceSourcePageSelector) =>
   EvidenceSourcePagePayload.make({
     candidateId: candidate.id,
     evidenceId: leftEvidence.id,
+    knownAt: instant(2_000),
     selector,
+    validAt: instant(2_000),
   });
 
 const sourceError = Effect.fn("test.source_error")(function* (sourceText: string, anchor: TextAnchor, locator: string) {
@@ -324,7 +332,11 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
             validAt: instant(2_000),
           })
         );
-        const detail = yield* client.GetContradictionCandidate({ candidateId: candidate.id });
+        const detail = yield* client.GetContradictionCandidate({
+          candidateId: candidate.id,
+          knownAt: instant(2_000),
+          validAt: instant(2_000),
+        });
         const reviewError = yield* Effect.flip(
           client.ReviewContradictionCandidate(
             ReviewContradictionCandidate.make({
@@ -344,7 +356,9 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
 
       expect(result.list.total).toBe(0);
       expect(captures.listOrgId).toBe(1);
+      expect(captures.expandedKnownAt).toStrictEqual(instant(2_000));
       expect(captures.expandedOrgId).toBe(1);
+      expect(captures.expandedValidAt).toStrictEqual(instant(2_000));
       expect(captures.reviewOrgId).toBe(1);
       expect(captures.reviewer).toMatchObject({ kind: "User", userId: 1 });
       expect(result.reviewError).toMatchObject({
@@ -356,7 +370,13 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
       );
       expect(result.page.page.pageIndex).toBe(1);
       expect(result.page.page.startOffset).toBe(65_535);
-      expect(result.page.verifiedAnchor).toStrictEqual(verifiedAnchor);
+      expect(result.page.highlight).toStrictEqual(
+        EvidenceSourceHighlight.make({
+          endChar: verifiedAnchor.anchor.endChar,
+          source: verifiedAnchor.source,
+          startChar: verifiedAnchor.anchor.startChar,
+        })
+      );
       expect(captures.resolverCalls).toBe(1);
     }, provideBunCrypto)
   );
@@ -383,7 +403,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
 
       expect(page.page.pageIndex).toBe(0);
       expect(page.page.endOffset).toBe(65_536);
-      expect(page.verifiedAnchor.anchor.endChar).toBeGreaterThan(page.page.endOffset);
+      expect(page.highlight.endChar).toBeGreaterThan(page.page.endOffset);
     }, provideBunCrypto)
   );
 

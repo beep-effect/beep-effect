@@ -21,13 +21,13 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/provenance/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
       "path": "../../foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../config/tsconfig.json"

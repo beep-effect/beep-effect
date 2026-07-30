@@ -5,9 +5,13 @@
  * @since 0.0.0
  */
 import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { Result, SchemaIssue } from "effect";
+import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type { Table } from "./EvidenceVerification.table.ts";
 
 /**
@@ -60,8 +64,24 @@ const validateManifestationKey = (
         )
   );
 
+const validateEvidenceAssociation = (
+  verification: EvidenceVerification,
+  evidence: Evidence
+): Result.Result<EvidenceVerification, S.SchemaError> =>
+  Eq.equals(verification.evidenceId, evidence.id) &&
+  EvidenceSpan.matchesAnchor(evidence.span, verification.verifiedAnchor.anchor)
+    ? Result.succeed(verification)
+    : Result.fail(
+        new S.SchemaError(
+          new SchemaIssue.InvalidValue(O.some(verification.verifiedAnchor.anchor), {
+            message: "Evidence-verification association does not match the referenced evidence id and span.",
+          })
+        )
+      );
+
 /**
- * Convert an EvidenceVerification entity into an insert row.
+ * Convert an EvidenceVerification entity into an insert row after proving its
+ * evidence id and verified anchor match the referenced evidence span.
  *
  * The database-managed serial id is omitted so inserts use the table sequence.
  *
@@ -75,16 +95,23 @@ const validateManifestationKey = (
  * @category tables
  * @since 0.0.0
  */
-export const toEvidenceVerificationInsert = (
-  verification: EvidenceVerification
-): Result.Result<EvidenceVerificationInsert, S.SchemaError> =>
+export const toEvidenceVerificationInsert: {
+  (verification: EvidenceVerification, evidence: Evidence): Result.Result<EvidenceVerificationInsert, S.SchemaError>;
+  (
+    evidence: Evidence
+  ): (verification: EvidenceVerification) => Result.Result<EvidenceVerificationInsert, S.SchemaError>;
+} = dual(2, (verification: EvidenceVerification, evidence: Evidence) =>
   Result.map(
-    Result.flatMap(validateManifestationKey(verification), encodeEvidenceVerification),
+    Result.flatMap(
+      Result.flatMap(validateEvidenceAssociation(verification, evidence), validateManifestationKey),
+      encodeEvidenceVerification
+    ),
     (encoded): EvidenceVerificationInsert => {
       const { id: _id, ...insert } = encoded;
       return insert;
     }
-  );
+  )
+);
 
 /**
  * Convert a selected row into an EvidenceVerification entity.

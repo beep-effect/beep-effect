@@ -70,6 +70,7 @@ const configureVault = Effect.fn("WorkspaceSourceTextResolverTest.configureVault
 
 const identityFor = (options: {
   readonly locator: string;
+  readonly normalizationVersion?: string;
   readonly sourceDigest: SourceTextDigest;
   readonly textDigest: SourceTextDigest;
   readonly extractorName?: string;
@@ -81,7 +82,7 @@ const identityFor = (options: {
       version: options.extractorVersion ?? UTF8_SOURCE_TEXT_EXTRACTOR_VERSION,
     }),
     locator: PosixPath.make(options.locator),
-    normalizationVersion: "1",
+    normalizationVersion: options.normalizationVersion ?? "1",
     scopeRef: "workspace:1",
     sourceDigest: options.sourceDigest,
     sourceRef: `source:${options.locator}`,
@@ -225,6 +226,29 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
       expect(error.reason).toBe("locator-invalid");
       expect(absoluteError.reason).toBe("locator-invalid");
       expect(traversalError.reason).toBe("locator-invalid");
+    }, provideScopedLayer(ResolverTestLayer))
+  );
+
+  it.effect(
+    "rejects unsupported locator-normalization versions before interpreting the locator",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-source-text-" });
+      const bytes = new TextEncoder().encode("unreachable");
+      const digest = yield* digestBytes(bytes);
+      yield* configureVault(root);
+
+      const error = yield* resolve(
+        identityFor({
+          locator: root,
+          normalizationVersion: "2",
+          sourceDigest: digest,
+          textDigest: digest,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.reason).toBe("extractor-unavailable");
+      expect(error.message).toBe("The pinned locator-normalization contract is unavailable.");
     }, provideScopedLayer(ResolverTestLayer))
   );
 

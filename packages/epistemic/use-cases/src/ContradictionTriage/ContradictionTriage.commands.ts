@@ -232,15 +232,19 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
 ) {}
 
 /**
- * Query one persisted contradiction candidate by identity.
+ * Query one persisted contradiction candidate in a two-axis temporal view.
  *
  * @example
  * ```ts
  * import { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
  * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
+ * import { DateTime } from "effect"
  *
+ * const at = DateTime.makeUnsafe(0)
  * const query = GetContradictionCandidate.make({
  *   candidateId: Epistemic.ContradictionCandidateId.make(7),
+ *   knownAt: at,
+ *   validAt: at,
  * })
  *
  * console.log(query.candidateId) // 7
@@ -254,9 +258,15 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
     candidateId: Epistemic.ContradictionCandidateId.annotateKey({
       description: "Candidate whose expanded persisted state is requested.",
     }),
+    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Transaction-time instant at which candidate state is requested.",
+    }),
+    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Valid-time instant at which contradiction applicability is requested.",
+    }),
   },
   $I.annote("GetContradictionCandidate", {
-    description: "Identity-only query for one expanded contradiction candidate.",
+    description: "Two-axis temporal query for one expanded contradiction candidate.",
   })
 ) {}
 
@@ -271,10 +281,14 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
  * import { GetExpandedContradictionCandidate } from "@beep/epistemic-use-cases/server"
  * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
+ * import { DateTime } from "effect"
  *
+ * const at = DateTime.makeUnsafe(0)
  * const query = GetExpandedContradictionCandidate.make({
  *   candidateId: Epistemic.ContradictionCandidateId.make(7),
+ *   knownAt: at,
  *   orgId: Shared.OrganizationId.make(1),
+ *   validAt: at,
  * })
  *
  * console.log(query.orgId) // 1
@@ -290,12 +304,18 @@ export class GetExpandedContradictionCandidate extends S.Class<GetExpandedContra
     candidateId: Epistemic.ContradictionCandidateId.annotateKey({
       description: "Candidate whose persisted detail is requested.",
     }),
+    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Transaction-time instant at which candidate state is requested.",
+    }),
     orgId: Shared.OrganizationId.annotateKey({
       description: "Authenticated organization allowed to observe the detail.",
     }),
+    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Valid-time instant at which contradiction applicability is requested.",
+    }),
   },
   $I.annote("GetExpandedContradictionCandidate", {
-    description: "Server-only organization-scoped query for exact contradiction detail inputs.",
+    description: "Server-only organization-scoped two-axis query for exact contradiction detail inputs.",
   })
 ) {}
 

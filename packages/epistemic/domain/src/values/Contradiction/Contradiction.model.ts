@@ -467,20 +467,7 @@ const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
     })
   );
 
-/**
- * Evidence and detector revision that form the repeatable match basis.
- *
- * @example
- * ```ts
- * import { ContradictionMatchBasis } from "@beep/epistemic-domain/values/Contradiction"
- *
- * console.log(ContradictionMatchBasis.fields.kind !== undefined)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I`ContradictionMatchBasis`)(
+class ContradictionMatchBasisStruct extends S.Class<ContradictionMatchBasisStruct>($I`ContradictionMatchBasisStruct`)(
   {
     detector: S.NonEmptyString.annotateKey({
       description: "Stable detector or caller name; it identifies provenance, not authority.",
@@ -501,6 +488,75 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
       description: "Evidence grounding the second canonical belief.",
     }),
   },
+  $I.annote("ContradictionMatchBasisStruct", {
+    description: "Internal structural base for a contradiction candidate match basis.",
+  })
+) {}
+
+const evidenceSetsAreDisjoint = ({ leftEvidenceIds, rightEvidenceIds }: ContradictionMatchBasisStruct): boolean =>
+  A.every(leftEvidenceIds, (leftId) =>
+    A.every(rightEvidenceIds, (rightId) => Bool.not(evidenceIdEquivalence(leftId, rightId)))
+  );
+
+const IndependentEvidenceSetsCheck = S.makeFilter(
+  (basis: ContradictionMatchBasisStruct) =>
+    ContradictionMatchBasisKind.$match(basis.kind, {
+      "independent-evidence": () => evidenceSetsAreDisjoint(basis),
+      "same-source-overlap": () => true,
+    }),
+  {
+    identifier: $I`IndependentEvidenceSetsCheck`,
+    title: "Independent Contradiction Evidence Sets",
+    description: "Checks that independent-evidence candidates never reuse one EvidenceId on both sides.",
+    message: "Expected left and right evidence sets to be disjoint for an independent-evidence match.",
+  }
+);
+
+const contradictionMatchBasisStructArbitrary = S.toArbitraryLazy(ContradictionMatchBasisStruct);
+
+const ContradictionMatchBasisSchema = ContradictionMatchBasisStruct.mapFields(identity)
+  .check(IndependentEvidenceSetsCheck)
+  .annotate({
+    toArbitrary: () => (fc) => {
+      const evidenceIdSeeds = fc.uniqueArray(fc.integer({ min: 2, max: 1_073_741_823 }), { maxLength: 7 });
+
+      return fc
+        .tuple(contradictionMatchBasisStructArbitrary(fc), evidenceIdSeeds, evidenceIdSeeds)
+        .map(([basis, leftSeeds, rightSeeds]) =>
+          ContradictionMatchBasisKind.$match(basis.kind, {
+            "independent-evidence": () =>
+              ContradictionMatchBasisStruct.make({
+                ...basis,
+                leftEvidenceIds: [
+                  EpistemicIdentity.EvidenceId.make(1),
+                  ...A.map(leftSeeds, (seed) => EpistemicIdentity.EvidenceId.make(seed * 2 - 1)),
+                ],
+                rightEvidenceIds: [
+                  EpistemicIdentity.EvidenceId.make(2),
+                  ...A.map(rightSeeds, (seed) => EpistemicIdentity.EvidenceId.make(seed * 2)),
+                ],
+              }),
+            "same-source-overlap": () => basis,
+          })
+        );
+    },
+  });
+
+/**
+ * Evidence and detector revision that form the repeatable match basis.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionMatchBasis } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(ContradictionMatchBasis.fields.kind !== undefined)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I`ContradictionMatchBasis`)(
+  ContradictionMatchBasisSchema,
   $I.annote("ContradictionMatchBasis", {
     description: "Exact evidence pair and detector revision supporting a contradiction candidate.",
   })

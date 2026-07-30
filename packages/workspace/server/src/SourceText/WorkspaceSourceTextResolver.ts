@@ -32,6 +32,7 @@ import type { ResolveSourceTextRequest } from "@beep/file-processing/SourceText"
 import type * as Crypto from "effect/Crypto";
 
 const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");
+const LOCATOR_NORMALIZATION_VERSION = "1";
 const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 const utf8Encoder = new TextEncoder();
 const sourceTextDigestEquals = S.toEquivalence(SourceTextDigest);
@@ -188,6 +189,12 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
           "source_text.operation": "resolve",
           "source_text.storage": "workspace_vault",
         });
+        if (!Eq.equals(request.identity.normalizationVersion, LOCATOR_NORMALIZATION_VERSION)) {
+          return yield* SourceTextResolverError.new(
+            "extractor-unavailable",
+            "The pinned locator-normalization contract is unavailable."
+          );
+        }
         const workspaceId = yield* resolveWorkspaceId(request.identity.scopeRef);
         const vaultConfig = yield* vaultStore
           .getVaultConfig(workspaceId)

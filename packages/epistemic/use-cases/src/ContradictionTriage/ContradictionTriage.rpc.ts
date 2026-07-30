@@ -17,7 +17,7 @@ import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
-import { identity } from "effect";
+import { identity, Number as N } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
@@ -146,12 +146,18 @@ export class EvidenceSourcePagePayload extends S.Class<EvidenceSourcePagePayload
     evidenceId: SharedEpistemic.EvidenceId.annotateKey({
       description: "Candidate-bound evidence whose verified source is requested.",
     }),
+    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Transaction-time instant at which candidate state is requested.",
+    }),
     selector: EvidenceSourcePageSelector.annotateKey({
       description: "Anchor-containing initial page or explicit page requested during navigation.",
     }),
+    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+      description: "Valid-time instant at which contradiction applicability is requested.",
+    }),
   },
   $I.annote("EvidenceSourcePagePayload", {
-    description: "Narrow source-page payload containing only candidate, evidence, and page selection.",
+    description: "Narrow source-page payload containing candidate, evidence, temporal view, and page selection.",
   })
 ) {}
 
@@ -233,10 +239,10 @@ export class ContradictionCandidateDetailView extends S.Class<ContradictionCandi
 )(
   {
     candidate: ContradictionCandidate.annotateKey({
-      description: "Immutable contradiction candidate and persisted correction proposals.",
+      description: "Immutable candidate applicable at validAt and recorded no later than knownAt.",
     }),
     disposition: ContradictionDisposition.pipe(S.OptionFromNullOr).annotateKey({
-      description: "Recorded human disposition when the candidate has been resolved.",
+      description: "Recorded human disposition only when its resolvedAt instant is no later than knownAt.",
     }),
     left: ContradictionBeliefView.annotateKey({
       description: "First exact belief and evidence in canonical candidate order.",
@@ -246,7 +252,72 @@ export class ContradictionCandidateDetailView extends S.Class<ContradictionCandi
     }),
   },
   $I.annote("ContradictionCandidateDetailView", {
-    description: "Candidate, optional disposition, and both exact belief-and-evidence views without ranking.",
+    description:
+      "Two-axis-visible candidate, optional disposition, and exact belief-and-evidence views without ranking.",
+  })
+) {}
+
+class EvidenceSourceHighlightStruct extends S.Class<EvidenceSourceHighlightStruct>($I`EvidenceSourceHighlightStruct`)(
+  {
+    endChar: NonNegativeInt.annotateKey({
+      description: "Exclusive absolute UTF-16 code-unit offset of the verified anchor.",
+    }),
+    source: SourceTextIdentity.annotateKey({
+      description: "Exact source manifestation against which the offsets were verified.",
+    }),
+    startChar: NonNegativeInt.annotateKey({
+      description: "Inclusive absolute UTF-16 code-unit offset of the verified anchor.",
+    }),
+  },
+  $I.annote("EvidenceSourceHighlightStruct", {
+    description: "Structural base for a quote-free source highlight before its half-open range is checked.",
+  })
+) {}
+
+const EvidenceSourceHighlightSchema = EvidenceSourceHighlightStruct.mapFields(identity)
+  .check(
+    S.makeFilter(({ endChar, startChar }) => N.isLessThan(startChar, endChar), {
+      identifier: $I`EvidenceSourceHighlightOrderCheck`,
+      title: "Evidence Source Highlight Order",
+      description: "Checks that the quote-free highlight is a non-empty forward half-open UTF-16 range.",
+      message: "Expected startChar to be less than endChar.",
+    })
+  )
+  .annotate({
+    toArbitrary: () => (fc) =>
+      fc
+        .tuple(fc.nat(10_000), fc.integer({ min: 1, max: 10_000 }), S.toArbitraryLazy(SourceTextIdentity)(fc))
+        .map(([startChar, width, source]) =>
+          EvidenceSourceHighlightStruct.make({
+            endChar: NonNegativeInt.make(startChar + width),
+            source,
+            startChar: NonNegativeInt.make(startChar),
+          })
+        ),
+  });
+
+/**
+ * Quote-free projection of a freshly verified source anchor.
+ *
+ * The projection retains the absolute UTF-16 offsets and exact source
+ * identity needed for highlighting while deliberately omitting the
+ * potentially unbounded anchor quote.
+ *
+ * @example
+ * ```ts
+ * import { EvidenceSourceHighlight } from "@beep/epistemic-use-cases/public"
+ *
+ * console.log(EvidenceSourceHighlight.fields.startChar !== undefined)
+ * console.log(EvidenceSourceHighlight.fields.source !== undefined)
+ * ```
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export class EvidenceSourceHighlight extends S.Class<EvidenceSourceHighlight>($I`EvidenceSourceHighlight`)(
+  EvidenceSourceHighlightSchema,
+  $I.annote("EvidenceSourceHighlight", {
+    description: "Quote-free verified non-empty half-open highlight offsets bound to one exact source manifestation.",
   })
 ) {}
 
@@ -255,11 +326,11 @@ class EvidenceSourcePageStruct extends S.Class<EvidenceSourcePageStruct>($I`Evid
     evidenceId: SharedEpistemic.EvidenceId.annotateKey({
       description: "Candidate-bound evidence represented by this source page.",
     }),
+    highlight: EvidenceSourceHighlight.annotateKey({
+      description: "Bounded quote-free projection of the freshly re-verified anchor.",
+    }),
     page: SourceTextPage.annotateKey({
       description: "Bounded page of exact canonical extracted source text.",
-    }),
-    verifiedAnchor: TextAnchorVerificationReceipt.annotateKey({
-      description: "Receipt emitted after live re-verification of the exact half-open UTF-16 anchor.",
     }),
   },
   $I.annote("EvidenceSourcePageStruct", {
@@ -269,46 +340,54 @@ class EvidenceSourcePageStruct extends S.Class<EvidenceSourcePageStruct>($I`Evid
 
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 const EvidenceSourcePageIdentityCheck = S.makeFilter(
-  ({ page, verifiedAnchor }: EvidenceSourcePageStruct) =>
-    sourceTextIdentityEquivalence(page.identity, verifiedAnchor.source),
+  ({ highlight, page }: EvidenceSourcePageStruct) => sourceTextIdentityEquivalence(page.identity, highlight.source),
   {
     identifier: $I`EvidenceSourcePageIdentityCheck`,
     title: "Evidence Source Page Identity",
     description: "Checks that the bounded page and freshly verified anchor name the exact same source manifestation.",
-    message: "Expected page.identity to equal verifiedAnchor.source.",
+    message: "Expected page.identity to equal highlight.source.",
+  }
+);
+const EvidenceSourcePageHighlightBoundsCheck = S.makeFilter(
+  ({ highlight, page }: EvidenceSourcePageStruct) => N.isLessThanOrEqualTo(highlight.endChar, page.totalCodeUnits),
+  {
+    identifier: $I`EvidenceSourcePageHighlightBoundsCheck`,
+    title: "Evidence Source Page Highlight Bounds",
+    description: "Checks that the verified highlight ends within the complete canonical source width.",
+    message: "Expected highlight.endChar to be less than or equal to page.totalCodeUnits.",
   }
 );
 const evidenceIdArbitrary = S.toArbitraryLazy(SharedEpistemic.EvidenceId);
+const evidenceSourceHighlightArbitrary = S.toArbitraryLazy(EvidenceSourceHighlight);
 const sourceTextPageArbitrary = S.toArbitraryLazy(SourceTextPage);
-const verifiedAnchorArbitrary = S.toArbitraryLazy(TextAnchorVerificationReceipt);
 
 const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity)
-  .check(EvidenceSourcePageIdentityCheck)
+  .check(EvidenceSourcePageIdentityCheck, EvidenceSourcePageHighlightBoundsCheck)
   .annotate({
     toArbitrary: () => (fc) =>
       fc
-        .tuple(evidenceIdArbitrary(fc), sourceTextPageArbitrary(fc), verifiedAnchorArbitrary(fc))
-        .map(([evidenceId, page, verifiedAnchor]) =>
+        .tuple(evidenceIdArbitrary(fc), evidenceSourceHighlightArbitrary(fc), sourceTextPageArbitrary(fc))
+        .map(([evidenceId, highlight, page]) =>
           EvidenceSourcePageStruct.make({
             evidenceId,
+            highlight,
             page: SourceTextPage.make({
               ...page,
-              identity: verifiedAnchor.source,
+              identity: highlight.source,
+              totalCodeUnits: NonNegativeInt.make(N.max(page.totalCodeUnits, highlight.endChar)),
             }),
-            verifiedAnchor,
           })
         ),
   });
 
 /**
- * Bounded canonical source page and the freshly re-verified anchor it must
- * highlight.
+ * Bounded canonical source page and quote-free verified highlight projection.
  *
  * @example
  * ```ts
  * import { EvidenceSourcePage } from "@beep/epistemic-use-cases/public"
  *
- * console.log(EvidenceSourcePage.fields.verifiedAnchor !== undefined)
+ * console.log(EvidenceSourcePage.fields.highlight !== undefined)
  * ```
  *
  * @category read-models
@@ -317,7 +396,7 @@ const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity)
 export class EvidenceSourcePage extends S.Class<EvidenceSourcePage>($I`EvidenceSourcePage`)(
   EvidenceSourcePageSchema,
   $I.annote("EvidenceSourcePage", {
-    description: "Candidate-authorized canonical source page paired with a freshly re-verified anchor receipt.",
+    description: "Candidate-authorized canonical source page paired with quote-free verified highlight offsets.",
   })
 ) {}
 

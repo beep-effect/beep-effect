@@ -192,6 +192,7 @@ export class ContradictionReviewConflict extends TaggedErrorClass<ContradictionR
 
 const ContradictionSubmissionConflictReasonBase = LiteralKit([
   "belief-mismatch",
+  "candidate-predates-input",
   "candidate-payload-mismatch",
   "receipt-key-reused",
 ]);

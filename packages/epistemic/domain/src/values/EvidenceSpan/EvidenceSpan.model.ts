@@ -13,16 +13,19 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import {
   isInternallyConsistent as isTextAnchorInternallyConsistent,
+  TextAnchor,
   TextAnchorFields,
   TextAnchorWidthCheck,
 } from "@beep/provenance/TextAnchor";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { identity } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $EpistemicDomainId.create("values/EvidenceSpan/EvidenceSpan.model");
+const textAnchorEquivalent = S.toEquivalence(TextAnchor);
 
 /**
  * Extraction confidence in the unit interval `[0, 1]` — the epistemic semantic
@@ -131,6 +134,28 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
    * @since 0.0.0
    */
   static readonly isInternallyConsistent = (span: EvidenceSpan): boolean => isTextAnchorInternallyConsistent(span);
+
+  /**
+   * Whether a provenance anchor names the exact offsets and quote carried by
+   * this evidence span. Extraction confidence is intentionally not part of the
+   * provenance anchor.
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly matchesAnchor: {
+    (span: EvidenceSpan, anchor: TextAnchor): boolean;
+    (anchor: TextAnchor): (span: EvidenceSpan) => boolean;
+  } = dual(2, (span: EvidenceSpan, anchor: TextAnchor): boolean =>
+    textAnchorEquivalent(
+      TextAnchor.make({
+        endChar: span.endChar,
+        quote: span.quote,
+        startChar: span.startChar,
+      }),
+      anchor
+    )
+  );
 }
 
 /**

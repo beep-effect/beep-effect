@@ -6,6 +6,7 @@ import {
   ContradictionListPayload,
   ContradictionReviewDecision,
   ContradictionRpcs,
+  EvidenceSourceHighlight,
   EvidenceSourcePage,
   EvidenceSourcePagePayload,
   EvidenceSourcePageSelector,
@@ -21,6 +22,7 @@ import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as N from "effect/Number";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -58,7 +60,7 @@ describe("ContradictionTriage RPC contract", () => {
       "offset",
       "validAt",
     ]);
-    expect(R.keys(GetContradictionCandidate.fields)).toStrictEqual(["candidateId"]);
+    expect(R.keys(GetContradictionCandidate.fields)).toStrictEqual(["candidateId", "knownAt", "validAt"]);
     expect(R.keys(ReviewContradictionCandidate.fields)).toStrictEqual([
       "candidateId",
       "decision",
@@ -71,7 +73,13 @@ describe("ContradictionTriage RPC contract", () => {
       "proposalId",
       "reason",
     ]);
-    expect(R.keys(EvidenceSourcePagePayload.fields)).toStrictEqual(["candidateId", "evidenceId", "selector"]);
+    expect(R.keys(EvidenceSourcePagePayload.fields)).toStrictEqual([
+      "candidateId",
+      "evidenceId",
+      "knownAt",
+      "selector",
+      "validAt",
+    ]);
     expect(R.keys(EvidenceSourcePageSelector.cases.anchor.fields)).toStrictEqual(["kind"]);
     expect(R.keys(EvidenceSourcePageSelector.cases.page.fields)).toStrictEqual(["kind", "pageIndex"]);
   });
@@ -129,15 +137,41 @@ describe("ContradictionTriage RPC contract", () => {
       "right",
     ]);
     expect(R.keys(ContradictionEvidenceView.fields)).toStrictEqual(["evidence", "verifiedAnchor"]);
-    expect(R.keys(EvidenceSourcePage.fields)).toStrictEqual(["evidenceId", "page", "verifiedAnchor"]);
+    expect(R.keys(EvidenceSourceHighlight.fields)).toStrictEqual(["endChar", "source", "startChar"]);
+    expect(R.keys(EvidenceSourcePage.fields)).toStrictEqual(["evidenceId", "highlight", "page"]);
   });
 
-  it("rejects a page whose source identity differs from its verified anchor", () =>
+  it("constructs only non-empty forward source highlights and rejects malformed ranges", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(EvidenceSourceHighlight), (highlight) => {
+        expect(highlight.startChar).toBeLessThan(highlight.endChar);
+        expect(
+          Result.isFailure(
+            S.decodeUnknownResult(EvidenceSourceHighlight)({
+              ...highlight,
+              endChar: highlight.startChar,
+            })
+          )
+        ).toBe(true);
+        expect(
+          Result.isFailure(
+            S.decodeUnknownResult(EvidenceSourceHighlight)({
+              ...highlight,
+              endChar: highlight.startChar,
+              startChar: highlight.endChar,
+            })
+          )
+        ).toBe(true);
+      }),
+      fcRuns(25)
+    ));
+
+  it("rejects a page whose source identity differs from its verified highlight", () =>
     fc.assert(
       fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
         const otherSource = SourceTextIdentity.make({
-          ...sourcePage.verifiedAnchor.source,
-          sourceRef: `${sourcePage.verifiedAnchor.source.sourceRef}:other`,
+          ...sourcePage.highlight.source,
+          sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
         });
         const otherPage = SourceTextPage.make({
           ...sourcePage.page,
@@ -156,6 +190,26 @@ describe("ContradictionTriage RPC contract", () => {
       fcRuns(25)
     ));
 
+  it("constructs source pages that cover their highlight and rejects out-of-bounds offsets", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
+        expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
+        expect(
+          Result.isFailure(
+            S.decodeUnknownResult(EvidenceSourcePage)({
+              ...sourcePage,
+              highlight: {
+                ...sourcePage.highlight,
+                endChar: N.increment(sourcePage.page.totalCodeUnits),
+                startChar: sourcePage.page.totalCodeUnits,
+              },
+            })
+          )
+        ).toBe(true);
+      }),
+      fcRuns(25)
+    ));
+
   it("round-trips only source-aligned EvidenceSourcePage values", () => {
     const encode = S.encodeResult(EvidenceSourcePage);
     const decode = S.decodeUnknownResult(EvidenceSourcePage);
@@ -163,10 +217,12 @@ describe("ContradictionTriage RPC contract", () => {
 
     fc.assert(
       fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
-        const decoded = encode(sourcePage).pipe(Result.getOrThrow, decode, Result.getOrThrow);
+        const encoded = encode(sourcePage).pipe(Result.getOrThrow);
+        const decoded = decode(encoded).pipe(Result.getOrThrow);
 
         expect(equivalent(decoded, sourcePage)).toBe(true);
-        expect(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.verifiedAnchor.source)).toBe(true);
+        expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);
+        expect(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.highlight.source)).toBe(true);
       }),
       fcRuns(25)
     );

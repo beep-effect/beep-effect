@@ -183,17 +183,29 @@ const query = Result.getOrThrow(
   })
 );
 
+const queryAfterReview = ContradictionTriage.ContradictionListPayload.make({
+  ...query,
+  knownAt: Result.getOrThrow(S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload.fields.knownAt)(3_000)),
+});
+
 const sourceRequest = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionTriage.EvidenceSourcePagePayload)({
     candidateId: 20,
     evidenceId: 3,
+    knownAt: 2_000,
     selector: ContradictionTriage.EvidenceSourcePageSelector.cases.anchor.make({}),
+    validAt: 1_500,
   })
 );
 
 const sourcePage = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionTriage.EvidenceSourcePage)({
     evidenceId: 3,
+    highlight: {
+      endChar: verifiedAnchorInput.anchor.endChar,
+      source: verifiedAnchorInput.source,
+      startChar: verifiedAnchorInput.anchor.startChar,
+    },
     page: {
       endOffset: 52,
       hasNextPage: false,
@@ -206,7 +218,6 @@ const sourcePage = Result.getOrThrow(
       text: "The signed amendment sets the amount to 125 dollars.",
       totalCodeUnits: 52,
     },
-    verifiedAnchor: verifiedAnchorInput,
   })
 );
 
@@ -537,10 +548,11 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       return flushMicrotaskUpdates();
     }));
 
-  it("treats a successful review as authoritative for the displayed candidate", () =>
+  it("treats a successful review as authoritative at or after its resolution time", () =>
     renderView(
       root,
       makeProps({
+        query: queryAfterReview,
         reviewResult: AsyncResult.success(supersededDisposition),
       })
     ).then(() => {
@@ -568,6 +580,20 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       );
 
       expect(container.querySelector('[data-testid="contradiction-actions-resolved"]')).toBeNull();
+      expect(requireButton(container, "Reject candidate").disabled).toBe(false);
+      expect(requireButton(container, "Review this proposal").disabled).toBe(false);
+    }));
+
+  it("keeps a historical detail open when a successful review resolved after knownAt", () =>
+    renderView(
+      root,
+      makeProps({
+        reviewResult: AsyncResult.success(supersededDisposition),
+      })
+    ).then(() => {
+      expect(container.querySelector('[data-testid="contradiction-review-success"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="contradiction-actions-resolved"]')).toBeNull();
+      expect(container.querySelector('[data-testid="contradiction-proposal-resolved"]')).toBeNull();
       expect(requireButton(container, "Reject candidate").disabled).toBe(false);
       expect(requireButton(container, "Review this proposal").disabled).toBe(false);
     }));

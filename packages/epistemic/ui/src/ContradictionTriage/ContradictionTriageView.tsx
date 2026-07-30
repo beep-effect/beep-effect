@@ -171,6 +171,7 @@ interface QueuePaneProps {
 
 interface ComparisonPaneProps {
   readonly detailResult: ContradictionTriageViewProps["detailResult"];
+  readonly knownAt: ContradictionTriageViewProps["query"]["knownAt"];
   readonly onDetailRetry: ContradictionTriageViewProps["onDetailRetry"];
   readonly onEvidenceSelect: ContradictionTriageViewProps["onEvidenceSelect"];
   readonly onRejectRequested: ContradictionTriageViewProps["onRejectRequested"];
@@ -236,12 +237,16 @@ const candidateSummary = (candidate: ContradictionTriage.ContradictionCandidateV
 
 const reviewDisposition = (
   result: ComparisonPaneProps["reviewResult"],
-  candidateId: ContradictionCandidateId
+  candidateId: ContradictionCandidateId,
+  knownAt: ComparisonPaneProps["knownAt"]
 ): O.Option<ContradictionDisposition> =>
   AsyncResult.match(result, {
     onInitial: O.none,
     onFailure: O.none,
-    onSuccess: ({ value }) => (Eq.equals(value.candidateId, candidateId) ? O.some(value) : O.none()),
+    onSuccess: ({ value }) =>
+      Eq.equals(value.candidateId, candidateId) && DateTime.isLessThanOrEqualTo(value.resolvedAt, knownAt)
+        ? O.some(value)
+        : O.none(),
   });
 
 const actionErrorCopy = (reason: ContradictionTriage.ContradictionActionErrorReason): ActionErrorCopy =>
@@ -801,6 +806,7 @@ function ReviewStatus({ result }: { readonly result: ComparisonPaneProps["review
 
 function CandidateComparison({
   detail,
+  knownAt,
   onEvidenceSelect,
   onRejectRequested,
   onSupersedeRequested,
@@ -810,6 +816,7 @@ function CandidateComparison({
   waiting,
 }: {
   readonly detail: ContradictionTriage.ContradictionCandidateDetailView;
+  readonly knownAt: ComparisonPaneProps["knownAt"];
   readonly onEvidenceSelect: ComparisonPaneProps["onEvidenceSelect"];
   readonly onRejectRequested: ComparisonPaneProps["onRejectRequested"];
   readonly onSupersedeRequested: ComparisonPaneProps["onSupersedeRequested"];
@@ -818,7 +825,9 @@ function CandidateComparison({
   readonly selectedSource: ComparisonPaneProps["selectedSource"];
   readonly waiting: boolean;
 }): JSX.Element {
-  const settledDisposition = O.orElse(detail.disposition, () => reviewDisposition(reviewResult, detail.candidate.id));
+  const settledDisposition = O.orElse(detail.disposition, () =>
+    reviewDisposition(reviewResult, detail.candidate.id, knownAt)
+  );
   const resolved = O.isSome(settledDisposition);
   const reviewBusy = AsyncResult.isWaiting(reviewResult);
   const actionsDisabled = resolved || reviewBusy || waiting;
@@ -920,6 +929,7 @@ function CandidateComparison({
 
 function ComparisonPane({
   detailResult,
+  knownAt,
   onDetailRetry,
   onEvidenceSelect,
   onRejectRequested,
@@ -957,6 +967,7 @@ function ComparisonPane({
       onSuccess: ({ value, waiting }) => (
         <CandidateComparison
           detail={value}
+          knownAt={knownAt}
           onEvidenceSelect={onEvidenceSelect}
           onRejectRequested={onRejectRequested}
           onSupersedeRequested={onSupersedeRequested}
@@ -1008,7 +1019,7 @@ function SourcePane({ onSourcePageChange, onSourceRetry, selectedSource, sourceR
       ),
       onSuccess: ({ value, waiting }) => (
         <EvidenceSourcePanel
-          anchor={value.verifiedAnchor}
+          highlight={value.highlight}
           loading={waiting}
           onPageChange={onSourcePageChange}
           page={value.page}
@@ -1314,6 +1325,7 @@ export function ContradictionTriageView(props: ContradictionTriageViewProps): JS
   const comparisonPane = (
     <ComparisonPane
       detailResult={props.detailResult}
+      knownAt={props.query.knownAt}
       onDetailRetry={props.onDetailRetry}
       onEvidenceSelect={props.onEvidenceSelect}
       onRejectRequested={props.onRejectRequested}

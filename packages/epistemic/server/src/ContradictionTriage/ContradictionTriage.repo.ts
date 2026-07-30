@@ -24,6 +24,7 @@ import {
   contradictionEvidenceDigest,
   contradictionProposalDigest,
 } from "@beep/epistemic-domain/values/Contradiction";
+import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { LogicalEdgeIdentity } from "@beep/epistemic-domain/values/LogicalEdgeIdentity";
 import { DbSchema } from "@beep/epistemic-tables";
 import {
@@ -62,6 +63,7 @@ import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { supersedeEdgeFactInTransaction } from "../EdgeAuthority/EdgeAuthority.repo.ts";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type {
   ContradictionCandidateKey,
   ContradictionResolutionProposal,
@@ -89,6 +91,7 @@ const beliefRefEquivalent = S.toEquivalence(BeliefVersionRef);
 const edgeVersionIdEquivalent = S.toEquivalence(BeliefVersionRef.fields.edgeVersionId);
 const proposalIdEquivalent = S.toEquivalence(ContradictionProposalId);
 const proposalById = Order.mapInput(Order.String, (proposal: ContradictionResolutionProposal) => proposal.proposalId);
+const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
 
 const candidatePublicIdFor = (candidateKey: string) =>
   candidatePublicId.fromUnknown(`${Epistemic.ContradictionCandidateId.tableName}_a${candidateKey}`);
@@ -151,30 +154,47 @@ const validateBeliefPair = (
           Eq.equals(version.orgId, command.orgId)
       )
     );
-  return valid
+  if (!valid) {
+    return Effect.fail(
+      ContradictionSubmissionConflict.make({
+        candidateKey,
+        reason: "belief-mismatch",
+      })
+    );
+  }
+  return A.every(versions, (version) => notLaterThan(version.recordedAt, command.recordedAt))
     ? Effect.void
     : Effect.fail(
         ContradictionSubmissionConflict.make({
           candidateKey,
-          reason: "belief-mismatch",
+          reason: "candidate-predates-input",
         })
       );
 };
 
 const validateEvidenceSet = (
   command: SubmitContradictionCandidate,
-  rows: ReadonlyArray<{ readonly orgId: number }>,
+  rows: ReadonlyArray<Evidence>,
   candidateKey: ContradictionCandidateKey,
   evidenceIds: ReadonlyArray<unknown>
-): Effect.Effect<void, ContradictionSubmissionConflict> =>
-  A.length(rows) === A.length(evidenceIds) && A.every(rows, (row) => Eq.equals(row.orgId, command.orgId))
+): Effect.Effect<void, ContradictionSubmissionConflict> => {
+  if (A.length(rows) !== A.length(evidenceIds) || !A.every(rows, (row) => Eq.equals(row.orgId, command.orgId))) {
+    return Effect.fail(
+      ContradictionSubmissionConflict.make({
+        candidateKey,
+        reason: "candidate-payload-mismatch",
+      })
+    );
+  }
+  return A.every(rows, (row) => notLaterThan(row.createdAt, command.recordedAt))
     ? Effect.void
     : Effect.fail(
         ContradictionSubmissionConflict.make({
           candidateKey,
-          reason: "candidate-payload-mismatch",
+          reason: "candidate-predates-input",
         })
       );
+};
 
 const normalizeSubmission = Effect.fnUntraced(function* (command: SubmitContradictionCandidate) {
   const normalized = canonicalizeContradiction(command.pair, command.matchBasis);
@@ -312,10 +332,19 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         "db.operation": "select",
         "db.system": "postgresql",
       });
+      const knownAt = DateTime.toEpochMillis(query.knownAt);
+      const validAt = DateTime.toEpochMillis(query.validAt);
       const candidates = yield* db
         .select()
         .from(candidateTable)
-        .where(eq(candidateTable.id, query.candidateId))
+        .where(
+          and(
+            eq(candidateTable.id, query.candidateId),
+            lte(candidateTable.validFrom, validAt),
+            or(isNull(candidateTable.validTo), gt(candidateTable.validTo, validAt)),
+            lte(candidateTable.recordedAt, knownAt)
+          )
+        )
         .pipe(repositoryUnavailable("get"));
       const candidateRow = A.head(candidates);
       if (O.isNone(candidateRow)) {
@@ -324,12 +353,12 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const dispositions = yield* db
         .select()
         .from(dispositionTable)
-        .where(eq(dispositionTable.candidateId, query.candidateId))
+        .where(and(eq(dispositionTable.candidateId, query.candidateId), lte(dispositionTable.resolvedAt, knownAt)))
         .pipe(repositoryUnavailable("get"));
       const receipts = yield* db
         .select()
         .from(receiptTable)
-        .where(eq(receiptTable.candidateId, query.candidateId))
+        .where(and(eq(receiptTable.candidateId, query.candidateId), lte(receiptTable.receivedAt, knownAt)))
         .orderBy(receiptTable.receivedAt, receiptTable.id)
         .pipe(repositoryUnavailable("get"));
       const candidate = yield* Effect.fromResult(fromContradictionCandidateRow(candidateRow.value)).pipe(
@@ -360,10 +389,20 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         "db.operation": "select",
         "db.system": "postgresql",
       });
+      const knownAt = DateTime.toEpochMillis(query.knownAt);
+      const validAt = DateTime.toEpochMillis(query.validAt);
       const candidates = yield* db
         .select()
         .from(candidateTable)
-        .where(and(eq(candidateTable.id, query.candidateId), eq(candidateTable.orgId, query.orgId)))
+        .where(
+          and(
+            eq(candidateTable.id, query.candidateId),
+            eq(candidateTable.orgId, query.orgId),
+            lte(candidateTable.validFrom, validAt),
+            or(isNull(candidateTable.validTo), gt(candidateTable.validTo, validAt)),
+            lte(candidateTable.recordedAt, knownAt)
+          )
+        )
         .pipe(repositoryUnavailable("get"));
       const candidateRow = A.head(candidates);
       if (O.isNone(candidateRow)) {
@@ -436,8 +475,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
           O.map((row) =>
             ContradictionEvidenceDetail.make({
               evidence: row,
-              latestVerification: A.findFirst(verifications, (verification) =>
-                Eq.equals(verification.evidenceId, evidenceId)
+              latestVerification: A.findFirst(
+                verifications,
+                (verification) =>
+                  Eq.equals(verification.evidenceId, evidenceId) &&
+                  EvidenceSpan.matchesAnchor(row.span, verification.verifiedAnchor.anchor)
               ),
             })
           )
@@ -454,12 +496,12 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const dispositions = yield* db
         .select()
         .from(dispositionTable)
-        .where(eq(dispositionTable.candidateId, query.candidateId))
+        .where(and(eq(dispositionTable.candidateId, query.candidateId), lte(dispositionTable.resolvedAt, knownAt)))
         .pipe(repositoryUnavailable("get"));
       const receipts = yield* db
         .select()
         .from(receiptTable)
-        .where(eq(receiptTable.candidateId, query.candidateId))
+        .where(and(eq(receiptTable.candidateId, query.candidateId), lte(receiptTable.receivedAt, knownAt)))
         .orderBy(receiptTable.receivedAt, receiptTable.id)
         .pipe(repositoryUnavailable("get"));
       const disposition = yield* pipe(
@@ -737,14 +779,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 A.appendAll(normalized.matchBasis.rightEvidenceIds),
                 A.dedupe
               );
-              const evidenceRows = yield* tx
-                .select({
-                  id: evidenceTable.id,
-                  orgId: evidenceTable.orgId,
-                })
-                .from(evidenceTable)
-                .where(inArray(evidenceTable.id, evidenceIds));
-              yield* validateEvidenceSet(command, evidenceRows, normalized.candidateKey, evidenceIds);
+              const evidenceRows = yield* tx.select().from(evidenceTable).where(inArray(evidenceTable.id, evidenceIds));
+              const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.try(() => fromEvidenceRow(row)), {
+                concurrency: 1,
+              }).pipe(repositoryUnavailable("submit"));
+              yield* validateEvidenceSet(command, evidence, normalized.candidateKey, evidenceIds);
 
               const seed = ContradictionCandidate.make({
                 assessment: normalized.assessment,

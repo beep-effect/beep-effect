@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 import { EvidenceVerification as EvidenceVerificationModel } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
-import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
+import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
@@ -88,10 +88,21 @@ if (!shouldRunPgliteIntegration) {
             },
             spanFixtureKey: "span:contradiction-migration",
           });
-          yield* db.insert(EpistemicDbSchema.evidence).values(toEvidenceInsert(evidence));
+          const evidenceRows = yield* db
+            .insert(EpistemicDbSchema.evidence)
+            .values(toEvidenceInsert(evidence))
+            .returning();
+          const persistedEvidence = yield* pipe(
+            evidenceRows,
+            A.head,
+            O.match({
+              onNone: () => Effect.die("expected the persisted evidence row"),
+              onSome: (row) => Effect.succeed(fromEvidenceRow(row)),
+            })
+          );
           const uncheckedVerification = yield* decodeEvidenceVerification({
             ...baseEntityFixtureInput("EpistemicEvidenceVerification", 41),
-            evidenceId: 1,
+            evidenceId: persistedEvidence.id,
             manifestationKey: "a".repeat(64),
             verifiedAnchor: {
               anchor: {
@@ -123,7 +134,9 @@ if (!shouldRunPgliteIntegration) {
             ...uncheckedVerification,
             manifestationKey,
           });
-          const verificationInsert = yield* Effect.fromResult(toEvidenceVerificationInsert(verification));
+          const verificationInsert = yield* Effect.fromResult(
+            toEvidenceVerificationInsert(verification, persistedEvidence)
+          );
           yield* db.insert(EpistemicDbSchema.evidenceVerification).values(verificationInsert);
 
           const rows = yield* db.select().from(EpistemicDbSchema.evidenceVerification);

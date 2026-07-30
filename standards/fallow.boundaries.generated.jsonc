@@ -1614,7 +1614,6 @@
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/ui"
         ],
@@ -1624,7 +1623,6 @@
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/ui"
         ]
