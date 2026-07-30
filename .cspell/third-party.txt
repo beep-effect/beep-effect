@@ -74,6 +74,7 @@ semgrep
 serde
 shadcn
 Silero
+SmartScreen
 starlette
 storybook
 syncpack

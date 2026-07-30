@@ -727,6 +727,8 @@ const DevEngineRequirement = S.Union([DevEngineDependency, S.Array(DevEngineDepe
   })
 );
 
+const OptionalDevEngineRequirement = S.optionalKey(DevEngineRequirement);
+
 /**
  * Schema for the `devEngines` field.
  *
@@ -735,11 +737,11 @@ const DevEngineRequirement = S.Union([DevEngineDependency, S.Array(DevEngineDepe
  */
 class DevEnginesShape extends S.Class<DevEnginesShape>($I`DevEngines`)(
   {
-    os: S.optionalKey(DevEngineRequirement),
-    cpu: S.optionalKey(DevEngineRequirement),
-    libc: S.optionalKey(DevEngineRequirement),
-    runtime: S.optionalKey(DevEngineRequirement),
-    packageManager: S.optionalKey(DevEngineRequirement),
+    os: OptionalDevEngineRequirement,
+    cpu: OptionalDevEngineRequirement,
+    libc: OptionalDevEngineRequirement,
+    runtime: OptionalDevEngineRequirement,
+    packageManager: OptionalDevEngineRequirement,
   },
   $I.annote("DevEngines", {
     title: "Dev Engines",
@@ -950,13 +952,18 @@ class WorkspacesObject extends S.Class<WorkspacesObject>($I`WorkspacesObject`)(
   })
 ) {}
 
+const PublishConfigBin = Bin.annotate({ identifier: $I`PublishConfigBin` });
+const PublishConfigPackageExports = PackageExports.annotate({
+  identifier: $I`PublishConfigPackageExports`,
+});
+
 const PublishConfigBase = S.Struct({
   access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
   tag: S.optionalKey(S.String),
   registry: S.optionalKey(S.String),
   provenance: S.optionalKey(S.Boolean),
-  bin: S.optionalKey(Bin),
-  exports: S.optionalKey(PackageExports),
+  bin: S.optionalKey(PublishConfigBin),
+  exports: S.optionalKey(PublishConfigPackageExports),
 }).pipe(
   $I.annoteSchema("PublishConfigBase", {
     title: "Publish Config Base",

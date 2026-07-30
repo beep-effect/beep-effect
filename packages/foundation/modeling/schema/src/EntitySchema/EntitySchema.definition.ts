@@ -340,7 +340,7 @@ export type EntityClass<
   Inherited = {},
   TableName extends string = string,
   EntityId extends EntityIdLike | undefined = EntityIdLike | undefined,
-> = S.Codec<Self, EncodedShape<FieldMap>, never, never> &
+> = S.ConstraintCodec<Self, EncodedShape<FieldMap>, never, never> &
   Model.ClassShape<Self, VariantFieldsFor<FieldMap, Persisted>, {}, Inherited> & {
     readonly definition: Definition<FieldMap, SelectedFieldsOf<FieldMap>, Persisted, TableName, EntityId>;
   };

@@ -14,6 +14,8 @@ import {
   DetectBordersReport,
   DetectFacesReport,
   FilesCommandServiceLive,
+  FlattenMediaOptions,
+  flattenMediaFiles,
   ImageAuditManifest,
   ImageCurationDecisionDocument,
   ImageCurationManifest,
@@ -26,6 +28,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -1848,6 +1851,511 @@ describe("files command", { concurrent: false }, () => {
 
           expect(yield* sortedDirectoryEntries(datasetDir)).toEqual(["broken.png", "valid.svg"]);
           expect(output).toContain("Failed to probe image dimensions");
+        })
+      )
+    ));
+
+  it("recursively flattens image and video files while preserving non-media files and source directories", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const nestedDir = path.join(sourceDir, "nestedFolder");
+          const hiddenDir = path.join(sourceDir, ".hidden");
+          const emptyDir = path.join(nestedDir, "empty");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(emptyDir, { recursive: true });
+          yield* fs.makeDirectory(hiddenDir, { recursive: true });
+          yield* fs.writeFileString(path.join(sourceDir, "1.jpg"), "direct image");
+          yield* fs.writeFileString(path.join(sourceDir, "1.mkv"), "direct video");
+          yield* fs.writeFileString(path.join(nestedDir, "2.png"), "nested image");
+          yield* fs.writeFileString(path.join(nestedDir, "beep.mp4"), "nested video");
+          yield* fs.writeFileString(path.join(hiddenDir, "secret.WEBM"), "hidden video");
+          yield* fs.writeFileString(path.join(sourceDir, "notes.txt"), "keep direct");
+          yield* fs.writeFileString(path.join(nestedDir, "keep.md"), "keep nested");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
+
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual(["1.jpg", "1.mkv", "2.png", "beep.mp4", "secret.WEBM"]);
+          expect(yield* fs.readFileString(path.join(outDir, "1.jpg"))).toBe("direct image");
+          expect(yield* fs.readFileString(path.join(outDir, "beep.mp4"))).toBe("nested video");
+          expect(yield* fs.readFileString(path.join(outDir, "secret.WEBM"))).toBe("hidden video");
+          expect(yield* sortedDirectoryEntries(sourceDir)).toEqual([".hidden", "nestedFolder", "notes.txt"]);
+          expect(yield* sortedDirectoryEntries(nestedDir)).toEqual(["empty", "keep.md"]);
+          expect(yield* sortedDirectoryEntries(hiddenDir)).toEqual([]);
+          expect(yield* fs.readFileString(path.join(sourceDir, "notes.txt"))).toBe("keep direct");
+          expect(yield* fs.readFileString(path.join(nestedDir, "keep.md"))).toBe("keep nested");
+        })
+      )
+    ));
+
+  it("allocates deterministic collision suffixes around existing file and directory names", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(path.join(sourceDir, "a"), { recursive: true });
+          yield* fs.makeDirectory(path.join(sourceDir, "b"), { recursive: true });
+          yield* fs.makeDirectory(path.join(sourceDir, "c"), { recursive: true });
+          yield* fs.makeDirectory(path.join(outDir, "photo_01.JPG"), { recursive: true });
+          yield* fs.writeFileString(path.join(sourceDir, "a", "photo.JPG"), "source a");
+          yield* fs.writeFileString(path.join(sourceDir, "b", "photo.JPG"), "source b");
+          yield* fs.writeFileString(path.join(sourceDir, "c", "photo.JPG"), "source c");
+          yield* fs.writeFileString(path.join(outDir, "photo.JPG"), "existing original");
+          yield* fs.writeFileString(path.join(outDir, "photo_03.JPG"), "existing gap");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
+
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual([
+            "photo.JPG",
+            "photo_01.JPG",
+            "photo_02.JPG",
+            "photo_03.JPG",
+            "photo_04.JPG",
+            "photo_05.JPG",
+          ]);
+          expect(yield* fs.readFileString(path.join(outDir, "photo.JPG"))).toBe("existing original");
+          expect(yield* fs.readFileString(path.join(outDir, "photo_02.JPG"))).toBe("source a");
+          expect(yield* fs.readFileString(path.join(outDir, "photo_03.JPG"))).toBe("existing gap");
+          expect(yield* fs.readFileString(path.join(outDir, "photo_04.JPG"))).toBe("source b");
+          expect(yield* fs.readFileString(path.join(outDir, "photo_05.JPG"))).toBe("source c");
+          expect(yield* sortedDirectoryEntries(path.join(outDir, "photo_01.JPG"))).toEqual([]);
+        })
+      )
+    ));
+
+  it("keeps mixed-case collision planning and application filesystem-safe", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(path.join(sourceDir, "a"), { recursive: true });
+          yield* fs.makeDirectory(path.join(sourceDir, "b"), { recursive: true });
+          yield* fs.makeDirectory(outDir, { recursive: true });
+          yield* fs.writeFileString(path.join(sourceDir, "a", "photo.jpg"), "lowercase source");
+          yield* fs.writeFileString(path.join(sourceDir, "b", "PHOTO.JPG"), "uppercase source");
+          yield* fs.writeFileString(path.join(outDir, "Photo.jpg"), "existing mixed-case target");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir, "--dry-run"]);
+
+          expect(yield* TestConsole.logLines).toContain("a/photo.jpg -> photo_01.jpg");
+          expect(yield* TestConsole.logLines).toContain("b/PHOTO.JPG -> PHOTO_02.JPG");
+          expect(yield* fs.readFileString(path.join(sourceDir, "a", "photo.jpg"))).toBe("lowercase source");
+          expect(yield* fs.readFileString(path.join(sourceDir, "b", "PHOTO.JPG"))).toBe("uppercase source");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
+
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual(["PHOTO_02.JPG", "Photo.jpg", "photo_01.jpg"]);
+          expect(yield* fs.readFileString(path.join(outDir, "Photo.jpg"))).toBe("existing mixed-case target");
+          expect(yield* fs.readFileString(path.join(outDir, "photo_01.jpg"))).toBe("lowercase source");
+          expect(yield* fs.readFileString(path.join(outDir, "PHOTO_02.JPG"))).toBe("uppercase source");
+        })
+      )
+    ));
+
+  it("prints a dry-run plan without moving files or creating the destination", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const nestedDir = path.join(sourceDir, "nested");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(nestedDir, { recursive: true });
+          yield* fs.writeFileString(path.join(nestedDir, "photo.png"), "image");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir, "--dry-run"]);
+
+          expect(yield* fs.readFileString(path.join(nestedDir, "photo.png"))).toBe("image");
+          expect(yield* fs.exists(outDir)).toBe(false);
+          expect(yield* TestConsole.logLines).toContain(
+            "files flatten-media: dry run; no directory created and no files moved."
+          );
+        })
+      )
+    ));
+
+  it("does not create the destination when no media files are found", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(path.join(sourceDir, "notes.txt"), "keep");
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
+
+          expect(yield* fs.readFileString(path.join(sourceDir, "notes.txt"))).toBe("keep");
+          expect(yield* fs.exists(outDir)).toBe(false);
+        })
+      )
+    ));
+
+  it("rejects an output path that is not a directory without moving media", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const outPath = path.join(tmpDir, "not-a-directory");
+          const sourcePath = path.join(sourceDir, "photo.jpg");
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(sourcePath, "image");
+          yield* fs.writeFileString(outPath, "existing file");
+
+          yield* expectFilesCommandFailure(["flatten-media", "--dir", sourceDir, "--out-dir", outPath]);
+
+          expect(yield* fs.readFileString(sourcePath)).toBe("image");
+          expect(yield* fs.readFileString(outPath)).toBe("existing file");
+        })
+      )
+    ));
+
+  it("rejects destination overlap in both containment directions", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const outerSourceDir = path.join(tmpDir, "outer-source");
+          const nestedOutDir = path.join(outerSourceDir, "flat");
+          const outerSourcePath = path.join(outerSourceDir, "outer.jpg");
+          const sourceAlias = path.join(tmpDir, "source-alias");
+          const aliasedNestedOutDir = path.join(sourceAlias, "aliased-flat");
+          const outerOutDir = path.join(tmpDir, "outer-output");
+          const nestedSourceDir = path.join(outerOutDir, "nested-source");
+          const nestedSourcePath = path.join(nestedSourceDir, "nested.png");
+
+          yield* fs.makeDirectory(outerSourceDir, { recursive: true });
+          yield* fs.makeDirectory(nestedSourceDir, { recursive: true });
+          yield* fs.writeFileString(outerSourcePath, "outer");
+          yield* fs.writeFileString(nestedSourcePath, "nested");
+          yield* fs.symlink(outerSourceDir, sourceAlias);
+
+          yield* expectFilesCommandFailure(["flatten-media", "--dir", outerSourceDir, "--out-dir", nestedOutDir]);
+          yield* expectFilesCommandFailure(["flatten-media", "--dir", outerSourceDir, "--out-dir", outerSourceDir]);
+          yield* expectFilesCommandFailure(["flatten-media", "--dir", nestedSourceDir, "--out-dir", outerOutDir]);
+          yield* expectFilesCommandFailure([
+            "flatten-media",
+            "--dir",
+            outerSourceDir,
+            "--out-dir",
+            aliasedNestedOutDir,
+          ]);
+
+          expect(yield* fs.readFileString(outerSourcePath)).toBe("outer");
+          expect(yield* fs.readFileString(nestedSourcePath)).toBe("nested");
+          expect(yield* fs.exists(nestedOutDir)).toBe(false);
+          expect(yield* fs.exists(path.join(outerSourceDir, "aliased-flat"))).toBe(false);
+        })
+      )
+    ));
+
+  it("skips symlinked media files and directories during recursive traversal", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const outsideDir = path.join(tmpDir, "outside");
+          const outsideFile = path.join(tmpDir, "outside.png");
+          const outDir = path.join(tmpDir, "flat");
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.makeDirectory(outsideDir, { recursive: true });
+          yield* fs.writeFileString(path.join(sourceDir, "actual.jpg"), "actual");
+          yield* fs.writeFileString(outsideFile, "outside file");
+          yield* fs.writeFileString(path.join(outsideDir, "hidden.mp4"), "outside directory");
+          yield* fs.symlink(outsideFile, path.join(sourceDir, "linked.png"));
+          yield* fs.symlink(outsideDir, path.join(sourceDir, "linked-dir"));
+
+          yield* runFilesCommand(["flatten-media", "--dir", sourceDir, "--out-dir", outDir]);
+
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual(["actual.jpg"]);
+          expect(yield* sortedDirectoryEntries(sourceDir)).toEqual(["linked-dir", "linked.png"]);
+          expect(yield* fs.readFileString(outsideFile)).toBe("outside file");
+          expect(yield* fs.readFileString(path.join(outsideDir, "hidden.mp4"))).toBe("outside directory");
+        })
+      )
+    ));
+
+  it("fails cross-device preflight before creating the destination or moving files", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const firstSourcePath = path.join(sourceDir, "a.jpg");
+          const secondSourcePath = path.join(sourceDir, "b.mp4");
+          const outDir = path.join(tmpDir, "flat");
+          let renameCallCount = 0;
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(firstSourcePath, "first");
+          yield* fs.writeFileString(secondSourcePath, "second");
+
+          const crossDeviceFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            rename: (fromPath, toPath) =>
+              Effect.sync(() => {
+                renameCallCount += 1;
+              }).pipe(Effect.flatMap(() => fs.rename(fromPath, toPath))),
+            stat: (filePath) =>
+              fs
+                .stat(filePath)
+                .pipe(Effect.map((info) => (filePath === secondSourcePath ? { ...info, dev: info.dev + 1 } : info))),
+          };
+          const error = yield* flattenMediaFiles(
+            FlattenMediaOptions.make({ dir: sourceDir, dryRun: false, outDir })
+          ).pipe(
+            provideScopedLayer(FilesCommandServiceLive),
+            Effect.provideService(FileSystem.FileSystem, crossDeviceFileSystem),
+            Effect.flip
+          );
+
+          expect(error.message).toContain("different filesystems");
+          expect(renameCallCount).toBe(0);
+          expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
+          expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
+          expect(yield* fs.exists(outDir)).toBe(false);
+        })
+      )
+    ));
+
+  it("preserves a target discovered immediately before the move", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const sourcePath = path.join(sourceDir, "photo.jpg");
+          const outDir = path.join(tmpDir, "flat");
+          const targetPath = path.join(outDir, "photo.jpg");
+          let targetProbeCount = 0;
+          let injectedTarget = false;
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(sourcePath, "source");
+
+          const racingFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            exists: (filePath) =>
+              Effect.suspend(() => {
+                if (filePath !== targetPath) {
+                  return fs.exists(filePath);
+                }
+
+                targetProbeCount += 1;
+                if (targetProbeCount < 2) {
+                  return fs.exists(filePath);
+                }
+
+                injectedTarget = true;
+                return fs.writeFileString(filePath, "concurrent target").pipe(Effect.as(true));
+              }),
+          };
+          const error = yield* flattenMediaFiles(
+            FlattenMediaOptions.make({ dir: sourceDir, dryRun: false, outDir })
+          ).pipe(
+            provideScopedLayer(FilesCommandServiceLive),
+            Effect.provideService(FileSystem.FileSystem, racingFileSystem),
+            Effect.flip
+          );
+
+          expect(error.message).toContain("Refusing to overwrite");
+          expect(injectedTarget).toBe(true);
+          expect(yield* fs.readFileString(sourcePath)).toBe("source");
+          expect(yield* fs.readFileString(targetPath)).toBe("concurrent target");
+        })
+      )
+    ));
+
+  it("rolls completed moves back and leaves the new output directory in place when a later move fails", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const firstSourcePath = path.join(sourceDir, "a.jpg");
+          const secondSourcePath = path.join(sourceDir, "b.mp4");
+          const outDir = path.join(tmpDir, "flat");
+          let renameCallCount = 0;
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(firstSourcePath, "first");
+          yield* fs.writeFileString(secondSourcePath, "second");
+
+          const failingFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            rename: (fromPath, toPath) =>
+              Effect.suspend(() => {
+                renameCallCount += 1;
+                return renameCallCount === 2
+                  ? Effect.fail(
+                      PlatformError.badArgument({
+                        description: "simulated second rename failure",
+                        method: "rename",
+                        module: "FileSystem",
+                      })
+                    )
+                  : fs.rename(fromPath, toPath);
+              }),
+          };
+
+          const error = yield* flattenMediaFiles(
+            FlattenMediaOptions.make({ dir: sourceDir, dryRun: false, outDir })
+          ).pipe(
+            provideScopedLayer(FilesCommandServiceLive),
+            Effect.provideService(FileSystem.FileSystem, failingFileSystem),
+            Effect.flip
+          );
+
+          expect(renameCallCount).toBe(3);
+          expect(error.message).toContain("Completed moves were restored.");
+          expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
+          expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual([]);
+        })
+      )
+    ));
+
+  it("does not clean up an output directory created by another actor after planning", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const firstSourcePath = path.join(sourceDir, "a.jpg");
+          const secondSourcePath = path.join(sourceDir, "b.mp4");
+          const outDir = path.join(tmpDir, "flat");
+          let injectedDirectory = false;
+          let renameCallCount = 0;
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.writeFileString(firstSourcePath, "first");
+          yield* fs.writeFileString(secondSourcePath, "second");
+
+          const racingFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            makeDirectory: (directoryPath, options) =>
+              Effect.suspend(() => {
+                if (directoryPath !== outDir || injectedDirectory) {
+                  return fs.makeDirectory(directoryPath, options);
+                }
+
+                injectedDirectory = true;
+                return fs.makeDirectory(directoryPath).pipe(Effect.andThen(fs.makeDirectory(directoryPath, options)));
+              }),
+            rename: (fromPath, toPath) =>
+              Effect.suspend(() => {
+                renameCallCount += 1;
+                return renameCallCount === 2
+                  ? Effect.fail(
+                      PlatformError.badArgument({
+                        description: "simulated second rename failure",
+                        method: "rename",
+                        module: "FileSystem",
+                      })
+                    )
+                  : fs.rename(fromPath, toPath);
+              }),
+          };
+
+          const error = yield* flattenMediaFiles(
+            FlattenMediaOptions.make({ dir: sourceDir, dryRun: false, outDir })
+          ).pipe(
+            provideScopedLayer(FilesCommandServiceLive),
+            Effect.provideService(FileSystem.FileSystem, racingFileSystem),
+            Effect.flip
+          );
+
+          expect(error.message).toContain("Completed moves were restored.");
+          expect(injectedDirectory).toBe(true);
+          expect(yield* fs.exists(outDir)).toBe(true);
+          expect(yield* sortedDirectoryEntries(outDir)).toEqual([]);
+          expect(yield* fs.readFileString(firstSourcePath)).toBe("first");
+          expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
+        })
+      )
+    ));
+
+  it("reports rollback failures without disturbing source files that were not moved", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sourceDir = path.join(tmpDir, "source");
+          const firstSourcePath = path.join(sourceDir, "a.jpg");
+          const secondSourcePath = path.join(sourceDir, "b.mp4");
+          const outDir = path.join(tmpDir, "flat");
+          const firstTargetPath = path.join(outDir, "a.jpg");
+          const sentinelDirectory = path.join(outDir, "reserved");
+          const sentinelPath = path.join(outDir, "sentinel.txt");
+          let renameCallCount = 0;
+
+          yield* fs.makeDirectory(sourceDir, { recursive: true });
+          yield* fs.makeDirectory(sentinelDirectory, { recursive: true });
+          yield* fs.writeFileString(firstSourcePath, "first");
+          yield* fs.writeFileString(secondSourcePath, "second");
+          yield* fs.writeFileString(sentinelPath, "sentinel");
+
+          const failingFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            rename: (fromPath, toPath) =>
+              Effect.suspend(() => {
+                renameCallCount += 1;
+                return renameCallCount === 1
+                  ? fs.rename(fromPath, toPath)
+                  : Effect.fail(
+                      PlatformError.badArgument({
+                        description:
+                          renameCallCount === 2 ? "simulated second rename failure" : "simulated rollback failure",
+                        method: "rename",
+                        module: "FileSystem",
+                      })
+                    );
+              }),
+          };
+          const error = yield* flattenMediaFiles(
+            FlattenMediaOptions.make({ dir: sourceDir, dryRun: false, outDir })
+          ).pipe(
+            provideScopedLayer(FilesCommandServiceLive),
+            Effect.provideService(FileSystem.FileSystem, failingFileSystem),
+            Effect.flip
+          );
+
+          expect(renameCallCount).toBe(3);
+          expect(error.message).toMatch(/rollback/i);
+          expect(yield* fs.exists(firstSourcePath)).toBe(false);
+          expect(yield* fs.readFileString(secondSourcePath)).toBe("second");
+          expect(yield* fs.readFileString(firstTargetPath)).toBe("first");
+          expect(yield* fs.readFileString(sentinelPath)).toBe("sentinel");
+          expect(yield* sortedDirectoryEntries(sentinelDirectory)).toEqual([]);
         })
       )
     ));

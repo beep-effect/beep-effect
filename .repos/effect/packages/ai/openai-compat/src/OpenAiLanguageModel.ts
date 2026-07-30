@@ -36,6 +36,7 @@ import * as InternalUtilities from "./internal/utilities.ts"
 import {
   type Annotation,
   type ChatCompletionContentPart,
+  type ChatCompletionRequestToolCall,
   type CreateResponse,
   type CreateResponse200,
   type CreateResponse200Sse,
@@ -48,7 +49,8 @@ import {
   type ReasoningItem,
   type SummaryTextContent,
   type TextResponseFormatConfiguration,
-  type Tool as OpenAiClientTool
+  type Tool as OpenAiClientTool,
+  type UnknownChatCompletionEvent
 } from "./OpenAiClient.ts"
 import { addGenAIAnnotations } from "./OpenAiTelemetry.ts"
 
@@ -1027,6 +1029,11 @@ const buildHttpResponseDetails = (
 
 type ResponseStreamEvent = CreateResponse200Sse
 
+const isUnknownChatCompletionEvent = (
+  event: ResponseStreamEvent
+): event is UnknownChatCompletionEvent =>
+  typeof event !== "string" && "_tag" in event && event._tag === "UnknownChatCompletionEvent"
+
 type ActiveToolCall = {
   readonly id: string
   name: string
@@ -1202,6 +1209,12 @@ const makeStreamResponse = Effect.fnUntraced(
               ? { metadata: { openai: { serviceTier: normalizedServiceTier } } }
               : undefined)
           })
+          return parts
+        }
+
+        // Keep unknown events available to direct client consumers; this layer
+        // cannot translate provider-specific data into portable stream parts.
+        if (isUnknownChatCompletionEvent(event)) {
           return parts
         }
 
@@ -1654,7 +1667,24 @@ const toChatMessages = (
   const messages: Array<CreateResponseRequestJson["messages"][number]> = []
 
   for (const item of input) {
-    messages.push(...toChatMessagesFromItem(item))
+    if (Predicate.hasProperty(item, "type") && item.type === "function_call") {
+      const previous = messages.at(-1)
+      const toolCall = toChatToolCall(item)
+      if (previous?.role === "assistant" && previous.tool_calls !== undefined) {
+        messages[messages.length - 1] = {
+          ...previous,
+          tool_calls: [...previous.tool_calls, toolCall]
+        }
+      } else {
+        messages.push({
+          role: "assistant",
+          content: null,
+          tool_calls: [toolCall]
+        })
+      }
+    } else {
+      messages.push(...toChatMessagesFromItem(item))
+    }
   }
 
   return messages
@@ -1682,14 +1712,7 @@ const toChatMessagesFromItem = (
       return [{
         role: "assistant",
         content: null,
-        tool_calls: [{
-          id: item.call_id,
-          type: "function",
-          function: {
-            name: item.name,
-            arguments: item.arguments
-          }
-        }]
+        tool_calls: [toChatToolCall(item)]
       }]
     }
 
@@ -1706,6 +1729,17 @@ const toChatMessagesFromItem = (
     }
   }
 }
+
+const toChatToolCall = (
+  item: Extract<InputItem, { readonly type: "function_call" }>
+): ChatCompletionRequestToolCall => ({
+  id: item.call_id,
+  type: "function",
+  function: {
+    name: item.name,
+    arguments: item.arguments
+  }
+})
 
 const toAssistantChatMessageContent = (
   content: ReadonlyArray<{

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-28",
+  "generatedOn": "2026-07-29",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -753,7 +753,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1156,
+      "line": 1163,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -765,7 +765,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1143,
+      "line": 1150,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -777,7 +777,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1130,
+      "line": 1137,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -789,7 +789,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1182,
+      "line": 1189,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -801,7 +801,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1169,
+      "line": 1176,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]

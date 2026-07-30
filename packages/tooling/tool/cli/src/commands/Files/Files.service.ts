@@ -98,6 +98,7 @@ import {
   preflightNormalizeOutputs,
   preflightTargetCollisions,
 } from "./internal/Apply.ts";
+import { runFlattenMediaFiles } from "./internal/FlattenMedia.ts";
 import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
 import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
 import { processFilesImpl } from "./internal/Process.ts";
@@ -131,6 +132,8 @@ import type {
   DetectFacesEntry,
   DetectFacesOptions,
   DetectFacesSkippedReason,
+  FlattenMediaOptions,
+  FlattenMediaSummary,
   ImageAuditManifest,
   ImageAuditOptions,
   ImageCurationOptions,
@@ -240,6 +243,13 @@ export interface FilesCommandServiceShape {
    * @since 0.0.0
    */
   readonly detectFacesFiles: (options: DetectFacesOptions) => Effect.Effect<DetectFacesReport, FilesCommandError>;
+
+  /**
+   * Recursively move image and video files into one flat destination directory.
+   *
+   * @since 0.0.0
+   */
+  readonly flattenMediaFiles: (options: FlattenMediaOptions) => Effect.Effect<FlattenMediaSummary, FilesCommandError>;
 
   /**
    * Normalize direct image files into a reversible output directory.
@@ -1716,6 +1726,7 @@ export const printFilesIndex = printLines([
   "- bun run files curate-images --dir ./raw --decisions ./decisions.json --out-dir ./prepared",
   "- bun run files sort-and-rename --prefix image --dir ./tmp",
   "- bun run files sort-and-rename --prefix image --dir ./tmp --with-dimensions",
+  "- bun run files flatten-media --dir ./raw --out-dir ./flat --dry-run",
   "- bun run files strip-metadata --dir ./tmp",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png --dedupe",
@@ -2375,6 +2386,17 @@ const sortAndRenameFilesImpl = Effect.fn("FilesCommandService.sortAndRenameFiles
   });
 });
 
+const flattenMediaFilesImpl = Effect.fn("FilesCommandService.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  return yield* profilePhase(runFlattenMediaFiles(options), {
+    phase: "files.flatten-media",
+    attributes: {
+      dryRun: `${options.dryRun}`,
+    },
+  });
+});
+
 const stripMetadataFilesImpl = Effect.fn("FilesCommandService.stripMetadataFiles")(function* (
   dir: string,
   dryRun: boolean
@@ -2458,6 +2480,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
     ),
     detectFacesFiles: Effect.fn("FilesCommandService.detectFacesFiles")((options) =>
       detectFacesFilesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    flattenMediaFiles: Effect.fn("FilesCommandService.flattenMediaFiles")((options) =>
+      flattenMediaFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     normalizeFiles: Effect.fn("FilesCommandService.normalizeFiles")((options) =>
       normalizeFilesImpl(options).pipe(Effect.provide(runtimeContext))
@@ -2635,6 +2660,32 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
 ): Effect.fn.Return<DetectFacesReport, FilesCommandError, FilesCommandService> {
   const files = yield* FilesCommandService;
   return yield* files.detectFacesFiles(options);
+});
+
+/**
+ * Recursively move image and video files into one flat destination directory.
+ *
+ * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
+ * @example
+ * ```ts
+ * import { FlattenMediaOptions, flattenMediaFiles } from "@beep/repo-cli/commands/Files"
+ * import { Effect } from "effect"
+ *
+ * const program = flattenMediaFiles(FlattenMediaOptions.make({
+ *   dir: "./raw",
+ *   dryRun: true,
+ *   outDir: "./flat"
+ * }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const flattenMediaFiles = Effect.fn("Files.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.flattenMediaFiles(options);
 });
 
 /**
