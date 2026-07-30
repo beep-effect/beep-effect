@@ -108,13 +108,23 @@ describe("dock pointer gestures", { concurrent: false }, () => {
     Effect.gen(function* () {
       const mounted = yield* mount();
       pointer(tab(panel2.id), "pointerDown", 600, 16);
-      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      // An unpromoted press shows no drag chrome: neither indicator nor ghost.
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
+      // preventDefault on the press suppresses native focus transfer; the
+      // handler restores it so keyboard activation tracks the clicked tab.
+      expect(document.activeElement).toBe(tab(panel2.id));
       pointer(tab(panel2.id), "pointerMove", 100, 16);
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      const ghost = screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]");
+      expect(ghost).not.toBeNull();
+      expect(ghost?.textContent).toBe(panel2.title);
       pointer(tab(panel2.id), "pointerUp", 100, 16);
       yield* mounted.graph.awaitIdle;
       const result = O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1)));
       expect(A.map(TabsNode.panels(result), (panel) => panel.id)).toEqual([panel2.id, panel1.id]);
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
       mounted.graph.dispose();
     })
   );
@@ -180,6 +190,40 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       pointer(tab(panel1.id), "pointerUp", 400, 220);
+      yield* mounted.graph.awaitIdle;
+      expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("clears sash and tab gestures on pointercancel without committing", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const initialRevision = mounted.graph.registry.get(mounted.graph.workspaceAtom).revision;
+      const sash = root.querySelector<HTMLElement>(`[data-sash-id='${splitId}']`);
+      if (sash === null) throw new Error("Missing sash");
+      const pane = root.querySelector<HTMLElement>(`[data-group-id='${group1}']`);
+      if (pane === null) throw new Error("Missing pane");
+      // 800px container, gap 8, even split: each pane lays out at 396px.
+      const initialWidth = "396px";
+      pointer(sash, "pointerDown", 400, 200);
+      pointer(sash, "pointerMove", 500, 200);
+      expect(pane.style.width).not.toBe(initialWidth);
+      fireEvent.pointerCancel(sash, { pointerId: 7 });
+      expect(pane.style.width).toBe(initialWidth);
+      const source = tab(panel1.id);
+      pointer(source, "pointerDown", 100, 16);
+      pointer(source, "pointerMove", 410, 200);
+      expect(root.querySelector("[data-drag-ghost]")).not.toBeNull();
+      // Over the source group's own center there is no drop target, but the
+      // ghost keeps following the pointer so the drag never looks dead.
+      pointer(source, "pointerMove", 200, 220);
+      expect(root.querySelector("[data-drop-indicator]")).toBeNull();
+      expect(root.querySelector("[data-drag-ghost]")).not.toBeNull();
+      fireEvent.pointerCancel(source, { pointerId: 7 });
+      expect(root.querySelector("[data-drag-ghost]")).toBeNull();
+      expect(root.querySelector("[data-drop-indicator]")).toBeNull();
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
       mounted.graph.dispose();
