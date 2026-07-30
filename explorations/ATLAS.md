@@ -40,6 +40,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`effect-jsdoc-quality`](./effect-jsdoc-quality/README.md) — research-stage:
+  close the JSDoc pedagogy gap so `@beep/*` IDE hovers teach like Effect
+  v4's. Opened 2026-07-30 from three WebStorm hover screenshots; same-day
+  mining found Effect's quality is a machine-enforced grammar
+  (`@effect/jsdocs`: **When to use**/**Details**/**Gotchas**/titled
+  **Example** sections, described `@see`, resolved `{@link}`) — and that v4
+  forbids `@example` and thereby lost example typechecking, which
+  `@beep/docgen` still has. Research artifacts + four options staged in
+  [`research/options.md`](./effect-jsdoc-quality/research/options.md)
+  (lead: grammar port riding the existing jsdoc-inventory ratchet);
+  next step is `/grill-with-docs`. Prior art cited:
+  `goals/jsdoc-worker-eval`, `goals/repo-codegraph-jsdoc`,
+  `goals/quality-gate-ratchets`.
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
