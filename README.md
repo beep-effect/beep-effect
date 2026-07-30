@@ -177,7 +177,7 @@ bun run beep create-package sandbox --family foundation --kind capability --dry-
 bun run docgen:local
 
 # Quality, security, and effect-law checks
-bun run beep quality repo-exports-catalog --check
+bun run beep yeet verify
 bun run beep codex quality-review-fix-loop "close the current initiative"
 ```
 
@@ -189,20 +189,9 @@ Each slice owns its own product language and adds only the role packages it
 currently needs: domain, use-cases, config, server/client adapters, tables, and
 UI are canonical roles, not mandatory scaffolding.
 
-Current slices at a glance (checkout snapshot):
-
-| Slice                  | One-line Role                                      | Live roles                         |
-|------------------------|----------------------------------------------------|------------------------------------|
-| `workspace`            | Core workspace and thread runtime                  | `domain`, `tables`                 |
-| `agents`     | Skills, capabilities, and agent governance         | `domain`, `use-cases`              |
-| `epistemic`            | Evidence, claims, candidate work, and provenance   | `domain`                           |
-| `law-practice`         | IP law practice models and workflows               | `domain`                           |
-| `architecture-lab`     | Canonical executable architecture proof            | `domain`, `use-cases`, `config`, `server`, `tables`, `client`, `ui` |
-
-This list is a point-in-time view. The live workspace graph is produced by
-`bun run topo-sort`; new architecture work should go through the architecture
-generator. The architecture docs describe target doctrine, not a claim that
-every current slice has every canonical role.
+The live workspace graph is produced by `bun run topo-sort`. Canonical roles
+and dependency laws live in [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md);
+new architecture work should go through the architecture generator.
 
 ### Apps
 

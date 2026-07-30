@@ -252,6 +252,39 @@ describe("@beep/firecrawl", () => {
     assertRoundTrip(F.FirecrawlWatcherEventType);
   });
 
+  it.effect(
+    "rejects malformed SDK shapes while preserving future response fields",
+    Effect.fnUntraced(function* () {
+      const documentWithFutureField = yield* S.decodeUnknownEffect(F.FirecrawlDocument)({
+        futureField: { enabled: true },
+        markdown: "ok",
+      });
+      const representativeSearchData = yield* S.decodeUnknownEffect(F.FirecrawlSearchData)({
+        web: [
+          { description: "result", url: "https://example.com/result" },
+          { futureField: { enabled: true }, markdown: "document" },
+        ],
+      });
+
+      expect(documentWithFutureField).toEqual({
+        futureField: { enabled: true },
+        markdown: "ok",
+      });
+      expect(representativeSearchData).toEqual({
+        web: [
+          { description: "result", url: "https://example.com/result" },
+          { futureField: { enabled: true }, markdown: "document" },
+        ],
+      });
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)(42))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)([]))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlDocument)({ markdown: 42 }))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlSearchData)({ web: [{ url: 42 }] }))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlMonitorListData)([42]))).toBe(true);
+      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeSuccess)({ data: 42 }))).toBe(true);
+    })
+  );
+
   layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()))((it) => {
     it.effect(
       "wraps SDK scrape output in a decoded success class",
@@ -272,6 +305,101 @@ describe("@beep/firecrawl", () => {
 
         expect(response).toBeInstanceOf(F.FirecrawlGetQueueStatusSuccess);
         expect(response.data.maxConcurrency).toBe(1);
+      })
+    );
+
+    it.effect(
+      "decodes every fake SDK endpoint through its public service method",
+      Effect.fnUntraced(function* () {
+        const firecrawl = yield* F.Firecrawl;
+        const monitorRequest = {
+          name: "Monitor",
+          schedule: { cron: "* * * * *" },
+          targets: [{ type: "scrape", urls: ["https://example.com"] }],
+        } satisfies F.FirecrawlCreateMonitorRequest;
+
+        yield* Effect.all(
+          [
+            firecrawl.agent(F.FirecrawlAgentPayload.make({ request: { prompt: "summarize" } })),
+            firecrawl.batchScrape(F.FirecrawlBatchScrapePayload.make({ urls: ["https://example.com"] })),
+            firecrawl.browser(F.FirecrawlBrowserPayload.make({})),
+            firecrawl.browserExecute(
+              F.FirecrawlBrowserExecutePayload.make({
+                request: { code: "return true" },
+                sessionId: "browser-id",
+              })
+            ),
+            firecrawl.cancelAgent(F.FirecrawlCancelAgentPayload.make({ jobId: "agent-id" })),
+            firecrawl.cancelBatchScrape(F.FirecrawlCancelBatchScrapePayload.make({ jobId: "batch-id" })),
+            firecrawl.cancelCrawl(F.FirecrawlCancelCrawlPayload.make({ jobId: "crawl-id" })),
+            firecrawl.crawl(F.FirecrawlCrawlPayload.make({ url: "https://example.com" })),
+            firecrawl.crawlParamsPreview(
+              F.FirecrawlCrawlParamsPreviewPayload.make({
+                prompt: "find documents",
+                url: "https://example.com",
+              })
+            ),
+            firecrawl.createMonitor(F.FirecrawlCreateMonitorPayload.make({ request: monitorRequest })),
+            firecrawl.deleteBrowser(F.FirecrawlDeleteBrowserPayload.make({ sessionId: "browser-id" })),
+            firecrawl.deleteMonitor(F.FirecrawlDeleteMonitorPayload.make({ monitorId: "monitor-id" })),
+            firecrawl.getActiveCrawls(F.FirecrawlGetActiveCrawlsPayload.make({})),
+            firecrawl.getAgentStatus(F.FirecrawlGetAgentStatusPayload.make({ jobId: "agent-id" })),
+            firecrawl.getBatchScrapeErrors(F.FirecrawlGetBatchScrapeErrorsPayload.make({ jobId: "batch-id" })),
+            firecrawl.getBatchScrapeStatus(F.FirecrawlGetBatchScrapeStatusPayload.make({ jobId: "batch-id" })),
+            firecrawl.getConcurrency(F.FirecrawlGetConcurrencyPayload.make({})),
+            firecrawl.getCrawlErrors(F.FirecrawlGetCrawlErrorsPayload.make({ crawlId: "crawl-id" })),
+            firecrawl.getCrawlStatus(F.FirecrawlGetCrawlStatusPayload.make({ jobId: "crawl-id" })),
+            firecrawl.getCreditUsage(F.FirecrawlGetCreditUsagePayload.make({})),
+            firecrawl.getCreditUsageHistorical(F.FirecrawlGetCreditUsageHistoricalPayload.make({})),
+            firecrawl.getMonitor(F.FirecrawlGetMonitorPayload.make({ monitorId: "monitor-id" })),
+            firecrawl.getMonitorCheck(
+              F.FirecrawlGetMonitorCheckPayload.make({
+                checkId: "check-id",
+                monitorId: "monitor-id",
+              })
+            ),
+            firecrawl.getQueueStatus(F.FirecrawlGetQueueStatusPayload.make({})),
+            firecrawl.getTokenUsage(F.FirecrawlGetTokenUsagePayload.make({})),
+            firecrawl.getTokenUsageHistorical(F.FirecrawlGetTokenUsageHistoricalPayload.make({})),
+            firecrawl.interact(
+              F.FirecrawlInteractPayload.make({
+                args: { code: "return true" },
+                jobId: "interaction-id",
+              })
+            ),
+            firecrawl.listBrowsers(F.FirecrawlListBrowsersPayload.make({})),
+            firecrawl.listMonitorChecks(
+              F.FirecrawlListMonitorChecksPayload.make({
+                monitorId: "monitor-id",
+              })
+            ),
+            firecrawl.listMonitors(F.FirecrawlListMonitorsPayload.make({})),
+            firecrawl.map(F.FirecrawlMapPayload.make({ url: "https://example.com" })),
+            firecrawl.parse(
+              F.FirecrawlParsePayload.make({
+                file: { data: "document", filename: "document.txt" },
+              })
+            ),
+            firecrawl.runMonitor(F.FirecrawlRunMonitorPayload.make({ monitorId: "monitor-id" })),
+            firecrawl.scrape(F.FirecrawlScrapePayload.make({ url: "https://example.com" })),
+            firecrawl.search(F.FirecrawlSearchPayload.make({ query: "effect" })),
+            firecrawl.startAgent(F.FirecrawlStartAgentPayload.make({ request: { prompt: "summarize" } })),
+            firecrawl.startBatchScrape(
+              F.FirecrawlStartBatchScrapePayload.make({
+                urls: ["https://example.com"],
+              })
+            ),
+            firecrawl.startCrawl(F.FirecrawlStartCrawlPayload.make({ url: "https://example.com" })),
+            firecrawl.stopInteraction(F.FirecrawlStopInteractionPayload.make({ jobId: "interaction-id" })),
+            firecrawl.updateMonitor(
+              F.FirecrawlUpdateMonitorPayload.make({
+                monitorId: "monitor-id",
+                request: { name: "Updated Monitor" },
+              })
+            ),
+          ],
+          { concurrency: 1 }
+        );
       })
     );
   });
@@ -299,6 +427,37 @@ describe("@beep/firecrawl", () => {
             expect(error.value).toBeInstanceOf(F.FirecrawlError);
             expect(error.value.reason).toBe("sdk thrown");
             expect(error.value.status).toEqual(O.some(429));
+          }
+        }
+      })
+    );
+  });
+
+  layer(
+    F.Firecrawl.makeLayerFromClient(
+      makeFakeClient({
+        getQueueStatus: () =>
+          Promise.resolve({
+            ...queueStatus,
+            maxConcurrency: Number.POSITIVE_INFINITY,
+          }),
+      })
+    )
+  )((it) => {
+    it.effect(
+      "maps malformed SDK responses to response-decoding errors",
+      Effect.fnUntraced(function* () {
+        const firecrawl = yield* F.Firecrawl;
+        const exit = yield* Effect.exit(firecrawl.getQueueStatus(F.FirecrawlGetQueueStatusPayload.make({})));
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          const error = Cause.findErrorOption(exit.cause);
+          expect(O.isSome(error)).toBe(true);
+          if (O.isSome(error)) {
+            expect(error.value).toBeInstanceOf(F.FirecrawlError);
+            expect(error.value.method).toEqual(O.some("getQueueStatus"));
+            expect(error.value.reason).toBe("response decoding");
           }
         }
       })
