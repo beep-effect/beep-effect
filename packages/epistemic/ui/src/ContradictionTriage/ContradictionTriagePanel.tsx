@@ -65,6 +65,54 @@ const panelReadStateAtom = Atom.readable((get) => ({
   sourceResult: get(contradictionEvidenceSourcePageAtom),
 }));
 
+const useContradictionTriagePanelState = () => {
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
+  const [disposition, setDisposition] = useAtom(contradictionDispositionFilterAtom);
+  const [knownAt, setKnownAt] = useAtom(contradictionKnownAtAtom);
+  const [offset, setOffset] = useAtom(contradictionQueueOffsetAtom);
+  const [reviewDialog, setReviewDialog] = useAtom(reviewDialogAtom);
+  const [validAt, setValidAt] = useAtom(contradictionValidAtAtom);
+  const panelReadState = useAtomValue(panelReadStateAtom);
+
+  return {
+    activeTab,
+    disposition,
+    knownAt,
+    offset,
+    reviewDialog,
+    setActiveTab,
+    setDisposition,
+    setKnownAt,
+    setOffset,
+    setReviewDialog,
+    setValidAt,
+    validAt,
+    ...panelReadState,
+  };
+};
+
+const useContradictionTriagePanelActions = () => {
+  const refreshSource = useAtomSet(refreshContradictionEvidenceSourceAtom);
+  const refreshTriage = useAtomSet(refreshContradictionTriageAtom);
+  const resetTemporalView = useAtomSet(resetContradictionTemporalViewAtom);
+  const reviewCandidate = useAtomSet(reviewContradictionCandidateAtom);
+  const selectCandidate = useAtomSet(selectContradictionCandidateAtom);
+  const selectSource = useAtomSet(selectContradictionEvidenceSourceAtom);
+  const setReviewCandidateId = useAtomSet(contradictionReviewCandidateIdAtom);
+  const setSelectedSource = useAtomSet(selectedContradictionEvidenceSourceAtom);
+
+  return {
+    refreshSource,
+    refreshTriage,
+    resetTemporalView,
+    reviewCandidate,
+    selectCandidate,
+    selectSource,
+    setReviewCandidateId,
+    setSelectedSource,
+  };
+};
+
 const currentReviewResult = (
   selectedCandidateId: Atom.Type<typeof selectedContradictionCandidateIdAtom>,
   reviewCandidateId: Atom.Type<typeof contradictionReviewCandidateIdAtom>,
@@ -150,31 +198,39 @@ function TemporalTriagePanel({
  * @since 0.0.0
  */
 export function ContradictionTriagePanel(): JSX.Element {
-  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
-  const [disposition, setDisposition] = useAtom(contradictionDispositionFilterAtom);
-  const [knownAt, setKnownAt] = useAtom(contradictionKnownAtAtom);
-  const [offset, setOffset] = useAtom(contradictionQueueOffsetAtom);
-  const [reviewDialog, setReviewDialog] = useAtom(reviewDialogAtom);
-  const [validAt, setValidAt] = useAtom(contradictionValidAtAtom);
   const {
+    activeTab,
+    disposition,
+    knownAt,
+    offset,
     queueResult,
     reviewCandidateId,
+    reviewDialog,
     reviewResult,
     selectedCandidate,
     selectedCandidateId,
     selectedSource,
+    setActiveTab,
+    setDisposition,
+    setKnownAt,
+    setOffset,
+    setReviewDialog,
+    setValidAt,
     sourceResult,
-  } = useAtomValue(panelReadStateAtom);
+    validAt,
+  } = useContradictionTriagePanelState();
   const { open: reviewDialogOpen, reason: reviewReason, selectedProposal } = reviewDialog;
 
-  const refreshSource = useAtomSet(refreshContradictionEvidenceSourceAtom);
-  const refreshTriage = useAtomSet(refreshContradictionTriageAtom);
-  const resetTemporalView = useAtomSet(resetContradictionTemporalViewAtom);
-  const reviewCandidate = useAtomSet(reviewContradictionCandidateAtom);
-  const selectCandidate = useAtomSet(selectContradictionCandidateAtom);
-  const selectSource = useAtomSet(selectContradictionEvidenceSourceAtom);
-  const setReviewCandidateId = useAtomSet(contradictionReviewCandidateIdAtom);
-  const setSelectedSource = useAtomSet(selectedContradictionEvidenceSourceAtom);
+  const {
+    refreshSource,
+    refreshTriage,
+    resetTemporalView,
+    reviewCandidate,
+    selectCandidate,
+    selectSource,
+    setReviewCandidateId,
+    setSelectedSource,
+  } = useContradictionTriagePanelActions();
 
   const visibleReviewResult = currentReviewResult(selectedCandidateId, reviewCandidateId, reviewResult);
 
