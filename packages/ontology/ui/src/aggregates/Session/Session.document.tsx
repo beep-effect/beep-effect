@@ -55,7 +55,7 @@ const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePa
  * console.log(state.saveDisabled) // true
  * ```
  *
- * @category presentation
+ * @category components
  * @since 0.0.0
  */
 export const documentToolbarState = (input: {
