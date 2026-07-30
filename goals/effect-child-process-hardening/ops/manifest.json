@@ -3,15 +3,15 @@
   "initiative": {
     "id": "effect-child-process-hardening",
     "title": "Effect Child-Process Hardening",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-29",
     "updated": "2026-07-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-child-process-hardening",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make Effect child-process ownership explicit and restore the repo CLI's canonical process boundary.",
-  "statusNote": "Implementation is isolated on a dedicated latest-main branch; refreshed verification is green and P3 publication is in progress.",
+  "statusNote": "Implementation and full local proof are complete; PR #509 reached hosted green after retrying one unrelated runner timeout, and the packet closeout is included in the delivery PR.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -65,12 +65,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

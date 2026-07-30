@@ -2,9 +2,10 @@
 
 ## Outcome
 
-Implementation and local verification are complete. Publication was not
-authorized: no commit, push, pull request, or hosted-state mutation was
-performed.
+Implementation, local verification, and publication are complete. The work was
+isolated from the unrelated shared checkout, published as
+[PR #509](https://github.com/beep-effect/beep-effect/pull/509), and rebased onto
+current `origin/main`.
 
 ## Static acceptance
 
@@ -40,11 +41,12 @@ The repo CLI process suite includes a live child that emits 1 MiB to stdout and
 1 MiB to stderr, proving concurrent drain without pipe deadlock. It also covers
 nonzero Git branch resolution.
 
-## Attributed branch-wide proof
+## Original shared-branch attribution
 
-`bun run beep yeet verify` completed in verify-only mode with no commit or push.
-The head-install preflight and integration lane passed; the integration proof
-completed 171 tasks. Security, secret, and Nix lanes also passed.
+Before publication authorization, `bun run beep yeet verify` completed in
+verify-only mode with no commit or push. The head-install preflight and
+integration lane passed; the integration proof completed 171 tasks. Security,
+secret, and Nix lanes also passed.
 
 The full pre-push lane remained red because of concurrent work outside this
 packet:
@@ -95,3 +97,31 @@ Fresh proof on the isolated latest-main branch:
   calls use the audited `spawnOptions`.
 - The repo CLI retains only four direct calls: three in `StepExec` and the
   streamed-stdin Codex command.
+
+The canonical `bun run beep yeet publish --amend --no-edit --pr --monitor`
+proof then passed locally:
+
+- build: 127 packages;
+- global check: 125 tasks;
+- dtslint/tsgo: 137 files, 555 tests, and 1,949 assertions;
+- test-file typecheck: 590 files across 122 packages;
+- lint: all 26 policy parts;
+- docgen: 123 packages;
+- unit: 125 package tasks, including 53 repo CLI files and 762 tests;
+- integration: 167 tasks;
+- Fallow, changeset graph, secrets, OSV, Semgrep, Nix, and frozen-lockfile
+  checks.
+
+The command committed and pushed `d0aaa0f309` and opened PR #509. Hosted run
+`30526298986` passed build, check, codegen drift, commitlint, coverage, docgen,
+Fallow, JSDoc, Knip, lint, lint policy, Nix, desktop IPC stdio, property laws,
+repo sanity, integration, SAST, secrets, security, and preview deployment. Its
+first unit attempt hit only the unrelated five-second timeout in
+`packages/tooling/tool/cli/test/lint-command.test.ts` ("reports redundant
+LiteralKit const assertions"). A focused local rerun passed in 266 ms; the
+failed hosted job was retried without a source change and passed.
+
+The branch was then rebased without conflict onto `origin/main` at
+`4cee4def49`; that upstream commit had no path overlap with this goal. The
+rebased implementation commit is `a0a0d7994d`. The retained closeout reflection,
+packet-state flip, and regenerated goal index ship in the same PR.
