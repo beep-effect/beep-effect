@@ -15,14 +15,15 @@ read-only viewer and composer primitives over the
 - `EditorCompatibilityViewer` — renders a compatible semantic state normally
   and shows lossless future/extension wire as escaped, read-only JSON.
 - `EditorWireViewer` — admits unknown persisted Lexical wire before rendering;
-  malformed or future wire stays escaped and read-only instead of entering the
-  Lexical runtime.
+  malformed, empty-root, or future wire stays escaped and read-only instead of
+  entering the Lexical runtime.
 - `EditorComposer` — editable surface wired with history, lists, check lists,
   links, and markdown shortcuts; `onSerializedChange` emits schema-decoded
   states (out-of-schema states are logged and skipped).
 - `EditorWireComposer` — persisted-wire admission boundary for editing.
-  Compatible input mounts `EditorComposer`; malformed or future wire remains
-  escaped and read-only. A changed compatible input remounts the inner editor.
+  Compatible input mounts `EditorComposer`; malformed, empty-root, or future
+  wire remains escaped and read-only. A changed compatible input remounts the
+  inner editor.
 - `ChatComposer` — Atom-owned chat surface with slash commands, async mentions,
   attachment capture, formatting, send/stop commands, and inline typed
   refusals. Immutable ports and feature flags belong in `mountConfig`; changing

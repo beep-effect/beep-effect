@@ -1011,6 +1011,35 @@ describe("editor contract hardening", { concurrent: false }, () => {
     composer.unmount();
   });
 
+  it("keeps an empty persisted root inert and disables editing, persistence, and sending", () => {
+    const emptyWire = {
+      root: {
+        type: "root",
+        version: 1,
+        children: [],
+      },
+    };
+    const persisted = vi.fn();
+    const sent = vi.fn(() => true);
+
+    expect(Effect.runSyncExit(decodeEditorStateForRuntime(emptyWire))._tag).toBe("Failure");
+
+    const admission = render(<EditorWireComposer input={emptyWire} onSerializedChange={persisted} />);
+    expect(admission.container.querySelector("[contenteditable='true']")).toBeNull();
+    expect(screen.getByTestId("editor-compatibility-fallback")).toHaveTextContent('"children":[]');
+    expect(persisted).not.toHaveBeenCalled();
+    admission.unmount();
+
+    const composer = render(
+      <ChatComposer initialState={emptyWire as never} onSerializedChange={persisted} mountConfig={{ onSend: sent }} />
+    );
+    expect(screen.queryByRole("combobox", { name: "Message composer" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("editor-compatibility-fallback")).toHaveTextContent('"children":[]');
+    expect(persisted).not.toHaveBeenCalled();
+    expect(sent).not.toHaveBeenCalled();
+    composer.unmount();
+  });
+
   it.effect(
     "remounts a compatible wire composer when its canonical input changes",
     Effect.fnUntraced(function* () {

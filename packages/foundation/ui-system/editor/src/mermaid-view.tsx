@@ -12,7 +12,7 @@ import { TaggedErrorClass } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
-import { Cause, Effect, HashSet, Layer } from "effect";
+import { Cause, Effect, HashSet, Layer, Match } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
@@ -210,27 +210,28 @@ const makeCssSelectorScanState = (): CssSelectorScanState => ({
 const isCompleteCssSelectorScan = (state: CssSelectorScanState): boolean =>
   state.bracketDepth === 0 && state.parenthesisDepth === 0 && state.quote === undefined && !state.escaped;
 
-const scanCssSelectorGroup = (state: CssSelectorScanState, character: string | undefined): boolean | undefined => {
-  if (character === "[") {
-    state.bracketDepth += 1;
-    return false;
-  }
-  if (character === "]") {
-    if (state.bracketDepth === 0) return undefined;
-    state.bracketDepth -= 1;
-    return false;
-  }
-  if (character === "(") {
-    state.parenthesisDepth += 1;
-    return false;
-  }
-  if (character === ")") {
-    if (state.parenthesisDepth === 0) return undefined;
-    state.parenthesisDepth -= 1;
-    return false;
-  }
-  return state.bracketDepth === 0 && state.parenthesisDepth === 0;
-};
+const scanCssSelectorGroup = (state: CssSelectorScanState, character: string | undefined): boolean | undefined =>
+  Match.value(character).pipe(
+    Match.when("[", () => {
+      state.bracketDepth += 1;
+      return false;
+    }),
+    Match.when("]", () => {
+      if (state.bracketDepth === 0) return undefined;
+      state.bracketDepth -= 1;
+      return false;
+    }),
+    Match.when("(", () => {
+      state.parenthesisDepth += 1;
+      return false;
+    }),
+    Match.when(")", () => {
+      if (state.parenthesisDepth === 0) return undefined;
+      state.parenthesisDepth -= 1;
+      return false;
+    }),
+    Match.orElse(() => state.bracketDepth === 0 && state.parenthesisDepth === 0)
+  );
 
 const scanCssSelectorCharacter = (state: CssSelectorScanState, character: string | undefined): boolean | undefined => {
   if (state.escaped) {
@@ -257,28 +258,38 @@ const selectorSlice = (value: string, start: number, end?: number): string | und
   return selector.length === 0 ? undefined : selector;
 };
 
-const splitSelectorList = (value: string): undefined | ReadonlyArray<string> => {
-  const selectors: Array<string> = [];
-  const state = makeCssSelectorScanState();
-  let start = 0;
-
+const scanSelectorSeparators = (value: string, state: CssSelectorScanState): undefined | ReadonlyArray<number> => {
+  const separators: Array<number> = [];
   for (let index = 0; index < value.length; index += 1) {
     const character = value[index];
     const isTopLevel = scanCssSelectorCharacter(state, character);
     if (isTopLevel === undefined) return undefined;
-    if (!isTopLevel || character !== ",") continue;
+    if (isTopLevel && character === ",") separators.push(index);
+  }
+  return separators;
+};
 
-    const selector = selectorSlice(value, start, index);
+const selectorsFromSeparators = (
+  value: string,
+  separators: ReadonlyArray<number>
+): undefined | ReadonlyArray<string> => {
+  const selectors: Array<string> = [];
+  let start = 0;
+  for (const end of A.append(separators, value.length)) {
+    const selector = selectorSlice(value, start, end);
     if (selector === undefined) return undefined;
     selectors.push(selector);
-    start = index + 1;
+    start = end + 1;
   }
-
-  if (!isCompleteCssSelectorScan(state)) return undefined;
-  const selector = selectorSlice(value, start);
-  if (selector === undefined) return undefined;
-  selectors.push(selector);
   return selectors;
+};
+
+const splitSelectorList = (value: string): undefined | ReadonlyArray<string> => {
+  const state = makeCssSelectorScanState();
+  const separators = scanSelectorSeparators(value, state);
+  return separators === undefined || !isCompleteCssSelectorScan(state)
+    ? undefined
+    : selectorsFromSeparators(value, separators);
 };
 
 const cssWhitespace = /\s/u;
@@ -306,12 +317,9 @@ const rootScopeAfterCharacter = (
   return isSiblingCombinator(nextNonWhitespaceCharacter(selector, index + 1)) ? undefined : false;
 };
 
-const selectorTargetsRoot = (selector: string, rootSelector: string): boolean | undefined => {
-  if (!selector.startsWith(rootSelector)) return undefined;
-  if (!isRootSelectorBoundary(selector[rootSelector.length])) return undefined;
-
+const scanRootSelectorScope = (selector: string, start: number): boolean | undefined => {
   const state = makeCssSelectorScanState();
-  for (let index = rootSelector.length; index < selector.length; index += 1) {
+  for (let index = start; index < selector.length; index += 1) {
     const character = selector[index];
     const isTopLevel = scanCssSelectorCharacter(state, character);
     if (isTopLevel === undefined) return undefined;
@@ -322,6 +330,11 @@ const selectorTargetsRoot = (selector: string, rootSelector: string): boolean | 
 
   return isCompleteCssSelectorScan(state) ? true : undefined;
 };
+
+const selectorTargetsRoot = (selector: string, rootSelector: string): boolean | undefined =>
+  selector.startsWith(rootSelector) && isRootSelectorBoundary(selector[rootSelector.length])
+    ? scanRootSelectorScope(selector, rootSelector.length)
+    : undefined;
 
 const selectorsTargetRoot = (selectors: ReadonlyArray<string>, rootSelector: string): boolean | undefined => {
   let targetsRoot = false;

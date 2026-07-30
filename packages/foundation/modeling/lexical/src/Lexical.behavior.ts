@@ -62,7 +62,13 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  * import { editorStateToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
  * const state = S.decodeUnknownSync(SerializedEditorState)({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
  * })
  * console.log(editorStateToPlainText(state)) // ""
  * ```

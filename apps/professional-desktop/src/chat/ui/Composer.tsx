@@ -246,6 +246,29 @@ interface ThreadComposerProps {
   readonly threadId: ThreadId;
 }
 
+function ComposerSafetyGateNotice({
+  gate,
+  onConfirm,
+}: {
+  readonly gate: O.Option<ComposerDocumentSafetyGate>;
+  readonly onConfirm: () => boolean;
+}): JSX.Element | null {
+  return O.match(gate, {
+    onNone: () => null,
+    onSome: ComposerDocumentSafetyGate.match({
+      UnsafeDocument: ({ message }) => <ComposerSafetyWarning message={message} />,
+      RawNormalization: ({ message, preview }) => (
+        <ComposerRawNormalizationWarning message={message} preview={preview} onConfirm={onConfirm} />
+      ),
+    }),
+  });
+}
+
+const editorStateAtomFor = (
+  content: Md.Document | undefined
+): Atom.Atom<AsyncResult.AsyncResult<SerializedEditorState, unknown>> =>
+  content === undefined ? emptyEditorStateAtom : documentEditorStateAtom(content);
+
 // Resolves the optional seed document to a serialized editor state through the
 // shared documentEditorStateAtom family (no runSyncExit). documentToEditorState is
 // a pure codec, so the runtime atom resolves to Success synchronously on first
@@ -265,8 +288,8 @@ function ThreadComposer({
   const confirmNormalization = useAtomValue(composerConfirmNormalizationHandlerAtoms(threadId)(safetySeed));
   const onSend = useAtomValue(composerSendHandlerAtoms(threadId)(safetySeed));
   const onSerializedChange = useAtomValue(composerSerializedChangeHandlerAtoms(threadId)(safetySeed));
-  const initialState = useAtomValue(content === undefined ? emptyEditorStateAtom : documentEditorStateAtom(content));
-  const seedState = content === undefined ? O.none<SerializedEditorState>() : AsyncResult.value(initialState);
+  const initialState = useAtomValue(editorStateAtomFor(content));
+  const seedState = O.flatMap(O.fromUndefinedOr(content), () => AsyncResult.value(initialState));
   const mountConfig: ChatComposerMountConfig = { onAttach, onSend };
 
   return (
@@ -282,16 +305,7 @@ function ThreadComposer({
       slashItems={defaultChatSlashItems}
       mentionSource={mentionSource}
     >
-      {O.match(safetyGate, {
-        onNone: () => null,
-        onSome: (gate) =>
-          ComposerDocumentSafetyGate.match(gate, {
-            UnsafeDocument: ({ message }) => <ComposerSafetyWarning message={message} />,
-            RawNormalization: ({ message, preview }) => (
-              <ComposerRawNormalizationWarning message={message} preview={preview} onConfirm={confirmNormalization} />
-            ),
-          }),
-      })}
+      <ComposerSafetyGateNotice gate={safetyGate} onConfirm={confirmNormalization} />
     </ChatComposer>
   );
 }

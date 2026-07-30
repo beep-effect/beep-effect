@@ -491,6 +491,32 @@ interface ComposerFeaturePluginsProps {
   readonly slashItems: ReadonlyArray<SlashItem>;
 }
 
+interface SerializedChangePluginProps {
+  readonly onSerializedChange: ComposerFeaturePluginsProps["onSerializedChange"];
+}
+
+function SerializedChangePlugin({ onSerializedChange }: SerializedChangePluginProps): JSX.Element | null {
+  const logEditorError = useAtomSet(logEditorErrorFn);
+  return O.match(O.fromUndefinedOr(onSerializedChange), {
+    onNone: () => null,
+    onSome: (changeSink) => (
+      <OnChangePlugin
+        ignoreSelectionChange={true}
+        onChange={(nextEditorState) =>
+          Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
+            onSuccess: changeSink,
+            onFailure: (error) =>
+              logEditorError({
+                message: "ChatComposer produced out-of-schema state",
+                error,
+              }),
+          })
+        }
+      />
+    ),
+  });
+}
+
 // The feature-gated plugins, split out of ComposerBody so the conditional
 // mounting lives in one place (and ComposerBody stays simple): the change sink,
 // slash / mention typeahead, attachment capture, combobox ARIA, and the send
@@ -503,24 +529,9 @@ function ComposerFeaturePlugins({
   onSerializedChange,
   slashItems,
 }: ComposerFeaturePluginsProps): JSX.Element {
-  const logEditorError = useAtomSet(logEditorErrorFn);
   return (
     <>
-      {onSerializedChange === undefined ? null : (
-        <OnChangePlugin
-          ignoreSelectionChange={true}
-          onChange={(nextEditorState) =>
-            Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
-              onSuccess: onSerializedChange,
-              onFailure: (error) =>
-                logEditorError({
-                  message: "ChatComposer produced out-of-schema state",
-                  error,
-                }),
-            })
-          }
-        />
-      )}
+      <SerializedChangePlugin onSerializedChange={onSerializedChange} />
       {features.slash ? <SlashPlugin items={slashItems} /> : null}
       {features.mentions && mentionSource !== undefined ? <MentionPlugin source={mentionSource} /> : null}
       {features.attachments ? <AttachmentPlugin /> : null}

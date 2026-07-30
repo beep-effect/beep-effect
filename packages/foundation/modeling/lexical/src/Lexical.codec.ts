@@ -414,6 +414,10 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
 /**
  * Lift a full Md document into a serialized Lexical editor state.
  *
+ * @remarks
+ * An empty Md document canonicalizes to one blank paragraph because Lexical
+ * cannot apply an editor state whose root has no children.
+ *
  * @example
  * ```ts
  * import * as Effect from "effect/Effect"
@@ -428,10 +432,16 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
  * @category combinators
  * @since 0.0.0
  */
-export const documentToEditorState = (document: Md.Document): Effect.Effect<SerializedEditorState, S.SchemaError> =>
-  Effect.flatMap(Effect.forEach(document.children, blockToLexical), (children) =>
-    Effect.flatMap(RootNode.makeEffect({ children }), (root) => SerializedEditorState.makeEffect({ root }))
-  );
+export const documentToEditorState = Effect.fn("Lexical.codec.documentToEditorState")(function* (
+  document: Md.Document
+) {
+  const children = yield* Effect.forEach(document.children, blockToLexical);
+  const runtimeChildren = A.isReadonlyArrayNonEmpty(children)
+    ? children
+    : [yield* ParagraphNode.makeEffect({ children: [] })];
+  const root = yield* RootNode.makeEffect({ children: runtimeChildren });
+  return yield* SerializedEditorState.makeEffect({ root });
+});
 
 const markConstructors: ReadonlyArray<readonly [TextFormatBit, (children: ReadonlyArray<Md.Inline>) => Md.Inline]> = [
   [TextFormatBits.strikethrough, (children) => Md.Del.make({ children })],

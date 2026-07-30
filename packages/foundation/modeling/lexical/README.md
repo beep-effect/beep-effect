@@ -14,9 +14,11 @@ codecs over the canonical `@beep/md` AST.
   keeps the exact Lexical wire shape (round-trip fidelity is non-negotiable;
   see `test/Lexical.model.test.ts`).
 - **Strict and lossless boundaries are separate.** Strict decoding rejects
-  unknown fields and invalid child topology before editor/runtime use;
-  lossless decoding retains JSON-only future nodes and extension fields for
-  persistence and migration.
+  unknown fields, empty roots that Lexical cannot apply, and invalid child
+  topology before editor/runtime use; lossless decoding retains those JSON
+  wires plus future nodes and extension fields for persistence and migration.
+  `documentToEditorState` migration-safely canonicalizes an empty Md document
+  to one blank paragraph.
 - **The lossless wire schemas intentionally use `StructWithRest`.** Effect
   schema classes accept closed `Struct` fields, so a class migration would
   discard arbitrary envelope, root, node, version, and `"$"` NodeState data.

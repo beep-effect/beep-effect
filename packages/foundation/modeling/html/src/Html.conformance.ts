@@ -552,6 +552,8 @@ const inspectChildModel = (
     })
   );
 
+const descriptionGroupSequence = /^(?:(?:dt,)+(?:dd,)+)+$/u;
+
 const inspectElementOrder = (
   parent: HtmlChildView,
   children: ReadonlyArray<HtmlChildView>,
@@ -588,17 +590,8 @@ const inspectElementOrder = (
         (first.value === 0 || (edge === "either" && first.value === significantChildren.length - 1)))
     );
   };
-  const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean => {
-    if (tags.length === 0) return false;
-    let index = 0;
-    while (index < tags.length) {
-      if (tags[index] !== "dt") return false;
-      while (tags[index] === "dt") index += 1;
-      if (tags[index] !== "dd") return false;
-      while (tags[index] === "dd") index += 1;
-    }
-    return true;
-  };
+  const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean =>
+    descriptionGroupSequence.test(`${A.join(tags, ",")},`);
 
   return Match.value(ELEMENT_META[parent._tag].childGrammar).pipe(
     Match.when("document-element", () =>
@@ -719,12 +712,6 @@ const inspectElementOrder = (
     }),
     Match.when("phrasing-or-heading", () => {
       const headings = A.filter(sequenceTags, (tag) => A.contains(ELEMENT_META[tag].categories, "heading"));
-      const significantChildren = A.filter(
-        children,
-        (child) =>
-          child._tag !== "#comment" &&
-          !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
-      );
       return headings.length === 0 || (headings.length === 1 && significantChildren.length === 1)
         ? A.emptyReadonly()
         : issue("Heading-content and phrasing-content alternatives cannot be mixed");

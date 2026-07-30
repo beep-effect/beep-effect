@@ -4,7 +4,12 @@ import { ArtifactRefNode } from "@beep/editor/artifact-ref-node";
 import { editorNodes } from "@beep/editor/nodes";
 import { YOUTUBE_EMBED_SANDBOX } from "@beep/editor/youtube-embed";
 import { YouTubeNode } from "@beep/editor/youtube-node";
-import { ARTIFACT_URI_PREFIX, documentToEditorState, SerializedEditorState } from "@beep/lexical-schema";
+import {
+  ARTIFACT_URI_PREFIX,
+  documentToEditorState,
+  EditorStateFromJson,
+  SerializedEditorState,
+} from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import { describe, expect, it } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
@@ -13,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { $getRoot } from "lexical";
 
 const text = (value: string) => MdModel.Text.make({ value });
@@ -62,6 +68,26 @@ const fixtureTurn = MdModel.Document.make({
 });
 
 describe("@beep/editor node registration", () => {
+  it("admits schema-derived strict states through the real Lexical runtime", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-schema-property-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+
+    fc.assert(
+      fc.property(S.toArbitrary(SerializedEditorState), (state) => {
+        editor.setEditorState(editor.parseEditorState(S.encodeSync(EditorStateFromJson)(state)));
+        expect(Result.isSuccess(S.decodeUnknownResult(SerializedEditorState)(editor.getEditorState().toJSON()))).toBe(
+          true
+        );
+      }),
+      { numRuns: 25 }
+    );
+  });
+
   it("imports a codec-built editor state and re-exports schema-conformant wire state", () => {
     const wire = documentToEditorState(fixtureTurn).pipe(Effect.runSync, S.encodeSync(SerializedEditorState));
 

@@ -176,7 +176,15 @@ export interface EditorCompatibilityViewerProps {
  * import type { EditorWireViewerProps } from "@beep/editor/viewer"
  *
  * const props: EditorWireViewerProps = {
- *   input: { root: { type: "root", version: 1, children: [] } },
+ *   input: {
+ *     root: {
+ *       type: "root", version: 1,
+ *       children: [{
+ *         type: "paragraph", version: 1, children: [],
+ *         direction: null, format: "", indent: 0
+ *       }]
+ *     }
+ *   },
  * }
  * console.log(typeof props.input) // "object"
  * ```
@@ -282,10 +290,11 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
 }
 
 /**
- * Renders a strict compatible state through {@link EditorViewer}; future or
- * extension-bearing wire that the current runtime does not understand falls
- * back to escaped JSON in a read-only `<pre>`. Unknown content is preserved and
- * visible without asking Lexical to execute unsupported node behavior.
+ * Renders a strict compatible state through {@link EditorViewer};
+ * runtime-incompatible wire, including empty roots and future extensions,
+ * falls back to escaped JSON in a read-only `<pre>`. Unknown content is
+ * preserved and visible without asking Lexical to execute unsupported node
+ * behavior.
  *
  * @example
  * ```tsx
@@ -317,14 +326,22 @@ export function EditorCompatibilityViewer({ result, className }: EditorCompatibi
 /**
  * Admits unknown persisted Lexical wire through the lossless compatibility
  * decoder before rendering. Compatible v1 input uses {@link EditorViewer};
- * future/extension wire is preserved as escaped read-only JSON, and malformed
- * non-wire input is refused without mounting Lexical.
+ * empty-root and future/extension wire is preserved as escaped read-only JSON,
+ * and malformed non-wire input is refused without mounting Lexical.
  *
  * @example
  * ```tsx
  * import { EditorWireViewer } from "@beep/editor/viewer"
  *
- * const wire = { root: { type: "root", version: 1, children: [] } }
+ * const wire = {
+ *   root: {
+ *     type: "root", version: 1,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
+ * }
  * const preview = <EditorWireViewer input={wire} />
  * console.log(preview.type.name) // "EditorWireViewer"
  * ```

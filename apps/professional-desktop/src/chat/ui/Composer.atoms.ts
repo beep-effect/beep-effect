@@ -582,7 +582,7 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
  * const program = Effect.gen(function* () {
  *   const seed = Md.Document.make({ children: [] })
  *   const state = yield* documentToEditorState(seed)
- *   console.log(A.length(composerDocumentFromEditorState(seed, state).children)) // 0
+ *   console.log(A.length(composerDocumentFromEditorState(seed, state).children)) // 1
  * })
  * ```
  *

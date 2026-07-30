@@ -24,7 +24,7 @@ messages are projected to the editor vocabulary for rich rendering; if that
 projection fails, the app renders the Md plain-text projection as React text.
 Consumers that do persist unknown Lexical wire should use the editor package's
 exported `EditorWireViewer` or `EditorWireComposer` admission surfaces, which
-keep malformed or forward-compatible wire escaped and read-only.
+keep malformed, empty-root, or forward-compatible wire escaped and read-only.
 
 YouTube players use only
 `https://www.youtube-nocookie.com` frames. Production and development CSP both

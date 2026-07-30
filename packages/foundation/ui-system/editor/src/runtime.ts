@@ -40,7 +40,13 @@ const revalidateSerializedEditorState = (
  * import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime"
  *
  * const result = decodeEditorStateForRuntimeResult({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   },
  * })
  * console.log(Result.isSuccess(result)) // true
  * ```
@@ -57,15 +63,22 @@ export const decodeEditorStateForRuntimeResult = (
  * Admits a schema-decoded state or decodes unknown wire before it is passed to a
  * live Lexical editor or emitted through an editor persistence callback.
  *
- * Wire-valid but runtime-incompatible future/extension nodes are rejected by
- * the strict semantic decoder. Use the lexical compatibility decoder for a
- * lossless read-only fallback; never mount incompatible wire in Lexical.
+ * Wire-valid but runtime-incompatible content, including empty roots and
+ * future/extension nodes, is rejected by the strict semantic decoder. Use the
+ * lexical compatibility decoder for a lossless read-only fallback; never
+ * mount incompatible wire in Lexical.
  *
  * @example
  * ```ts
  * import { decodeEditorStateForRuntime } from "@beep/editor/runtime"
  * const program = decodeEditorStateForRuntime({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   },
  * })
  * console.log(program !== undefined) // true
  * ```

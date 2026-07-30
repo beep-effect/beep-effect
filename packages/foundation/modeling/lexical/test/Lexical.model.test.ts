@@ -382,6 +382,24 @@ describe("Lexical.model", () => {
     expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
   });
 
+  it("preserves an empty root losslessly while reporting strict incompatibility", () => {
+    const empty = {
+      root: {
+        ...element,
+        type: "root",
+        children: [],
+      },
+    };
+
+    expect(Effect.runSync(decodeEditorStateLossless(empty))).toEqual(empty);
+    expect(Effect.runSyncExit(decodeEditorStateStrict(empty))._tag).toBe("Failure");
+
+    const compatibility = Effect.runSync(analyzeEditorStateCompatibility(empty));
+    expect(compatibility.wire).toEqual(empty);
+    expect(O.isNone(compatibility.state)).toBe(true);
+    expect(compatibility.issues).toHaveLength(1);
+  });
+
   it("rejects impossible serialized formatting and structural values", () => {
     const boldUnderline = S.decodeUnknownSync(TextFormatMask)(TextFormatBits.bold | TextFormatBits.underline);
     expect(hasTextFormat(boldUnderline, TextFormatBits.bold)).toBe(true);

@@ -26,6 +26,17 @@ const roundTrip = (document: MdModel.Document): MdModel.Document =>
   documentToEditorState(document).pipe(Effect.runSync, editorStateToDocument);
 
 describe("Lexical.codec", () => {
+  it("canonicalizes an empty Md document to one runtime-editable paragraph", () => {
+    const empty = MdModel.Document.make({ children: [] });
+    const state = Effect.runSync(documentToEditorState(empty));
+
+    expect(state.root.children).toEqual([expect.objectContaining({ type: "paragraph", children: [] })]);
+
+    const projected = editorStateToDocument(state);
+    expect(projected).toEqual(MdModel.Document.make({ children: [MdModel.P.make({ children: [] })] }));
+    expect(roundTrip(projected)).toEqual(projected);
+  });
+
   it("round-trips an md-core assistant turn (Md → Lexical → Md identity)", () => {
     const document = MdModel.Document.make({
       children: [

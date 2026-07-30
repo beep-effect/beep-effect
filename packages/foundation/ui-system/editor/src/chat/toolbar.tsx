@@ -43,6 +43,7 @@ import { TextBIcon } from "@phosphor-icons/react/TextB";
 import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
 import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
 import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
+import { Match } from "effect";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
@@ -128,6 +129,17 @@ const INITIAL_STATE: SelectionState = {
 const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockType =>
   listType === "number" ? "number" : listType === "check" ? "check" : "bullet";
 
+const blockTypeFromNode = Match.type<LexicalNode>().pipe(
+  Match.when($isListNode, (node) => blockTypeFromListType(node.getListType())),
+  Match.when($isHeadingNode, (node) => node.getTag()),
+  Match.when($isQuoteNode, BlockType.thunk.quote),
+  Match.when($isCodeNode, BlockType.thunk.code),
+  // A table cell is the local block boundary. Do not climb to the table's
+  // top-level node: classify the nearest supported block inside this cell.
+  Match.when($isTableCellNode, BlockType.thunk.paragraph),
+  Match.orElse(() => undefined)
+);
+
 // The block type of the current selection, read from live editor state. Must run
 // inside a Lexical lexical-scope (`editorState.read` or `editor.update`), where
 // the `$`-prefixed helpers are valid.
@@ -162,13 +174,8 @@ export const $selectionBlockType = (): BlockType => {
   let node: LexicalNode | null = selection.anchor.getNode();
 
   while (node !== null && node.getKey() !== "root") {
-    if ($isListNode(node)) return blockTypeFromListType(node.getListType());
-    if ($isHeadingNode(node)) return node.getTag();
-    if ($isQuoteNode(node)) return "quote";
-    if ($isCodeNode(node)) return "code";
-    // A table cell is the local block boundary. Do not climb to the table's
-    // top-level node: classify the nearest supported block inside this cell.
-    if ($isTableCellNode(node)) return "paragraph";
+    const blockType = blockTypeFromNode(node);
+    if (blockType !== undefined) return blockType;
     node = node.getParent();
   }
   return "paragraph";

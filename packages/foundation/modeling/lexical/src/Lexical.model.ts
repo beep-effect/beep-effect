@@ -2555,16 +2555,20 @@ const strictNodeChildren: (node: LexicalNode.Type) => boolean = LexicalNode.matc
 });
 
 const StrictRootNode = RootNode.check(
-  S.makeFilter(hasStrictNodeChildren, {
+  S.makeFilter((node) => A.isReadonlyArrayNonEmpty(node.children) && hasStrictNodeChildren(node), {
     identifier: $I`StrictRootNodeTreeCheck`,
     title: "Strict Root Node",
-    description: "A serialized Lexical root whose recursive child topology follows the supported v1 grammar.",
-    message: "Expected every Lexical node to appear under a compatible v1 parent.",
+    description: "A non-empty serialized Lexical root whose recursive child topology follows the supported v1 grammar.",
+    message: "Expected at least one root child and every Lexical node to appear under a compatible v1 parent.",
   })
 );
 
 /**
- * Mirrors `SerializedEditorState`.
+ * Models the strict runtime-compatible subset of `SerializedEditorState`.
+ *
+ * @remarks
+ * Use {@link SerializedEditorStateWire} when persistence or migration must
+ * retain runtime-incompatible wire, including an empty root.
  *
  * @example
  * ```ts
@@ -2573,7 +2577,11 @@ const StrictRootNode = RootNode.check(
  *
  * const state = S.decodeUnknownSync(SerializedEditorState)({
  *   root: {
- *     type: "root", version: 1, children: [], direction: null, format: "", indent: 0
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
  *   }
  * })
  * console.log(state.root.type) // "root"
@@ -2584,9 +2592,11 @@ const StrictRootNode = RootNode.check(
  */
 export class SerializedEditorState extends S.Class<SerializedEditorState>($I`SerializedEditorState`)(
   {
-    root: StrictRootNode.annotateKey({ description: "The strict v1 document root node." }),
+    root: StrictRootNode.annotateKey({ description: "The non-empty strict v1 document root node." }),
   },
-  $I.annote("SerializedEditorState", { description: "The serialized Lexical editor state envelope." })
+  $I.annote("SerializedEditorState", {
+    description: "The runtime-compatible serialized Lexical editor state envelope with a non-empty root.",
+  })
 ) {
   /**
    * Soft-decodes an unknown serialized editor-state payload.
@@ -2597,7 +2607,13 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
    * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
    *
    * const state = SerializedEditorState.decodeOption({
-   *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+   *   root: {
+   *     type: "root", version: 1, direction: null, format: "", indent: 0,
+   *     children: [{
+   *       type: "paragraph", version: 1, children: [],
+   *       direction: null, format: "", indent: 0
+   *     }]
+   *   }
    * })
    * console.log(O.isSome(state)) // true
    * ```
@@ -2620,7 +2636,13 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
  * const state: SerializedEditorState.Type = S.decodeUnknownSync(SerializedEditorState)({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
  * })
  * console.log(state.root.type) // "root"
  * ```
@@ -2887,7 +2909,7 @@ export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue
  * const program = analyzeEditorStateCompatibility({
  *   root: { type: "root", version: 1, children: [] },
  * })
- * Effect.runPromise(program).then((result) => console.log(result.isCompatible))
+ * Effect.runPromise(program).then((result) => console.log(result.isCompatible)) // false
  * ```
  *
  * @category diagnostics
@@ -2955,7 +2977,13 @@ const losslessEditorStateDecodeError = LexicalDecodeError.new(
  * import { decodeEditorStateStrictResult } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = decodeEditorStateStrictResult({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   },
  * })
  * console.log(Result.isSuccess(result)) // true
  * ```
@@ -2974,8 +3002,9 @@ export const decodeEditorStateStrictResult = (
  * Decodes an unknown payload into the supported strict semantic editor state.
  *
  * @remarks
- * Excess fields are errors. Use {@link decodeEditorStateLossless} when unknown
- * extension data must be retained for migration or read-only fallback.
+ * Excess fields, invalid topology, and empty roots that Lexical cannot apply
+ * are errors. Use {@link decodeEditorStateLossless} when their exact wire must
+ * be retained for migration or read-only fallback.
  *
  * @example
  * ```ts
@@ -2983,7 +3012,13 @@ export const decodeEditorStateStrictResult = (
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
  * const program = decodeEditorStateStrict({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   },
  * })
  * Effect.runPromise(program).then((state) => console.log(state.root.type))
  * ```
@@ -3087,7 +3122,7 @@ export const analyzeEditorStateCompatibility = (
  * import { EditorStateFromJson } from "@beep/lexical-schema/Lexical.model"
  *
  * const state = S.decodeUnknownSync(EditorStateFromJson)(
- *   '{"root":{"type":"root","version":1,"children":[],"direction":null,"format":"","indent":0}}'
+ *   '{"root":{"type":"root","version":1,"children":[{"type":"paragraph","version":1,"children":[],"direction":null,"format":"","indent":0}],"direction":null,"format":"","indent":0}}'
  * )
  * console.log(state.root.type) // "root"
  * ```

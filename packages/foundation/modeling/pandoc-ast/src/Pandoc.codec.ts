@@ -1192,28 +1192,33 @@ const inspectTableComponent = (
     onSome: (wire) => inspectUnmatchedConstructor(wire, "block", path),
   });
 
-const inspectTableAlignment = (input: unknown, path: JsonPathType): LosslessInspection =>
+const inspectTableConstructor = (
+  input: unknown,
+  inspect: (wire: PandocConstructorWire) => LosslessInspection
+): LosslessInspection =>
   O.match(decodeConstructorOption(input), {
     onNone: () => Effect.succeed([]),
-    onSome: (wire) =>
-      Match.value(wire.t).pipe(
-        Match.when(isPandocTableAlignmentConstructorName, () =>
-          inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)
-        ),
-        Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
-      ),
+    onSome: inspect,
   });
 
-const inspectTableColumnWidth = (input: unknown, path: JsonPathType): LosslessInspection =>
-  O.match(decodeConstructorOption(input), {
-    onNone: () => Effect.succeed([]),
-    onSome: (wire) =>
-      Match.value(wire.t).pipe(
-        Match.when("ColWidth", () => inspectDecoded(decodeFinite(wire.c), "block", wire.t, path)),
-        Match.when("ColWidthDefault", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
-        Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
+const inspectTableAlignment = (input: unknown, path: JsonPathType): LosslessInspection =>
+  inspectTableConstructor(input, (wire) =>
+    Match.value(wire.t).pipe(
+      Match.when(isPandocTableAlignmentConstructorName, () =>
+        inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)
       ),
-  });
+      Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
+    )
+  );
+
+const inspectTableColumnWidth = (input: unknown, path: JsonPathType): LosslessInspection =>
+  inspectTableConstructor(input, (wire) =>
+    Match.value(wire.t).pipe(
+      Match.when("ColWidth", () => inspectDecoded(decodeFinite(wire.c), "block", wire.t, path)),
+      Match.when("ColWidthDefault", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
+      Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
+    )
+  );
 
 const inspectTableCaptionPair = (
   [shortCaption, longCaption]: typeof TableCaptionPairWire.Type,

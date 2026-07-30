@@ -88,7 +88,15 @@ export interface EditorComposerProps {
  * import type { EditorWireComposerProps } from "@beep/editor/composer"
  *
  * const props: EditorWireComposerProps = {
- *   input: { root: { type: "root", version: 1, children: [] } },
+ *   input: {
+ *     root: {
+ *       type: "root", version: 1,
+ *       children: [{
+ *         type: "paragraph", version: 1, children: [],
+ *         direction: null, format: "", indent: 0
+ *       }]
+ *     }
+ *   },
  * }
  * console.log(typeof props.input) // "object"
  * ```
@@ -188,16 +196,24 @@ export function EditorComposer({
 
 /**
  * Editable admission surface for persisted Lexical wire. Compatible v1 input
- * mounts {@link EditorComposer}; future/extension wire remains escaped and
- * read-only, so incompatible content can never reach a load or save callback.
- * A changed compatible `input` remounts the inner editor with its canonical
- * encoded state.
+ * mounts {@link EditorComposer}; runtime-incompatible content, including empty
+ * roots and future/extension wire, remains escaped and read-only so it can
+ * never reach a load or save callback. A changed compatible `input` remounts
+ * the inner editor with its canonical encoded state.
  *
  * @example
  * ```tsx
  * import { EditorWireComposer } from "@beep/editor/composer"
  *
- * const wire = { root: { type: "root", version: 1, children: [] } }
+ * const wire = {
+ *   root: {
+ *     type: "root", version: 1,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
+ * }
  * const editor = <EditorWireComposer input={wire} placeholder="Draft" />
  * console.log(editor.type.name) // "EditorWireComposer"
  * ```
