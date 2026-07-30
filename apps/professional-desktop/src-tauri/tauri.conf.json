@@ -12,6 +12,8 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "create": false,
         "title": "Professional Desktop",
         "width": 1280,
         "height": 860,

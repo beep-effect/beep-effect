@@ -10,6 +10,8 @@ name = "professional_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+cc = "1"
+pkg-config = "0.3"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]

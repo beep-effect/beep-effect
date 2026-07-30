@@ -121,27 +121,34 @@ const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
       readonly query: string;
       readonly source: MentionSource;
     }>()(
-      Effect.fnUntraced(function* ({ query, source }) {
-        const sourceResult = yield* Effect.try({
-          try: () => source(query),
-          catch: mentionSourceFailure,
-        });
-        const raw = yield* isImmediateMentionOptions(sourceResult)
-          ? Effect.succeed(sourceResult)
-          : Effect.tryPromise({
-              try: () => sourceResult,
-              catch: mentionSourceFailure,
-            });
-        return yield* decodeMentionOptions(raw).pipe(
-          Effect.mapError((cause) =>
-            MentionLookupError.make({
-              reason: "invalid-results",
-              message: "Mentions are unavailable right now.",
-              cause,
-            })
+      Effect.fnUntraced(
+        function* ({ query, source }) {
+          const sourceResult = yield* Effect.try({
+            try: () => source(query),
+            catch: mentionSourceFailure,
+          });
+          const raw = yield* isImmediateMentionOptions(sourceResult)
+            ? Effect.succeed(sourceResult)
+            : Effect.tryPromise({
+                try: () => sourceResult,
+                catch: mentionSourceFailure,
+              });
+          return yield* decodeMentionOptions(raw).pipe(
+            Effect.mapError((cause) =>
+              MentionLookupError.make({
+                reason: "invalid-results",
+                message: "Mentions are unavailable right now.",
+                cause,
+              })
+            )
+          );
+        },
+        Effect.tapError((failure) =>
+          Effect.logError("Mention lookup failed", failure.cause ?? failure).pipe(
+            Effect.annotateLogs({ component: "editor", reason: failure.reason })
           )
-        );
-      })
+        )
+      )
     )
     .pipe(Atom.setIdleTTL(0))
 );

@@ -192,7 +192,7 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
       if (MutableHashSet.has(seen, item.key)) {
         return Result.succeed({
           path: [index, "key"],
-          issue: `Duplicate slash-command key ${JSON.stringify(item.key)}.`,
+          issue: `Duplicate slash-command key "${item.key}".`,
         });
       }
       MutableHashSet.add(seen, item.key);
@@ -288,7 +288,7 @@ const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
       if (MutableHashSet.has(seen, option.id)) {
         return Result.succeed({
           path: [index, "id"],
-          issue: `Duplicate mention-option id ${JSON.stringify(option.id)}.`,
+          issue: `Duplicate mention-option id "${option.id}".`,
         });
       }
       MutableHashSet.add(seen, option.id);

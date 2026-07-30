@@ -17,7 +17,7 @@ import {
   TextFormatMask,
   TextNode,
 } from "@beep/lexical-schema";
-import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
+import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -479,6 +479,9 @@ describe("Lexical.model", () => {
   });
 
   it("normalizes compatible legacy decorator and code metadata", () => {
+    expect(legacyYouTubeVideoId("https://www.youtube.com/watch?v=AbCdEfGhI12")).toBe("AbCdEfGhI12");
+    expect(legacyYouTubeVideoId("https://youtube.com/embed/AbCdEfGhI12")).toBe("AbCdEfGhI12");
+
     expect(
       S.decodeUnknownSync(LexicalNode)({
         type: "youtube",
@@ -526,5 +529,18 @@ describe("Lexical.model", () => {
 
     const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 });
     expect(nodeToPlainText(node)).toBe("\n");
+    expect(
+      nodeToPlainText(
+        S.decodeUnknownSync(LexicalNode)({
+          type: "tab",
+          version: 1,
+          detail: 0,
+          format: 0,
+          mode: "normal",
+          style: "",
+          text: "\t",
+        })
+      )
+    ).toBe("\t");
   });
 });

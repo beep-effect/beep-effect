@@ -10,6 +10,7 @@ import {
   encodePandocJsonString,
   encodePandocJsonStringLossless,
   PandocJsonFromString,
+  PandocLosslessDocument,
 } from "@beep/pandoc-ast/Pandoc.codec";
 import {
   Header,
@@ -90,6 +91,27 @@ describe("Pandoc.codec", () => {
   it("keeps the established decode names as strict API aliases", () => {
     expect(decodePandocJson).toBe(decodePandocJsonStrict);
     expect(decodePandocJsonString).toBe(decodePandocJsonStringStrict);
+  });
+
+  it("issues lossless views from one immutable canonical wire", () => {
+    const input = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [{ c: [], t: "Para" }],
+      extension: { retained: true },
+      meta: {},
+    };
+    const document = Effect.runSync(decodePandocJsonLossless(input));
+
+    expect(S.is(PandocLosslessDocument)(document)).toBe(true);
+    expect(S.is(PandocLosslessDocument)({ ...document })).toBe(false);
+    expect(document.apiVersion).toEqual(document.wire["pandoc-api-version"]);
+    expect(document.blocks).toEqual(document.wire.blocks);
+    expect(document.meta).toEqual(document.wire.meta);
+
+    const exposedWire = document.wire;
+    (exposedWire.blocks as Array<S.Json>).push({ c: "forged", t: "Para" });
+    expect(document.blocks).toEqual([{ c: [], t: "Para" }]);
+    expect(Effect.runSync(encodePandocJsonLossless(document))).toEqual(input);
   });
 
   it("rejects payloads on known nullary constructors and reports them losslessly", () => {
@@ -285,6 +307,32 @@ describe("Pandoc.codec", () => {
       const lossless = Effect.runSync(decodePandocJsonLossless(wire));
       expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         [expected[0], "block", expected[1]],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
+  it("rejects non-constructor values in required table constructor slots", () => {
+    const malformed = [
+      {
+        expected: "/blocks/0/c/4/0/3/0/1/0/1",
+        wire: tableWire({ cellAlignment: 42 }),
+      },
+      {
+        expected: "/blocks/0/c/2/0/0",
+        wire: tableWire({ columnAlignment: null }),
+      },
+      {
+        expected: "/blocks/0/c/2/0/1",
+        wire: tableWire({ columnWidth: "wide" }),
+      },
+    ];
+
+    for (const { expected, wire } of malformed) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        ["Table", "block", expected],
       ]);
       expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
     }
@@ -686,6 +734,28 @@ describe("Pandoc.codec", () => {
         }
       })
     ));
+
+  it("rejects known or malformed nullary constructors in a Math type slot", () => {
+    const malformed = [
+      { expected: "AlignLeft", mathType: { t: "AlignLeft" } },
+      { expected: "InlineMath", mathType: { c: "smuggled", t: "InlineMath" } },
+    ];
+
+    for (const { expected, mathType } of malformed) {
+      const wire = {
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [{ c: [{ c: [mathType, "x"], t: "Math" }], t: "Para" }],
+        meta: {},
+      };
+
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        [expected, "inline", "/blocks/0/c/0/c/0"],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
 
   it("rejects malformed known list constructors through the typed strict API", () => {
     const malformedBlocks = [

@@ -16,6 +16,7 @@ import { Cause, Effect, HashSet, Layer, Match } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
+import type { MermaidConfig } from "mermaid";
 import type { JSX } from "react";
 
 const $I = $EditorId.create("mermaid-view");
@@ -67,7 +68,7 @@ const oversizedMessage = (length: number): string =>
   `Diagram source is too large to render (${length.toLocaleString()} characters; limit ${maxSourceLength.toLocaleString()}).`;
 
 const mermaidConfig = {
-  securityLevel: "strict" as const,
+  securityLevel: "strict",
   startOnLoad: false,
   suppressErrorRendering: true,
   htmlLabels: false,
@@ -85,7 +86,7 @@ const mermaidConfig = {
     "altFontFamily",
     "fontSize",
   ],
-};
+} satisfies MermaidConfig;
 
 const mermaidSanitizerConfig = {
   ADD_ATTR: ["role"],

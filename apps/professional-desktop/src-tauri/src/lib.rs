@@ -112,6 +112,10 @@ const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
 const ONTOLOGY_WORKSPACE_ROOT_ENV: &str = "ONTOLOGY_WORKSPACE_ROOT";
 const APP_LOG_LEVEL_ENV: &str = "APP_LOG_LEVEL";
 const OTEL_RESOURCE_ATTRIBUTES_ENV: &str = "OTEL_RESOURCE_ATTRIBUTES";
+#[cfg(target_os = "linux")]
+const YOUTUBE_WEB_EXTENSION: &[u8] = include_bytes!(env!("BEEP_WEB_EXTENSION_PATH"));
+#[cfg(target_os = "linux")]
+const YOUTUBE_WEB_EXTENSION_REVISION: &str = env!("BEEP_WEB_EXTENSION_REVISION");
 const SAFE_OBSERVABILITY_ENV: [&str; 20] = [
     "OTEL_EXPORTER_OTLP_ENDPOINT",
     "OTEL_EXPORTER_OTLP_PROTOCOL",
@@ -207,6 +211,79 @@ fn ensure_private_directory(path: &Path) -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn prepare_youtube_web_extension(cache_root: &Path) -> std::io::Result<std::path::PathBuf> {
+    use std::os::unix::fs::OpenOptionsExt;
+
+    let extension_root = cache_root.join("webkit-web-extensions");
+    ensure_private_directory(&extension_root)?;
+    let extension_dir = extension_root.join(YOUTUBE_WEB_EXTENSION_REVISION);
+    ensure_private_directory(&extension_dir)?;
+
+    let extension_path = extension_dir.join("libbeep_youtube_referrer.so");
+    for entry in std::fs::read_dir(&extension_dir)? {
+        let entry = entry?;
+        if entry.path() != extension_path {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "unexpected file in the WebKit extension directory: {}",
+                    entry.path().display()
+                ),
+            ));
+        }
+    }
+
+    match std::fs::symlink_metadata(&extension_path) {
+        Ok(metadata) if !metadata.file_type().is_file() => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "WebKit extension path is not a regular file: {}",
+                    extension_path.display()
+                ),
+            ));
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error),
+    }
+
+    let current_matches = std::fs::read(&extension_path)
+        .map(|contents| contents == YOUTUBE_WEB_EXTENSION)
+        .unwrap_or(false);
+    if !current_matches {
+        let temporary_path =
+            extension_root.join(format!(".libbeep_youtube_referrer.{}.tmp", Uuid::new_v4()));
+        let write_result = (|| {
+            let mut temporary = std::fs::OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .mode(0o600)
+                .open(&temporary_path)?;
+            temporary.write_all(YOUTUBE_WEB_EXTENSION)?;
+            temporary.sync_all()?;
+            std::fs::rename(&temporary_path, &extension_path)
+        })();
+        if write_result.is_err() {
+            let _ = std::fs::remove_file(&temporary_path);
+        }
+        write_result?;
+    }
+
+    if !matches!(
+        std::fs::read(&extension_path),
+        Ok(contents) if contents == YOUTUBE_WEB_EXTENSION
+    ) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "materialized WebKit extension does not match the bundled artifact",
+        ));
+    }
+
+    Ok(extension_dir)
 }
 
 #[tauri::command]
@@ -1213,6 +1290,30 @@ pub fn run() {
             check_for_update
         ])
         .setup(move |app| {
+            let main_window_config = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .find(|window| window.label == "main")
+                .ok_or_else(|| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::NotFound,
+                        "main webview configuration is required",
+                    )
+                })?;
+            let main_window =
+                tauri::WebviewWindowBuilder::from_config(app.handle(), main_window_config)?;
+
+            #[cfg(target_os = "linux")]
+            let main_window = main_window.extensions_path(prepare_youtube_web_extension(
+                &app.path().app_cache_dir()?,
+            )?);
+
+            // The configured window uses `create: false` so Linux can install
+            // the Web-process extension before WebKit creates the first page.
+            main_window.build()?;
+
             let metadata = app.state::<DesktopRuntimeMetadata>();
             let app_version = app.package_info().version.to_string();
             if logging.invalid_value {
@@ -1455,6 +1556,8 @@ mod tests {
         kill_sidecar, monitor_sidecar_process, poll_sidecar_process, running_sidecar_pid,
         write_sidecar_frame, SidecarProcess, SidecarProcessPoll, MAX_IPC_FRAME_BYTES,
     };
+    #[cfg(target_os = "linux")]
+    use super::{prepare_youtube_web_extension, YOUTUBE_WEB_EXTENSION};
     use std::io::Cursor;
     #[cfg(unix)]
     use std::process::{Command, Stdio};
@@ -1463,6 +1566,27 @@ mod tests {
     #[cfg(unix)]
     use std::time::{Duration, Instant};
     use uuid::Uuid;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn builds_and_materializes_the_scoped_youtube_web_extension() {
+        let status = Command::new(env!("BEEP_WEB_EXTENSION_TEST_PATH"))
+            .arg(env!("BEEP_WEB_EXTENSION_PATH"))
+            .status()
+            .expect("compiled WebKit extension contract test should run");
+        assert!(status.success());
+
+        let root = std::env::temp_dir().join(format!("beep-web-extension-{}", Uuid::new_v4()));
+        let extension_dir =
+            prepare_youtube_web_extension(&root).expect("WebKit extension should materialize");
+        let extension_path = extension_dir.join("libbeep_youtube_referrer.so");
+        assert_eq!(
+            std::fs::read(extension_path).expect("WebKit extension should be readable"),
+            YOUTUBE_WEB_EXTENSION
+        );
+
+        std::fs::remove_dir_all(root).expect("WebKit extension fixture should be removed");
+    }
 
     #[test]
     fn omits_absent_renderer_observability_options_from_the_wire() {

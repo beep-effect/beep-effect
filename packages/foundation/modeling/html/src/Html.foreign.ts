@@ -6,7 +6,11 @@
  * serialization therefore accepts exactly the names that survive that
  * round-trip unchanged.
  *
- * @packageDocumentation \@beep/html/Html.foreign
+ * @remarks
+ * This internal implementation detail is shared by the conformance and
+ * serialization modules. It is intentionally not a package entrypoint.
+ *
+ * @internal
  * @since 0.0.0
  */
 import { A } from "@beep/utils";
@@ -28,9 +32,9 @@ const browserAdjustedName = (name: string, adjustments: Readonly<Record<string, 
 /**
  * Tests whether an opaque foreign element name is unchanged by HTML parsing.
  *
- * @example
+ * @example Internal call site
  * ```ts
- * import { isForeignElementNameFixedPoint } from "@beep/html/Html.foreign"
+ * import { isForeignElementNameFixedPoint } from "./Html.foreign.ts"
  *
  * isForeignElementNameFixedPoint("svg", "linearGradient") // true
  * isForeignElementNameFixedPoint("svg", "lineargradient") // false
@@ -56,9 +60,9 @@ export const isForeignElementNameFixedPoint: {
  * adjustment registry because the AST does not separately store namespace
  * metadata for arbitrary colon-prefixed attributes.
  *
- * @example
+ * @example Internal call site
  * ```ts
- * import { isForeignAttributeNameFixedPoint } from "@beep/html/Html.foreign"
+ * import { isForeignAttributeNameFixedPoint } from "./Html.foreign.ts"
  *
  * isForeignAttributeNameFixedPoint("svg", "viewBox") // true
  * isForeignAttributeNameFixedPoint("svg", "viewbox") // false

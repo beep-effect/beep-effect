@@ -580,10 +580,10 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 // forwarding would obscure which mount-time values enter the atom-backed body.
 // fallow-ignore-next-line complexity -- component assembles plugins and optional consumer ports at one declarative boundary
 export function ChatComposer(props: ChatComposerProps): JSX.Element {
+  const compatibilityConfig: ChatComposerMountConfig = props;
   const {
     ariaLabel = DEFAULT_ARIA_LABEL,
     mountConfig,
-    features,
     initialState,
     placeholder,
     className,
@@ -591,15 +591,13 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
     onSerializedChange,
     slashItems = defaultChatSlashItems,
     mentionSource,
-    onAttach,
-    maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
-    onSend,
     onStop,
     streaming = false,
     sendDisabled = false,
     sendLabel = "Send",
     children,
-  } = props as Omit<ChatComposerProps, keyof ChatComposerMountConfig> & ChatComposerMountConfig;
+  } = props;
+  const { features, maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES, onAttach, onSend } = compatibilityConfig;
   const resolved = ComposerFeatures.make(mountConfig?.features ?? features ?? {});
   const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? maxAttachmentBytes;
   const resolvedOnAttach = mountConfig?.onAttach ?? onAttach;

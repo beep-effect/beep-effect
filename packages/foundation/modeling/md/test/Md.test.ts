@@ -16,12 +16,14 @@ import {
   isStringArray,
   joinBlocks,
   maxBackticks,
+  normalizeUrlPolicy,
   prefixLines,
   renderFencedCode,
   renderInlineCode,
   StrictWebUrlPolicySpec,
   sanitizeUrlDestination,
   sanitizeUrlDestinationWithPolicy,
+  UrlPolicy,
   UrlPolicySpec,
 } from "@beep/md/Md.escape";
 import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html";
@@ -775,6 +777,20 @@ Demo video`);
     if (normalizedPolicy._tag === "AllowList") {
       expect(normalizedPolicy.schemes).toEqual(["https:"]);
     }
+
+    const normalizedLegacyPolicy = normalizeUrlPolicy(
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Proves the compatibility adapter until its documented removal.
+      UrlPolicy.make({
+        allowedProtocols: [" HTTPS ", "MAILTO:"],
+        allowRelative: false,
+        allowProtocolRelative: false,
+        allowBackslashRelative: false,
+      })
+    );
+    expect(normalizedLegacyPolicy).toMatchObject({
+      _tag: "AllowList",
+      schemes: ["https:", "mailto:"],
+    });
 
     const markedInspiredEvasions = [
       "java\u0000script:alert(1)",

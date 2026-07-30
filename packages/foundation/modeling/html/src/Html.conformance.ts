@@ -358,7 +358,11 @@ const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<s
       A.some(rules, (rule) =>
         rule.condition === "present"
           ? hasAttribute((node as unknown as Record<string, unknown>)[rule.attribute])
-          : !attributeEquals((node as unknown as Record<string, unknown>)[rule.attribute], rule.value ?? "")
+          : !attributeEquals(
+              (node as unknown as Record<string, unknown>)[rule.attribute],
+              /* istanbul ignore next -- the generator supplies value for every not-equals conditional category */
+              rule.value ?? ""
+            )
       )
     );
   });
@@ -559,6 +563,7 @@ const inspectElementOrder = (
   children: ReadonlyArray<HtmlChildView>,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
+  /* istanbul ignore next -- inspectChild invokes order inspection only after deriving an HtmlTag */
   if (!isHtmlTag(parent._tag)) return A.emptyReadonly();
   const elementChildren = pipe(
     children,

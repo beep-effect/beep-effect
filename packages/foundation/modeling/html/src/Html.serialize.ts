@@ -254,8 +254,11 @@ const isRuntimeForeignNode = (node: RuntimeNode): node is RuntimeForeignNode =>
   (node.namespace === "svg" || node.namespace === "mathml") &&
   isForeignElementNameFixedPoint(node.namespace, node.name);
 
-const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> =>
-  A.isArray(node.children) ? A.filter(node.children, isRuntimeNode) : A.emptyReadonly();
+const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> => {
+  /* istanbul ignore else -- every encoded container node has a generated array-valued children field */
+  if (A.isArray(node.children)) return A.filter(node.children, isRuntimeNode);
+  return A.emptyReadonly();
+};
 
 const isStructuralElementField = (tag: HtmlTag, name: string): boolean =>
   name === "_tag" || name === "children" || (name === "content" && ELEMENT_META[tag].textMode !== "normal");
@@ -298,6 +301,7 @@ const serializeAttribute = (
       Effect.map((scalar) => ` ${name}="${escapeAttribute(scalar)}"`)
     );
   }
+  /* istanbul ignore else -- encoded scalar attributes are presence booleans, strings, or numbers */
   if (P.isNumber(value)) {
     return Effect.succeed(` ${name}="${value}"`);
   }
@@ -309,12 +313,17 @@ const serializeAttribute = (
 const serializeDataset = (
   value: unknown,
   path: ReadonlyArray<string>
-): Effect.Effect<ReadonlyArray<string>, HtmlSerializeError> =>
-  P.isObject(value)
-    ? Effect.forEach(pipe(Struct.entries(value), A.sort(byEntryName)), ([key, entry]) =>
-        serializeAttribute(`data-${key}`, entry, path)
-      )
-    : Effect.fail(makeError(A.append(path, "dataset"), "invalidAttribute", "The dataset attribute must be an object"));
+): Effect.Effect<ReadonlyArray<string>, HtmlSerializeError> => {
+  /* istanbul ignore else -- HtmlRoot encoding emits dataset only from its generated record schema */
+  if (P.isObject(value)) {
+    return Effect.forEach(pipe(Struct.entries(value), A.sort(byEntryName)), ([key, entry]) =>
+      serializeAttribute(`data-${key}`, entry, path)
+    );
+  }
+  return Effect.fail(
+    makeError(A.append(path, "dataset"), "invalidAttribute", "The dataset attribute must be an object")
+  );
+};
 
 const serializeAttributes = Effect.fn("Html.serializeAttributes")(function* (
   node: RuntimeNode,
@@ -337,23 +346,28 @@ const serializeForeignAttributes = (
   value: unknown,
   namespace: "svg" | "mathml",
   path: ReadonlyArray<string>
-): Effect.Effect<string, HtmlSerializeError> =>
-  P.isObject(value)
-    ? Effect.forEach(
-        pipe(Struct.entries(value), A.sort(byEntryName)),
-        ([name, entry]) =>
-          !isForeignAttributeName(name) || !isForeignAttributeNameFixedPoint(namespace, name)
-            ? Effect.fail(
-                makeError(
-                  A.append(path, name),
-                  "invalidAttribute",
-                  `Foreign attribute ${name} is not a browser-fixed XML-style attribute name`
-                )
+): Effect.Effect<string, HtmlSerializeError> => {
+  /* istanbul ignore else -- HtmlRoot encoding emits foreign attributes only from its generated record schema */
+  if (P.isObject(value)) {
+    return Effect.forEach(
+      pipe(Struct.entries(value), A.sort(byEntryName)),
+      ([name, entry]) =>
+        !isForeignAttributeName(name) || !isForeignAttributeNameFixedPoint(namespace, name)
+          ? Effect.fail(
+              makeError(
+                A.append(path, name),
+                "invalidAttribute",
+                `Foreign attribute ${name} is not a browser-fixed XML-style attribute name`
               )
-            : serializeAttribute(name, entry, path),
-        { discard: false }
-      ).pipe(Effect.map(A.join("")))
-    : Effect.fail(makeError(A.append(path, "attributes"), "invalidAttribute", "Foreign attributes must be an object"));
+            )
+          : serializeAttribute(name, entry, path),
+      { discard: false }
+    ).pipe(Effect.map(A.join("")));
+  }
+  return Effect.fail(
+    makeError(A.append(path, "attributes"), "invalidAttribute", "Foreign attributes must be an object")
+  );
+};
 
 const serializeChildren = Effect.fn("Html.serializeChildren")(function* (
   children: ReadonlyArray<RuntimeNode>,
@@ -491,6 +505,7 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
       Effect.fail(makeError([], "encodingFailure", "The HTML root did not satisfy its generated schema")),
     onSuccess: Effect.succeed,
   });
+  /* istanbul ignore next -- a successful HtmlRoot encoding always yields an object with a string discriminator */
   if (!isRuntimeNode(encoded)) {
     return yield* makeError([], "encodingFailure", "The encoded HTML root was not an object node");
   }

@@ -7,7 +7,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import { CauseTaggedError, LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, dual, flow, O, Struct } from "@beep/utils";
+import { A, dual, flow, O, P, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
 import {
@@ -385,18 +385,134 @@ export type PandocLosslessBlock = typeof PandocLosslessBlock.Type;
  * @category models
  * @since 0.0.0
  */
-export class PandocLosslessDocument extends S.Class<PandocLosslessDocument>($I`PandocLosslessDocument`)(
-  {
-    apiVersion: PandocApiVersion,
-    blocks: S.Array(PandocLosslessBlock),
-    issues: S.Array(PandocLosslessIssue),
-    meta: S.Record(S.String, S.Json),
-    wire: PandocJsonObject,
-  },
-  $I.annote("PandocLosslessDocument", {
-    description: "Lossless Pandoc envelope with exact raw views and recursive compatibility diagnostics.",
+type ExactPandocLosslessWire = Readonly<Record<string, S.Json>> & PandocJsonWire.Type;
+
+function clonePandocJson(value: S.Json): S.Json {
+  if (A.isArray(value)) {
+    return A.map(value as ReadonlyArray<S.Json>, clonePandocJson);
+  }
+  return P.isObject(value)
+    ? Struct.fromEntries(
+        A.map(Struct.entries(value as Readonly<Record<string, S.Json>>), ([key, entry]) => [
+          key,
+          clonePandocJson(entry),
+        ])
+      )
+    : value;
+}
+
+const clonePandocJsonRecord = (value: Readonly<Record<string, S.Json>>): Readonly<Record<string, S.Json>> =>
+  Struct.fromEntries(A.map(Struct.entries(value), ([key, entry]) => [key, clonePandocJson(entry)]));
+
+const cloneLosslessIssue = (issue: PandocLosslessIssue): PandocLosslessIssue =>
+  PandocLosslessIssue.make({
+    constructor: issue.constructor,
+    context: issue.context,
+    message: issue.message,
+    path: A.fromIterable(issue.path),
+  });
+
+class PandocLosslessDocumentValue {
+  readonly #proof = true;
+  readonly #wire: ExactPandocLosslessWire;
+  readonly #issues: ReadonlyArray<PandocLosslessIssue>;
+
+  constructor(wire: Readonly<Record<string, S.Json>>, issues: ReadonlyArray<PandocLosslessIssue>) {
+    this.#wire = clonePandocJsonRecord(wire) as ExactPandocLosslessWire;
+    this.#issues = A.map(issues, cloneLosslessIssue);
+  }
+
+  static is(value: unknown): value is PandocLosslessDocumentValue {
+    return P.isObject(value) && #proof in value;
+  }
+
+  get apiVersion(): PandocApiVersion {
+    return A.map(this.#wire["pandoc-api-version"], (part) => part);
+  }
+
+  get blocks(): ReadonlyArray<PandocLosslessBlock> {
+    return A.map(this.#wire.blocks, clonePandocJson);
+  }
+
+  get issues(): ReadonlyArray<PandocLosslessIssue> {
+    return A.map(this.#issues, cloneLosslessIssue);
+  }
+
+  get meta(): Readonly<Record<string, S.Json>> {
+    return clonePandocJsonRecord(this.#wire.meta);
+  }
+
+  get wire(): Readonly<Record<string, S.Json>> {
+    return clonePandocJsonRecord(this.#wire);
+  }
+}
+
+/**
+ * Module-issued lossless Pandoc envelope.
+ *
+ * The public schema has no arbitrary constructor: decoding is the only issuer,
+ * so the derived views and diagnostics cannot contradict the retained wire.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   decodePandocJsonLossless,
+ *   PandocLosslessDocument,
+ * } from "@beep/pandoc-ast/Pandoc.codec"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const document = Effect.runSync(
+ *   decodePandocJsonLossless({
+ *     "pandoc-api-version": [1, 23, 1],
+ *     blocks: [],
+ *     meta: {},
+ *   })
+ * )
+ *
+ * console.log(S.is(PandocLosslessDocument)(document)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocLosslessDocument = S.declare(PandocLosslessDocumentValue.is).pipe(
+  $I.annoteSchema("PandocLosslessDocument", {
+    description: "Module-issued lossless Pandoc envelope with wire-derived views and diagnostics.",
   })
-) {}
+);
+
+/**
+ * Decoded type of {@link PandocLosslessDocument}.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   decodePandocJsonLossless,
+ *   type PandocLosslessDocument,
+ * } from "@beep/pandoc-ast/Pandoc.codec"
+ * import { Effect } from "effect"
+ *
+ * const document: PandocLosslessDocument = Effect.runSync(
+ *   decodePandocJsonLossless({
+ *     "pandoc-api-version": [1, 23, 1],
+ *     blocks: [],
+ *     meta: {},
+ *   })
+ * )
+ *
+ * console.log(document.issues.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocLosslessDocument = typeof PandocLosslessDocument.Type;
+
+const issuePandocLosslessDocument = (
+  wire: Readonly<Record<string, S.Json>>,
+  issues: ReadonlyArray<PandocLosslessIssue>
+): PandocLosslessDocument => new PandocLosslessDocumentValue(wire, issues);
 
 const AttrWire = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
 const TargetWire = S.Tuple([S.String, S.String]);
@@ -518,6 +634,15 @@ const rejectKnownConstructorInContext = (
     )
   );
 
+const rejectKnownConstructorInSlot = (wire: PandocConstructorWire, slot: string): Effect.Effect<never, S.SchemaError> =>
+  Effect.fail(
+    new S.SchemaError(
+      new SchemaIssue.InvalidValue(O.some(wire), {
+        message: `Known Pandoc constructor ${wire.t} cannot occur in ${slot}`,
+      })
+    )
+  );
+
 const decodeBlockItems = (
   input: unknown
 ): Effect.Effect<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> =>
@@ -592,27 +717,21 @@ const decodeAttributedInlineChildren: {
 );
 
 const decodeMathInline = (wire: PandocConstructorWire): Effect.Effect<PandocInline.Type, S.SchemaError> =>
-  Effect.flatMap(decodeMathPayloadWire(wire.c), ([mathTypeWire, text]) =>
-    O.match(decodeMathType(mathTypeWire.t), {
-      onNone: () => Effect.succeed(unknownInline(wire)),
-      onSome: PandocMathType.$match({
-        DisplayMath: (mathType) =>
-          Effect.succeed(
-            Math.make({
-              mathType,
-              text,
-            })
-          ),
-        InlineMath: (mathType) =>
-          Effect.succeed(
-            Math.make({
-              mathType,
-              text,
-            })
-          ),
-      }),
-    })
-  );
+  Effect.flatMap(decodeMathPayloadWire(wire.c), ([mathTypeWire, text]) => {
+    const mathType = decodeMathType(mathTypeWire.t);
+    if (O.isNone(mathType)) {
+      return isPandocKnownConstructorName(mathTypeWire.t)
+        ? rejectKnownConstructorInSlot(mathTypeWire, "a Math type slot")
+        : Effect.succeed<PandocInline.Type>(unknownInline(wire));
+    }
+    return Effect.as(
+      decodeAbsentPayload(mathTypeWire.c),
+      Math.make({
+        mathType: mathType.value,
+        text,
+      })
+    );
+  });
 
 const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.SchemaError> =>
   Effect.flatMap(decodeConstructor(input), (wire) =>
@@ -1077,6 +1196,25 @@ const inspectUnmatchedConstructor = (
       : []
   );
 
+const inspectUnmatchedConstructorInSlot = (
+  wire: PandocConstructorWire,
+  context: PandocConstructorContext,
+  path: JsonPathType,
+  slot: string
+): LosslessInspection =>
+  Effect.succeed(
+    isPandocKnownConstructorName(wire.t)
+      ? [
+          PandocLosslessIssue.make({
+            constructor: wire.t,
+            context,
+            message: `Known Pandoc constructor ${wire.t} cannot occur in ${slot}`,
+            path,
+          }),
+        ]
+      : []
+  );
+
 const inspectDecoded = <Value>(
   decoded: Effect.Effect<Value, S.SchemaError>,
   context: PandocConstructorContext,
@@ -1136,6 +1274,15 @@ const inspectBlockItems = (
     )
   );
 
+const inspectMath = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeMathPayloadWire(payload), "inline", "Math", path, ([mathTypeWire]) => {
+    const mathTypePath = appendPath(path, "c", 0);
+    return O.match(decodeMathType(mathTypeWire.t), {
+      onNone: () => inspectUnmatchedConstructorInSlot(mathTypeWire, "inline", mathTypePath, "a Math type slot"),
+      onSome: () => inspectDecoded(decodeAbsentPayload(mathTypeWire.c), "inline", mathTypeWire.t, mathTypePath),
+    });
+  });
+
 function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
   return decodeConstructor(input).pipe(
     Effect.matchEffect({
@@ -1166,7 +1313,7 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
             )
           ),
           Match.when("Note", () => inspectBlockArray(wire.c, appendPath(path, "c"), "inline", wire.t, path)),
-          Match.when("Math", () => inspectDecoded(decodeMathPayloadWire(wire.c), "inline", wire.t, path)),
+          Match.when("Math", () => inspectMath(wire.c, path)),
           Match.orElse(() => inspectUnmatchedConstructor(wire, "inline", path))
         ),
     })
@@ -1194,15 +1341,12 @@ const inspectTableComponent = (
 
 const inspectTableConstructor = (
   input: unknown,
+  path: JsonPathType,
   inspect: (wire: PandocConstructorWire) => LosslessInspection
-): LosslessInspection =>
-  O.match(decodeConstructorOption(input), {
-    onNone: () => Effect.succeed([]),
-    onSome: inspect,
-  });
+): LosslessInspection => inspectDecoded(decodeConstructor(input), "block", "Table", path, inspect);
 
 const inspectTableAlignment = (input: unknown, path: JsonPathType): LosslessInspection =>
-  inspectTableConstructor(input, (wire) =>
+  inspectTableConstructor(input, path, (wire) =>
     Match.value(wire.t).pipe(
       Match.when(isPandocTableAlignmentConstructorName, () =>
         inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)
@@ -1212,7 +1356,7 @@ const inspectTableAlignment = (input: unknown, path: JsonPathType): LosslessInsp
   );
 
 const inspectTableColumnWidth = (input: unknown, path: JsonPathType): LosslessInspection =>
-  inspectTableConstructor(input, (wire) =>
+  inspectTableConstructor(input, path, (wire) =>
     Match.value(wire.t).pipe(
       Match.when("ColWidth", () => inspectDecoded(decodeFinite(wire.c), "block", wire.t, path)),
       Match.when("ColWidthDefault", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
@@ -1393,13 +1537,7 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
         ),
         (blockIssues) =>
           Effect.map(inspectMeta(wire.meta), (metaIssues) =>
-            PandocLosslessDocument.make({
-              apiVersion: wire["pandoc-api-version"],
-              blocks: wire.blocks,
-              issues: [...blockIssues, ...metaIssues],
-              meta: wire.meta,
-              wire: rawWire,
-            })
+            issuePandocLosslessDocument(rawWire, [...blockIssues, ...metaIssues])
           )
       )
     )

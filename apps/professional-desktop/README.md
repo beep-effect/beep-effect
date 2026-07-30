@@ -1,3 +1,5 @@
+<!-- cspell:words Referer -->
+
 # @beep/professional-desktop
 
 ## Chat Database Compatibility
@@ -28,12 +30,18 @@ keep malformed, empty-root, or forward-compatible wire escaped and read-only.
 
 YouTube players use only
 `https://www.youtube-nocookie.com` frames. Production and development CSP both
-declare that exact `frame-src`. “Watch on YouTube” cancels its click and emits
-a typed, cancelable request. The Tauri desktop claims validated requests and
-uses the official opener plugin; an unclaimed browser request is opened
-explicitly. If the native opener rejects a claimed request, an accessible
-notice retains both a retry and an explicit browser fallback. Every path
-remains scoped to canonical watch URLs with an exact eleven-character video id.
+declare that exact `frame-src`. On Linux, WebKitGTK adds the installed Tauri app
+identity as the `Referer` header only for an exact privacy-enhanced embed
+request; other requests are unchanged. The native build compiles that policy
+into a WebKit Web-process extension, uses the honored
+[`WebKitWebPage::send-request`](https://webkitgtk.org/reference/webkit2gtk-web-extension/2.42.4/signal.WebPage.send-request.html)
+mutation point, bundles it into the executable, and loads it before creating the
+first page. “Watch on YouTube” cancels its click and emits a typed, cancelable
+request. The Tauri desktop claims validated requests and uses the official
+opener plugin; an unclaimed browser request is opened explicitly. If the native
+opener rejects a claimed request, an accessible notice retains both a retry and
+an explicit browser fallback. Every path remains scoped to canonical watch URLs
+with an exact eleven-character video id.
 
 The packaged CSP keeps scripts, workers, and application assets on `'self'`;
 the ontology projection worker is emitted as a same-origin module asset rather

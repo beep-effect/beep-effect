@@ -650,12 +650,19 @@ const inspectAttributeCompatibility = (
   return A.emptyReadonly();
 };
 
-const isSafeAttributeUrl = (node: RuntimeNode, name: string, value: unknown): boolean =>
-  (name === "href" || name === "cite") && P.isString(value)
-    ? isSafeUrlAttribute(value)
-    : name === "src" && node._tag === "img" && P.isString(value)
-      ? isSafeImageUrlAttribute(value)
-      : name !== "href" && name !== "cite" && name !== "src";
+const isSafeAttributeUrl = (node: RuntimeNode, name: string, value: unknown): boolean => {
+  if (name === "href" || name === "cite") {
+    /* istanbul ignore next -- HtmlRoot encoding emits string values for both generated URL attributes */
+    if (!P.isString(value)) return false;
+    return isSafeUrlAttribute(value);
+  }
+  if (name === "src") {
+    /* istanbul ignore next -- img is the only safe-policy element with a generated src attribute */
+    if (node._tag !== "img" || !P.isString(value)) return false;
+    return isSafeImageUrlAttribute(value);
+  }
+  return true;
+};
 
 const inspectAttribute = (
   node: RuntimeNode,
@@ -731,10 +738,11 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
 export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicyIssue> =>
   Result.match(S.encodeResult(HtmlRoot)(conformantRoot(value)), {
     onFailure: () => [makeIssue([], "encodingFailure", "The conformance proof did not contain an encodable HTML root")],
-    onSuccess: (root) =>
-      isRuntimeNode(root)
-        ? inspectNode(root, [])
-        : [makeIssue([], "encodingFailure", "The encoded HTML root was not an object node")],
+    onSuccess: (root) => {
+      /* istanbul ignore else -- a successful HtmlRoot encoding always yields an object with a string discriminator */
+      if (isRuntimeNode(root)) return inspectNode(root, []);
+      return [makeIssue([], "encodingFailure", "The encoded HTML root was not an object node")];
+    },
   });
 
 /**
