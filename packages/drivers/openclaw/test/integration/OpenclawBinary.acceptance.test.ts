@@ -31,7 +31,6 @@ import {
   findLossySchemaPlaceholders,
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
-import { collectProcessOutput } from "@beep/utils/Stream";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, layer } from "@effect/vitest";
 import { Config, Context, Effect, Layer, pipe } from "effect";
@@ -39,6 +38,7 @@ import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { goldenDeploymentIntent } from "../fixtures/golden-intent.expected.ts";
@@ -79,7 +79,19 @@ class OpenclawItWorkbench extends Context.Service<OpenclawItWorkbench, OpenclawI
 
 const runCapturedProcess = Effect.fnUntraced(function* (command: ChildProcess.Command) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  return yield* Effect.scoped(Effect.flatMap(spawner.spawn(command), collectProcessOutput));
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* spawner.spawn(command);
+      return yield* Effect.all(
+        [
+          handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+          handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
+    })
+  );
 });
 
 const ambientProcess = (executable: string, args: ReadonlyArray<string>): ChildProcess.Command =>

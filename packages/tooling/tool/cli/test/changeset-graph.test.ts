@@ -6,7 +6,7 @@ import {
   makeChangesetGraphSummary,
   runChangesetGraphCheck,
 } from "@beep/repo-cli/test/Quality";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as P from "effect/Predicate";
@@ -19,16 +19,13 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  TestConsole.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 const runGit = Effect.fn("ChangesetGraphTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
+    stdin: "ignore",
     stdout: "ignore",
     stderr: "ignore",
   });

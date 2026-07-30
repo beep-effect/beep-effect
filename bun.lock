@@ -2412,7 +2412,6 @@
         "@beep/utils": "workspace:^",
         "@effect/markdown-toc": "catalog:",
         "@effect/platform-bun": "catalog:",
-        "@effect/platform-node": "catalog:",
         "doctrine": "catalog:",
         "effect": "catalog:",
         "jsonc-parser": "catalog:",

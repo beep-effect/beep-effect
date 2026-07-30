@@ -7,14 +7,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
+import { Console, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
+import { runCaptured } from "../../internal/process/index.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -180,33 +180,18 @@ const collectGitOutput = Effect.fn("ChangesetGraph.collectGitOutput")(function* 
   repoRoot: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<string, ChangesetGraphError, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "ignore",
-      });
-      const text = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      const exitCode = yield* handle.exitCode;
-
-      if (exitCode !== 0) {
-        return yield* ChangesetGraphError.make({
-          message: `git ${A.join(args, " ")} failed with exit code ${exitCode}.`,
-        });
-      }
-
-      return text;
-    })
-  ).pipe(ChangesetGraphError.mapError(`Failed to run git ${A.join(args, " ")}.`));
-
-  return output;
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(ChangesetGraphError.mapError(`Failed to run git ${A.join(args, " ")}.`));
+  if (result.exitCode !== 0) {
+    return yield* ChangesetGraphError.make({
+      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.output;
 });
 
 const readPackageJson = Effect.fn("ChangesetGraph.readPackageJson")(function* (

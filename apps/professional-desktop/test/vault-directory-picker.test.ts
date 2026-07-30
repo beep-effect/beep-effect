@@ -33,19 +33,33 @@ const spawnNotFound = PlatformError.systemError({
 });
 
 const mockSpawnerLayer = (
-  handler: (command: string) => { stdout?: string; code?: number } | "missing"
+  handler: (command: ChildProcess.StandardCommand) => { stdout?: string; code?: number } | "missing"
 ): Layer.Layer<ChildProcessSpawner.ChildProcessSpawner> =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("Expected a standard picker command");
-      const result = handler(command.command);
+      const result = handler(command);
       return result === "missing" ? Effect.fail(spawnNotFound) : Effect.succeed(mockHandle(result));
     })
   );
 
 describe("pickVaultDirectoryOnHost", () => {
-  layer(mockSpawnerLayer(() => ({ stdout: "/home/user/vault1\n" })))("with a kdialog selection", (it) => {
+  layer(
+    mockSpawnerLayer((command) => {
+      assert.strictEqual(command.command, "kdialog");
+      assert.deepStrictEqual(command.args, [
+        "--title",
+        "Select workspace vault",
+        "--getexistingdirectory",
+        "/home/user",
+      ]);
+      assert.strictEqual(command.options.stdin, "ignore");
+      assert.strictEqual(command.options.stdout, "pipe");
+      assert.strictEqual(command.options.stderr, "ignore");
+      return { stdout: "/home/user/vault1\n" };
+    })
+  )("with a kdialog selection", (it) => {
     it.effect(
       "returns the picked path from kdialog stdout",
       Effect.fnUntraced(function* () {
@@ -75,7 +89,7 @@ describe("pickVaultDirectoryOnHost", () => {
     );
   });
 
-  layer(mockSpawnerLayer((command) => (command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
+  layer(mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
     "with kdialog missing and zenity available",
     (it) => {
       it.effect(

@@ -5,14 +5,16 @@
  * @since 0.0.0
  */
 
-import { collectProcessOutput } from "@beep/utils/Stream";
-import { Effect } from "effect";
+import { O } from "@beep/utils";
+import { Duration, Effect, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/unstable/process";
 import { OpenclawCommandSpawnError } from "../Openclaw.errors.ts";
 import { OpenclawProcessResult } from "../Openclaw.models.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "../Openclaw.models.ts";
+
+const forceKillGrace = Duration.seconds(2);
 
 /**
  * Spawn the requested process, collect stdout/stderr/exit code, and map any
@@ -36,8 +38,12 @@ export const spawnProcessResult = (input: {
 }): Effect.Effect<OpenclawProcessResult, OpenclawCommandSpawnError> => {
   const { extendEnv, request, spawner, subcommand } = input;
   const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
+    ...O.getSomesStruct({
+      forceKillAfter: O.as(request.timeoutMs, forceKillGrace),
+    }),
     env: request.env,
     extendEnv,
+    // fallow-ignore-next-line code-duplication -- The approved process-hardening spec keeps output ownership inside each driver boundary.
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -46,7 +52,14 @@ export const spawnProcessResult = (input: {
   return Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+          handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
 
       return OpenclawProcessResult.make({ exitCode, stderr, stdout });
     })

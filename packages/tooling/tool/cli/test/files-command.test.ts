@@ -26,7 +26,7 @@ import {
 } from "@beep/repo-cli/test/Files";
 import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
@@ -43,12 +43,7 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  TestConsole.layer,
-  FetchHttpClient.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, FetchHttpClient.layer);
 const runFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
 const decodeArchivePoorCandidatesManifest = S.decodeUnknownSync(S.fromJsonString(ArchivePoorCandidatesManifest));
 const decodeDetectBordersReport = S.decodeUnknownSync(S.fromJsonString(DetectBordersReport));

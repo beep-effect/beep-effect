@@ -64,7 +64,6 @@ const TestLayer = Layer.mergeAll(
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(CommandPlatformLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
   FetchHttpClient.layer,
@@ -93,6 +92,7 @@ const runCommand = (command: string, args: ReadonlyArray<string>, cwd: string) =
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(command, [...args], {
         cwd,
+        stdin: "ignore",
         stdout: "ignore",
         stderr: "ignore",
       });

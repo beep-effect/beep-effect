@@ -32,6 +32,7 @@ import type { TailscaleCommandError } from "./Tailscale.errors.ts";
 import type { TailnetIpv4Address as TailnetIpv4AddressType } from "./Tailscale.models.ts";
 
 const tailscaleExecutable = "tailscale";
+const forceKillGrace = Duration.seconds(2);
 const emptyString = () => Str.empty;
 
 const collectStdout = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
@@ -157,14 +158,23 @@ export const readTailscaleStatus = Effect.gen(function* () {
     argumentCount: A.length(args),
   };
   return yield* Effect.gen(function* () {
-    const child = yield* spawner.spawn(ChildProcess.make(tailscaleExecutable, args)).pipe(
-      Effect.mapError((cause) =>
-        TailscaleCommandSpawnError.make({
-          ...commandContext,
-          cause,
+    const child = yield* spawner
+      .spawn(
+        ChildProcess.make(tailscaleExecutable, args, {
+          forceKillAfter: forceKillGrace,
+          stdin: "ignore",
+          stderr: "pipe",
+          stdout: "pipe",
         })
       )
-    );
+      .pipe(
+        Effect.mapError((cause) =>
+          TailscaleCommandSpawnError.make({
+            ...commandContext,
+            cause,
+          })
+        )
+      );
     const [stdout, stderr, exitCode] = yield* Effect.all(
       [collectStdout(child.stdout), collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
       { concurrency: "unbounded" }
@@ -227,14 +237,23 @@ const runTailscaleCommand: {
     };
     const timeout = Duration.fromInputUnsafe(timeoutInput);
     return yield* Effect.gen(function* () {
-      const child = yield* spawner.spawn(ChildProcess.make(tailscaleExecutable, args)).pipe(
-        Effect.mapError((cause) =>
-          TailscaleCommandSpawnError.make({
-            ...commandContext,
-            cause,
+      const child = yield* spawner
+        .spawn(
+          ChildProcess.make(tailscaleExecutable, args, {
+            forceKillAfter: forceKillGrace,
+            stdin: "ignore",
+            stderr: "pipe",
+            stdout: "ignore",
           })
         )
-      );
+        .pipe(
+          Effect.mapError((cause) =>
+            TailscaleCommandSpawnError.make({
+              ...commandContext,
+              cause,
+            })
+          )
+        );
       const [stderr, exitCode] = yield* Effect.all(
         [collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
         { concurrency: "unbounded" }

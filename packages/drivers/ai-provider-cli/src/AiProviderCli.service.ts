@@ -7,8 +7,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { collectProcessOutput } from "@beep/utils/Stream";
-import { Context, Effect, Layer, Match, Result, Tuple } from "effect";
+import { Context, Effect, Layer, Match, Result, Stream, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -121,6 +120,7 @@ const runNative = (
   const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
     env: request.env,
     extendEnv: true,
+    // fallow-ignore-next-line code-duplication -- The approved process-hardening spec keeps output ownership inside each driver boundary.
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -129,7 +129,14 @@ const runNative = (
   return Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+          handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
 
       return AiProviderCliProcessResult.make({ exitCode, stderr, stdout });
     })

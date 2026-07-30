@@ -7,6 +7,7 @@ import {
   OutputBound,
   qualityStepOutputBound,
   repoRunOutputBound,
+  runCapturedStreams,
 } from "@beep/repo-cli/test/Process";
 import {
   gitLinesFromOutput,
@@ -16,7 +17,9 @@ import {
   safeOriginBranchFromBase,
   sortedUniquePaths,
 } from "@beep/repo-cli/test/RepoRun";
-import { describe, expect, it } from "@effect/vitest";
+import { Str } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Stream } from "effect";
 import * as O from "effect/Option";
 
@@ -71,6 +74,26 @@ describe("StepExec bounded output fold", () => {
   it("formats a command line", () => {
     expect(formatCommandLine("git", ["status", "--short"])).toBe("git status --short");
   });
+});
+
+layer(NodeServices.layer)("StepExec process integration", (it) => {
+  it.effect(
+    "drains large stdout and stderr streams concurrently",
+    Effect.fnUntraced(function* () {
+      const charsPerStream = 1024 * 1024;
+      const result = yield* runCapturedStreams({
+        command: process.execPath,
+        args: [
+          "-e",
+          `process.stdout.write("o".repeat(${charsPerStream}));process.stderr.write("e".repeat(${charsPerStream}));`,
+        ],
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(Str.length(result.stdout)).toBe(charsPerStream);
+      expect(Str.length(result.stderr)).toBe(charsPerStream);
+    })
+  );
 });
 
 describe("GitExec path parsing", () => {

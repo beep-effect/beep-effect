@@ -119,13 +119,11 @@ const countSelectedScopes = (packageSelector: O.Option<string>, all: boolean, ch
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { resolveDocgenQualityTargets } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.scope"
- * import { BunChildProcessSpawner, BunServices } from "@effect/platform-bun"
+ * import { BunServices } from "@effect/platform-bun"
  * import { Effect, Layer } from "effect"
  * import * as O from "effect/Option"
  *
- * const RuntimeLayer = Layer.mergeAll(BunChildProcessSpawner.layer, FsUtilsLive).pipe(
- *   Layer.provideMerge(BunServices.layer)
- * )
+ * const RuntimeLayer = FsUtilsLive.pipe(Layer.provideMerge(BunServices.layer))
  *
  * const program = Effect.gen(function* () {
  *   const targets = yield* resolveDocgenQualityTargets({

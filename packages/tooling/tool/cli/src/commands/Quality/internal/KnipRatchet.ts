@@ -12,10 +12,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 import { parse } from "jsonc-parser";
 import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
-import { collectText } from "../../../internal/process/index.ts";
+import { runCapturedStreams } from "../../../internal/process/index.ts";
 import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -402,26 +401,12 @@ const runKnipReporterJson = Effect.fn("KnipRatchet.runKnipReporterJson")(functio
   repoRoot: string
 ): Effect.fn.Return<KnipProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[knip] ${knipCommand}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", ["run", "knip", "--reporter", "json"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        {
-          concurrency: 3,
-        }
-      );
-      return {
-        stdout: Str.trim(stdout),
-        stderr: Str.trim(stderr),
-        exitCode,
-      };
-    })
-  ).pipe(
+  return yield* runCapturedStreams({
+    command: "bun",
+    args: ["run", "knip", "--reporter", "json"],
+    cwd: repoRoot,
+    trim: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to run ${knipCommand}.`, {
       command: knipCommand,
     })

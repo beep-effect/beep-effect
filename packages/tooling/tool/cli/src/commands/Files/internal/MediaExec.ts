@@ -8,12 +8,11 @@
 import { A, Str } from "@beep/utils";
 import { Config, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as O from "effect/Option";
-import { ChildProcess } from "effect/unstable/process";
 import { imageSizeFromFile } from "image-size/fromFile";
 import sharp from "sharp";
+import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { FilesCommandError } from "../Files.errors.ts";
 import {
-  collectText,
   isExifOrientationRotated,
   isQuarterTurnRotation,
   maybeSwapDimensions,
@@ -126,9 +125,9 @@ const runFfprobe = Effect.fn("Files.runFfprobe")(function* (
 > {
   const path = yield* Path.Path;
   const ffprobePath = yield* resolveTrustedMediaToolPath("ffprobe", "BEEP_FFPROBE_PATH");
-  const command = ChildProcess.make(
-    ffprobePath,
-    [
+  const result = yield* runCapturedStreams({
+    command: ffprobePath,
+    args: [
       "-v",
       "error",
       "-protocol_whitelist",
@@ -140,22 +139,8 @@ const runFfprobe = Effect.fn("Files.runFfprobe")(function* (
       "json",
       file.sourcePath,
     ],
-    {
-      cwd: path.dirname(file.sourcePath),
-      stderr: "pipe",
-      stdout: "pipe",
-    }
-  );
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* command;
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      return { exitCode, stderr, stdout };
-    })
-  ).pipe(
+    cwd: path.dirname(file.sourcePath),
+  }).pipe(
     FilesCommandError.mapError(
       `Failed to run ffprobe for "${file.sourcePath}". Install ffprobe or run without --with-dimensions.`
     )
@@ -363,9 +348,9 @@ const runFfmpegStripMetadata = Effect.fn("Files.runFfmpegStripMetadata")(functio
 > {
   const path = yield* Path.Path;
   const ffmpegPath = yield* resolveTrustedMediaToolPath("ffmpeg", "BEEP_FFMPEG_PATH");
-  const command = ChildProcess.make(
-    ffmpegPath,
-    [
+  const result = yield* runCapturedStreams({
+    command: ffmpegPath,
+    args: [
       "-hide_banner",
       "-nostdin",
       "-y",
@@ -387,22 +372,8 @@ const runFfmpegStripMetadata = Effect.fn("Files.runFfmpegStripMetadata")(functio
       "-1",
       tempPath,
     ],
-    {
-      cwd: path.dirname(entry.sourcePath),
-      stderr: "pipe",
-      stdout: "pipe",
-    }
-  );
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* command;
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      return { exitCode, stderr, stdout };
-    })
-  ).pipe(
+    cwd: path.dirname(entry.sourcePath),
+  }).pipe(
     FilesCommandError.mapError(
       `Failed to run ffmpeg for "${entry.sourcePath}". Install ffmpeg or remove videos from the selection.`
     )

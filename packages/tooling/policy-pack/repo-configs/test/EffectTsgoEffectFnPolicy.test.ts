@@ -105,6 +105,7 @@ const runCommand = Effect.fn("EffectTsgoEffectFnPolicy.runCommand")(function* (
 ) {
   const child = ChildProcess.make(command, args, {
     cwd,
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });

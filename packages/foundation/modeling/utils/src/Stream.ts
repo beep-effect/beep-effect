@@ -8,34 +8,6 @@
 import { Effect, flow, Stream } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { ChildProcessSpawner } from "effect/unstable/process";
-
-/**
- * Collects a child process handle's stdout, stderr, and exit code concurrently.
- *
- * @param handle - Running child process handle whose output should be collected.
- * @returns The decoded stdout, decoded stderr, and exit code.
- * @example
- * ```ts
- * import { collectProcessOutput } from "@beep/utils/Stream"
- *
- * console.log(collectProcessOutput)
- * ```
- * @category utilities
- * @since 0.0.0
- */
-export const collectProcessOutput = Effect.fn("Stream.collectProcessOutput")(function* (
-  handle: ChildProcessSpawner.ChildProcessHandle
-) {
-  return yield* Effect.all(
-    [
-      handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-      handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-      handle.exitCode,
-    ],
-    { concurrency: "unbounded" }
-  );
-});
 
 /**
  * Splits a text stream into lines, decodes each line as JSON with `schema`,

@@ -39,15 +39,12 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  * encoded JSON to stdin, and reads stdout/stderr from the child process.
  * @example
  * ```ts
- * import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node"
- * import { Effect, Layer } from "effect"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
  * import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson"
- * const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
- *   Layer.provideMerge(NodeServices.layer)
- * )
  * const formatted = await Effect.runPromise(
  *   renderBiomeJson("package.json", { name: "@beep/example", private: true }).pipe(
- *     Effect.provide(PlatformLayer)
+ *     Effect.provide(NodeServices.layer)
  *   )
  * )
  * console.log(formatted.endsWith("\n")) // true

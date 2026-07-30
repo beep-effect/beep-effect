@@ -72,6 +72,7 @@ const isString = (value: unknown): value is string => typeof value === "string";
 const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
+    stdin: "ignore",
     stdout: "ignore",
     stderr: "ignore",
   });

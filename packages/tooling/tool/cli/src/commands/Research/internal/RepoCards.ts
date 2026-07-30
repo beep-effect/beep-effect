@@ -11,14 +11,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
+import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -73,20 +73,13 @@ const runForOutput = Effect.fn("RepoCards.runForOutput")(function* (
   args: ReadonlyArray<string>,
   cwd: string
 ): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], { cwd, stderr: "pipe", stdout: "pipe" });
-      const output = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output: Str.trim(output) };
-    })
-  ).pipe(Effect.option);
+  const result = yield* runCaptured({
+    command,
+    args,
+    cwd,
+    source: "stdout",
+    trim: true,
+  }).pipe(Effect.option);
   return result.pipe(
     O.filter((run) => run.exitCode === 0 && Str.isNonEmpty(run.output)),
     O.map((run) => run.output)

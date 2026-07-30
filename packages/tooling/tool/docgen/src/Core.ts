@@ -455,6 +455,7 @@ const runTscOnExamples = Effect.gen(function* () {
   const tsconfig = path.normalize(path.join(cwd, config.outDir, "examples", "tsconfig.json"));
   const command = ChildProcess.make(config.tscExecutable, ["--noEmit", "--project", tsconfig], {
     cwd,
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -484,6 +485,7 @@ const runBunOnExamples = Effect.gen(function* () {
   const index = path.join(examplesDir, "index.ts");
   const command = ChildProcess.make("bun", [index], {
     cwd: examplesDir,
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
