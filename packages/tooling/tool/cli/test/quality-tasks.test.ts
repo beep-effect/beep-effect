@@ -501,7 +501,7 @@ describe("quality task adapter", () => {
       })
     ).toBe(true);
     expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
-    expect(fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")).toEqual([
+    expect(fallowAuditDiffFallbackArgsForTesting({ diffPath: "/tmp/audit.diff", quiet: true })("origin/main")).toEqual([
       "run",
       "fallow",
       "--",

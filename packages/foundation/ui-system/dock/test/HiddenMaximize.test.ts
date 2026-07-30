@@ -63,14 +63,17 @@ describe("hidden groups and maximize", () => {
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const hidden = yield* requireChanged(yield* engine.transition(workspace, updateVisibility(groupOne, false)));
-        const oneHidden = projectWorkspace(hidden.state, box, GeometryOptions.make({ gap: 4 }));
+        const oneHidden = projectWorkspace(hidden.state, {
+          container: box,
+          options: GeometryOptions.make({ gap: 4 }),
+        });
         expect(oneHidden.groups).toEqual([{ groupId: groupTwo, box }]);
         expect(oneHidden.sashes).toEqual([]);
         expect(O.isNone(DockGeometry.forGroup(oneHidden, groupOne))).toBe(true);
         const allHidden = yield* requireChanged(
           yield* engine.transition(hidden.state, updateVisibility(groupTwo, false))
         );
-        expect(projectWorkspace(allHidden.state, box)).toEqual(DockGeometry.empty);
+        expect(projectWorkspace(allHidden.state, { container: box })).toEqual(DockGeometry.empty);
         const shown = yield* requireChanged(
           yield* engine.transition(allHidden.state, updateVisibility(groupOne, true))
         );
@@ -85,8 +88,8 @@ describe("hidden groups and maximize", () => {
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
-        expect(projectWorkspace(maximized.state, box).groups).toEqual([{ groupId: groupOne, box }]);
-        expect(projectWorkspace(maximized.state, box).sashes).toEqual([]);
+        expect(projectWorkspace(maximized.state, { container: box }).groups).toEqual([{ groupId: groupOne, box }]);
+        expect(projectWorkspace(maximized.state, { container: box }).sashes).toEqual([]);
         const again = yield* engine.transition(maximized.state, maximize());
         expect(again.result).toMatchObject({ _tag: "Unchanged", reason: "group-already-maximized" });
         const restored = yield* requireChanged(

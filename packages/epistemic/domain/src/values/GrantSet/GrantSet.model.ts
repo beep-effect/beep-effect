@@ -25,6 +25,7 @@ import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime, Result, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { ExecutionGrant, PolicyRevision } from "../ExecutionGrant/index.ts";
 import { ExecutionVerdict } from "../ExecutionVerdict/index.ts";
@@ -277,13 +278,16 @@ export const emptyDraftGrantSet = (policyRevision: PolicyRevision): DraftGrantSe
  * @category combinators
  * @since 0.0.0
  */
-export const addGrant = (
-  draft: DraftGrantSet,
-  grant: ExecutionGrant
-): Result.Result<DraftGrantSet, GrantRevisionMismatch> =>
-  grant.policyRevision === draft.policyRevision
-    ? Result.succeed(DraftGrantSet.make({ grants: [...draft.grants, grant], policyRevision: draft.policyRevision }))
-    : Result.fail(GrantRevisionMismatch.between(draft.policyRevision, grant.policyRevision));
+export const addGrant: {
+  (grant: ExecutionGrant): (draft: DraftGrantSet) => Result.Result<DraftGrantSet, GrantRevisionMismatch>;
+  (draft: DraftGrantSet, grant: ExecutionGrant): Result.Result<DraftGrantSet, GrantRevisionMismatch>;
+} = dual(
+  2,
+  (draft: DraftGrantSet, grant: ExecutionGrant): Result.Result<DraftGrantSet, GrantRevisionMismatch> =>
+    grant.policyRevision === draft.policyRevision
+      ? Result.succeed(DraftGrantSet.make({ grants: [...draft.grants, grant], policyRevision: draft.policyRevision }))
+      : Result.fail(GrantRevisionMismatch.between(draft.policyRevision, grant.policyRevision))
+);
 
 /**
  * Exactly what the grant-set seal commits to. Modeled as a schema rather than
@@ -395,11 +399,42 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
     })
   ) === frozen.digest;
 
+/**
+ * Time and policy context used to evaluate one execution request.
+ *
+ * @example
+ * ```ts
+ * import { ExecutionRequestEvaluationOptions, PolicyRevision } from "@beep/epistemic-domain"
+ * import { DateTime } from "effect"
+ *
+ * const options = ExecutionRequestEvaluationOptions.make({
+ *   currentPolicyRevision: PolicyRevision.fromUnknown("1.0.0"),
+ *   now: DateTime.makeUnsafe(0)
+ * })
+ * console.log(options.currentPolicyRevision)
+ * // "1.0.0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExecutionRequestEvaluationOptions extends S.Class<ExecutionRequestEvaluationOptions>(
+  $I`ExecutionRequestEvaluationOptions`
+)(
+  {
+    currentPolicyRevision: PolicyRevision,
+    now: S.DateTimeUtc,
+  },
+  $I.annote("ExecutionRequestEvaluationOptions", {
+    description: "Time and current policy revision used to evaluate one execution request.",
+  })
+) {}
+
 const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make({ verdict: "denied", reason });
 
 /**
- * The pure evaluator: a total function of (frozen grants, request, now,
- * current policy revision) with error channel `never` — refusal is a value.
+ * The pure evaluator: a total function of (frozen grants, request, evaluation
+ * options) with error channel `never` — refusal is a value.
  *
  * It re-verifies the set's seal **first**, because `S.Class` and schema
  * decoding can both produce a `FrozenGrantSet` whose `digest` does not match
@@ -421,7 +456,7 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  *
  * @example
  * ```ts
- * import { emptyDraftGrantSet, evaluateExecutionRequest, ExecutionRequest, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
+ * import { emptyDraftGrantSet, evaluateExecutionRequest, ExecutionRequest, ExecutionRequestEvaluationOptions, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -433,7 +468,14 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  *   resolvedAudience: "external-network",
  *   sinkClass: "network-egress"
  * })
- * const verdict = evaluateExecutionRequest(frozen, request, DateTime.makeUnsafe(0), revision)
+ * const verdict = evaluateExecutionRequest(
+ *   frozen,
+ *   request,
+ *   ExecutionRequestEvaluationOptions.make({
+ *     currentPolicyRevision: revision,
+ *     now: DateTime.makeUnsafe(0)
+ *   })
+ * )
  * console.log(verdict)
  * // { verdict: "denied", reason: "operation-not-granted" }
  * ```
@@ -441,16 +483,14 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  * @category policies
  * @since 0.0.0
  */
-export const evaluateExecutionRequest = (
-  frozen: FrozenGrantSet,
-  request: ExecutionRequest,
-  now: DateTime.Utc,
-  currentPolicyRevision: PolicyRevision
-): ExecutionVerdict => {
+export const evaluateExecutionRequest: {
+  (request: ExecutionRequest, options: ExecutionRequestEvaluationOptions): (frozen: FrozenGrantSet) => ExecutionVerdict;
+  (frozen: FrozenGrantSet, request: ExecutionRequest, options: ExecutionRequestEvaluationOptions): ExecutionVerdict;
+} = dual(3, (frozen: FrozenGrantSet, request: ExecutionRequest, options: ExecutionRequestEvaluationOptions) => {
   if (!verifyFrozenGrantSetDigest(frozen)) {
     return denied("grant-set-digest-mismatch");
   }
-  if (frozen.policyRevision !== currentPolicyRevision) {
+  if (frozen.policyRevision !== options.currentPolicyRevision) {
     return denied("policy-revision-mismatch");
   }
   const byOperation = A.filter(frozen.grants, (grant) => grant.operation === request.operation);
@@ -469,9 +509,9 @@ export const evaluateExecutionRequest = (
   if (byDestination.length === 0) {
     return denied("destination-not-granted");
   }
-  const live = A.filter(byDestination, (grant) => DateTime.isLessThan(now, grant.expiresAt));
+  const live = A.filter(byDestination, (grant) => DateTime.isLessThan(options.now, grant.expiresAt));
   if (live.length === 0) {
     return denied("grant-expired");
   }
   return ExecutionVerdict.make({ verdict: "allowed" });
-};
+});

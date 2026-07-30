@@ -34,6 +34,15 @@ export class GoalPacketNotFoundError extends TaggedErrorClass<GoalPacketNotFound
     description: "A goal packet directory or its manifest could not be found.",
   })
 ) {
+  /**
+   * Construct a missing-packet error.
+   *
+   * @param slug - Goal packet slug that could not be found.
+   * @param message - Diagnostic message describing the missing packet.
+   * @returns A typed missing-packet error.
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly new = (slug: string, message: string): GoalPacketNotFoundError =>
     GoalPacketNotFoundError.make({ slug, message });
 }
@@ -62,6 +71,15 @@ export class GoalManifestInvalidError extends TaggedErrorClass<GoalManifestInval
     description: "A goal manifest failed JSON parsing or GoalManifest decoding.",
   })
 ) {
+  /**
+   * Construct an invalid-manifest error.
+   *
+   * @param slug - Goal packet slug whose manifest is invalid.
+   * @param message - Diagnostic message describing the invalid manifest.
+   * @returns A typed invalid-manifest error.
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly new = (slug: string, message: string): GoalManifestInvalidError =>
     GoalManifestInvalidError.make({ slug, message });
 }
@@ -92,6 +110,15 @@ export class GoalReadmeStatusLineError extends TaggedErrorClass<GoalReadmeStatus
     description: "A packet README lacks a recognizable Lifecycle: status line to rewrite.",
   })
 ) {
+  /**
+   * Construct a missing-README-status-line error.
+   *
+   * @param slug - Goal packet slug whose README cannot be updated.
+   * @param message - Diagnostic message describing the missing status line.
+   * @returns A typed missing-README-status-line error.
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly new = (slug: string, message: string): GoalReadmeStatusLineError =>
     GoalReadmeStatusLineError.make({ slug, message });
 }

@@ -499,6 +499,12 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
     description: "A non-empty ordered tab zipper with one structurally active panel.",
   })
 ) {
+  /**
+   * Constructs a tab zipper from an ordered non-empty panel collection.
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly fromPanels: Dual4<GroupId, A.NonEmptyReadonlyArray<Panel>, PanelId, GroupMetadata, TabsNode> = dual(
     4,
     (

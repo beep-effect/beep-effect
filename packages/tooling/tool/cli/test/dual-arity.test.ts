@@ -219,7 +219,7 @@ layer(testLayer)("dual arity laws", (it) => {
     )
   );
 
-  it.effect("ignores static schema-codec callables while tracking plain static function properties", () =>
+  it.effect("ignores non-helper static callable values while tracking required static function properties", () =>
     withTempWorkingDirectory(
       Effect.gen(function* () {
         yield* writeProjectScaffold;
@@ -227,10 +227,29 @@ layer(testLayer)("dual arity laws", (it) => {
           "packages/demo/src/index.ts",
           A.join(
             [
-              'import * as S from "effect/Schema";',
+              "declare const S: {",
+              "  readonly decodeUnknownEffect: (",
+              "    schema: string",
+              "  ) => (input: unknown, options?: { readonly strict: boolean }) => string",
+              "};",
+              "declare const SchemaUtils: {",
+              "  readonly toEquivalence: <A>(schema: A) => {",
+              "    (self: A, that: A): boolean",
+              "    (that: A): (self: A) => boolean",
+              "  }",
+              "};",
+              "declare const makeOptional: () => (",
+              "  input: unknown,",
+              "  options?: { readonly strict: boolean }",
+              ") => string;",
               "",
-              "export class Codec extends S.asClass(S.String) {",
-              "  static readonly decodeUnknownSync = S.decodeUnknownSync(this);",
+              "export class Codec {",
+              '  static readonly decodeEffect = S.decodeUnknownEffect("schema");',
+              '  static readonly equivalence = SchemaUtils.toEquivalence("schema");',
+              "}",
+              "",
+              "export class Optional {",
+              "  static readonly parse = makeOptional();",
               "}",
               "",
               "export class Plain {",
@@ -247,7 +266,9 @@ layer(testLayer)("dual arity laws", (it) => {
         const diagnostics = A.join(summary.diagnostics, "\n");
 
         expect(summary.liveEntries).toBe(1);
-        expect(diagnostics).not.toContain("Codec.decodeUnknownSync");
+        expect(diagnostics).not.toContain("Codec.decodeEffect");
+        expect(diagnostics).not.toContain("Codec.equivalence");
+        expect(diagnostics).not.toContain("Optional.parse");
         expect(diagnostics).toContain("Plain.combine");
         expect(diagnostics).toContain("missing-dual");
       })

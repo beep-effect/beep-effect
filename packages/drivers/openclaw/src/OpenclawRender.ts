@@ -21,6 +21,7 @@ import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -502,14 +503,17 @@ export const declaredExtensionSurfaces = (intent: OpenclawDeploymentIntent): Rea
  * @category guards
  * @since 0.0.0
  */
-export const findLossySchemaPlaceholders = (
-  schemaExport: unknown,
-  surfaces: ReadonlyArray<string>
-): ReadonlyArray<OpenclawSchemaPlaceholderFinding> =>
-  A.getSomes(
-    A.map(surfaces, (surface) =>
-      O.map(surfaceReason(schemaExport, surface), (reason) =>
-        OpenclawSchemaPlaceholderFinding.make({ reason, surface })
+export const findLossySchemaPlaceholders: {
+  (surfaces: ReadonlyArray<string>): (schemaExport: unknown) => ReadonlyArray<OpenclawSchemaPlaceholderFinding>;
+  (schemaExport: unknown, surfaces: ReadonlyArray<string>): ReadonlyArray<OpenclawSchemaPlaceholderFinding>;
+} = dual(
+  2,
+  (schemaExport: unknown, surfaces: ReadonlyArray<string>): ReadonlyArray<OpenclawSchemaPlaceholderFinding> =>
+    A.getSomes(
+      A.map(surfaces, (surface) =>
+        O.map(surfaceReason(schemaExport, surface), (reason) =>
+          OpenclawSchemaPlaceholderFinding.make({ reason, surface })
+        )
       )
     )
-  );
+);

@@ -471,7 +471,9 @@ describe("floating dock topology", () => {
         const maximized = changed(
           yield* engine.transition(state, envelope("maximize-docked", MaximizeGroupCommand.make({ groupId: groupOne })))
         );
-        const geometry = projectWorkspace(maximized.state, DockBox.make({ left: 0, top: 0, width: 800, height: 600 }));
+        const geometry = projectWorkspace(maximized.state, {
+          container: DockBox.make({ left: 0, top: 0, width: 800, height: 600 }),
+        });
         expect(geometry.groups[0]?.box).toEqual(DockBox.make({ left: 0, top: 0, width: 800, height: 600 }));
         expect(geometry.floating).toHaveLength(1);
       })

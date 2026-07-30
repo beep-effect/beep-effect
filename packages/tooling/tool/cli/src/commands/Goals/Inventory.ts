@@ -13,6 +13,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Effect, FileSystem, Order, Path } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -233,7 +234,10 @@ export const readmeLifecycleToken = (readme: string): O.Option<string> => {
  * @category formatting
  * @since 0.0.0
  */
-export const rewriteReadmeLifecycleToken = (readme: string, token: string): O.Option<string> => {
+export const rewriteReadmeLifecycleToken: {
+  (token: string): (readme: string) => O.Option<string>;
+  (readme: string, token: string): O.Option<string>;
+} = dual(2, (readme: string, token: string): O.Option<string> => {
   const match = LIFECYCLE_LINE_PATTERN.exec(readme);
   if (match === null || !P.isString(match[1]) || !P.isString(match[3])) {
     return O.none();
@@ -243,7 +247,7 @@ export const rewriteReadmeLifecycleToken = (readme: string, token: string): O.Op
   return O.some(
     `${pipe(readme, Str.slice(0, start))}${match[1]}${token}${match[3]}${pipe(readme, Str.slice(end, Str.length(readme)))}`
   );
-};
+});
 
 /**
  * Extract the H1 title from a packet README.

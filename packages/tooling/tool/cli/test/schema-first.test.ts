@@ -259,7 +259,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
@@ -274,7 +274,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -288,7 +288,7 @@ describe("normalizationEntryFromCallExpression", () => {
       ["export function normalizeName(name: string): string {", "  return name.trim();", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
@@ -299,7 +299,7 @@ describe("normalizationEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile("fixture.ts", 'const trimmed = "  hi  ".trim();');
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -313,7 +313,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
@@ -327,7 +327,10 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
+      file: "fixture.ts",
+      owner: "@beep/test",
+    });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -341,7 +344,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
@@ -355,7 +358,10 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression(callExpression, {
+      file: "fixture.ts",
+      owner: "@beep/test",
+    });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -379,7 +385,7 @@ describe("G4 foundation family-flip regression fixture", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, file, "@beep/fixture"));
+    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, { file, owner: "@beep/fixture" }));
   };
 
   const foundationFile = "packages/foundation/modeling/schema/src/Fixture.ts";

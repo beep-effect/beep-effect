@@ -9,6 +9,7 @@ import { naturalWidth, PretextCapture, PretextCaptureRequest } from "@beep/prete
 import { SchemaUtils } from "@beep/schema";
 import { Layer, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -20,6 +21,11 @@ import type { GroupMinimaRecord } from "./Dock.geometry.ts";
 import type { DockWorkspace } from "./Dock.tree.ts";
 
 const $I = $DockId.create("Minima");
+
+type Dual3<Self, First, Second, Result> = {
+  (self: Self, first: First, second: Second): Result;
+  (first: First, second: Second): (self: Self) => Result;
+};
 
 const PixelAllowance = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("PixelAllowance", { description: "A finite non-negative pixel allowance." })
@@ -126,29 +132,32 @@ export const titleWords = (workspace: DockWorkspace): ReadonlyArray<string> =>
  * @category projections
  * @since 0.0.0
  */
-export const titleMinima = (metrics: FontMetrics, workspace: DockWorkspace, chrome: TabChrome): GroupMinimaRecord =>
-  pipe(
-    workspaceTabs(workspace),
-    A.reduce(emptyMinima, (record, tabs) => {
-      const measured = pipe(
-        TabsNode.panels(tabs),
-        A.map((panel) => naturalWidth(metrics, panel.title)),
-        A.getSomes
-      );
-      return A.match(measured, {
-        onEmpty: () => record,
-        onNonEmpty: (widths) =>
-          R.set(
-            record,
-            tabs.groupId,
-            N.sum(
-              chrome.strip,
-              A.reduce(widths, 0, (total, width) => N.sum(total, N.sum(width, chrome.perTab)))
-            )
-          ),
-      });
-    })
-  );
+export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMinimaRecord> = dual(
+  3,
+  (metrics: FontMetrics, workspace: DockWorkspace, chrome: TabChrome): GroupMinimaRecord =>
+    pipe(
+      workspaceTabs(workspace),
+      A.reduce(emptyMinima, (record, tabs) => {
+        const measured = pipe(
+          TabsNode.panels(tabs),
+          A.map((panel) => naturalWidth(metrics, panel.title)),
+          A.getSomes
+        );
+        return A.match(measured, {
+          onEmpty: () => record,
+          onNonEmpty: (widths) =>
+            R.set(
+              record,
+              tabs.groupId,
+              N.sum(
+                chrome.strip,
+                A.reduce(widths, 0, (total, width) => N.sum(total, N.sum(width, chrome.perTab)))
+              )
+            ),
+        });
+      })
+    )
+);
 
 /**
  * Composes a reactive title-minima projection with headless font capture.

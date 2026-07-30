@@ -9,6 +9,7 @@ import {
   ExecutionGrant,
   ExecutionOutcomeRecord,
   ExecutionRequest,
+  ExecutionRequestEvaluationOptions,
   ExecutionRunKey,
   emptyDraftGrantSet,
   evaluateExecutionRequest,
@@ -99,6 +100,11 @@ const request = (overrides: Record<string, unknown> = {}): ExecutionRequest =>
 
 const now = DateTime.makeUnsafe(0);
 const afterExpiry = DateTime.makeUnsafe(120000);
+const evaluationOptions = (
+  evaluationTime: DateTime.Utc,
+  currentPolicyRevision: PolicyRevision
+): ExecutionRequestEvaluationOptions =>
+  ExecutionRequestEvaluationOptions.make({ currentPolicyRevision, now: evaluationTime });
 
 const draft = Result.getOrThrow(addGrant(emptyDraftGrantSet(revision), grant));
 const frozen = freezeGrantSet(draft, DateTime.makeUnsafe(0));
@@ -140,7 +146,7 @@ const decisionContent = (input: {
 describe("ExecutionAuthority", () => {
   describe("evaluateExecutionRequest", () => {
     it("allows a request matching every grant axis", () => {
-      const verdict = evaluateExecutionRequest(frozen, request(), now, revision);
+      const verdict = evaluateExecutionRequest(request(), evaluationOptions(now, revision))(frozen);
 
       expect(verdict.verdict).toBe("allowed");
     });
@@ -151,28 +157,33 @@ describe("ExecutionAuthority", () => {
         grants: [],
       });
       const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
-        "grant-set-digest-mismatch": evaluateExecutionRequest(tamperedFrozen, request(), now, revision),
-        "policy-revision-mismatch": evaluateExecutionRequest(frozen, request(), now, otherRevision),
+        "grant-set-digest-mismatch": evaluateExecutionRequest(
+          tamperedFrozen,
+          request(),
+          evaluationOptions(now, revision)
+        ),
+        "policy-revision-mismatch": evaluateExecutionRequest(frozen, request(), evaluationOptions(now, otherRevision)),
         "operation-not-granted": evaluateExecutionRequest(
           frozen,
           request({ operation: "ontology_delete_everything" }),
-          now,
-          revision
+          evaluationOptions(now, revision)
         ),
-        "sink-class-not-granted": evaluateExecutionRequest(frozen, request({ sinkClass: "mcp-write" }), now, revision),
+        "sink-class-not-granted": evaluateExecutionRequest(
+          frozen,
+          request({ sinkClass: "mcp-write" }),
+          evaluationOptions(now, revision)
+        ),
         "audience-not-granted": evaluateExecutionRequest(
           frozen,
           request({ resolvedAudience: "local-workspace" }),
-          now,
-          revision
+          evaluationOptions(now, revision)
         ),
         "destination-not-granted": evaluateExecutionRequest(
           frozen,
           request({ destination: "https://attacker.example" }),
-          now,
-          revision
+          evaluationOptions(now, revision)
         ),
-        "grant-expired": evaluateExecutionRequest(frozen, request(), afterExpiry, revision),
+        "grant-expired": evaluateExecutionRequest(frozen, request(), evaluationOptions(afterExpiry, revision)),
       };
 
       expect(evaluatorDenialReasons.length).toBe(7);
@@ -183,7 +194,7 @@ describe("ExecutionAuthority", () => {
 
     it("fails closed: an operation absent from the set denies, never allows", () => {
       const emptyFrozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0));
-      const verdict = evaluateExecutionRequest(emptyFrozen, request(), now, revision);
+      const verdict = evaluateExecutionRequest(emptyFrozen, request(), evaluationOptions(now, revision));
 
       expectDenied(verdict, "operation-not-granted");
     });
@@ -197,7 +208,10 @@ describe("ExecutionAuthority", () => {
         grants: [],
       });
 
-      expectDenied(evaluateExecutionRequest(tampered, request(), now, revision), "grant-set-digest-mismatch");
+      expectDenied(
+        evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
+        "grant-set-digest-mismatch"
+      );
     });
   });
 

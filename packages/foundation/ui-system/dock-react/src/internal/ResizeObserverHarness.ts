@@ -1,4 +1,16 @@
+import { dual } from "effect/Function";
+
 const observers = new Set<ControllableResizeObserver>();
+
+type ResizeDimensions = {
+  readonly width: number;
+  readonly height: number;
+};
+
+type Dual2<Self, That, Result> = {
+  (self: Self, that: That): Result;
+  (that: That): (self: Self) => Result;
+};
 
 export const activeResizeObserverCount = (): number => observers.size;
 
@@ -25,16 +37,19 @@ export class ControllableResizeObserver implements ResizeObserver {
   };
 }
 
-export const resize = (target: Element, width: number, height: number): void => {
-  const size = { blockSize: height, inlineSize: width };
-  const entry: ResizeObserverEntry = {
-    target,
-    contentRect: new DOMRectReadOnly(0, 0, width, height),
-    borderBoxSize: [size],
-    contentBoxSize: [size],
-    devicePixelContentBoxSize: [size],
-  };
-  for (const observer of observers) {
-    if (observer.targets.has(target)) observer.callback([entry], observer);
+export const resize: Dual2<Element, ResizeDimensions, void> = dual(
+  2,
+  (target: Element, { width, height }: ResizeDimensions): void => {
+    const size = { blockSize: height, inlineSize: width };
+    const entry: ResizeObserverEntry = {
+      target,
+      contentRect: new DOMRectReadOnly(0, 0, width, height),
+      borderBoxSize: [size],
+      contentBoxSize: [size],
+      devicePixelContentBoxSize: [size],
+    };
+    for (const observer of observers) {
+      if (observer.targets.has(target)) observer.callback([entry], observer);
+    }
   }
-};
+);

@@ -42,7 +42,7 @@ import {
   splitOne,
   splitTwo,
 } from "./Fixtures.ts";
-import type { DockMutationOutcome, DockWorkspace } from "@beep/dock";
+import type { DockCommandPolicy, DockMutationOutcome, DockWorkspace } from "@beep/dock";
 
 const panelFour = Panel.make({
   id: PanelId.make("panel-four"),
@@ -71,6 +71,8 @@ const moveIntoLocked = envelope(
   MovePanelCommand.make({ panelId: panelThree.id, target: TabPlacement.make({ groupId: groupOne }) })
 );
 
+const policyContract: DockCommandPolicy = lockedGroupsPolicy;
+
 const requireChangedState = (outcome: DockMutationOutcome): Effect.Effect<DockWorkspace> =>
   DockMutationResult.match(outcome.result, {
     Changed: ({ state }) => Effect.succeed(state),
@@ -78,6 +80,17 @@ const requireChangedState = (outcome: DockMutationOutcome): Effect.Effect<DockWo
   });
 
 describe("DockPolicy", () => {
+  it.effect(
+    "supports data-last use while remaining assignable to the policy contract",
+    Effect.fnUntraced(function* () {
+      const state = workspaceWith("locked");
+      const dataFirst = yield* Effect.flip(policyContract(state, moveIntoLocked));
+      const dataLast = yield* Effect.flip(lockedGroupsPolicy(moveIntoLocked)(state));
+
+      expect(dataLast).toEqual(dataFirst);
+    })
+  );
+
   it.layer(DockEngineLive)("without policy", (it) => {
     it.effect(
       "treats locked metadata as data and permits a move into the group",

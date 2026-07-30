@@ -58,9 +58,11 @@ describe("full circle against @beep/pretext: driver metrics → content minimum 
       }),
     });
     const container = DockBox.make({ left: 0, top: 0, width: 900, height: 600 });
-    const geometry = project(workspaceRoot, container, GeometryOptions.make({ gap: 4 }), (groupId) =>
-      GroupId.equals(groupId, proseGroup) ? contentMinimum : 0
-    );
+    const geometry = project(workspaceRoot, {
+      container,
+      minima: (groupId) => (GroupId.equals(groupId, proseGroup) ? contentMinimum : 0),
+      options: GeometryOptions.make({ gap: 4 }),
+    });
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
     expect(proseBox).toBeDefined();
     expect(proseBox!.width).toBeGreaterThanOrEqual(contentMinimum);
@@ -79,7 +81,7 @@ describe("full circle against @beep/pretext: driver metrics → content minimum 
       }),
     });
     const container = DockBox.make({ left: 0, top: 0, width: 900, height: 600 });
-    const geometry = project(workspaceRoot, container, GeometryOptions.make({ gap: 4 }));
+    const geometry = project(workspaceRoot, { container, options: GeometryOptions.make({ gap: 4 }) });
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
     expect(
       O.getOrThrow(lineCount(metrics, TextLayoutInput.make({ maxWidth: proseBox!.width, text: sentence })))

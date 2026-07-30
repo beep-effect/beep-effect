@@ -22,7 +22,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -245,10 +245,10 @@ export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>(
  * @category utilities
  * @since 0.0.0
  */
-export const classifyGoalDoctorFindings = (
-  current: ReadonlyArray<GoalDoctorFinding>,
-  baselineKeys: ReadonlyArray<string>
-): GoalDoctorClassification => {
+export const classifyGoalDoctorFindings: {
+  (baselineKeys: ReadonlyArray<string>): (current: ReadonlyArray<GoalDoctorFinding>) => GoalDoctorClassification;
+  (current: ReadonlyArray<GoalDoctorFinding>, baselineKeys: ReadonlyArray<string>): GoalDoctorClassification;
+} = dual(2, (current: ReadonlyArray<GoalDoctorFinding>, baselineKeys: ReadonlyArray<string>) => {
   const diff = diffMembership({
     current: A.map(current, (item) => item.key),
     baseline: baselineKeys,
@@ -261,7 +261,7 @@ export const classifyGoalDoctorFindings = (
     inherited: A.filter(current, (item) => !HashSet.has(introducedKeys, item.key)),
     resolved: diff.resolved,
   });
-};
+});
 
 const stringAt = (value: Readonly<Record<string, unknown>>, key: string): O.Option<string> =>
   pipe(R.get(value, key), O.filter(P.isString));

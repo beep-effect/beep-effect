@@ -26,6 +26,7 @@ import { O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PolicyRevision, SinkAudience, SinkClass } from "../ExecutionGrant/index.ts";
 import { DenialReason } from "../ExecutionVerdict/index.ts";
@@ -694,12 +695,18 @@ export const verifyExecutionDecisionChain = (
  * @category predicates
  * @since 0.0.0
  */
-export const verifyOutcomeBinding = (outcome: ExecutionOutcomeRecord, decision: ExecutionDecisionRecord): boolean =>
-  outcome.decisionHash === decision.hash &&
-  outcome.runKey === decision.runKey &&
-  decision.verdict === "allowed" &&
-  verifyExecutionOutcomeHash(outcome) &&
-  verifyExecutionDecisionHash(decision);
+export const verifyOutcomeBinding: {
+  (decision: ExecutionDecisionRecord): (outcome: ExecutionOutcomeRecord) => boolean;
+  (outcome: ExecutionOutcomeRecord, decision: ExecutionDecisionRecord): boolean;
+} = dual(
+  2,
+  (outcome: ExecutionOutcomeRecord, decision: ExecutionDecisionRecord): boolean =>
+    outcome.decisionHash === decision.hash &&
+    outcome.runKey === decision.runKey &&
+    decision.verdict === "allowed" &&
+    verifyExecutionOutcomeHash(outcome) &&
+    verifyExecutionDecisionHash(decision)
+);
 
 // Manual wire-form projection of outcome content for hashing, mirroring
 // encodeDecisionContent's rationale.

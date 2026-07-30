@@ -91,7 +91,7 @@ export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLoo
     description: "Normalized key used to compare effect-law findings with allowlist entries.",
   })
 ) {
-  static readonly equivalence = S.toEquivalence(EffectLawsAllowlistLookupKey);
+  static readonly equivalence = SchemaUtils.toEquivalence(EffectLawsAllowlistLookupKey);
 }
 
 const toInvalidValueIssue = (actual: unknown, message: string): SchemaIssue.Issue =>

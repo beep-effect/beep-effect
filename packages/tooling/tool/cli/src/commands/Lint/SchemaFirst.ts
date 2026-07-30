@@ -6,6 +6,7 @@
  */
 
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import { Command, Flag } from "effect/unstable/cli";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
@@ -14,6 +15,8 @@ import type * as O from "effect/Option";
 import type { CallExpression } from "ts-morph";
 import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
 import type { SchemaFirstInventoryEntry } from "./Lint.schemas.ts";
+
+type SchemaFirstDetectorContext = Pick<SchemaFirstInventoryEntry, "file" | "owner">;
 
 /**
  * Literal member equality helper used by schema catalog detection.
@@ -217,8 +220,7 @@ export {
  * Detect an exported function or arrow function with inline object contracts.
  *
  * @param node - The ts-morph function-like declaration to inspect for inline object contracts.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
  * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @example
  * ```ts
@@ -229,24 +231,24 @@ export {
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function updateWidget(input: { id: string; name: string }): void {}")
  * const [node] = sourceFile.getFunctions()
- * const entry = fnSchemaEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * const entry = fnSchemaEntryFromFunctionLike(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("updateWidget")
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const fnSchemaEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(node, file, owner);
+export const fnSchemaEntryFromFunctionLike: {
+  (context: SchemaFirstDetectorContext): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(node, context.file, context.owner)
+);
 
 /**
  * Detect an exported function or arrow function with nullish return annotation.
  *
  * @param node - The ts-morph function-like declaration to inspect for a nullish return annotation.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
  * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @example
  * ```ts
@@ -257,24 +259,24 @@ export const fnSchemaEntryFromFunctionLike = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function findUser(id: string): string | null {\n  return null\n}")
  * const [node] = sourceFile.getFunctions()
- * const entry = nullReturnEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * const entry = nullReturnEntryFromFunctionLike(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("findUser")
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const nullReturnEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => SchemaFirstDetectors.nullReturnEntryFromFunctionLike(node, file, owner);
+export const nullReturnEntryFromFunctionLike: {
+  (context: SchemaFirstDetectorContext): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.nullReturnEntryFromFunctionLike(node, context.file, context.owner)
+);
 
 /**
  * Detect function-local trim/case normalization in schema-modeled files.
  *
  * @param callExpression - The ts-morph call expression to inspect for function-local trim/case normalization.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
  * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @example
  * ```ts
@@ -285,25 +287,24 @@ export const nullReturnEntryFromFunctionLike = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function normalizeName(name: string): string {\n  return name.trim()\n}")
  * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
- * const entry = normalizationEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * const entry = normalizationEntryFromCallExpression(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("normalizeName.trim")
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const normalizationEntryFromCallExpression = (
-  callExpression: CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> =>
-  SchemaFirstDetectors.normalizationEntryFromCallExpression(callExpression, file, owner);
+export const normalizationEntryFromCallExpression: {
+  (context: SchemaFirstDetectorContext): (callExpression: CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (callExpression: CallExpression, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (callExpression: CallExpression, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.normalizationEntryFromCallExpression(callExpression, context.file, context.owner)
+);
 
 /**
  * Detect R.getSomes over an inline heterogeneous Option struct.
  *
  * @param callExpression - The ts-morph call expression to inspect for `R.getSomes` over an inline Option struct.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
  * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @example
  * ```ts
@@ -314,18 +315,18 @@ export const normalizationEntryFromCallExpression = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function pickSomes() {\n  return R.getSomes({ a: 1, b: 2 })\n}")
  * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
- * const entry = getsomesStructEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * const entry = getsomesStructEntryFromCallExpression(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("pickSomes.R.getSomes")
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const getsomesStructEntryFromCallExpression = (
-  callExpression: CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> =>
-  SchemaFirstDetectors.getsomesStructEntryFromCallExpression(callExpression, file, owner);
+export const getsomesStructEntryFromCallExpression: {
+  (context: SchemaFirstDetectorContext): (callExpression: CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (callExpression: CallExpression, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (callExpression: CallExpression, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.getsomesStructEntryFromCallExpression(callExpression, context.file, context.owner)
+);
 
 /**
  * Repo-wide schema-first lint command.

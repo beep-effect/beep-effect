@@ -15,7 +15,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Order } from "effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -110,10 +110,10 @@ const truncateCell = (text: string): string =>
  * @category formatting
  * @since 0.0.0
  */
-export const renderPortfolioIndex = (
-  rows: ReadonlyArray<PortfolioIndexRow>,
-  invalid: ReadonlyArray<string>
-): string => {
+export const renderPortfolioIndex: {
+  (invalid: ReadonlyArray<string>): (rows: ReadonlyArray<PortfolioIndexRow>) => string;
+  (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string;
+} = dual(2, (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string => {
   const sortedRows = A.sort(rows, rowBySlug);
   const counts = GoalStatus.Options.map(
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
@@ -157,7 +157,7 @@ export const renderPortfolioIndex = (
 
   lines.push("");
   return A.join(lines, "\n");
-};
+});
 
 /**
  * Build the current goals index content from the filesystem.

@@ -61,7 +61,12 @@ import {
   ExecutionRequest,
   ExecutionVerdict,
 } from "@beep/epistemic-domain/values/ExecutionVerdict";
-import { DraftGrantSet, evaluateExecutionRequest, freezeGrantSet } from "@beep/epistemic-domain/values/GrantSet";
+import {
+  DraftGrantSet,
+  ExecutionRequestEvaluationOptions,
+  evaluateExecutionRequest,
+  freezeGrantSet,
+} from "@beep/epistemic-domain/values/GrantSet";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
@@ -287,7 +292,11 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
       resolvedAudience: resolveSinkAudience(destination),
       sinkClass: "network-egress",
     });
-    const verdict = evaluateExecutionRequest(frozen, request, now, config.policyRevision);
+    const verdict = evaluateExecutionRequest(
+      frozen,
+      request,
+      ExecutionRequestEvaluationOptions.make({ currentPolicyRevision: config.policyRevision, now })
+    );
     return yield* lock.withPermit(
       Effect.gen(function* () {
         const state = yield* Ref.get(chain);

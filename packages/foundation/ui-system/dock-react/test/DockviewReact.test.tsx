@@ -96,7 +96,7 @@ const dispatch = (graph: DockAtomGraph, command: ActivatePanelCommand | MovePane
   );
 };
 
-const sizeRoot = (): void => resize(screen.getByTestId("dockview-react"), 800, 400);
+const sizeRoot = (): void => resize(screen.getByTestId("dockview-react"), { width: 800, height: 400 });
 
 afterEach(() => cleanup());
 
@@ -119,7 +119,7 @@ describe("DockviewReact", { concurrent: false }, () => {
       A.forEach(screen.getAllByRole("tab"), (tab) =>
         vi.spyOn(tab, "getBoundingClientRect").mockReturnValue(DOMRect.fromRect({ width: 100, height: 32 }))
       );
-      resize(strip, 260, 32);
+      resize(strip, { width: 260, height: 32 });
       const trigger = yield* Effect.promise(() => screen.findByRole("button", { name: "Show 2 overflowed tabs" }));
       expect(screen.getByRole("tab", { name: /One/ }).getAttribute("data-active")).toBe("true");
       fireEvent.click(trigger);

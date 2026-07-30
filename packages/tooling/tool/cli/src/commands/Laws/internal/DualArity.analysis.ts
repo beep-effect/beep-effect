@@ -240,7 +240,7 @@ const isFunctionExportInitializer = (
 };
 
 const SCHEMA_CALLABLE_VALUE_FACTORY_PATTERN =
-  /^(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)$/u;
+  /^(?:(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)|SchemaUtils\.toEquivalence)$/u;
 
 const isOrderValueType = (type: Type): boolean => {
   const typeText = type.getText();
@@ -290,11 +290,27 @@ const hasRestParameter = (parameters: ReadonlyArray<ParameterDeclaration>): bool
 const hasDeferredPublicParameterShape = (parameters: ReadonlyArray<ParameterDeclaration>): boolean =>
   hasRestParameter(parameters) || getRequiredParameterCount(parameters) < 2;
 
+const hasRequiredTypeSignatureShape = (callableType: Type): boolean =>
+  A.some(getNonTemplateCallSignatures(callableType), (signature) => {
+    const signatureParameters = signature.getParameters();
+    const declarations = pipe(
+      signatureParameters,
+      A.map((parameter) =>
+        pipe(O.fromNullishOr(parameter.getValueDeclaration()), O.filter(Node.isParameterDeclaration))
+      ),
+      A.getSomes
+    );
+    return declarations.length === signatureParameters.length && !hasDeferredPublicParameterShape(declarations);
+  });
+
 const shouldDeferPublicParameterShape = (
   parameters: ReadonlyArray<ParameterDeclaration>,
   callableType: Type,
   parameterCount: number
-): boolean => hasDeferredPublicParameterShape(parameters) && !hasDualSignatures(callableType, parameterCount);
+): boolean =>
+  (A.isReadonlyArrayEmpty(parameters)
+    ? !hasRequiredTypeSignatureShape(callableType)
+    : hasDeferredPublicParameterShape(parameters)) && !hasDualSignatures(callableType, parameterCount);
 
 const getCallableParameterCount = (
   callableType: Type,
@@ -622,10 +638,7 @@ const collectVariableCandidate = (
     O.map((ownerNode) => ownerNode.getParameters()),
     O.getOrElse(A.empty)
   );
-  if (
-    !A.isReadonlyArrayEmpty(parameters) &&
-    shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)
-  ) {
+  if (shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)) {
     return O.none();
   }
 
@@ -723,6 +736,9 @@ const collectStaticPropertyCandidate = (
   if (P.isUndefined(initializer) && A.isReadonlyArrayEmpty(callableType.getCallSignatures())) {
     return O.none();
   }
+  if (!P.isUndefined(initializer) && isNonHelperCallableValue(initializer, callableType)) {
+    return O.none();
+  }
 
   const dualCall = P.isUndefined(initializer) ? O.none<DualCallInfo>() : getDualCallInfo(initializer, bindings);
   const parameterOwner = P.isUndefined(initializer)
@@ -742,10 +758,7 @@ const collectStaticPropertyCandidate = (
     O.map((ownerNode) => ownerNode.getParameters()),
     O.getOrElse(A.empty)
   );
-  if (
-    !A.isReadonlyArrayEmpty(parameters) &&
-    shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)
-  ) {
+  if (shouldDeferPublicParameterShape(parameters, callableType, parameterCount.value)) {
     return O.none();
   }
 

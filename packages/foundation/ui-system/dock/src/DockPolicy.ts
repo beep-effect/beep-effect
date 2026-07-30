@@ -9,6 +9,7 @@ import { thunkEffectVoid } from "@beep/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { DockCommand } from "./Dock.commands.ts";
 import { DockCommandRejected } from "./Dock.errors.ts";
@@ -44,6 +45,11 @@ export type DockCommandPolicy = (
   state: DockWorkspaceType,
   envelope: DockCommandEnvelope
 ) => Effect.Effect<void, DockCommandRejected>;
+
+type DualDockCommandPolicy = {
+  (state: DockWorkspaceType, envelope: DockCommandEnvelope): Effect.Effect<void, DockCommandRejected>;
+  (envelope: DockCommandEnvelope): (state: DockWorkspaceType) => Effect.Effect<void, DockCommandRejected>;
+};
 
 const rejectLocked = (envelope: DockCommandEnvelope): Effect.Effect<never, DockCommandRejected> =>
   Effect.fail(
@@ -111,54 +117,57 @@ const rejectNoDropReference = (
  * @category policies
  * @since 0.0.0
  */
-export const lockedGroupsPolicy: DockCommandPolicy = Effect.fn("DockPolicy.lockedGroups")(function* (state, envelope) {
-  return yield* DockCommand.match(envelope.command, {
-    openPanel: ({ placement }) =>
-      DockPlacement.match(placement, {
-        root: thunkEffectVoid,
-        rootSplit: thunkEffectVoid,
-        tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
-        split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-      }),
-    movePanel: ({ panelId, target }) =>
-      DockMoveTarget.match(target, {
-        tab: ({ groupId }) =>
-          Bool.match(
-            O.exists(DockWorkspace.findTabsForPanel(state, panelId), (source) =>
-              GroupId.equals(source.groupId, groupId)
+export const lockedGroupsPolicy: DualDockCommandPolicy = dual(
+  2,
+  Effect.fn("DockPolicy.lockedGroups")(function* (state, envelope) {
+    return yield* DockCommand.match(envelope.command, {
+      openPanel: ({ placement }) =>
+        DockPlacement.match(placement, {
+          root: thunkEffectVoid,
+          rootSplit: thunkEffectVoid,
+          tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
+          split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
+        }),
+      movePanel: ({ panelId, target }) =>
+        DockMoveTarget.match(target, {
+          tab: ({ groupId }) =>
+            Bool.match(
+              O.exists(DockWorkspace.findTabsForPanel(state, panelId), (source) =>
+                GroupId.equals(source.groupId, groupId)
+              ),
+              {
+                onTrue: thunkEffectVoid,
+                onFalse: () => rejectLockedDestination(state, envelope, groupId),
+              }
             ),
-            {
-              onTrue: thunkEffectVoid,
-              onFalse: () => rejectLockedDestination(state, envelope, groupId),
-            }
-          ),
-        split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        rootSplit: thunkEffectVoid,
-      }),
-    moveGroup: ({ target }) =>
-      DockGroupMoveTarget.match(target, {
-        tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
-        groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        groupRootSplit: thunkEffectVoid,
-      }),
-    activatePanel: thunkEffectVoid,
-    updatePanel: thunkEffectVoid,
-    updateGroup: thunkEffectVoid,
-    closePanel: thunkEffectVoid,
-    resizeSplit: thunkEffectVoid,
-    clearWorkspace: thunkEffectVoid,
-    maximizeGroup: thunkEffectVoid,
-    restoreMaximized: thunkEffectVoid,
-    floatGroup: thunkEffectVoid,
-    dockFloatingGroup: ({ target }) =>
-      DockGroupMoveTarget.match(target, {
-        tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
-        groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        groupRootSplit: thunkEffectVoid,
-      }),
-    moveFloatingGroup: thunkEffectVoid,
-  });
-});
+          split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
+          rootSplit: thunkEffectVoid,
+        }),
+      moveGroup: ({ target }) =>
+        DockGroupMoveTarget.match(target, {
+          tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
+          groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
+          groupRootSplit: thunkEffectVoid,
+        }),
+      activatePanel: thunkEffectVoid,
+      updatePanel: thunkEffectVoid,
+      updateGroup: thunkEffectVoid,
+      closePanel: thunkEffectVoid,
+      resizeSplit: thunkEffectVoid,
+      clearWorkspace: thunkEffectVoid,
+      maximizeGroup: thunkEffectVoid,
+      restoreMaximized: thunkEffectVoid,
+      floatGroup: thunkEffectVoid,
+      dockFloatingGroup: ({ target }) =>
+        DockGroupMoveTarget.match(target, {
+          tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
+          groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
+          groupRootSplit: thunkEffectVoid,
+        }),
+      moveFloatingGroup: thunkEffectVoid,
+    });
+  })
+);
 
 /**
  * Wraps the live engine with a command policy.

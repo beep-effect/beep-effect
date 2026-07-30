@@ -10,6 +10,7 @@ import { Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -27,6 +28,7 @@ import {
 } from "../Geometry.models.ts";
 import type { GroupId } from "../Dock.ids.ts";
 import type { DockNode, DockWorkspace } from "../Dock.tree.ts";
+import type { GroupMinimaRecord, GroupMinimumLookup } from "../Geometry.models.ts";
 
 const $I = $DockId.create("Geometry.projection");
 
@@ -39,22 +41,18 @@ const hasVisibleGroup = (node: DockNode): boolean =>
     },
   });
 
-/**
- * Host-supplied per-group minimum extents, e.g. derived from content
- * measurement (a panel title's natural width). The effective per-leaf
- * minimum is the maximum of this lookup and the global
- * `GeometryOptions.minGroupExtent`.
- */
-type GroupMinimumLookup = (groupId: GroupId) => number;
-
 const zeroMinimum: GroupMinimumLookup = () => 0;
 
-/**
- * Per-group minimum extents as a plain record value, keyed by group id. This
- * is the atom-friendly shape: a value (not a function) so hosts can store it
- * in a writable Atom and update it as content measurements change.
- */
-type GroupMinimaRecord = Readonly<Record<string, number>>;
+type Dual2<Self, That, Result> = {
+  (self: Self, that: That): Result;
+  (that: That): (self: Self) => Result;
+};
+
+type GeometryProjectionContext = Readonly<{
+  container: DockBox;
+  minima?: GroupMinimumLookup | undefined;
+  options?: GeometryOptions | undefined;
+}>;
 
 interface MakeDockGeometryAtomsInput {
   readonly containerAtom: Atom.Atom<DockBox>;
@@ -320,19 +318,20 @@ const projectNode = (
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
  * const split = SplitNode.make({ splitId: SplitId.make("split-one"), layout: SplitLayout.cases.horizontal.make({ left: tabs, right: tabs }) })
- * const geometry = project(split, DockBox.make({ width: 101, height: 40 }), GeometryOptions.make({ gap: 1 }))
+ * const geometry = project(split, { container: DockBox.make({ width: 101, height: 40 }), options: GeometryOptions.make({ gap: 1 }) })
  * console.log(geometry.groups.length)
  * ```
  *
  * @category projections
  * @since 0.0.0
  */
-export const project = (
-  root: DockNode,
-  container: DockBox,
-  options = GeometryOptions.make(),
-  minima: GroupMinimumLookup = zeroMinimum
-): DockGeometry => projectNode(root, container, options, minima);
+export const project: Dual2<DockNode, GeometryProjectionContext, DockGeometry> = dual(
+  2,
+  (
+    root: DockNode,
+    { container, minima = zeroMinimum, options = GeometryOptions.make() }: GeometryProjectionContext
+  ): DockGeometry => projectNode(root, container, options, minima)
+);
 
 /**
  * Projects docked, maximized, and floating workspace geometry.
@@ -341,41 +340,43 @@ export const project = (
  * ```ts
  * import { DockBox, DockWorkspace, projectWorkspace } from "@beep/dock"
  *
- * const geometry = projectWorkspace(DockWorkspace.empty, DockBox.make({ width: 800, height: 600 }))
+ * const geometry = projectWorkspace(DockWorkspace.empty, { container: DockBox.make({ width: 800, height: 600 }) })
  * console.log(geometry.groups.length)
  * ```
  *
  * @category projections
  * @since 0.0.0
  */
-export const projectWorkspace = (
-  workspace: DockWorkspace,
-  container: DockBox,
-  options = GeometryOptions.make(),
-  minima: GroupMinimumLookup = zeroMinimum
-): DockGeometry => {
-  const floating = A.map(DockWorkspaceModel.floatingMembers(workspace), (member) => {
-    const box = resolveAnchoredBox(member.anchoredBox, container);
-    const geometry = project(member.root, box, options, minima);
-    return FloatingGeometry.make({ box, groups: geometry.groups, sashes: geometry.sashes });
-  });
-  const docked = DockWorkspaceModel.match(workspace, {
-    empty: () => DockGeometry.empty,
-    populated: ({ maximized, root }) =>
-      pipe(
-        maximized,
-        O.map((groupId) =>
-          pipe(
-            DockNodeModel.findTabs(root, groupId),
-            O.map(() => DockGeometry.make({ groups: [GroupGeometry.make({ groupId, box: container })], sashes: [] })),
-            O.getOrElse(() => DockGeometry.empty)
-          )
+export const projectWorkspace: Dual2<DockWorkspace, GeometryProjectionContext, DockGeometry> = dual(
+  2,
+  (
+    workspace: DockWorkspace,
+    { container, minima = zeroMinimum, options = GeometryOptions.make() }: GeometryProjectionContext
+  ): DockGeometry => {
+    const context = { container, minima, options };
+    const floating = A.map(DockWorkspaceModel.floatingMembers(workspace), (member) => {
+      const box = resolveAnchoredBox(member.anchoredBox, container);
+      const geometry = project(member.root, { ...context, container: box });
+      return FloatingGeometry.make({ box, groups: geometry.groups, sashes: geometry.sashes });
+    });
+    const docked = DockWorkspaceModel.match(workspace, {
+      empty: () => DockGeometry.empty,
+      populated: ({ maximized, root }) =>
+        pipe(
+          maximized,
+          O.map((groupId) =>
+            pipe(
+              DockNodeModel.findTabs(root, groupId),
+              O.map(() => DockGeometry.make({ groups: [GroupGeometry.make({ groupId, box: container })], sashes: [] })),
+              O.getOrElse(() => DockGeometry.empty)
+            )
+          ),
+          O.getOrElse(() => project(root, context))
         ),
-        O.getOrElse(() => project(root, container, options, minima))
-      ),
-  });
-  return DockGeometry.make({ groups: docked.groups, sashes: docked.sashes, floating });
-};
+    });
+    return DockGeometry.make({ groups: docked.groups, sashes: docked.sashes, floating });
+  }
+);
 
 /** One weighted entry in a normalized same-axis row view. */
 class DockRowEntry extends S.Class<DockRowEntry>($I`DockRowEntry`)(
@@ -451,7 +452,11 @@ export const makeDockGeometryAtoms = (input: MakeDockGeometryAtomsInput) => {
         return (groupId: GroupId) => N.max(minima(groupId), fromRecord(groupId));
       },
     });
-    return projectWorkspace(get(input.workspaceAtom), get(input.containerAtom), options, lookup);
+    return projectWorkspace(get(input.workspaceAtom), {
+      container: get(input.containerAtom),
+      minima: lookup,
+      options,
+    });
   });
   const groupBoxAtom = Atom.family((groupId: GroupId) =>
     Atom.map(geometryAtom, (geometry) => DockGeometry.forGroup(geometry, groupId))

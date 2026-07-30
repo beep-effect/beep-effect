@@ -8,6 +8,7 @@
 import * as HttpMethod from "@beep/schema/HttpMethod";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { Config, Context, Effect, Metric, Redacted } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type { Layer } from "effect";
@@ -44,8 +45,12 @@ export const rpcSessionAuthorizationHeader = (token: Redacted.Redacted): string 
  * @category auth
  * @since 0.0.0
  */
-export const isAuthorizedRpcSessionHeaders = (headers: Headers.Headers, token: Redacted.Redacted): boolean =>
-  O.contains(Headers.get(headers, "authorization"), rpcSessionAuthorizationHeader(token));
+export const isAuthorizedRpcSessionHeaders: {
+  (headers: Headers.Headers, token: Redacted.Redacted): boolean;
+  (token: Redacted.Redacted): (headers: Headers.Headers) => boolean;
+} = dual(2, (headers: Headers.Headers, token: Redacted.Redacted): boolean =>
+  O.contains(Headers.get(headers, "authorization"), rpcSessionAuthorizationHeader(token))
+);
 
 /**
  * Check the complete HTTP request auth decision. CORS preflight is intentionally
@@ -54,11 +59,14 @@ export const isAuthorizedRpcSessionHeaders = (headers: Headers.Headers, token: R
  * @category auth
  * @since 0.0.0
  */
-export const isAuthorizedRpcSessionRequest = (
-  method: string,
-  headers: Headers.Headers,
-  token: Redacted.Redacted
-): boolean => HttpMethod.Schema.is.OPTIONS(method) || isAuthorizedRpcSessionHeaders(headers, token);
+export const isAuthorizedRpcSessionRequest: {
+  (method: string, headers: Headers.Headers, token: Redacted.Redacted): boolean;
+  (headers: Headers.Headers, token: Redacted.Redacted): (method: string) => boolean;
+} = dual(
+  3,
+  (method: string, headers: Headers.Headers, token: Redacted.Redacted): boolean =>
+    HttpMethod.Schema.is.OPTIONS(method) || isAuthorizedRpcSessionHeaders(headers, token)
+);
 
 /**
  * HTTP middleware requiring the active desktop RPC session token.
@@ -81,13 +89,19 @@ export const requireRpcSessionToken = (token: Redacted.Redacted) =>
       Effect.withFiber((fiber) => {
         const request = Context.getUnsafe(fiber.context, HttpServerRequest.HttpServerRequest);
         const authorized = isAuthorizedRpcSessionRequest(request.method, request.headers, token);
-        const attributes = { decision: authorized ? "allowed" : "denied", method: request.method };
+        const attributes = {
+          decision: authorized ? "allowed" : "denied",
+          method: request.method,
+        };
         return Metric.update(Metric.withAttributes(rpcAuthDecisions, attributes), 1).pipe(
           Effect.andThen(
             authorized
               ? effect
               : Effect.logWarning("desktop RPC session authorization denied").pipe(
-                  Effect.annotateLogs({ method: request.method, subsystem: "rpc_auth" }),
+                  Effect.annotateLogs({
+                    method: request.method,
+                    subsystem: "rpc_auth",
+                  }),
                   Effect.as(
                     HttpServerResponse.text("Unauthorized desktop RPC session.", {
                       status: HttpStatus.From.Enum.Unauthorized,
