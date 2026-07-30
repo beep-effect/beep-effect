@@ -10,12 +10,14 @@
 import {
   OpenclawAgentIntent,
   OpenclawAuthProfileIntent,
+  OpenclawControlUiIntent,
   OpenclawDeploymentIntent,
   OpenclawGatewayIntent,
   OpenclawLoggingIntent,
   OpenclawModelDeclaration,
   OpenclawModelProviderIntent,
   OpenclawModelProviderParams,
+  OpenclawPersonaIntent,
   OpenclawProviderApiKeyPlaceholder,
   OpenclawSecretReference,
   OpenclawSecretsResolverIntent,
@@ -38,12 +40,21 @@ export const goldenDeploymentIntent = OpenclawDeploymentIntent.make({
       provider: "ollama",
     }),
   ],
+  controlUi: OpenclawControlUiIntent.make({
+    allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+    enabled: true,
+  }),
   gateway: OpenclawGatewayIntent.make({
     authTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-rotating/password"),
     port: 19031,
   }),
   logging: OpenclawLoggingIntent.make({ filePath: "/var/lib/beep/openclaw/state/log/openclaw.log" }),
   openclawVersion: "2026.7.1-2",
+  persona: OpenclawPersonaIntent.make({
+    clientDataPolicy: "synthetic-only",
+    confidentialityPolicy: "advisory",
+    soulMarkdown: "# Synthetic legal assistant",
+  }),
   providers: [
     OpenclawModelProviderIntent.make({
       api: "ollama",
@@ -127,6 +138,13 @@ export const goldenIntentCanonicalJson = `{
       }
     },
     "bind": "loopback",
+    "controlUi": {
+      "allowedOrigins": [
+        "http://127.0.0.1:19031",
+        "http://localhost:19031"
+      ],
+      "enabled": true
+    },
     "mode": "local",
     "port": 19031,
     "reload": {
@@ -202,4 +220,4 @@ export const goldenIntentCanonicalJson = `{
 }
 `;
 
-export const goldenIntentContentHash = "ee805da8048665ed6075aaa89be3f07a73420c2970574f60a71c0f77469a8aa9";
+export const goldenIntentContentHash = "c3d1b6765883eec1c2b570d15406ed05386cc13a56180e8a142d03fee10b6f90";

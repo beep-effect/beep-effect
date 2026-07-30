@@ -15,19 +15,32 @@
  * @since 0.0.0
  */
 
+import { createHash } from "node:crypto";
 import { $InfraId } from "@beep/identity/packages";
 import {
   OPENCLAW_COMPATIBILITY_SET,
   OpenclawAbsolutePath,
   OpenclawAgentIntent,
+  OpenclawAuthProfileIntent,
+  OpenclawControlUiIntent,
   OpenclawDeploymentIntent,
   OpenclawGatewayIntent,
   OpenclawGatewayPort,
+  OpenclawGuardrailsIntent,
   OpenclawLoggingIntent,
+  OpenclawModelDeclaration,
+  OpenclawModelProviderIntent,
+  OpenclawPersonaIntent,
+  OpenclawProviderApiKeyPlaceholder,
+  OpenclawProviderApiKeySecretRef,
   OpenclawSecretReference,
   OpenclawSecretsResolverIntent,
   OpenclawSha256Hex,
+  OpenclawSkillPin,
   OpenclawTargetVersion,
+  OpenclawTelegramDmPolicy,
+  OpenclawTelegramGroupPolicy,
+  OpenclawTelegramIntent,
   renderOpenclawConfig,
 } from "@beep/openclaw";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
@@ -41,13 +54,21 @@ import {
   pulumiConfigSchemaIssueError,
   withPulumiConfigDecodeEffect,
 } from "./internal/PulumiConfigSchema.ts";
+import {
+  openClawLegalSoulMarkdown,
+  openClawProofSkillMarkdown,
+  openClawProofSkillRelativePath,
+  openClawSoulRelativePath,
+} from "./OpenClawArtifacts.ts";
+import type {
+  OpenclawTelegramDmPolicy as OpenclawTelegramDmPolicyType,
+  OpenclawTelegramGroupPolicy as OpenclawTelegramGroupPolicyType,
+} from "@beep/openclaw";
 
 const $I = $InfraId.create("OpenClaw");
 
 const defaultAgentId = "workstation";
-const defaultAgentModel = "ollama/gemma3:4b";
 const defaultAgentName = "Beep Workstation";
-const defaultAgentWorkspace = "/var/lib/beep/openclaw/workspace";
 const defaultBackupRemoteDir = "/srv/data/beep-openclaw-backups";
 const defaultBackupSshHost = "dankserver";
 const defaultBackupSshUser = "elpresidank";
@@ -61,6 +82,12 @@ const defaultResolverOpBinaryPath = "/opt/beep/openclaw/bin/op";
 const defaultResolverTrustedDir = "/opt/beep/openclaw";
 const defaultStateDir = "/var/lib/beep/openclaw";
 const defaultUnitName = "openclaw.service";
+const localProviderPlaceholder = "local-no-secret";
+const opServiceAccountCredentialPath = "/etc/beep/openclaw/credentials/op-service-account-token";
+const proofSkillName = "beep-proof-ping";
+const proofSkillSource = "repo-local:infra/src/OpenClawArtifacts.ts";
+const proofSkillVersion = "1.0.0";
+const loopbackProviderBaseUrlPattern = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/.*)?$/u;
 
 const backupPassphraseEnvVar = "OPENCLAW_BACKUP_PASSPHRASE";
 const configFileName = "openclaw.json";
@@ -79,6 +106,8 @@ const configHeredocSentinel = "BEEP_OPENCLAW_CONFIG";
 const manifestHeredocSentinel = "BEEP_OPENCLAW_MANIFEST";
 const runScriptHeredocSentinel = "BEEP_OPENCLAW_RUN";
 const unitHeredocSentinel = "BEEP_OPENCLAW_UNIT";
+const soulHeredocSentinel = "BEEP_OPENCLAW_SOUL";
+const proofSkillHeredocSentinel = "BEEP_OPENCLAW_PROOF_SKILL";
 
 const machineIdPattern = /^[0-9a-f]{32}$/u;
 const OpenClawFileModeBase = LiteralKit(["0644", "0755"]);
@@ -93,6 +122,19 @@ const MachineIdFormat = S.isPattern(machineIdPattern, {
 const MachineId = S.String.check(MachineIdFormat).pipe(
   $I.annoteSchema("MachineId", {
     description: "A 32-character lowercase hexadecimal `/etc/machine-id` value.",
+  })
+);
+
+const LoopbackProviderBaseUrlFormat = S.isPattern(loopbackProviderBaseUrlPattern, {
+  identifier: $I`LoopbackProviderBaseUrlFormat`,
+  title: "Loopback Provider Base URL",
+  description: "An HTTP URL rooted at localhost or 127.0.0.1.",
+  message: "Expected an HTTP loopback URL rooted at localhost or 127.0.0.1",
+});
+
+const LoopbackProviderBaseUrl = S.NonEmptyString.check(LoopbackProviderBaseUrlFormat).pipe(
+  $I.annoteSchema("LoopbackProviderBaseUrl", {
+    description: "An HTTP base URL restricted to localhost or 127.0.0.1.",
   })
 );
 
@@ -119,6 +161,8 @@ const schemaIssueToPulumiConfigError = pulumiConfigSchemaIssueError("openclaw");
 
 const decodeOpenclawTargetVersion = S.decodeUnknownResult(OpenclawTargetVersion);
 const decodeOpenclawSecretReference = S.decodeUnknownResult(OpenclawSecretReference);
+const decodeTelegramDmPolicy = S.decodeUnknownResult(OpenclawTelegramDmPolicy);
+const decodeTelegramGroupPolicy = S.decodeUnknownResult(OpenclawTelegramGroupPolicy);
 
 const targetVersionFromPulumiConfig = (value: string | undefined): O.Option<OpenclawTargetVersion> =>
   O.map(O.fromUndefinedOr(value), (value) =>
@@ -128,6 +172,19 @@ const targetVersionFromPulumiConfig = (value: string | undefined): O.Option<Open
 const secretReferenceFromPulumiConfig = (key: string, value: string | undefined): O.Option<OpenclawSecretReference> =>
   O.map(O.fromUndefinedOr(value), (value) =>
     Result.getOrThrowWith(decodeOpenclawSecretReference(value), schemaIssueToPulumiConfigError(key, value))
+  );
+
+const telegramDmPolicyFromPulumiConfig = (value: string | undefined): O.Option<OpenclawTelegramDmPolicyType> =>
+  O.map(O.fromUndefinedOr(value), (value) =>
+    Result.getOrThrowWith(decodeTelegramDmPolicy(value), schemaIssueToPulumiConfigError("telegramDmPolicy", value))
+  );
+
+const telegramGroupPolicyFromPulumiConfig = (value: string | undefined): O.Option<OpenclawTelegramGroupPolicyType> =>
+  O.map(O.fromUndefinedOr(value), (value) =>
+    Result.getOrThrowWith(
+      decodeTelegramGroupPolicy(value),
+      schemaIssueToPulumiConfigError("telegramGroupPolicy", value)
+    )
   );
 
 const requiredConfigValue = <Value>(key: string, value: Value | undefined): Value =>
@@ -192,9 +249,7 @@ export type OpenClawFileMode = typeof OpenClawFileMode.Type;
 
 type OpenClawPulumiConfigValuesFields = {
   readonly agentId?: string | undefined;
-  readonly agentModel?: string | undefined;
   readonly agentName?: string | undefined;
-  readonly agentWorkspace?: string | undefined;
   readonly backupPassphraseSecretRef?: string | undefined;
   readonly backupRemoteDir?: string | undefined;
   readonly backupSshAgentSocketPath?: string | undefined;
@@ -209,6 +264,15 @@ type OpenClawPulumiConfigValuesFields = {
   readonly expectedUsername?: string | undefined;
   readonly gatewayAuthTokenRef?: OpenclawSecretReference | undefined;
   readonly gatewayPort?: number | undefined;
+  readonly hostedProviderApiKeyRef?: OpenclawSecretReference | undefined;
+  readonly hostedProviderBaseUrl?: string | undefined;
+  readonly hostedProviderId?: string | undefined;
+  readonly hostedProviderModelId?: string | undefined;
+  readonly hostedProviderModelName?: string | undefined;
+  readonly localProviderBaseUrl?: string | undefined;
+  readonly localProviderId?: string | undefined;
+  readonly localProviderModelId?: string | undefined;
+  readonly localProviderModelName?: string | undefined;
   readonly logFilePath?: string | undefined;
   readonly nodeBinDir?: string | undefined;
   readonly openclawVersion?: OpenclawTargetVersion | undefined;
@@ -216,15 +280,28 @@ type OpenClawPulumiConfigValuesFields = {
   readonly resolverOpBinaryPath?: string | undefined;
   readonly resolverTrustedDir?: string | undefined;
   readonly stateDir?: string | undefined;
+  readonly telegramBotTokenRef?: OpenclawSecretReference | undefined;
+  readonly telegramDefaultTo?: string | undefined;
+  readonly telegramDmPolicy?: "pairing" | "disabled" | "open" | undefined;
+  readonly telegramGroupPolicy?: "open" | "disabled" | undefined;
   readonly unitName?: string | undefined;
 };
 
 type OpenClawPulumiConfigInputValues = Omit<
   OpenClawPulumiConfigValuesFields,
-  "gatewayAuthTokenRef" | "openclawVersion"
+  | "gatewayAuthTokenRef"
+  | "hostedProviderApiKeyRef"
+  | "openclawVersion"
+  | "telegramBotTokenRef"
+  | "telegramDmPolicy"
+  | "telegramGroupPolicy"
 > & {
   readonly gatewayAuthTokenRef?: string | undefined;
+  readonly hostedProviderApiKeyRef?: string | undefined;
   readonly openclawVersion?: string | undefined;
+  readonly telegramBotTokenRef?: string | undefined;
+  readonly telegramDmPolicy?: string | undefined;
+  readonly telegramGroupPolicy?: string | undefined;
 };
 
 /**
@@ -243,9 +320,7 @@ type OpenClawPulumiConfigInputValues = Omit<
 export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFields>($I`OpenClawPulumiConfigValues`)(
   {
     agentId: S.String,
-    agentModel: S.String,
     agentName: S.String,
-    agentWorkspace: OpenclawAbsolutePath,
     backupPassphraseSecretRef: S.String,
     backupRemoteDir: OpenclawAbsolutePath,
     backupSshAgentSocketPath: S.String,
@@ -260,6 +335,15 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
     expectedUsername: S.String,
     gatewayAuthTokenRef: OpenclawSecretReference,
     gatewayPort: OpenclawGatewayPort,
+    hostedProviderApiKeyRef: OpenclawSecretReference,
+    hostedProviderBaseUrl: S.String,
+    hostedProviderId: S.String,
+    hostedProviderModelId: S.String,
+    hostedProviderModelName: S.String,
+    localProviderBaseUrl: LoopbackProviderBaseUrl,
+    localProviderId: S.String,
+    localProviderModelId: S.String,
+    localProviderModelName: S.String,
     logFilePath: OpenclawAbsolutePath,
     nodeBinDir: OpenclawAbsolutePath,
     openclawVersion: OpenclawTargetVersion,
@@ -267,6 +351,10 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
     resolverOpBinaryPath: OpenclawAbsolutePath,
     resolverTrustedDir: OpenclawAbsolutePath,
     stateDir: OpenclawAbsolutePath,
+    telegramBotTokenRef: OpenclawSecretReference,
+    telegramDefaultTo: S.String,
+    telegramDmPolicy: S.Literals(["pairing", "disabled", "open"]),
+    telegramGroupPolicy: S.Literals(["open", "disabled"]),
     unitName: S.String,
   },
   $I.annote("OpenClawPulumiConfigValues", { description: "Configuration values for OpenClaw Pulumi resources" })
@@ -360,6 +448,73 @@ export class OpenClawWorkstationPaths extends S.Class<OpenClawWorkstationPaths>(
 ) {}
 
 /**
+ * Hosted OpenAI-compatible provider selected as the workstation primary.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawHostedProviderConfig } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
+ *
+ * const provider = OpenClawHostedProviderConfig.make({
+ *   apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *   baseUrl: "https://api.example.com/v1",
+ *   modelId: "legal-primary",
+ *   modelName: "Legal Primary",
+ *   providerId: "hosted"
+ * })
+ * console.log(provider.providerId) // "hosted"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenClawHostedProviderConfig extends S.Class<OpenClawHostedProviderConfig>(
+  $I`OpenClawHostedProviderConfig`
+)(
+  {
+    apiKeyRef: OpenclawSecretReference,
+    baseUrl: S.NonEmptyString,
+    modelId: S.NonEmptyString,
+    modelName: S.NonEmptyString,
+    providerId: S.NonEmptyString,
+  },
+  $I.annote("OpenClawHostedProviderConfig", {
+    description: "Required hosted OpenAI-compatible provider configuration.",
+  })
+) {}
+
+/**
+ * Local loopback OpenAI-compatible fallback provider.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawLocalProviderConfig } from "@beep/infra"
+ *
+ * const provider = OpenClawLocalProviderConfig.make({
+ *   baseUrl: "http://127.0.0.1:11434/v1",
+ *   modelId: "gemma3:4b",
+ *   modelName: "Gemma 3 4B",
+ *   providerId: "ollama"
+ * })
+ * console.log(provider.baseUrl) // "http://127.0.0.1:11434/v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenClawLocalProviderConfig extends S.Class<OpenClawLocalProviderConfig>($I`OpenClawLocalProviderConfig`)(
+  {
+    baseUrl: LoopbackProviderBaseUrl,
+    modelId: S.NonEmptyString,
+    modelName: S.NonEmptyString,
+    providerId: S.NonEmptyString,
+  },
+  $I.annote("OpenClawLocalProviderConfig", {
+    description: "Required local loopback OpenAI-compatible provider configuration.",
+  })
+) {}
+
+/**
  * Deployment inputs the stack turns into an OpenClaw deployment intent.
  *
  * Secret material never appears here: `gatewayAuthTokenRef` is an `op://`
@@ -367,9 +522,30 @@ export class OpenClawWorkstationPaths extends S.Class<OpenClawWorkstationPaths>(
  *
  * @example
  * ```ts
- * import { OpenClawDeploymentConfig } from "@beep/infra"
+ * import {
+ *   OpenClawDeploymentConfig,
+ *   OpenClawHostedProviderConfig,
+ *   OpenClawLocalProviderConfig
+ * } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
  *
- * console.log(OpenClawDeploymentConfig.make({}).gatewayPort) // 19031
+ * const deployment = OpenClawDeploymentConfig.make({
+ *   hostedProvider: OpenClawHostedProviderConfig.make({
+ *     apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *     baseUrl: "https://api.example.com/v1",
+ *     modelId: "legal-primary",
+ *     modelName: "Legal Primary",
+ *     providerId: "hosted"
+ *   }),
+ *   localProvider: OpenClawLocalProviderConfig.make({
+ *     baseUrl: "http://127.0.0.1:11434/v1",
+ *     modelId: "gemma3:4b",
+ *     modelName: "Gemma 3 4B",
+ *     providerId: "ollama"
+ *   }),
+ *   telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token")
+ * })
+ * console.log(deployment.gatewayPort) // 19031
  * ```
  *
  * @category models
@@ -380,14 +556,8 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
     agentId: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultAgentId)).annotateKey({
       description: "Slug identifying the agent in config and state paths.",
     }),
-    agentModel: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultAgentModel)).annotateKey({
-      description: "Primary model reference for the registered agent.",
-    }),
     agentName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultAgentName)).annotateKey({
       description: "Human-readable agent display name.",
-    }),
-    agentWorkspace: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultAgentWorkspace)).annotateKey({
-      description: "Absolute path of the agent workspace directory.",
     }),
     gatewayAuthTokenRef: OpenclawSecretReference.pipe(
       SchemaUtils.withKeyDefaults(OpenclawSecretReference.make(defaultGatewayAuthTokenRef))
@@ -397,6 +567,8 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
     gatewayPort: OpenclawGatewayPort.pipe(SchemaUtils.withKeyDefaults(defaultGatewayPort)).annotateKey({
       description: "Loopback TCP port the gateway listens on.",
     }),
+    hostedProvider: OpenClawHostedProviderConfig,
+    localProvider: OpenClawLocalProviderConfig,
     logFilePath: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultLogFilePath)).annotateKey({
       description: "Absolute path of the gateway log file.",
     }),
@@ -418,6 +590,10 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
     resolverTrustedDir: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultResolverTrustedDir)).annotateKey({
       description: "Directory OpenClaw trusts to contain the resolver command.",
     }),
+    telegramBotTokenRef: OpenclawSecretReference,
+    telegramDefaultTo: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    telegramDmPolicy: S.Literals(["pairing", "disabled", "open"]).pipe(SchemaUtils.withKeyDefaults("pairing")),
+    telegramGroupPolicy: S.Literals(["open", "disabled"]).pipe(SchemaUtils.withKeyDefaults("disabled")),
   },
   $I.annote("OpenClawDeploymentConfig", {
     description: "Deployment inputs the OpenClaw stack renders into a deployment intent.",
@@ -429,34 +605,126 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
  *
  * @example
  * ```ts
- * import { makeOpenClawDeploymentIntent, OpenClawDeploymentConfig } from "@beep/infra"
+ * import {
+ *   makeOpenClawDeploymentIntent,
+ *   OpenClawDeploymentConfig,
+ *   OpenClawHostedProviderConfig,
+ *   OpenClawLocalProviderConfig
+ * } from "@beep/infra"
+ * import { OpenclawSecretReference } from "@beep/openclaw"
  *
- * console.log(makeOpenClawDeploymentIntent(OpenClawDeploymentConfig.make({})).gateway.port) // 19031
+ * const deployment = OpenClawDeploymentConfig.make({
+ *   hostedProvider: OpenClawHostedProviderConfig.make({
+ *     apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+ *     baseUrl: "https://api.example.com/v1",
+ *     modelId: "legal-primary",
+ *     modelName: "Legal Primary",
+ *     providerId: "hosted"
+ *   }),
+ *   localProvider: OpenClawLocalProviderConfig.make({
+ *     baseUrl: "http://127.0.0.1:11434/v1",
+ *     modelId: "gemma3:4b",
+ *     modelName: "Gemma 3 4B",
+ *     providerId: "ollama"
+ *   }),
+ *   telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token")
+ * })
+ * console.log(makeOpenClawDeploymentIntent(deployment).gateway.port) // 19031
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeOpenClawDeploymentIntent = (deployment: OpenClawDeploymentConfig): OpenclawDeploymentIntent =>
+export const makeOpenClawDeploymentIntent = (
+  deployment: OpenClawDeploymentConfig,
+  configRoot = defaultConfigRoot
+): OpenclawDeploymentIntent =>
   OpenclawDeploymentIntent.make({
     agent: OpenclawAgentIntent.make({
       id: deployment.agentId,
-      model: deployment.agentModel,
+      model: `${deployment.hostedProvider.providerId}/${deployment.hostedProvider.modelId}`,
       name: deployment.agentName,
-      workspace: deployment.agentWorkspace,
+      workspace: `${configRoot}/${generationPointerName}/workspace`,
+    }),
+    authProfiles: [
+      OpenclawAuthProfileIntent.make({
+        mode: "api_key",
+        profileId: `${deployment.hostedProvider.providerId}:managed`,
+        provider: deployment.hostedProvider.providerId,
+      }),
+    ],
+    controlUi: OpenclawControlUiIntent.make({
+      allowedOrigins: [`http://127.0.0.1:${deployment.gatewayPort}`, `http://localhost:${deployment.gatewayPort}`],
+      enabled: true,
     }),
     gateway: OpenclawGatewayIntent.make({
       authTokenRef: deployment.gatewayAuthTokenRef,
       port: deployment.gatewayPort,
     }),
+    guardrails: OpenclawGuardrailsIntent.make({ toolsDeny: ["*"] }),
     logging: OpenclawLoggingIntent.make({ filePath: deployment.logFilePath }),
     openclawVersion: deployment.openclawVersion,
-    providers: [],
+    persona: OpenclawPersonaIntent.make({
+      clientDataPolicy: "synthetic-only",
+      confidentialityPolicy: "advisory",
+      soulMarkdown: openClawLegalSoulMarkdown,
+    }),
+    providers: [
+      OpenclawModelProviderIntent.make({
+        api: "openai-compat",
+        apiKey: OpenclawProviderApiKeySecretRef.make({
+          _tag: "SecretRef",
+          ref: deployment.hostedProvider.apiKeyRef,
+        }),
+        baseUrl: deployment.hostedProvider.baseUrl,
+        id: deployment.hostedProvider.providerId,
+        models: [
+          OpenclawModelDeclaration.make({
+            id: deployment.hostedProvider.modelId,
+            input: ["text"],
+            name: deployment.hostedProvider.modelName,
+          }),
+        ],
+      }),
+      OpenclawModelProviderIntent.make({
+        api: "openai-compat",
+        apiKey: OpenclawProviderApiKeyPlaceholder.make({
+          _tag: "Placeholder",
+          value: localProviderPlaceholder,
+        }),
+        baseUrl: deployment.localProvider.baseUrl,
+        id: deployment.localProvider.providerId,
+        models: [
+          OpenclawModelDeclaration.make({
+            id: deployment.localProvider.modelId,
+            input: ["text"],
+            name: deployment.localProvider.modelName,
+          }),
+        ],
+      }),
+    ],
     secretsResolver: OpenclawSecretsResolverIntent.make({
       commandPath: deployment.resolverCommandPath,
       opBinaryPath: deployment.resolverOpBinaryPath,
       trustedDir: deployment.resolverTrustedDir,
     }),
+    skills: [
+      OpenclawSkillPin.make({
+        integrity: createHash("sha256").update(openClawProofSkillMarkdown, "utf8").digest("hex"),
+        name: proofSkillName,
+        source: proofSkillSource,
+        version: proofSkillVersion,
+      }),
+    ],
+    telegram: O.some(
+      OpenclawTelegramIntent.make({
+        botTokenRef: deployment.telegramBotTokenRef,
+        defaultTo: deployment.telegramDefaultTo,
+        dmPolicy: deployment.telegramDmPolicy,
+        groupPolicy: deployment.telegramGroupPolicy,
+        groups: {},
+      })
+    ),
   });
 
 /**
@@ -503,27 +771,34 @@ export class OpenClawBackupConfig extends S.Class<OpenClawBackupConfig>($I`OpenC
 /**
  * One immutable, content-addressed OpenClaw generation.
  *
- * `generationId` is the SHA-256 of the canonical `openclaw.json` bytes, which
- * is also the generation directory name — equal intents therefore always
- * produce the same generation directory and the applicator becomes idempotent
- * by construction.
+ * `generationId` is the length-delimited SHA-256 bundle of the config,
+ * persona, proof skill, and compatibility identity. It is also the generation
+ * directory name, so equal inputs always produce the same generation
+ * directory and the applicator becomes idempotent by construction.
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
- * const generation = makeOpenClawGeneration(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
  * console.log(generation.generationId.length) // 64
  * ```
  *
@@ -532,20 +807,21 @@ export class OpenClawBackupConfig extends S.Class<OpenClawBackupConfig>($I`OpenC
  */
 export class OpenClawGeneration extends S.Class<OpenClawGeneration>($I`OpenClawGeneration`)(
   {
+    agentId: S.NonEmptyString,
     canonicalJson: S.String.annotateKey({
       description: "Canonical `openclaw.json` bytes rendered by the driver adapter.",
     }),
     configRoot: OpenclawAbsolutePath.annotateKey({
       description: "Root-owned directory holding every generation and the `current` pointer.",
     }),
-    credentialsDir: OpenclawAbsolutePath.annotateKey({
-      description: "User-owned directory holding unit-private credential files.",
+    configHash: OpenclawSha256Hex.annotateKey({
+      description: "SHA-256 of the canonical config bytes, distinct from the bundle generation id.",
     }),
     gatewayPort: OpenclawGatewayPort.annotateKey({
       description: "Loopback TCP port acceptance probes poll.",
     }),
     generationId: OpenclawSha256Hex.annotateKey({
-      description: "SHA-256 of the canonical config bytes; also the generation directory name.",
+      description: "Length-delimited bundle SHA-256; also the generation directory name.",
     }),
     home: OpenclawAbsolutePath.annotateKey({
       description: "Home directory exported into the unit environment.",
@@ -562,12 +838,21 @@ export class OpenClawGeneration extends S.Class<OpenClawGeneration>($I`OpenClawG
     openclawVersion: OpenclawTargetVersion.annotateKey({
       description: "Pinned OpenClaw version staged into the generation.",
     }),
+    opBinaryPath: OpenclawAbsolutePath,
+    proofSkillHash: OpenclawSha256Hex,
+    proofSkillMarkdown: S.NonEmptyString,
+    hostedModelId: S.NonEmptyString,
+    hostedProviderId: S.NonEmptyString,
+    localBaseUrl: S.NonEmptyString,
+    localModelId: S.NonEmptyString,
     runtimeDir: OpenclawAbsolutePath.annotateKey({
       description: "`XDG_RUNTIME_DIR` the applicator constructs before touching the user bus.",
     }),
     stateDir: OpenclawAbsolutePath.annotateKey({
       description: "OpenClaw state root snapshotted before every generation switch.",
     }),
+    soulHash: OpenclawSha256Hex,
+    soulMarkdown: S.NonEmptyString,
     unitName: S.NonEmptyString.annotateKey({
       description: "Name of the stack-owned `systemd --user` unit.",
     }),
@@ -593,8 +878,6 @@ const stateDatabasePath = (generation: OpenClawGeneration): string => `${generat
 
 const unitPath = (generation: OpenClawGeneration): string =>
   `${generation.home}/.config/systemd/user/${generation.unitName}`;
-
-const gatewayCredentialPath = (generation: OpenClawGeneration): string => `${generation.credentialsDir}/gateway-token`;
 
 const stagedOpenclawBinary = (generation: OpenClawGeneration): string =>
   `${generationDir(generation)}/node_modules/.bin/openclaw`;
@@ -669,40 +952,89 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
     [
       "{",
       `  "adapterVersion": ${OPENCLAW_COMPATIBILITY_SET.adapterVersion},`,
+      `  "configHash": "${generation.configHash}",`,
       `  "generationId": "${generation.generationId}",`,
       `  "nodeVersion": "${generation.nodeVersion}",`,
       `  "npmIntegrity": "${OPENCLAW_COMPATIBILITY_SET.npmIntegrity}",`,
       `  "npmShasum": "${OPENCLAW_COMPATIBILITY_SET.npmShasum}",`,
       `  "openclawCommit": "${OPENCLAW_COMPATIBILITY_SET.openclawCommit}",`,
-      `  "openclawVersion": "${generation.openclawVersion}"`,
+      `  "openclawVersion": "${generation.openclawVersion}",`,
+      `  "paths": {`,
+      `    "config": "${configFileName}",`,
+      `    "proofSkill": "${openClawProofSkillRelativePath}",`,
+      `    "soul": "${openClawSoulRelativePath}"`,
+      `  },`,
+      `  "proofSkillSha256": "${generation.proofSkillHash}",`,
+      `  "soulSha256": "${generation.soulHash}"`,
       "}",
     ],
     "\n"
   )}\n`;
 
 /**
- * Build the content-addressed generation described by stack args.
- *
- * Pure and total: the driver render adapter turns the deployment config into
- * canonical `openclaw.json` bytes, and their SHA-256 becomes the generation
- * id.
+ * Build the deterministic length-delimited generation bundle hash.
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawBundleHash } from "@beep/infra"
+ * import { OpenclawSha256Hex } from "@beep/openclaw"
  *
- * const generation = makeOpenClawGeneration(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   )
- * )
+ * const zeroHash = OpenclawSha256Hex.make("0".repeat(64))
+ * const bundleHash = makeOpenClawBundleHash({
+ *   configHash: zeroHash,
+ *   proofSkillHash: zeroHash,
+ *   soulHash: zeroHash
+ * })
+ * console.log(bundleHash.length) // 64
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeOpenClawBundleHash = (input: {
+  readonly configHash: OpenclawSha256Hex;
+  readonly proofSkillHash: OpenclawSha256Hex;
+  readonly soulHash: OpenclawSha256Hex;
+}): OpenclawSha256Hex => {
+  const compatibilityId = `${OPENCLAW_COMPATIBILITY_SET.adapterVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawCommit}:${OPENCLAW_COMPATIBILITY_SET.nodeVersion}`;
+  const hash = A.reduce(
+    [input.configHash, input.soulHash, input.proofSkillHash, compatibilityId],
+    createHash("sha256"),
+    (hash, part) => hash.update(`${new TextEncoder().encode(part).byteLength}:`).update(part, "utf8")
+  );
+  return OpenclawSha256Hex.make(hash.digest("hex"));
+};
+
+/**
+ * Build the content-addressed generation described by stack args.
+ *
+ * Pure and total: the driver render adapter turns the deployment config into
+ * canonical `openclaw.json` bytes, then the config and immutable workspace
+ * artifact hashes become one length-delimited generation identity.
+ *
+ * @example
+ * ```ts
+ * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
+ *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
  * console.log(generation.configRoot) // "/etc/beep/openclaw"
  * ```
  *
@@ -710,23 +1042,36 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
  * @since 0.0.0
  */
 export const makeOpenClawGeneration = (args: OpenClawStackArgs): OpenClawGeneration => {
-  const rendered = renderOpenclawConfig(makeOpenClawDeploymentIntent(args.deployment));
-
+  const rendered = renderOpenclawConfig(makeOpenClawDeploymentIntent(args.deployment, args.paths.configRoot));
+  const soulHash = OpenclawSha256Hex.make(createHash("sha256").update(openClawLegalSoulMarkdown, "utf8").digest("hex"));
+  const proofSkillHash = OpenclawSha256Hex.make(
+    createHash("sha256").update(openClawProofSkillMarkdown, "utf8").digest("hex")
+  );
   return OpenClawGeneration.make({
+    agentId: args.deployment.agentId,
     canonicalJson: rendered.canonicalJson,
     configRoot: args.paths.configRoot,
-    credentialsDir: `${args.identity.home}/.config/beep/openclaw/credentials`,
+    configHash: rendered.contentHash,
     gatewayPort: args.deployment.gatewayPort,
-    generationId: rendered.contentHash,
+    generationId: makeOpenClawBundleHash({ configHash: rendered.contentHash, proofSkillHash, soulHash }),
     home: args.identity.home,
+    hostedModelId: args.deployment.hostedProvider.modelId,
+    hostedProviderId: args.deployment.hostedProvider.providerId,
+    localBaseUrl: args.deployment.localProvider.baseUrl,
+    localModelId: args.deployment.localProvider.modelId,
     logFilePath: args.deployment.logFilePath,
     nodeBinDir: args.paths.nodeBinDir,
     nodeVersion: OPENCLAW_COMPATIBILITY_SET.nodeVersion,
     openclawVersion: args.deployment.openclawVersion,
+    opBinaryPath: args.deployment.resolverOpBinaryPath,
+    proofSkillHash,
+    proofSkillMarkdown: openClawProofSkillMarkdown,
     runtimeDir: args.identity.runtimeDir,
     stateDir: args.paths.stateDir,
+    soulHash,
+    soulMarkdown: openClawLegalSoulMarkdown,
     unitName: args.paths.unitName,
-    workspace: args.deployment.agentWorkspace,
+    workspace: `${args.paths.configRoot}/${generationPointerName}/workspace`,
   });
 };
 
@@ -736,27 +1081,36 @@ export const makeOpenClawGeneration = (args: OpenClawStackArgs): OpenClawGenerat
  * The unit never names a generation directory: it points at the
  * `<configRoot>/current` symlink so a pointer switch also switches binaries.
  * `UnsetEnvironment` strips inherited 1Password and gateway credentials from
- * the manager environment, and the gateway token arrives exclusively through
- * `LoadCredential`.
+ * the manager environment, and the scoped 1Password service-account token
+ * arrives exclusively through `LoadCredential`.
  *
  * @example
  * ```ts
- * import { makeOpenClawGeneration, OpenClawExpectedIdentity, OpenClawStackArgs, renderOpenClawUnit } from "@beep/infra"
+ * import {
+ *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
+ *   renderOpenClawUnit
+ * } from "@beep/infra"
  *
- * const unit = renderOpenClawUnit(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const unit = renderOpenClawUnit(makeOpenClawGeneration(args))
  * console.log(unit.startsWith("# BEEP_OPENCLAW_MANAGED")) // true
  * ```
  *
@@ -779,7 +1133,7 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
       `Environment=OPENCLAW_CONFIG_PATH=${activeConfigPath(generation)}`,
       `Environment=OPENCLAW_STATE_DIR=${generation.stateDir}`,
       "Environment=OPENCLAW_NIX_MODE=1",
-      `LoadCredential=gateway-token:${gatewayCredentialPath(generation)}`,
+      `LoadCredential=op-service-account-token:${opServiceAccountCredentialPath}`,
       "UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN",
       `ExecStartPre=${pointerPath(generation)}/${runScriptFileName} preflight`,
       `ExecStart=${pointerPath(generation)}/${runScriptFileName}`,
@@ -805,25 +1159,29 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRunScript
  * } from "@beep/infra"
  *
- * const runScript = renderOpenClawRunScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const runScript = renderOpenClawRunScript(makeOpenClawGeneration(args))
  * console.log(runScript.includes("config validate")) // true
  * ```
  *
@@ -841,8 +1199,16 @@ export const renderOpenClawRunScript = (generation: OpenClawGeneration): string 
       `export OPENCLAW_CONFIG_PATH="\${generation_dir}/${configFileName}"`,
       `export OPENCLAW_STATE_DIR=${shellQuote(generation.stateDir)}`,
       "export OPENCLAW_NIX_MODE=1",
+      "unset OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN",
+      'credential_file="${CREDENTIALS_DIRECTORY:?systemd credentials directory is required}/op-service-account-token"',
+      "[ -r \"${credential_file}\" ] || { printf 'missing op-service-account-token credential\\n' >&2; exit 78; }",
+      'export OP_SERVICE_ACCOUNT_TOKEN="$(cat "${credential_file}")"',
       'case "${1:-gateway}" in',
-      '  preflight) exec "${openclaw_bin}" config validate ;;',
+      "  preflight)",
+      `    op_binary=${shellQuote(generation.opBinaryPath)}`,
+      '    "${op_binary}" whoami >/dev/null',
+      '    exec "${openclaw_bin}" config validate',
+      "    ;;",
       '  gateway) exec "${openclaw_bin}" gateway ;;',
       "  *)",
       "    printf 'unsupported run.sh mode: %s\\n' \"${1}\" >&2",
@@ -892,25 +1258,29 @@ export class OpenClawGenerationFile extends S.Class<OpenClawGenerationFile>($I`O
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawGenerationTree
  * } from "@beep/infra"
  *
- * const tree = renderOpenClawGenerationTree(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const tree = renderOpenClawGenerationTree(makeOpenClawGeneration(args))
  * console.log(tree["run.sh"]?.mode) // "0755"
  * ```
  *
@@ -922,6 +1292,11 @@ export const renderOpenClawGenerationTree = (
 ): Record<string, OpenClawGenerationFile> => ({
   [configFileName]: OpenClawGenerationFile.make({ content: generation.canonicalJson, mode: "0644" }),
   [manifestFileName]: OpenClawGenerationFile.make({ content: renderGenerationManifest(generation), mode: "0644" }),
+  [openClawProofSkillRelativePath]: OpenClawGenerationFile.make({
+    content: generation.proofSkillMarkdown,
+    mode: "0644",
+  }),
+  [openClawSoulRelativePath]: OpenClawGenerationFile.make({ content: generation.soulMarkdown, mode: "0644" }),
   [runScriptFileName]: OpenClawGenerationFile.make({
     content: renderOpenClawRunScript(generation),
     mode: "0755",
@@ -942,21 +1317,31 @@ export const renderOpenClawGenerationTree = (
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawPreflightScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawPreflightScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("PREFLIGHT-OK")) // true
@@ -1020,25 +1405,29 @@ export const renderOpenClawPreflightScript = ({
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawStageScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawStageScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawStageScript(makeOpenClawGeneration(args))
  * console.log(script.includes("STAGE-OK")) // true
  * ```
  *
@@ -1050,11 +1439,16 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
   const stagedFiles = [
     { relativePath: configFileName, sentinel: configHeredocSentinel },
     { relativePath: manifestFileName, sentinel: manifestHeredocSentinel },
+    { relativePath: openClawSoulRelativePath, sentinel: soulHeredocSentinel },
+    { relativePath: openClawProofSkillRelativePath, sentinel: proofSkillHeredocSentinel },
     { relativePath: runScriptFileName, sentinel: runScriptHeredocSentinel },
   ];
 
   return bashScript([
     ...scriptPreamble(generation),
+    `[ ! -L ${shellQuote(generation.configRoot)} ] || { printf 'STAGE-FAIL: symlink parent %s\\n' ${shellQuote(
+      generation.configRoot
+    )} >&2; exit 73; }`,
     `sudo -n install -d -o root -g root -m 0755 ${shellQuote(generation.configRoot)}`,
     ...heredocLines({
       content: "beep-openclaw\n",
@@ -1062,7 +1456,25 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
       path: `${generation.configRoot}/.beep-openclaw`,
       sentinel: "BEEP_OPENCLAW_MARKER",
     }),
+    `for parent in ${A.join(
+      A.map(
+        [
+          generation.configRoot,
+          generationDir(generation),
+          `${generationDir(generation)}/workspace`,
+          `${generationDir(generation)}/workspace/skills`,
+          `${generationDir(generation)}/workspace/skills/${proofSkillName}`,
+        ],
+        shellQuote
+      ),
+      " "
+    )}; do [ ! -L "\${parent}" ] || { printf 'STAGE-FAIL: symlink parent %s\\n' "\${parent}" >&2; exit 73; }; done`,
     `sudo -n install -d -o root -g root -m 0755 ${shellQuote(generationDir(generation))}`,
+    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace`)}`,
+    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace/skills`)}`,
+    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(
+      `${generationDir(generation)}/workspace/skills/${proofSkillName}`
+    )}`,
     ...A.flatten(
       A.getSomes(
         A.map(stagedFiles, ({ relativePath, sentinel }) =>
@@ -1086,7 +1498,6 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
     `[ "\${staged_version}" = ${shellQuote(generation.openclawVersion)} ] || { printf 'STAGE-FAIL: staged openclaw %s does not match the pinned %s\\n' "\${staged_version}" ${shellQuote(
       generation.openclawVersion
     )} >&2; exit 73; }`,
-    `install -d -m 0700 ${shellQuote(generation.credentialsDir)}`,
     `install -d -m 0755 ${shellQuote(`${generation.home}/.config/systemd/user`)}`,
     ...heredocLines({
       content: renderOpenClawUnit(generation),
@@ -1120,25 +1531,29 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawApplyScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawApplyScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawApplyScript(makeOpenClawGeneration(args))
  * console.log(script.includes("APPLY-OK")) // true
  * ```
  *
@@ -1235,25 +1650,29 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRollbackScript
  * } from "@beep/infra"
  *
- * const script = renderOpenClawRollbackScript(
- *   makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const script = renderOpenClawRollbackScript(makeOpenClawGeneration(args))
  * console.log(script.includes("ROLLBACK-OK")) // true
  * ```
  *
@@ -1325,8 +1744,8 @@ const driftAuditLines = (input: {
     `[ "\${unit_active}" = active ] || alert unit-active active "\${unit_active}"`,
     `config_sha="$(sha256sum ${shellQuote(activeConfigPath(generation))} 2>/dev/null | cut -d' ' -f1 || printf 'absent')"`,
     `[ "\${config_sha}" = ${shellQuote(
-      generation.generationId
-    )} ] || alert config-hash ${shellQuote(generation.generationId)} "\${config_sha:-absent}"`,
+      generation.configHash
+    )} ] || alert config-hash ${shellQuote(generation.configHash)} "\${config_sha:-absent}"`,
     // Mode comparison uses stat's octal form so the numeric encodings systemd and
     // stat report for the same permissions (33188 vs 420) can never read as drift.
     `config_mode="$(stat -c '%a' ${shellQuote(activeConfigPath(generation))} 2>/dev/null || printf 'absent')"`,
@@ -1378,21 +1797,31 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawDriftAuditScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawDriftAuditScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("ALERT: OPENCLAW_CONFIG_DRIFT")) // true
@@ -1418,21 +1847,31 @@ export const renderOpenClawDriftAuditScript = (input: {
  * ```ts
  * import {
  *   makeOpenClawGeneration,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawProbeScript
  * } from "@beep/infra"
  *
- * const identity = OpenClawExpectedIdentity.make({
- *   home: "/home/elpresidank",
- *   hostname: "DankStation",
- *   machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *   runtimeDir: "/run/user/1000",
- *   uid: 1000,
- *   username: "elpresidank"
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
+ * const identity = args.identity
  * const script = renderOpenClawProbeScript({
- *   generation: makeOpenClawGeneration(OpenClawStackArgs.new(identity)),
+ *   generation: makeOpenClawGeneration(args),
  *   identity
  * })
  * console.log(script.includes("PROBE-COMPLETE")) // true
@@ -1475,6 +1914,97 @@ export const renderOpenClawProbeScript = (input: {
 };
 
 /**
+ * Render the fail-closed, operator-invoked P3 live acceptance script.
+ *
+ * Run `degraded` while the designated op:// reference is unresolvable, then
+ * restore it and run `restored`; the restored phase immediately proves model,
+ * local inventory, skill, Telegram send, and channel health.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
+ *   renderOpenClawLiveAcceptanceScript
+ * } from "@beep/infra"
+ *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
+ * const generation = makeOpenClawGeneration(args)
+ * const script = renderOpenClawLiveAcceptanceScript(generation)
+ * console.log(script.includes("LIVE-ACCEPTANCE-RESTORED PASS")) // true
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneration): string =>
+  bashScript([
+    ...scriptPreamble(generation),
+    `export PATH=${shellQuote(`${generation.nodeBinDir}:/usr/bin:/bin`)}`,
+    `export HOME=${shellQuote(generation.home)}`,
+    `export OPENCLAW_CONFIG_PATH=${shellQuote(activeConfigPath(generation))}`,
+    `export OPENCLAW_STATE_DIR=${shellQuote(generation.stateDir)}`,
+    "export OPENCLAW_NIX_MODE=1",
+    `openclaw=${shellQuote(`${pointerPath(generation)}/node_modules/.bin/openclaw`)}`,
+    `skill_file=${shellQuote(`${pointerPath(generation)}/${openClawProofSkillRelativePath}`)}`,
+    "fail() { printf 'LIVE-ACCEPTANCE-FAIL: %s\\n' \"$1\" >&2; exit 1; }",
+    'phase="${1:-}"',
+    'case "${phase}" in',
+    "  degraded)",
+    '    if "${openclaw}" secrets reload --json >/dev/null 2>&1; then',
+    "      fail 'designated broken reference did not degrade secrets reload'",
+    "    fi",
+    "    printf 'LIVE-ACCEPTANCE-DEGRADED PASS (verify degraded-reloader alert in sanitized journal evidence)\\n'",
+    "    exit 0",
+    "    ;;",
+    "  restored) ;;",
+    "  *) fail 'usage: live-acceptance degraded|restored' ;;",
+    "esac",
+    'reload_json="$("${openclaw}" secrets reload --json)" || fail \'restored secrets reload failed\'',
+    `printf '%s' "\${reload_json}" | jq -e '.ok == true and .warningCount == 0' >/dev/null || fail 'restored reload reported warnings'`,
+    `model_json="$("\${openclaw}" agent --agent ${shellQuote(generation.agentId)} --session-key p3-model-proof --message 'Return exactly P3_MODEL_OK' --thinking off --timeout 120 --json)" || fail 'hosted model turn failed'`,
+    `printf '%s' "\${model_json}" | jq -e ${shellQuote(
+      `.status == "ok" and (.runId | type == "string" and length > 0) and .result.meta.stopReason == "stop" and .result.meta.aborted == false and .result.meta.agentMeta.provider == "${generation.hostedProviderId}" and .result.meta.agentMeta.model == "${generation.hostedModelId}" and .result.payloads[0].text == "P3_MODEL_OK"`
+    )} >/dev/null || fail 'hosted model assertion failed'`,
+    `curl -fsS --max-time 10 ${shellQuote(`${generation.localBaseUrl}/models`)} | jq -e ${shellQuote(
+      `.data | map(.id) | index("${generation.localModelId}") != null`
+    )} >/dev/null || fail 'local /models omitted configured model'`,
+    `skills_json="$("\${openclaw}" skills list --json --eligible --agent ${shellQuote(
+      generation.agentId
+    )})" || fail 'skills inventory failed'`,
+    `printf '%s' "\${skills_json}" | jq -e '[.skills[] | select(.name == "beep-proof-ping" and .eligible == true and .source == "openclaw-workspace")] | length == 1' >/dev/null || fail 'proof skill inventory assertion failed'`,
+    `[ "$(sha256sum "\${skill_file}" | cut -d' ' -f1)" = ${shellQuote(
+      generation.proofSkillHash
+    )} ] || fail 'active proof skill hash mismatch'`,
+    `skill_json="$("\${openclaw}" agent --agent ${shellQuote(generation.agentId)} --session-key p3-skill-proof --message 'P3 proof skill ping' --thinking off --timeout 120 --json)" || fail 'proof skill turn failed'`,
+    `printf '%s' "\${skill_json}" | jq -e '.status == "ok" and .result.payloads[0].text == "P3_SKILL_OK"' >/dev/null || fail 'proof skill sentinel mismatch'`,
+    "[ -n \"${P3_TELEGRAM_TARGET:-}\" ] || fail 'P3_TELEGRAM_TARGET is required'",
+    "[ -n \"${P3_SYNTHETIC_NONCE:-}\" ] || fail 'P3_SYNTHETIC_NONCE is required'",
+    'send_json="$("${openclaw}" message send --channel telegram --target "${P3_TELEGRAM_TARGET}" --message "${P3_SYNTHETIC_NONCE}" --json)" || fail \'Telegram send failed\'',
+    `printf '%s' "\${send_json}" | jq -e '.channel == "telegram" and .payload.ok == true and (.messageId | type == "string" and length > 0)' >/dev/null || fail 'Telegram receipt assertion failed'`,
+    'channel_json="$("${openclaw}" channels status --channel telegram --probe --json)" || fail \'Telegram channel probe failed\'',
+    `printf '%s' "\${channel_json}" | jq -e '[.channelAccounts.telegram[] | select(.accountId == "default" and .probe.ok == true and (.probe.error == null))] | length == 1' >/dev/null || fail 'Telegram channel assertion failed'`,
+    `printf 'LIVE-ACCEPTANCE-RESTORED PASS generation=${generation.generationId}\\n'`,
+  ]);
+
+/**
  * Render the encrypted snapshot shipping script.
  *
  * The archive is symmetrically encrypted locally before it ever leaves the
@@ -1488,26 +2018,32 @@ export const renderOpenClawProbeScript = (input: {
  * ```ts
  * import {
  *   makeOpenClawGeneration,
+ *   makeOpenClawStackArgsFromConfigValues,
  *   OpenClawBackupConfig,
- *   OpenClawExpectedIdentity,
- *   OpenClawStackArgs,
  *   renderOpenClawBackupShipScript
  * } from "@beep/infra"
  *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * const script = renderOpenClawBackupShipScript({
  *   backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
- *   generation: makeOpenClawGeneration(
- *     OpenClawStackArgs.new(
- *       OpenClawExpectedIdentity.make({
- *         home: "/home/elpresidank",
- *         hostname: "DankStation",
- *         machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *         runtimeDir: "/run/user/1000",
- *         uid: 1000,
- *         username: "elpresidank"
- *       })
- *     )
- *   )
+ *   generation: makeOpenClawGeneration(args)
  * })
  * console.log(script.includes("BACKUP-OK")) // true
  * ```
@@ -1558,18 +2094,26 @@ export const renderOpenClawBackupShipScript = ({
  *
  * @example
  * ```ts
- * import { OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
- * const args = OpenClawStackArgs.new(
- *   OpenClawExpectedIdentity.make({
- *     home: "/home/elpresidank",
- *     hostname: "DankStation",
- *     machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *     runtimeDir: "/run/user/1000",
- *     uid: 1000,
- *     username: "elpresidank"
- *   })
- * )
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * console.log(args.paths.unitName) // "openclaw.service"
  * ```
  *
@@ -1581,10 +2125,7 @@ export class OpenClawStackArgs extends S.Class<OpenClawStackArgs>($I`OpenClawSta
     backup: S.OptionFromOptionalKey(OpenClawBackupConfig).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Backup shipping inputs; absent when snapshots stay on the workstation.",
     }),
-    deployment: OpenClawDeploymentConfig.pipe(
-      S.withConstructorDefault(Effect.succeed(OpenClawDeploymentConfig.make({}))),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ).annotateKey({
+    deployment: OpenClawDeploymentConfig.annotateKey({
       description: "Deployment inputs rendered into the OpenClaw deployment intent.",
     }),
     identity: OpenClawExpectedIdentity.annotateKey({
@@ -1626,7 +2167,7 @@ export class OpenClawStackArgs extends S.Class<OpenClawStackArgs>($I`OpenClawSta
    */
   static readonly new = (
     identity: OpenClawExpectedIdentity,
-    deployment: OpenClawDeploymentConfig = OpenClawDeploymentConfig.make({}),
+    deployment: OpenClawDeploymentConfig,
     paths: OpenClawWorkstationPaths = OpenClawWorkstationPaths.make({}),
     backup: O.Option<OpenClawBackupConfig> = O.none()
   ): OpenClawStackArgs =>
@@ -1665,9 +2206,7 @@ export class OpenClawStackArgs extends S.Class<OpenClawStackArgs>($I`OpenClawSta
  */
 export const makeOpenClawStackArgsFromConfigValues = ({
   agentId,
-  agentModel,
   agentName,
-  agentWorkspace,
   backupPassphraseSecretRef,
   backupRemoteDir,
   backupSshAgentSocketPath,
@@ -1682,6 +2221,15 @@ export const makeOpenClawStackArgsFromConfigValues = ({
   expectedUsername,
   gatewayAuthTokenRef,
   gatewayPort,
+  hostedProviderApiKeyRef,
+  hostedProviderBaseUrl,
+  hostedProviderId,
+  hostedProviderModelId,
+  hostedProviderModelName,
+  localProviderBaseUrl,
+  localProviderId,
+  localProviderModelId,
+  localProviderModelName,
   logFilePath,
   nodeBinDir,
   openclawVersion,
@@ -1689,6 +2237,10 @@ export const makeOpenClawStackArgsFromConfigValues = ({
   resolverOpBinaryPath,
   resolverTrustedDir,
   stateDir,
+  telegramBotTokenRef,
+  telegramDefaultTo,
+  telegramDmPolicy,
+  telegramGroupPolicy,
   unitName,
 }: OpenClawPulumiConfigInputValues = {}): OpenClawStackArgs =>
   OpenClawStackArgs.new(
@@ -1703,9 +2255,7 @@ export const makeOpenClawStackArgsFromConfigValues = ({
     OpenClawDeploymentConfig.make({
       ...O.getSomesStruct({
         agentId: O.fromUndefinedOr(agentId),
-        agentModel: O.fromUndefinedOr(agentModel),
         agentName: O.fromUndefinedOr(agentName),
-        agentWorkspace: O.fromUndefinedOr(agentWorkspace),
         gatewayAuthTokenRef: secretReferenceFromPulumiConfig("gatewayAuthTokenRef", gatewayAuthTokenRef),
         gatewayPort: O.fromUndefinedOr(gatewayPort),
         logFilePath: O.fromUndefinedOr(logFilePath),
@@ -1713,6 +2263,31 @@ export const makeOpenClawStackArgsFromConfigValues = ({
         resolverCommandPath: O.fromUndefinedOr(resolverCommandPath),
         resolverOpBinaryPath: O.fromUndefinedOr(resolverOpBinaryPath),
         resolverTrustedDir: O.fromUndefinedOr(resolverTrustedDir),
+      }),
+      hostedProvider: OpenClawHostedProviderConfig.make({
+        apiKeyRef: requiredConfigValue(
+          "hostedProviderApiKeyRef",
+          O.getOrUndefined(secretReferenceFromPulumiConfig("hostedProviderApiKeyRef", hostedProviderApiKeyRef))
+        ),
+        baseUrl: requiredConfigValue("hostedProviderBaseUrl", hostedProviderBaseUrl),
+        modelId: requiredConfigValue("hostedProviderModelId", hostedProviderModelId),
+        modelName: requiredConfigValue("hostedProviderModelName", hostedProviderModelName),
+        providerId: requiredConfigValue("hostedProviderId", hostedProviderId),
+      }),
+      localProvider: OpenClawLocalProviderConfig.make({
+        baseUrl: requiredConfigValue("localProviderBaseUrl", localProviderBaseUrl),
+        modelId: requiredConfigValue("localProviderModelId", localProviderModelId),
+        modelName: requiredConfigValue("localProviderModelName", localProviderModelName),
+        providerId: requiredConfigValue("localProviderId", localProviderId),
+      }),
+      telegramBotTokenRef: requiredConfigValue(
+        "telegramBotTokenRef",
+        O.getOrUndefined(secretReferenceFromPulumiConfig("telegramBotTokenRef", telegramBotTokenRef))
+      ),
+      telegramDefaultTo: O.fromUndefinedOr(telegramDefaultTo),
+      ...O.getSomesStruct({
+        telegramDmPolicy: telegramDmPolicyFromPulumiConfig(telegramDmPolicy),
+        telegramGroupPolicy: telegramGroupPolicyFromPulumiConfig(telegramGroupPolicy),
       }),
     }),
     OpenClawWorkstationPaths.make({
@@ -1754,9 +2329,7 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
 
   return makeOpenClawStackArgsFromConfigValues({
     agentId: config.get("agentId"),
-    agentModel: config.get("agentModel"),
     agentName: config.get("agentName"),
-    agentWorkspace: config.get("agentWorkspace"),
     backupPassphraseSecretRef: config.get("backupPassphraseSecretRef"),
     backupRemoteDir: config.get("backupRemoteDir"),
     backupSshAgentSocketPath: config.get("backupSshAgentSocketPath"),
@@ -1771,6 +2344,15 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
     expectedUsername: config.get("expectedUsername"),
     gatewayAuthTokenRef: config.get("gatewayAuthTokenRef"),
     gatewayPort: config.getNumber("gatewayPort"),
+    hostedProviderApiKeyRef: config.get("hostedProviderApiKeyRef"),
+    hostedProviderBaseUrl: config.get("hostedProviderBaseUrl"),
+    hostedProviderId: config.get("hostedProviderId"),
+    hostedProviderModelId: config.get("hostedProviderModelId"),
+    hostedProviderModelName: config.get("hostedProviderModelName"),
+    localProviderBaseUrl: config.get("localProviderBaseUrl"),
+    localProviderId: config.get("localProviderId"),
+    localProviderModelId: config.get("localProviderModelId"),
+    localProviderModelName: config.get("localProviderModelName"),
     logFilePath: config.get("logFilePath"),
     nodeBinDir: config.get("nodeBinDir"),
     openclawVersion: config.get("openclawVersion"),
@@ -1778,6 +2360,10 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
     resolverOpBinaryPath: config.get("resolverOpBinaryPath"),
     resolverTrustedDir: config.get("resolverTrustedDir"),
     stateDir: config.get("stateDir"),
+    telegramBotTokenRef: config.get("telegramBotTokenRef"),
+    telegramDefaultTo: config.get("telegramDefaultTo"),
+    telegramDmPolicy: config.get("telegramDmPolicy"),
+    telegramGroupPolicy: config.get("telegramGroupPolicy"),
     unitName: config.get("unitName"),
   });
 };
@@ -1794,21 +2380,28 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
  *
  * @example
  * ```ts
- * import { OpenClawExpectedIdentity, OpenClawStack, OpenClawStackArgs } from "@beep/infra"
+ * import { makeOpenClawStackArgsFromConfigValues, OpenClawStack } from "@beep/infra"
  *
+ * const args = makeOpenClawStackArgsFromConfigValues({
+ *   expectedHome: "/home/elpresidank",
+ *   expectedHostname: "DankStation",
+ *   expectedMachineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+ *   expectedRuntimeDir: "/run/user/1000",
+ *   expectedUid: 1000,
+ *   expectedUsername: "elpresidank",
+ *   hostedProviderApiKeyRef: "op://beep-openclaw/hosted/api-key",
+ *   hostedProviderBaseUrl: "https://api.example.com/v1",
+ *   hostedProviderId: "hosted",
+ *   hostedProviderModelId: "legal-primary",
+ *   hostedProviderModelName: "Legal Primary",
+ *   localProviderBaseUrl: "http://127.0.0.1:11434/v1",
+ *   localProviderId: "ollama",
+ *   localProviderModelId: "gemma3:4b",
+ *   localProviderModelName: "Gemma 3 4B",
+ *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
+ * })
  * console.log(OpenClawStack)
- * console.log(
- *   OpenClawStackArgs.new(
- *     OpenClawExpectedIdentity.make({
- *       home: "/home/elpresidank",
- *       hostname: "DankStation",
- *       machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
- *       runtimeDir: "/run/user/1000",
- *       uid: 1000,
- *       username: "elpresidank"
- *     })
- *   ).paths.configRoot
- * )
+ * console.log(args.paths.configRoot)
  * ```
  *
  * @category resources
@@ -1886,6 +2479,13 @@ export class OpenClawStack extends pulumi.ComponentResource {
   public readonly driftAuditCommand: pulumi.Output<string>;
 
   /**
+   * Fail-closed P3 live acceptance command for an operator sitting.
+   *
+   * @since 0.0.0
+   */
+  public readonly liveAcceptanceCommand: pulumi.Output<string>;
+
+  /**
    * Operator rollback command for the applied generation.
    *
    * @since 0.0.0
@@ -1941,6 +2541,8 @@ export class OpenClawStack extends pulumi.ComponentResource {
     const generationTriggers = [
       generation.generationId,
       generation.canonicalJson,
+      generation.soulMarkdown,
+      generation.proofSkillMarkdown,
       generation.gatewayPort,
       generation.nodeVersion,
       generation.openclawVersion,
@@ -2029,6 +2631,7 @@ export class OpenClawStack extends pulumi.ComponentResource {
     this.openclawVersion = pulumi.output(generation.openclawVersion);
     this.nodeVersion = pulumi.output(generation.nodeVersion);
     this.driftAuditCommand = pulumi.output(renderOpenClawDriftAuditScript({ generation, identity }));
+    this.liveAcceptanceCommand = pulumi.output(renderOpenClawLiveAcceptanceScript(generation));
     this.rollbackCommand = pulumi.output(renderOpenClawRollbackScript(generation));
     this.preflightStdout = pulumi.secret(preflight.stdout);
     this.stageStdout = pulumi.secret(stage.stdout);
@@ -2045,6 +2648,7 @@ export class OpenClawStack extends pulumi.ComponentResource {
       generation: this.generation,
       generationDir: this.generationDir,
       generationId: this.generationId,
+      liveAcceptanceCommand: this.liveAcceptanceCommand,
       nodeVersion: this.nodeVersion,
       openclawVersion: this.openclawVersion,
       preflightStdout: this.preflightStdout,

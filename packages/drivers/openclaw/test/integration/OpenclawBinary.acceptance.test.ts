@@ -55,6 +55,7 @@ const negativeFixtureDir = fileURLToPath(new URL("../fixtures/negative/", import
 const negativeFixtureNames = [
   "agents-entries-shape",
   "gateway-port-string",
+  "unknown-control-ui-key",
   "unknown-exec-provider-key",
   "unknown-top-level-key",
 ];
