@@ -133,6 +133,21 @@ const readSidecarTransport = Effect.suspend(() =>
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTransport);
 
+const ContradictionTriageSurface = (): JSX.Element => {
+  const transport = useAtomValue(sidecarTransportAtom);
+  const unavailable = (
+    <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">
+      Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
+    </div>
+  );
+
+  return AsyncResult.match(transport, {
+    onInitial: () => unavailable,
+    onFailure: () => unavailable,
+    onSuccess: ({ value }) => (hasDesktopRpcAccess(value) ? <ContradictionTriagePanel /> : unavailable),
+  });
+};
+
 const BrowserFailureReporter = ({
   cause,
   source,
@@ -476,8 +491,7 @@ export const SurfaceBoundary = ({
 
 const makePanelRenderers = (
   graph: DesktopDockGraph,
-  appRegistry: AppRegistry,
-  desktopRpcAvailable: boolean
+  appRegistry: AppRegistry
 ): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
   const wrap = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
@@ -491,17 +505,7 @@ const makePanelRenderers = (
     home: () => wrap("Home", <HomeSurface graph={graph} />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
-    "contradiction-triage": () =>
-      wrap(
-        "Contradiction Triage",
-        desktopRpcAvailable ? (
-          <ContradictionTriagePanel />
-        ) : (
-          <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">
-            Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
-          </div>
-        )
-      ),
+    "contradiction-triage": () => wrap("Contradiction Triage", <ContradictionTriageSurface />),
     "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
     "ontology-document": () => wrap("Document", <OntologyDocumentRegion />),
     "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
@@ -517,12 +521,8 @@ const makePanelRenderers = (
 // The family owns one renderer map per graph. Reading the professional registry
 // inside the atom keeps renderer identity stable without module-global state.
 const panelRendererAtoms = Atom.family((graph: DesktopDockGraph) =>
-  Atom.family((desktopRpcAvailable: boolean) =>
-    Atom.readable((get) =>
-      AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) =>
-        makePanelRenderers(graph, appRegistry, desktopRpcAvailable)
-      )
-    )
+  Atom.readable((get) =>
+    AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) => makePanelRenderers(graph, appRegistry))
   )
 );
 
@@ -680,7 +680,7 @@ const DesktopShell = ({
   const navigate = (key: DesktopPanelKey): void => {
     navigatePanel({ api: dockApi, graph, key, workspace });
   };
-  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)(desktopRpcAvailable)));
+  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)));
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
