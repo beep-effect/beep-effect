@@ -14,7 +14,7 @@ import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@be
 import { TaggedErrorClass } from "@beep/schema";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -56,6 +56,49 @@ class SmokeInitializeResponse extends S.Class<SmokeInitializeResponse>($I`SmokeI
   $I.annote("SmokeInitializeResponse", { description: "Initialization JSON-RPC response from the compiled MCP host." })
 ) {}
 
+class SmokeManifestEnv extends S.Class<SmokeManifestEnv>($I`SmokeManifestEnv`)(
+  {
+    BUNDLE_DIR: S.String,
+    NODE_PATH: S.String,
+    PRACTICE_KG_CORPUS_ROOT: S.String,
+  },
+  $I.annote("SmokeManifestEnv", {
+    description: "Env contract Claude Desktop applies when spawning the compiled host.",
+  })
+) {}
+
+class SmokeManifestMcpConfig extends S.Class<SmokeManifestMcpConfig>($I`SmokeManifestMcpConfig`)(
+  { command: S.String, env: SmokeManifestEnv },
+  $I.annote("SmokeManifestMcpConfig", { description: "Launch-configuration slice of the MCPB manifest." })
+) {}
+
+class SmokeManifestServer extends S.Class<SmokeManifestServer>($I`SmokeManifestServer`)(
+  { mcp_config: SmokeManifestMcpConfig },
+  $I.annote("SmokeManifestServer", { description: "Server block of the MCPB manifest." })
+) {}
+
+class SmokeManifest extends S.Class<SmokeManifest>($I`SmokeManifest`)(
+  { server: SmokeManifestServer },
+  $I.annote("SmokeManifest", {
+    description: "Manifest slice the smoke replays to spawn the compiled host exactly as Claude Desktop does.",
+  })
+) {}
+
+class SmokeCallContent extends S.Class<SmokeCallContent>($I`SmokeCallContent`)(
+  { text: S.String, type: S.Literal("text") },
+  $I.annote("SmokeCallContent", { description: "Text content item returned by a compiled-host tool call." })
+) {}
+
+class SmokeCallResult extends S.Class<SmokeCallResult>($I`SmokeCallResult`)(
+  { content: S.Array(SmokeCallContent) },
+  $I.annote("SmokeCallResult", { description: "Tool-call payload returned by the compiled MCP host." })
+) {}
+
+class SmokeCallResponse extends S.Class<SmokeCallResponse>($I`SmokeCallResponse`)(
+  { result: SmokeCallResult },
+  $I.annote("SmokeCallResponse", { description: "Tool-call JSON-RPC response from the compiled MCP host." })
+) {}
+
 class SmokeFailure extends TaggedErrorClass<SmokeFailure>($I`SmokeFailure`)(
   "SmokeFailure",
   {
@@ -67,6 +110,15 @@ class SmokeFailure extends TaggedErrorClass<SmokeFailure>($I`SmokeFailure`)(
 
 const decodeInitialize = S.decodeUnknownEffect(S.fromJsonString(SmokeInitializeResponse));
 const decodeTools = S.decodeUnknownEffect(S.fromJsonString(SmokeToolsResponse));
+const decodeCall = S.decodeUnknownEffect(S.fromJsonString(SmokeCallResponse));
+const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(SmokeManifest));
+
+const substituteManifestTokens = (exeDir: string, bundleOut: string) =>
+  flow(
+    Str.replace("${__dirname}", exeDir),
+    Str.replace("${user_config.bundle_dir}", bundleOut),
+    Str.replace("${user_config.corpus_root}", "")
+  );
 
 const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (databasePath: string) {
   yield* Effect.gen(function* () {
@@ -134,16 +186,51 @@ const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(functio
 });
 
 // fallow-ignore-next-line complexity -- stdio smoke harness; IS the coverage for the compiled artifact
-const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (executable: string, bundleOut: string) {
+const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
+  executable: string,
+  bundleOut: string,
+  neutralCwd: string
+) {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const exeDir = path.dirname(executable);
+  const manifestText = yield* fs
+    .readFileString(path.join(exeDir, "manifest.json"))
+    .pipe(
+      Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Failed reading the staged manifest.json." }))
+    );
+  // Decoding the manifest slice is the contract check: dropping NODE_PATH from
+  // mcp_config.env fails the smoke here, before the host even spawns.
+  const manifest = yield* decodeManifest(manifestText).pipe(
+    Effect.mapError((cause) =>
+      SmokeFailure.make({ cause, message: "Staged manifest.json broke the mcp_config contract." })
+    )
+  );
+  const substitute = substituteManifestTokens(exeDir, bundleOut);
+  // bin.ts resolves PRACTICE_KG_BUNDLE_DIR ahead of the manifest's BUNDLE_DIR, so an ambient
+  // value in a developer or CI shell would aim the compiled host at another bundle and let the
+  // smoke pass without proving the staged artifact. Dropping both higher-precedence overrides
+  // also leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install.
+  const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
+  const hostEnv = R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT");
   const pipeScript =
-    `{ printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"compiled-smoke","version":"0.0.0"}}}'; sleep 1; ` +
-    `printf '%s\\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'; sleep 1; } ` +
-    `| "$1" --bundle-dir "$2"`;
+    `{ printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"compiled-smoke","version":"0.0.0"}}}'; sleep 2; ` +
+    `printf '%s\\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'; sleep 1; ` +
+    `printf '%s\\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'; sleep 1; ` +
+    `printf '%s\\n' '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"corpus_search_text","arguments":{"query":"fixture"}}}'; sleep 3; } ` +
+    `| "$1"`;
   const child = yield* Effect.try({
     try: () =>
-      Bun.spawn(["sh", "-c", pipeScript, "practice-kg-smoke", executable, bundleOut], {
-        cwd: path.dirname(executable),
+      // Desktop-faithful spawn: a neutral cwd (Desktop never launches from the extension
+      // dir, so resolution must not lean on cwd-adjacent node_modules) and configuration
+      // through the manifest env alone.
+      Bun.spawn(["sh", "-c", pipeScript, "practice-kg-smoke", executable], {
+        cwd: neutralCwd,
+        env: {
+          ...hostEnv,
+          BUNDLE_DIR: substitute(manifest.server.mcp_config.env.BUNDLE_DIR),
+          NODE_PATH: substitute(manifest.server.mcp_config.env.NODE_PATH),
+        },
         stderr: "inherit",
         stdout: "pipe",
       }),
@@ -183,6 +270,19 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
       message: `Compiled host did not list the expected toolkit tools: ${A.join(names, ", ")}`,
     });
   }
+  const callLine = yield* responseLine(2, "corpus_search_text");
+  const call = yield* decodeCall(callLine).pipe(
+    Effect.mapError((cause) => SmokeFailure.make({ cause, message: "corpus_search_text response was invalid." }))
+  );
+  // Every tool result carries bundle_version; its presence proves the DuckDB-backed
+  // query path executed inside the compiled host, not just the JSON-RPC plumbing.
+  const callText = A.head(call.result.content).pipe(
+    O.map((item) => item.text),
+    O.getOrElse(() => "")
+  );
+  if (!Str.includes("bundle_version")(callText)) {
+    return yield* SmokeFailure.make({ message: "corpus_search_text result did not include bundle_version." });
+  }
   yield* Effect.logInfo("COMPILED_SMOKE_OK", {
     initialize: initialize.result.serverInfo.name,
     toolCount: names.length,
@@ -202,7 +302,7 @@ const program = Effect.scoped(
         message: `Compiled Linux host is missing at "${executable}"; run the package:mcpb:linux script first.`,
       });
     }
-    yield* runCompiledHost(executable, bundleOut);
+    yield* runCompiledHost(executable, bundleOut, root);
   })
 ).pipe(Effect.provide(BunServices.layer));
 
