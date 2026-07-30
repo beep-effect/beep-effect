@@ -23,6 +23,24 @@ import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { DocTextError } from "./DocText.errors.ts";
 
 /**
+ * Version of the canonical text emitted by the JS-native document extractor.
+ *
+ * Increment this value when PDF or DOCX extraction semantics change in a way
+ * that can alter the canonical text or its UTF-16 offsets.
+ *
+ * @example
+ * ```ts
+ * import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text"
+ *
+ * console.log(DOC_TEXT_ENGINE_VERSION) // "1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DOC_TEXT_ENGINE_VERSION = "1";
+
+/**
  * JS-native document text file-processing engine descriptor.
  *
  * The capability contract currently groups text engines under the `tika`
@@ -43,6 +61,7 @@ export const DocTextFileProcessingEngineDescriptor = FileProcessingEngineDescrip
   engine: "tika",
   name: "doc-text-js",
   supportedFormats: ["pdf-text-layer", "docx"],
+  version: DOC_TEXT_ENGINE_VERSION,
 });
 
 const operationFailure = (operation: ExtractFileOperation, error: DocTextError): FileProcessingOperationError =>
@@ -119,6 +138,7 @@ const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function*
 
   return ExtractionResult.make({
     engine: DocTextFileProcessingEngineDescriptor.name,
+    engineVersion: DOC_TEXT_ENGINE_VERSION,
     format: operation.format,
     metadata: { "pdf.totalPages": `${result.totalPages}` },
     operationId: operation.operationId,
@@ -139,6 +159,7 @@ const extractDocx = Effect.fn("DocTextFileProcessingEngine.extractDocx")(functio
 
   return ExtractionResult.make({
     engine: DocTextFileProcessingEngineDescriptor.name,
+    engineVersion: DOC_TEXT_ENGINE_VERSION,
     format: operation.format,
     metadata: {},
     operationId: operation.operationId,

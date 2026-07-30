@@ -7,9 +7,23 @@
  */
 
 /**
+ * Exact extracted-source identity and digest/version schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./SourceTextIdentity.ts";
+/**
  * TextAnchor: char-offset anchor into a source document plus the quoted span.
  *
  * @category models
  * @since 0.0.0
  */
 export * from "./TextAnchor.ts";
+/**
+ * Fail-closed verified-anchor construction.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./VerifiedTextAnchor.ts";

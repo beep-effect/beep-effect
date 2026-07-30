@@ -183,7 +183,9 @@ const generatedComposers = $I.compose(
   "obs",
   "exiftool",
   "qa-capture",
-  "gov-legal-mcp"
+  "gov-legal-mcp",
+  "epistemic-client",
+  "epistemic-ui"
 );
 
 const composers = {
@@ -2309,3 +2311,33 @@ export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = compo
  * @category configuration
  */
 export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = composers.$GovLegalMcpId;
+
+/**
+  * Identity composer for `@beep/epistemic-client`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicClientId } from "@beep/identity"
+ *
+ * console.log($EpistemicClientId.make("ContradictionTriage"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-client"> = composers.$EpistemicClientId;
+
+/**
+ * Identity composer for `@beep/epistemic-ui`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicUiId } from "@beep/identity"
+ *
+ * console.log($EpistemicUiId.make("ContradictionTriage"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = composers.$EpistemicUiId;

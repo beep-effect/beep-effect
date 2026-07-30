@@ -14,6 +14,16 @@
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
     {
+      "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 54,
+      "owner": "@beep/professional-desktop",
+      "reason": "Sidecar registration regression decodes fixed contradiction RPC envelopes to prove handler wiring; schema-derived arbitrary coverage lives with the domain and use-case schemas."
+    },
+    {
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -150,6 +160,26 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 102,
+      "owner": "@beep/epistemic-server",
+      "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 74,
+      "owner": "@beep/epistemic-server",
+      "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
+    },
+    {
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -178,6 +208,16 @@
       "line": 49,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 148,
+      "owner": "@beep/epistemic-ui",
+      "reason": "Component regression decodes fixed read models to prove triage interactions, conflict states, and exact source highlighting; schema-derived property coverage lives in domain and use-case tests."
     },
     {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",

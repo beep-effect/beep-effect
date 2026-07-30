@@ -41,6 +41,7 @@
     "./Handoff": "./src/Handoff/index.ts",
     "./Service": "./src/Service/index.ts",
     "./Target": "./src/Target/index.ts",
+    "./VerifiedSpan": "./src/VerifiedSpan/index.ts",
     "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -63,6 +64,7 @@
       "./Handoff": "./dist/Handoff/index.js",
       "./Service": "./dist/Service/index.js",
       "./Target": "./dist/Target/index.js",
+      "./VerifiedSpan": "./dist/VerifiedSpan/index.js",
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"
@@ -71,6 +73,7 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"

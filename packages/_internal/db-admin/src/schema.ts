@@ -153,6 +153,74 @@ export const workspaceMessageTable: typeof WorkspaceDbSchema.message = Workspace
 export const epistemicUsageRecordTable: typeof EpistemicDbSchema.usageRecord = EpistemicDbSchema.usageRecord;
 
 /**
+ * Epistemic contradiction candidate table (drizzle-kit generate surface).
+ *
+ * @example
+ * ```ts
+ * import { epistemicContradictionCandidateTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicContradictionCandidateTable.definition.tableName)
+ * // "epistemic_contradiction_candidate"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicContradictionCandidateTable: typeof EpistemicDbSchema.contradictionCandidate =
+  EpistemicDbSchema.contradictionCandidate;
+
+/**
+ * Epistemic contradiction receipt table (drizzle-kit generate surface).
+ *
+ * @example
+ * ```ts
+ * import { epistemicContradictionReceiptTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicContradictionReceiptTable.definition.tableName)
+ * // "epistemic_contradiction_receipt"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicContradictionReceiptTable: typeof EpistemicDbSchema.contradictionReceipt =
+  EpistemicDbSchema.contradictionReceipt;
+
+/**
+ * Epistemic contradiction disposition table (drizzle-kit generate surface).
+ *
+ * @example
+ * ```ts
+ * import { epistemicContradictionDispositionTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicContradictionDispositionTable.definition.tableName)
+ * // "epistemic_contradiction_disposition"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicContradictionDispositionTable: typeof EpistemicDbSchema.contradictionDisposition =
+  EpistemicDbSchema.contradictionDisposition;
+
+/**
+ * Epistemic evidence-verification table (drizzle-kit generate surface).
+ *
+ * @example
+ * ```ts
+ * import { epistemicEvidenceVerificationTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicEvidenceVerificationTable.definition.tableName)
+ * // "epistemic_evidence_verification"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicEvidenceVerificationTable: typeof EpistemicDbSchema.evidenceVerification =
+  EpistemicDbSchema.evidenceVerification;
+
+/**
  * Documents sync item table (drizzle-kit generate surface).
  *
  * @example

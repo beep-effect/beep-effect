@@ -172,6 +172,7 @@ export type TextSpan = InstanceType<typeof TextSpanBase>;
 export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionResult`)(
   {
     engine: S.String,
+    engineVersion: S.optionalKey(S.String),
     format: FileFormatFamily,
     metadata: S.Record(S.String, S.String),
     operationId: OperationId,

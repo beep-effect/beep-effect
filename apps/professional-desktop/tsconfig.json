@@ -49,6 +49,12 @@
         "../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
       ],
       "@beep/postgres": ["../../packages/drivers/postgres/src/index.ts"],
+      "@beep/provenance": [
+        "../../packages/foundation/modeling/provenance/src/index.ts"
+      ],
+      "@beep/provenance/*": [
+        "../../packages/foundation/modeling/provenance/src/*"
+      ],
       "@beep/rdf": ["../../packages/foundation/modeling/rdf/src/index.ts"],
       "@beep/rdf/*": ["../../packages/foundation/modeling/rdf/src/*"],
       "@beep/identity": [
@@ -156,6 +162,9 @@
       "path": "../../packages/drivers/postgres/tsconfig.json"
     },
     {
+      "path": "../../packages/epistemic/client/tsconfig.json"
+    },
+    {
       "path": "../../packages/epistemic/config/tsconfig.json"
     },
     {
@@ -166,6 +175,9 @@
     },
     {
       "path": "../../packages/epistemic/tables/tsconfig.json"
+    },
+    {
+      "path": "../../packages/epistemic/ui/tsconfig.json"
     },
     {
       "path": "../../packages/epistemic/use-cases/tsconfig.json"
@@ -187,6 +199,9 @@
     },
     {
       "path": "../../packages/foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/rdf/tsconfig.json"

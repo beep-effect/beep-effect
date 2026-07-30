@@ -9,6 +9,7 @@
 import { Effect } from "effect";
 import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts";
 import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
+import { EpistemicContradictionTriageMigrationTarget } from "./migrations/EpistemicContradictionTriage.ts";
 import { EpistemicEdgeMigrationTarget } from "./migrations/EpistemicEdge.ts";
 import { EpistemicExecutionLedgerMigrationTarget } from "./migrations/EpistemicExecutionLedger.ts";
 import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
@@ -16,37 +17,7 @@ import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts"
 import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 
 /**
- * Architecture lab migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Documents sync migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Epistemic bitemporal edge migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Epistemic execution ledger migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Epistemic usage migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Workspace thread migration target export.
+ * Registered db-admin migration target exports.
  *
  * @category configuration
  * @since 0.0.0
@@ -54,6 +25,7 @@ import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 export {
   ArchitectureLabMigrationTarget,
   DocumentsSyncMigrationTarget,
+  EpistemicContradictionTriageMigrationTarget,
   EpistemicEdgeMigrationTarget,
   EpistemicExecutionLedgerMigrationTarget,
   EpistemicUsageMigrationTarget,
@@ -80,6 +52,7 @@ export const DbAdminMigrationTargets = [
   EpistemicUsageMigrationTarget,
   DocumentsSyncMigrationTarget,
   EpistemicEdgeMigrationTarget,
+  EpistemicContradictionTriageMigrationTarget,
   EpistemicExecutionLedgerMigrationTarget,
 ] as const;
 
