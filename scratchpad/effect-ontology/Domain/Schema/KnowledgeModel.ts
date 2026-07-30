@@ -16,8 +16,8 @@ import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { Confidence } from "../Model/shared.ts";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf/Types.ts";
+import { Confidence } from "../Model";
+import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 

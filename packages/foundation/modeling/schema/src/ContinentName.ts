@@ -1,5 +1,4 @@
-/**
- * CLDR continent display-name schema.
+/** * CLDR continent display-name schema.
  *
  * @packageDocumentation
  * @since 0.0.0

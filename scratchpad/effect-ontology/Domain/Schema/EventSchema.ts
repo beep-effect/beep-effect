@@ -15,9 +15,8 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
-import { BatchState } from "../Model/BatchWorkflow.ts";
-import { Confidence } from "../Model/shared.ts";
-import { NamedNode } from "../Rdf/Types.ts";
+import { BatchState, Confidence } from "../Model";
+import { NamedNode } from "../Rdf";
 import { ClaimId } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/EventSchema");

@@ -85,32 +85,20 @@ type M365ErrorOptionsInputRaw = {
   readonly url?: string;
 };
 
+const optionalField = <Inner extends S.Top>(inner: Inner, description: string) =>
+  S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+
 class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorOptionsInput`)(
   {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Original native or third-party cause when one was available." })
+    cause: optionalField(S.Unknown, "Original native or third-party cause when one was available."),
+    itemId: optionalField(S.String, "Graph item id involved, if any."),
+    resource: optionalField(S.String, "Graph resource family involved, if any."),
+    retryAfterSeconds: optionalField(
+      NonNegativeInt,
+      "Honored Retry-After delay in seconds, if the response was throttled."
     ),
-    itemId: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph item id involved, if any." })
-    ),
-    resource: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph resource family involved, if any." })
-    ),
-    retryAfterSeconds: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Honored Retry-After delay in seconds, if the response was throttled." })
-    ),
-    status: S.OptionFromOptionalKey(M365HttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "HTTP status code associated with the failure, if any." })
-    ),
-    url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Request URL involved, if any." })
-    ),
+    status: optionalField(M365HttpStatus, "HTTP status code associated with the failure, if any."),
+    url: optionalField(S.String, "Request URL involved, if any."),
   },
   $I.annote("M365ErrorOptionsInput", {
     description: "Normalized options for configuring Microsoft 365 driver errors.",
@@ -146,6 +134,19 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
     url: O.fromUndefinedOr(options.url),
   });
 
+const M365ErrorFields = {
+  reason: M365ErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
+  cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
+  itemId: optionalField(S.String, "Graph item id involved, if any."),
+  resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
+  retryAfterSeconds: optionalField(
+    NonNegativeInt,
+    "Honored Retry-After delay in seconds, if the response was throttled."
+  ),
+  status: optionalField(M365HttpStatus, "HTTP status code, if any."),
+  url: optionalField(S.String, "Request URL involved, if any."),
+} satisfies S.Struct.Fields;
+
 /**
  * Technical failure raised by the Microsoft 365 driver boundary.
  *
@@ -171,38 +172,8 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
  */
 export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   "M365Error",
-  {
-    reason: M365ErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Sanitized cause label (tag/name), if any." })
-    ),
-    itemId: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph item id involved, if any." })
-    ),
-    resource: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Graph resource family (drives/sites/messages/events), if any.",
-      })
-    ),
-    retryAfterSeconds: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Honored Retry-After delay in seconds, if the response was throttled.",
-      })
-    ),
-    status: S.OptionFromOptionalKey(M365HttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "HTTP status code, if any." })
-    ),
-    url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Request URL involved, if any." })
-    ),
-  },
-  $I.annote("M365Error", {
+  M365ErrorFields,
+  $I.annoteClass<S.declare<M365Error>, readonly [S.TaggedStruct<"M365Error", typeof M365ErrorFields>]>("M365Error", {
     description: "Redacted technical failure raised by the Microsoft 365 Graph driver boundary.",
     toEquivalence: () => sameM365ErrorFields,
   })
