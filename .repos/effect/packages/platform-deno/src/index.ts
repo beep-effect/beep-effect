@@ -12,6 +12,16 @@ export * as DenoChildProcessSpawner from "./DenoChildProcessSpawner.ts"
 /**
  * @since 4.0.0
  */
+export * as DenoClusterHttp from "./DenoClusterHttp.ts"
+
+/**
+ * @since 4.0.0
+ */
+export * as DenoClusterSocket from "./DenoClusterSocket.ts"
+
+/**
+ * @since 4.0.0
+ */
 export * as DenoCrypto from "./DenoCrypto.ts"
 
 /**
@@ -32,7 +42,22 @@ export * as DenoHttpPlatform from "./DenoHttpPlatform.ts"
 /**
  * @since 4.0.0
  */
+export * as DenoHttpServer from "./DenoHttpServer.ts"
+
+/**
+ * @since 4.0.0
+ */
+export * as DenoHttpServerRequest from "./DenoHttpServerRequest.ts"
+
+/**
+ * @since 4.0.0
+ */
 export * as DenoKeyValueStore from "./DenoKeyValueStore.ts"
+
+/**
+ * @since 4.0.0
+ */
+export * as DenoMultipart from "./DenoMultipart.ts"
 
 /**
  * @since 4.0.0
@@ -58,6 +83,11 @@ export * as DenoServices from "./DenoServices.ts"
  * @since 4.0.0
  */
 export * as DenoSocket from "./DenoSocket.ts"
+
+/**
+ * @since 4.0.0
+ */
+export * as DenoSocketServer from "./DenoSocketServer.ts"
 
 /**
  * @since 4.0.0

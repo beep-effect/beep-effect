@@ -1251,7 +1251,7 @@ export function logLevel(name?: string) {
  *
  * const provider = ConfigProvider.fromEnv({
  *   env: {
- *     API_KEY: "sk-1234567890abcdef" // gitleaks:allow
+ *     API_KEY: "sk-1234567890abcdef"
  *   }
  * })
  *
