@@ -20,9 +20,9 @@ const $I = $LawPracticeDomainId.create("values/StatuteCitation/StatuteCitation.m
  * discriminant plus statute-specific components: title, code, section, chapter,
  * subsection, structured section/subsection ranges, jurisdiction, edition
  * metadata, and the {@link StatuteComponentSpan} locating each sub-part in the
- * source text. Every own field is optional and modeled as `Option` with a
- * `None` constructor default, because statute forms vary widely (bare-section,
- * chapter-only, annotated-edition parentheticals, and so on).
+ * source text. Sparse components use `Option` because statute forms vary widely
+ * (bare-section, chapter-only, annotated-edition parentheticals, and so on);
+ * `hasEtSeq` defaults to `false`.
  *
  * **Example**
  *
@@ -120,9 +120,7 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
         description: "Alias for subsection (string chain, unlike case pincite which is a number).",
       })
     ),
-    hasEtSeq: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    hasEtSeq: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: 'True when "et seq." follows the citation',
       })

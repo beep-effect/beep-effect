@@ -15,9 +15,8 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
 /**
  * Options for `toDurableLocator` / `toDurableLocators`.
  *
- * Every field is optional and decodes to `None` when omitted, so a bare
- * `DurableLocatorOptions.make({})` carries no overrides and callers apply their
- * own defaults (`space` "original", `fullSpan` false, `contextLength` 32).
+ * Omitted fields use the durable-locator defaults: `space` is `"original"`,
+ * `fullSpan` is `false`, and `contextLength` is 32.
  *
  * **Example**
  *
@@ -25,16 +24,15 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
  * ```ts
  * import { DurableLocatorOptions } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
- * import * as O from "effect/Option"
  *
  * const options = DurableLocatorOptions.make({
- *   space: O.some("clean"),
- *   fullSpan: O.some(true),
- *   contextLength: O.some(NonNegativeInt.make(64)),
+ *   space: "clean",
+ *   fullSpan: true,
+ *   contextLength: NonNegativeInt.make(64),
  * })
  *
- * console.log(O.getOrElse(options.space, () => "original")) // "clean"
- * console.log(O.isNone(DurableLocatorOptions.make({}).fullSpan)) // true
+ * console.log(options.space) // "clean"
+ * console.log(DurableLocatorOptions.make({}).fullSpan) // false
  * ```
  *
  * @category models
@@ -43,24 +41,20 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
 export class DurableLocatorOptions extends S.Class<DurableLocatorOptions>($I`DurableLocatorOptions`)(
   {
     space: S.Literals(["original", "clean"]).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withKeyDefaults("original"),
       S.annotateKey({
         description:
           'Coordinate space. Default "original": source must be the text passed to extractCitations. "clean": source must be eyecite\'s cleaned text.',
       })
     ),
-    fullSpan: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    fullSpan: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
           "Use fullSpan (case name through final parenthetical) when present, else the core span. Default false.",
       })
     ),
     contextLength: NonNegativeInt.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withKeyDefaults(NonNegativeInt.make(32)),
       S.annotateKey({
         description: "Max characters per context side after sentence-bounding. Default 32.",
       })

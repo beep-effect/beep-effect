@@ -78,9 +78,7 @@ export class NeutralCitation extends S.Class<NeutralCitation>($I`NeutralCitation
           "Database identifier for vendor-database cites with no inherent court value: WL, LEXIS, BL. Set instead of court (#294).",
       })
     ),
-    unpublished: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    unpublished: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: "True when the citation has an Illinois Rule 23 -U suffix; stripped from documentNumber (#230).",
       })

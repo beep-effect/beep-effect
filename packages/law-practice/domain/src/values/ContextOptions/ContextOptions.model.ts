@@ -14,9 +14,8 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
 /**
  * Options for surrounding context extraction.
  *
- * Both fields are optional: a missing `type` or `maxLength` decodes to `None`,
- * so callers can apply their own defaults (boundary `"sentence"`, `500`
- * characters) when neither is supplied.
+ * `type` defaults to `"sentence"`. `maxLength` remains optional so omitting it
+ * leaves context extraction unbounded.
  *
  * **Example**
  *
@@ -27,11 +26,11 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
  * import * as O from "effect/Option"
  *
  * const options = ContextOptions.make({
- *   type: O.some("paragraph"),
+ *   type: "paragraph",
  *   maxLength: O.some(NonNegativeInt.make(1000)),
  * })
  *
- * console.log(O.getOrNull(options.type)) // "paragraph"
+ * console.log(options.type) // "paragraph"
  * console.log(O.isNone(ContextOptions.make({}).maxLength)) // true
  * ```
  *
@@ -41,8 +40,7 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
 export class ContextOptions extends S.Class<ContextOptions>($I`ContextOptions`)(
   {
     type: S.Literals(["sentence", "paragraph"]).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withKeyDefaults("sentence"),
       S.annotateKey({
         description: "Boundary type (default: 'sentence').",
       })
@@ -51,7 +49,7 @@ export class ContextOptions extends S.Class<ContextOptions>($I`ContextOptions`)(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
-        description: "Max characters to return (default: 500).",
+        description: "Maximum characters to return. Omit for no explicit length limit.",
       })
     ),
   },
