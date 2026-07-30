@@ -2379,6 +2379,8 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
   const writeContainerMetadata = Effect.fn("FFmpeg.writeContainerMetadata")(function* (
     rawRequest: WriteContainerMetadataRequest
   ) {
+    // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+    // fallow-ignore-next-line code-duplication
     const request = yield* WriteContainerMetadataRequest.decodeEffect(rawRequest).pipe(
       Effect.mapError((cause) =>
         FFmpegError.fromUnknown("writeContainerMetadata", "Invalid write-container-metadata request.", { cause })
