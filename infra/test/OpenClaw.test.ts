@@ -10,6 +10,7 @@ import {
   makeOpenClawStackArgsFromConfigValues,
   OpenClawBackupConfig,
   OpenClawBackupShipScriptInput,
+  OpenClawBundleHashInput,
   OpenClawDeploymentConfig,
   OpenClawExpectedIdentity,
   OpenClawGenerationIdentityScriptInput,
@@ -335,6 +336,7 @@ describe("@beep/infra OpenClaw", () => {
     expectSchemaRoundTrip(OpenClawWorkstationPaths);
     expectSchemaRoundTrip(OpenClawDeploymentConfig);
     expectSchemaRoundTrip(OpenClawBackupConfig);
+    expectSchemaRoundTrip(OpenClawBundleHashInput);
   });
 
   it("models renderer input contracts as schemas", () => {

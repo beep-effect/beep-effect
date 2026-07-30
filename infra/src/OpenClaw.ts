@@ -875,6 +875,43 @@ export class OpenClawGeneration extends S.Class<OpenClawGeneration>($I`OpenClawG
 ) {}
 
 /**
+ * Content hashes that form an immutable OpenClaw generation identity.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawBundleHashInput } from "@beep/infra"
+ * import { OpenclawSha256Hex } from "@beep/openclaw"
+ *
+ * const hash = OpenclawSha256Hex.make("0".repeat(64))
+ * const input = OpenClawBundleHashInput.make({
+ *   configHash: hash,
+ *   proofSkillHash: hash,
+ *   soulHash: hash
+ * })
+ * console.log(input.configHash === hash) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OpenClawBundleHashInput extends S.Class<OpenClawBundleHashInput>($I`OpenClawBundleHashInput`)(
+  {
+    configHash: OpenclawSha256Hex.annotateKey({
+      description: "SHA-256 of the canonical OpenClaw configuration.",
+    }),
+    proofSkillHash: OpenclawSha256Hex.annotateKey({
+      description: "SHA-256 of the immutable proof skill.",
+    }),
+    soulHash: OpenclawSha256Hex.annotateKey({
+      description: "SHA-256 of the immutable legal-agent persona.",
+    }),
+  },
+  $I.annote("OpenClawBundleHashInput", {
+    description: "Content hashes combined into the length-delimited OpenClaw generation identity.",
+  })
+) {}
+
+/**
  * Shared input for rendered scripts that bind a generation to its expected
  * workstation identity.
  *
@@ -1065,11 +1102,7 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
  * @category constructors
  * @since 0.0.0
  */
-export const makeOpenClawBundleHash = (input: {
-  readonly configHash: OpenclawSha256Hex;
-  readonly proofSkillHash: OpenclawSha256Hex;
-  readonly soulHash: OpenclawSha256Hex;
-}): OpenclawSha256Hex => {
+export const makeOpenClawBundleHash = (input: OpenClawBundleHashInput): OpenclawSha256Hex => {
   const compatibilityId = `${OPENCLAW_COMPATIBILITY_SET.adapterVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawCommit}:${OPENCLAW_COMPATIBILITY_SET.nodeVersion}`;
   const hash = A.reduce(
     [input.configHash, input.soulHash, input.proofSkillHash, compatibilityId],

@@ -23,20 +23,11 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { commandCounter } from "./AdapterState.ts";
 import type { AnchoredBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
+import type { Dual2, Dual3 } from "@beep/dock/internal/Dual";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 import type { PointerPosition, TabDrag } from "./Gesture.models.ts";
-
-type Dual2<Self, That, Result> = {
-  (self: Self, that: That): Result;
-  (that: That): (self: Self) => Result;
-};
-
-type Dual3<Self, First, Second, Result> = {
-  (self: Self, first: First, second: Second): Result;
-  (first: First, second: Second): (self: Self) => Result;
-};
 
 export const boxStyle = (box: DockBox): React.CSSProperties => ({
   position: "absolute",
