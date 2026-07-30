@@ -21,7 +21,6 @@ import {
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
 import * as Pglite from "@beep/pglite";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -335,7 +334,6 @@ const graphOptions = (corpusRoot: string, bundleOut: string) =>
     bundleOut,
     corpusRoot,
     includeRefresh: false,
-    maxTextBytes: NonNegativeInt.make(2_097_152),
     overwrite: false,
     skipEmails: false,
   });
@@ -370,6 +368,43 @@ describe("practice KG projections", () => {
       }),
       { numRuns: 10 }
     );
+  });
+
+  it("pins the schema-absorbed defaults to their contract values", () => {
+    const options = PracticeKgOptions.make({
+      corpusRoot: "/corpus",
+      includeRefresh: false,
+      overwrite: false,
+      skipEmails: true,
+    });
+    expect(options.maxTextBytes).toBe(2_097_152);
+    expect(options.bundleOut).toBeUndefined();
+    const decoded = S.decodeUnknownSync(PracticeKgOptions)({
+      corpusRoot: "/corpus",
+      includeRefresh: false,
+      overwrite: false,
+      skipEmails: true,
+    });
+    expect(decoded.maxTextBytes).toBe(2_097_152);
+    const spineRow = S.decodeUnknownSync(PracticeKgToolResult)({
+      bundle_version: "2026-07-27-01",
+      data: { columns: ["family"], rows: [["10008"]] },
+      epistemic_status: "derived-from-official-records",
+      tier: "minimal",
+      total: 1,
+      truncated: false,
+    });
+    expect(spineRow.epistemic_status).toBe("derived-from-official-records");
+    expect(() =>
+      S.decodeUnknownSync(PracticeKgToolResult)({
+        bundle_version: "2026-07-27-01",
+        data: { columns: [], rows: [] },
+        epistemic_status: "settled-fact",
+        tier: "minimal",
+        total: 0,
+        truncated: false,
+      })
+    ).toThrow();
   });
 
   it.effect(
@@ -690,7 +725,6 @@ describe("practice KG projections", () => {
           bundleOut,
           corpusRoot,
           includeRefresh: false,
-          maxTextBytes: NonNegativeInt.make(2_097_152),
           overwrite: true,
           skipEmails: true,
         }),
@@ -708,7 +742,6 @@ describe("practice KG projections", () => {
           bundleOut: refreshBundleOut,
           corpusRoot,
           includeRefresh: true,
-          maxTextBytes: NonNegativeInt.make(2_097_152),
           overwrite: true,
           skipEmails: true,
         }),

@@ -11,7 +11,7 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { TaggedErrorClass } from "@beep/schema";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -42,7 +42,7 @@ class SmokeToolsResponse extends S.Class<SmokeToolsResponse>($I`SmokeToolsRespon
 ) {}
 
 class SmokeServerInfo extends S.Class<SmokeServerInfo>($I`SmokeServerInfo`)(
-  { name: S.String },
+  { name: S.Literal("beep-practice-kg") },
   $I.annote("SmokeServerInfo", { description: "Server identity returned by MCP initialization." })
 ) {}
 
@@ -123,7 +123,6 @@ const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(functio
             bundleOut,
             corpusRoot,
             includeRefresh: false,
-            maxTextBytes: NonNegativeInt.make(2_097_152),
             overwrite: false,
             skipEmails: true,
           })
@@ -162,18 +161,16 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     return yield* SmokeFailure.make({ message: `Compiled host exited with code ${exitCode}.` });
   }
   const lines = A.filter(Str.split("\n")(Str.trim(responseText)), Str.isNonEmpty);
-  const initializeLine = yield* A.get(lines, 0).pipe(
-    O.match({
-      onNone: () => SmokeFailure.make({ message: "Compiled host returned no initialize response." }),
-      onSome: Effect.succeed,
-    })
-  );
-  const toolsLine = yield* A.get(lines, 1).pipe(
-    O.match({
-      onNone: () => SmokeFailure.make({ message: "Compiled host returned no tools/list response." }),
-      onSome: Effect.succeed,
-    })
-  );
+  const responseLine = (index: number, what: string) =>
+    A.get(lines, index).pipe(
+      O.match({
+        onNone: () => SmokeFailure.make({ message: `Compiled host returned no ${what} response.` }),
+        onSome: Effect.succeed,
+      })
+    );
+  const initializeLine = yield* responseLine(0, "initialize");
+  const toolsLine = yield* responseLine(1, "tools/list");
+  // Server-name mismatch fails here too: SmokeServerInfo.name is a literal.
   const initialize = yield* decodeInitialize(initializeLine).pipe(
     Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Initialize response was invalid." }))
   );
@@ -181,9 +178,6 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Tools/list response was invalid." }))
   );
   const names = A.map(tools.result.tools, (tool) => tool.name);
-  if (initialize.result.serverInfo.name !== "beep-practice-kg") {
-    return yield* SmokeFailure.make({ message: "Compiled host returned the wrong server name." });
-  }
   if (names.length !== A.length(ExpectedTools) || !A.every(ExpectedTools, (name) => A.contains(names, name))) {
     return yield* SmokeFailure.make({
       message: `Compiled host did not list the expected toolkit tools: ${A.join(names, ", ")}`,

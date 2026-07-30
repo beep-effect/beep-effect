@@ -272,74 +272,19 @@ export const decodePracticeKgEmailRows = S.decodeUnknownEffect(S.Array(PracticeK
 export const decodePracticeKgCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
 
 /**
- * Convert a graph row to the generic record accepted by the field-tier projector.
+ * Convert any decoded tool row to the generic record accepted by the
+ * field-tier projector.
  *
  * @example
  * ```ts
- * import { graphToolRecord } from "@beep/law-practice-server"
+ * import { toToolRecord } from "@beep/law-practice-server"
  *
- * console.log(typeof graphToolRecord) // "function"
+ * console.log(toToolRecord({ digest: "sha256:9f2c" })) // { digest: "sha256:9f2c" }
  * ```
  * @category mappers
  * @since 0.0.0
  */
-export const graphToolRecord = (row: PracticeKgGraphToolRow): Record<string, unknown> => ({ ...row });
-
-/**
- * Convert a family row to the generic record accepted by the field-tier projector.
- *
- * @example
- * ```ts
- * import { familyToolRecord } from "@beep/law-practice-server"
- *
- * console.log(typeof familyToolRecord) // "function"
- * ```
- * @category mappers
- * @since 0.0.0
- */
-export const familyToolRecord = (row: PracticeKgFamilyToolRow): Record<string, unknown> => ({ ...row });
-
-/**
- * Convert a document row to the generic record accepted by the field-tier projector.
- *
- * @example
- * ```ts
- * import { documentToolRecord } from "@beep/law-practice-server"
- *
- * console.log(typeof documentToolRecord) // "function"
- * ```
- * @category mappers
- * @since 0.0.0
- */
-export const documentToolRecord = (row: PracticeKgDocumentToolRow): Record<string, unknown> => ({ ...row });
-
-/**
- * Convert an email row to the generic record accepted by the field-tier projector.
- *
- * @example
- * ```ts
- * import { emailToolRecord } from "@beep/law-practice-server"
- *
- * console.log(typeof emailToolRecord) // "function"
- * ```
- * @category mappers
- * @since 0.0.0
- */
-export const emailToolRecord = (row: PracticeKgEmailToolRow): Record<string, unknown> => ({ ...row });
-
-/**
- * Convert a candidate-claim row to the generic record accepted by the field-tier projector.
- *
- * @example
- * ```ts
- * import { candidateClaimToolRecord } from "@beep/law-practice-server"
- *
- * console.log(typeof candidateClaimToolRecord) // "function"
- * ```
- * @category mappers
- * @since 0.0.0
- */
-export const candidateClaimToolRecord = (row: PracticeKgCandidateClaimToolRow): Record<string, unknown> => ({ ...row });
+export const toToolRecord = <Row extends object>(row: Row): { [K in keyof Row]: Row[K] } => ({ ...row });
 
 /**
  * Resolve optional external-corpus pointers with the platform path service.

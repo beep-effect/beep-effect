@@ -9,6 +9,7 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { KgNodeKind, PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-practice-domain/values";
 import {
   annotateFourHints,
   ColumnarEnvelope,
@@ -22,6 +23,15 @@ import { Tool } from "effect/unstable/ai";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);
+
+/*
+ * Tool rows admit the persisted domain literals plus the synthetic members the
+ * bundle-status row uses when kg_provenance is called without an identity —
+ * "bundle" is not a kg_node kind and "bundle-manifest" is not a stored
+ * provenance kind, so the domain kits stay closed.
+ */
+const PracticeKgToolNodeKind = S.Union([KgNodeKind, S.Literal("bundle")]);
+const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Literal("bundle-manifest")]);
 
 const BudgetBytes = PosInt.pipe(SchemaUtils.withKeyDefaults(defaultBudgetBytes)).annotateKey({
   description: "Maximum serialized response size in bytes. Defaults to 8000.",
@@ -78,12 +88,15 @@ class DocumentRange extends S.Class<DocumentRange>($I`DocumentRange`)(
   $I.annote("DocumentRange", { description: "One-based text start and positive character length." })
 ) {}
 
+/* Whole-document read: start at 1 with a 2 MiB character budget. */
+const defaultDocumentRange = DocumentRange.make({ length: PosInt.make(2_097_152), start: PosInt.make(1) });
+
 class GetDocumentParams extends S.Class<GetDocumentParams>($I`GetDocumentParams`)(
   {
     budgetBytes: BudgetBytes,
     digest: S.optionalKey(S.NonEmptyString),
     organized_path: S.optionalKey(S.NonEmptyString),
-    range: S.optionalKey(DocumentRange),
+    range: DocumentRange.pipe(SchemaUtils.withKeyDefaults(defaultDocumentRange)),
   },
   $I.annote("GetDocumentParams", { description: "Document lookup by digest or organized corpus path." })
 ) {}
@@ -173,7 +186,7 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
   {
     bundle_version: S.NonEmptyString,
     data: ColumnarEnvelope,
-    epistemic_status: S.NonEmptyString,
+    epistemic_status: PracticeKgEpistemicStatus,
     note: S.optionalKey(S.String),
     tier: FieldTierName,
     total: NonNegativeInt,
@@ -281,12 +294,12 @@ export class PracticeKgGraphToolRow extends S.Class<PracticeKgGraphToolRow>($I`P
     client: S.NullOr(S.String),
     count: S.NullOr(S.Finite),
     docketFamily: S.NullOr(S.String),
-    epistemicStatus: S.String,
+    epistemicStatus: PracticeKgEpistemicStatus,
     iri: S.String,
-    kind: S.String,
+    kind: PracticeKgToolNodeKind,
     label: S.String,
     naturalKey: S.String,
-    provenanceKind: S.String,
+    provenanceKind: PracticeKgToolProvenanceKind,
     provenanceRef: S.String,
   },
   $I.annote("PracticeKgGraphToolRow", { description: "Decoded graph row exposed through practice KG tools." })
@@ -792,16 +805,3 @@ export const KgProvenanceTool = readTool(
   ProvenanceParams,
   PracticeKgToolResult
 );
-
-/**
- * Complete nine-tool read-only practice KG toolkit declaration.
- *
- * @example
- * ```ts
- * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 9
- * ```
- *
- * @category tools
- * @since 0.0.0
- */

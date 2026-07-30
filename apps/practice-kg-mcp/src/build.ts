@@ -7,7 +7,8 @@
  */
 
 import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server";
-import { NonNegativeInt } from "@beep/schema";
+import { PosInt } from "@beep/schema";
+import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -19,7 +20,7 @@ const corpusRoot = Flag.directory("corpus-root", { mustExist: true });
 const bundleOut = Flag.directory("bundle-out").pipe(Flag.optional);
 const includeRefresh = Flag.boolean("include-refresh");
 const skipEmails = Flag.boolean("skip-emails");
-const maxTextBytes = Flag.integer("max-text-bytes").pipe(Flag.withDefault(2_097_152));
+const maxTextBytes = Flag.integer("max-text-bytes").pipe(Flag.optional);
 const overwrite = Flag.boolean("overwrite");
 
 const buildCommand = Command.make(
@@ -28,8 +29,9 @@ const buildCommand = Command.make(
   Effect.fnUntraced(function* (flags) {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
-    const resolvedBundleOut = O.getOrElse(flags.bundleOut, () =>
-      path.join(flags.corpusRoot, "staging", "practice-kg-bundle")
+    const resolvedBundleOut = PracticeKgOptions.resolveBundleOut(
+      { corpusRoot: flags.corpusRoot, ...OptionUtils.getSomesStruct({ bundleOut: flags.bundleOut }) },
+      path
     );
     const bundleExists = yield* fs.exists(resolvedBundleOut).pipe(Effect.orElseSucceed(() => false));
     if (bundleExists && flags.overwrite) {
@@ -38,9 +40,12 @@ const buildCommand = Command.make(
     yield* fs.makeDirectory(resolvedBundleOut, { recursive: true });
     const build = buildPracticeKgBundle(
       PracticeKgOptions.make({
-        ...flags,
         bundleOut: resolvedBundleOut,
-        maxTextBytes: NonNegativeInt.make(flags.maxTextBytes),
+        corpusRoot: flags.corpusRoot,
+        includeRefresh: flags.includeRefresh,
+        overwrite: flags.overwrite,
+        skipEmails: flags.skipEmails,
+        ...OptionUtils.getSomesStruct({ maxTextBytes: O.map(flags.maxTextBytes, PosInt.make) }),
       })
     );
     yield* Effect.scoped(

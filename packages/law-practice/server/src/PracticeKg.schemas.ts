@@ -6,36 +6,62 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
-import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import {
+  KgEdgePredicate,
+  KgNodeKind,
+  PracticeKgEpistemicStatus,
+  PracticeKgProvenanceKind,
+} from "@beep/law-practice-domain/values";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type { Path } from "effect";
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
+
+/*
+ * Constructor-only default: these projection classes are written exclusively
+ * by the deterministic spine (SPEC D-2a), so the settled label is the
+ * invariant, not a guess — candidate rows live in the epistemic tables and
+ * must never be written through kg_node/kg_edge.
+ */
+const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
+  SchemaUtils.withConstantDefault<PracticeKgEpistemicStatus>("derived-from-official-records")
+);
+
+/**
+ * Practice knowledge-graph literal domains, re-exported from the domain tier
+ * where they are defined alongside {@link KgNodeKind}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-practice-domain/values";
 
 /**
  * Validated options used by `corpus graph`.
  *
  * @remarks
- * `bundleOut` is the only optional key: omitting it puts the bundle under
- * `<corpusRoot>/staging/practice-kg-bundle`. `overwrite` is what distinguishes a
- * rebuild from an accidental clobber — without it a build refuses to run against
- * an existing bundle.
+ * Omitting `bundleOut` puts the bundle under
+ * `<corpusRoot>/staging/practice-kg-bundle` (see {@link PracticeKgOptions.resolveBundleOut}),
+ * and omitting `maxTextBytes` applies the 2 MiB positive byte budget for both
+ * construction and decode. `overwrite` is what distinguishes a rebuild from an
+ * accidental clobber — without it a build refuses to run against an existing
+ * bundle.
  *
  * @example
  * ```ts
  * import { PracticeKgOptions } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = PracticeKgOptions.make({
  *   corpusRoot: "/corpus",
  *   includeRefresh: true,
- *   maxTextBytes: NonNegativeInt.make(2_097_152),
  *   overwrite: false,
  *   skipEmails: false
  * })
  *
  * console.log(options.bundleOut) // undefined — defaults under the corpus root
- * console.log(options.maxTextBytes) // 2097152
+ * console.log(options.maxTextBytes) // 2097152 — schema default
  * ```
  *
  * @category models
@@ -46,112 +72,61 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
     bundleOut: S.optionalKey(S.String),
     corpusRoot: S.String,
     includeRefresh: S.Boolean,
-    maxTextBytes: NonNegativeInt,
+    maxTextBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2_097_152))),
     overwrite: S.Boolean,
     skipEmails: S.Boolean,
   },
   $I.annote("PracticeKgOptions", {
     description: "Validated options used to build a deterministic practice knowledge-graph bundle.",
   })
-) {}
+) {
+  /**
+   * Resolve the effective bundle destination for a corpus root, applying the
+   * canonical `<corpusRoot>/staging/practice-kg-bundle` default.
+   *
+   * @example
+   * ```ts
+   * import { PracticeKgOptions } from "@beep/law-practice-server"
+   * import { Effect, Path } from "effect"
+   *
+   * const program = Effect.gen(function* () {
+   *   const path = yield* Path.Path
+   *   return PracticeKgOptions.resolveBundleOut({ corpusRoot: "/corpus" }, path)
+   * })
+   *
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
+  static readonly resolveBundleOut: {
+    (path: Path.Path): (options: PracticeKgBundleOutInput) => string;
+    (options: PracticeKgBundleOutInput, path: Path.Path): string;
+  } = dual(
+    2,
+    (options: PracticeKgBundleOutInput, path: Path.Path): string =>
+      options.bundleOut ?? path.join(options.corpusRoot, "staging", "practice-kg-bundle")
+  );
+}
 
 /**
- * Epistemic labels stored on graph projections.
- *
- * @remarks
- * The distinction is load-bearing rather than descriptive: rows labelled
- * `derived-from-official-records` are reconcilable against the corpus catalog,
- * while `candidate-unreviewed` rows come from enrichment and must not be
- * presented as settled fact.
+ * Corpus-root and optional bundle destination accepted by
+ * {@link PracticeKgOptions.resolveBundleOut} — the schema-derived subset of
+ * {@link PracticeKgOptions} the resolver reads.
  *
  * @example
  * ```ts
- * import { PracticeKgEpistemicStatus } from "@beep/law-practice-server"
- * import * as S from "effect/Schema"
+ * import type { PracticeKgBundleOutInput } from "@beep/law-practice-server"
  *
- * const status = S.decodeUnknownSync(PracticeKgEpistemicStatus)("candidate-unreviewed")
- * console.log(status) // "candidate-unreviewed"
- * console.log(PracticeKgEpistemicStatus.Enum["derived-from-official-records"])
- * // "derived-from-official-records"
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PracticeKgEpistemicStatus = LiteralKit(["derived-from-official-records", "candidate-unreviewed"]).pipe(
-  $I.annoteSchema("PracticeKgEpistemicStatus", {
-    description: "Authority label distinguishing deterministic spine rows from candidate claims.",
-  })
-);
-
-/**
- * Runtime type for {@link PracticeKgEpistemicStatus}.
- *
- * @example
- * ```ts
- * import type { PracticeKgEpistemicStatus } from "@beep/law-practice-server"
- *
- * const isSettled = (status: PracticeKgEpistemicStatus): boolean =>
- *   status === "derived-from-official-records"
- *
- * console.log(isSettled("candidate-unreviewed")) // false
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PracticeKgEpistemicStatus = typeof PracticeKgEpistemicStatus.Type;
-
-/**
- * Closed provenance-reference kinds stored on graph projections.
- *
- * @remarks
- * The kind tells a reader how to interpret the accompanying `provenanceRef`: a
- * `catalog-digest` ref is a content digest, a `uspto-anchor` ref is an
- * application number, and so on. Widening this set means teaching every consumer
- * a new ref format.
- *
- * @example
- * ```ts
- * import { PracticeKgProvenanceKind } from "@beep/law-practice-server"
- * import * as S from "effect/Schema"
- *
- * const kind = S.decodeUnknownSync(PracticeKgProvenanceKind)("uspto-anchor")
- * console.log(kind) // "uspto-anchor"
- * console.log(PracticeKgProvenanceKind.Enum["extract-operation"]) // "extract-operation"
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PracticeKgProvenanceKind = LiteralKit([
-  "catalog-digest",
-  "uspto-anchor",
-  "organize-row",
-  "extract-operation",
-]).pipe(
-  $I.annoteSchema("PracticeKgProvenanceKind", {
-    description: "Stable source-reference kinds accepted by the practice knowledge graph.",
-  })
-);
-
-/**
- * Runtime type for {@link PracticeKgProvenanceKind}.
- *
- * @example
- * ```ts
- * import type { PracticeKgProvenanceKind } from "@beep/law-practice-server"
- *
- * const refLabel = (kind: PracticeKgProvenanceKind): string =>
- *   kind === "uspto-anchor" ? "application number" : "corpus reference"
- *
- * console.log(refLabel("uspto-anchor")) // "application number"
+ * const input: PracticeKgBundleOutInput = { corpusRoot: "/corpus" }
+ * console.log(input.bundleOut) // undefined — resolves under the corpus root
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type PracticeKgProvenanceKind = typeof PracticeKgProvenanceKind.Type;
+export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "corpusRoot">;
 
 /**
  * One persisted `kg_node` row.
@@ -160,7 +135,9 @@ export type PracticeKgProvenanceKind = typeof PracticeKgProvenanceKind.Type;
  * `iri` is the node's identity across the whole graph and the join target for
  * both edge endpoints; `naturalKey` is the human-facing key it was minted from.
  * `client` and `docketFamily` are absent — not empty — for nodes that belong to
- * neither, such as an email archive.
+ * neither, such as an email archive. `epistemicStatus` defaults at construction
+ * to the settled spine label because these rows are written only by the
+ * deterministic projection; candidate material never flows through this class.
  *
  * @example
  * ```ts
@@ -189,7 +166,7 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
   {
     client: S.optionalKey(S.String),
     docketFamily: S.optionalKey(S.String),
-    epistemicStatus: PracticeKgEpistemicStatus,
+    epistemicStatus: spineEpistemicStatus,
     iri: S.NonEmptyString,
     kind: KgNodeKind,
     label: S.String,
@@ -209,7 +186,8 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
  * @remarks
  * The `(subjectIri, predicate, objectIri)` triple is the row's identity, so the
  * same assertion derived twice collapses to one edge. Both IRIs must name nodes
- * that exist in the same bundle.
+ * that exist in the same bundle. `epistemicStatus` carries the same
+ * spine-writers-only constructor default as {@link PracticeKgNodeRow}.
  *
  * @example
  * ```ts
@@ -232,7 +210,7 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
  */
 export class PracticeKgEdgeRow extends S.Class<PracticeKgEdgeRow>($I`PracticeKgEdgeRow`)(
   {
-    epistemicStatus: PracticeKgEpistemicStatus,
+    epistemicStatus: spineEpistemicStatus,
     objectIri: S.NonEmptyString,
     predicate: KgEdgePredicate,
     provenanceKind: PracticeKgProvenanceKind,

@@ -6,6 +6,7 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -16,12 +17,38 @@ import type { DuckDbShape } from "@beep/duckdb";
 import type { PracticeKgCatalogRow, PracticeKgEnrichmentRow } from "./PracticeKg.rows.ts";
 import type { PracticeKgEmailHeaderRow } from "./PracticeKg.schemas.ts";
 
-class GraphTextSourceSpec extends S.Class<GraphTextSourceSpec>("PracticeKgTextSourceSpec")({
-  sourcesPath: S.String,
-  textGlob: S.String,
-}) {}
+const $I = $LawPracticeServerId.create("PracticeKg.fts");
 
-class GraphDuckCountsRow extends S.Class<GraphDuckCountsRow>("GraphDuckCountsRow")({
+/**
+ * One extraction source feeding the bundle's `document_text` table: a
+ * `sources.jsonl` manifest plus the glob of its extracted text files.
+ *
+ * @example
+ * ```ts
+ * import { GraphTextSourceSpec } from "../../src/PracticeKg.fts.ts"
+ *
+ * const spec = GraphTextSourceSpec.make({
+ *   sourcesPath: "/corpus/staging/extract/sources.jsonl",
+ *   textGlob: "/corpus/staging/extract/text/operation:*.txt"
+ * })
+ *
+ * console.log(spec.textGlob.endsWith(".txt")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphTextSourceSpec extends S.Class<GraphTextSourceSpec>($I`GraphTextSourceSpec`)(
+  {
+    sourcesPath: S.String,
+    textGlob: S.String,
+  },
+  $I.annote("GraphTextSourceSpec", {
+    description: "Extraction manifest path and text glob pair joined into document_text.",
+  })
+) {}
+
+class GraphDuckCountsRow extends S.Class<GraphDuckCountsRow>($I`GraphDuckCountsRow`)({
   documents: S.Finite,
   emails: S.Finite,
 }) {}
