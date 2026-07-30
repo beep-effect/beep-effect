@@ -148,6 +148,242 @@
   "childSequencePatterns": {
     "table": "^(?:caption,)?(?:colgroup,)*(?:thead,)?(?:(?:tbody,)*|(?:tr,)+)(?:tfoot,)?$"
   },
+  "contentTokenExpansions": {
+    "flow select element inner content elements": [
+      "div",
+      "hr",
+      "optgroup",
+      "option",
+      "script-supporting elements"
+    ],
+    "optgroup element inner content elements": [
+      "div",
+      "optgroup",
+      "option",
+      "script-supporting elements"
+    ],
+    "option element inner content elements": ["phrasing"],
+    "select element inner content elements": [
+      "div",
+      "hr",
+      "optgroup",
+      "option",
+      "script-supporting elements"
+    ]
+  },
+  "specialChildGrammars": {
+    "audio": "media",
+    "colgroup": "colgroup",
+    "datalist": "datalist",
+    "details": "details",
+    "dl": "description-list",
+    "fieldset": "fieldset",
+    "figure": "figure",
+    "head": "head",
+    "hgroup": "hgroup",
+    "html": "document-element",
+    "legend": "phrasing-or-heading",
+    "optgroup": "optgroup",
+    "picture": "picture",
+    "ruby": "ruby",
+    "select": "select",
+    "summary": "phrasing-or-heading",
+    "table": "table",
+    "video": "media"
+  },
+  "conditionalCategories": {
+    "a": [
+      {
+        "attribute": "href",
+        "category": "interactive",
+        "condition": "present"
+      }
+    ],
+    "audio": [
+      {
+        "attribute": "controls",
+        "category": "interactive",
+        "condition": "present"
+      }
+    ],
+    "img": [
+      {
+        "attribute": "usemap",
+        "category": "interactive",
+        "condition": "present"
+      }
+    ],
+    "input": [
+      {
+        "attribute": "type",
+        "category": "interactive",
+        "condition": "not-equals",
+        "value": "hidden"
+      }
+    ],
+    "object": [
+      {
+        "attribute": "usemap",
+        "category": "interactive",
+        "condition": "present"
+      }
+    ],
+    "video": [
+      {
+        "attribute": "controls",
+        "category": "interactive",
+        "condition": "present"
+      }
+    ]
+  },
+  "currentAttributeOverrides": {
+    "body": [
+      "onafterprint",
+      "onbeforeprint",
+      "onbeforeunload",
+      "onhashchange",
+      "onlanguagechange",
+      "onmessage",
+      "onmessageerror",
+      "onoffline",
+      "ononline",
+      "onpageswap",
+      "onpagehide",
+      "onpagereveal",
+      "onpageshow",
+      "onpopstate",
+      "onrejectionhandled",
+      "onstorage",
+      "onunhandledrejection",
+      "onunload"
+    ],
+    "button": ["popovertarget", "popovertargetaction"],
+    "input": [
+      "formaction",
+      "formenctype",
+      "formmethod",
+      "formnovalidate",
+      "formtarget",
+      "height",
+      "popovertarget",
+      "popovertargetaction",
+      "width"
+    ]
+  },
+  "svgElementNameAdjustments": {
+    "altglyph": "altGlyph",
+    "altglyphdef": "altGlyphDef",
+    "altglyphitem": "altGlyphItem",
+    "animatecolor": "animateColor",
+    "animatemotion": "animateMotion",
+    "animatetransform": "animateTransform",
+    "clippath": "clipPath",
+    "feblend": "feBlend",
+    "fecolormatrix": "feColorMatrix",
+    "fecomponenttransfer": "feComponentTransfer",
+    "fecomposite": "feComposite",
+    "feconvolvematrix": "feConvolveMatrix",
+    "fediffuselighting": "feDiffuseLighting",
+    "fedisplacementmap": "feDisplacementMap",
+    "fedistantlight": "feDistantLight",
+    "feflood": "feFlood",
+    "fefunca": "feFuncA",
+    "fefuncb": "feFuncB",
+    "fefuncg": "feFuncG",
+    "fefuncr": "feFuncR",
+    "fegaussianblur": "feGaussianBlur",
+    "feimage": "feImage",
+    "femerge": "feMerge",
+    "femergenode": "feMergeNode",
+    "femorphology": "feMorphology",
+    "feoffset": "feOffset",
+    "fepointlight": "fePointLight",
+    "fespecularlighting": "feSpecularLighting",
+    "fespotlight": "feSpotLight",
+    "fetile": "feTile",
+    "feturbulence": "feTurbulence",
+    "foreignobject": "foreignObject",
+    "glyphref": "glyphRef",
+    "lineargradient": "linearGradient",
+    "radialgradient": "radialGradient",
+    "textpath": "textPath"
+  },
+  "svgAttributeNameAdjustments": {
+    "attributename": "attributeName",
+    "attributetype": "attributeType",
+    "basefrequency": "baseFrequency",
+    "baseprofile": "baseProfile",
+    "calcmode": "calcMode",
+    "clippathunits": "clipPathUnits",
+    "diffuseconstant": "diffuseConstant",
+    "edgemode": "edgeMode",
+    "filterunits": "filterUnits",
+    "glyphref": "glyphRef",
+    "gradienttransform": "gradientTransform",
+    "gradientunits": "gradientUnits",
+    "kernelmatrix": "kernelMatrix",
+    "kernelunitlength": "kernelUnitLength",
+    "keypoints": "keyPoints",
+    "keysplines": "keySplines",
+    "keytimes": "keyTimes",
+    "lengthadjust": "lengthAdjust",
+    "limitingconeangle": "limitingConeAngle",
+    "markerheight": "markerHeight",
+    "markerunits": "markerUnits",
+    "markerwidth": "markerWidth",
+    "maskcontentunits": "maskContentUnits",
+    "maskunits": "maskUnits",
+    "numoctaves": "numOctaves",
+    "pathlength": "pathLength",
+    "patterncontentunits": "patternContentUnits",
+    "patterntransform": "patternTransform",
+    "patternunits": "patternUnits",
+    "pointsatx": "pointsAtX",
+    "pointsaty": "pointsAtY",
+    "pointsatz": "pointsAtZ",
+    "preservealpha": "preserveAlpha",
+    "preserveaspectratio": "preserveAspectRatio",
+    "primitiveunits": "primitiveUnits",
+    "refx": "refX",
+    "refy": "refY",
+    "repeatcount": "repeatCount",
+    "repeatdur": "repeatDur",
+    "requiredextensions": "requiredExtensions",
+    "requiredfeatures": "requiredFeatures",
+    "specularconstant": "specularConstant",
+    "specularexponent": "specularExponent",
+    "spreadmethod": "spreadMethod",
+    "startoffset": "startOffset",
+    "stddeviation": "stdDeviation",
+    "stitchtiles": "stitchTiles",
+    "surfacescale": "surfaceScale",
+    "systemlanguage": "systemLanguage",
+    "tablevalues": "tableValues",
+    "targetx": "targetX",
+    "targety": "targetY",
+    "textlength": "textLength",
+    "viewbox": "viewBox",
+    "viewtarget": "viewTarget",
+    "xchannelselector": "xChannelSelector",
+    "ychannelselector": "yChannelSelector",
+    "zoomandpan": "zoomAndPan"
+  },
+  "mathMlAttributeNameAdjustments": {
+    "definitionurl": "definitionURL"
+  },
+  "xmlAttributeNames": [
+    "xlink:actuate",
+    "xlink:arcrole",
+    "xlink:href",
+    "xlink:role",
+    "xlink:show",
+    "xlink:title",
+    "xlink:type",
+    "xml:lang",
+    "xml:space",
+    "xmlns",
+    "xmlns:xlink"
+  ],
   "void": [
     "area",
     "base",
@@ -175,6 +411,7 @@
   "rcData": ["textarea", "title"],
   "plaintext": ["plaintext"],
   "booleanAttributes": [
+    "autofocus",
     "allowfullscreen",
     "async",
     "autoplay",
@@ -184,7 +421,10 @@
     "defer",
     "disabled",
     "formnovalidate",
+    "headingreset",
+    "inert",
     "ismap",
+    "itemscope",
     "loop",
     "multiple",
     "muted",
@@ -301,6 +541,7 @@
     "ping",
     "placeholder",
     "poster",
+    "popovertarget",
     "profile",
     "referrerpolicy",
     "rev",

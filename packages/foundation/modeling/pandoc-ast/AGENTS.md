@@ -12,5 +12,6 @@ Schema-first Pandoc JSON AST mirror and compatibility adapters.
 
 Known constructor names with malformed payloads fail strict decoding. Future
 constructor names remain typed `Unknown*` nodes. Lossless decoding additionally
-retains the exact top-level JSON object and surfaces malformed top-level blocks
-as `OpaquePandocBlock` inspection nodes.
+retains the exact top-level JSON object and reports malformed known
+constructors through structured, path-located issues without replacing their
+raw wire with synthetic semantic nodes.

@@ -23,6 +23,7 @@ import {
   HtmlNonNegativeInteger,
   HtmlPositiveInteger,
   makeSpaceSeparatedTokenList,
+  PopoverTargetAction,
 } from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type * as O from "effect/Option";
@@ -1349,6 +1350,24 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
     link: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onafterprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onbeforeprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onbeforeunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onhashchange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onlanguagechange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onmessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onmessageerror: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onoffline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ononline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpagehide: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpagereveal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpageshow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpageswap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpopstate: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onrejectionhandled: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onstorage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onunhandledrejection: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rightmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     text: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     topmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -1382,6 +1401,24 @@ export declare namespace Body {
     readonly link: O.Option<string>;
     readonly marginheight: O.Option<string>;
     readonly marginwidth: O.Option<string>;
+    readonly onafterprint: O.Option<string>;
+    readonly onbeforeprint: O.Option<string>;
+    readonly onbeforeunload: O.Option<string>;
+    readonly onhashchange: O.Option<string>;
+    readonly onlanguagechange: O.Option<string>;
+    readonly onmessage: O.Option<string>;
+    readonly onmessageerror: O.Option<string>;
+    readonly onoffline: O.Option<string>;
+    readonly ononline: O.Option<string>;
+    readonly onpagehide: O.Option<string>;
+    readonly onpagereveal: O.Option<string>;
+    readonly onpageshow: O.Option<string>;
+    readonly onpageswap: O.Option<string>;
+    readonly onpopstate: O.Option<string>;
+    readonly onrejectionhandled: O.Option<string>;
+    readonly onstorage: O.Option<string>;
+    readonly onunhandledrejection: O.Option<string>;
+    readonly onunload: O.Option<string>;
     readonly rightmargin: O.Option<string>;
     readonly text: O.Option<string>;
     readonly topmargin: O.Option<string>;
@@ -1398,6 +1435,24 @@ export declare namespace Body {
     readonly link?: string;
     readonly marginheight?: string;
     readonly marginwidth?: string;
+    readonly onafterprint?: string;
+    readonly onbeforeprint?: string;
+    readonly onbeforeunload?: string;
+    readonly onhashchange?: string;
+    readonly onlanguagechange?: string;
+    readonly onmessage?: string;
+    readonly onmessageerror?: string;
+    readonly onoffline?: string;
+    readonly ononline?: string;
+    readonly onpagehide?: string;
+    readonly onpagereveal?: string;
+    readonly onpageshow?: string;
+    readonly onpageswap?: string;
+    readonly onpopstate?: string;
+    readonly onrejectionhandled?: string;
+    readonly onstorage?: string;
+    readonly onunhandledrejection?: string;
+    readonly onunload?: string;
     readonly rightmargin?: string;
     readonly text?: string;
     readonly topmargin?: string;
@@ -1490,6 +1545,8 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
     method: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.Literals(["submit", "reset", "button"])).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -1530,6 +1587,8 @@ export declare namespace Button {
     readonly method: O.Option<string>;
     readonly name: O.Option<string>;
     readonly novalidate: O.Option<true | "">;
+    readonly popovertarget: O.Option<string>;
+    readonly popovertargetaction: O.Option<"toggle" | "show" | "hide">;
     readonly target: O.Option<string>;
     readonly type: O.Option<"submit" | "reset" | "button">;
     readonly value: O.Option<string>;
@@ -1553,6 +1612,8 @@ export declare namespace Button {
     readonly method?: string;
     readonly name?: string;
     readonly novalidate?: true | "";
+    readonly popovertarget?: string;
+    readonly popovertargetaction?: "toggle" | "show" | "hide";
     readonly target?: string;
     readonly type?: "submit" | "reset" | "button";
     readonly value?: string;
@@ -3968,6 +4029,12 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formmethod: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     list: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -3979,6 +4046,8 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     pattern: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
     readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
@@ -4013,6 +4082,7 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Input", { description: "The <input> element." })
 ) {}
@@ -4045,6 +4115,12 @@ export declare namespace Input {
     readonly dirname: O.Option<string>;
     readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
+    readonly formaction: O.Option<string>;
+    readonly formenctype: O.Option<string>;
+    readonly formmethod: O.Option<"get" | "post" | "dialog">;
+    readonly formnovalidate: O.Option<true | "">;
+    readonly formtarget: O.Option<string>;
+    readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
     readonly ismap: O.Option<true | "">;
     readonly list: O.Option<string>;
@@ -4056,6 +4132,8 @@ export declare namespace Input {
     readonly name: O.Option<string>;
     readonly pattern: O.Option<string>;
     readonly placeholder: O.Option<string>;
+    readonly popovertarget: O.Option<string>;
+    readonly popovertargetaction: O.Option<"toggle" | "show" | "hide">;
     readonly readonly: O.Option<true | "">;
     readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
@@ -4088,6 +4166,7 @@ export declare namespace Input {
     readonly usemap: O.Option<string>;
     readonly value: O.Option<string>;
     readonly vspace: O.Option<string>;
+    readonly width: O.Option<number>;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
@@ -4103,6 +4182,12 @@ export declare namespace Input {
     readonly dirname?: string;
     readonly disabled?: true | "";
     readonly form?: string;
+    readonly formaction?: string;
+    readonly formenctype?: string;
+    readonly formmethod?: "get" | "post" | "dialog";
+    readonly formnovalidate?: true | "";
+    readonly formtarget?: string;
+    readonly height?: number;
     readonly hspace?: string;
     readonly ismap?: true | "";
     readonly list?: string;
@@ -4114,6 +4199,8 @@ export declare namespace Input {
     readonly name?: string;
     readonly pattern?: string;
     readonly placeholder?: string;
+    readonly popovertarget?: string;
+    readonly popovertargetaction?: "toggle" | "show" | "hide";
     readonly readonly?: true | "";
     readonly required?: true | "";
     readonly size?: number;
@@ -4145,6 +4232,7 @@ export declare namespace Input {
     readonly usemap?: string;
     readonly value?: string;
     readonly vspace?: string;
+    readonly width?: number;
   };
 }
 

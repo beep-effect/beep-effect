@@ -29,9 +29,17 @@ read-only viewer and composer primitives over the
   by default (`sendOn: "enter"`).
 - `CodeBlockView` / `MermaidView` / `YouTubeEmbed` — reader surfaces available
   from dedicated package subpaths. Mermaid rendering is interruptible and uses
-  its frozen `securityLevel: "strict"` configuration; oversized or invalid
-  source falls back to escaped text. Mermaid source is capped at 20,000
-  characters before the renderer is loaded.
+  its frozen `securityLevel: "strict"` configuration. Renderer output crosses
+  a DOMPurify SVG-only browser-parser boundary, then the sanitized bytes are
+  revalidated against the inert SVG element, attribute, URL, and CSS policy
+  before the HTML sink. The SVG root id must match the requested render id, its
+  required accessibility role is admitted explicitly, and every CSSOM rule
+  must remain rooted inside that exact SVG. Mermaid's two pinned built-in
+  animation keyframes are removed before validation; every remaining at-rule,
+  nesting rule, and URL-bearing declaration is rejected. Oversized, invalid, or
+  unsafe source fails through the typed async result and falls back to escaped
+  text. Mermaid source is capped at 20,000 characters before the renderer is
+  loaded.
 - `editorNodes` — node registration matching the schema v1 union, including
   runtime artifact and YouTube decorators. Runtime JSON/DOM import is decoded
   before construction; malformed values become inert fallbacks.

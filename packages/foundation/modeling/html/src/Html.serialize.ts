@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ForeignAttributeName, ForeignElementName } from "./Html.attributes.ts";
 import { conform, conformantRoot } from "./Html.conformance.ts";
+import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
 import { ELEMENT_META, HtmlBooleanAttributeName, HtmlTag } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import { enforceSafeHtml, SafeHtmlAst, safeHtmlAstRoot } from "./Html.policy.ts";
@@ -309,18 +310,19 @@ const serializeAttributes = Effect.fn("Html.serializeAttributes")(function* (
 
 const serializeForeignAttributes = (
   value: unknown,
+  namespace: "svg" | "mathml",
   path: ReadonlyArray<string>
 ): Effect.Effect<string, HtmlSerializeError> =>
   P.isObject(value)
     ? Effect.forEach(
         pipe(Struct.entries(value), A.sort(byEntryName)),
         ([name, entry]) =>
-          !isForeignAttributeName(name)
+          !isForeignAttributeName(name) || !isForeignAttributeNameFixedPoint(namespace, name)
             ? Effect.fail(
                 makeError(
                   A.append(path, name),
                   "invalidAttribute",
-                  `Foreign attribute ${name} is not a valid XML-style attribute name`
+                  `Foreign attribute ${name} is not a browser-fixed XML-style attribute name`
                 )
               )
             : serializeAttribute(name, entry, path),
@@ -430,7 +432,8 @@ const serializeRuntimeNode = (
     node._tag === "#foreign" &&
     P.isString(node.name) &&
     isForeignElementName(node.name) &&
-    (node.namespace === "svg" || node.namespace === "mathml")
+    (node.namespace === "svg" || node.namespace === "mathml") &&
+    isForeignElementNameFixedPoint(node.namespace, node.name)
   ) {
     const [prefix] = Str.split(":")(node.name);
     if (
@@ -444,7 +447,7 @@ const serializeRuntimeNode = (
     const attributes =
       node.attributes === undefined
         ? Effect.succeed("")
-        : serializeForeignAttributes(node.attributes, A.append(path, "attributes"));
+        : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
     return Effect.all([
       Effect.succeed(`<${node.name}`),
       attributes,

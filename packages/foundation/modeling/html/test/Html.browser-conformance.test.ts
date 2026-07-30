@@ -5,6 +5,7 @@ import { ForeignElement, P } from "@beep/html/Html.model";
 import { Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
+import * as O from "effect/Option";
 
 describe("@beep/html browser conformance", () => {
   it("rejects opaque foreign trees that an HTML parser restructures", () => {
@@ -47,5 +48,42 @@ describe("@beep/html browser conformance", () => {
       })
     );
     expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+  });
+
+  it("serializes canonical SVG names and attributes to browser fixed points", () => {
+    const root = ForeignElement.make({
+      namespace: "svg",
+      name: "svg",
+      children: [
+        ForeignElement.make({
+          namespace: "svg",
+          name: "linearGradient",
+          attributes: O.some({ viewBox: "0 0 1 1" }),
+          children: [],
+        }),
+      ],
+    });
+    const serialized = pipe(root, serialize, Effect.runSync, untrustedHtmlValue);
+    const container = document.createElement("div");
+    container.innerHTML = serialized;
+    const gradient = container.firstElementChild?.firstElementChild;
+
+    expect(serialized).toBe('<svg><linearGradient viewBox="0 0 1 1"></linearGradient></svg>');
+    expect(gradient?.localName).toBe("linearGradient");
+    expect(gradient?.getAttributeNames()).toContain("viewBox");
+
+    const drifting = ForeignElement.make({
+      namespace: "svg",
+      name: "svg",
+      children: [
+        ForeignElement.make({
+          namespace: "svg",
+          name: "lineargradient",
+          attributes: O.some({ viewbox: "0 0 1 1" }),
+          children: [],
+        }),
+      ],
+    });
+    expect(Exit.isFailure(Effect.runSyncExit(serialize(drifting)))).toBe(true);
   });
 });

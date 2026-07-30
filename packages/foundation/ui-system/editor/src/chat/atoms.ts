@@ -25,7 +25,7 @@ import {
   INSERT_PARAGRAPH_COMMAND,
   KEY_ENTER_COMMAND,
 } from "lexical";
-import { decodeEditorStateForRuntime } from "../runtime.ts";
+import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
 import {
   AttachmentPortFailed,
   DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -503,11 +503,10 @@ export const removeAttachmentFn = composerRuntime.fn<{
 );
 
 /**
- * Lexical editor-error sink, modeled as a runtime `fn` atom so the failure logs
- * through the Effect runtime rather than `Effect.runSync` in the editor's config
- * callback. `ChatComposer` wires `initialConfig.onError` to dispatch this via
- * `useAtomSet`, so editor errors are observed (not swallowed) while staying
- * within the atom-first law.
+ * Lexical editor-error sink, modeled as a runtime `fn` atom so failures log
+ * through the Effect runtime rather than being run directly in React render or
+ * callback code. Editor surfaces dispatch this via `useAtomSet`, so errors are
+ * observed without leaving the atom-first boundary.
  *
  * @example
  * ```tsx
@@ -526,7 +525,7 @@ export const removeAttachmentFn = composerRuntime.fn<{
  * @since 0.0.0
  */
 export const logEditorErrorFn = composerRuntime.fn<unknown>()((error) =>
-  Effect.logError("ChatComposer Lexical editor error", error)
+  Effect.logError("Editor runtime error", error)
 );
 
 /**
@@ -827,7 +826,7 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           }
           const dispatched =
             hasContent &&
-            Result.match(Effect.runSync(Effect.result(decodeEditorStateForRuntime(editorState.toJSON()))), {
+            Result.match(decodeEditorStateForRuntimeResult(editorState.toJSON()), {
               // A state the wire schema rejects is a bug in the schema or the
               // editor — never a reason to make the composer quietly stop
               // working. Say so, keep the draft, and leave a log behind.

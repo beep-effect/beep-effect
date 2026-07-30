@@ -18,24 +18,27 @@
  * @since 0.0.0
  */
 
+import { $EditorId } from "@beep/identity";
+import { TaggedErrorClass } from "@beep/schema";
 import { cn } from "@beep/ui/lib/utils";
-import { A, O } from "@beep/utils";
-import { RegistryContext, useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { A } from "@beep/utils";
+import { useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   LexicalTypeaheadMenuPlugin,
   MenuOption,
   useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
-import { useContext } from "react";
 import { createPortal } from "react-dom";
 import {
   anyMenuOpenAtom,
+  composerRuntime,
   menusOpenAtom,
-  typeaheadActiveDescendant,
+  TYPEAHEAD_MENU_ATTRIBUTE,
   typeaheadMenuMarker,
   typeaheadOptionId,
 } from "./atoms.ts";
@@ -44,6 +47,8 @@ import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
 import type { ReactNode, RefObject } from "react";
 import type { MentionOption, MentionSource, SlashItem } from "./config.ts";
+
+const $I = $EditorId.create("chat/typeahead");
 
 class SlashMenuOption extends MenuOption {
   readonly item: SlashItem;
@@ -60,6 +65,24 @@ class MentionMenuOption extends MenuOption {
     this.option = option;
   }
 }
+
+class MentionLookupError extends TaggedErrorClass<MentionLookupError>($I`MentionLookupError`)(
+  "MentionLookupError",
+  {
+    reason: S.Literals(["source-failed", "invalid-results"]).annotateKey({
+      description: "Stable reason the mention lookup failed.",
+    }),
+    message: S.String.annotateKey({
+      description: "User-safe lookup failure message.",
+    }),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Underlying source or schema failure retained for structured diagnostics.",
+    }),
+  },
+  $I.annote("MentionLookupError", {
+    description: "Typed failure raised when a mention source rejects or returns invalid candidates.",
+  })
+) {}
 
 // Whether a slash item matches the (already trimmed + lowercased) query across
 // its label, hint, or keywords. Extracted so the filter predicate reads as one
@@ -78,15 +101,50 @@ const filterSlashItems = (items: ReadonlyArray<SlashItem>, query: string): Reado
 // Per-editor `/` query text. Writable; the typeahead writes the live query.
 const slashQueryAtom = Atom.family((_editor: LexicalEditor) => Atom.make<string>(""));
 
-// Per-editor `@` mention options resolved from the app source.
-const mentionOptionsAtom = Atom.family((_editor: LexicalEditor) => Atom.make<ReadonlyArray<MentionMenuOption>>([]));
+const decodeMentionOptions = S.decodeUnknownEffect(MentionOptions);
+const isImmediateMentionOptions = (result: ReturnType<MentionSource>): result is ReadonlyArray<MentionOption> =>
+  A.isArray(result);
 
-// Per-editor monotonic mention-request id, so stale async responses are dropped.
-const mentionRequestIdAtom = Atom.family((_editor: LexicalEditor) => Atom.make<number>(0));
+const mentionSourceFailure = (cause: unknown): MentionLookupError =>
+  MentionLookupError.make({
+    reason: "source-failed",
+    message: "Mentions are unavailable right now.",
+    cause,
+  });
 
-// Whether the latest `@` lookup failed. A rejected source must not be
-// indistinguishable from "no matches": the menu renders an unavailable row.
-const mentionFailedAtom = Atom.family((_editor: LexicalEditor) => Atom.make<boolean>(false));
+// Runtime-owned, per-editor lookup. Atom.fn's default latest-write-wins
+// semantics interrupt the preceding request when a newer query arrives, so
+// stale responses cannot cross queries or composers.
+const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
+  composerRuntime
+    .fn<{
+      readonly query: string;
+      readonly source: MentionSource;
+    }>()(
+      Effect.fnUntraced(function* ({ query, source }) {
+        const sourceResult = yield* Effect.try({
+          try: () => source(query),
+          catch: mentionSourceFailure,
+        });
+        const raw = yield* isImmediateMentionOptions(sourceResult)
+          ? Effect.succeed(sourceResult)
+          : Effect.tryPromise({
+              try: () => sourceResult,
+              catch: mentionSourceFailure,
+            });
+        return yield* decodeMentionOptions(raw).pipe(
+          Effect.mapError((cause) =>
+            MentionLookupError.make({
+              reason: "invalid-results",
+              message: "Mentions are unavailable right now.",
+              cause,
+            })
+          )
+        );
+      })
+    )
+    .pipe(Atom.setIdleTTL(0))
+);
 
 // Bumped whenever the viewport moves under an open menu. `TypeaheadMenuList`
 // reads it so the fixed-position listbox is recomputed on scroll/resize instead
@@ -119,7 +177,7 @@ const viewportTickAtom = Atom.family((editor: LexicalEditor) =>
       window.removeEventListener("resize", bump);
     });
     return 0;
-  })
+  }).pipe(Atom.setIdleTTL(0))
 );
 
 interface MenuListProps<TOption extends MenuOption> {
@@ -228,10 +286,10 @@ const caretViewportRect = (
  * the caret: below the caret line when there is room, flipped above it
  * otherwise. `position: fixed` keeps the menu inside the view box, so a
  * composer at the bottom of the screen never grows the page scroll area.
- * Each row is a `role="option"` with the `typeahead-item-${index}` id the
- * Lexical menu delegate references through `aria-activedescendant`, and registers
- * its element via `option.setRefElement` so scroll-into-view works. `mousedown`
- * is prevented so clicking an option never steals focus from the editor.
+ * Each row is a `role="option"` with an editor-scoped id referenced through
+ * `aria-activedescendant`, and registers its element via
+ * `option.setRefElement` so scroll-into-view works. `mousedown` is prevented
+ * so clicking an option never steals focus from the editor.
  */
 function TypeaheadMenuList<TOption extends MenuOption>({
   anchorElementRef,
@@ -260,12 +318,6 @@ function TypeaheadMenuList<TOption extends MenuOption>({
     viewportHeight: window.innerHeight,
     viewportWidth: window.innerWidth,
   });
-  // Lexical has just written `aria-activedescendant="typeahead-item-<index>"` on the
-  // editor root — an id that is not unique across composers. Overwrite it with the id
-  // of the option this editor actually rendered, so the reference resolves to the row
-  // in THIS menu.
-  typeaheadActiveDescendant(editor, selectedIndex);
-
   return createPortal(
     <div
       {...typeaheadMenuMarker(editor)}
@@ -301,12 +353,14 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   );
 }
 
-// Rendered in place of the mention options when the app-injected source rejects,
-// so a service outage reads as an outage rather than "no matches".
-function MentionUnavailableNotice({
+// Rendered in place of mention options while lookup is pending or unavailable,
+// so both states stay visible and editor-scoped instead of reading as no matches.
+function MentionLookupNotice({
   anchorElementRef,
+  message,
 }: {
   readonly anchorElementRef: RefObject<HTMLElement | null>;
+  readonly message: string;
 }): ReactNode {
   const [editor] = useLexicalComposerContext();
   useAtomValue(viewportTickAtom(editor));
@@ -328,7 +382,7 @@ function MentionUnavailableNotice({
       className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
       role="status"
     >
-      Mentions are unavailable right now.
+      {message}
     </div>,
     anchorElementRef.current
   );
@@ -441,50 +495,25 @@ interface MentionPluginProps {
  */
 export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
   const [editor] = useLexicalComposerContext();
-  const registry = useContext(RegistryContext);
-  const options = useAtomValue(mentionOptionsAtom(editor));
-  const setOptions = useAtomSet(mentionOptionsAtom(editor));
-  const setRequestId = useAtomSet(mentionRequestIdAtom(editor));
+  const lookupAtom = mentionLookupFn(editor);
+  const lookupState = useAtomValue(lookupAtom);
+  const lookup = useAtomSet(lookupAtom);
   const setMenus = useAtomSet(menusOpenAtom(editor));
-  const failed = useAtomValue(mentionFailedAtom(editor));
-  const setFailed = useAtomSet(mentionFailedAtom(editor));
   const triggerFn = useBasicTypeaheadTriggerMatch("@", { minLength: 0 });
+  const pending = AsyncResult.isWaiting(lookupState);
+  const settled = !pending;
+  const options =
+    settled && AsyncResult.isSuccess(lookupState)
+      ? A.map(lookupState.value, (option) => new MentionMenuOption(option))
+      : [];
+  const failed = settled && AsyncResult.isFailure(lookupState) && !AsyncResult.isInterrupted(lookupState);
 
   const onQueryChange = (matching: string | null): void => {
-    // Allocate the next request id off the latest committed value (read via the
-    // registry) so rapid keystrokes never reuse an id (replaces the original
-    // `useRef` counter). Neither the allocation nor the staleness check is a side
-    // effect inside an atom updater.
-    const id = registry.get(mentionRequestIdAtom(editor)) + 1;
-    setRequestId(id);
-    const isLatest = (): boolean => id === registry.get(mentionRequestIdAtom(editor));
-    // Invoke `source` *inside* the chain so a synchronous throw rejects the
-    // promise (and hits `.catch`) instead of escaping the interaction path.
-    Promise.resolve()
-      .then(() => source(matching ?? ""))
-      .then((results) => {
-        // Drop a stale response: only the most-recent request wins.
-        if (isLatest()) {
-          O.match(S.decodeUnknownOption(MentionOptions)(results), {
-            onNone: () => {
-              setFailed(true);
-              setOptions([]);
-            },
-            onSome: (decoded) => {
-              setFailed(false);
-              setOptions(A.map(decoded, (option) => new MentionMenuOption(option)));
-            },
-          });
-        }
-      })
-      .catch(() => {
-        // A failed lookup is not "no matches": clearing the list silently would
-        // make a source outage indistinguishable from an empty result set.
-        if (isLatest()) {
-          setFailed(true);
-          setOptions([]);
-        }
-      });
+    if (matching === null) {
+      lookup(Atom.Reset);
+      return;
+    }
+    lookup({ query: matching, source });
   };
 
   const onSelectOption = (
@@ -506,10 +535,13 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
   };
 
   const menuRenderFn: MenuRenderFn<MentionMenuOption> = (anchorElementRef, itemProps) =>
-    // A failed lookup still renders the portal, so the outage is visible where
-    // the results would have been instead of collapsing into an empty menu.
-    failed && A.isReadonlyArrayEmpty(itemProps.options) ? (
-      <MentionUnavailableNotice anchorElementRef={anchorElementRef} />
+    // Pending and failed lookups keep an editor-scoped portal mounted. Besides
+    // making the lifecycle visible, the marker keeps Enter owned by this
+    // typeahead and gives the expanded combobox a real controlled listbox.
+    pending && A.isReadonlyArrayEmpty(itemProps.options) ? (
+      <MentionLookupNotice anchorElementRef={anchorElementRef} message="Looking up mentions..." />
+    ) : failed && A.isReadonlyArrayEmpty(itemProps.options) ? (
+      <MentionLookupNotice anchorElementRef={anchorElementRef} message="Mentions are unavailable right now." />
     ) : (
       <TypeaheadMenuList
         anchorElementRef={anchorElementRef}
@@ -539,8 +571,7 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
       onOpen={() => setMenus({ slash: false, mention: true })}
       onClose={() => {
         setMenus((s) => ({ ...s, mention: false }));
-        setFailed(false);
-        setOptions([]);
+        lookup(Atom.Reset);
       }}
       triggerFn={triggerFn}
       menuRenderFn={menuRenderFn}
@@ -548,43 +579,113 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
   );
 }
 
+/**
+ * DOM id of the Lexical-owned typeahead listbox, scoped to one editor.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadMenuId } from "@beep/editor/chat/typeahead"
+ * import { createEditor } from "lexical"
+ *
+ * console.log(typeaheadMenuId(createEditor()).startsWith("typeahead-menu-")) // true
+ * ```
+ *
+ * @category accessibility
+ * @since 0.0.0
+ */
+export const typeaheadMenuId = (editor: LexicalEditor): string => `typeahead-menu-${editor.getKey()}`;
+
+const findTypeaheadAnchor = (root: HTMLElement, editor: LexicalEditor): HTMLElement | null => {
+  for (const marker of root.ownerDocument.querySelectorAll<HTMLElement>(`[${TYPEAHEAD_MENU_ATTRIBUTE}]`)) {
+    if (marker.getAttribute(TYPEAHEAD_MENU_ATTRIBUTE) === editor.getKey()) {
+      return marker.parentElement;
+    }
+  }
+  return null;
+};
+
+const synchronizeTypeaheadAria = (root: HTMLElement, editor: LexicalEditor): void => {
+  const anchor = findTypeaheadAnchor(root, editor);
+  if (anchor === null || anchor.getAttribute("role") !== "listbox") return;
+  const menuId = typeaheadMenuId(editor);
+  if (anchor.id !== menuId) anchor.id = menuId;
+  if (root.getAttribute("aria-controls") !== menuId) root.setAttribute("aria-controls", menuId);
+  const selectedOption = anchor.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+  if (selectedOption === null) {
+    root.removeAttribute("aria-activedescendant");
+  } else if (root.getAttribute("aria-activedescendant") !== selectedOption.id) {
+    root.setAttribute("aria-activedescendant", selectedOption.id);
+  }
+};
+
 // Per-editor combobox-ARIA root-listener registration. Subscribes to
-// anyMenuOpenAtom so it re-registers (re-applies aria-expanded) whenever the
-// open state changes; torn down via the atom finalizer.
-const COMBOBOX_ARIA_ATTRIBUTES = ["role", "aria-haspopup", "aria-autocomplete", "aria-expanded"] as const;
+// anyMenuOpenAtom so it re-registers whenever open state changes. Lexical uses
+// one hardcoded listbox id for every composer and rewrites its ARIA relations
+// from effects and command handlers; the short-lived observer repairs those
+// relations after Lexical's writes and disconnects as soon as this editor's
+// menu closes.
+const COMBOBOX_ARIA_ATTRIBUTES = [
+  "role",
+  "aria-haspopup",
+  "aria-autocomplete",
+  "aria-expanded",
+  "aria-controls",
+  "aria-activedescendant",
+] as const;
+
+const clearComboboxAria = (root: HTMLElement): void => {
+  for (const attribute of COMBOBOX_ARIA_ATTRIBUTES) {
+    root.removeAttribute(attribute);
+  }
+};
 
 const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     const open = get(anyMenuOpenAtom(editor));
+    let observer: MutationObserver | undefined;
+    let root: HTMLElement | null = null;
     get.addFinalizer(
       editor.registerRootListener((rootElement) => {
+        observer?.disconnect();
+        observer = undefined;
+        if (root !== null && root !== rootElement) clearComboboxAria(root);
+        root = rootElement;
         if (rootElement === null) return;
         rootElement.setAttribute("role", "combobox");
         rootElement.setAttribute("aria-haspopup", "listbox");
         rootElement.setAttribute("aria-autocomplete", "list");
         rootElement.setAttribute("aria-expanded", open ? "true" : "false");
+        if (!open) return;
+
+        synchronizeTypeaheadAria(rootElement, editor);
+        const Observer = rootElement.ownerDocument.defaultView?.MutationObserver;
+        if (Observer === undefined) return;
+        observer = new Observer(() => synchronizeTypeaheadAria(rootElement, editor));
+        observer.observe(rootElement.ownerDocument.body, {
+          attributeFilter: ["aria-activedescendant", "aria-controls", "aria-selected", "id"],
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
       })
     );
     // Unregistering the root listener leaves the attributes painted on a root
     // that outlives this plugin — an editor advertised as an expanded combobox
     // with no popup. Strip what we applied when the binding goes away.
     get.addFinalizer(() => {
-      const rootElement = editor.getRootElement();
-      if (rootElement === null) return;
-      for (const attribute of COMBOBOX_ARIA_ATTRIBUTES) {
-        rootElement.removeAttribute(attribute);
-      }
+      observer?.disconnect();
+      if (root !== null) clearComboboxAria(root);
     });
     return undefined;
-  })
+  }).pipe(Atom.setIdleTTL(0))
 );
 
 /**
  * Marks the editor root as a WAI-ARIA combobox while slash/mention typeahead menus
- * are enabled, toggling `aria-expanded` as the menu opens/closes. The Lexical
- * menu delegate already adds `aria-controls` and `aria-activedescendant`; this
- * completes the combobox pattern (`role`, `aria-haspopup`, `aria-autocomplete`).
- * Reads the open state from the shared {@link anyMenuOpenAtom}.
+ * are enabled, toggling `aria-expanded` as the menu opens/closes. The binding
+ * scopes Lexical's listbox id and `aria-controls` relation to this editor while
+ * preserving its `aria-activedescendant` behavior. Reads the open state from
+ * the shared {@link anyMenuOpenAtom}.
  *
  * @example
  * ```tsx

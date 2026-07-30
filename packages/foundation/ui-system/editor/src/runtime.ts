@@ -5,12 +5,53 @@
  * @since 0.0.0
  */
 
-import { decodeEditorStateStrict, SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
-import { Effect } from "effect";
+import {
+  decodeEditorStateStrictResult,
+  LexicalDecodeError,
+  SerializedEditorState,
+} from "@beep/lexical-schema/Lexical.model";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import type { LexicalDecodeError } from "@beep/lexical-schema/Lexical.model";
 
 const isSerializedEditorState = S.is(SerializedEditorState);
+const encodeSerializedEditorState = S.encodeUnknownResult(SerializedEditorState);
+const runtimeEditorStateValidationError = LexicalDecodeError.new(
+  "Schema-decoded Lexical editor state failed runtime revalidation."
+);
+
+const revalidateSerializedEditorState = (
+  state: SerializedEditorState
+): Result.Result<SerializedEditorState, LexicalDecodeError> =>
+  Result.try({
+    try: () => encodeSerializedEditorState(state, { onExcessProperty: "error" }),
+    catch: runtimeEditorStateValidationError,
+  }).pipe(
+    Result.flatMap(Result.mapError(runtimeEditorStateValidationError)),
+    Result.map(() => state)
+  );
+
+/**
+ * Synchronously admits a deeply revalidated decoded state or strictly decodes
+ * unknown wire without throwing.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime"
+ *
+ * const result = decodeEditorStateForRuntimeResult({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ * })
+ * console.log(Result.isSuccess(result)) // true
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateForRuntimeResult = (
+  input: unknown
+): Result.Result<SerializedEditorState, LexicalDecodeError> =>
+  isSerializedEditorState(input) ? revalidateSerializedEditorState(input) : decodeEditorStateStrictResult(input);
 
 /**
  * Admits a schema-decoded state or decodes unknown wire before it is passed to a
@@ -23,20 +64,14 @@ const isSerializedEditorState = S.is(SerializedEditorState);
  * @example
  * ```ts
  * import { decodeEditorStateForRuntime } from "@beep/editor/runtime"
- * import { Effect } from "effect"
- *
- * const exit = Effect.runSyncExit(
- *   decodeEditorStateForRuntime({
- *     root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
- *   })
- * )
- * console.log(exit._tag) // "Success"
+ * const program = decodeEditorStateForRuntime({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ * })
+ * console.log(program !== undefined) // true
  * ```
  *
  * @category decoding
  * @since 0.0.0
  */
-export const decodeEditorStateForRuntime = (
-  input: unknown
-): Effect.Effect<SerializedEditorState, LexicalDecodeError> =>
-  isSerializedEditorState(input) ? Effect.succeed(input) : decodeEditorStateStrict(input);
+export const decodeEditorStateForRuntime = (input: unknown): Effect.Effect<SerializedEditorState, LexicalDecodeError> =>
+  Effect.fromResult(decodeEditorStateForRuntimeResult(input));

@@ -9,9 +9,10 @@
 "use client";
 
 import { EditorStateFromJson } from "@beep/lexical-schema";
-import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model";
+import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
 import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-editable";
 import { O } from "@beep/utils";
+import { useAtomSet } from "@effect/atom-react";
 import { TRANSFORMERS } from "@lexical/markdown";
 import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -22,18 +23,15 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect, Exit, Result } from "effect";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { logEditorErrorFn } from "./chat/atoms.ts";
 import { editorNodes } from "./nodes.ts";
-import { decodeEditorStateForRuntime } from "./runtime.ts";
+import { decodeEditorStateForRuntimeResult } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
 import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
-
-const onError = (error: Error) => {
-  Effect.runSync(Effect.logError(error));
-};
 
 /**
  * The markdown shortcut transformers registered by {@link EditorComposer} —
@@ -130,14 +128,9 @@ export function EditorComposer({
   className,
   onSerializedChange,
 }: EditorComposerProps): JSX.Element {
+  const logEditorError = useAtomSet(logEditorErrorFn);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
-    Exit.match(Effect.runSyncExit(decodeEditorStateForRuntime(state)), {
-      onFailure: (cause) => {
-        Effect.runSync(Effect.logError("EditorComposer refused runtime-incompatible initial state", cause));
-        return O.none();
-      },
-      onSuccess: O.some,
-    })
+    Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );
   if (initialState !== undefined && O.isNone(runtimeInitialState)) {
     return <EditorWireViewer input={initialState} className={className} />;
@@ -152,7 +145,7 @@ export function EditorComposer({
         ...O.getSomesStruct({
           editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
         }),
-        onError,
+        onError: (error) => logEditorError(error),
       }}
     >
       {/* Non-flex wrapper: Lexical warns when the content editable's direct
@@ -178,11 +171,13 @@ export function EditorComposer({
         <OnChangePlugin
           ignoreSelectionChange={true}
           onChange={(nextEditorState) => {
-            const exit = Effect.runSyncExit(decodeEditorStateForRuntime(nextEditorState.toJSON()));
-            Exit.match(exit, {
+            Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
               onSuccess: onSerializedChange,
-              onFailure: (cause) =>
-                Effect.runSync(Effect.logError("EditorComposer produced out-of-schema state", cause)),
+              onFailure: (error) =>
+                logEditorError({
+                  message: "EditorComposer produced out-of-schema state",
+                  error,
+                }),
             });
           }}
         />
@@ -216,7 +211,7 @@ export function EditorWireComposer({
   onSerializedChange,
   placeholder,
 }: EditorWireComposerProps): JSX.Element {
-  return Result.match(Effect.runSync(Effect.result(analyzeEditorStateCompatibility(input))), {
+  return Result.match(analyzeEditorStateCompatibilityResult(input), {
     onFailure: () => <EditorWireViewer input={input} className={className} />,
     onSuccess: (result) =>
       O.match(result.state, {

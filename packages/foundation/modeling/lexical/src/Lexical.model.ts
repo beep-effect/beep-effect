@@ -2751,11 +2751,7 @@ export declare namespace LexicalNodeWire {
    * @category serialization
    * @since 0.0.0
    */
-  export interface Type {
-    readonly children?: S.Json;
-    readonly type: string;
-    readonly version: number;
-  }
+  export type Type = S.Schema.Type<typeof LexicalNodeWire>;
 
   /**
    * Encoded opaque wire node.
@@ -2763,11 +2759,7 @@ export declare namespace LexicalNodeWire {
    * @category serialization
    * @since 0.0.0
    */
-  export interface Encoded {
-    readonly children?: S.Json;
-    readonly type: string;
-    readonly version: number;
-  }
+  export type Encoded = S.Codec.Encoded<typeof LexicalNodeWire>;
 }
 
 /**
@@ -2965,9 +2957,42 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
   }
 }
 
-const decodeStrictEditorState = S.decodeUnknownEffect(StrictSerializedEditorState);
-const decodeLosslessEditorState = S.decodeUnknownEffect(SerializedEditorStateWire);
+const decodeStrictEditorStateResult = S.decodeUnknownResult(StrictSerializedEditorState);
+const decodeLosslessEditorStateResult = S.decodeUnknownResult(SerializedEditorStateWire);
 const inspectStrictEditorState = S.decodeUnknownResult(StrictSerializedEditorState);
+const strictEditorStateDecodeError = LexicalDecodeError.new("Lexical editor state failed strict semantic decoding.");
+const losslessEditorStateDecodeError = LexicalDecodeError.new(
+  "Lexical editor state failed lossless JSON-wire decoding."
+);
+
+/**
+ * Synchronously decodes an unknown payload into the supported strict semantic
+ * editor state without throwing.
+ *
+ * This Result boundary is intended for synchronous framework callbacks and
+ * render admission. Effectful callers should prefer
+ * {@link decodeEditorStateStrict}.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import { decodeEditorStateStrictResult } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const result = decodeEditorStateStrictResult({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ * })
+ * console.log(Result.isSuccess(result)) // true
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateStrictResult = (
+  input: unknown
+): Result.Result<SerializedEditorState, LexicalDecodeError> =>
+  decodeStrictEditorStateResult(input, { onExcessProperty: "error" }).pipe(
+    Result.mapError(strictEditorStateDecodeError)
+  );
 
 /**
  * Decodes an unknown payload into the supported strict semantic editor state.
@@ -2991,9 +3016,7 @@ const inspectStrictEditorState = S.decodeUnknownResult(StrictSerializedEditorSta
  * @since 0.0.0
  */
 export const decodeEditorStateStrict = (input: unknown): Effect.Effect<SerializedEditorState, LexicalDecodeError> =>
-  decodeStrictEditorState(input, { onExcessProperty: "error" }).pipe(
-    LexicalDecodeError.mapError("Lexical editor state failed strict semantic decoding.")
-  );
+  Effect.fromResult(decodeEditorStateStrictResult(input));
 
 /**
  * Decodes an unknown payload into the JSON-only lossless wire model.
@@ -3015,8 +3038,45 @@ export const decodeEditorStateStrict = (input: unknown): Effect.Effect<Serialize
 export const decodeEditorStateLossless = (
   input: unknown
 ): Effect.Effect<SerializedEditorStateWire, LexicalDecodeError> =>
-  decodeLosslessEditorState(input).pipe(
-    LexicalDecodeError.mapError("Lexical editor state failed lossless JSON-wire decoding.")
+  Effect.fromResult(decodeLosslessEditorStateResult(input).pipe(Result.mapError(losslessEditorStateDecodeError)));
+
+/**
+ * Synchronously retains lossless wire and reports whether strict semantic
+ * decoding succeeds, without throwing.
+ *
+ * This Result boundary is intended for synchronous framework rendering.
+ * Effectful callers should prefer {@link analyzeEditorStateCompatibility}.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const result = analyzeEditorStateCompatibilityResult({
+ *   root: { type: "root", version: 1, children: [] },
+ * })
+ * console.log(Result.isSuccess(result)) // true
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const analyzeEditorStateCompatibilityResult = (
+  input: unknown
+): Result.Result<LexicalCompatibilityResult, LexicalDecodeError> =>
+  decodeLosslessEditorStateResult(input).pipe(
+    Result.mapError(losslessEditorStateDecodeError),
+    Result.map((wire) =>
+      Result.match(inspectStrictEditorState(wire, { onExcessProperty: "error" }), {
+        onFailure: (error) =>
+          LexicalCompatibilityResult.make({
+            issues: [LexicalCompatibilityIssue.make({ message: error.message })],
+            state: O.none(),
+            wire,
+          }),
+        onSuccess: (state) => LexicalCompatibilityResult.make({ issues: [], state: O.some(state), wire }),
+      })
+    )
   );
 
 /**
@@ -3039,19 +3099,7 @@ export const decodeEditorStateLossless = (
 export const analyzeEditorStateCompatibility = (
   input: unknown
 ): Effect.Effect<LexicalCompatibilityResult, LexicalDecodeError> =>
-  decodeEditorStateLossless(input).pipe(
-    Effect.map((wire) =>
-      Result.match(inspectStrictEditorState(wire, { onExcessProperty: "error" }), {
-        onFailure: (error) =>
-          LexicalCompatibilityResult.make({
-            issues: [LexicalCompatibilityIssue.make({ message: String(error) })],
-            state: O.none(),
-            wire,
-          }),
-        onSuccess: (state) => LexicalCompatibilityResult.make({ issues: [], state: O.some(state), wire }),
-      })
-    )
-  );
+  Effect.fromResult(analyzeEditorStateCompatibilityResult(input));
 
 /**
  * Backward-compatible alias for {@link analyzeEditorStateCompatibility}.

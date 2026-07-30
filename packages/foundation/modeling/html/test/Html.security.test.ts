@@ -43,6 +43,7 @@ import {
   Tbody,
   Tfoot,
   Thead,
+  Title,
   Tr,
 } from "@beep/html/Html.model";
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
@@ -85,7 +86,7 @@ describe("@beep/html conformance", () => {
       doctype: O.some(Doctype.html()),
       children: [
         Html.make({
-          children: [Head.make({ children: [] }), Body.make({ children: [] })],
+          children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],
         }),
       ],
     });
@@ -263,9 +264,8 @@ describe("@beep/html safe policy", () => {
       name: O.some("unsafe-legacy-name"),
       src: O.some("/logo.png"),
     });
-    expect(inspectSafeHtml(conformSync(legacyImageName))).toContainEqual(
-      expect.objectContaining({ rule: "deniedAttribute" })
-    );
+    expect(inspectConformance(legacyImageName)).toContainEqual(expect.objectContaining({ rule: "obsoleteAttribute" }));
+    expect(Exit.isFailure(Effect.runSyncExit(conform(legacyImageName)))).toBe(true);
   });
 });
 
@@ -283,6 +283,17 @@ describe("@beep/html canonical serialization", () => {
       '<a class="a&quot;b" href="/docs?a=1&amp;b=2" id="link" rel="noopener noreferrer" target="_blank">&lt;go&gt;</a>'
     );
     expect(serializeSync(Input.make({ disabled: O.some("") }))).toBe("<input disabled>");
+    expect(
+      serializeSync(
+        Div.make({
+          autofocus: O.some(""),
+          headingreset: O.some(""),
+          inert: O.some(""),
+          itemscope: O.some(""),
+          children: [],
+        })
+      )
+    ).toBe("<div autofocus headingreset inert itemscope></div>");
   });
 
   it("serializes real content, name, and value attributes without structural-field loss", () => {

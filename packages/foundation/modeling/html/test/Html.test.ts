@@ -174,6 +174,9 @@ describe("HtmlNode AST — schema laws", () => {
           textMode: "normal",
           categories: ["flow", "phrasing"],
           children: ["transparent"],
+          currentAttributes: [],
+          obsoleteAttributes: [],
+          conditionalCategories: [],
         })
       )
     ).toStrictEqual({
@@ -185,6 +188,9 @@ describe("HtmlNode AST — schema laws", () => {
       textMode: "normal",
       categories: ["flow", "phrasing"],
       children: ["transparent"],
+      currentAttributes: [],
+      obsoleteAttributes: [],
+      conditionalCategories: [],
     });
   });
 

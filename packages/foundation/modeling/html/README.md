@@ -96,10 +96,11 @@ the final string, closing mutation and time-of-check/time-of-use gaps.
 
 `serialize` and `serializeConformant` return `UntrustedHtml`. Canonical escaping
 does not imply a safe browser-insertion policy. In particular, ordinary
-serialization losslessly preserves valid foreign-element attributes, including
-active ones; the safe policy rejects all foreign SVG/MathML instead of silently
-rewriting it. Element attributes named `content`, `name`, or `value` remain
-attributes; only node-kind-specific structural fields are excluded.
+serialization preserves browser-fixed foreign-element attributes, including
+active ones; names that the HTML parser would lowercase or adjust are rejected
+instead of silently changing the modeled tree. The safe policy rejects all
+foreign SVG/MathML. Element attributes named `content`, `name`, or `value`
+remain attributes; only node-kind-specific structural fields are excluded.
 
 ## Conservative safe-output policy
 
@@ -122,9 +123,13 @@ This is validation, not repair. `inspectSafeHtml` returns all policy issues;
 `inspectConformance` checks generated content metadata, transparent ancestor
 contexts, document doctype/root ordering, element-specific ordering,
 foreign-content integration, obsolete elements, forbidden descendants, and
-cross-attribute relationships. `conform` issues the opaque proof only when no
-issues remain. Generated sequence metadata enforces the table grammar
-`caption?`, `colgroup*`, `thead?`, either `tbody*` or `tr+`, then `tfoot?`.
+cross-attribute relationships. It also rejects obsolete or misplaced
+attributes from exact generated per-element inventories and evaluates
+attribute-conditional categories such as interactive anchors and media.
+`conform` issues the opaque proof only when no issues remain. Generated grammar
+profiles cover cardinality, ordering, alternatives, and attribute-conditional
+branches for document/head, description lists, disclosure/fieldset/figure,
+colgroups, media/picture, ruby, datalist/select, hgroup, and tables.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text
@@ -150,10 +155,12 @@ bun run generate:check
 ```
 
 Generation fails when an element lacks exactly one text/void/normal
-classification, lacks an explicit content-model source, or an encountered
-non-global attribute has no explicit literal, token, numeric, boolean, or
-string classification. Element-qualified attribute overrides and constrained
-child-sequence patterns live in the same generator-owned classification data.
+classification, lacks an explicit content-model source, has an unexplained
+pinned/webref attribute gap, or an encountered non-global attribute has no
+explicit literal, token, numeric, boolean, or string classification. Exact
+current/obsolete inventories, special child grammars, conditional categories,
+and browser foreign-name adjustment profiles live in the same generator-owned
+classification data.
 
 ## Package entry points
 

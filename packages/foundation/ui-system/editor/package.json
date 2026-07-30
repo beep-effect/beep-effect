@@ -126,6 +126,7 @@
     "@lexical/table": "catalog:",
     "@lexical/utils": "catalog:",
     "@phosphor-icons/react": "catalog:",
+    "dompurify": "catalog:",
     "effect": "catalog:",
     "lexical": "catalog:",
     "mermaid": "catalog:"

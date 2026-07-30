@@ -372,6 +372,9 @@ export const Hidden = LiteralKit(["", "hidden", "until-found"]).pipe(
  * @since 0.0.0
  */
 export type Hidden = typeof Hidden.Type;
+const PopoverBase = LiteralKit(["auto", "manual", "hint"]);
+const PopoverInput = S.Literals(["", ...PopoverBase.Options]);
+
 /**
  * `popover` global attribute value.
  *
@@ -385,8 +388,16 @@ export type Hidden = typeof Hidden.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const Popover = LiteralKit(["auto", "manual", "hint"]).pipe(
-  $I.annoteSchema("Popover", { description: "Popover behavior." })
+export const Popover = PopoverInput.pipe(
+  S.decodeTo(
+    PopoverBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "auto" : value),
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("Popover", { description: "Popover behavior." }),
+  SchemaUtils.withLiteralKitStatics(PopoverBase)
 );
 /**
  * Decoded type of {@link Popover}.
@@ -471,6 +482,48 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
  * @since 0.0.0
  */
 export type BooleanAttribute = typeof BooleanAttribute.Type;
+
+/**
+ * Integer accepted by the `headingoffset` global attribute.
+ *
+ * @example
+ * ```ts
+ * import { HeadingOffset } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HeadingOffset)(8)) // true
+ * console.log(S.is(HeadingOffset)(9)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HeadingOffset = S.Int.check(
+  S.isBetween({
+    minimum: 0,
+    maximum: 8,
+  })
+).pipe(
+  $I.annoteSchema("HeadingOffset", {
+    description: "Canonical integer domain of the headingoffset global attribute.",
+  })
+);
+
+/**
+ * Decoded type of {@link HeadingOffset}.
+ *
+ * @example
+ * ```ts
+ * import type { HeadingOffset } from "@beep/html/Html.attributes"
+ *
+ * const offset: HeadingOffset = 2
+ * console.log(offset)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HeadingOffset = typeof HeadingOffset.Type;
 
 /**
  * An HTML non-negative integer microsyntax.
@@ -822,8 +875,8 @@ export const StandardGlobalAttributes = {
   draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
   enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
   exportparts: OptionalString,
-  headingoffset: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-  headingreset: OptionalString,
+  headingoffset: S.OptionFromOptionalKey(HeadingOffset).pipe(SchemaUtils.withNoneDefault),
+  headingreset: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
   hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
   id: OptionalString,
   inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
@@ -838,8 +891,6 @@ export const StandardGlobalAttributes = {
   nonce: OptionalString,
   part: OptionalString,
   popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
-  popovertarget: OptionalString,
-  popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
   slot: OptionalString,
   spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
   style: OptionalString,
