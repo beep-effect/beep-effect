@@ -75,7 +75,7 @@ const TripleValidationMessages = ({ state }: { readonly state: OntologyInspector
 
 // The zero-behavior extraction keeps the established form validation and
 // gesture guards together so every action reads one consistent input snapshot.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- form keeps validation and action guards on one atom-backed input snapshot
 const OntologyAddTripleForm = (): JSX.Element => {
   const form = useAtomValue(ontologyInspectorFormStateAtom);
   const predicateSuggestions = useAtomValue(ontologyPredicateSuggestionsAtom);

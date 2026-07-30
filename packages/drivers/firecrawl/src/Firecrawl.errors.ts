@@ -405,12 +405,12 @@ const statusFromUnknown = (cause: unknown): O.Option<number> =>
   O.firstSomeOf([readNumber(cause, "status"), readNumber(cause, "statusCode")]);
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local cause labeling preserves Firecrawl SDK diagnostics
 const causeLabel = (cause: unknown): string =>
   pipe(
     O.firstSomeOf([readString(cause, "_tag"), readString(cause, "name"), readString(cause, "code")]),
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- Firecrawl fallback labels mirror peer drivers but stay provider-local
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );
 

@@ -1360,7 +1360,7 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
           DockNode.findTabs(member.root, groupId),
           O.map(() =>
             pipe(
-              // fallow-ignore-next-line code-duplication
+              // fallow-ignore-next-line code-duplication -- floating-group removal rebuilds its tree while preserving its box
               DockNode.removeTabs(member.root, groupId),
               O.map((root) => A.of(FloatingMember.make({ anchoredBox: member.anchoredBox, root }))),
               O.getOrElse(A.empty)

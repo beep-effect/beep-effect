@@ -389,6 +389,8 @@
     "fallow:dead-code:baseline:write": "fallow dead-code --config .fallowrc.jsonc --format json --quiet --summary --save-regression-baseline standards/fallow.dead-code.regression-baseline.jsonc",
     "fallow:dead-code:json": "fallow dead-code --config .fallowrc.jsonc --format json --quiet",
     "fallow:health": "fallow health --config .fallowrc.jsonc",
+    "fallow:health:baseline:check": "fallow health --config .fallowrc.jsonc --format json --quiet --summary --baseline standards/fallow.health.regression-baseline.jsonc",
+    "fallow:health:baseline:write": "fallow health --config .fallowrc.jsonc --format json --quiet --summary --save-baseline standards/fallow.health.regression-baseline.jsonc",
     "fallow:migrate:dry-run": "fallow migrate --dry-run",
     "files": "bun run beep files",
     "image": "bun run beep image",

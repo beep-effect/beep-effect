@@ -24,7 +24,7 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
 
 // Vite treats an explicit `.ts` suffix as an exact filename, while the repository
 // convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- composition-root plugin mirrors Storybook's .ts-to-.tsx resolver by design
 const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   name: "beep:resolve-uniform-typescript-source-specifiers",
   enforce: "pre",

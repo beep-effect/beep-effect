@@ -1,10 +1,18 @@
 {
-  "schema_version": 1,
-  "fallow_version": "3.9.1",
-  "timestamp": "2026-07-27T08:37:43Z",
-  "git_sha": "fd43ab17bb20bcd8548a5aa5e321db2302ceb0cc",
+  "schema_version": 2,
+  "fallow_version": "3.10.0",
+  "timestamp": "2026-07-30T16:09:10Z",
+  "git_sha": "f9b8aaac15e5c02bf609b278936d44594ff024e3",
+  "analysis_identity": {
+    "mode": "syntactic",
+    "semantic_schema_version": 1,
+    "capabilities": [],
+    "project_config_hash": "",
+    "backend_family": "",
+    "completeness": "complete"
+  },
   "check": {
-    "total_issues": 0,
+    "total_issues": 77,
     "unused_files": 0,
     "unused_exports": 0,
     "unused_types": 0,

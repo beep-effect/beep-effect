@@ -435,7 +435,7 @@ const isBlockedRemoteHost = (hostname: string): boolean => {
   // rather than coupling this driver to a foundation schema's internals.
   // IPv4-mapped IPv6 is decoded back to its IPv4 form so mapped private ranges
   // classify through the same isInternalIpv4 checks.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- SSRF blocklist mirrors SafeRemoteHost for independent security auditing
   return (
     host === "localhost" ||
     Str.endsWith(".localhost")(host) ||

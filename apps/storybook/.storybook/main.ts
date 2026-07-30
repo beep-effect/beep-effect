@@ -7,7 +7,7 @@ const repoRoot = new URL("../../..", import.meta.url).pathname;
 // The strip plugin is deliberately copied into each Vite composition root
 // (professional-desktop vite.config.ts is the other); a shared tooling package
 // for a two-site workaround is out of this packet's scope.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- composition-root workaround mirrors professional-desktop's Lexical plugin
 const lexicalReactProdModule =
   /node_modules[\\/]@lexical[\\/]react[\\/]dist[\\/]Lexical(ContentEditable|ErrorBoundary)\.prod\.mjs(?:\?.*)?$/;
 const misplacedPureAnnotationBeforeReturn = /\/\*#__PURE__\*\/\s*(?=return\b)/g;
@@ -28,7 +28,7 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
 
 // Vite treats an explicit `.ts` suffix as an exact filename, while the repository
 // convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- composition-root resolver mirrors professional-desktop's Vite plugin
 const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   name: "beep:resolve-uniform-typescript-source-specifiers",
   enforce: "pre",

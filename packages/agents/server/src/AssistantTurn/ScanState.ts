@@ -204,7 +204,7 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
 // Its branching is the brace/string/escape state machine itself and is locked
 // down by a fast-check property test (test/scanChunk.test.ts); extracting helpers
 // would scatter the single-pass state without reducing real complexity.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- single-pass brace and string scanner is a POC port guarded by property tests
 export const scanChunk = (state: ScanState, text: string): [ScanState, Array<string>] => {
   const result = scanChunkResult({ state, text });
   return [

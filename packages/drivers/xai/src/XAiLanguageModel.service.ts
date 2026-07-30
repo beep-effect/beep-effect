@@ -113,7 +113,7 @@ const errorDescription = (error: XAiError): string =>
   })}.`;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- adapter maps xAI transport failures locally to Effect AI network errors
 const networkTransportError = (error: XAiError): AiError.NetworkError =>
   AiError.NetworkError.make({
     description: errorDescription(error),
