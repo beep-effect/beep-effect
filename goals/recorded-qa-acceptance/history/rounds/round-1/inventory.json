@@ -1,0 +1,84 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        {
+          "eventIds": [116, 118],
+          "kind": "frame",
+          "path": "frames/drag-w11_00003.png"
+        },
+        {
+          "eventIds": [118, 130],
+          "kind": "frame",
+          "path": "frames/drag-w11_00005.png"
+        },
+        {
+          "eventIds": [115, 116],
+          "kind": "screenshot",
+          "path": "floating-drag-resize--after-move.png"
+        },
+        {
+          "eventIds": [118, 130],
+          "kind": "screenshot",
+          "path": "floating-drag-resize--after-resize.png"
+        }
+      ],
+      "fix": "Bind the resize interaction to the actual lower-right grip and apply pointer deltas to width and height while preserving the pane origin; keep the header grip bound only to translation.",
+      "id": "R1-01",
+      "lens": "floating-chrome",
+      "repro": "Drag the Scratch floating header from (314,143) to (574,323), then perform the recorded floating-grip-resize drag from (421,327) to (555,416). The pane moves down and right while remaining 320x252.",
+      "severity": "P1",
+      "title": "Floating resize grip translates the pane without resizing it"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [237],
+          "kind": "frame",
+          "path": "frames/drag-w18_00000.png"
+        },
+        {
+          "eventIds": [251, 253],
+          "kind": "frame",
+          "path": "frames/drag-w18_00002.png"
+        },
+        {
+          "eventIds": [251, 253],
+          "kind": "screenshot",
+          "path": "escape-cancels-tab-drag--after-escape.png"
+        }
+      ],
+      "fix": "Snapshot the active panel when tab dragging starts and restore it on Escape cancellation together with the original layout and cleared drop-preview state.",
+      "id": "R1-02",
+      "lens": "cancel-reset",
+      "repro": "With Notes active, begin dragging the inactive Brief tab toward the Outline group, press Escape at seq 251 before pointer-up, then release. Brief remains active instead of restoring the pre-gesture Notes state.",
+      "severity": "P1",
+      "title": "Escape cancellation leaves the dragged Brief tab activated"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [163, 167, 181, 183],
+          "kind": "screenshot",
+          "path": "drop-quadrant-hover--preview-right.png"
+        },
+        {
+          "eventIds": [209, 213, 227, 229],
+          "kind": "screenshot",
+          "path": "drop-quadrant-hover--preview-bottom.png"
+        }
+      ],
+      "fix": "Clamp the drag-label overlay to the viewport and flip its horizontal or vertical offset to the opposite side of the pointer when the preferred placement would overflow.",
+      "id": "R1-03",
+      "lens": "overflow",
+      "repro": "Drag the source into the target's right or bottom quadrant until the witness cursor reaches the viewport edge. The pointer-adjacent Drag Source label extends beyond the viewport and becomes partially or entirely hidden.",
+      "severity": "P2",
+      "title": "Drag label is clipped at the right and bottom viewport edges"
+    }
+  ],
+  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
+  "requiredCount": 2,
+  "round": 1,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

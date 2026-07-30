@@ -29,9 +29,11 @@ Round directory: `{{ROUND_DIR}}`
 
 ## Lenses
 
-Static: visual hierarchy; dark-mode contrast; tab strip legibility;
-drop-preview clarity; menu affordances; empty/clipped/overflow content;
-floating chrome; layout proportions.
+Static — use EXACTLY these `lens` slugs: `visual-hierarchy` (hierarchy),
+`contrast` (dark-mode contrast), `legibility` (tab strip legibility),
+`drop-preview` (drop-preview clarity), `affordance` (menu affordances),
+`overflow` (empty/clipped/overflowing content), `floating-chrome`,
+`proportions` (layout proportions).
 
 Motion/interaction (each maps to a `lens` value in your output):
 

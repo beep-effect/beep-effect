@@ -1,0 +1,25 @@
+diff --git a/packages/foundation/ui-system/dock-react/src/internal/Sash.tsx b/packages/foundation/ui-system/dock-react/src/internal/Sash.tsx
+index f13f19cb35..d6c138135f 100644
+--- a/packages/foundation/ui-system/dock-react/src/internal/Sash.tsx
++++ b/packages/foundation/ui-system/dock-react/src/internal/Sash.tsx
+@@ -72,11 +72,6 @@ export const Sash = (props: {
+       if (O.isNone(split)) return;
+       const extent = splitExtent(props.graph, props.state, split.value);
+       if (extent <= 0) return;
+-      // Without this the browser anchors a native text selection at the
+-      // press point and smears it across neighboring panels for the whole
+-      // drag; over an existing selection it can even escalate to native
+-      // drag-and-drop, which cancels the pointer stream mid-resize.
+-      event.preventDefault();
+       node.setPointerCapture?.(event.pointerId);
+       props.graph.registry.set(
+         props.state.resizeAtom,
+@@ -109,8 +104,6 @@ export const Sash = (props: {
+       style={{
+         ...boxStyle(sash.value.box),
+         cursor: Eq.equals(sash.value.axis, "horizontal") ? "col-resize" : "row-resize",
+-        touchAction: "none",
+-        userSelect: "none",
+       }}
+     />
+   );

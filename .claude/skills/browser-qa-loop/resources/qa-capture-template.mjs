@@ -325,9 +325,12 @@ if (COLLECTOR) {
   if (sash !== null) {
     const sashBox = await sash.boundingBox();
     await mark("gesture:sash-drag-to-minima");
+    // Anchor drag Y to a TEXT row when hunting selection smear — panels are
+    // mostly empty and a mid-height drag crosses nothing selectable. Note the
+    // verified boundary: synthetic pointer streams do NOT anchor native
+    // selections in headless Chromium — the smear class needs a Lane B round.
     await page.mouse.move(sashBox.x + 2, sashBox.y + sashBox.height / 2);
     await page.mouse.down();
-    // Slow squeeze across panel text — the selection-smear witness case.
     await page.mouse.move(20, sashBox.y + sashBox.height / 2, { steps: 24 });
     await page.mouse.up();
     await settle(500);

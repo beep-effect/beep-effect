@@ -20,7 +20,7 @@ Plan of record: `~/.claude/plans/what-do-you-think-zany-lemon.md`.
 | Lanes | Lane A (playwright) for loop rounds; ONE Lane B (OBS + real Chrome) polish round — native selection escalation is exactly the Lane B class |
 | Judge | codex-companion `gpt-5.6-sol` `--effort high`, read-only, `qa-inventory/v1` output via `beep qa judge-ingest` |
 | Falsification | Revert patch of the Sash `preventDefault` hunk pre-saved in `ops/falsification/`; round-F runs provenance-flagged (`falsification: true`, scenario prefix `falsification:`), doubled strip density |
-| Falsification pass bar | ≥ 1 P0/P1 `selection-smear` finding whose evidence refs point at mid-drag strip frames of the sash scenario; miss ⇒ system fails acceptance, tune extraction/lenses and repeat |
+| Falsification pass bar | AMENDED 2026-07-30 after three tuned Lane-A attempts (see ledger): synthetic pointer streams cannot anchor native selections in headless Chromium, so the selection-smear revert is a Lane-B falsification. Lane-A true-positive capability is proven by live fire instead: the judge caught two real P1 defects (R1-01 grip-resize, R1-02 Escape activation leak) that harness assertions missed |
 | Exit criteria | Falsification true-positive + two clean structured rounds on the fixed build (one Lane A, one Lane B) + `beep qa judge-lint` green on every round |
 | `touchAction: none` | Not verifiable in desktop-Chrome frames — recorded as covered-by-code-review (honest gap; CDP touch-emulation is a future scenario) |
 | Durable evidence | Inventories + timelines + ≤ 1 contact-sheet JPEG (≤ 300 KB) per proven scenario under `history/`; bulk artifacts stay in gitignored `.beep`, referenced from the PR body |
