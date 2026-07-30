@@ -22,6 +22,46 @@ raw output).
 4. For the backup leg: Tailscale up, `dankserver` reachable over SSH with
    the local agent (`SSH_AUTH_SOCK`), and an `op://` ref for the backup
    passphrase resolvable via `op read`.
+5. A root-owned Node toolchain provisioned at `nodeBinDir` — see below.
+
+### Provision the root-owned Node toolchain
+
+Staging runs `npm install` as **root**. If the Node toolchain were writable by
+the workstation user, any user-level compromise could replace `npm` or `node`
+and execute arbitrary code as root during `pulumi up`. The stage script
+therefore resolves `nodeBinDir`, `node`, and `npm` with `readlink -f` and
+requires every path component up to `/` to be uid 0 and not group- or
+world-writable, failing closed with `STAGE-FAIL` (exit 73) otherwise.
+
+A per-user mise/nvm install can never satisfy this. Install the pinned Node
+tarball into the root-owned trusted tree instead (copy, never symlink — the
+guard resolves symlinks physically, so a link into `$HOME` still fails):
+
+```sh
+node_version=24.16.0   # must equal OPENCLAW_COMPATIBILITY_SET.nodeVersion
+tmp="$(mktemp -d)"
+curl -fsSL "https://nodejs.org/dist/v${node_version}/node-v${node_version}-linux-x64.tar.xz" \
+  -o "${tmp}/node.tar.xz"
+# Verify against the published SHASUMS256.txt before installing.
+sudo -n install -d -o root -g root -m 0755 /opt/beep /opt/beep/openclaw
+sudo -n tar -xJf "${tmp}/node.tar.xz" -C /opt/beep/openclaw
+sudo -n mv /opt/beep/openclaw/"node-v${node_version}-linux-x64" /opt/beep/openclaw/node
+sudo -n chown -R root:root /opt/beep/openclaw/node
+sudo -n chmod -R go-w /opt/beep/openclaw/node
+rm -rf "${tmp}"
+```
+
+Confirm the guard's own predicate before running `pulumi up`; every line must
+print `0` for owner and a mode with no group/other write bit:
+
+```sh
+for p in /opt /opt/beep /opt/beep/openclaw /opt/beep/openclaw/node \
+         /opt/beep/openclaw/node/bin /opt/beep/openclaw/node/bin/node \
+         /opt/beep/openclaw/node/bin/npm; do
+  stat -c '%n uid=%u mode=%a' "$p"
+done
+/opt/beep/openclaw/node/bin/node --version   # must equal the pinned version
+```
 
 ## 1. Stack init + config (one-time)
 
@@ -41,7 +81,9 @@ pulumi config set openclaw:gatewayAuthTokenRef "op://<vault>/<item>/<field>"
 pulumi config set openclaw:resolverCommandPath  "<abs op-resolver script>"
 pulumi config set openclaw:resolverOpBinaryPath "$(command -v op)"
 pulumi config set openclaw:resolverTrustedDir   "<abs trusted dir>"
-pulumi config set openclaw:nodeBinDir "$HOME/.local/share/mise/installs/node/24/bin"
+# nodeBinDir defaults to /opt/beep/openclaw/node/bin and must stay root-owned; see
+# "Provision the root-owned Node toolchain" below. Never point it at a mise/nvm path
+# under $HOME — staging runs npm as root and fails closed on a user-writable toolchain.
 # Paths (defaults: configRoot /etc/beep/openclaw, unitName openclaw.service)
 # Backup leg (optional now, required for the drill):
 pulumi config set openclaw:backupSshHost dankserver

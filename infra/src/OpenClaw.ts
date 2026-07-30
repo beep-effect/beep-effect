@@ -76,7 +76,10 @@ const defaultConfigRoot = "/etc/beep/openclaw";
 const defaultGatewayAuthTokenRef = "op://beep-openclaw/gateway/token";
 const defaultGatewayPort = 19_031;
 const defaultLogFilePath = "/var/lib/beep/openclaw/log/openclaw.log";
-const defaultNodeBinDir = "/home/elpresidank/.local/share/mise/installs/node/24/bin";
+// The staging step runs `npm install` as root, so the Node toolchain is part of the trust
+// boundary: it lives beside the resolver under the root-owned `/opt/beep/openclaw` tree rather
+// than in a user-writable per-user runtime manager directory.
+const defaultNodeBinDir = "/opt/beep/openclaw/node/bin";
 const defaultResolverCommandPath = "/opt/beep/openclaw/op-resolver.sh";
 const defaultResolverOpBinaryPath = "/opt/beep/openclaw/bin/op";
 const defaultResolverTrustedDir = "/opt/beep/openclaw";
@@ -198,7 +201,13 @@ const requiredConfigValue = <Value>(key: string, value: Value | undefined): Valu
 
 const shellQuote = (value: string): string => `'${pipe(value, Str.replace(/'/gu, `'"'"'`))}'`;
 
-const bashScript = (lines: ReadonlyArray<string>): string => `/bin/bash -lc ${shellQuote(A.join(lines, "\n"))}`;
+// Never a login shell. `-l` sources /etc/profile and the user-writable ~/.bash_profile before the
+// first rendered line runs, so an unprivileged user could define a `sudo` shell function (or
+// prepend a PATH entry) and intercept every privileged command while the operator's ticket is
+// live. `--noprofile --norc` drops the startup files and `-p` refuses functions exported through
+// the environment, which is the only other way to inject one.
+const bashScript = (lines: ReadonlyArray<string>): string =>
+  `/bin/bash --noprofile --norc -p -c ${shellQuote(A.join(lines, "\n"))}`;
 
 const heredocLines = (input: {
   readonly content: string;
@@ -884,8 +893,14 @@ const stagedOpenclawBinary = (generation: OpenClawGeneration): string =>
 
 const healthUrl = (generation: OpenClawGeneration): string => `http://127.0.0.1:${generation.gatewayPort}/health`;
 
+// Pinned before anything else runs: the Pulumi process inherits the operator's PATH, which on a
+// developer workstation routinely leads with user-writable runtime-manager directories. Scripts
+// that need the pinned Node toolchain export their own PATH after this line.
+const trustedBasePath = "export PATH=/usr/bin:/bin";
+
 const scriptPreamble = (generation: OpenClawGeneration): ReadonlyArray<string> => [
   "set -euo pipefail",
+  trustedBasePath,
   `export XDG_RUNTIME_DIR=${shellQuote(generation.runtimeDir)}`,
   `export DBUS_SESSION_BUS_ADDRESS=${shellQuote(`unix:path=${generation.runtimeDir}/bus`)}`,
 ];
@@ -1361,9 +1376,13 @@ export const renderOpenClawPreflightScript = ({
     ...scriptPreamble(generation),
     "fail() { printf 'PREFLIGHT-FAIL: %s\\n' \"$1\" >&2; exit 78; }",
     ...A.map(
-      ["curl", "install", "loginctl", "sha256sum", "sqlite3", "sudo", "systemctl"],
+      ["curl", "install", "loginctl", "sha256sum", "sqlite3", "systemctl"],
       (binary) => `command -v ${binary} >/dev/null || fail ${shellQuote(`${binary} is not installed on the target`)}`
     ),
+    // `sudo` is asserted as the real setuid-root binary at its absolute path rather than by name:
+    // a name lookup is satisfied by any shim earlier on PATH, which is precisely what the
+    // privileged scripts must never call.
+    "[ -u /usr/bin/sudo ] || fail '/usr/bin/sudo is missing or not setuid root'",
     ...A.flatMap(identityChecks(identity), identityAssertionLines),
     `linger="$(loginctl show-user ${shellQuote(identity.username)} -p Linger --value || printf '')"`,
     `[ "\${linger}" = yes ] || fail "linger not enabled for ${identity.username} (Linger=\${linger})"`,
@@ -1386,11 +1405,54 @@ export const renderOpenClawPreflightScript = ({
       unixSocketPathLimit
     )}-byte UNIX socket cap: \${candidate}"`,
     "done",
-    `sudo -n -v 2>/dev/null || fail ${shellQuote(
+    `/usr/bin/sudo -n -v 2>/dev/null || fail ${shellQuote(
       "no armed sudo ticket; re-run pulumi up inside an armed pty (ops/handoffs/sudo-session.sh) so privileged steps stay non-interactive"
     )}`,
     `printf 'PREFLIGHT-OK generation=${generation.generationId} machine=%s host=%s uid=%s home=%s runtime=%s linger=%s units_load=%s manager=%s\\n' "\${actual_expected_machine_id}" "\${actual_expected_hostname}" "\${actual_expected_uid}" "\${actual_expected_home}" "\${XDG_RUNTIME_DIR}" "\${linger}" "\${units_load_timestamp}" "\${manager_state}"`,
   ]);
+
+/**
+ * Guard lines proving the Node toolchain the privileged staging step executes is root-owned.
+ *
+ * Staging runs `npm install` under `sudo`, so every path that decides which `npm` and `node`
+ * actually execute is inside the root trust boundary. Each candidate is fully resolved with
+ * `readlink -f` (which collapses every symlink component) and then walked to `/`, requiring each
+ * component to be uid 0 and not group- or world-writable. `--ignore-scripts` is no defense when
+ * the package manager binary itself is writable, and the pinned `npm` is commonly a wrapper that
+ * execs a sibling `node`, so the directory and both binaries are proven, not just `npm`.
+ */
+const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<string> => [
+  "fail() { printf 'STAGE-FAIL: %s\\n' \"$1\" >&2; exit 73; }",
+  "assert_trusted_path() {",
+  '  probe="$1"',
+  '  label="$2"',
+  "  while :; do",
+  '    metadata="$(/usr/bin/stat -c \'%u %a\' "${probe}")" || fail "cannot inspect ${label}: ${probe}"',
+  '    owner="${metadata%% *}"',
+  '    mode="${metadata##* }"',
+  '    [ "${owner}" = 0 ] || fail "${label} is not root-owned: ${probe}"',
+  // Both operands are written `8#` explicitly: a bare `022` is octal in bash but decimal in some
+  // other shells, and this comparison decides whether root executes an attacker-writable binary.
+  '    [ "$(( 8#${mode} & 8#22 ))" -eq 0 ] || fail "${label} is group- or world-writable: ${probe}"',
+  '    if [ "${probe}" = / ]; then break; fi',
+  '    probe="$(/usr/bin/dirname "${probe}")"',
+  "  done",
+  "}",
+  `node_dir="$(/usr/bin/readlink -f ${shellQuote(
+    generation.nodeBinDir
+  )})" || fail 'cannot resolve the pinned node bin dir'`,
+  `node_bin="$(/usr/bin/readlink -f ${shellQuote(
+    `${generation.nodeBinDir}/node`
+  )})" || fail 'cannot resolve the pinned node binary'`,
+  `npm_bin="$(/usr/bin/readlink -f ${shellQuote(
+    `${generation.nodeBinDir}/npm`
+  )})" || fail 'cannot resolve the pinned npm binary'`,
+  "[ -x \"${node_bin}\" ] || fail 'the pinned node binary is not executable'",
+  "[ -x \"${npm_bin}\" ] || fail 'the pinned npm binary is not executable'",
+  "assert_trusted_path \"${node_dir}\" 'pinned node bin dir'",
+  "assert_trusted_path \"${node_bin}\" 'pinned node binary'",
+  "assert_trusted_path \"${npm_bin}\" 'pinned npm binary'",
+];
 
 /**
  * Render the staging script that materializes a generation tree.
@@ -1446,13 +1508,14 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
 
   return bashScript([
     ...scriptPreamble(generation),
+    ...trustedToolchainLines(generation),
     `[ ! -L ${shellQuote(generation.configRoot)} ] || { printf 'STAGE-FAIL: symlink parent %s\\n' ${shellQuote(
       generation.configRoot
     )} >&2; exit 73; }`,
-    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(generation.configRoot)}`,
+    `/usr/bin/sudo -n install -d -o root -g root -m 0755 ${shellQuote(generation.configRoot)}`,
     ...heredocLines({
       content: "beep-openclaw\n",
-      install: "sudo -n install -o root -g root -m 0644",
+      install: "/usr/bin/sudo -n install -o root -g root -m 0644",
       path: `${generation.configRoot}/.beep-openclaw`,
       sentinel: "BEEP_OPENCLAW_MARKER",
     }),
@@ -1469,10 +1532,10 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
       ),
       " "
     )}; do [ ! -L "\${parent}" ] || { printf 'STAGE-FAIL: symlink parent %s\\n' "\${parent}" >&2; exit 73; }; done`,
-    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(generationDir(generation))}`,
-    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace`)}`,
-    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace/skills`)}`,
-    `sudo -n install -d -o root -g root -m 0755 ${shellQuote(
+    `/usr/bin/sudo -n install -d -o root -g root -m 0755 ${shellQuote(generationDir(generation))}`,
+    `/usr/bin/sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace`)}`,
+    `/usr/bin/sudo -n install -d -o root -g root -m 0755 ${shellQuote(`${generationDir(generation)}/workspace/skills`)}`,
+    `/usr/bin/sudo -n install -d -o root -g root -m 0755 ${shellQuote(
       `${generationDir(generation)}/workspace/skills/${proofSkillName}`
     )}`,
     ...A.flatten(
@@ -1481,7 +1544,7 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
           O.map(R.get(tree, relativePath), (file) =>
             heredocLines({
               content: file.content,
-              install: `sudo -n install -o root -g root -m ${file.mode}`,
+              install: `/usr/bin/sudo -n install -o root -g root -m ${file.mode}`,
               path: `${generationDir(generation)}/${relativePath}`,
               sentinel,
             })
@@ -1489,10 +1552,12 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
         )
       )
     ),
-    `sudo -n env PATH=${shellQuote(`${generation.nodeBinDir}:/usr/bin:/bin`)} npm install --prefix ${shellQuote(
+    `/usr/bin/sudo -n env PATH=${shellQuote(
+      `${generation.nodeBinDir}:/usr/bin:/bin`
+    )} "\${npm_bin}" install --prefix ${shellQuote(
       generationDir(generation)
     )} --no-audit --no-fund --ignore-scripts ${shellQuote(`openclaw@${generation.openclawVersion}`)} >/dev/null`,
-    `staged_version="$(sudo -n cat ${shellQuote(
+    `staged_version="$(/usr/bin/sudo -n cat ${shellQuote(
       `${generationDir(generation)}/node_modules/openclaw/package.json`
     )} | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p' | head -n 1)"`,
     `[ "\${staged_version}" = ${shellQuote(generation.openclawVersion)} ] || { printf 'STAGE-FAIL: staged openclaw %s does not match the pinned %s\\n' "\${staged_version}" ${shellQuote(
@@ -1584,28 +1649,28 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
     '  printf \'APPLY-ROLLBACK: restoring snapshot %s and prior pointer %s\\n\' "${snapshot}" "${prior_pointer}" >&2',
     '  systemctl --user stop "${unit}" || true',
     '  if [ -d "${snapshot}" ]; then',
-    '    sudo -n rm -rf -- "${state_dir}"',
-    '    sudo -n cp -a -- "${snapshot}" "${state_dir}"',
+    '    /usr/bin/sudo -n rm -rf -- "${state_dir}"',
+    '    /usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"',
     "  fi",
     '  if [ -n "${prior_pointer}" ]; then',
-    '    sudo -n ln -s -- "${prior_pointer}" "${pointer}.rollback.$$"',
-    '    sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"',
+    '    /usr/bin/sudo -n ln -s -- "${prior_pointer}" "${pointer}.rollback.$$"',
+    '    /usr/bin/sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"',
     "  fi",
     "  systemctl --user daemon-reload || true",
     '  systemctl --user start "${unit}" || true',
     "}",
     'systemctl --user stop "${unit}" || true',
-    `sudo -n install -d -o root -g root -m 0700 ${shellQuote(`${generation.configRoot}/${snapshotsDirName}`)}`,
-    'sudo -n rm -rf -- "${snapshot}"',
+    `/usr/bin/sudo -n install -d -o root -g root -m 0700 ${shellQuote(`${generation.configRoot}/${snapshotsDirName}`)}`,
+    '/usr/bin/sudo -n rm -rf -- "${snapshot}"',
     'if [ -d "${state_dir}" ]; then',
-    '  sudo -n cp -a -- "${state_dir}" "${snapshot}"',
+    '  /usr/bin/sudo -n cp -a -- "${state_dir}" "${snapshot}"',
     "else",
-    '  sudo -n install -d -o root -g root -m 0700 "${snapshot}"',
+    '  /usr/bin/sudo -n install -d -o root -g root -m 0700 "${snapshot}"',
     "fi",
     'printf \'APPLY-SNAPSHOT: %s -> %s (stopped state, includes SQLite WAL sidecars)\\n\' "${state_dir}" "${snapshot}"',
-    'printf \'%s\\n\' "${prior_pointer}" | sudo -n install -o root -g root -m 0644 /dev/stdin "${previous_pointer_file}"',
-    `sudo -n ln -s -- ${shellQuote(generation.generationId)} "\${pointer}.tmp.$$"`,
-    'sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"',
+    'printf \'%s\\n\' "${prior_pointer}" | /usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin "${previous_pointer_file}"',
+    `/usr/bin/sudo -n ln -s -- ${shellQuote(generation.generationId)} "\${pointer}.tmp.$$"`,
+    '/usr/bin/sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"',
     'printf \'APPLY-POINTER: current -> %s\\n\' "$(readlink "${pointer}")"',
     "systemctl --user daemon-reload",
     'if ! systemctl --user start "${unit}"; then',
@@ -1630,8 +1695,8 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
     )}s; snapshot and prior pointer restored\\n' >&2`,
     "  exit 70",
     "fi",
-    'printf \'%s\\n\' "$(state_user_version)" | sudo -n install -o root -g root -m 0644 /dev/stdin "${recorded_stamp}"',
-    `printf '%s\\n' ${shellQuote(generation.generationId)} | sudo -n install -o root -g root -m 0644 /dev/stdin ${shellQuote(
+    'printf \'%s\\n\' "$(state_user_version)" | /usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin "${recorded_stamp}"',
+    `printf '%s\\n' ${shellQuote(generation.generationId)} | /usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin ${shellQuote(
       `${generationDir(generation)}/.beep-openclaw-committed`
     )}`,
     `printf 'APPLY-OK generation=${generation.generationId} pointer=%s user_version=%s\\n' "$(readlink "\${pointer}")" "$(state_user_version)"`,
@@ -1688,11 +1753,11 @@ export const renderOpenClawRollbackScript = (generation: OpenClawGeneration): st
     'previous_pointer="$(tr -d \'[:space:]\' < "${previous_pointer_file}")"',
     "[ -n \"${previous_pointer}\" ] || { printf 'ROLLBACK-FAIL: recorded previous pointer is empty\\n' >&2; exit 66; }",
     'systemctl --user stop "${unit}" || true',
-    'sudo -n rm -rf -- "${state_dir}"',
-    'sudo -n cp -a -- "${snapshot}" "${state_dir}"',
+    '/usr/bin/sudo -n rm -rf -- "${state_dir}"',
+    '/usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"',
     'printf \'ROLLBACK-RESTORE: %s -> %s\\n\' "${snapshot}" "${state_dir}"',
-    'sudo -n ln -s -- "${previous_pointer}" "${pointer}.rollback.$$"',
-    'sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"',
+    '/usr/bin/sudo -n ln -s -- "${previous_pointer}" "${pointer}.rollback.$$"',
+    '/usr/bin/sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"',
     "systemctl --user daemon-reload",
     'systemctl --user start "${unit}"',
     "healthy=0",
@@ -1834,7 +1899,13 @@ export const renderOpenClawDriftAuditScript = (input: {
   readonly generation: OpenClawGeneration;
   readonly identity: OpenClawExpectedIdentity;
 }): string =>
-  bashScript(["set -uo pipefail", ...expectedUnitTextLines(input.generation), ...driftAuditLines(input), "exit 0"]);
+  bashScript([
+    "set -uo pipefail",
+    trustedBasePath,
+    ...expectedUnitTextLines(input.generation),
+    ...driftAuditLines(input),
+    "exit 0",
+  ]);
 
 /**
  * Render the acceptance probe script run after a successful apply.
@@ -1888,6 +1959,7 @@ export const renderOpenClawProbeScript = (input: {
 
   return bashScript([
     "set -uo pipefail",
+    trustedBasePath,
     `export XDG_RUNTIME_DIR=${shellQuote(generation.runtimeDir)}`,
     `export DBUS_SESSION_BUS_ADDRESS=${shellQuote(`unix:path=${generation.runtimeDir}/bus`)}`,
     ...expectedUnitTextLines(generation),
@@ -2062,6 +2134,7 @@ export const renderOpenClawBackupShipScript = ({
 
   return bashScript([
     "set -euo pipefail",
+    trustedBasePath,
     ...A.fromOption(O.map(backup.agentSocketPath, (socketPath) => `export SSH_AUTH_SOCK=${shellQuote(socketPath)}`)),
     `[ -n "\${${backupPassphraseEnvVar}:-}" ] || { printf 'BACKUP-FAIL: ${backupPassphraseEnvVar} is unset; resolve %s out of band before running pulumi up\\n' ${shellQuote(
       backup.passphraseSecretRef
@@ -2069,7 +2142,7 @@ export const renderOpenClawBackupShipScript = ({
     'work="$(mktemp -d)"',
     "trap 'rm -rf -- \"${work}\"' EXIT",
     `archive="\${work}/openclaw-${generation.generationId}-$(date -u +%Y%m%dT%H%M%SZ).tar"`,
-    `sudo -n tar -cf "\${archive}" -C ${shellQuote(generation.configRoot)} ${shellQuote(
+    `/usr/bin/sudo -n tar -cf "\${archive}" -C ${shellQuote(generation.configRoot)} ${shellQuote(
       `${snapshotsDirName}/${generation.generationId}`
     )}`,
     `printf '%s' "\${${backupPassphraseEnvVar}}" | gpg --batch --yes --symmetric --cipher-algo AES256 --pinentry-mode loopback --passphrase-fd 0 --output "\${archive}.gpg" "\${archive}"`,

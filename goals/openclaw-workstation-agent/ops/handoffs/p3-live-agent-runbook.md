@@ -14,7 +14,12 @@ provider, Telegram, 1Password, or workstation mutation. Evidence goes under
 2. Require an unlocked 1Password desktop, successful `op whoami`, the hosted
    provider account, the selected loopback OpenAI-compatible server, a
    Telegram bot, and the intended owner present.
-3. Hard stop if any command, Pulumi value/state, tracked file, or evidence
+3. Provision the root-owned Node toolchain at `/opt/beep/openclaw/node/bin`
+   per the P2 runbook's "Provision the root-owned Node toolchain" section.
+   Staging runs `npm install` as root and fails closed with `STAGE-FAIL`
+   (exit 73) on a user-writable toolchain, so a mise/nvm path under `$HOME`
+   cannot be used.
+4. Hard stop if any command, Pulumi value/state, tracked file, or evidence
    would contain raw secrets or real client identities, documents, facts, or
    data. Only synthetic prompts and nonces are permitted.
 
@@ -57,7 +62,7 @@ pulumi config set openclaw:expectedHome       "$HOME"
 pulumi config set openclaw:expectedRuntimeDir "/run/user/$(id -u)"
 pulumi config set openclaw:configRoot /etc/beep/openclaw
 pulumi config set openclaw:stateDir /var/lib/beep/openclaw
-pulumi config set openclaw:nodeBinDir "$HOME/.local/share/mise/installs/node/24/bin"
+pulumi config set openclaw:nodeBinDir /opt/beep/openclaw/node/bin
 pulumi config set openclaw:resolverCommandPath /opt/beep/openclaw/op-resolver.sh
 pulumi config set openclaw:resolverOpBinaryPath /opt/beep/openclaw/bin/op
 pulumi config set openclaw:resolverTrustedDir /opt/beep/openclaw

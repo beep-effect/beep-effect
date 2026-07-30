@@ -96,11 +96,13 @@ const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   );
 
 /**
- * Unwrap a rendered `/bin/bash -lc '<body>'` command back into the body the
+ * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the
  * shell actually executes, so assertions read as the script an operator sees.
  */
+const scriptWrapperPrefix = "/bin/bash --noprofile --norc -p -c '";
+
 const scriptBody = (rendered: string): string =>
-  pipe(rendered, Str.slice("/bin/bash -lc '".length, -1), Str.replace(/'"'"'/gu, "'"));
+  pipe(rendered, Str.slice(scriptWrapperPrefix.length, -1), Str.replace(/'"'"'/gu, "'"));
 
 /** Index of the first line matching `needle`, or `-1` when absent. */
 const lineIndexOf = (script: string, needle: string): number =>
@@ -126,7 +128,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-Environment=PATH=/home/elpresidank/.local/share/mise/installs/node/24/bin:/usr/bin:/bin
+Environment=PATH=/opt/beep/openclaw/node/bin:/usr/bin:/bin
 Environment=HOME=/home/elpresidank
 Environment=OPENCLAW_CONFIG_PATH=/etc/beep/openclaw/current/openclaw.json
 Environment=OPENCLAW_STATE_DIR=/var/lib/beep/openclaw
@@ -312,7 +314,7 @@ describe("@beep/infra OpenClaw", () => {
 
     expect(encodedPaths).toEqual({
       configRoot: "/etc/beep/openclaw",
-      nodeBinDir: "/home/elpresidank/.local/share/mise/installs/node/24/bin",
+      nodeBinDir: "/opt/beep/openclaw/node/bin",
       stateDir: "/var/lib/beep/openclaw",
       unitName: "beep.service",
     });
@@ -410,20 +412,101 @@ describe("@beep/infra OpenClaw", () => {
     const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
     const generationDir = `/etc/beep/openclaw/${defaultGeneration.generationId}`;
 
-    expect(script).toContain(`sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/openclaw.json'`);
-    expect(script).toContain(`sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/manifest.json'`);
-    expect(script).toContain(`sudo -n install -o root -g root -m 0755 /dev/stdin '${generationDir}/run.sh'`);
     expect(script).toContain(
-      `sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawSoulRelativePath}'`
+      `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/openclaw.json'`
     );
     expect(script).toContain(
-      `sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawProofSkillRelativePath}'`
+      `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/manifest.json'`
+    );
+    expect(script).toContain(`/usr/bin/sudo -n install -o root -g root -m 0755 /dev/stdin '${generationDir}/run.sh'`);
+    expect(script).toContain(
+      `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawSoulRelativePath}'`
+    );
+    expect(script).toContain(
+      `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawProofSkillRelativePath}'`
     );
     expect(script).toContain("STAGE-FAIL: symlink parent");
     expect(script).toContain("BEEP_OPENCLAW_CONFIG");
     expect(script).toContain("BEEP_OPENCLAW_MANIFEST");
     expect(script).toContain("BEEP_OPENCLAW_RUN");
     expect(script).toContain("BEEP_OPENCLAW_UNIT");
+  });
+
+  it("proves the node toolchain is root-owned before running the privileged install", () => {
+    const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
+    const nodeBinDir = defaultGeneration.nodeBinDir;
+
+    // The privileged install must never resolve `npm` through PATH: a user-writable directory
+    // ahead of it would execute an attacker's package manager as root, and `--ignore-scripts`
+    // is no defense once the package manager binary itself is attacker-controlled.
+    expect(script).not.toMatch(/sudo -n env PATH=\S+ npm install/u);
+    expect(script).toContain('"${npm_bin}" install --prefix');
+    expect(script).toContain(`node_dir="$(/usr/bin/readlink -f '${nodeBinDir}')"`);
+    expect(script).toContain(`node_bin="$(/usr/bin/readlink -f '${nodeBinDir}/node')"`);
+    expect(script).toContain(`npm_bin="$(/usr/bin/readlink -f '${nodeBinDir}/npm')"`);
+    expect(script).toContain("assert_trusted_path \"${node_dir}\" 'pinned node bin dir'");
+    expect(script).toContain("assert_trusted_path \"${node_bin}\" 'pinned node binary'");
+    expect(script).toContain("assert_trusted_path \"${npm_bin}\" 'pinned npm binary'");
+    expect(script).toContain('[ "${owner}" = 0 ] || fail "${label} is not root-owned: ${probe}"');
+    expect(script).toContain('[ "$(( 8#${mode} & 8#22 ))" -eq 0 ]');
+    // The walk must terminate at the root inode, so a writable ancestor cannot be swapped.
+    expect(script).toContain('if [ "${probe}" = / ]; then break; fi');
+    // The guard runs before any privileged mutation the stage script performs.
+    const guard = lineIndexOf(script, 'assert_trusted_path "${npm_bin}"');
+    const install = lineIndexOf(script, "/usr/bin/sudo -n install -d");
+    const privilegedNpm = lineIndexOf(script, '"${npm_bin}" install --prefix');
+
+    expect(guard).toBeGreaterThanOrEqual(0);
+    expect(guard).toBeLessThan(install);
+    expect(guard).toBeLessThan(privilegedNpm);
+  });
+
+  it("pins the node toolchain default inside the root-owned trusted tree", () => {
+    expect(OpenClawWorkstationPaths.make({}).nodeBinDir).toBe("/opt/beep/openclaw/node/bin");
+  });
+
+  it("never renders a login shell and never resolves sudo by name", () => {
+    const rendered = [
+      renderOpenClawPreflightScript({ generation: defaultGeneration, identity }),
+      renderOpenClawStageScript(defaultGeneration),
+      renderOpenClawApplyScript(defaultGeneration),
+      renderOpenClawRollbackScript(defaultGeneration),
+      renderOpenClawDriftAuditScript({ generation: defaultGeneration, identity }),
+      renderOpenClawProbeScript({ generation: defaultGeneration, identity }),
+      renderOpenClawLiveAcceptanceScript(defaultGeneration),
+      renderOpenClawBackupShipScript({
+        backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
+        generation: defaultGeneration,
+      }),
+    ];
+
+    for (const command of rendered) {
+      // A login shell sources the user-writable ~/.bash_profile before the first rendered line,
+      // which lets an unprivileged user define a `sudo` function and hijack the armed ticket.
+      expect(command.startsWith(scriptWrapperPrefix)).toBe(true);
+      expect(command).not.toContain("/bin/bash -lc");
+
+      const body = scriptBody(command);
+
+      // Every privilege-granting call is absolute: a bare `sudo` is satisfied by any shim
+      // earlier on PATH, and PATH is attacker-influenced until the pinned export runs.
+      expect(body).not.toMatch(/(?<!\/usr\/bin\/)\bsudo -n\b/u);
+      const pinnedPath = lineIndexOf(body, "export PATH=/usr/bin:/bin");
+      const firstSudo = lineIndexOf(body, "/usr/bin/sudo");
+
+      expect(pinnedPath).toBeGreaterThanOrEqual(0);
+      // PATH is pinned before the first privileged call, never after it.
+      if (firstSudo >= 0) {
+        expect(pinnedPath).toBeLessThan(firstSudo);
+      }
+    }
+  });
+
+  it("asserts sudo is the real setuid binary rather than trusting a name lookup", () => {
+    const script = scriptBody(renderOpenClawPreflightScript({ generation: defaultGeneration, identity }));
+
+    expect(script).toContain("[ -u /usr/bin/sudo ] || fail '/usr/bin/sudo is missing or not setuid root'");
+    expect(script).not.toContain("command -v sudo");
   });
 
   it("validates the candidate config with the candidate's own staged binary before apply", () => {
@@ -460,7 +543,7 @@ describe("@beep/infra OpenClaw", () => {
     expect(script).toContain("user bus round-trip failed (systemctl --user show)");
     expect(script).toContain("running|degraded|maintenance|starting) : ;;");
     expect(script).toContain("108-byte UNIX socket cap");
-    expect(script).toContain("sudo -n -v");
+    expect(script).toContain("/usr/bin/sudo -n -v");
     expect(script).toContain("no armed sudo ticket");
     expect(script).toContain("PREFLIGHT-OK");
   });
@@ -475,8 +558,8 @@ describe("@beep/infra OpenClaw", () => {
   it("orders apply as stop, snapshot, pointer switch, reload, start, health, commit", () => {
     const script = mainSequence(scriptBody(renderOpenClawApplyScript(defaultGeneration)));
     const stop = lineIndexOf(script, 'systemctl --user stop "${unit}" || true');
-    const snapshot = lineIndexOf(script, 'sudo -n cp -a -- "${state_dir}" "${snapshot}"');
-    const pointer = lineIndexOf(script, 'sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
+    const snapshot = lineIndexOf(script, '/usr/bin/sudo -n cp -a -- "${state_dir}" "${snapshot}"');
+    const pointer = lineIndexOf(script, '/usr/bin/sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
     const reload = lineIndexOf(script, "systemctl --user daemon-reload");
     const start = lineIndexOf(script, 'if ! systemctl --user start "${unit}"; then');
     const health = lineIndexOf(script, "for attempt in $(seq 1 30); do");
@@ -502,8 +585,8 @@ describe("@beep/infra OpenClaw", () => {
   it("switches the pointer atomically with ln -s followed by mv -T", () => {
     const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
 
-    expect(script).toContain(`sudo -n ln -s -- '${defaultGeneration.generationId}' "\${pointer}.tmp.$$"`);
-    expect(script).toContain('sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
+    expect(script).toContain(`/usr/bin/sudo -n ln -s -- '${defaultGeneration.generationId}' "\${pointer}.tmp.$$"`);
+    expect(script).toContain('/usr/bin/sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
     expect(script).toContain("APPLY-POINTER");
   });
 
@@ -512,8 +595,8 @@ describe("@beep/infra OpenClaw", () => {
 
     expect(script).toContain("restore_snapshot() {");
     expect(script).toContain("APPLY-ROLLBACK: restoring snapshot");
-    expect(script).toContain('sudo -n cp -a -- "${snapshot}" "${state_dir}"');
-    expect(script).toContain('sudo -n ln -s -- "${prior_pointer}" "${pointer}.rollback.$$"');
+    expect(script).toContain('/usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"');
+    expect(script).toContain('/usr/bin/sudo -n ln -s -- "${prior_pointer}" "${pointer}.rollback.$$"');
     expect(script.split("restore_snapshot").length - 1).toBeGreaterThanOrEqual(3);
     expect(script).toContain("APPLY-FAIL: unit failed to start; snapshot and prior pointer restored");
     expect(script).toContain("never succeeded within 30s; snapshot and prior pointer restored");
@@ -522,7 +605,7 @@ describe("@beep/infra OpenClaw", () => {
   it("refuses to start a generation older than the migrated live state", () => {
     const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
     const guard = lineIndexOf(script, "APPLY-REFUSED: downgrade guard");
-    const firstPrivilegedStep = lineIndexOf(script, "sudo -n");
+    const firstPrivilegedStep = lineIndexOf(script, "/usr/bin/sudo -n");
 
     expect(script).toContain("PRAGMA user_version;");
     expect(script).toContain('if [ "${candidate_user_version}" -lt "${live_user_version}" ]; then');
@@ -536,8 +619,8 @@ describe("@beep/infra OpenClaw", () => {
 
   it("restores state before switching binaries in the operator rollback script", () => {
     const script = scriptBody(renderOpenClawRollbackScript(defaultGeneration));
-    const restore = lineIndexOf(script, 'sudo -n cp -a -- "${snapshot}" "${state_dir}"');
-    const pointer = lineIndexOf(script, 'sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"');
+    const restore = lineIndexOf(script, '/usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"');
+    const pointer = lineIndexOf(script, '/usr/bin/sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"');
     const start = lineIndexOf(script, 'systemctl --user start "${unit}"');
 
     expect(script).toContain("ROLLBACK-FAIL: no snapshot at");
@@ -580,7 +663,7 @@ describe("@beep/infra OpenClaw", () => {
   it("mutates nothing in the drift audit", () => {
     const script = scriptBody(renderOpenClawDriftAuditScript({ generation: defaultGeneration, identity }));
 
-    expect(script).not.toContain("sudo -n");
+    expect(script).not.toContain("/usr/bin/sudo -n");
     expect(script).not.toContain("mv -T");
     expect(script).not.toContain("rm -rf");
     expect(script).not.toContain("install -o root");
