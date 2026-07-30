@@ -4500,8 +4500,8 @@ export const firstSuccessOf: <Eff extends Effect<any, any, any>>(
  *
  * The `timeout` function allows you to specify a time limit for an
  * effect's execution. If the effect does not complete within the given time, a
- * `TimeoutException` is raised. This can be useful for controlling how long
- * your program waits for a task to finish, ensuring that it doesn't hang
+ * `TimeoutError` is raised. This can be useful for controlling how long your
+ * program waits for a task to finish, ensuring that it doesn't hang
  * indefinitely if the task takes too long.
  *
  * **Gotchas**
@@ -4520,7 +4520,7 @@ export const firstSuccessOf: <Eff extends Effect<any, any, any>>(
  *   return "Result"
  * })
  *
- * // Output will show a TimeoutException as the task takes longer
+ * // Output will show a TimeoutError as the task takes longer
  * // than the specified timeout duration
  * const timedEffect = task.pipe(Effect.timeout("1 second"))
  *
@@ -4533,7 +4533,7 @@ export const firstSuccessOf: <Eff extends Effect<any, any, any>>(
  * //   cause: {
  * //     _id: 'Cause',
  * //     _tag: 'Fail',
- * //     failure: { _tag: 'TimeoutException' }
+ * //     failure: { _tag: 'TimeoutError' }
  * //   }
  * // }
  * ```
@@ -4597,7 +4597,7 @@ export const timeout: {
  * // ]
  * ```
  *
- * @see {@link timeout} for a version that raises a `TimeoutException`.
+ * @see {@link timeout} for a version that raises a `TimeoutError`.
  * @see {@link timeoutOrElse} for a version that allows specifying both success and timeout handlers.
  *
  * @category delays & timeouts
@@ -4658,7 +4658,7 @@ export const timeoutOption: {
  * // Cached result
  * ```
  *
- * @see {@link timeout} for failing with a `TimeoutException`.
+ * @see {@link timeout} for failing with a `TimeoutError`.
  * @see {@link timeoutOption} for returning `Option.none` on timeout.
  *
  * @category delays & timeouts
@@ -6223,6 +6223,72 @@ export const updateService: {
 } = internal.updateService
 
 /**
+ * Updates a service for the lifetime of the current scope and restores its
+ * previous value when the scope closes.
+ *
+ * **When to use**
+ *
+ * Use when you need a setup effect to change a service for subsequent effects
+ * in the same scope.
+ *
+ * **Details**
+ *
+ * The updater receives the currently visible service value. A
+ * `Context.Service` remains in the requirements, while a `Context.Reference`
+ * uses its default when no override is present and adds no service requirement.
+ * The returned effect always requires `Scope`. The optional `reset` function
+ * receives the original, updated, and current values when the scope closes,
+ * allowing changes to be merged during restoration. It defaults to returning
+ * the original value.
+ *
+ * **Example** (Updating a reference within a scope)
+ *
+ * ```ts
+ * import { Context, Effect } from "effect"
+ *
+ * const CurrentNumber = Context.Reference<number>("CurrentNumber", {
+ *   defaultValue: () => 1
+ * })
+ *
+ * const program = Effect.gen(function*() {
+ *   const before = yield* CurrentNumber
+ *   const during = yield* Effect.scoped(
+ *     Effect.gen(function*() {
+ *       yield* Effect.updateServiceScoped(
+ *         CurrentNumber,
+ *         (value) => value + 1,
+ *         {
+ *           // Optional: when omitted, the original value is restored
+ *           reset: (original, updated, current) =>
+ *             Math.max(original, updated, current) + 1
+ *         }
+ *       )
+ *       return yield* CurrentNumber
+ *     })
+ *   )
+ *   const after = yield* CurrentNumber
+ *
+ *   console.log([before, during, after])
+ *   // [1, 2, 3]
+ * })
+ *
+ * Effect.runPromise(program)
+ * ```
+ *
+ * @see {@link updateService} for updating a service only within a wrapped effect
+ *
+ * @category context
+ * @since 4.0.0
+ */
+export const updateServiceScoped: <I, A>(
+  service: Context.Key<I, A>,
+  f: (value: A) => A,
+  options?: {
+    readonly reset?: ((original: A, updated: A, current: A) => A) | undefined
+  } | undefined
+) => Effect<void, never, I | Scope> = internal.updateServiceScoped
+
+/**
  * Provides one concrete service implementation to an effect.
  *
  * **When to use**
@@ -6358,52 +6424,6 @@ export const provideServiceEffect: {
     acquire: Effect<S, E2, R2>
   ): Effect<A, E | E2, Exclude<R, I> | R2>
 } = internal.provideServiceEffect
-
-// -----------------------------------------------------------------------------
-// References
-// -----------------------------------------------------------------------------
-
-/**
- * Sets the concurrency level for parallel operations within an effect.
- *
- * **Example** (Setting local concurrency)
- *
- * ```ts
- * import { Console, Effect } from "effect"
- *
- * const task = (id: number) =>
- *   Effect.gen(function*() {
- *     yield* Console.log(`Task ${id} starting`)
- *     yield* Effect.sleep("100 millis")
- *     yield* Console.log(`Task ${id} completed`)
- *     return id
- *   })
- *
- * // Run tasks with limited concurrency (max 2 at a time)
- * const program = Effect.gen(function*() {
- *   const tasks = [1, 2, 3, 4, 5].map(task)
- *   return yield* Effect.all(tasks, { concurrency: 2 })
- * }).pipe(
- *   Effect.withConcurrency(2)
- * )
- *
- * Effect.runPromise(program).then(console.log)
- * // Tasks will run with max 2 concurrent operations
- * // [1, 2, 3, 4, 5]
- * ```
- *
- * @category references
- * @since 2.0.0
- */
-export const withConcurrency: {
-  (
-    concurrency: number | "unbounded"
-  ): <A, E, R>(self: Effect<A, E, R>) => Effect<A, E, R>
-  <A, E, R>(
-    self: Effect<A, E, R>,
-    concurrency: number | "unbounded"
-  ): Effect<A, E, R>
-} = internal.withConcurrency
 
 // -----------------------------------------------------------------------------
 // Resource management & finalization

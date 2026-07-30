@@ -369,7 +369,7 @@ export interface Class<
   Variants extends string = string,
   Default extends Variants = Variants,
   Inherited = {},
-> extends S.Bottom<
+> extends S.BottomWithoutNew<
       Self,
       S["Encoded"],
       S["DecodingServices"],

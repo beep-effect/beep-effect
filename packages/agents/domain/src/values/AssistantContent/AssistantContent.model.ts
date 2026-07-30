@@ -127,6 +127,12 @@ export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
  */
 export type InlineNode = typeof InlineNode.Type;
 
+const ParagraphBlockInlineNode = InlineNode.annotate({ identifier: $I`ParagraphBlockInlineNode` });
+const HeadingBlockInlineNode = InlineNode.annotate({ identifier: $I`HeadingBlockInlineNode` });
+const QuoteBlockInlineNode = InlineNode.annotate({ identifier: $I`QuoteBlockInlineNode` });
+const ListItemInlineNode = InlineNode.annotate({ identifier: $I`ListItemInlineNode` });
+const TableCellBlockInlineNode = InlineNode.annotate({ identifier: $I`TableCellBlockInlineNode` });
+
 // ---------------------------------------------------------------------------
 // Blocks (structured assistant turn block vocabulary)
 // ---------------------------------------------------------------------------
@@ -188,7 +194,7 @@ export type AssistantHeadingTag = typeof AssistantHeadingTag.Type;
 export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
   {
     type: S.tag("paragraph"),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(ParagraphBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("ParagraphBlock", {
     description: "A paragraph of inline content.",
@@ -218,7 +224,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
   {
     type: S.tag("heading"),
     level: AssistantHeadingTag.annotateKey({ description: "Heading level" }),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(HeadingBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("HeadingBlock", {
     description: "A section heading.",
@@ -246,7 +252,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
 export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
   {
     type: S.tag("quote"),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(QuoteBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("QuoteBlock", {
     description: "A block quotation.",
@@ -305,7 +311,7 @@ export type AssistantListType = typeof AssistantListType.Type;
  */
 export class ListItem extends S.Class<ListItem>($I`ListItem`)(
   {
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content of the item" }),
+    children: S.Array(ListItemInlineNode).annotateKey({ description: "Inline content of the item" }),
   },
   $I.annote("ListItem", {
     description: "A single item within a list block.",
@@ -393,7 +399,7 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
  */
 export class TableCellBlock extends S.Class<TableCellBlock>($I`TableCellBlock`)(
   {
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content of the cell" }),
+    children: S.Array(TableCellBlockInlineNode).annotateKey({ description: "Inline content of the cell" }),
   },
   $I.annote("TableCellBlock", {
     description: "A single table cell in an assistant-generated table.",

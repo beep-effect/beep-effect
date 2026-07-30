@@ -34,6 +34,10 @@ class ExtendedCauseError extends BeepError.extend<ExtendedCauseError>("ExtendedC
   count: S.Finite,
 }) {}
 
+class StructuredExtendedBeepError extends BeepError.extend<StructuredExtendedBeepError>("StructuredExtendedBeepError")(
+  S.Struct({ count: S.Finite })
+) {}
+
 describe("TaggedErrorClass", () => {
   it("infers constructor input from schema fields (without _tag)", () => {
     expect<TaggedErrorNewInput<typeof BeepError>>().type.toBe<{ readonly beep: string }>();
@@ -103,5 +107,12 @@ describe("TaggedErrorClass", () => {
 
     // @ts-expect-error!
     ExtendedCauseError.make({ beep: "beep" });
+  });
+
+  it("supports the upstream struct-schema extension overload", () => {
+    expect(StructuredExtendedBeepError.make({ beep: "beep", count: 1 })).type.toBe<StructuredExtendedBeepError>();
+
+    // @ts-expect-error!
+    StructuredExtendedBeepError.make({ beep: "beep" });
   });
 });

@@ -22,6 +22,26 @@
       "reason": "Effect service contract containing repository functions; persisted ProviderInstance values and command payloads are modeled by schemas at the boundary."
     },
     {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 49,
+      "owner": "@beep/professional-desktop",
+      "reason": "End-to-end authority acceptance suite: the codecs are exercised through a live MCP server against a real PGlite ledger, so the file's value is behavioral, not codec round-tripping. Schema-derived property coverage for these schemas already exists — ExecutionAuthority.test.ts 'derives round-tripping arbitraries for execution authority schemas', and ontology-mcp-http.test.ts runs assertSchemaRoundTrip over the MCP request codecs."
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 24,
+      "owner": "@beep/professional-desktop",
+      "reason": "Shared test harness module rather than a test: it defines the MCP request/response codecs both professional-desktop integration suites consume. Round-trip property coverage for those schemas lives with the suite that owns them, in ontology-mcp-http.test.ts via assertSchemaRoundTrip."
+    },
+    {
       "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1473,11 +1493,11 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts",
-      "symbol": "fieldsStruct",
+      "symbol": "withFieldEquivalence",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/schema",
-      "reason": "Generic TaggedErrorClass factory builds a Struct from its dynamic fields argument (a fields record or Struct) solely to derive a stack-independent field equivalence for S.toEquivalence; the fields are a runtime parameter, so no plain object literal is possible."
+      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
     },
     {
       "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",

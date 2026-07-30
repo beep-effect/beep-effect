@@ -3,13 +3,13 @@
   "initiative": {
     "id": "agent-execution-authority",
     "title": "Agent Execution Authority",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-25",
-    "updated": "2026-07-27",
+    "updated": "2026-07-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-execution-authority",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Default-deny authority boundary over the MCP agent surface, with a hash-chained append-only record of every decision and outcome.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -52,22 +52,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -87,5 +87,5 @@
     "DISCHARGED 2026-07-27 (PR 6): the policy Fetch reaches a request issued from inside a real dispatched MCP tool handler, measured with a falsification control; see history/pr6-fetch-reach-spike.md. The surviving invariant is that no middleware or request-scoped layer in a transport mounting governed tools may provide FetchHttpClient.Fetch, because request-time context takes precedence over the composition root.",
     "Widening EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST authorizes an agent-chosen POST of workspace content to that origin and everything beneath it; treat allowlist edits as security review, not configuration."
   ],
-  "updated": "2026-07-27"
+  "updated": "2026-07-28"
 }

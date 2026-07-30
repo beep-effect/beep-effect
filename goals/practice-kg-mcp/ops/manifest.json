@@ -48,27 +48,27 @@
     {
       "id": "P0",
       "name": "Packet + spike",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "KG build lane",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "MCP host package",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "OA candidate claims",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Distribution",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",

@@ -221,8 +221,26 @@ The package binary works the same way:
 bunx @beep/repo-cli files <subcommand> [options]
 ```
 
-All `files` subcommands work on direct children of `--dir`; they do not recurse
-into nested directories.
+Except for `flatten-media`, `files` subcommands work on direct children of
+`--dir`; they do not recurse into nested directories.
+
+#### `files flatten-media`
+
+Recursively move image and video files into one flat output directory while
+leaving non-media files and source directories in place.
+
+```bash
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media --dry-run
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media
+```
+
+Existing output files are preserved. Name collisions are checked
+case-insensitively and use numeric suffixes such as `_01` and `_02`. Use
+`--dry-run` to print the complete move plan without creating the output
+directory or moving files. If a move fails, completed moves are restored; a
+newly created output directory may remain empty.
+
+Do not modify the source or output tree concurrently while this command runs.
 
 #### `files sort-and-rename`
 

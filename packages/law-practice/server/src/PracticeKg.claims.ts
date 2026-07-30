@@ -17,6 +17,8 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { LangExtractError } from "@beep/langextract/Extraction";
+import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -29,7 +31,8 @@ import { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient";
 import type * as SqlClient from "effect/unstable/sql/SqlClient";
 
 const $I = $LawPracticeServerId.create("PracticeKg.claims");
-const docketPattern = /^(\d{5}(?:[A-Z]{2}\d{2})?)/iu;
+const docketPattern = /(?<!\d)(\d{5}[A-Z]{2}\d{2})(?!\d)/iu;
+const leadingDocketPattern = /^(\d{5})(?!\d)/u;
 const textEncoder = new TextEncoder();
 class ClaimsCountRow extends S.Class<ClaimsCountRow>($I`ClaimsCountRow`)({
   count: S.Finite,
@@ -129,6 +132,7 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
  *
  * const summary = PracticeKgClaimsSummary.make({
  *   claims: NonNegativeInt.make(1),
+ *   failedFiles: NonNegativeInt.make(0),
  *   files: NonNegativeInt.make(1)
  * })
  * console.log(summary.claims)
@@ -140,10 +144,11 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
 export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I`PracticeKgClaimsSummary`)(
   {
     claims: NonNegativeInt,
+    failedFiles: NonNegativeInt,
     files: NonNegativeInt,
   },
   $I.annote("PracticeKgClaimsSummary", {
-    description: "Number of source files and grounded claims persisted by a batch.",
+    description: "Extracted, extraction-failed, and persisted-claim counts for a batch.",
   })
 ) {}
 
@@ -172,7 +177,11 @@ export class PracticeKgClaimsError extends TaggedErrorClass<PracticeKgClaimsErro
 ) {}
 
 const docketFromFilename = (filename: string): O.Option<string> =>
-  Str.match(docketPattern)(filename).pipe(O.flatMap(A.get(1)));
+  Str.match(docketPattern)(filename).pipe(
+    O.orElse(() => Str.match(leadingDocketPattern)(filename)),
+    O.flatMap(A.get(1)),
+    O.map(Str.toUpperCase)
+  );
 
 const persistCandidate = Effect.fn("PracticeKgClaims.persistCandidate")(function* (
   sql: SqlClient.SqlClient,
@@ -250,74 +259,110 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       { discard: true }
     );
     const entries = A.sort(yield* fs.readDirectory(options.inputs), Order.String);
-    const files = yield* Effect.forEach(
-      entries,
-      Effect.fnUntraced(function* (filename) {
-        const docket = yield* docketFromFilename(filename).pipe(
-          O.match({
-            onNone: () => Effect.fail(PracticeKgClaimsError.make({ message: `No docket number in "${filename}".` })),
-            onSome: Effect.succeed,
-          })
-        );
-        const sourcePath = path.join(options.inputs, filename);
-        const text = yield* fs.readFileString(sourcePath);
-        const digestHex = yield* hashBytes(textEncoder.encode(text));
-        const artifactId = yield* decodeArtifactId(`artifact:${digestHex}`);
-        const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
-        const operationId = yield* decodeOperationId(`operation:${digestHex}`);
-        const relativePath = yield* decodePosixPath(filename);
-        // Identity derives from content, not loop position, so re-runs are stable (B2).
-        // Bounded so the shim's `seed * 10 + 1` stays inside the int32 serial range.
-        const entitySeed = PosInt.make((Number.parseInt(Str.slice(0, 8)(digestHex), 16) % 214_748_363) + 1);
-        const extracted = yield* review.extractCandidate(
-          OfficeActionReviewInput.make({
-            entitySeed,
-            matterFixtureKey: `matter:${docket}`,
-            officeActionFixtureKey: `office-action:${digest}`,
-            operationId,
-            sourceArtifact: SourceArtifact.make({
-              digest,
-              extension: Str.slice(1)(path.extname(filename)),
-              id: artifactId,
-              locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
-              name: filename,
-              relativePath,
-              sizeBytes: NonNegativeInt.make(text.length),
-              text,
-            }),
-          })
-        );
-        const evidenceFixtureKey = `evidence:${digest}`;
-        const evidence = Evidence.make({
-          ...extracted.evidence,
-          artifactFixtureKey: digest,
-          spanFixtureKey: evidenceFixtureKey,
-        });
-        const candidate = CandidateClaim.make({
-          ...extracted.candidate,
-          fixtureKey: `claim:${digest}`,
-          snapshot: {
-            ...extracted.candidate.snapshot,
-            activityKind: "extract-operation",
-            activityOperation: operationId,
+    const skippedFiles = A.filter(entries, (filename) => O.isNone(docketFromFilename(filename)));
+    const docketedFiles = A.getSomes(
+      A.map(entries, (filename) => O.map(docketFromFilename(filename), (docket) => ({ docket, filename })))
+    );
+    if (A.isReadonlyArrayNonEmpty(skippedFiles)) {
+      yield* Effect.logInfo("PracticeKgClaims.skippedInputs", {
+        count: A.length(skippedFiles),
+        files: skippedFiles,
+      });
+    }
+    const extractOne = Effect.fnUntraced(function* ({
+      docket,
+      filename,
+    }: {
+      readonly docket: string;
+      readonly filename: string;
+    }) {
+      const sourcePath = path.join(options.inputs, filename);
+      const text = yield* fs.readFileString(sourcePath);
+      const digestHex = yield* hashBytes(textEncoder.encode(text));
+      const artifactId = yield* decodeArtifactId(`artifact:${digestHex}`);
+      const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
+      const operationId = yield* decodeOperationId(`operation:${digestHex}`);
+      const relativePath = yield* decodePosixPath(filename);
+      // Identity derives from content, not loop position, so re-runs are stable (B2).
+      // Bounded so the shim's `seed * 10 + 1` stays inside the int32 serial range.
+      const entitySeed = PosInt.make((Number.parseInt(Str.slice(0, 8)(digestHex), 16) % 214_748_363) + 1);
+      const extracted = yield* review.extractCandidate(
+        OfficeActionReviewInput.make({
+          entitySeed,
+          matterFixtureKey: `matter:${docket}`,
+          officeActionFixtureKey: `office-action:${digest}`,
+          operationId,
+          sourceArtifact: SourceArtifact.make({
             digest,
-            docket,
-            evidenceFixtureKey,
-            family: Str.slice(0, 5)(docket),
-            sourceFile: filename,
-          },
-        });
-        yield* persistCandidate(sql, candidate, evidence);
-        return filename;
-      }),
+            extension: Str.slice(1)(path.extname(filename)),
+            id: artifactId,
+            locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
+            name: filename,
+            relativePath,
+            sizeBytes: NonNegativeInt.make(text.length),
+            text,
+          }),
+        })
+      );
+      const evidenceFixtureKey = `evidence:${digest}`;
+      const evidence = Evidence.make({
+        ...extracted.evidence,
+        artifactFixtureKey: digest,
+        spanFixtureKey: evidenceFixtureKey,
+      });
+      const candidate = CandidateClaim.make({
+        ...extracted.candidate,
+        fixtureKey: `claim:${digest}`,
+        snapshot: {
+          ...extracted.candidate.snapshot,
+          activityKind: "extract-operation",
+          activityOperation: operationId,
+          digest,
+          docket,
+          evidenceFixtureKey,
+          family: Str.slice(0, 5)(docket),
+          sourceFile: filename,
+        },
+      });
+      yield* persistCandidate(sql, candidate, evidence);
+      return filename;
+    });
+    const isExtractionQualityError = (error: unknown): boolean =>
+      S.is(IrToLawExtractionError)(error) || S.is(LangExtractError)(error);
+    const outcomes = yield* Effect.forEach(
+      docketedFiles,
+      (entry) =>
+        extractOne(entry).pipe(
+          Effect.map((filename) => ({ extracted: true as const, filename })),
+          Effect.catchIf(isExtractionQualityError, (error) =>
+            Effect.logWarning("PracticeKgClaims.extractionFailed", {
+              error: String(error),
+              file: entry.filename,
+            }).pipe(Effect.as({ extracted: false as const, filename: entry.filename }))
+          )
+        ),
       { concurrency: 1 }
     );
+    const extractedFiles = A.filter(outcomes, (outcome) => outcome.extracted);
+    const failedExtractions = A.filter(outcomes, (outcome) => !outcome.extracted);
+    if (A.isReadonlyArrayNonEmpty(failedExtractions)) {
+      yield* Effect.logWarning("PracticeKgClaims.failedExtractions", {
+        count: A.length(failedExtractions),
+        files: A.map(failedExtractions, (outcome) => outcome.filename),
+      });
+    }
     const claimCountRows = yield* sql
       .unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM epistemic_candidate_claim")
       .pipe(Effect.flatMap(decodeClaimsCountRows));
+    if (A.isReadonlyArrayNonEmpty(docketedFiles) && A.headNonEmpty(claimCountRows).count === 0) {
+      return yield* PracticeKgClaimsError.make({
+        message: "Claims batch persisted zero claims across all extractable inputs.",
+      });
+    }
     return PracticeKgClaimsSummary.make({
       claims: NonNegativeInt.make(A.headNonEmpty(claimCountRows).count),
-      files: NonNegativeInt.make(A.length(files)),
+      failedFiles: NonNegativeInt.make(A.length(failedExtractions)),
+      files: NonNegativeInt.make(A.length(extractedFiles)),
     });
   },
   Effect.mapError((cause) =>
