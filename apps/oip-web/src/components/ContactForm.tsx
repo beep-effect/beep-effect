@@ -14,11 +14,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import {
-  ContactSubmissionStatus,
-  contactSubmissionPayloadFromFormData,
-  OipContactHttpApiClient,
-} from "../contact/index.ts";
+import { OipContactHttpApiClient } from "../contact/ContactSubmission.http.ts";
+import { ContactSubmissionStatus, contactSubmissionPayloadFromFormData } from "../contact/ContactSubmission.model.ts";
 
 const $I = $OipWebId.create("components/ContactForm");
 const inputClass =

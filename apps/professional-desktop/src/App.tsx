@@ -29,10 +29,7 @@ import {
   OntologyExplorerRegion,
   OntologyGraphRegion,
   OntologyInspectorRegion,
-  OntologyMetricsRegion,
   OntologySourceRegion,
-  OntologySparqlRegion,
-  OntologyValidationRegion,
 } from "@beep/ontology-ui";
 import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
@@ -44,15 +41,13 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component } from "react";
+import { Component, lazy, Suspense } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
-import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
-import { Graph3DSpike } from "./spikes/Graph3DSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
@@ -76,6 +71,28 @@ import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 
 const $I = $ProfessionalDesktopId.create("App");
+
+const OntologyMetricsRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/metrics").then(({ OntologyMetricsRegion }) => ({
+    default: OntologyMetricsRegion,
+  }))
+);
+const OntologySparqlRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/sparql").then(({ OntologySparqlRegion }) => ({
+    default: OntologySparqlRegion,
+  }))
+);
+const OntologyValidationRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/validation").then(({ OntologyValidationRegion }) => ({
+    default: OntologyValidationRegion,
+  }))
+);
+const CosmosSpike = lazy(() =>
+  import("./spikes/CosmosSpike.tsx").then(({ CosmosSpike }) => ({ default: CosmosSpike }))
+);
+const Graph3DSpike = lazy(() =>
+  import("./spikes/Graph3DSpike.tsx").then(({ Graph3DSpike }) => ({ default: Graph3DSpike }))
+);
 
 type AppRegistry = DesktopDockGraph["registry"];
 type BrowserFailureSource = Parameters<typeof reportedBrowserFailureAtoms>[0];
@@ -473,6 +490,19 @@ const makePanelRenderers = (
       <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
     </RegistryContext.Provider>
   );
+  const wrapLazy = (label: string, content: ReactNode): JSX.Element =>
+    wrap(
+      label,
+      <Suspense
+        fallback={
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground" role="status">
+            Loading {label}
+          </div>
+        }
+      >
+        {content}
+      </Suspense>
+    );
   // Each ontology region reads the same app-registry atoms it read inside
   // the old monolith, so a region docked anywhere (or floated) stays wired
   // to the same session.
@@ -485,10 +515,10 @@ const makePanelRenderers = (
     "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
     "ontology-source": () => wrap("Source", <OntologySourceRegion />),
     "ontology-inspector": () => wrap("Inspector", <OntologyInspectorRegion />),
-    "ontology-sparql": () => wrap("SPARQL", <OntologySparqlRegion />),
-    "ontology-validation": () => wrap("Validation", <OntologyValidationRegion />),
+    "ontology-sparql": () => wrapLazy("SPARQL", <OntologySparqlRegion />),
+    "ontology-validation": () => wrapLazy("Validation", <OntologyValidationRegion />),
     "ontology-changelog": () => wrap("Change Log", <OntologyChangeLogRegion />),
-    "ontology-metrics": () => wrap("Worker Metrics", <OntologyMetricsRegion />),
+    "ontology-metrics": () => wrapLazy("Worker Metrics", <OntologyMetricsRegion />),
   };
 };
 
@@ -803,11 +833,19 @@ export function App(): JSX.Element {
   const graphResult = useAtomValue(desktopDockGraphAtom);
 
   if (hasCosmosSpikeFlag()) {
-    return <CosmosSpike />;
+    return (
+      <Suspense fallback={<ShellLoading label="Loading Cosmos spike" />}>
+        <CosmosSpike />
+      </Suspense>
+    );
   }
 
   if (hasGraph3dSpikeFlag()) {
-    return <Graph3DSpike />;
+    return (
+      <Suspense fallback={<ShellLoading label="Loading graph-3d spike" />}>
+        <Graph3DSpike />
+      </Suspense>
+    );
   }
 
   return AsyncResult.match(graphResult, {

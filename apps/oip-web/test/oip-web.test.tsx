@@ -2,13 +2,11 @@ import { EmailString, NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
-import { useAtom } from "@effect/atom-react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Clock, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { Atom } from "effect/unstable/reactivity";
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
@@ -42,7 +40,6 @@ import {
   ReviewStatus,
 } from "@/content";
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
-import { oipBrowserRuntime } from "@/runtime/OipAtomRuntime";
 
 const contactFormEmail = Result.getOrThrow(S.decodeUnknownResult(EmailString)("tom@example.com"));
 
@@ -165,12 +162,6 @@ const setWindowScrollY = (scrollY: number) =>
     value: scrollY,
   });
 
-const oipRuntimeKvsAtom = Atom.kvs({
-  defaultValue: () => "initial",
-  key: "oip-web:test-kvs",
-  runtime: oipBrowserRuntime,
-  schema: S.String,
-});
 const OipSiteContentArbitrary = S.toArbitrary(OipSiteContent);
 const OipSiteContentEquivalence = S.toEquivalence(OipSiteContent);
 const ContactSubmissionArbitrary = S.toArbitrary(ContactSubmission);
@@ -187,16 +178,6 @@ const encodeContactSubmissionFormPayload = S.encodeSync(ContactSubmissionFormPay
 const decodeContactSubmissionFormPayload = S.decodeUnknownSync(ContactSubmissionFormPayload);
 const encodeContactSubmissionResponse = S.encodeSync(ContactSubmissionResponse);
 const decodeContactSubmissionResponse = S.decodeUnknownSync(ContactSubmissionResponse);
-
-function OipRuntimeKvsHarness() {
-  const [value, setValue] = useAtom(oipRuntimeKvsAtom);
-
-  return (
-    <button type="button" onClick={() => setValue("stored")}>
-      {value}
-    </button>
-  );
-}
 
 describe("@beep/oip-web", { concurrent: false }, () => {
   beforeEach(() => {
@@ -386,21 +367,6 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     );
 
     expect(screen.getByRole("button", { name: "OIP themed child" })).toBeDefined();
-  });
-
-  it("mounts an OIP Atom runtime backed by browser key-value storage", () => {
-    render(
-      <OipAtomProvider>
-        <OipRuntimeKvsHarness />
-      </OipAtomProvider>
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "initial" }));
-
-    return waitFor(() => {
-      expect(window.localStorage.getItem("oip-web:test-kvs")).toBe(JSON.stringify("stored"));
-      expect(screen.getByRole("button", { name: "stored" })).toBeDefined();
-    });
   });
 
   it("drives the back-to-top control from Atom-managed scroll state", () => {

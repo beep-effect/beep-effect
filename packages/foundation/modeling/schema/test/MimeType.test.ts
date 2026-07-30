@@ -1,3 +1,4 @@
+import { MimeTypesData } from "@beep/data";
 import {
   AudioMimeType,
   extractMimeExtensions,
@@ -6,8 +7,8 @@ import {
   MimeType,
   TextMimeType,
 } from "@beep/schema";
+import { Struct } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import type { MimeTypesData } from "@beep/data";
 
 describe("MimeType helpers", () => {
   it("dedupes extracted file extensions while preserving first-seen order", () => {
@@ -58,23 +59,14 @@ describe("MimeType kinds", () => {
   });
 
   it("keeps the category kits aligned with the generated IANA media type data", () => {
-    expect(MimeType.kinds.Application.Options).toContain("application/json");
-    expect(MimeType.kinds.Application.Options).toContain("application/ld+json");
-    expect(MimeType.kinds.Text.Options).toContain("text/html");
-    expect(MimeType.kinds.Image.Options).toContain("image/png");
-    expect(MimeType.kinds.Audio.Options).toContain("audio/mpeg");
-
-    expect(MimeType.kinds.Application.Options).toContain(
-      "application/json" satisfies keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.application
+    expect(MimeType.Options).toEqual(MimeTypesData.OfficialMimeTypeDataTypeValues);
+    expect(MimeType.kinds.Application.Options).toEqual(
+      Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.application)
     );
-    expect(MimeType.kinds.Text.Options).toContain(
-      "text/html" satisfies keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.text
-    );
-    expect(MimeType.kinds.Image.Options).toContain(
-      "image/png" satisfies keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.image
-    );
-    expect(MimeType.kinds.Audio.Options).toContain(
-      "audio/mpeg" satisfies keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.audio
-    );
+    expect(MimeType.kinds.Video.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.video));
+    expect(MimeType.kinds.Text.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.text));
+    expect(MimeType.kinds.Image.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.image));
+    expect(MimeType.kinds.Audio.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.audio));
+    expect(MimeType.kinds.Misc.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.misc));
   });
 });
