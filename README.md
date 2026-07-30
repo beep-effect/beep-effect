@@ -1,6 +1,7 @@
 # beep-effect
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/beep-effect/beep-effect)
+[![Greptile: The War on Bugs](https://www.greptile.com/badge.svg)](https://www.greptile.com/?utm_source=oss_badge&utm_medium=readme&utm_campaign=greptile_for_open_source)
 
 **Mission.** beep-effect is the Effect-first, schema-first monorepo for building local-first, evidence-backed, governed **professional agentic runtimes**. It ships reliable domain experiments as production-quality vertical slices that can be added, rewritten, or removed without long-term topology debt.
 
