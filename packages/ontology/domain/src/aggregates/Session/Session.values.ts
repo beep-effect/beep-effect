@@ -8,6 +8,7 @@
 import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { thunkFalse, thunkTrue } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
@@ -133,9 +134,9 @@ export const graphPartitionIri = (partition: GraphPartition): string =>
  */
 export const isExcludedFromReasoning = (partition: GraphPartition): boolean =>
   GraphPartition.$match(partition, {
-    asserted: () => false,
-    ontologies: () => false,
-    inferred: () => true,
-    shapes: () => true,
-    provenance: () => true,
+    asserted: thunkFalse,
+    ontologies: thunkFalse,
+    inferred: thunkTrue,
+    shapes: thunkTrue,
+    provenance: thunkTrue,
   });
