@@ -177,6 +177,18 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
   it("pins the editor state envelope", () => {
     expect(analyzeEditorStateCompatibility).type.toBeAssignableTo<(input: unknown) => unknown>();
     expect<LexicalNodeWire["children"]>().type.toBe<import("effect/Schema").Json | undefined>();
+    const decodedFutureNode: LexicalNodeWire.Type = {
+      type: "future-node",
+      version: 2,
+      pluginData: { enabled: true },
+    };
+    const encodedFutureNode: LexicalNodeWire.Encoded = {
+      type: "future-node",
+      version: 2,
+      pluginData: { enabled: true },
+    };
+    expect(decodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json | undefined>();
+    expect(encodedFutureNode.pluginData).type.toBe<import("effect/Schema").Json | undefined>();
     expect<SerializedEditorState.Encoded["root"]["type"]>().type.toBe<"root">();
     expect<SansChildren<SerializedEditorState.Encoded["root"]>>().type.toBeAssignableTo<
       SansChildren<LexicalSerializedEditorState["root"]>

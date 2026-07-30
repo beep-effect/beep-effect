@@ -7,28 +7,51 @@
 "use client";
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
+import { $ProfessionalDesktopId } from "@beep/identity";
+import { TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
-import { useAtomMount } from "@effect/atom-react";
+import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Effect } from "effect";
+import { Cause, Effect } from "effect";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import type { JSX } from "react";
+
+const $I = $ProfessionalDesktopId.create("chat/ui/YouTubeWatchOpener");
 
 const hasTauriRuntime = (): boolean => "__TAURI_INTERNALS__" in globalThis;
 
+class YouTubeWatchOpenFailed extends TaggedErrorClass<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
+  "YouTubeWatchOpenFailed",
+  {
+    request: YouTubeWatchRequest.annotateKey({
+      description: "Validated canonical YouTube watch request that can be retried.",
+    }),
+    cause: S.Defect({ includeStack: true }).annotateKey({
+      description: "Native opener defect retained for structured diagnostics only.",
+    }),
+  },
+  $I.annote("YouTubeWatchOpenFailed", {
+    description: "The Tauri native opener rejected a validated YouTube watch request.",
+  })
+) {}
+
 const openYouTubeWatchAtom = professionalBrowserRuntime.fn<YouTubeWatchRequest>()((request) =>
-  Effect.tryPromise(() => openUrl(request.url)).pipe(
-    Effect.tapError((cause) => Effect.logError("Unable to open YouTube watch URL with the Tauri opener", cause)),
-    Effect.ignore
+  Effect.tryPromise({
+    try: () => openUrl(request.url),
+    catch: (cause) => YouTubeWatchOpenFailed.make({ request, cause }),
+  }).pipe(
+    Effect.tapError((failure) =>
+      Effect.logError("Unable to open YouTube watch URL with the Tauri opener", failure.cause)
+    )
   )
 );
 
 const decodeWatchRequest = S.decodeUnknownOption(YouTubeWatchRequest);
 
-// The package-level embed emits a cancelable event before following its normal
-// browser anchor. Only a real Tauri runtime claims the event; ordinary browser
-// and Storybook mounts retain the anchor fallback unchanged.
+// The package-level embed emits a cancelable typed request. Only a real Tauri
+// runtime claims it; an unclaimed request is opened explicitly by the browser.
 const youtubeWatchOpenerBindingAtom = Atom.make((get) => {
   get.mount(openYouTubeWatchAtom);
   const onWatch = (event: Event): void => {
@@ -47,6 +70,42 @@ const youtubeWatchOpenerBindingAtom = Atom.make((get) => {
   return undefined;
 });
 
+const renderOpenFailure = (
+  cause: Cause.Cause<YouTubeWatchOpenFailed>,
+  retry: (request: YouTubeWatchRequest) => void
+): JSX.Element =>
+  O.match(Cause.findErrorOption(cause), {
+    onNone: () => (
+      <div
+        className="absolute right-3 top-3 z-50 rounded border border-destructive/40 bg-background p-3 text-sm shadow"
+        role="alert"
+      >
+        YouTube could not be opened.
+      </div>
+    ),
+    onSome: (failure) => (
+      <div
+        className="absolute right-3 top-3 z-50 rounded border border-destructive/40 bg-background p-3 text-sm shadow"
+        role="alert"
+      >
+        <p>YouTube could not be opened.</p>
+        <div className="mt-2 flex gap-3">
+          <button className="underline underline-offset-2" type="button" onClick={() => retry(failure.request)}>
+            Retry
+          </button>
+          <a
+            className="underline underline-offset-2"
+            href={failure.request.url}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Open in browser
+          </a>
+        </div>
+      </div>
+    ),
+  });
+
 /**
  * Mounts the scoped native opener bridge for every YouTube embed in the chat
  * surface. The binding is Atom-owned and tears its global listener down on
@@ -64,7 +123,13 @@ const youtubeWatchOpenerBindingAtom = Atom.make((get) => {
  * @category components
  * @since 0.0.0
  */
-export function YouTubeWatchOpener(): null {
+export function YouTubeWatchOpener(): JSX.Element | null {
   useAtomMount(youtubeWatchOpenerBindingAtom);
-  return null;
+  const [openResult, retry] = useAtom(openYouTubeWatchAtom);
+
+  return AsyncResult.match(openResult, {
+    onInitial: () => null,
+    onSuccess: () => null,
+    onFailure: ({ cause }) => renderOpenFailure(cause, retry),
+  });
 }

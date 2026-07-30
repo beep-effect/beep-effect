@@ -105,9 +105,11 @@ export {
   ForeignAttributeName,
   ForeignElementName,
   GlobalAttributesStruct,
+  HeadingOffset,
   HtmlNonNegativeInteger,
   HtmlPositiveInteger,
   makeSpaceSeparatedTokenList,
+  Popover,
 } from "./Html.attributes.ts";
 /**
  * HTML document-conformance validation.
@@ -168,6 +170,8 @@ export {
   ELEMENT_META,
   HtmlBooleanAttributeName,
   HtmlCategory,
+  HtmlChildGrammar,
+  HtmlConditionalCategoryRule,
   HtmlContentToken,
   HtmlElementMeta,
   HtmlTag,

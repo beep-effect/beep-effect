@@ -8,24 +8,24 @@
 "use client";
 
 import { SerializedEditorState } from "@beep/lexical-schema";
-import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model";
+import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
 import { O } from "@beep/utils";
+import { useAtomSet } from "@effect/atom-react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { logEditorErrorFn } from "./chat/atoms.ts";
 import { CodeBlockNode } from "./code-block-node.tsx";
 import { MermaidNode } from "./mermaid-node.tsx";
 import { editorNodes } from "./nodes.ts";
-import { decodeEditorStateForRuntime } from "./runtime.ts";
+import { decodeEditorStateForRuntimeResult } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
 import type { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
 import type { JSX } from "react";
-
-const onError = (error: Error) => Effect.runSync(Effect.logError(error));
 
 const MERMAID_LANGUAGE = "mermaid";
 
@@ -230,7 +230,8 @@ function EditorReadOnlyFallback({
  * @since 0.0.0
  */
 export function EditorViewer({ state, className }: EditorViewerProps): JSX.Element {
-  const runtimeState = Effect.runSync(Effect.result(decodeEditorStateForRuntime(state)));
+  const logEditorError = useAtomSet(logEditorErrorFn);
+  const runtimeState = decodeEditorStateForRuntimeResult(state);
   if (Result.isFailure(runtimeState)) {
     return (
       <EditorReadOnlyFallback
@@ -264,7 +265,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         theme: editorTheme,
         nodes: [...editorNodes, MermaidNode, CodeBlockNode],
         editorState: decorated,
-        onError,
+        onError: (error) => logEditorError(error),
       }}
     >
       {/* Non-flex wrapper: Lexical warns when the content editable's direct
@@ -332,7 +333,7 @@ export function EditorCompatibilityViewer({ result, className }: EditorCompatibi
  * @since 0.0.0
  */
 export function EditorWireViewer({ input, className }: EditorWireViewerProps): JSX.Element {
-  return Result.match(Effect.runSync(Effect.result(analyzeEditorStateCompatibility(input))), {
+  return Result.match(analyzeEditorStateCompatibilityResult(input), {
     onFailure: () => (
       <EditorReadOnlyFallback
         className={className}

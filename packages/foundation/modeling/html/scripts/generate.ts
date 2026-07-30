@@ -148,13 +148,17 @@ interface AttributeSpec {
 
 interface El {
   readonly categories: ReadonlyArray<string>;
+  readonly childGrammar: string | undefined;
   readonly children: ReadonlyArray<string>;
   readonly childSequencePattern: string | undefined;
   readonly cls: string;
+  readonly conditionalCategories: ReadonlyArray<ConditionalCategoryRule>;
+  readonly currentAttributes: ReadonlyArray<string>;
   readonly encoded: string;
   readonly iface: string;
   readonly kind: Kind;
   readonly obsolete: boolean;
+  readonly obsoleteAttributes: ReadonlyArray<string>;
   readonly runtime: string;
   readonly tag: string;
   readonly textMode: TextMode;
@@ -182,10 +186,23 @@ class WebrefElement extends S.Class<WebrefElement>($I`WebrefElement`)(
 
 class ContentModelEntry extends S.Class<ContentModelEntry>($I`ContentModelEntry`)(
   {
+    attributes: S.Array(S.String).pipe(S.optionalKey),
     categories: S.Array(S.String).pipe(S.optionalKey),
     children: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("ContentModelEntry", { description: "WHATWG content-model metadata for one element." })
+) {}
+
+class ConditionalCategoryRule extends S.Class<ConditionalCategoryRule>($I`ConditionalCategoryRule`)(
+  {
+    attribute: S.String,
+    category: S.String,
+    condition: S.Literals(["present", "not-equals"]),
+    value: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("ConditionalCategoryRule", {
+    description: "An attribute predicate controlling membership in an HTML content category.",
+  })
 ) {}
 
 class Classification extends S.Class<Classification>($I`Classification`)(
@@ -194,7 +211,11 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     booleanAttributes: S.Array(S.String),
     boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
     childSequencePatterns: S.Record(S.String, S.String),
+    conditionalCategories: S.Record(S.String, S.Array(ConditionalCategoryRule)),
+    contentTokenExpansions: S.Record(S.String, S.Array(S.String)),
+    currentAttributeOverrides: S.Record(S.String, S.Array(S.String)),
     integerAttributes: S.Array(S.String),
+    mathMlAttributeNameAdjustments: S.Record(S.String, S.String),
     nonNegativeIntegerAttributes: S.Array(S.String),
     normal: S.Array(S.String),
     emptyContentModelElements: S.Array(S.String),
@@ -202,9 +223,13 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     positiveIntegerAttributes: S.Array(S.String),
     rawText: S.Array(S.String),
     rcData: S.Array(S.String),
+    specialChildGrammars: S.Record(S.String, S.String),
     spaceSeparatedTokenAttributes: S.Array(S.String),
     stringAttributes: S.Array(S.String),
+    svgAttributeNameAdjustments: S.Record(S.String, S.String),
+    svgElementNameAdjustments: S.Record(S.String, S.String),
     void: S.Array(S.String),
+    xmlAttributeNames: S.Array(S.String),
   },
   $I.annote("Classification", { description: "Pinned HTML attribute and element classifications." })
 ) {}
@@ -247,6 +272,28 @@ const optionalRuntime = (schema: string): string =>
 const literalUnion = (values: ReadonlyArray<string>): string =>
   values.map((value) => JSON.stringify(value)).join(" | ");
 
+/**
+ * Requires every pinned current attribute missing from webref to have an exact
+ * reviewed override, with no stale or speculative entries.
+ *
+ * @since 0.0.0
+ */
+export const assertReviewedCurrentAttributeGap = (
+  tag: string,
+  pinned: ReadonlyArray<string>,
+  webref: ReadonlyArray<string>,
+  reviewed: ReadonlyArray<string>
+): void => {
+  const webrefNames = MutableHashSet.fromIterable(webref);
+  const missingFromWebref = pinned.filter((name) => !MutableHashSet.has(webrefNames, name)).sort();
+  const reviewedNames = [...reviewed].sort();
+  if (JSON.stringify(missingFromWebref) !== JSON.stringify(reviewedNames)) {
+    failGeneration(
+      `HTML generator current-attribute gap for <${tag}> requires an exact reviewed override; expected ${JSON.stringify(missingFromWebref)}, received ${JSON.stringify(reviewedNames)}`
+    );
+  }
+};
+
 const buildModel = (data: RawData): { model: string; meta: string; conforming: number; total: number } => {
   const { classification, contentModel, dfns, elements: elementsData, obsoleteInterfaces } = data;
 
@@ -284,6 +331,47 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   for (const e of elementsData) MutableHashMap.set(interfaceByName, e.name, e.interface);
 
   const globalKeys = MutableHashSet.fromIterable<string>(R.keys(GlobalAttributes));
+  const currentElemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
+  const obsoleteElemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
+  for (const tag of elementNames) {
+    const definition = elementDfns.find((entry) => entry.linkingText[0] === tag);
+    const webref = MutableHashMap.get(elemAttrs, tag).pipe(
+      O.getOrElse((): MutableHashSet.MutableHashSet<string> => MutableHashSet.empty())
+    );
+    const webrefSpecific = MutableHashSet.fromIterable(
+      [...webref].filter((name) => !MutableHashSet.has(globalKeys, name))
+    );
+    if (isObsolete(definition)) {
+      MutableHashMap.set(currentElemAttrs, tag, MutableHashSet.empty());
+      MutableHashMap.set(obsoleteElemAttrs, tag, webrefSpecific);
+      continue;
+    }
+
+    const pinned =
+      contentModel[tag]?.attributes ??
+      failGeneration(`HTML generator has no pinned current-attribute inventory for conforming <${tag}>`);
+    if (!pinned.includes("globals")) {
+      failGeneration(`HTML generator requires the pinned <${tag}> inventory to classify global attributes explicitly`);
+    }
+    const pinnedSpecific = MutableHashSet.fromIterable(pinned.filter((name) => name !== "globals"));
+    const reviewed = [...(classification.currentAttributeOverrides[tag] ?? [])].sort();
+    assertReviewedCurrentAttributeGap(tag, [...pinnedSpecific], [...webrefSpecific], reviewed);
+    MutableHashMap.set(currentElemAttrs, tag, pinnedSpecific);
+    MutableHashMap.set(
+      obsoleteElemAttrs,
+      tag,
+      MutableHashSet.fromIterable([...webrefSpecific].filter((name) => !MutableHashSet.has(pinnedSpecific, name)))
+    );
+  }
+  for (const tag of R.keys(classification.currentAttributeOverrides)) {
+    if (!MutableHashSet.has(elementNameSet, tag)) {
+      failGeneration(`HTML generator current-attribute override names unknown element <${tag}>`);
+    }
+    if (isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))) {
+      failGeneration(`HTML generator current-attribute override names obsolete element <${tag}>`);
+    }
+  }
+
   const autocompleteAttrs = MutableHashSet.fromIterable(classification.autocompleteAttributes);
   const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
   const integerAttrs = MutableHashSet.fromIterable(classification.integerAttributes);
@@ -297,6 +385,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const plaintextEls = MutableHashSet.fromIterable(classification.plaintext);
   const normalEls = MutableHashSet.fromIterable(classification.normal);
   const emptyContentModelEls = MutableHashSet.fromIterable(classification.emptyContentModelElements);
+  const globalBooleanAttributes = R.keys(GlobalAttributes).filter((name) => S.is(GlobalAttributes[name])(O.some(true)));
+  for (const name of globalBooleanAttributes) {
+    if (!MutableHashSet.has(booleanAttrs, name)) {
+      failGeneration(`HTML generator boolean registry omits global BooleanAttribute field ${name}`);
+    }
+  }
   const isClassifiedAs = (
     classificationSet: MutableHashSet.MutableHashSet<string>,
     element: string,
@@ -346,8 +440,104 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       failGeneration(`HTML generator child-sequence pattern for <${tag}> is not a valid Unicode regexp`);
     }
   }
+  const grammarRequiredTags = [
+    "audio",
+    "colgroup",
+    "datalist",
+    "details",
+    "dl",
+    "fieldset",
+    "figure",
+    "head",
+    "hgroup",
+    "html",
+    "legend",
+    "optgroup",
+    "picture",
+    "ruby",
+    "select",
+    "summary",
+    "table",
+    "video",
+  ];
+  const configuredGrammarTags = R.keys(classification.specialChildGrammars).sort();
+  if (JSON.stringify(configuredGrammarTags) !== JSON.stringify(grammarRequiredTags)) {
+    failGeneration(
+      `HTML generator requires an exact special-child grammar inventory; expected ${JSON.stringify(grammarRequiredTags)}, received ${JSON.stringify(configuredGrammarTags)}`
+    );
+  }
+  const opaqueContentTokens = [
+    ...MutableHashSet.fromIterable(
+      R.values(contentModel).flatMap((entry) =>
+        (entry.children ?? []).filter((token) => Str.includes("inner content elements")(token))
+      )
+    ),
+  ].sort();
+  const expandedContentTokens = R.keys(classification.contentTokenExpansions).sort();
+  if (JSON.stringify(opaqueContentTokens) !== JSON.stringify(expandedContentTokens)) {
+    failGeneration(
+      `HTML generator requires an exact contextual content-token expansion inventory; expected ${JSON.stringify(opaqueContentTokens)}, received ${JSON.stringify(expandedContentTokens)}`
+    );
+  }
+  for (const [tag, rules] of R.toEntries(classification.conditionalCategories)) {
+    if (
+      !MutableHashSet.has(elementNameSet, tag) ||
+      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
+    ) {
+      failGeneration(`HTML generator conditional-category metadata names non-current element <${tag}>`);
+    }
+    const modeledAttributes = MutableHashSet.fromIterable([
+      ...globalKeys,
+      ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+      ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+    ]);
+    for (const rule of rules) {
+      const categories = contentModel[tag]?.categories ?? [];
+      if (!categories.includes(rule.category)) {
+        failGeneration(`HTML generator conditional category ${tag}/${rule.category} is absent from pinned categories`);
+      }
+      if (!MutableHashSet.has(modeledAttributes, rule.attribute)) {
+        failGeneration(
+          `HTML generator conditional category ${tag}/${rule.category} references unknown ${rule.attribute}`
+        );
+      }
+      if ((rule.condition === "not-equals") !== (rule.value !== undefined)) {
+        failGeneration(`HTML generator conditional category ${tag}/${rule.category} has an invalid predicate value`);
+      }
+    }
+  }
+  for (const [label, adjustments] of [
+    ["SVG element", classification.svgElementNameAdjustments],
+    ["SVG attribute", classification.svgAttributeNameAdjustments],
+    ["MathML attribute", classification.mathMlAttributeNameAdjustments],
+  ] as const) {
+    for (const [lowercase, canonical] of R.toEntries(adjustments)) {
+      if (Str.toLowerCase(lowercase) !== lowercase || Str.toLowerCase(canonical) !== lowercase) {
+        failGeneration(`${label} adjustment ${lowercase} -> ${canonical} is not a browser fixed-point pair`);
+      }
+    }
+  }
+  for (const name of classification.xmlAttributeNames) {
+    if (Str.toLowerCase(name) !== name) {
+      failGeneration(`XML foreign attribute ${name} must be the lowercase browser fixed point`);
+    }
+  }
 
   const valueSchema = (el: string, attr: string): AttributeSpec => {
+    if (Str.startsWith("on")(attr)) {
+      return {
+        runtime: optionalRuntime("S.String"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    if (attr === "popovertargetaction") {
+      return {
+        runtime: optionalRuntime("PopoverTargetAction"),
+        type: 'O.Option<"toggle" | "show" | "hide">',
+        encoded: '"toggle" | "show" | "hide"',
+      };
+    }
     if (isClassifiedAs(booleanAttrs, el, attr)) {
       return {
         runtime: optionalRuntime("BooleanAttribute"),
@@ -424,10 +614,9 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   // Generated runtime field body + TS type bodies for an element's specific
   // attributes (globals/`_tag`/children excluded).
   const specificBodies = (el: string): { encoded: string; runtime: string; type: string } => {
-    const attrBucket = MutableHashMap.get(elemAttrs, el).pipe(
-      O.getOrElse((): MutableHashSet.MutableHashSet<string> => MutableHashSet.empty())
-    );
-    const attrs = [...attrBucket].filter((a) => !MutableHashSet.has(globalKeys, a)).sort();
+    const current = MutableHashMap.get(currentElemAttrs, el).pipe(O.getOrElse(() => MutableHashSet.empty<string>()));
+    const obsolete = MutableHashMap.get(obsoleteElemAttrs, el).pipe(O.getOrElse(() => MutableHashSet.empty<string>()));
+    const attrs = [...MutableHashSet.fromIterable([...current, ...obsolete])].sort();
     if (attrs.length === 0) return { encoded: "", runtime: "", type: "" };
     const fields = attrs.map((attr) => [attr, valueSchema(el, attr)] as const);
     return {
@@ -460,6 +649,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
           ? "raw-text"
           : "normal";
     const { encoded, runtime, type } = specificBodies(tag);
+    const currentAttributes = [
+      ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+    ].sort();
+    const obsoleteAttributes = [
+      ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+    ].sort();
     return {
       tag,
       cls: className(tag),
@@ -469,7 +664,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       iface: interfaceOf(tag, obsolete),
       categories: contentModel[tag]?.categories ?? [],
       children: contentModel[tag]?.children ?? [],
+      conditionalCategories: classification.conditionalCategories[tag] ?? [],
+      currentAttributes,
+      obsoleteAttributes,
       childSequencePattern: classification.childSequencePatterns[tag],
+      childGrammar: classification.specialChildGrammars[tag],
       runtime,
       textMode,
       type,
@@ -811,6 +1010,7 @@ import {
   HtmlNonNegativeInteger,
   HtmlPositiveInteger,
   makeSpaceSeparatedTokenList,
+  PopoverTargetAction,
 } from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
@@ -1045,7 +1245,12 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
       const conformance = e.obsolete ? "non-conforming" : "conforming";
       const childSequencePattern =
         e.childSequencePattern === undefined ? "" : ` childSequencePattern: ${JSON.stringify(e.childSequencePattern)},`;
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)},${childSequencePattern} },`;
+      const childGrammar = e.childGrammar === undefined ? "" : ` childGrammar: ${JSON.stringify(e.childGrammar)},`;
+      const currentAttributes =
+        e.currentAttributes.length === 0
+          ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
+          : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${JSON.stringify(e.currentAttributes)}]`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)},${childSequencePattern}${childGrammar} },`;
     })
     .join("\n");
 
@@ -1057,6 +1262,15 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
     [...MutableHashSet.fromIterable(els.flatMap((element) => element.children))].sort()
   );
   const booleanAttributeValues = JSON.stringify([...booleanAttrs].sort());
+  const childGrammarValues = JSON.stringify(
+    [...MutableHashSet.fromIterable(R.values(classification.specialChildGrammars))].sort()
+  );
+  const svgElementNameAdjustments = JSON.stringify(classification.svgElementNameAdjustments);
+  const svgAttributeNameAdjustments = JSON.stringify(classification.svgAttributeNameAdjustments);
+  const mathMlAttributeNameAdjustments = JSON.stringify(classification.mathMlAttributeNameAdjustments);
+  const xmlAttributeNames = JSON.stringify([...classification.xmlAttributeNames].sort());
+  const globalAttributeNames = JSON.stringify([...globalKeys].sort());
+  const contentTokenExpansions = JSON.stringify(classification.contentTokenExpansions);
 
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
@@ -1173,6 +1387,175 @@ export const HtmlContentToken = LiteralKit(${contentTokenValues}).pipe(
 export type HtmlContentToken = typeof HtmlContentToken.Type;
 
 /**
+ * Reviewed grammar profiles for HTML elements whose child rules include
+ * ordering, cardinality, alternatives, or attribute-dependent branches.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlChildGrammar } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlChildGrammar.is.table("table")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlChildGrammar = LiteralKit(${childGrammarValues}).pipe(
+  $I.annoteSchema("HtmlChildGrammar", { description: "Reviewed HTML special-child grammar profile." })
+);
+
+/**
+ * Decoded HTML special-child grammar profile.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlChildGrammar } from "@beep/html/Html.meta"
+ *
+ * const grammar: HtmlChildGrammar = "table"
+ * console.log(grammar)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlChildGrammar = typeof HtmlChildGrammar.Type;
+
+/**
+ * One attribute-dependent content-category membership rule.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlConditionalCategoryRule } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlConditionalCategoryRule.make({
+ *   attribute: "href",
+ *   category: "interactive",
+ *   condition: "present"
+ * })
+ * console.log(rule.category) // "interactive"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategoryRule>(
+  $I\`HtmlConditionalCategoryRule\`
+)(
+  {
+    attribute: S.String,
+    category: HtmlCategory,
+    condition: S.Literals(["present", "not-equals"]),
+    value: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlConditionalCategoryRule", {
+    description: "Attribute predicate controlling one element content-category membership.",
+  })
+) {}
+
+/**
+ * WHATWG SVG element-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * \`\`\`ts
+ * import { SVG_ELEMENT_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient) // "linearGradient"
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
+  ${svgElementNameAdjustments}
+);
+
+/**
+ * WHATWG SVG attribute-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * \`\`\`ts
+ * import { SVG_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox) // "viewBox"
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
+  ${svgAttributeNameAdjustments}
+);
+
+/**
+ * WHATWG MathML attribute-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * \`\`\`ts
+ * import { MATHML_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl) // "definitionURL"
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze(
+  ${mathMlAttributeNameAdjustments}
+);
+
+/**
+ * Foreign qualified attributes whose HTML parser adjustment assigns an XML,
+ * XMLNS, or XLink namespace while preserving this serialized name.
+ *
+ * @example
+ * \`\`\`ts
+ * import { XML_FOREIGN_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href")) // true
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(${xmlAttributeNames});
+
+/**
+ * Shared current attributes permitted on every generated HTML element.
+ *
+ * Per-element metadata reuses this frozen inventory and appends only its
+ * element-specific current attributes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_GLOBAL_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert")) // true
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(${globalAttributeNames});
+
+/**
+ * Reviewed expansions for context-sensitive content-model tokens emitted by
+ * the non-normative WHATWG element index.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_CONTENT_TOKEN_EXPANSIONS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"]) // ["phrasing"]
+ * \`\`\`
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
+  ${contentTokenExpansions}
+);
+
+/**
  * Text parsing and serialization mode of an HTML element.
  *
  * @example
@@ -1259,7 +1642,12 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  *   conformance: "conforming",
  *   void: false,
  *   rawText: false,
- *   categories: ["flow"]
+ *   textMode: "normal",
+ *   categories: ["flow"],
+ *   children: ["flow"],
+ *   currentAttributes: [],
+ *   obsoleteAttributes: [],
+ *   conditionalCategories: []
  * })) // true
  * \`\`\`
  *
@@ -1276,7 +1664,11 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
     textMode: HtmlTextMode,
     categories: S.Array(HtmlCategory),
     children: S.Array(HtmlContentToken),
+    currentAttributes: S.Array(S.String),
+    obsoleteAttributes: S.Array(S.String),
+    conditionalCategories: S.Array(HtmlConditionalCategoryRule),
     childSequencePattern: S.String.pipe(S.optionalKey),
+    childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
@@ -1355,4 +1747,6 @@ const main = Effect.scoped(
   Layer.build(runtimeLayer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
 );
 
-NodeRuntime.runMain(main);
+if (import.meta.main) {
+  NodeRuntime.runMain(main);
+}

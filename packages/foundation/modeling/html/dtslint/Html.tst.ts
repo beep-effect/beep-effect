@@ -12,7 +12,7 @@ import { AutocompleteAttribute as SubpathAutocompleteAttribute } from "@beep/htm
 import { ConformantHtml as SubpathConformantHtml } from "@beep/html/Html.conformance";
 import { HtmlFragment as SubpathHtmlFragment } from "@beep/html/Html.contract";
 import { HtmlTag as SubpathHtmlTag } from "@beep/html/Html.meta";
-import { Html as HtmlElement, Li } from "@beep/html/Html.model";
+import { Button, Div, Html as HtmlElement, Input, Li } from "@beep/html/Html.model";
 import { Comment } from "@beep/html/Html.nodes";
 import { SafeHtmlAst as SubpathSafeHtmlAst } from "@beep/html/Html.policy";
 import { SafeHtml as SubpathSafeHtml } from "@beep/html/Html.serialize";
@@ -83,6 +83,19 @@ describe("@beep/html contract", () => {
   it("publishes the signed integer li value domain", () => {
     const item = Li.make({ children: [], value: O.some(-2) });
     expect(item.value).type.toBe<O.Option<number>>();
+  });
+
+  it("scopes popover invoker attributes to button and input elements", () => {
+    const button = Button.make({ children: [], popovertarget: O.some("menu") });
+    const input = Input.make({ popovertargetaction: O.some("show") });
+    expect(button.popovertarget).type.toBe<O.Option<string>>();
+    expect(input.popovertargetaction).type.toBe<O.Option<"toggle" | "show" | "hide">>();
+
+    Div.make({
+      children: [],
+      // @ts-expect-error!
+      popovertarget: O.some("menu"),
+    });
   });
 
   it("does not allow plain strings to satisfy opaque safe HTML", () => {

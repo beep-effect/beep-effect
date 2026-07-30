@@ -27,6 +27,17 @@ const mermaidStub = vi.hoisted(() => {
   };
 });
 
+const mermaidRootRole = "graphics-document document";
+
+const mermaidSvg = (id: string, contents = ""): string =>
+  `<svg xmlns="http://www.w3.org/2000/svg" id="${id}" role="${mermaidRootRole}">${contents}</svg>`;
+
+const getPendingRender = (source: string): PendingRender => {
+  const pending = mermaidStub.pending.get(source);
+  if (pending === undefined) throw new Error(`Missing pending Mermaid render for ${source}`);
+  return pending;
+};
+
 vi.mock("mermaid", () => ({
   default: {
     initialize: mermaidStub.initialize,
@@ -64,13 +75,11 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       expect(firstRender?.id).not.toBe(secondRender?.id);
 
       yield* Effect.sync(() => {
-        act(() =>
-          secondRender?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-source="second"></svg>' })
-        );
+        act(() => secondRender?.resolve({ svg: mermaidSvg(secondRender.id, '<g data-source="second"></g>') }));
       });
       yield* Effect.promise(() =>
         waitFor(() =>
-          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("svg")).toHaveAttribute(
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-source]")).toHaveAttribute(
             "data-source",
             "second"
           )
@@ -78,11 +87,11 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       );
 
       yield* Effect.sync(() => {
-        act(() => firstRender?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-source="first"></svg>' }));
+        act(() => firstRender?.resolve({ svg: mermaidSvg(firstRender.id, '<g data-source="first"></g>') }));
       });
       yield* Effect.promise(() =>
         waitFor(() =>
-          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("svg")).toHaveAttribute(
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-source]")).toHaveAttribute(
             "data-source",
             "second"
           )
@@ -101,7 +110,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
 
       view.unmount();
       yield* Effect.sync(() => {
-        act(() => pending?.resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg" data-after-unmount="no"></svg>' }));
+        act(() => pending?.resolve({ svg: mermaidSvg(pending.id, '<g data-after-unmount="no"></g>') }));
       });
       yield* Effect.yieldNow;
 
@@ -124,9 +133,10 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       );
 
       yield* Effect.sync(() => {
+        const pending = getPendingRender(source);
         act(() =>
-          mermaidStub.pending.get(source)?.resolve({
-            svg: '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><img src="x" onerror="alert(1)"></foreignObject></svg>',
+          pending.resolve({
+            svg: mermaidSvg(pending.id, '<foreignObject><img src="x" onerror="alert(1)"></foreignObject>'),
           })
         );
       });
@@ -138,6 +148,124 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
 
       expect(view.container.querySelector("svg, foreignObject, img, [onerror]")).toBeNull();
       expect(within(view.container).getByTestId("mermaid-diagram")).toHaveTextContent("<img");
+    })
+  );
+
+  it.effect(
+    "sanitizes the XML-versus-HTML parser differential before the HTML sink",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nXML-->HTML";
+      const view = render(<MermaidView renderKey="parser-differential" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+
+      yield* Effect.sync(() => {
+        const pending = getPendingRender(source);
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              '<desc><style><![CDATA[</style><img src=x onerror="globalThis.__xss=1">]]></style></desc>'
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+        )
+      );
+
+      expect(view.container.querySelector("svg, img, [onerror]")).toBeNull();
+    })
+  );
+
+  it.effect(
+    "rejects stylesheet rules that can affect the containing document",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        {
+          key: "document-selector",
+          stylesheet: (_renderId: string) => "body { display: none !important; }",
+        },
+        {
+          key: "sibling-selector",
+          stylesheet: (renderId: string) => `#${renderId} + #mermaid-outside { display: none !important; }`,
+        },
+        {
+          key: "global-keyframes",
+          stylesheet: (renderId: string) =>
+            `#${renderId} .spinner { animation: global-spin 1s; } @keyframes global-spin { to { opacity: 0; } }`,
+        },
+        {
+          key: "external-url",
+          stylesheet: (renderId: string) =>
+            `#${renderId} .spinner { background-image: url("https://attacker.invalid/pixel"); }`,
+        },
+      ];
+
+      for (const attack of attacks) {
+        const source = `graph TD\nCSS-->${attack.key}`;
+        const view = render(
+          <>
+            <div id="mermaid-outside">Outside diagram</div>
+            <MermaidView renderKey={attack.key} source={source} />
+          </>
+        );
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() =>
+            pending.resolve({
+              svg: mermaidSvg(pending.id, `<style>${attack.stylesheet(pending.id)}</style><g class="spinner"></g>`),
+            })
+          );
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, style")).toBeNull();
+        expect(within(view.container).getByText("Outside diagram")).toBeVisible();
+        expect(globalThis.getComputedStyle(document.body).display).not.toBe("none");
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "renders parse and render rejections through the typed async failure branch",
+    Effect.fnUntraced(function* () {
+      mermaidStub.parse.mockRejectedValueOnce(new Error("private parser detail"));
+      const parseView = render(<MermaidView renderKey="parse-failure" source="not a graph" />);
+      yield* Effect.promise(() =>
+        waitFor(() => expect(within(parseView.container).getByText("Diagram could not be parsed.")))
+      );
+      expect(parseView.container).not.toHaveTextContent("private parser detail");
+      parseView.unmount();
+
+      mermaidStub.render.mockRejectedValueOnce(new Error("private renderer detail"));
+      const renderView = render(<MermaidView renderKey="render-failure" source="graph TD\nA-->B" />);
+      yield* Effect.promise(() =>
+        waitFor(() => expect(within(renderView.container).getByText("Unable to render diagram.")))
+      );
+      expect(renderView.container).not.toHaveTextContent("private renderer detail");
+    })
+  );
+
+  it.effect(
+    "rejects oversized source through the typed async failure branch before Mermaid loads",
+    Effect.fnUntraced(function* () {
+      const source = "A".repeat(20_001);
+      const view = render(<MermaidView renderKey="oversized" source={source} />);
+
+      yield* Effect.promise(() =>
+        waitFor(() => expect(within(view.container).getByText(/Diagram source is too large to render/iu)))
+      );
+      expect(mermaidStub.initialize).not.toHaveBeenCalled();
+      expect(mermaidStub.render).not.toHaveBeenCalled();
     })
   );
 });

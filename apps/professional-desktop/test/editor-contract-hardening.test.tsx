@@ -11,6 +11,7 @@ import { LexicalCompatibilityResult, SerializedEditorState } from "@beep/lexical
 import * as Md from "@beep/md/Md.model";
 import { documentSafetyIssues, refineSafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
 import { RegistryProvider, useAtomValue } from "@effect/atom-react";
 import { it } from "@effect/vitest";
@@ -321,6 +322,167 @@ describe("editor contract hardening", { concurrent: false }, () => {
   );
 
   it.effect(
+    "keeps a pending mention lookup visible and owns Enter until it settles",
+    Effect.fnUntraced(function* () {
+      const lookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
+      const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+      const source = vi.fn<MentionSource>(() => runPromise(Deferred.await(lookup)));
+      const onSend = vi.fn(() => true);
+      render(
+        <ChatComposer namespace="pending-mention-input" mentionSource={source} mountConfig={{ onSend }}>
+          <SeedEditor label="Seed pending mention" text="@pending" />
+        </ChatComposer>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed pending mention" }));
+      yield* Effect.promise(() => screen.findByText("Looking up mentions..."));
+
+      const editor = screen.getByRole("combobox", { name: "Message composer" });
+      const controls = editor.getAttribute("aria-controls");
+      expect(editor).toHaveAttribute("aria-expanded", "true");
+      expect(controls).toMatch(/^typeahead-menu-/u);
+      expect(controls === null ? null : document.getElementById(controls)).toHaveAttribute("role", "listbox");
+
+      fireEvent.keyDown(editor, { code: "Enter", key: "Enter", keyCode: 13 });
+      expect(onSend).not.toHaveBeenCalled();
+
+      yield* Deferred.succeed(lookup, [{ id: "settled", label: "Settled" }]);
+    })
+  );
+
+  it.effect(
+    "maps synchronous throws and invalid duplicate mention ids to safe failure feedback",
+    Effect.fnUntraced(function* () {
+      const synchronousSend = vi.fn(() => true);
+      const duplicateSend = vi.fn(() => true);
+      const duplicateSource = (() => [
+        { id: "duplicate", label: "First" },
+        { id: "duplicate", label: "Second" },
+      ]) as MentionSource;
+      render(
+        <>
+          <ChatComposer
+            namespace="throwing-mention-input"
+            mentionSource={() => {
+              throw new Error("private synchronous lookup detail");
+            }}
+            mountConfig={{ onSend: synchronousSend }}
+          >
+            <SeedEditor label="Seed throwing mention" text="@throw" />
+          </ChatComposer>
+          <ChatComposer
+            namespace="invalid-mention-input"
+            mentionSource={duplicateSource}
+            mountConfig={{ onSend: duplicateSend }}
+          >
+            <SeedEditor label="Seed invalid mention" text="@duplicate" />
+          </ChatComposer>
+        </>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed throwing mention" }));
+      yield* Effect.promise(() => screen.findByText("Mentions are unavailable right now."));
+      fireEvent.click(screen.getByRole("button", { name: "Seed invalid mention" }));
+      yield* Effect.promise(() =>
+        waitFor(() => expect(screen.getAllByText("Mentions are unavailable right now.")).toHaveLength(2))
+      );
+
+      expect(document.body).not.toHaveTextContent("private synchronous lookup detail");
+      for (const editor of screen.getAllByRole("combobox", { name: "Message composer" })) {
+        fireEvent.keyDown(editor, { code: "Enter", key: "Enter", keyCode: 13 });
+      }
+      expect(synchronousSend).not.toHaveBeenCalled();
+      expect(duplicateSend).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "keeps only the latest out-of-order mention response",
+    Effect.fnUntraced(function* () {
+      const firstLookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
+      const secondLookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
+      const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+      const source = vi.fn<MentionSource>((query) =>
+        runPromise(Deferred.await(query === "ab" ? secondLookup : firstLookup))
+      );
+      render(
+        <ChatComposer namespace="mention-latest-wins" mentionSource={source}>
+          <SeedEditor label="Seed first lookup" text="@a" />
+          <SeedEditor label="Seed second lookup" text="@ab" />
+        </ChatComposer>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed first lookup" }));
+      yield* Effect.promise(() => waitFor(() => expect(source).toHaveBeenCalledWith("a")));
+      fireEvent.click(screen.getByRole("button", { name: "Seed second lookup" }));
+      yield* Effect.promise(() => waitFor(() => expect(source).toHaveBeenCalledWith("ab")));
+
+      yield* Deferred.succeed(secondLookup, [{ id: "latest", label: "Latest" }]);
+      yield* Effect.promise(() => screen.findByRole("option", { name: /Latest/u }));
+      yield* Deferred.succeed(firstLookup, [{ id: "stale", label: "Stale" }]);
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(screen.getByRole("option", { name: /Latest/u })).toBeInTheDocument();
+          expect(screen.queryByRole("option", { name: /Stale/u })).not.toBeInTheDocument();
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "interrupts a pending mention lookup and releases DOM listeners immediately under the production idle TTL",
+    Effect.fnUntraced(function* () {
+      const lookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
+      const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+      const source = vi.fn<MentionSource>(() => runPromise(Deferred.await(lookup)));
+      const decodedAfterUnmount = vi.fn(() => "late");
+      const disconnectObserver = vi.spyOn(MutationObserver.prototype, "disconnect");
+      const removeWindowListener = vi.spyOn(window, "removeEventListener");
+      const view = render(
+        <RegistryProvider defaultIdleTTL={30_000}>
+          <ChatComposer namespace="mention-unmount-interruption" mentionSource={source}>
+            <SeedEditor label="Seed pending lookup" text="@pending" />
+          </ChatComposer>
+        </RegistryProvider>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed pending lookup" }));
+      yield* Effect.promise(() => waitFor(() => expect(source).toHaveBeenCalledTimes(1)));
+      yield* Effect.promise(() => screen.findByText("Looking up mentions..."));
+      const editorRoot = screen.getByRole("combobox");
+      editorRoot.setAttribute("aria-activedescendant", "lexical-stale-option");
+      view.rerender(
+        <RegistryProvider defaultIdleTTL={30_000}>
+          <div />
+        </RegistryProvider>
+      );
+      yield* Effect.promise(() => waitFor(() => expect(disconnectObserver).toHaveBeenCalled()));
+      expect(editorRoot).not.toHaveAttribute("aria-activedescendant");
+      expect(removeWindowListener).toHaveBeenCalledWith(
+        "scroll",
+        expect.any(Function),
+        expect.objectContaining({ capture: true, passive: true })
+      );
+      expect(removeWindowListener).toHaveBeenCalledWith("resize", expect.any(Function));
+
+      yield* Deferred.succeed(lookup, [
+        {
+          get id() {
+            return decodedAfterUnmount();
+          },
+          label: "Late",
+        },
+      ]);
+      yield* Effect.promise(() => Promise.resolve());
+      yield* Effect.yieldNow;
+
+      expect(screen.queryByText("Mentions are unavailable right now.")).not.toBeInTheDocument();
+      expect(decodedAfterUnmount).not.toHaveBeenCalled();
+      view.unmount();
+    })
+  );
+
+  it.effect(
     "isolates one composer's open mention menu from another composer's Enter key",
     Effect.fnUntraced(function* () {
       const firstSend = vi.fn(() => true);
@@ -355,6 +517,79 @@ describe("editor contract hardening", { concurrent: false }, () => {
 
       expect(firstSend).not.toHaveBeenCalled();
       expect(secondSend).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect(
+    "scopes concurrent typeahead listbox ids and aria-controls to each composer",
+    Effect.fnUntraced(function* () {
+      render(
+        <>
+          <ChatComposer
+            namespace="mention-aria-first"
+            mentionSource={() => [{ id: "first", label: "First scoped option" }]}
+          >
+            <SeedEditor label="Seed first scoped mention" text="@first" />
+          </ChatComposer>
+          <ChatComposer
+            namespace="mention-aria-second"
+            mentionSource={() => [{ id: "second", label: "Second scoped option" }]}
+          >
+            <SeedEditor label="Seed second scoped mention" text="@second" />
+          </ChatComposer>
+        </>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed first scoped mention" }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /First scoped option/u }));
+      fireEvent.click(screen.getByRole("button", { name: "Seed second scoped mention" }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /Second scoped option/u }));
+
+      const editors = screen.getAllByRole("combobox", { name: "Message composer" });
+      const firstEditor = editors.at(0);
+      const secondEditor = editors.at(1);
+      expect(firstEditor).toBeDefined();
+      expect(secondEditor).toBeDefined();
+      if (firstEditor === undefined || secondEditor === undefined) return;
+      const firstControls = firstEditor.getAttribute("aria-controls");
+      const secondControls = secondEditor.getAttribute("aria-controls");
+      expect(firstControls).toMatch(/^typeahead-menu-/u);
+      expect(secondControls).toMatch(/^typeahead-menu-/u);
+      expect(firstControls).not.toBe(secondControls);
+
+      const firstListbox = firstControls === null ? null : document.getElementById(firstControls);
+      const secondListbox = secondControls === null ? null : document.getElementById(secondControls);
+      expect(firstListbox).toHaveAttribute("role", "listbox");
+      expect(firstListbox).toHaveTextContent("First scoped option");
+      expect(firstListbox).not.toHaveTextContent("Second scoped option");
+      expect(secondListbox).toHaveAttribute("role", "listbox");
+      expect(secondListbox).toHaveTextContent("Second scoped option");
+      expect(secondListbox).not.toHaveTextContent("First scoped option");
+
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          const firstActive = firstEditor.getAttribute("aria-activedescendant");
+          const secondActive = secondEditor.getAttribute("aria-activedescendant");
+          expect(firstActive).toMatch(/^typeahead-item-/u);
+          expect(secondActive).toMatch(/^typeahead-item-/u);
+          expect(firstListbox).toContainElement(firstActive === null ? null : document.getElementById(firstActive));
+          expect(secondListbox).toContainElement(secondActive === null ? null : document.getElementById(secondActive));
+        })
+      );
+
+      const firstActive = firstEditor.getAttribute("aria-activedescendant");
+      const secondActive = secondEditor.getAttribute("aria-activedescendant");
+      expect(firstActive).not.toBeNull();
+      expect(secondActive).not.toBeNull();
+      if (firstActive === null || secondActive === null) return;
+      fireEvent.keyDown(firstEditor, { code: "ArrowDown", key: "ArrowDown", keyCode: 40 });
+      fireEvent.keyDown(secondEditor, { code: "ArrowUp", key: "ArrowUp", keyCode: 38 });
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(firstEditor).toHaveAttribute("aria-activedescendant", firstActive);
+          expect(secondEditor).toHaveAttribute("aria-activedescendant", secondActive);
+        })
+      );
     })
   );
 

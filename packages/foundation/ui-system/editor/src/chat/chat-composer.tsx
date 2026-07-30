@@ -40,12 +40,12 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { PaperclipIcon } from "@phosphor-icons/react/Paperclip";
 import { PaperPlaneRightIcon } from "@phosphor-icons/react/PaperPlaneRight";
 import { StopIcon } from "@phosphor-icons/react/Stop";
-import { Effect, Exit } from "effect";
+import { Result } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { useRef } from "react";
 import { editorNodes } from "../nodes.ts";
-import { decodeEditorStateForRuntime } from "../runtime.ts";
+import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
 import { editorTheme } from "../theme.ts";
 import { EditorWireViewer } from "../viewer.tsx";
 import {
@@ -503,15 +503,20 @@ function ComposerFeaturePlugins({
   onSerializedChange,
   slashItems,
 }: ComposerFeaturePluginsProps): JSX.Element {
+  const logEditorError = useAtomSet(logEditorErrorFn);
   return (
     <>
       {onSerializedChange === undefined ? null : (
         <OnChangePlugin
           ignoreSelectionChange={true}
           onChange={(nextEditorState) =>
-            Exit.match(Effect.runSyncExit(decodeEditorStateForRuntime(nextEditorState.toJSON())), {
+            Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
               onSuccess: onSerializedChange,
-              onFailure: () => undefined,
+              onFailure: (error) =>
+                logEditorError({
+                  message: "ChatComposer produced out-of-schema state",
+                  error,
+                }),
             })
           }
         />
@@ -604,10 +609,7 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
   const resolvedOnSend = mountConfig?.onSend ?? onSend;
   const resolvedSlashItems = O.getOrElse(S.decodeUnknownOption(SlashItems)(slashItems), () => defaultChatSlashItems);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
-    Exit.match(Effect.runSyncExit(decodeEditorStateForRuntime(state)), {
-      onFailure: O.none,
-      onSuccess: O.some,
-    })
+    Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );
   // Lexical config errors log through the Effect runtime (no runSync here).
   const logEditorError = useAtomSet(logEditorErrorFn);

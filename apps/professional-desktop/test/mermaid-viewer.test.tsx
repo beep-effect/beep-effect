@@ -7,7 +7,7 @@ import { it } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { afterEach, describe, expect } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect } from "vitest";
 
 const mermaidDocument = MdModel.Document.make({
   children: [
@@ -18,7 +18,34 @@ const mermaidDocument = MdModel.Document.make({
 
 const state = documentToEditorState(mermaidDocument).pipe(Effect.runSync);
 
+const originalGetBBox = Object.getOwnPropertyDescriptor(SVGElement.prototype, "getBBox");
+const originalComputedTextLength = Object.getOwnPropertyDescriptor(SVGElement.prototype, "getComputedTextLength");
+
 describe("persisted mermaid rendering", { concurrent: false }, () => {
+  beforeAll(() => {
+    Object.defineProperty(SVGElement.prototype, "getBBox", {
+      configurable: true,
+      value: () => new DOMRect(0, 0, 100, 20),
+    });
+    Object.defineProperty(SVGElement.prototype, "getComputedTextLength", {
+      configurable: true,
+      value: () => 100,
+    });
+  });
+
+  afterAll(() => {
+    if (originalGetBBox === undefined) {
+      Reflect.deleteProperty(SVGElement.prototype, "getBBox");
+    } else {
+      Object.defineProperty(SVGElement.prototype, "getBBox", originalGetBBox);
+    }
+    if (originalComputedTextLength === undefined) {
+      Reflect.deleteProperty(SVGElement.prototype, "getComputedTextLength");
+    } else {
+      Object.defineProperty(SVGElement.prototype, "getComputedTextLength", originalComputedTextLength);
+    }
+  });
+
   afterEach(cleanup);
 
   const expectInertDiagram = (container: HTMLElement): void => {
@@ -48,9 +75,15 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
 
       yield* Effect.promise(() =>
         waitFor(() => {
-          expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
+          expect(screen.getByTestId("mermaid-diagram").querySelector("svg")).toBeInTheDocument();
         })
       );
+
+      const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
+      expect(svg?.id).toMatch(/^mermaid-/u);
+      expect(svg).toHaveAttribute("role", "graphics-document document");
+      expect(svg?.querySelector("style")?.textContent).not.toContain("@keyframes");
+      expect(screen.queryByText("Diagram output did not satisfy the desktop safety policy.")).not.toBeInTheDocument();
 
       // The diagram IS the node now. A leftover <code> element means the old
       // hide-and-inject path is back -- and that is the shape that renders a blank

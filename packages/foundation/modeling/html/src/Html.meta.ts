@@ -316,6 +316,456 @@ export const HtmlContentToken = LiteralKit([
 export type HtmlContentToken = typeof HtmlContentToken.Type;
 
 /**
+ * Reviewed grammar profiles for HTML elements whose child rules include
+ * ordering, cardinality, alternatives, or attribute-dependent branches.
+ *
+ * @example
+ * ```ts
+ * import { HtmlChildGrammar } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlChildGrammar.is.table("table")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlChildGrammar = LiteralKit([
+  "colgroup",
+  "datalist",
+  "description-list",
+  "details",
+  "document-element",
+  "fieldset",
+  "figure",
+  "head",
+  "hgroup",
+  "media",
+  "optgroup",
+  "phrasing-or-heading",
+  "picture",
+  "ruby",
+  "select",
+  "table",
+]).pipe($I.annoteSchema("HtmlChildGrammar", { description: "Reviewed HTML special-child grammar profile." }));
+
+/**
+ * Decoded HTML special-child grammar profile.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlChildGrammar } from "@beep/html/Html.meta"
+ *
+ * const grammar: HtmlChildGrammar = "table"
+ * console.log(grammar)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlChildGrammar = typeof HtmlChildGrammar.Type;
+
+/**
+ * One attribute-dependent content-category membership rule.
+ *
+ * @example
+ * ```ts
+ * import { HtmlConditionalCategoryRule } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlConditionalCategoryRule.make({
+ *   attribute: "href",
+ *   category: "interactive",
+ *   condition: "present"
+ * })
+ * console.log(rule.category) // "interactive"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategoryRule>($I`HtmlConditionalCategoryRule`)(
+  {
+    attribute: S.String,
+    category: HtmlCategory,
+    condition: S.Literals(["present", "not-equals"]),
+    value: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlConditionalCategoryRule", {
+    description: "Attribute predicate controlling one element content-category membership.",
+  })
+) {}
+
+/**
+ * WHATWG SVG element-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * ```ts
+ * import { SVG_ELEMENT_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient) // "linearGradient"
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
+  altglyph: "altGlyph",
+  altglyphdef: "altGlyphDef",
+  altglyphitem: "altGlyphItem",
+  animatecolor: "animateColor",
+  animatemotion: "animateMotion",
+  animatetransform: "animateTransform",
+  clippath: "clipPath",
+  feblend: "feBlend",
+  fecolormatrix: "feColorMatrix",
+  fecomponenttransfer: "feComponentTransfer",
+  fecomposite: "feComposite",
+  feconvolvematrix: "feConvolveMatrix",
+  fediffuselighting: "feDiffuseLighting",
+  fedisplacementmap: "feDisplacementMap",
+  fedistantlight: "feDistantLight",
+  feflood: "feFlood",
+  fefunca: "feFuncA",
+  fefuncb: "feFuncB",
+  fefuncg: "feFuncG",
+  fefuncr: "feFuncR",
+  fegaussianblur: "feGaussianBlur",
+  feimage: "feImage",
+  femerge: "feMerge",
+  femergenode: "feMergeNode",
+  femorphology: "feMorphology",
+  feoffset: "feOffset",
+  fepointlight: "fePointLight",
+  fespecularlighting: "feSpecularLighting",
+  fespotlight: "feSpotLight",
+  fetile: "feTile",
+  feturbulence: "feTurbulence",
+  foreignobject: "foreignObject",
+  glyphref: "glyphRef",
+  lineargradient: "linearGradient",
+  radialgradient: "radialGradient",
+  textpath: "textPath",
+});
+
+/**
+ * WHATWG SVG attribute-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * ```ts
+ * import { SVG_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox) // "viewBox"
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
+  attributename: "attributeName",
+  attributetype: "attributeType",
+  basefrequency: "baseFrequency",
+  baseprofile: "baseProfile",
+  calcmode: "calcMode",
+  clippathunits: "clipPathUnits",
+  diffuseconstant: "diffuseConstant",
+  edgemode: "edgeMode",
+  filterunits: "filterUnits",
+  glyphref: "glyphRef",
+  gradienttransform: "gradientTransform",
+  gradientunits: "gradientUnits",
+  kernelmatrix: "kernelMatrix",
+  kernelunitlength: "kernelUnitLength",
+  keypoints: "keyPoints",
+  keysplines: "keySplines",
+  keytimes: "keyTimes",
+  lengthadjust: "lengthAdjust",
+  limitingconeangle: "limitingConeAngle",
+  markerheight: "markerHeight",
+  markerunits: "markerUnits",
+  markerwidth: "markerWidth",
+  maskcontentunits: "maskContentUnits",
+  maskunits: "maskUnits",
+  numoctaves: "numOctaves",
+  pathlength: "pathLength",
+  patterncontentunits: "patternContentUnits",
+  patterntransform: "patternTransform",
+  patternunits: "patternUnits",
+  pointsatx: "pointsAtX",
+  pointsaty: "pointsAtY",
+  pointsatz: "pointsAtZ",
+  preservealpha: "preserveAlpha",
+  preserveaspectratio: "preserveAspectRatio",
+  primitiveunits: "primitiveUnits",
+  refx: "refX",
+  refy: "refY",
+  repeatcount: "repeatCount",
+  repeatdur: "repeatDur",
+  requiredextensions: "requiredExtensions",
+  requiredfeatures: "requiredFeatures",
+  specularconstant: "specularConstant",
+  specularexponent: "specularExponent",
+  spreadmethod: "spreadMethod",
+  startoffset: "startOffset",
+  stddeviation: "stdDeviation",
+  stitchtiles: "stitchTiles",
+  surfacescale: "surfaceScale",
+  systemlanguage: "systemLanguage",
+  tablevalues: "tableValues",
+  targetx: "targetX",
+  targety: "targetY",
+  textlength: "textLength",
+  viewbox: "viewBox",
+  viewtarget: "viewTarget",
+  xchannelselector: "xChannelSelector",
+  ychannelselector: "yChannelSelector",
+  zoomandpan: "zoomAndPan",
+});
+
+/**
+ * WHATWG MathML attribute-name adjustments keyed by tokenizer-lowercased input.
+ *
+ * @example
+ * ```ts
+ * import { MATHML_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
+ *
+ * console.log(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl) // "definitionURL"
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Object.freeze({
+  definitionurl: "definitionURL",
+});
+
+/**
+ * Foreign qualified attributes whose HTML parser adjustment assigns an XML,
+ * XMLNS, or XLink namespace while preserving this serialized name.
+ *
+ * @example
+ * ```ts
+ * import { XML_FOREIGN_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href")) // true
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
+  "xlink:actuate",
+  "xlink:arcrole",
+  "xlink:href",
+  "xlink:role",
+  "xlink:show",
+  "xlink:title",
+  "xlink:type",
+  "xml:lang",
+  "xml:space",
+  "xmlns",
+  "xmlns:xlink",
+]);
+
+/**
+ * Shared current attributes permitted on every generated HTML element.
+ *
+ * Per-element metadata reuses this frozen inventory and appends only its
+ * element-specific current attributes.
+ *
+ * @example
+ * ```ts
+ * import { HTML_GLOBAL_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert")) // true
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
+  "accesskey",
+  "aria-activedescendant",
+  "aria-atomic",
+  "aria-autocomplete",
+  "aria-braillelabel",
+  "aria-brailleroledescription",
+  "aria-busy",
+  "aria-checked",
+  "aria-colcount",
+  "aria-colindex",
+  "aria-colindextext",
+  "aria-colspan",
+  "aria-controls",
+  "aria-current",
+  "aria-describedby",
+  "aria-description",
+  "aria-details",
+  "aria-disabled",
+  "aria-dropeffect",
+  "aria-errormessage",
+  "aria-expanded",
+  "aria-flowto",
+  "aria-grabbed",
+  "aria-haspopup",
+  "aria-hidden",
+  "aria-invalid",
+  "aria-keyshortcuts",
+  "aria-label",
+  "aria-labelledby",
+  "aria-level",
+  "aria-live",
+  "aria-modal",
+  "aria-multiline",
+  "aria-multiselectable",
+  "aria-orientation",
+  "aria-owns",
+  "aria-placeholder",
+  "aria-posinset",
+  "aria-pressed",
+  "aria-readonly",
+  "aria-relevant",
+  "aria-required",
+  "aria-roledescription",
+  "aria-rowcount",
+  "aria-rowindex",
+  "aria-rowindextext",
+  "aria-rowspan",
+  "aria-selected",
+  "aria-setsize",
+  "aria-sort",
+  "aria-valuemax",
+  "aria-valuemin",
+  "aria-valuenow",
+  "aria-valuetext",
+  "autocapitalize",
+  "autocorrect",
+  "autofocus",
+  "class",
+  "contenteditable",
+  "dataset",
+  "dir",
+  "draggable",
+  "enterkeyhint",
+  "exportparts",
+  "headingoffset",
+  "headingreset",
+  "hidden",
+  "id",
+  "inert",
+  "inputmode",
+  "is",
+  "itemid",
+  "itemprop",
+  "itemref",
+  "itemscope",
+  "itemtype",
+  "lang",
+  "nonce",
+  "onabort",
+  "onauxclick",
+  "onbeforeinput",
+  "onbeforematch",
+  "onbeforetoggle",
+  "onblur",
+  "oncancel",
+  "oncanplay",
+  "oncanplaythrough",
+  "onchange",
+  "onclick",
+  "onclose",
+  "oncommand",
+  "oncontextlost",
+  "oncontextmenu",
+  "oncontextrestored",
+  "oncopy",
+  "oncuechange",
+  "oncut",
+  "ondblclick",
+  "ondrag",
+  "ondragend",
+  "ondragenter",
+  "ondragleave",
+  "ondragover",
+  "ondragstart",
+  "ondrop",
+  "ondurationchange",
+  "onemptied",
+  "onended",
+  "onerror",
+  "onfocus",
+  "onformdata",
+  "oninput",
+  "oninvalid",
+  "onkeydown",
+  "onkeypress",
+  "onkeyup",
+  "onload",
+  "onloadeddata",
+  "onloadedmetadata",
+  "onloadstart",
+  "onmousedown",
+  "onmouseenter",
+  "onmouseleave",
+  "onmousemove",
+  "onmouseout",
+  "onmouseover",
+  "onmouseup",
+  "onpaste",
+  "onpause",
+  "onplay",
+  "onplaying",
+  "onprogress",
+  "onratechange",
+  "onreset",
+  "onresize",
+  "onscroll",
+  "onscrollend",
+  "onsecuritypolicyviolation",
+  "onseeked",
+  "onseeking",
+  "onselect",
+  "onslotchange",
+  "onstalled",
+  "onsubmit",
+  "onsuspend",
+  "ontimeupdate",
+  "ontoggle",
+  "onvolumechange",
+  "onwaiting",
+  "onwheel",
+  "part",
+  "popover",
+  "role",
+  "slot",
+  "spellcheck",
+  "style",
+  "tabindex",
+  "title",
+  "translate",
+  "writingsuggestions",
+]);
+
+/**
+ * Reviewed expansions for context-sensitive content-model tokens emitted by
+ * the non-normative WHATWG element index.
+ *
+ * @example
+ * ```ts
+ * import { HTML_CONTENT_TOKEN_EXPANSIONS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"]) // ["phrasing"]
+ * ```
+ *
+ * @category registries
+ * @since 0.0.0
+ */
+export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
+  "flow select element inner content elements": ["div", "hr", "optgroup", "option", "script-supporting elements"],
+  "optgroup element inner content elements": ["div", "optgroup", "option", "script-supporting elements"],
+  "option element inner content elements": ["phrasing"],
+  "select element inner content elements": ["div", "hr", "optgroup", "option", "script-supporting elements"],
+});
+
+/**
  * Text parsing and serialization mode of an HTML element.
  *
  * @example
@@ -365,6 +815,7 @@ export const HtmlBooleanAttributeName = LiteralKit([
   "allowfullscreen",
   "alpha",
   "async",
+  "autofocus",
   "autoplay",
   "checked",
   "compact",
@@ -374,7 +825,10 @@ export const HtmlBooleanAttributeName = LiteralKit([
   "defer",
   "disabled",
   "formnovalidate",
+  "headingreset",
+  "inert",
   "ismap",
+  "itemscope",
   "loop",
   "multiple",
   "muted",
@@ -437,7 +891,12 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  *   conformance: "conforming",
  *   void: false,
  *   rawText: false,
- *   categories: ["flow"]
+ *   textMode: "normal",
+ *   categories: ["flow"],
+ *   children: ["flow"],
+ *   currentAttributes: [],
+ *   obsoleteAttributes: [],
+ *   conditionalCategories: []
  * })) // true
  * ```
  *
@@ -454,7 +913,11 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I`HtmlElementMeta
     textMode: HtmlTextMode,
     categories: S.Array(HtmlCategory),
     children: S.Array(HtmlContentToken),
+    currentAttributes: S.Array(S.String),
+    obsoleteAttributes: S.Array(S.String),
+    conditionalCategories: S.Array(HtmlConditionalCategoryRule),
     childSequencePattern: S.String.pipe(S.optionalKey),
+    childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
@@ -482,6 +945,12 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "interactive", "palpable"],
     children: ["transparent"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["download", "href", "hreflang", "ping", "referrerpolicy", "rel", "target", "type"],
+    ],
+    obsoleteAttributes: ["charset", "coords", "methods", "name", "rev", "shape", "urn"],
+    conditionalCategories: [{ attribute: "href", category: "interactive", condition: "present" }],
   },
   abbr: {
     tag: "abbr",
@@ -492,6 +961,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   acronym: {
     tag: "acronym",
@@ -502,6 +974,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   address: {
     tag: "address",
@@ -512,6 +987,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   applet: {
     tag: "applet",
@@ -522,6 +1000,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   area: {
     tag: "area",
@@ -532,6 +1013,12 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing"],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["alt", "coords", "download", "href", "ping", "referrerpolicy", "rel", "shape", "target"],
+    ],
+    obsoleteAttributes: ["hreflang", "nohref", "type"],
+    conditionalCategories: [],
   },
   article: {
     tag: "article",
@@ -542,6 +1029,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   aside: {
     tag: "aside",
@@ -552,6 +1042,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   audio: {
     tag: "audio",
@@ -562,6 +1055,13 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
     children: ["source", "track", "transparent"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["autoplay", "controls", "crossorigin", "loading", "loop", "muted", "preload", "src"],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [{ attribute: "controls", category: "interactive", condition: "present" }],
+    childGrammar: "media",
   },
   b: {
     tag: "b",
@@ -572,6 +1072,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   base: {
     tag: "base",
@@ -582,6 +1085,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["metadata"],
     children: ["empty"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["href", "target"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   basefont: {
     tag: "basefont",
@@ -592,6 +1098,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   bdi: {
     tag: "bdi",
@@ -602,6 +1111,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   bdo: {
     tag: "bdo",
@@ -612,6 +1124,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   bgsound: {
     tag: "bgsound",
@@ -622,6 +1137,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   big: {
     tag: "big",
@@ -632,6 +1150,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   blink: {
     tag: "blink",
@@ -642,6 +1163,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   blockquote: {
     tag: "blockquote",
@@ -652,6 +1176,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   body: {
     tag: "body",
@@ -662,6 +1189,43 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "onafterprint",
+        "onbeforeprint",
+        "onbeforeunload",
+        "onhashchange",
+        "onlanguagechange",
+        "onmessage",
+        "onmessageerror",
+        "onoffline",
+        "ononline",
+        "onpagehide",
+        "onpagereveal",
+        "onpageshow",
+        "onpageswap",
+        "onpopstate",
+        "onrejectionhandled",
+        "onstorage",
+        "onunhandledrejection",
+        "onunload",
+      ],
+    ],
+    obsoleteAttributes: [
+      "alink",
+      "bgcolor",
+      "bottommargin",
+      "leftmargin",
+      "link",
+      "marginheight",
+      "marginwidth",
+      "rightmargin",
+      "text",
+      "topmargin",
+      "vlink",
+    ],
+    conditionalCategories: [],
   },
   br: {
     tag: "br",
@@ -672,6 +1236,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing"],
     children: ["empty"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["clear"],
+    conditionalCategories: [],
   },
   button: {
     tag: "button",
@@ -691,6 +1258,27 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "palpable",
     ],
     children: ["phrasing"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "command",
+        "commandfor",
+        "disabled",
+        "form",
+        "formaction",
+        "formenctype",
+        "formmethod",
+        "formnovalidate",
+        "formtarget",
+        "name",
+        "popovertarget",
+        "popovertargetaction",
+        "type",
+        "value",
+      ],
+    ],
+    obsoleteAttributes: ["action", "autocomplete", "enctype", "method", "novalidate", "target"],
+    conditionalCategories: [],
   },
   canvas: {
     tag: "canvas",
@@ -701,6 +1289,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "palpable"],
     children: ["transparent"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["height", "width"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   caption: {
     tag: "caption",
@@ -711,6 +1302,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   center: {
     tag: "center",
@@ -721,6 +1315,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   cite: {
     tag: "cite",
@@ -731,6 +1328,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   code: {
     tag: "code",
@@ -741,6 +1341,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   col: {
     tag: "col",
@@ -751,6 +1354,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["empty"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["span"]],
+    obsoleteAttributes: ["align", "char", "charoff", "valign", "width"],
+    conditionalCategories: [],
   },
   colgroup: {
     tag: "colgroup",
@@ -761,6 +1367,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["col", "template"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["span"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "colgroup",
   },
   data: {
     tag: "data",
@@ -771,6 +1381,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["value"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   datalist: {
     tag: "datalist",
@@ -781,6 +1394,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing"],
     children: ["phrasing", "option", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "datalist",
   },
   dd: {
     tag: "dd",
@@ -791,6 +1408,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   del: {
     tag: "del",
@@ -801,6 +1421,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["transparent"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite", "datetime"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   details: {
     tag: "details",
@@ -811,6 +1434,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "interactive", "palpable"],
     children: ["summary", "flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name", "open"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "details",
   },
   dfn: {
     tag: "dfn",
@@ -821,6 +1448,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   dialog: {
     tag: "dialog",
@@ -831,6 +1461,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow"],
     children: ["flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["open"]],
+    obsoleteAttributes: ["closedby"],
+    conditionalCategories: [],
   },
   dir: {
     tag: "dir",
@@ -841,6 +1474,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   div: {
     tag: "div",
@@ -855,6 +1491,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "optgroup element inner content elements",
       "option element inner content elements",
     ],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   dl: {
     tag: "dl",
@@ -865,6 +1504,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["dt", "dd", "div", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["compact"],
+    conditionalCategories: [],
+    childGrammar: "description-list",
   },
   dt: {
     tag: "dt",
@@ -875,6 +1518,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   em: {
     tag: "em",
@@ -885,6 +1531,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   embed: {
     tag: "embed",
@@ -895,6 +1544,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
     children: ["empty"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["height", "src", "type", "width"]],
+    obsoleteAttributes: ["align", "hspace", "name", "vspace"],
+    conditionalCategories: [],
   },
   fieldset: {
     tag: "fieldset",
@@ -905,6 +1557,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "listed", "form-associated", "palpable"],
     children: ["legend", "flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "form", "name"]],
+    obsoleteAttributes: ["autocomplete"],
+    conditionalCategories: [],
+    childGrammar: "fieldset",
   },
   figcaption: {
     tag: "figcaption",
@@ -915,6 +1571,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   figure: {
     tag: "figure",
@@ -925,6 +1584,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["figcaption", "flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "figure",
   },
   font: {
     tag: "font",
@@ -935,6 +1598,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   footer: {
     tag: "footer",
@@ -945,6 +1611,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   form: {
     tag: "form",
@@ -955,6 +1624,12 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["accept-charset", "action", "autocomplete", "enctype", "method", "name", "novalidate", "rel", "target"],
+    ],
+    obsoleteAttributes: ["accept", "formaction", "formenctype", "formmethod", "formnovalidate", "formtarget"],
+    conditionalCategories: [],
   },
   frame: {
     tag: "frame",
@@ -965,6 +1640,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   frameset: {
     tag: "frameset",
@@ -975,6 +1653,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   h1: {
     tag: "h1",
@@ -985,6 +1666,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   h2: {
     tag: "h2",
@@ -995,6 +1679,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   h3: {
     tag: "h3",
@@ -1005,6 +1692,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   h4: {
     tag: "h4",
@@ -1015,6 +1705,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   h5: {
     tag: "h5",
@@ -1025,6 +1718,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   h6: {
     tag: "h6",
@@ -1035,6 +1731,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "heading", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   head: {
     tag: "head",
@@ -1045,6 +1744,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["metadata content"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["profile"],
+    conditionalCategories: [],
+    childGrammar: "head",
   },
   header: {
     tag: "header",
@@ -1055,6 +1758,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   hgroup: {
     tag: "hgroup",
@@ -1065,6 +1771,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["h1", "h2", "h3", "h4", "h5", "h6", "p", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "hgroup",
   },
   hr: {
     tag: "hr",
@@ -1075,6 +1785,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow"],
     children: ["empty"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align", "color", "noshade", "size", "width"],
+    conditionalCategories: [],
   },
   html: {
     tag: "html",
@@ -1085,6 +1798,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["head", "body"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["manifest", "version"],
+    conditionalCategories: [],
+    childGrammar: "document-element",
   },
   i: {
     tag: "i",
@@ -1095,6 +1812,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   iframe: {
     tag: "iframe",
@@ -1105,6 +1825,34 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "allow",
+        "allowfullscreen",
+        "height",
+        "loading",
+        "name",
+        "referrerpolicy",
+        "sandbox",
+        "src",
+        "srcdoc",
+        "width",
+      ],
+    ],
+    obsoleteAttributes: [
+      "align",
+      "allowtransparency",
+      "frameborder",
+      "framespacing",
+      "hspace",
+      "longdesc",
+      "marginheight",
+      "marginwidth",
+      "scrolling",
+      "vspace",
+    ],
+    conditionalCategories: [],
   },
   img: {
     tag: "img",
@@ -1115,6 +1863,27 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "form-associated", "palpable"],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "alt",
+        "controls",
+        "crossorigin",
+        "decoding",
+        "fetchpriority",
+        "height",
+        "ismap",
+        "loading",
+        "referrerpolicy",
+        "sizes",
+        "src",
+        "srcset",
+        "usemap",
+        "width",
+      ],
+    ],
+    obsoleteAttributes: ["align", "border", "hspace", "longdesc", "lowsrc", "name", "vspace"],
+    conditionalCategories: [{ attribute: "usemap", category: "interactive", condition: "present" }],
   },
   input: {
     tag: "input",
@@ -1135,6 +1904,47 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "palpable",
     ],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "accept",
+        "alpha",
+        "alt",
+        "autocomplete",
+        "checked",
+        "colorspace",
+        "dirname",
+        "disabled",
+        "form",
+        "formaction",
+        "formenctype",
+        "formmethod",
+        "formnovalidate",
+        "formtarget",
+        "height",
+        "list",
+        "max",
+        "maxlength",
+        "min",
+        "minlength",
+        "multiple",
+        "name",
+        "pattern",
+        "placeholder",
+        "popovertarget",
+        "popovertargetaction",
+        "readonly",
+        "required",
+        "size",
+        "src",
+        "step",
+        "type",
+        "value",
+        "width",
+      ],
+    ],
+    obsoleteAttributes: ["align", "border", "hspace", "ismap", "usemap", "vspace"],
+    conditionalCategories: [{ attribute: "type", category: "interactive", condition: "not-equals", value: "hidden" }],
   },
   ins: {
     tag: "ins",
@@ -1145,6 +1955,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["transparent"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite", "datetime"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   isindex: {
     tag: "isindex",
@@ -1155,6 +1968,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   kbd: {
     tag: "kbd",
@@ -1165,6 +1981,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   keygen: {
     tag: "keygen",
@@ -1175,6 +1994,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   label: {
     tag: "label",
@@ -1185,6 +2007,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "interactive", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["for"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   legend: {
     tag: "legend",
@@ -1195,6 +2020,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["phrasing", "heading content"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
+    childGrammar: "phrasing-or-heading",
   },
   li: {
     tag: "li",
@@ -1205,6 +2034,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["value"]],
+    obsoleteAttributes: ["type"],
+    conditionalCategories: [],
   },
   link: {
     tag: "link",
@@ -1215,6 +2047,29 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "as",
+        "blocking",
+        "color",
+        "crossorigin",
+        "disabled",
+        "fetchpriority",
+        "href",
+        "hreflang",
+        "imagesizes",
+        "imagesrcset",
+        "integrity",
+        "media",
+        "referrerpolicy",
+        "rel",
+        "sizes",
+        "type",
+      ],
+    ],
+    obsoleteAttributes: ["charset", "methods", "rev", "target", "urn"],
+    conditionalCategories: [],
   },
   listing: {
     tag: "listing",
@@ -1225,6 +2080,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   main: {
     tag: "main",
@@ -1235,6 +2093,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   map: {
     tag: "map",
@@ -1245,6 +2106,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["transparent", "area"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   mark: {
     tag: "mark",
@@ -1255,6 +2119,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   marquee: {
     tag: "marquee",
@@ -1265,6 +2132,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["behavior", "direction", "loop", "truespeed"],
+    conditionalCategories: [],
   },
   menu: {
     tag: "menu",
@@ -1275,6 +2145,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["li", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["compact", "label", "type"],
+    conditionalCategories: [],
   },
   menuitem: {
     tag: "menuitem",
@@ -1285,6 +2158,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   meta: {
     tag: "meta",
@@ -1295,6 +2171,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
     children: ["empty"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["charset", "content", "http-equiv", "media", "name"]],
+    obsoleteAttributes: ["scheme"],
+    conditionalCategories: [],
   },
   meter: {
     tag: "meter",
@@ -1305,6 +2184,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "labelable", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["high", "low", "max", "min", "optimum", "value"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   multicol: {
     tag: "multicol",
@@ -1315,6 +2197,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   nav: {
     tag: "nav",
@@ -1325,6 +2210,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   nextid: {
     tag: "nextid",
@@ -1335,6 +2223,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   nobr: {
     tag: "nobr",
@@ -1345,6 +2236,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   noembed: {
     tag: "noembed",
@@ -1355,6 +2249,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   noframes: {
     tag: "noframes",
@@ -1365,6 +2262,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   noscript: {
     tag: "noscript",
@@ -1375,6 +2275,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
     children: ["varies"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   object: {
     tag: "object",
@@ -1385,6 +2288,25 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "listed", "form-associated", "palpable"],
     children: ["transparent"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["data", "form", "height", "name", "type", "width"]],
+    obsoleteAttributes: [
+      "align",
+      "archive",
+      "autocomplete",
+      "border",
+      "classid",
+      "code",
+      "codebase",
+      "codetype",
+      "declare",
+      "disabled",
+      "hspace",
+      "standby",
+      "typemustmatch",
+      "usemap",
+      "vspace",
+    ],
+    conditionalCategories: [{ attribute: "usemap", category: "interactive", condition: "present" }],
   },
   ol: {
     tag: "ol",
@@ -1395,6 +2317,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["li", "script-supporting elements"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["reversed", "start", "type"]],
+    obsoleteAttributes: ["compact"],
+    conditionalCategories: [],
   },
   optgroup: {
     tag: "optgroup",
@@ -1405,6 +2330,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["optgroup element inner content elements", "legend"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "label"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "optgroup",
   },
   option: {
     tag: "option",
@@ -1415,6 +2344,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["text", "option element inner content elements"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "label", "selected", "value"]],
+    obsoleteAttributes: ["name"],
+    conditionalCategories: [],
   },
   output: {
     tag: "output",
@@ -1425,6 +2357,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "listed", "labelable", "resettable", "form-associated", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["for", "form", "name"]],
+    obsoleteAttributes: ["autocomplete", "disabled"],
+    conditionalCategories: [],
   },
   p: {
     tag: "p",
@@ -1435,6 +2370,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align"],
+    conditionalCategories: [],
   },
   param: {
     tag: "param",
@@ -1445,6 +2383,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   picture: {
     tag: "picture",
@@ -1455,6 +2396,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "palpable"],
     children: ["source", "one img", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "picture",
   },
   plaintext: {
     tag: "plaintext",
@@ -1465,6 +2410,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "plaintext",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   pre: {
     tag: "pre",
@@ -1475,6 +2423,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["width"],
+    conditionalCategories: [],
   },
   progress: {
     tag: "progress",
@@ -1485,6 +2436,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "labelable", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["max", "value"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   q: {
     tag: "q",
@@ -1495,6 +2449,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   rb: {
     tag: "rb",
@@ -1505,6 +2462,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   rp: {
     tag: "rp",
@@ -1515,6 +2475,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["text"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   rt: {
     tag: "rt",
@@ -1525,6 +2488,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   rtc: {
     tag: "rtc",
@@ -1535,6 +2501,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   ruby: {
     tag: "ruby",
@@ -1545,6 +2514,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing", "rt", "rp"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "ruby",
   },
   s: {
     tag: "s",
@@ -1555,6 +2528,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   samp: {
     tag: "samp",
@@ -1565,6 +2541,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   script: {
     tag: "script",
@@ -1575,6 +2554,23 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: ["metadata", "flow", "phrasing", "script-supporting"],
     children: ["script", "data", "or script documentation"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "async",
+        "blocking",
+        "crossorigin",
+        "defer",
+        "fetchpriority",
+        "integrity",
+        "nomodule",
+        "referrerpolicy",
+        "src",
+        "type",
+      ],
+    ],
+    obsoleteAttributes: ["charset", "event", "for", "language"],
+    conditionalCategories: [],
   },
   search: {
     tag: "search",
@@ -1585,6 +2581,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   section: {
     tag: "section",
@@ -1595,6 +2594,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
     children: ["flow"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   select: {
     tag: "select",
@@ -1615,6 +2617,13 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "palpable",
     ],
     children: ["select element inner content elements", "button"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["autocomplete", "disabled", "form", "multiple", "name", "required", "size"],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "select",
   },
   selectedcontent: {
     tag: "selectedcontent",
@@ -1625,6 +2634,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["empty"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   slot: {
     tag: "slot",
@@ -1635,6 +2647,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing"],
     children: ["transparent"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   small: {
     tag: "small",
@@ -1645,6 +2660,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   source: {
     tag: "source",
@@ -1655,6 +2673,12 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...["height", "media", "sizes", "src", "srcset", "type", "width"],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   spacer: {
     tag: "spacer",
@@ -1665,6 +2689,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   span: {
     tag: "span",
@@ -1675,6 +2702,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   strike: {
     tag: "strike",
@@ -1685,6 +2715,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   strong: {
     tag: "strong",
@@ -1695,6 +2728,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   style: {
     tag: "style",
@@ -1705,6 +2741,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: ["metadata"],
     children: ["text"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["blocking", "media"]],
+    obsoleteAttributes: ["type"],
+    conditionalCategories: [],
   },
   sub: {
     tag: "sub",
@@ -1715,6 +2754,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   summary: {
     tag: "summary",
@@ -1725,6 +2767,10 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["phrasing", "heading content"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
+    childGrammar: "phrasing-or-heading",
   },
   sup: {
     tag: "sup",
@@ -1735,6 +2781,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   table: {
     tag: "table",
@@ -1745,7 +2794,24 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["caption", "colgroup", "thead", "tbody", "tfoot", "tr", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [
+      "align",
+      "bgcolor",
+      "border",
+      "bordercolor",
+      "cellpadding",
+      "cellspacing",
+      "datapagesize",
+      "frame",
+      "height",
+      "rules",
+      "summary",
+      "width",
+    ],
+    conditionalCategories: [],
     childSequencePattern: "^(?:caption,)?(?:colgroup,)*(?:thead,)?(?:(?:tbody,)*|(?:tr,)+)(?:tfoot,)?$",
+    childGrammar: "table",
   },
   tbody: {
     tag: "tbody",
@@ -1756,6 +2822,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["tr", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align", "char", "charoff", "height", "valign"],
+    conditionalCategories: [],
   },
   td: {
     tag: "td",
@@ -1766,6 +2835,21 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["colspan", "headers", "rowspan"]],
+    obsoleteAttributes: [
+      "abbr",
+      "align",
+      "axis",
+      "bgcolor",
+      "char",
+      "charoff",
+      "height",
+      "nowrap",
+      "scope",
+      "valign",
+      "width",
+    ],
+    conditionalCategories: [],
   },
   template: {
     tag: "template",
@@ -1776,6 +2860,19 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["metadata", "flow", "phrasing", "script-supporting"],
     children: ["empty"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "shadowrootclonable",
+        "shadowrootcustomelementregistry",
+        "shadowrootdelegatesfocus",
+        "shadowrootmode",
+        "shadowrootserializable",
+        "shadowrootslotassignment",
+      ],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   textarea: {
     tag: "textarea",
@@ -1796,6 +2893,26 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "palpable",
     ],
     children: ["text"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "autocomplete",
+        "cols",
+        "dirname",
+        "disabled",
+        "form",
+        "maxlength",
+        "minlength",
+        "name",
+        "placeholder",
+        "readonly",
+        "required",
+        "rows",
+        "wrap",
+      ],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   tfoot: {
     tag: "tfoot",
@@ -1806,6 +2923,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["tr", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   th: {
     tag: "th",
@@ -1816,6 +2936,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["interactive"],
     children: ["flow"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["abbr", "colspan", "headers", "rowspan", "scope"]],
+    obsoleteAttributes: ["align", "axis", "bgcolor", "char", "charoff", "height", "nowrap", "valign", "width"],
+    conditionalCategories: [],
   },
   thead: {
     tag: "thead",
@@ -1826,6 +2949,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["tr", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   time: {
     tag: "time",
@@ -1836,6 +2962,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["datetime"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   title: {
     tag: "title",
@@ -1846,6 +2975,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "rcdata",
     categories: ["metadata"],
     children: ["text"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   tr: {
     tag: "tr",
@@ -1856,6 +2988,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["th", "td", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["align", "bgcolor", "char", "charoff", "height", "valign"],
+    conditionalCategories: [],
   },
   track: {
     tag: "track",
@@ -1866,6 +3001,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: ["empty"],
+    currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["default", "kind", "label", "src", "srclang"]],
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   tt: {
     tag: "tt",
@@ -1876,6 +3014,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   u: {
     tag: "u",
@@ -1886,6 +3027,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   ul: {
     tag: "ul",
@@ -1896,6 +3040,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "palpable"],
     children: ["li", "script-supporting elements"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: ["compact", "type"],
+    conditionalCategories: [],
   },
   var: {
     tag: "var",
@@ -1906,6 +3053,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
     children: ["phrasing"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   video: {
     tag: "video",
@@ -1916,6 +3066,26 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
     children: ["source", "track", "transparent"],
+    currentAttributes: [
+      ...HTML_GLOBAL_ATTRIBUTE_NAMES,
+      ...[
+        "autoplay",
+        "controls",
+        "crossorigin",
+        "height",
+        "loading",
+        "loop",
+        "muted",
+        "playsinline",
+        "poster",
+        "preload",
+        "src",
+        "width",
+      ],
+    ],
+    obsoleteAttributes: [],
+    conditionalCategories: [{ attribute: "controls", category: "interactive", condition: "present" }],
+    childGrammar: "media",
   },
   wbr: {
     tag: "wbr",
@@ -1926,6 +3096,9 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "normal",
     categories: ["flow", "phrasing"],
     children: ["empty"],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
   xmp: {
     tag: "xmp",
@@ -1936,5 +3109,8 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     textMode: "raw-text",
     categories: [],
     children: [],
+    currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
+    obsoleteAttributes: [],
+    conditionalCategories: [],
   },
 };

@@ -86,6 +86,50 @@ describe("Pandoc.codec", () => {
     }
   });
 
+  it("rejects known constructors in the wrong context and reports their exact paths losslessly", () => {
+    const wrongContext = [
+      {
+        expected: [["Str", "block", "/blocks/0"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: "not a block", t: "Str" }],
+          meta: {},
+        },
+      },
+      {
+        expected: [["Para", "inline", "/blocks/0/c/0"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: [{ c: [], t: "Para" }], t: "Para" }],
+          meta: {},
+        },
+      },
+      {
+        expected: [["Str", "meta", "/meta/invalid"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [],
+          meta: { invalid: { c: "not metadata", t: "Str" } },
+        },
+      },
+      {
+        expected: [["TableCaption", "block", "/blocks/0"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: [null, []], t: "TableCaption" }],
+          meta: {},
+        },
+      },
+    ];
+
+    for (const { expected, wire } of wrongContext) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual(expected);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
   it("retains exact future constructors, including absent payloads and extension fields", () =>
     Effect.runPromise(
       Effect.gen(function* () {

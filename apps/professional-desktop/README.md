@@ -28,10 +28,12 @@ keep malformed or forward-compatible wire escaped and read-only.
 
 YouTube players use only
 `https://www.youtube-nocookie.com` frames. Production and development CSP both
-declare that exact `frame-src`. “Watch on YouTube” remains a normal browser
-anchor outside Tauri; the desktop claims its cancelable event and uses the
-official opener plugin, whose capability is scoped to
-canonical watch URLs with an exact eleven-character video id.
+declare that exact `frame-src`. “Watch on YouTube” cancels its click and emits
+a typed, cancelable request. The Tauri desktop claims validated requests and
+uses the official opener plugin; an unclaimed browser request is opened
+explicitly. If the native opener rejects a claimed request, an accessible
+notice retains both a retry and an explicit browser fallback. Every path
+remains scoped to canonical watch URLs with an exact eleven-character video id.
 
 The packaged CSP keeps scripts, workers, and application assets on `'self'`;
 the ontology projection worker is emitted as a same-origin module asset rather

@@ -2,9 +2,11 @@ import {
   AutocompleteAttribute,
   BooleanAttribute,
   DatasetKey,
+  HeadingOffset,
   HtmlNonNegativeInteger,
   HtmlPositiveInteger,
   makeSpaceSeparatedTokenList,
+  Popover,
 } from "@beep/html";
 import { A as Anchor, Li } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
@@ -38,6 +40,16 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(S.is(BooleanAttribute)("")).toBe(true);
     expect(S.is(BooleanAttribute)(false)).toBe(false);
     expect(S.is(BooleanAttribute)("false")).toBe(false);
+  });
+
+  it("models heading and popover global microsyntaxes canonically", () => {
+    expect(S.is(HeadingOffset)(0)).toBe(true);
+    expect(S.is(HeadingOffset)(8)).toBe(true);
+    expect(S.is(HeadingOffset)(-1)).toBe(false);
+    expect(S.is(HeadingOffset)(9)).toBe(false);
+    expect(S.decodeUnknownSync(Popover)("")).toBe("auto");
+    expect(S.decodeUnknownSync(Popover)("auto")).toBe("auto");
+    expect(S.is(Popover)("")).toBe(false);
   });
 
   it("models non-negative and positive integer domains", () => {

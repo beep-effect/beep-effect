@@ -177,6 +177,7 @@
     "docx": "^9.7.1",
     "drizzle-kit": "1.0.0-rc.4-ca0f029",
     "drizzle-orm": "1.0.0-rc.4-de6c356",
+    "dompurify": "^3.4.12",
     "effect": "4.0.0-beta.102",
     "embla-carousel-react": "^8.6.0",
     "emojibase-data": "17.0.0",

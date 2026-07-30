@@ -15,7 +15,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ELEMENT_META, HtmlTag } from "./Html.meta.ts";
+import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
+import { ELEMENT_META, HTML_CONTENT_TOKEN_EXPANSIONS, HtmlTag } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import type { Doctype } from "./Html.nodes.ts";
 
@@ -26,6 +27,7 @@ const isString = S.is(S.String);
 class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
   {
     _tag: S.String,
+    attributes: S.Unknown.pipe(S.optionalKey),
     children: S.Array(S.suspend((): S.Codec<HtmlChildView> => HtmlChildView)).pipe(S.optionalKey),
     name: S.Unknown.pipe(S.optionalKey),
     namespace: S.String.pipe(S.optionalKey),
@@ -69,6 +71,8 @@ export const HtmlConformanceRule = LiteralKit([
   "foreignIntegration",
   "forbiddenDescendant",
   "attributeRelationship",
+  "obsoleteAttribute",
+  "misplacedAttribute",
 ]).pipe(
   $I.annoteSchema("HtmlConformanceRule", {
     description: "Rule identifier emitted by HTML AST conformance validation.",
@@ -334,16 +338,53 @@ const attributeRelationships: ReadonlyArray<AttributeRelationship> = [
 ];
 
 const inspectForbiddenDescendants = (
+  node: HtmlChildView,
   tag: HtmlTag,
   path: ReadonlyArray<string>,
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const categories = ELEMENT_META[tag].categories;
+  const meta = ELEMENT_META[tag];
+  const categories = A.filter(meta.categories, (category) => {
+    const rules = A.filter(meta.conditionalCategories, (rule) => rule.category === category);
+    return (
+      rules.length === 0 ||
+      A.some(rules, (rule) =>
+        rule.condition === "present"
+          ? hasAttribute((node as unknown as Record<string, unknown>)[rule.attribute])
+          : !attributeEquals((node as unknown as Record<string, unknown>)[rule.attribute], rule.value ?? "")
+      )
+    );
+  });
   return A.flatMap(forbiddenDescendantConstraints, (constraint) =>
     A.contains(ancestors, constraint.ancestor) &&
     (A.contains(constraint.tags, tag) || A.some(constraint.categories, (category) => A.contains(categories, category)))
       ? [makeIssue(path, "forbiddenDescendant", `<${tag}> is forbidden beneath <${constraint.ancestor}>`)]
       : A.emptyReadonly()
+  );
+};
+
+const inspectElementAttributes = (
+  node: HtmlChildView,
+  tag: HtmlTag,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const meta = ELEMENT_META[tag];
+  return pipe(
+    Struct.entries(node as unknown as Record<string, unknown>),
+    A.filter(([name, value]) => name !== "_tag" && name !== "children" && name !== "content" && hasAttribute(value)),
+    A.flatMap(([name]) =>
+      A.contains(meta.obsoleteAttributes, name)
+        ? [makeIssue(A.append(path, `attributes.${name}`), "obsoleteAttribute", `<${tag} ${name}> is obsolete`)]
+        : A.contains(meta.currentAttributes, name)
+          ? A.emptyReadonly()
+          : [
+              makeIssue(
+                A.append(path, `attributes.${name}`),
+                "misplacedAttribute",
+                `Attribute ${name} is not permitted on <${tag}>`
+              ),
+            ]
+    )
   );
 };
 
@@ -367,14 +408,8 @@ const inspectAttributeRelationships = (
 const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
   pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
 
-const effectiveContentTokens = (tag: HtmlTag, tokens: ReadonlyArray<string>): ReadonlyArray<string> =>
-  Match.value(tag).pipe(
-    Match.when("div", () => ["flow"]),
-    Match.when("option", () => ["text"]),
-    Match.when("optgroup", () => ["option", "optgroup", "legend", "script-supporting elements"]),
-    Match.when("select", () => ["button", "option", "optgroup", "hr", "script-supporting elements"]),
-    Match.orElse(() => tokens)
-  );
+const effectiveContentTokens = (tokens: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.flatMap(tokens, (token) => HTML_CONTENT_TOKEN_EXPANSIONS[token] ?? [token]);
 
 const isScriptSupporting = (tag: string): boolean => tag === "script" || tag === "template";
 const tableChildSequencePattern = new RegExp(
@@ -422,7 +457,7 @@ const inspectChildModel = (
     O.match({
       onNone: A.emptyReadonly,
       onSome: (tag): ReadonlyArray<HtmlConformanceIssue> => {
-        const ownTokens = effectiveContentTokens(tag, ELEMENT_META[tag].children);
+        const ownTokens = effectiveContentTokens(ELEMENT_META[tag].children);
         const tokens = A.contains(ownTokens, "transparent") ? ancestorContentTokens : ownTokens;
         if (tag === "noscript") {
           return [
@@ -467,60 +502,207 @@ const inspectElementOrder = (
   children: ReadonlyArray<HtmlChildView>,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const elementTags = pipe(
+  if (!isHtmlTag(parent._tag)) return A.emptyReadonly();
+  const elementChildren = pipe(
     children,
-    A.filter((child) => isHtmlTag(child._tag)),
-    A.map((child) => child._tag)
+    A.filter((child): child is HtmlChildView & { readonly _tag: HtmlTag } => isHtmlTag(child._tag))
   );
+  const elementTags = A.map(elementChildren, (child) => child._tag);
   const sequenceTags = A.filter(elementTags, (tag) => !isScriptSupporting(tag));
+  const significantText = A.some(
+    children,
+    (child) => child._tag === "#text" && isString(child.value) && Str.isNonEmpty(Str.trim(child.value))
+  );
+  const issue = (message: string): ReadonlyArray<HtmlConformanceIssue> => [makeIssue(path, "elementOrder", message)];
+  const oneAtEdge = (tag: HtmlTag, edge: "first" | "either"): boolean => {
+    const first = A.findFirstIndex(elementTags, (candidate) => candidate === tag);
+    const last = A.findLastIndex(elementTags, (candidate) => candidate === tag);
+    return (
+      (O.isNone(first) && O.isNone(last)) ||
+      (O.isSome(first) &&
+        O.contains(last, first.value) &&
+        (first.value === 0 || (edge === "either" && first.value === elementTags.length - 1)))
+    );
+  };
+  const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean => {
+    if (tags.length === 0) return false;
+    let index = 0;
+    while (index < tags.length) {
+      if (tags[index] !== "dt") return false;
+      while (tags[index] === "dt") index += 1;
+      if (tags[index] !== "dd") return false;
+      while (tags[index] === "dd") index += 1;
+    }
+    return true;
+  };
 
-  return Match.value(parent._tag).pipe(
-    Match.when(
-      "html",
-      (): ReadonlyArray<HtmlConformanceIssue> =>
-        elementTags.length === 2 && elementTags[0] === "head" && elementTags[1] === "body"
-          ? A.emptyReadonly()
-          : [makeIssue(path, "elementOrder", "<html> must contain one <head> followed by one <body>")]
+  return Match.value(ELEMENT_META[parent._tag].childGrammar).pipe(
+    Match.when("document-element", () =>
+      elementTags.length === 2 && elementTags[0] === "head" && elementTags[1] === "body"
+        ? A.emptyReadonly()
+        : issue("<html> must contain one <head> followed by one <body>")
     ),
-    Match.when("picture", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const firstImage = A.findFirstIndex(elementTags, (tag) => tag === "img");
-      const lastImage = A.findLastIndex(elementTags, (tag) => tag === "img");
-      const oneImage = O.isSome(firstImage) && O.contains(lastImage, firstImage.value);
-      return oneImage &&
-        A.every(A.take(elementTags, firstImage.value), (tag) => tag === "source" || isScriptSupporting(tag))
+    Match.when("head", () => {
+      const titles = A.filter(elementTags, (tag) => tag === "title").length;
+      const bases = A.filter(elementTags, (tag) => tag === "base").length;
+      return titles === 1 && bases <= 1
         ? A.emptyReadonly()
-        : [makeIssue(path, "elementOrder", "<picture> must contain one <img> after its <source> elements")];
+        : issue("<head> must contain exactly one <title> and no more than one <base>");
     }),
-    Match.when("details", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const firstSummary = A.findFirstIndex(elementTags, (tag) => tag === "summary");
-      const lastSummary = A.findLastIndex(elementTags, (tag) => tag === "summary");
-      return (O.isNone(firstSummary) && O.isNone(lastSummary)) ||
-        (O.contains(firstSummary, 0) && O.contains(lastSummary, 0))
+    Match.when("description-list", () => {
+      const direct = isDescriptionGroups(sequenceTags);
+      const wrapped =
+        sequenceTags.length > 0 &&
+        A.every(elementChildren, (child) => {
+          if (child._tag !== "div") return isScriptSupporting(child._tag);
+          const nestedChildren = childrenOf(child);
+          const nestedTags = pipe(
+            nestedChildren,
+            A.filter((nested) => isHtmlTag(nested._tag) && !isScriptSupporting(nested._tag)),
+            A.map((nested) => nested._tag as HtmlTag)
+          );
+          const invalidNested = A.some(
+            nestedChildren,
+            (nested) =>
+              nested._tag === "#foreign" ||
+              (nested._tag === "#text" && isString(nested.value) && Str.isNonEmpty(Str.trim(nested.value))) ||
+              (isHtmlTag(nested._tag) &&
+                !isScriptSupporting(nested._tag) &&
+                nested._tag !== "dt" &&
+                nested._tag !== "dd")
+          );
+          return !invalidNested && isDescriptionGroups(nestedTags);
+        });
+      return (sequenceTags.length === 0 || direct || wrapped) && !significantText
         ? A.emptyReadonly()
-        : [makeIssue(path, "elementOrder", "<summary> must be the first element child of <details>")];
+        : issue("<dl> children must be complete dt+ / dd+ groups, directly or in <div> wrappers");
     }),
-    Match.when("figure", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const firstCaption = A.findFirstIndex(elementTags, (tag) => tag === "figcaption");
-      const lastCaption = A.findLastIndex(elementTags, (tag) => tag === "figcaption");
-      return (O.isNone(firstCaption) && O.isNone(lastCaption)) ||
-        (O.isSome(firstCaption) &&
-          O.contains(lastCaption, firstCaption.value) &&
-          (firstCaption.value === 0 || firstCaption.value === elementTags.length - 1))
+    Match.when("details", () =>
+      oneAtEdge("summary", "first")
         ? A.emptyReadonly()
-        : [makeIssue(path, "elementOrder", "<figcaption> must be the first or last element child of <figure>")];
+        : issue("<summary> must be the first element child of <details> and occur at most once")
+    ),
+    Match.when("fieldset", () =>
+      oneAtEdge("legend", "first")
+        ? A.emptyReadonly()
+        : issue("<legend> must be the first element child of <fieldset> and occur at most once")
+    ),
+    Match.when("figure", () =>
+      oneAtEdge("figcaption", "either")
+        ? A.emptyReadonly()
+        : issue("<figcaption> must be the first or last element child of <figure> and occur at most once")
+    ),
+    Match.when("colgroup", () =>
+      hasAttribute((parent as unknown as Record<string, unknown>).span) &&
+      A.some(elementTags, (tag) => tag === "col" || tag === "template")
+        ? issue("<colgroup span> cannot contain <col> or <template> children")
+        : A.emptyReadonly()
+    ),
+    Match.when("media", () => {
+      let phase: "source" | "track" | "content" = "source";
+      const hasSrc = hasAttribute(parent.src);
+      const orderedChildren = A.filter(
+        children,
+        (child) =>
+          child._tag !== "#comment" &&
+          !(isHtmlTag(child._tag) && isScriptSupporting(child._tag)) &&
+          !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
+      );
+      const valid = A.every(orderedChildren, (child) => {
+        if (child._tag === "source") {
+          if (hasSrc || phase !== "source") return false;
+          return true;
+        }
+        if (child._tag === "track") {
+          if (phase === "content") return false;
+          phase = "track";
+          return true;
+        }
+        phase = "content";
+        return true;
+      });
+      return valid
+        ? A.emptyReadonly()
+        : issue(
+            "Media children must order source* before track* before fallback content, with no source when src is set"
+          );
     }),
-    Match.when(
-      "table",
-      (): ReadonlyArray<HtmlConformanceIssue> =>
-        tableChildSequencePattern.test(`${A.join(sequenceTags, ",")}${sequenceTags.length === 0 ? "" : ","}`)
-          ? A.emptyReadonly()
-          : [
-              makeIssue(
-                path,
-                "elementOrder",
-                "<table> children must follow caption?, colgroup*, thead?, (tbody* | tr+), tfoot?"
-              ),
-            ]
+    Match.when("picture", () =>
+      /^(?:source,)*img,$/u.test(`${A.join(sequenceTags, ",")}${sequenceTags.length === 0 ? "" : ","}`)
+        ? A.emptyReadonly()
+        : issue("<picture> must contain source* followed by exactly one <img>")
+    ),
+    Match.when("hgroup", () =>
+      A.filter(sequenceTags, (tag) => A.contains(ELEMENT_META[tag].categories, "heading")).length === 1
+        ? A.emptyReadonly()
+        : issue("<hgroup> must contain exactly one heading element")
+    ),
+    Match.when("datalist", () => {
+      const optionMode = A.contains(sequenceTags, "option");
+      const mixed =
+        optionMode &&
+        A.some(
+          children,
+          (child) =>
+            child._tag === "#foreign" ||
+            (child._tag === "#text" && isString(child.value) && Str.isNonEmpty(Str.trim(child.value))) ||
+            (isHtmlTag(child._tag) && child._tag !== "option" && !isScriptSupporting(child._tag))
+        );
+      return mixed
+        ? issue("<datalist> must use either phrasing content or option children, not both")
+        : A.emptyReadonly();
+    }),
+    Match.when("phrasing-or-heading", () => {
+      const headings = A.filter(sequenceTags, (tag) => A.contains(ELEMENT_META[tag].categories, "heading"));
+      const significantChildren = A.filter(
+        children,
+        (child) =>
+          child._tag !== "#comment" &&
+          !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
+      );
+      return headings.length === 0 || (headings.length === 1 && significantChildren.length === 1)
+        ? A.emptyReadonly()
+        : issue("Heading-content and phrasing-content alternatives cannot be mixed");
+    }),
+    Match.when("optgroup", () =>
+      oneAtEdge("legend", "first")
+        ? A.emptyReadonly()
+        : issue("<optgroup> may contain at most one <legend>, as its first element child")
+    ),
+    Match.when("select", () => {
+      const traditional = A.every(sequenceTags, (tag) => tag === "option" || tag === "optgroup" || tag === "hr");
+      const customizable =
+        sequenceTags[0] === "button" &&
+        A.every(
+          A.drop(sequenceTags, 1),
+          (tag) => tag === "option" || tag === "optgroup" || tag === "hr" || tag === "div"
+        );
+      return traditional || customizable
+        ? A.emptyReadonly()
+        : issue("<select> must use either the traditional or customizable-select child grammar");
+    }),
+    Match.when("ruby", () => {
+      const symbols = pipe(
+        children,
+        A.filter(
+          (child) =>
+            child._tag !== "#comment" &&
+            !(isHtmlTag(child._tag) && isScriptSupporting(child._tag)) &&
+            !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
+        ),
+        A.map((child) =>
+          child._tag === "rt" ? "t" : child._tag === "rp" ? "r" : child._tag === "#foreign" ? "x" : "b"
+        ),
+        A.join("")
+      );
+      return /^(?:b+(?:r?tr?)+)+$/u.test(symbols)
+        ? A.emptyReadonly()
+        : issue("<ruby> must contain base phrasing followed by complete rt/rp annotation groups");
+    }),
+    Match.when("table", () =>
+      tableChildSequencePattern.test(`${A.join(sequenceTags, ",")}${sequenceTags.length === 0 ? "" : ","}`)
+        ? A.emptyReadonly()
+        : issue("<table> children must follow caption?, colgroup*, thead?, (tbody* | tr+), tfoot?")
     ),
     Match.orElse((): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly())
   );
@@ -570,7 +752,7 @@ const inspectChild = (
     Match.when("#foreign", (): ReadonlyArray<HtmlConformanceIssue> => {
       const parent = A.last(ancestors);
       const entersFromHtml = O.isNone(parent) || (O.isSome(parent) && isHtmlTag(parent.value));
-      const integrationIssue =
+      const integrationIssue: ReadonlyArray<HtmlConformanceIssue> =
         entersFromHtml &&
         !((node.namespace === "svg" && node.name === "svg") || (node.namespace === "mathml" && node.name === "math"))
           ? [
@@ -581,8 +763,41 @@ const inspectChild = (
               ),
             ]
           : A.empty<HtmlConformanceIssue>();
+      const fixedPointIssues =
+        (node.namespace === "svg" || node.namespace === "mathml") && isString(node.name)
+          ? [
+              ...(isForeignElementNameFixedPoint(node.namespace, node.name)
+                ? A.empty<HtmlConformanceIssue>()
+                : [
+                    makeIssue(
+                      A.append(path, "name"),
+                      "foreignIntegration",
+                      `Foreign element name ${node.name} is not a browser parse fixed point`
+                    ),
+                  ]),
+              ...pipe(
+                attributeValue(node.attributes),
+                O.filter(P.isObject),
+                O.match({
+                  onNone: A.emptyReadonly,
+                  onSome: (attributes) =>
+                    A.flatMap(Struct.keys(attributes), (name) =>
+                      isForeignAttributeNameFixedPoint(node.namespace as "svg" | "mathml", name)
+                        ? A.emptyReadonly()
+                        : [
+                            makeIssue(
+                              A.append(path, `attributes.${name}`),
+                              "foreignIntegration",
+                              `Foreign attribute name ${name} is not a browser parse fixed point`
+                            ),
+                          ]
+                    ),
+                })
+              ),
+            ]
+          : A.empty<HtmlConformanceIssue>();
       return A.appendAll(
-        integrationIssue,
+        A.appendAll(integrationIssue, fixedPointIssues),
         A.flatMap(childrenOf(node), (child, index) => {
           const pathToChild = childPath(path, index);
           return A.appendAll(
@@ -600,11 +815,12 @@ const inspectChild = (
         meta.conformance === "non-conforming"
           ? [makeIssue(path, "obsoleteElement", `<${tag}> is obsolete and non-conforming`)]
           : A.empty<HtmlConformanceIssue>();
-      const ownTokens = effectiveContentTokens(tag, meta.children);
+      const ownTokens = effectiveContentTokens(meta.children);
       const childContentTokens = A.contains(ownTokens, "transparent") ? ancestorContentTokens : ownTokens;
       const local = [
         ...own,
-        ...inspectForbiddenDescendants(tag, path, ancestors),
+        ...inspectForbiddenDescendants(node, tag, path, ancestors),
+        ...inspectElementAttributes(node, tag, path),
         ...inspectAttributeRelationships(node, tag, path),
         ...inspectChildModel(node, children, path, ancestorContentTokens),
         ...inspectElementOrder(node, children, path),
@@ -685,6 +901,11 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
  * @since 0.0.0
  */
 export const conform = Effect.fn("Html.conform")(function* (root: HtmlRoot.Type) {
+  const suppliedIssues = inspectConformance(root);
+  yield* A.match(suppliedIssues, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (issues) => Effect.fail(HtmlConformanceError.make({ issues })),
+  });
   const snapshot = yield* snapshotRoot(root);
   return yield* A.match(inspectConformance(snapshot), {
     onEmpty: () => Effect.succeed(issueConformantHtml(snapshot)),

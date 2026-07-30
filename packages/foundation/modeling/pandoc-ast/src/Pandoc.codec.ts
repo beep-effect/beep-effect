@@ -6,9 +6,9 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { CauseTaggedError, SchemaUtils } from "@beep/schema";
+import { CauseTaggedError, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, Struct } from "@beep/utils";
-import { Effect, Match, SchemaGetter } from "effect";
+import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
 import {
   BlockQuote,
@@ -59,6 +59,57 @@ import type { PandocBlock, PandocInline, PandocMeta, PandocMetaValue } from "./P
 import type { JsonPath as JsonPathType } from "./Pandoc.report.ts";
 
 const $I = $PandocAstId.create("Pandoc.codec");
+
+const PandocInlineConstructorName = LiteralKit([
+  "Str",
+  "Space",
+  "SoftBreak",
+  "LineBreak",
+  "Emph",
+  "Strong",
+  "Strikeout",
+  "Code",
+  "Link",
+  "Image",
+  "Span",
+  "Note",
+  "Math",
+]);
+
+const PandocBlockConstructorName = LiteralKit([
+  "Plain",
+  "Para",
+  "Header",
+  "BlockQuote",
+  "CodeBlock",
+  "BulletList",
+  "OrderedList",
+  "HorizontalRule",
+  "Div",
+  "Table",
+]);
+
+const PandocMetaConstructorName = LiteralKit([
+  "MetaBool",
+  "MetaString",
+  "MetaInlines",
+  "MetaBlocks",
+  "MetaList",
+  "MetaMap",
+]);
+
+const PandocKnownConstructorName = S.Union([
+  PandocInlineConstructorName,
+  PandocBlockConstructorName,
+  PandocMetaConstructorName,
+  PandocMathType,
+  PandocListNumberStyle,
+  PandocListNumberDelimiter,
+  S.Literal("TableCaption"),
+]);
+
+const isPandocKnownConstructorName = S.is(PandocKnownConstructorName);
+type PandocConstructorContext = "block" | "inline" | "meta";
 
 /**
  * Generic Pandoc constructor wire shape.
@@ -433,6 +484,18 @@ const unknownInline = (wire: PandocConstructorWire): UnknownInline => UnknownInl
 
 const unknownBlock = (wire: PandocConstructorWire): UnknownBlock => UnknownBlock.make({ wire });
 
+const rejectKnownConstructorInContext = (
+  wire: PandocConstructorWire,
+  context: PandocConstructorContext
+): Effect.Effect<never, S.SchemaError> =>
+  Effect.fail(
+    new S.SchemaError(
+      new SchemaIssue.InvalidValue(O.some(wire), {
+        message: `Known Pandoc constructor ${wire.t} cannot occur in ${context} context`,
+      })
+    )
+  );
+
 const decodeBlockItems = (
   input: unknown
 ): Effect.Effect<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> =>
@@ -577,7 +640,11 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
         Effect.map(Effect.flatMap(decodeNotePayloadWire(wire.c), decodeBlockList), (blocks) => Note.make({ blocks }))
       ),
       Match.when("Math", () => decodeMathInline(wire)),
-      Match.orElse(() => Effect.succeed(unknownInline(wire)))
+      Match.orElse(() =>
+        isPandocKnownConstructorName(wire.t)
+          ? rejectKnownConstructorInContext(wire, "inline")
+          : Effect.succeed(unknownInline(wire))
+      )
     )
   );
 
@@ -651,7 +718,11 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
         )
       ),
       Match.when("Table", () => decodeTableBlock(wire.c)),
-      Match.orElse(() => Effect.succeed(unknownBlock(wire)))
+      Match.orElse(() =>
+        isPandocKnownConstructorName(wire.t)
+          ? rejectKnownConstructorInContext(wire, "block")
+          : Effect.succeed(unknownBlock(wire))
+      )
     )
   );
 
@@ -677,7 +748,11 @@ function decodeMetaValue(input: unknown): Effect.Effect<PandocMetaValue, S.Schem
           )
         )
       ),
-      Match.orElse(() => Effect.succeed(UnknownMeta.make({ wire })))
+      Match.orElse(() =>
+        isPandocKnownConstructorName(wire.t)
+          ? rejectKnownConstructorInContext(wire, "meta")
+          : Effect.succeed(UnknownMeta.make({ wire }))
+      )
     )
   );
 }
@@ -930,7 +1005,6 @@ export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<Pand
  */
 export const decodePandocJsonString = decodePandocJsonStringStrict;
 
-type LosslessContext = "block" | "inline" | "meta";
 type LosslessInspection = Effect.Effect<ReadonlyArray<PandocLosslessIssue>>;
 
 const appendPath = (path: JsonPathType, ...segments: ReadonlyArray<string | number>): JsonPathType => [
@@ -939,7 +1013,7 @@ const appendPath = (path: JsonPathType, ...segments: ReadonlyArray<string | numb
 ];
 
 const malformedConstructorIssue = (
-  context: LosslessContext,
+  context: PandocConstructorContext,
   constructor: string,
   path: JsonPathType,
   cause: unknown
@@ -951,9 +1025,27 @@ const malformedConstructorIssue = (
     path,
   });
 
+const inspectUnmatchedConstructor = (
+  wire: PandocConstructorWire,
+  context: PandocConstructorContext,
+  path: JsonPathType
+): LosslessInspection =>
+  Effect.succeed(
+    isPandocKnownConstructorName(wire.t)
+      ? [
+          PandocLosslessIssue.make({
+            constructor: wire.t,
+            context,
+            message: `Known Pandoc constructor ${wire.t} cannot occur in ${context} context`,
+            path,
+          }),
+        ]
+      : []
+  );
+
 const inspectDecoded = <Value>(
   decoded: Effect.Effect<Value, S.SchemaError>,
-  context: LosslessContext,
+  context: PandocConstructorContext,
   constructor: string,
   path: JsonPathType,
   onSuccess: (value: Value) => LosslessInspection = () => Effect.succeed([])
@@ -980,7 +1072,7 @@ const inspectInlineArray = (
   path: JsonPathType,
   constructor: string,
   constructorPath: JsonPathType,
-  context: LosslessContext = "inline"
+  context: PandocConstructorContext = "inline"
 ): LosslessInspection =>
   inspectDecoded(decodeUnknownArray(input), context, constructor, constructorPath, (values) =>
     inspectChildren(values, path, inspectInline)
@@ -989,7 +1081,7 @@ const inspectInlineArray = (
 const inspectBlockArray = (
   input: unknown,
   path: JsonPathType,
-  context: LosslessContext,
+  context: PandocConstructorContext,
   constructor: string,
   constructorPath: JsonPathType
 ): LosslessInspection =>
@@ -1041,7 +1133,7 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
           ),
           Match.when("Note", () => inspectBlockArray(wire.c, appendPath(path, "c"), "inline", wire.t, path)),
           Match.when("Math", () => inspectDecoded(decodeMathPayloadWire(wire.c), "inline", wire.t, path)),
-          Match.orElse(() => Effect.succeed([]))
+          Match.orElse(() => inspectUnmatchedConstructor(wire, "inline", path))
         ),
     })
   );
@@ -1080,7 +1172,7 @@ function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
             )
           ),
           Match.when("Table", () => inspectDecoded(decodeTablePayloadWire(wire.c), "block", wire.t, path)),
-          Match.orElse(() => Effect.succeed([]))
+          Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))
         ),
     })
   );
@@ -1111,7 +1203,7 @@ function inspectMetaValue(input: unknown, path: JsonPathType): LosslessInspectio
               )
             )
           ),
-          Match.orElse(() => Effect.succeed([]))
+          Match.orElse(() => inspectUnmatchedConstructor(wire, "meta", path))
         ),
     })
   );
