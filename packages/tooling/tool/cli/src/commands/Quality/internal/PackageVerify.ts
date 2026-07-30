@@ -196,7 +196,7 @@ const byWorkspacePathLengthDescending = Order.flip(
   Order.mapInput(Order.Number, (workspace: PackageVerifyWorkspace) => Str.length(workspace.dir))
 );
 
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- local rendering makes verification errors show the exact invocation
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
 const linesFromText = (text: string): ReadonlyArray<string> =>

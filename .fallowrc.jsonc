@@ -226,6 +226,16 @@
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
   "health": {
+    // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
+    // mechanism in standards/architecture/DECISIONS.md). Only maxCognitive tightens vs
+    // fallow defaults; the rest are pinned so the effective gate is explicit in-repo.
+    // Calibration: p99 cognitive = 6 across 41,469 functions; a judged marginal-band
+    // panel put every honest best-version ceiling at <=8 (two outliers, override
+    // material). Revisit 6 after goals/complexity-ceiling-burn-down clears the >15 tail.
+    "maxCognitive": 8,
+    "maxCyclomatic": 20,
+    "maxCrap": 30,
+    "maxUnitSize": 60,
     "thresholdOverrides": [
       {
         "files": [
@@ -233,7 +243,7 @@
         ],
         "functions": ["TripleValidationMessages"],
         "maxCrap": 73,
-        "reason": "Pre-existing function unchanged by the import-extension migration; Fallow audit attributes its CRAP finding as introduced when the file's import suffix changes."
+        "reason": "Pre-existing function unchanged by the import-extension migration; Fallow audit attributes its CRAP finding as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       },
       {
         "files": [
@@ -241,7 +251,7 @@
         ],
         "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
         "maxCrap": 57,
-        "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes."
+        "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       }
     ]
   },
@@ -252,6 +262,10 @@
     "duplicate-exports": "off",
     "unused-catalog-entries": "off",
     "empty-catalog-groups": "off",
-    "boundary-violation": "error"
+    "boundary-violation": "error",
+    // Suppression hygiene: every fallow-ignore-* marker must carry `-- <reason>`.
+    // Enabled 2026-07-30 with the cognitive-ceiling law; legacy bare pragmas were
+    // backfilled in the same change.
+    "require-suppression-reason": "error"
   }
 }

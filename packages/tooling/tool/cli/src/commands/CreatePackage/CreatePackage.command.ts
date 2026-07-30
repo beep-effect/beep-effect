@@ -811,7 +811,7 @@ export const createPackageCommand = Command.make(
   },
   // Pre-existing complexity debt: this handler predates the fallow audit gate
   // and only re-entered the diff via a one-line registry fix (2026-06-12).
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- legacy scaffold handler keeps flag validation and file planning in one transaction
   Effect.fn(function* (config) {
     const {
       name,

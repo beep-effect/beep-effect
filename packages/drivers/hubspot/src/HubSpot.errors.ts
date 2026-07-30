@@ -210,7 +210,7 @@ export class HubSpotErrorOptions extends S.Class<HubSpotErrorOptions>($I`HubSpot
 ) {}
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the HubSpot boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
