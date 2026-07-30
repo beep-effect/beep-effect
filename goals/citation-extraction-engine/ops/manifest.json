@@ -5,7 +5,7 @@
     "title": "Citation Extraction Engine",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-29",
+    "updated": "2026-07-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
@@ -95,10 +95,12 @@
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/citation-extraction-engine/GOAL.md)\" -le 4000",
-    "jq . goals/citation-extraction-engine/ops/manifest.json",
-    "test \"$(git -C /home/elpresidank/YeeBois/research/law_stuff/repos/eyecite rev-parse HEAD)\" = \"04d82c032ad5fd0f9ab72a61c87110c46ee8f52e\"",
-    "rg -n \"canonical|capability|disposition|Bluebook|single.*PR\" goals/citation-extraction-engine",
-    "git diff --check -- goals/citation-extraction-engine THIRD_PARTY_NOTICES.md",
+    "jq -e . goals/citation-extraction-engine/ops/manifest.json >/dev/null",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
+    "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
+    "git diff --check -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
     "bun run beep yeet verify",
     "bun run beep lint reflection-artifacts"
   ],

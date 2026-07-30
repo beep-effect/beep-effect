@@ -27,10 +27,22 @@ runtime dependency.
 4. `resolve_citations`
 
 The pinned source contains nine implementation modules plus
-`test_factories.py`, nine `test_*.py` modules, one text asset, and 52 unittest
+`test_factories.py`, eight `test_*.py` modules, one text asset, and 52 unittest
 methods. Several unittest methods hold large parameter/fixture tables, so 52 is
 not the future parity-case count. Each independently asserted tuple/subtest must
 become its own case-level ledger row.
+
+Reproduce the inventory from a configured live clone:
+
+```sh
+(cd "$EYECITE_ORACLE_ROOT" && find eyecite -maxdepth 1 -type f -name '*.py' ! -name '__init__.py' ! -name 'test_factories.py' -printf '%f\n' | sort)
+(cd "$EYECITE_ORACLE_ROOT" && find tests -maxdepth 1 -type f -name 'test_*.py' -printf '%f\n' | sort)
+(cd "$EYECITE_ORACLE_ROOT" && rg -n '^[[:space:]]+def test_' tests --glob 'test_*.py')
+```
+
+The first command emits nine modules, the second eight test modules, and the
+third 52 methods. P0 still requires case/assertion-level accounting rather than
+trusting these aggregate counts.
 
 ## Executable oracle proof
 
@@ -95,11 +107,21 @@ requires an explicit baseline decision.
   `domhandler` is not installed. This is not a green or meaningful red source
   baseline.
 
-Neither port is normative merely because it has more tests or features.
-No dependencies were installed during this packet pass. P0 must provision the
-pinned lockfiles with explicit authorization, rerun both suites, inventory
-unique failures/capabilities, and apply the extension gates before
-implementation.
+Neither port is normative merely because it has more tests or features. No
+dependencies were installed during this packet pass.
+
+P0 must pause for explicit user authorization before installing donor
+dependencies. After authorization, use the exact frozen-lockfile commands:
+
+```sh
+(cd "$EYECITE_TS_ROOT" && pnpm install --frozen-lockfile && pnpm test -- --run)
+(cd "$EYECITE_JS_ROOT" && bun install --frozen-lockfile && bun test)
+```
+
+Record commit/tree, tool versions, exact commands, logs, and clean status before
+and after. Do not edit lockfiles, install globally, repeat a failed
+authentication loop, or move an extension out of `audit` until its pinned donor
+suite and focused source case are reproducible.
 
 ## Drift policy
 

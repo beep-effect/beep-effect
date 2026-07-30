@@ -1,71 +1,69 @@
 # GOAL: deliver eyecite capability parity as an Effect-native citation engine
 
-Repo root is the current `beep-effect` checkout. Use repo-relative paths.
+Work from the current `beep-effect` checkout and use repo-relative paths.
 
-Outcome: an attributed, schema-first, Effect-native implementation has
-observable parity with pinned Free Law Project eyecite 2.7.6, adopts only proven
-TypeScript extensions, preserves verified source evidence, and exposes lawful
-schema transformations including a Bluebook-style proof.
+Outcome: ship an attributed, schema-first, Effect-native engine with observable
+capability parity to pinned Free Law Project eyecite 2.7.6, exact verified
+source evidence, lawful schema transforms, and only proven TypeScript-port
+extensions.
 
-Read first:
+Read `AGENTS.md`, `CLAUDE.md`, applicable architecture/skill instructions, both
+prerequisite contracts, then this packet in the order defined by
+`goals/README.md`. Packet prose never overrides repository law.
 
-- the packet's `README.md`, `SPEC.md`, `PLAN.md`, and `GOAL.md`
-- `ops/manifest.json` and all files under `research/`
-- `AGENTS.md`, `CLAUDE.md`, dependency contracts, and named standards
-
-Normative oracle:
-
-- Official Python eyecite commit
-  `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e` (version 2.7.6).
-- Default read-only clone:
-  `/home/elpresidank/YeeBois/research/law_stuff/repos/eyecite`.
-- `eyecite-ts` and `eyecite-js` are differential/extension references only.
+Behavior oracle: official eyecite commit
+`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`. A live clone is optional
+maintainer evidence configured with `EYECITE_ORACLE_ROOT`; committed fixtures
+and accounting are the portable gate. `eyecite-ts` and `eyecite-js` are
+differential/extension references only.
 
 Blocked by:
 
 - `goals/citation-verified-span-substrate`
 - `goals/court-reporter-vocabulary`
 
-P0 source/accounting work may proceed. Do not freeze or implement public engine
-contracts until both dependencies are public and compatible.
+P0 accounting may proceed. Before P1, both prerequisite contracts must be
+available and `history/evidence/prerequisite-compatibility.md` must record their
+exact symbols, public imports, versions, compatibility, and approved
+adaptations. Until then, separation/removal decisions are binding but target
+field/import/version details are provisional.
 
 Required interpretation:
 
-1. Port behavior and coverage, not Python classes or file layout.
-2. Account for every canonical capability and upstream test case. No canonical
-   row may be rejected or deferred.
-3. Give every unique TypeScript-port capability an evidenced disposition:
-   adopted, subsumed, rejected, or follow-up. Adopt only licensed, tested,
-   coherent extensions that preserve bounded deterministic execution.
-4. Rebuild existing provisional schemas freely. Keep durable legal concepts;
-   remove copied implementation shapes and parallel truth.
-5. Separate semantic citations, source mentions/anchors, resolution, document
-   grouping, and run diagnostics.
-6. Model public/inter-stage data as annotated Effect schemas. Extraction is an
-   Effect API, not a reversible codec.
-7. Bidirectional transforms require round-trip equality; canonicalizing
-   transforms prove semantic equivalence; lossy/partial directions fail typed.
-8. Replace the static best-effort Bluebook formatter with structured
-   `BluebookCitation`, `BluebookFromFullCitation`, and text transformations.
-   This proves supported transformations, not full manual compliance.
-9. Use case/Id./supra/35 U.S.C./37 C.F.R. as the first internal slice; complete
-   canonical parity and accepted extensions before publishing.
-10. Deliver packet, code, corpus, transforms, proof, and closeout in one PR.
-    Use reviewable local commits; publish after local gates are green.
+1. Port behavior and exhaustive coverage, not donor classes or file layout.
+2. Reconcile a static source inventory with runtime oracle cases. The portable
+   checker must reject every missing, duplicate, nonterminal, unlicensed, or
+   unexplained row.
+3. Give every TypeScript-port export/test behavior one evidenced disposition:
+   adopted, subsumed, rejected, or follow-up. Donor installs require explicit
+   authorization and frozen lockfiles.
+4. Freely replace provisional citation schemas. Separate semantic citations,
+   verified mentions, document-local mention/authority IDs, resolution data,
+   document relationships, and run diagnostics. Reserve shared
+   `LawPractice.CitationId` for a persisted entity.
+5. Publish semantic schemas from law-practice domain; the raw-text request,
+   closed errors, ports, and `CitationEngine` `Context.Service` from
+   `@beep/law-practice-use-cases/server`; test fixtures from `/test`; and the
+   live Layer from `@beep/law-practice-server/layer`. Publish no client surface
+   unless a safe consumer is proved.
+6. Every service method has `R = never`. Named modes are schema data; callable
+   cleaners/tokenizers are injected server services, never function-valued
+   request fields.
+7. The `Citation` schema is its own structured codec; do not add a redundant
+   wire model. `BluebookFromFullCitation` must accept
+   `FullCitation.Type` in the exact `S.decodeEffect(...)(citation)` call and
+   declare separate information and directional-totality laws.
+8. Ambiguous, unresolved, and unknown citations are data. Boundary failures
+   use a closed tagged error union. Enforce schema-owned resource limits,
+   interruptibility-aware regex safety, clock-controlled timing, and
+   privacy-safe spans.
+9. Case/Id./supra/35 U.S.C./37 C.F.R. are the first internal slice, not the
+   completion boundary. Classify 35 U.S.C. under canonical `FullLawCitation`;
+   audit 37 C.F.R. before calling any residual behavior an extension.
+10. Deliver packet, implementation, corpus, proof, reflection, and lifecycle
+    update in one PR. Use phase-local green commits and do not freeze a public
+    completion claim until all accounting and quality gates pass.
 
-Acceptance:
-
-- [ ] Every canonical capability/test row is ported or intentionally subsumed
-      with equivalent proof; none is unreviewed, rejected, or deferred.
-- [ ] Every unique TypeScript extension has a final evidenced disposition.
-- [ ] Schema-disposition and transformation-law gates pass.
-- [ ] Exact UTF-16 source anchors, resolution, cleaning, extraction, annotation,
-      regex safety, property laws, docs, and differential parity pass.
-- [ ] No runtime Python, `eyecite-js`, `eyecite-ts`, hosted-parser, raw
-      vocabulary, or native Hyperscan dependency exists.
-- [ ] The one implementation PR is mergeable through Yeet and includes the
-      packet state change plus reflection.
-
-Stop rather than weaken scope when a dependency contract is unavailable,
-proven parity cannot be reproduced, or safety/fidelity would require an
-unrecorded divergence.
+Stop rather than weaken scope when a prerequisite is incompatible, exhaustive
+parity cannot be proved, safety/fidelity needs an unrecorded divergence, or the
+one-PR constraint cannot remain reviewable.

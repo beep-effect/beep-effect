@@ -3,15 +3,36 @@
 This document defines how the goal proves capability parity without copying
 Python object layout into the Effect-native domain model.
 
-## Oracle production
+## Oracle production and independent accounting
 
-1. Run the detached official eyecite pin with CPython 3.11.
-2. Enumerate every independently asserted upstream fixture/subtest case.
-3. Execute a versioned oracle exporter that emits schema-decoded normalized
-   records.
-4. Commit the normalized records and metadata; CI never requires the external
-   Python clone.
-5. Keep a live differential command for maintainers with the clone available.
+1. Run a static AST/source inventory over the detached pin, recording every
+   public operation, implementation/model/regex family, test method, assertion/
+   parameter/subtest source, fixture, and source-content hash.
+2. Independently run the pin with CPython 3.11 and an instrumented, versioned
+   oracle exporter that emits schema-decoded normalized case records.
+3. Reconcile static source IDs, runtime case IDs, aggregate capability rows, and
+   target-test IDs with an executable checker.
+4. Commit the inventories, normalized records, schemas, and metadata; CI never
+   requires the external Python clone.
+5. Keep live regeneration/differential commands for maintainers with the clone
+   available.
+
+The portable artifacts live under
+`packages/law-practice/use-cases/test/fixtures/eyecite/`:
+
+- `source-inventory.json`;
+- `canonical-cases.json`;
+- `typescript-extensions.json`;
+- `divergences.json`;
+- `regex-inventory.json`; and
+- the adversarial regex corpus and benchmark metadata.
+
+Fixture schemas/helpers export only through
+`@beep/law-practice-use-cases/test`. The package command
+`citation:parity-check` validates accounting without a live clone. P0 includes
+negative-control tests proving it rejects every omission, duplicate,
+unknown/composite state, missing proof/license/hash/test, unexplained
+divergence, invalid follow-up, and unaccounted regex family.
 
 Each oracle record includes:
 
@@ -22,6 +43,12 @@ Each oracle record includes:
 - Python offset unit and UTF-16 conversion result;
 - normalized-output hash and exporter version; and
 - expected success, typed failure, warning, or ambiguity.
+
+The source inventory and runtime exporter must not derive case completeness
+from the same hand-maintained list. If dynamic test construction prevents exact
+static enumeration, record the static assertion/parameter source plus runtime
+case events and require the checker to reconcile their declared expansion
+rather than silently dropping the source.
 
 Use Effect Schema JSON codecs for in-repo fixture IO. Do not use native
 `JSON.parse`/`JSON.stringify` in the TypeScript harness.
@@ -114,50 +141,75 @@ pincite, reference target, or occurrence span.
 
 ## Transformation laws
 
-Every transformation module declares one category in its JSDoc/schema
-annotation and tests it with `S.toArbitrary` derived from the production source
-schema.
+Every transform module annotates and tests two independent axes:
 
-### Reversible
+- information law: `reversible | canonicalizing | projection`; and
+- decode/encode totality: `total | partial` for each direction.
 
-For `CitationWireFromCitation`:
+The property generators come from production schemas with `S.toArbitrary`.
+Every symbol also has dtslint proof for its exact encoded input, decoded output,
+decode Effect, encode Effect, and error/service channels.
 
-```text
-encode(decode(wire)) = wire
-decode(encode(citation)) = citation
-```
+### Base citation codec
 
-If constructor defaults make encoded key presence canonical, compare against
-the documented canonical encoded form in the first law.
-
-### Semantic/canonicalizing
-
-For `BluebookFromFullCitation` where the structured presentation contains all
-supported legal meaning:
+`Citation` itself is the structured codec. Do not add a
+`CitationWireFromCitation` wrapper that merely renames `Citation.Encoded`.
 
 ```text
-toFullCitation(toBluebook(citation)) ≈ citation
+decode(Citation.Encoded) = Citation.Type
+encode(Citation.Type) = Citation.Encoded
 ```
 
-The equivalence is the production semantic citation equivalence, not string
-equality.
+Test exact round trips. If schema defaults canonicalize encoded key presence,
+declare that as the schema's canonicalizing law rather than inventing a second
+wire model.
 
-### Text rendering/parsing
+### `BluebookFromFullCitation`
 
-For supported `BluebookTextFromBluebookCitation` grammar:
+The source schema is deliberately `S.toType(FullCitation)`, or a proven
+equivalent, so its `Encoded` is exactly `FullCitation.Type` and this invocation
+type-checks:
+
+```ts
+S.decodeEffect(BluebookFromFullCitation)(citation)
+```
+
+The transform has:
+
+- decoded output `BluebookCitation.Type`;
+- partial decode for unsupported full-citation forms;
+- total encode for every member of the supported structured Bluebook union;
+  and
+- a canonicalizing information law.
+
+For supported input:
 
 ```text
-parse(render(bluebook)) ≈ bluebook
-render(parse(text)) = canonical(text)
+encode(decode(fullCitation)) ≈ fullCitation
 ```
 
-Parsing unsupported or ambiguous text fails with a typed schema issue.
+The equivalence is the production semantic citation equivalence. Unsupported
+decode fails through `SchemaTransformation.transformOrFail` with a typed schema
+issue. The encode branch may not invent legal fields.
+
+### `BluebookTextFromBluebookCitation`
+
+Its encoded input is `BluebookCitation.Type` and decoded output is branded
+`BluebookText.Type`. Decode is total rendering; encode is partial parsing of
+the documented grammar:
+
+```text
+encode(decode(bluebook)) ≈ bluebook
+decode(encode(text)) = canonical(text)
+```
+
+Unsupported or ambiguous text fails with a typed schema issue.
 
 ### Projection
 
-When a representation discards information, encoding the projection back must
-fail explicitly. Tests assert the unsupported reverse path; it may not invent
-defaults or silently return a partial citation.
+A future projection declares its lossy direction and fails the unsupported
+reverse explicitly. It may not manufacture defaults or silently return a
+partial citation.
 
 ## Divergence ledger
 
@@ -179,7 +231,8 @@ or document the divergence with independent evidence and a focused regression.
 
 For each extension family:
 
-1. run the pinned donor suite and record baseline;
+1. obtain explicit authorization, use the frozen donor lockfile, run the pinned
+   donor suite, and record before/after clean status and baseline;
 2. enumerate unique exports and test-observed cases;
 3. remove cases already covered canonically;
 4. verify source/license and domain ownership;
@@ -207,6 +260,18 @@ Prefer a pure-JavaScript literal prefilter plus per-extractor regexes. Do not
 combine the whole reporter corpus into an opaque alternation. Do not claim a
 timeout interrupts an already running JavaScript regex.
 
+P0 freezes numeric `CitationEngineLimits` before P1. The adversarial lane uses
+geometric input sizes, recorded warmups/repetitions, runtime/tool/CPU metadata,
+and this stable growth gate: no accepted family exceeds a `3.5x` median-time
+increase for two consecutive input doublings. Absolute latency is
+informational. Deterministic pattern/work counters and configured caps are
+exact. A seeded catastrophic pattern must fail.
+
+Rewrite or reject unprovable patterns. Killable isolation is allowed only when
+canonical behavior cannot otherwise be retained and P0 records the boundary;
+a wall-clock timeout around same-thread JavaScript is never accepted as
+interruptibility proof.
+
 ## Required test lanes
 
 - official normalized case manifest;
@@ -214,9 +279,13 @@ timeout interrupts an already running JavaScript regex.
 - stage-level differential tests;
 - source-anchor hostile Unicode/HTML/drift cases;
 - schema decode/encode and typed-error tests;
+- service contract, `R = never`, error-translator, and Layer boundary tests;
 - transform property laws from production arbitraries;
 - adopted-extension regressions;
 - regex compatibility/adversarial runtime;
+- limit-exhaustion/nontruncation, bounded-concurrency, and Effect
+  `Clock`/`Duration` tests;
+- observability span/attribute allowlist and raw-payload redaction tests;
 - package tests and dtslint;
 - schema-first lint and documentation examples; and
 - local Yeet verification before the single publish.
@@ -232,7 +301,7 @@ Parity is complete only when:
 - every adopted extension case passes;
 - every divergence is explained and tested;
 - every source anchor obeys the raw-slice law; and
-- every transformation passes its declared law.
+- every transformation passes both declared law axes.
 
 Passing a percentage threshold, a sample corpus, or only the four public wrapper
 operations cannot close the goal.

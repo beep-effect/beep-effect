@@ -34,20 +34,38 @@ not an API compatibility constraint.
 - **Semantic equality**: equality of legal citation meaning after removing
   source evidence, diagnostics, and canonicalized presentation differences.
 
-## Source Hierarchy
+## Governing Authority
 
-1. This `SPEC.md` and the 2026-07-29 user override recorded below.
-2. `AGENTS.md`, `CLAUDE.md`, architecture standards, and required skills.
-3. Pinned official eyecite behavior, tests, fixtures, and BSD-2 license.
-4. Public contracts of both prerequisite goals.
-5. `research/CAPABILITY_LEDGER.md`, `SCHEMA_DISPOSITION.md`, and
-   `PARITY_METHOD.md`.
-6. Pinned `eyecite-ts` and `eyecite-js` as differential/extension evidence.
-7. Earlier exploration decisions where they do not conflict with this spec.
+Apply the repository-wide packet order from `goals/README.md`:
 
-The Python oracle decides canonical behavior. Repository laws decide TypeScript
-architecture. A TypeScript port may reveal a Python bug or useful extension but
-cannot silently redefine canonical parity.
+1. the current user objective and recorded product decisions;
+2. `AGENTS.md`, `CLAUDE.md`, and required skills;
+3. architecture and package standards governing the target surface;
+4. this `SPEC.md`;
+5. `PLAN.md`;
+6. `GOAL.md`; and
+7. supporting `research/`, `ops/`, and `history/` files.
+
+Repository law and architecture always outrank packet-local prose. If a
+prerequisite or packet statement conflicts with a higher authority, stop and
+record the conflict rather than choosing the convenient text.
+
+## Behavioral Oracle Hierarchy
+
+Within the governing constraints:
+
+1. pinned official eyecite behavior, tests, fixtures, and BSD-2 license define
+   canonical observable citation behavior;
+2. published prerequisite contracts define canonical source-anchor and
+   vocabulary representations;
+3. pinned `eyecite-ts` and `eyecite-js` provide differential and extension
+   evidence; and
+4. earlier exploration is context only where not superseded.
+
+The Python oracle does not decide TypeScript architecture, package ownership,
+resource safety, or public representations. A TypeScript port may expose a
+Python defect or useful extension but cannot silently redefine canonical
+parity.
 
 ## Blocked By
 
@@ -58,10 +76,19 @@ cannot silently redefine canonical parity.
   lookups, artifact version, and machine-readable compatibility classification.
 
 Source acquisition, case inventory, regex review, oracle generation design, and
-schema disposition may proceed. No production engine contract freezes and no
-P1 production implementation begins until both dependency surfaces are public
-and compatible. Raw generated vocabulary files and locally invented anchor
-substitutes do not clear these blockers.
+schema separation/removal decisions may proceed. No production engine contract
+freezes and no P1 production implementation begins until both dependency
+surfaces are public and compatible. Raw generated vocabulary files and locally
+invented anchor substitutes do not clear these blockers.
+
+P0 must create
+`history/evidence/prerequisite-compatibility.md` before P1. It records exact
+exported symbols, canonical import subpaths, anchor/vocabulary artifact
+versions, compatibility results, approved adaptations, reviewer/date, and
+reproducing commands. Until that gate is approved, exact prerequisite-derived
+fields, brands, imports, versions, and codecs in this packet are provisional;
+the separation, ownership, removal, and no-duplicate-truth decisions are
+binding now.
 
 ## Required Capability Surface
 
@@ -109,6 +136,13 @@ An extension may be adopted only when:
    bounded regex/runtime behavior; and
 5. it does not create parallel truth for a canonical or prerequisite concept.
 
+Source inspection may create an `unresolved` audit row but cannot prove an
+extension. Installing or executing either donor suite requires explicit user
+authorization, the pinned checkout, and its frozen lockfile. P0 records the
+exact command, tool versions, commit/tree, before/after clean status, and result.
+It may not edit donor lockfiles, install globally, or treat a dependency-blocked
+suite as green.
+
 The audit includes, at minimum, stable citation IDs, segment maps, false-positive
 filters, granular legal-form extractors, typed parse errors, court/pincite
 normalization, document/scope resolution, footnotes, document analysis and
@@ -118,38 +152,79 @@ Id.-section substitution.
 
 ## Target Ownership and Architecture
 
-Legal meaning stays in `packages/law-practice/domain`. Use-case orchestration and
-engine services stay in the law-practice use-case role. Generic verified source
-provenance stays in its prerequisite owner.
+Generic verified source provenance stays in its prerequisite owner. The engine
+may use different algorithms, composition, or internal files from Python. It
+may not require Python, `eyecite-ts`, `eyecite-js`, a hosted parser, native
+Hyperscan, or privileged off-box text at runtime.
 
-All public and inter-stage data must be the decoded type of an annotated Effect
-schema. Service contracts may be interfaces; citation, token, request, result,
-warning, error payload, fixture, and transform models may not be hand-authored
-data interfaces.
+All public and inter-stage data is the decoded type of an annotated Effect
+schema. Service contracts may be interfaces; citations, tokens, requests,
+results, warnings, error payloads, fixtures, limits, and transforms may not be
+hand-authored data interfaces.
 
-The target conceptual surface is:
+### Publication boundary
+
+| Surface | Canonical owner/export | Boundary rule |
+| --- | --- | --- |
+| `Citation`, derived full/short subsets, `CitationMention`, document-local IDs, resolution/document values, and structured Bluebook schemas | `@beep/law-practice-domain/values` through one citation concept barrel | Legal semantics and evidence composition only; no engine service, run telemetry, or callback values. |
+| Raw-text request, server options, `CitationEngineLimits`, `CitationEngineReport`, action errors, cleaner/tokenizer ports, and `CitationEngine` service contract | `@beep/law-practice-use-cases/server` | Server-only. Full source text and server services never export from package root or `/public`. |
+| Fixture schemas, fakes, oracle case helpers, and parity harness support | `@beep/law-practice-use-cases/test` | Test-only; production code cannot import this subpath. |
+| Live engine, cleaner/tokenizer adapters, and composed Layer | `@beep/law-practice-server/layer` | Implementation and dependency composition; no contract redefinition. |
+| Client-safe citation API | none in this goal | Add only after a concrete consumer and a redacted, raw-text-free contract pass separate boundary review. |
+
+Package `README.md`, `package.json` exports, source barrels, dtslint imports,
+JSDoc examples, and docgen proof must agree with this table. Intermediate
+tokens/candidates remain private unless a demonstrated external consumer
+requires a reviewed schema.
+
+### Conceptual surface
 
 - `Citation`: tagged semantic union containing legal meaning only.
-- `FullCitation` and `ShortFormCitation`: derived tagged-union subsets.
-- `CitationMention`: stable citation ID, semantic citation, verified source
-  anchor, matched text, component anchors, and typed warnings.
+- `FullCitation` and `ShortFormCitation`: schema-derived tagged-union subsets.
+- `CitationMention`: one semantic citation, document-local mention ID, verified
+  source anchor, exact matched text, component anchors, and typed warnings.
 - `CitationResolution`: tagged `Resolved | Ambiguous | Unresolved` outcomes
-  using stable IDs, not array positions.
+  using brand-separated IDs, never array positions.
 - `CitationDocument`: mentions, authority groups, references, and resolution
   relationships.
-- `CitationEngineInput`: source identity/text plus schema-defined options.
-- `CitationEngineReport`: stage diagnostics, timing, pattern counts, and safety
-  evidence; never embedded in semantic citations.
-- `CitationEngine`: Effect service exposing the canonical operations through
-  repo-native typed errors and schema-decoded boundaries.
+- `CitationEngineInput`: server-only source identity/text plus schema-defined
+  operation options.
+- `CitationEngineReport`: deterministic counts/versions/safety decisions and
+  nondeterministic timing, separate from semantic citations.
 
-The engine may use different algorithms, composition, or internal files from
-Python. It may not require Python, `eyecite-ts`, `eyecite-js`, a hosted parser,
-native Hyperscan, or privileged off-box text at runtime.
+`CitationMentionId` identifies one occurrence inside one source version and
+is reproducible for the same source version, engine artifact version, verified
+anchor, and semantic discriminant. It remains stable through pipeline stages,
+consumer reordering, and an identical replay, but changes when those identity
+inputs change. `CitationAuthorityId` identifies an authority group within a
+`CitationDocument` and is reproducible from its versioned semantic authority
+key. Neither is a persisted entity ID; the brands are not interchangeable.
+
+The shared `LawPractice.CitationId` in
+`@beep/shared-domain/identity/LawPractice` is reserved for a persisted citation
+entity assigned at the persistence boundary. The engine must remove/rename the
+current donor-shaped law-practice `CitationId`; it must not redefine or shadow
+the shared entity ID. Internal pre-mention candidates may use a private
+`CitationCandidateId`, but no public candidate ID is added without a consumer.
+
+### Service and injectable behavior
+
+`CitationEngine` is a `Context.Service` exported from the server use-case
+subpath. It exposes cleaning, extraction, resolution, and annotation operations.
+Every method returns `Effect<Output, ClosedActionError, never>`: all
+dependencies are captured when constructing the live Layer.
+
+Named cleaning/tokenizer modes and options use schema literals. Canonical
+callable-cleaner/custom-tokenizer behavior is represented by explicit
+server-only `CitationCleaner` and `CitationTokenizer` service ports and their
+Layers, never by function-valued request or schema fields. The live
+implementation and port adapters belong to law-practice server.
 
 ## Existing Law-Practice Schema Migration
 
-Apply `research/SCHEMA_DISPOSITION.md` as a binding migration ledger.
+Apply `research/SCHEMA_DISPOSITION.md` as the binding separation, ownership,
+removal, and duplicate-truth ledger. Exact prerequisite-derived field/import/
+version choices remain provisional until the compatibility gate.
 
 Required outcomes:
 
@@ -174,34 +249,53 @@ Required outcomes:
    recursive embedded citation copies.
 10. Leave unrelated patent and knowledge-graph values unchanged.
 
-No deprecation or compatibility shim is required: the package is private, no
-production consumer of the provisional citation surface is known, and the user
-explicitly selected a free rebuild.
+No deprecation or compatibility shim is currently required: the package is
+private, the recorded source/barrel/import scan found no production consumer of
+the provisional citation surface, and the user explicitly selected a free
+rebuild. Repeat the exact recorded scan immediately before deletion and at
+close. A newly discovered production consumer pauses deletion and requires a
+dated bridge/removal decision; `private: true` alone is not consumer evidence.
 
 ## Transformation Contract
 
 Deterministic representation changes are schemas, not unrelated formatter
-functions.
+functions. Every Effect schema already defines decoded `Type`, `Encoded`, and
+decode/encode operations; do not add `CitationWireFromCitation` merely to
+rename the normal encoded form. A materially different, versioned transport
+envelope requires a demonstrated consumer and a separate schema.
 
-Required proof surface:
+Every transform declares two orthogonal properties:
 
-- `CitationWireFromCitation`: lossless structured citation representation with
-  exact decode/encode round-trip equality.
-- `BluebookCitation`: structured, tagged, source-supported presentation model.
-- `BluebookFromFullCitation`: `FullCitation -> BluebookCitation`, directly
-  usable as `S.decodeEffect(BluebookFromFullCitation)(citation)`.
-- `BluebookTextFromBluebookCitation`: structured presentation to branded text,
-  with reverse parsing only for the documented supported grammar.
+1. **information law** — `reversible`, `canonicalizing`, or `projection`; and
+2. **directional totality** — `total` or `partial` independently for decode and
+   encode.
 
-Every transformation declares and tests exactly one law:
+| Symbol | Encoded input to decode | Decoded output | Decode | Encode | Information law |
+| --- | --- | --- | --- | --- | --- |
+| `Citation` | `Citation.Encoded` | `Citation.Type` | total for valid encoded data | total for valid semantic members | Reversible, except explicitly annotated constructor/default canonicalization. |
+| `BluebookFromFullCitation` | `FullCitation.Type` | `BluebookCitation.Type` | partial for unsupported full-citation forms | total because the structured Bluebook union represents only supported forms | Canonicalizing; supported decode→encode preserves semantic citation equality. |
+| `BluebookTextFromBluebookCitation` | `BluebookCitation.Type` | `BluebookText.Type` | total structured rendering | partial parsing of the documented grammar | Canonicalizing; parse/render converges on one supported text form. |
 
-- **reversible**: decode then encode and encode then decode preserve equality;
-- **canonicalizing**: round trips preserve semantic equality and yield one
-  canonical representation;
-- **partial**: invalid/unsupported inputs fail with typed schema issues;
-- **projection**: the unsupported reverse direction fails explicitly.
+`BluebookFromFullCitation` must deliberately use `S.toType(FullCitation)` as
+its source side, or a proven equivalent whose `Encoded` is exactly
+`FullCitation.Type`, so this call type-checks:
 
-Never implement an encode branch that manufactures missing semantic data.
+```ts
+const bluebook = S.decodeEffect(BluebookFromFullCitation)(citation)
+```
+
+Its reverse call
+`S.encodeEffect(BluebookFromFullCitation)(bluebook)` returns a semantically
+equivalent `FullCitation.Type`. Unsupported decoded forms fail with a typed
+schema issue through `SchemaTransformation.transformOrFail`; encode may not
+manufacture missing legal data. Dtslint must prove both exact calls and their
+inferred Effect types.
+
+`BluebookTextFromBluebookCitation` renders on decode and parses on encode.
+Property tests cover both directions and unsupported/ambiguous text. A future
+projection must declare the unsupported reverse direction and fail it
+explicitly.
+
 Delete the static best-effort `FullCaseCitation.toBlueBook` helper when its
 schema replacement lands. Use `Bluebook` casing in exported names.
 
@@ -210,27 +304,113 @@ not claim exhaustive compliance with the Bluebook manual, and it does not
 transcribe unlicensed rule text. A full rule/edition coverage program is a
 separate goal.
 
+## Action Errors and Boundary Translation
+
+Ambiguous, unresolved, unknown, filtered, and unsupported citation meanings are
+schema-modeled domain outcomes, not Effect failures.
+
+The server use-case subpath owns a closed union of annotated
+`TaggedErrorClass` action errors:
+
+- `CitationInputError` for request/schema boundary failures;
+- `CitationPrerequisiteError` for incompatible or unavailable
+  anchor/vocabulary contracts;
+- `CitationSafetyLimitExceeded` for any deterministic resource or deadline
+  limit;
+- `CitationAnnotationError` for invalid replacement/markup operations; and
+- `CitationOperationUnsupported` only for an explicitly unsupported requested
+  mode, never for a missing canonical capability.
+
+At the service boundary, translate schema issues and every prerequisite/port
+error into that closed union. Methods may not leak `ParseError`, donor
+exceptions, adapter errors, or open `unknown` failures. Defects are reserved for
+violated internal invariants. Each translator needs focused tests, including
+payload redaction. Emit a structured server log/span event when useful
+technical detail is intentionally dropped, without including raw source text.
+
+## Resource and Regex Safety
+
+P0 freezes an annotated `CitationEngineLimits` schema and its numeric
+defaults/maxima before P1. Server Layer configuration owns the caps; a request
+may only choose equal or tighter limits. At minimum, bound:
+
+- source UTF-16 code units;
+- candidate, token, mention, and authority counts;
+- pattern evaluations and matches;
+- resolution edges/iterations;
+- annotation replacements and output/diff growth;
+- concurrency; and
+- per-stage deadlines represented with `Duration`.
+
+Limit exhaustion fails with `CitationSafetyLimitExceeded`; never silently
+truncate a parity result. Use bounded Effect concurrency and Effect
+`Clock`/`Duration` services. A timeout around synchronous JavaScript regex does
+not make that regex interruptible.
+
+Every accepted pattern family needs static compatibility review, a literal
+prefilter/routing decision, deterministic work caps, and a committed
+adversarial benchmark using geometric sizes, warmups/repetitions, and
+environment metadata. No family may exceed a `3.5x` median-time increase for
+two consecutive input doublings. A seeded catastrophic negative-control
+pattern must fail. Absolute wall-clock latency is informational.
+
+Prefer rewritten/static-safe JavaScript patterns. If a canonical family cannot
+be proven within the caps, either reject the implementation strategy and stop,
+or isolate it in a killable worker boundary approved and recorded during P0.
+
+## Observability and Determinism
+
+The server operation spans are:
+
+- `law_practice.citation.clean`;
+- `law_practice.citation.extract`;
+- `law_practice.citation.resolve`; and
+- `law_practice.citation.annotate`.
+
+Prerequisite/port calls receive child spans; technical adapter spans stay in the
+server Layer. Allow only bounded, low-cardinality attributes such as operation
+mode, outcome tag, counts, limit kind, anchor/vocabulary versions, and pattern
+family ID. Never emit source text, matched text, rendered citations, regex
+bodies, replacement bodies, arbitrary metadata, PII, secrets, or unbounded
+identifiers.
+
+`CitationEngineReport` complements tracing; it does not replace it. Semantic
+fixtures and content hashes exclude elapsed timing. Deterministic counts,
+versions, ordering, limit decisions, and outcome tags compare exactly. Timing
+uses Effect `Clock`/`Duration` and is tested with `TestClock` or invariant
+bounds, never exact host milliseconds.
+
 ## Parity and Evidence Rules
 
-1. Generate oracle outputs from the pinned Python clone and commit normalized
-   fixtures so CI does not depend on that external checkout.
-2. Record upstream commit, source test/case ID, fixture license, generator
-   version, and content hash beside every generated oracle.
-3. Compare stages independently: cleaning/mapping, tokens, semantic citations,
+1. Independently enumerate the pinned source/tests/fixtures/regex families and
+   export instrumented runtime cases. Commit both inventories; reconcile their
+   case IDs rather than trusting one hand-written list.
+2. Generate normalized fixtures from the pinned Python clone so CI does not
+   depend on that external checkout.
+3. Record upstream commit/tree, source file/method/case ID, source-content hash,
+   fixture license, generator version, and fixture hash beside every oracle.
+4. Compare stages independently: cleaning/mapping, tokens, semantic citations,
    mentions/anchors, filtering/grouping, resolution, and annotation.
-4. Normalize only declared representation differences. Python code-point
+5. Normalize only declared representation differences. Python code-point
    offsets must be explicitly converted to canonical half-open UTF-16 offsets;
    the resulting raw slice must reproduce the exact matched text.
-5. Treat a missing field, dropped fixture, unclassified warning, or unexplained
+6. Treat a missing field, dropped fixture, unclassified warning, or unexplained
    span difference as a parity failure.
-6. Preserve upstream regressions as focused named tests rather than only one
+7. Preserve upstream regressions as focused named tests rather than only one
    monolithic snapshot.
-7. Preserve the full BSD-2 terms and affected-material attribution in
+8. Preserve the full BSD-2 terms and affected-material attribution in
    `THIRD_PARTY_NOTICES.md` for copied/adapted code, regular expressions, and
    fixtures.
-8. Keep regex compatibility and adversarial timing evidence per pattern family.
+9. Keep regex compatibility and adversarial timing evidence per pattern family.
    A timeout wrapper alone is not proof that a JavaScript regex is interruptible
    or safe.
+
+P0 commits the exact artifacts and checker defined in `PLAN.md`. The
+`citation:parity-check` script independently rejects missing/duplicate cases,
+unknown or composite states, incomplete canonical proof, unproved adopted
+extensions, follow-ups without an existing successor goal, missing licenses/
+hashes/tests, unexplained divergences, and unaccounted regex families.
+Deliberately corrupted negative fixtures prove every rejection path.
 
 ## Delivery Constraint
 
@@ -240,9 +420,18 @@ implementation PR. Local commits may separate phases for review. Do not open
 incremental phase PRs; publish after local verification is green to avoid
 unnecessary hosted CI executions.
 
-The current full/short case, `Id.`, supra, 35 U.S.C., and 37 C.F.R. forms remain
-the first internal vertical slice. They are an implementation order, not the
-completion boundary.
+The current full/short case, `Id.`, supra, 35 U.S.C., and 37 C.F.R. fixtures
+remain the first internal vertical slice. They are an implementation order, not
+the completion boundary. Official `FullLawCitation` owns canonical U.S.C.
+behavior. P0 audits C.F.R. field by field against canonical law behavior and
+classifies only genuinely additional, independently proved semantics as an
+extension.
+
+Both prerequisite contracts and the compatibility record must be complete
+before P1. Each phase ends in a focused local green commit and archived
+evidence. No public completion/stability claim is made until every phase closes.
+If one-PR delivery becomes unreviewable or unverifiable, stop for direction
+instead of silently splitting delivery or weakening scope.
 
 ## Non-Goals
 
@@ -258,26 +447,35 @@ completion boundary.
 
 ## Acceptance Criteria
 
-- [ ] The official clone is at the pinned commit; source/tree/license hashes and
-      executable baseline evidence are recorded.
+- [ ] Captured live-oracle evidence confirms the pinned commit and executable
+      suite; committed source/tree/license hashes make that baseline portable.
 - [ ] Both prerequisite public contracts are complete and their exact artifact/
-      anchor versions are recorded before production implementation.
+      anchor versions/imports/compatibility are recorded before production
+      implementation.
+- [ ] Static source inventory and runtime oracle export reconcile exactly; the
+      executable accounting checker and every negative control pass.
 - [ ] Every canonical public capability, unittest method, embedded fixture case,
-      model behavior, and regex family has a ledger row and terminal proof.
-- [ ] No canonical row is unreviewed, rejected, deferred, or explained only by
+      model behavior, and regex family has a ledger row and complete proof.
+- [ ] No canonical row is unresolved, rejected, deferred, or explained only by
       an aggregate pass percentage.
 - [ ] Every unique TypeScript-port capability has a final disposition; every
       adopted extension has focused regression proof.
 - [ ] The schema-disposition migration is complete with no mixed semantic/
-      source/diagnostic base object or duplicate prerequisite contract.
+      source/diagnostic base object, ambiguous citation identity, or duplicate
+      prerequisite contract.
 - [ ] Current first-slice forms and all remaining canonical forms preserve exact
       verified raw UTF-16 anchors.
 - [ ] Cleaning, tokenization, extraction, filtering, grouping, resolution, and
       annotation differential suites have zero unexplained differences.
-- [ ] Reversible, canonicalizing, partial, and projection transforms pass their
-      declared property laws; unsupported directions fail explicitly.
-- [ ] Regex corpus compatibility and adversarial timing justify the selected
-      bounded execution strategy.
+- [ ] Every transform's information law and decode/encode totality pass
+      production-schema property tests and exact dtslint call proofs.
+- [ ] `CitationEngine` ownership, `R = never` methods, closed action errors, and
+      every boundary translator pass contract tests.
+- [ ] `CitationEngineLimits`, bounded concurrency, regex compatibility,
+      adversarial growth/negative control, and nontruncating limit failures
+      justify the selected execution strategy.
+- [ ] Operation spans, attribute allowlist/redaction tests, deterministic report
+      fields, and `Clock`/`Duration` timing tests pass.
 - [ ] No runtime reference dependency, raw vocabulary import, hosted parser, or
       second public citation hierarchy exists.
 - [ ] Focused package tests, dtslint, schema-first lint, docgen, repo quality,
@@ -290,13 +488,15 @@ completion boundary.
 | Check | Required evidence |
 | --- | --- |
 | Source baseline | Pin/tree/license hashes plus official suite execution |
-| Canonical accounting | Case-level ledger has no missing or nonterminal canonical row |
-| Extension accounting | Every unique TS behavior has a final disposition |
+| Canonical accounting | Independent source/runtime inventories plus executable zero-missing/duplicate/nonterminal query |
+| Extension accounting | Every unique TS behavior has a final disposition, proof, and successor where required |
 | Schema migration | Disposition ledger and source/barrel/consumer scans agree |
 | Differential parity | Zero unexplained stage-level differences |
 | Span fidelity | Exact raw substring at canonical UTF-16 half-open anchor |
-| Transform laws | Property tests from production schemas/arbitraries |
-| Regex safety | Static compatibility inventory plus adversarial runtime evidence |
+| Transform laws | Direction/type dtslint plus two-axis property tests from production schemas/arbitraries |
+| Service/errors | Boundary ownership, `R = never`, closed-error and translator tests |
+| Regex/resources | Static inventory, exact work caps, adversarial growth gate, and catastrophic negative control |
+| Observability | Named spans, low-cardinality redaction, deterministic report and Effect Clock proof |
 | Package quality | Tests, type checks, lint, dtslint, and docgen green |
 | Repo/PR quality | `bun run beep yeet verify`, hosted checks, and review green |
 
@@ -308,7 +508,8 @@ completion boundary.
   reproducibly.
 - A canonical behavior would require weakened source fidelity, unbounded
   execution, hosted truth, or a parallel citation hierarchy.
-- A proposed reversible transformation would need to invent information.
+- A declared reversible/canonicalizing encode direction would need to invent
+  information.
 - Verification requires unnamed credentials, cost beyond the authorized PR
   workflow, destructive effects, or additional product authority.
 
@@ -316,8 +517,9 @@ completion boundary.
 
 - **2026-07-29 capability override:** “port” means 1:1 observable capability,
   not a greenfield subset and not 1:1 source architecture.
-- **2026-07-29 source hierarchy:** pinned official Python eyecite is normative;
-  both TypeScript ports are differential and extension references.
+- **2026-07-29 behavioral oracle:** pinned official Python eyecite is normative
+  for observable citation behavior within repo law; both TypeScript ports are
+  differential and extension references.
 - **2026-07-29 schema compatibility:** existing citation value schemas may be
   split, merged, renamed, or removed without compatibility shims.
 - **2026-07-29 transformations:** use lawful schema transformations; do not

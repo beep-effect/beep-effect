@@ -1,18 +1,30 @@
 # Citation Extraction Engine — Sources and Provenance
 
-This ledger is authoritative for the engine goal. The originating exploration
-remains useful context, but the 2026-07-29 capability-parity decision supersedes
-its narrow-v1 and preserve-existing-shapes assumptions.
+This ledger is authoritative for provenance within the governing repository
+order. The originating exploration remains useful context, but the 2026-07-29
+capability-parity decision supersedes its narrow-v1 and
+preserve-existing-shapes assumptions.
 
-## Source hierarchy
+## Governing authority
+
+This provenance ledger does not define repository authority. Apply the order in
+`goals/README.md`: user objective, repo instructions/skills, architecture and
+package standards, `SPEC.md`, `PLAN.md`, `GOAL.md`, then supporting packet
+files. No external repository can override that order.
+
+## Behavior and provenance oracle hierarchy
 
 | Priority | Source | Role |
 | --- | --- | --- |
 | 1 | Official Free Law Project `eyecite` pin | Normative behavior, models, regressions, fixtures, regexes, cleaning, extraction, resolution, and annotation |
-| 2 | Repo architecture, Effect/schema laws, and prerequisite public contracts | Normative TypeScript architecture, ownership, errors, spans, and identities |
+| 2 | Published prerequisite public contracts | Canonical source-anchor and vocabulary representations within repo law |
 | 3 | `eyecite-ts` pin | Independent differential oracle and extension candidate inventory |
 | 4 | `eyecite-js` pin | Near-source TS comparison oracle and extension candidate inventory |
 | 5 | Earlier exploration and other legal tools | Context only; cannot override the sources above |
+
+Official eyecite is normative only for observable citation behavior. Repository
+architecture determines TypeScript ownership, services, errors, resource
+safety, and public representation.
 
 ## Pinned repositories
 

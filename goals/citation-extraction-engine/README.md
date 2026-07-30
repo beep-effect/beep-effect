@@ -26,7 +26,9 @@ inheritance, module layout, mutability, or API signatures.
 /goal follow the instructions in goals/citation-extraction-engine/GOAL.md
 ```
 
-`GOAL.md` is the compact launcher. `SPEC.md` remains normative.
+`GOAL.md` is the compact launcher. Repository instructions and architecture
+remain authoritative; within that boundary, `SPEC.md` is this packet's binding
+product contract.
 
 ## Read This First
 
@@ -44,15 +46,23 @@ inheritance, module layout, mutability, or API signatures.
    transformation laws.
 9. [`research/SOURCES.md`](./research/SOURCES.md) — provenance and licenses.
 
-## Reference Hierarchy
+## Authority and Behavioral Evidence
 
-1. Pinned Free Law Project eyecite is the normative behavior oracle.
-2. `eyecite-ts` and `eyecite-js` are independent differential oracles and
-   extension candidates.
-3. Repo architecture and Effect/schema laws determine the implementation shape.
+The governing order is the one in [`goals/README.md`](../README.md): current
+user objective, repository instructions and required skills, architecture and
+package standards, then `SPEC.md`, `PLAN.md`, `GOAL.md`, and supporting packet
+files.
 
-No reference repository becomes a runtime dependency or a second public
-citation hierarchy.
+Inside those constraints:
+
+1. Pinned Free Law Project eyecite is the canonical observable-behavior oracle.
+2. Published prerequisite contracts govern source anchors and vocabulary
+   representation.
+3. `eyecite-ts` and `eyecite-js` are differential references and extension
+   candidates.
+
+No external reference overrides repo law, becomes a runtime dependency, or
+creates a second public citation hierarchy.
 
 ## Delivery
 
