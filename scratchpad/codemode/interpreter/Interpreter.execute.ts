@@ -282,6 +282,30 @@ const boundLogs = (logs: ReadonlyArray<string>, maxBytes: number) => {
   return { kept, truncated }
 }
 
+const boundFailureDiagnostic = (
+  diagnostic: DiagnosticModel,
+  maxOutputBytes: number,
+) => {
+  const serialized = pipe(
+    S.encodeUnknownResult(DiagnosticModel)(diagnostic),
+    Rs.flatMap(S.encodeUnknownResult(S.UnknownFromJsonString)),
+    Rs.getOrElse(() => "null")
+  )
+  const bytes = utf8ByteLength(serialized)
+  if (bytes <= maxOutputBytes) {
+    return { diagnostic, bytes, truncated: false }
+  }
+  return {
+    diagnostic: DiagnosticModel.new(
+      diagnostic.kind,
+      `${utf8Truncate(diagnostic.message, maxOutputBytes)} [error truncated: ${bytes} bytes exceeds the ${maxOutputBytes}-byte output limit]`,
+      O.getOrUndefined(diagnostic.location),
+    ),
+    bytes: maxOutputBytes,
+    truncated: true,
+  }
+}
+
 // Warnings have a separate budget so result data cannot starve diagnostics.
 const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =>
   ResultModel.match(result, {
@@ -335,10 +359,14 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
       })
     },
     Failure: (failure) => {
-      const logs = boundLogs(O.getOrElse(failure.logs, A.empty), maxOutputBytes)
-      if (!logs.truncated) return failure
+      const error = boundFailureDiagnostic(failure.error, maxOutputBytes)
+      const logs = boundLogs(
+        O.getOrElse(failure.logs, A.empty),
+        Math.max(0, maxOutputBytes - error.bytes)
+      )
+      if (!error.truncated && !logs.truncated) return failure
       return FailureModel.make({
-        error: failure.error,
+        error: error.diagnostic,
         logs: A.isReadonlyArrayNonEmpty(logs.kept) ? O.some(logs.kept) : O.none(),
         truncated: O.some(true),
         toolCalls: failure.toolCalls,

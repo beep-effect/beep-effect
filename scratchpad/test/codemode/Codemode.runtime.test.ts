@@ -1,4 +1,4 @@
-import { A, R } from "@beep/utils";
+import { A, O, R } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Random } from "effect";
 import * as S from "effect/Schema";
@@ -67,6 +67,114 @@ describe("CodeMode runtime", () => {
       assert.strictEqual(result.ok, true);
       if (result.ok === true) {
         assert.deepEqual(result.value, A.make(1, 2, A.empty(), A.empty()));
+      }
+    })
+  );
+
+  it.effect(
+    "hoists var bindings to the program or function scope",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          {
+            var answer = 42
+          }
+          for (var item of [1, 2]) {}
+          for (var key in { first: 1, last: 2 }) {}
+          if (false) {
+            var neverAssigned = 1
+          }
+          return [answer, item, key, neverAssigned === undefined]
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make(42, 2, "last", true));
+      }
+    })
+  );
+
+  it.effect(
+    "treats nullish for-in sources as empty",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          let iterations = 0
+          for (const key in null) iterations += 1
+          for (const key in undefined) iterations += 1
+          return iterations
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) assert.strictEqual(result.value, 0);
+    })
+  );
+
+  it.effect(
+    "iterates live Map, Set, and URLSearchParams collections",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          const map = new Map()
+          map.set("a", 1)
+          map.set("b", 2)
+          const mapSeen = []
+          map.forEach((_value, key) => {
+            mapSeen.push(key)
+            if (key === "a") {
+              map.delete("b")
+              map.set("c", 3)
+            }
+          })
+
+          const set = new Set([1, 2])
+          const setSeen = []
+          set.forEach((value) => {
+            setSeen.push(value)
+            if (value === 1) {
+              set.delete(2)
+              set.add(3)
+            }
+          })
+
+          const params = new URLSearchParams("a=1&b=2")
+          const paramsSeen = []
+          params.forEach((_value, key) => {
+            paramsSeen.push(key)
+            if (key === "a") {
+              params.delete("b")
+              params.append("c", "3")
+            }
+          })
+
+          return [mapSeen, setSeen, paramsSeen]
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(
+          result.value,
+          A.make(A.make("a", "c"), A.make(1, 3), A.make("a", "c"))
+        );
+      }
+    })
+  );
+
+  it.effect(
+    "bounds failure diagnostics with the output budget",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `throw "x".repeat(10_000)`,
+        limits: { maxOutputBytes: 64 },
+      });
+
+      assert.strictEqual(result.ok, false);
+      if (result.ok === false) {
+        assert.strictEqual(result.truncated, true);
+        assert.strictEqual(result.error.message.length < 256, true);
       }
     })
   );
@@ -430,6 +538,9 @@ describe("OpenAPI adapter", () => {
       expect(R.keys(result.toolkit.tools)).toEqual(A.make("getUser"));
       expect(result.skipped).toEqual(A.empty());
       assert.strictEqual(S.is(OpenAPI.FromSpecResult)(result), true);
+      const getUser = O.getOrThrow(R.get(result.toolkit.tools, "getUser"));
+      assert.strictEqual(S.is(getUser.successSchema)({ id: "user-1" }), true);
+      assert.strictEqual(S.is(getUser.successSchema)({ id: 1 }), false);
     })
   );
 

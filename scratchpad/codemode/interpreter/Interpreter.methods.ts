@@ -694,7 +694,7 @@ const invokeMapMethod = <R>(
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Map.forEach", node);
       return Effect.gen(function* () {
-        for (const [key, item] of Array.from(target.map.entries())) yield* apply([item, key, target]);
+        for (const [key, item] of target.map.entries()) yield* apply([item, key, target]);
         return undefined;
       });
     },
@@ -729,7 +729,7 @@ const invokeSetMethod = <R>(
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Set.forEach", node);
       return Effect.gen(function* () {
-        for (const item of Array.from(target.set.values())) yield* apply([item, item, target]);
+        for (const item of target.set.values()) yield* apply([item, item, target]);
         return undefined;
       });
     },
@@ -945,7 +945,7 @@ const invokeURLSearchParamsMethod = <R>(
       requireArgs(1);
       const apply = applyCollectionCallback(runner, args[0], "URLSearchParams.forEach", node);
       return Effect.gen(function* () {
-        for (const [key, value] of Array.from(target.params.entries())) yield* apply([value, key, target]);
+        for (const [key, value] of target.params.entries()) yield* apply([value, key, target]);
         return undefined;
       });
     },

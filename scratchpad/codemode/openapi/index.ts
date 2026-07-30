@@ -11,7 +11,9 @@ import {
   HashSet,
   Result,
 } from "effect";
+import * as JsonSchemaDocument from "effect/JsonSchema";
 import * as S from "effect/Schema";
+import * as SchemaRepresentation from "effect/SchemaRepresentation";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
 import { HttpClient } from "effect/unstable/http";
@@ -46,6 +48,7 @@ import {
   Plan,
   Skipped,
   type Document,
+  type JsonSchema,
 } from "./OpenAPI.types.ts";
 
 export {
@@ -287,6 +290,21 @@ const operationDescription = (operation: Operation): string =>
     )
   );
 
+const compileOutputSchema = (
+  output: O.Option<JsonSchema>,
+): Result.Result<S.Top, string> =>
+  O.match(output, {
+    onNone: () => Result.succeed(S.Unknown),
+    onSome: (schema) =>
+      Result.try({
+        try: () =>
+          SchemaRepresentation.fromJsonSchemaDocument(
+            JsonSchemaDocument.fromSchemaDraft2020_12(schema)
+          ),
+        catch: () => "response schema could not be imported",
+      }),
+  });
+
 const compile = (options: Options): CompilationState => {
   const document = options.spec;
   const schemes = securitySchemes(document);
@@ -337,7 +355,8 @@ const compile = (options: Options): CompilationState => {
                 candidate.operation,
                 definitions
               )
-            )
+            ),
+            Result.flatMap(compileOutputSchema)
           ),
           requestDefinitions,
           security: operationSecurityRequirements(
@@ -353,6 +372,7 @@ const compile = (options: Options): CompilationState => {
           ({
             baseUrl: resolvedBaseUrl,
             input,
+            output,
             requestDefinitions: definitions,
             security,
           }) => {
@@ -377,7 +397,7 @@ const compile = (options: Options): CompilationState => {
             const tool = Tool.dynamic(name, {
               description: operationDescription(operation.value),
               parameters,
-              success: S.Unknown,
+              success: output,
               failure: ToolError,
               failureMode: "return",
             });

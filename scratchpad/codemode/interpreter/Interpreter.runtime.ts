@@ -18,7 +18,7 @@ import {
   SafeObject as SafeObjectSchema,
   type SafeObject
 } from "@beep/schema/SafeObject";
-import {A, O, P, pipe, thunkFalse} from "@beep/utils";
+import {A, O, P, R, pipe, thunkFalse} from "@beep/utils";
 import {
   isBlockedMember,
   ToolReference,
@@ -312,6 +312,32 @@ const collectPatternNames = (pattern: AstNode): Array<string> =>
     Match.orElse(() => []),
   );
 
+const collectHoistedVariables = (
+  value: unknown,
+): Array<readonly [name: string, node: AstNode]> => {
+  if (A.isArray(value)) return A.flatMap(value, collectHoistedVariables);
+  if (
+    !AstNode.is(value) ||
+    value.type === "FunctionDeclaration" ||
+    value.type === "FunctionExpression" ||
+    value.type === "ArrowFunctionExpression" ||
+    value.type === "ClassDeclaration" ||
+    value.type === "ClassExpression"
+  ) {
+    return A.empty();
+  }
+  if (value.type === "VariableDeclaration" && getString(value, "kind") === "var") {
+    return A.flatMap(getArray(value, "declarations"), (declarationValue) => {
+      const declaration = asNode(declarationValue, "declarations");
+      return A.map(
+        collectPatternNames(getNode(declaration, "id")),
+        (name) => [name, declaration] as const,
+      );
+    });
+  }
+  return A.flatMap(R.values(value), collectHoistedVariables);
+};
+
 const loopDeclaration = (left: AstNode, statement: "for...of" | "for...in") => {
   if (left.type !== "VariableDeclaration") return undefined;
   const declarations = getArray(left, "declarations");
@@ -470,6 +496,7 @@ export class Interpreter<R> {
     return Effect.gen(function* () {
       self.predeclareLexical(program.body);
       self.hoistFunctions(program.body);
+      self.hoistVariables(program.body);
       let value: unknown = undefined;
       for (const [index, statement] of program.body.entries()) {
         if (index === program.body.length - 1 && statement.type === "ExpressionStatement") {
@@ -593,6 +620,15 @@ export class Interpreter<R> {
       if (!AstNode.is(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
       const node = statementValue;
       this.scopes.declare(getString(getNode(node, "id"), "name"), this.createFunction(node), true, node);
+    }
+  }
+
+  private hoistVariables(value: unknown): void {
+    const scope = this.scopes.current();
+    for (const [name, node] of collectHoistedVariables(value)) {
+      if (!MutableHashMap.has(scope, name)) {
+        this.scopes.declare(name, undefined, true, node);
+      }
     }
   }
 
@@ -835,11 +871,13 @@ export class Interpreter<R> {
     const awaiting = getBoolean(node, "await");
     const left = getNode(node, "left");
     const declared = loopDeclaration(left, "for...of");
-    if (P.isNotNullish(declared?.lexical)) this.scopes.push();
+    if (P.isNotNullish(declared) && declared.lexical) this.scopes.push();
 
     const self = this;
     return Effect.gen(function* () {
-      if (P.isNotNullish(declared?.lexical)) self.predeclarePattern(declared.pattern, declared.mutable, left);
+      if (P.isNotNullish(declared) && declared.lexical) {
+        self.predeclarePattern(declared.pattern, declared.mutable, left);
+      }
       const right = yield* self.evaluateExpression(getNode(node, "right"));
       const body = getNode(node, "body");
 
@@ -876,17 +914,19 @@ export class Interpreter<R> {
 
       const evaluateBody =
         Effect.fnUntraced(function* (value: unknown) {
-          if (P.isNotNullish(declared)) {
+          if (P.isNotNullish(declared) && declared.lexical) {
             self.scopes.push();
-            if (declared.lexical) self.predeclarePattern(declared.pattern, declared.mutable, left);
-            yield* self.declarePattern(declared.pattern, value, declared.mutable, left, declared.lexical);
+            self.predeclarePattern(declared.pattern, declared.mutable, left);
+            yield* self.declarePattern(declared.pattern, value, declared.mutable, left, true);
+          } else if (P.isNotNullish(declared)) {
+            yield* self.assignPattern(declared.pattern, value, left);
           } else if (P.isNotNullish(assignment)) {
             yield* self.assignPattern(assignment, value, left);
           }
           return yield* self.evaluateStatement(body);
         }, Effect.ensuring(
           Effect.sync(() => {
-            if (P.isNotNullish(declared)) self.scopes.pop();
+            if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
           }),
         ));
 
@@ -931,7 +971,7 @@ export class Interpreter<R> {
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {
-          if (P.isNotNullish(declared?.lexical)) self.scopes.pop();
+          if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
         }),
       ),
     );
@@ -1115,6 +1155,7 @@ export class Interpreter<R> {
   }
 
   private enumerableKeys(value: unknown): Array<string> | undefined {
+    if (P.isNullish(value)) return A.empty();
     if (ToolReference.is(value)) {
       return [...this.toolKeys(value.path)];
     }
@@ -1133,11 +1174,13 @@ export class Interpreter<R> {
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const left = getNode(node, "left");
     const declared = loopDeclaration(left, "for...in");
-    if (P.isNotNullish(declared?.lexical)) this.scopes.push();
+    if (P.isNotNullish(declared) && declared.lexical) this.scopes.push();
 
     const self = this;
     return Effect.gen(function* () {
-      if (P.isNotNullish(declared?.lexical)) self.predeclarePattern(declared.pattern, declared.mutable, left);
+      if (P.isNotNullish(declared) && declared.lexical) {
+        self.predeclarePattern(declared.pattern, declared.mutable, left);
+      }
       const right = yield* self.evaluateExpression(getNode(node, "right"));
       const body = getNode(node, "body");
 
@@ -1159,10 +1202,12 @@ export class Interpreter<R> {
 
       for (const key of keys) {
         const result = yield* Effect.gen(function* () {
-          if (P.isNotNullish(declared)) {
+          if (P.isNotNullish(declared) && declared.lexical) {
             self.scopes.push();
-            if (declared.lexical) self.predeclarePattern(declared.pattern, declared.mutable, left);
-            yield* self.declarePattern(declared.pattern, key, declared.mutable, left, declared.lexical);
+            self.predeclarePattern(declared.pattern, declared.mutable, left);
+            yield* self.declarePattern(declared.pattern, key, declared.mutable, left, true);
+          } else if (P.isNotNullish(declared)) {
+            yield* self.assignPattern(declared.pattern, key, left);
           } else if (P.isNotUndefined(assignmentName)) {
             self.scopes.set(assignmentName, key, left);
           }
@@ -1170,7 +1215,7 @@ export class Interpreter<R> {
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {
-              if (P.isNotUndefined(declared)) self.scopes.pop();
+              if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
             }),
           ),
         );
@@ -1195,7 +1240,7 @@ export class Interpreter<R> {
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {
-          if (P.isNotNullish(declared?.lexical)) self.scopes.pop();
+          if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
         }),
       ),
     );
@@ -1317,8 +1362,15 @@ export class Interpreter<R> {
         }
 
         const init = getOptionalNode(declaration, "init");
+        const pattern = getNode(declaration, "id");
+        if (kind === "var") {
+          if (P.isNotNullish(init)) {
+            yield* self.assignPattern(pattern, yield* self.evaluateExpression(init), declaration);
+          }
+          continue;
+        }
         const value = P.isNotNullish(init) ? yield* self.evaluateExpression(init) : undefined;
-        yield* self.declarePattern(getNode(declaration, "id"), value, kind !== "const", declaration, kind !== "var");
+        yield* self.declarePattern(pattern, value, kind !== "const", declaration, true);
       }
     });
   }
@@ -2450,6 +2502,7 @@ export class Interpreter<R> {
       }
 
       if (fn.body.type === "BlockStatement") {
+        invocation.hoistVariables(getArray(fn.body, "body"));
         const result = yield* invocation.evaluateStatement(fn.body);
         return StatementResult.guards.Return(result)
           ? result.value
