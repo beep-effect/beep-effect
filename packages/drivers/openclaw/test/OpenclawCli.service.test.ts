@@ -13,18 +13,20 @@ import {
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Duration, Effect, Layer, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 
 const binaryPath = "/opt/openclaw/node_modules/.bin/openclaw";
 const gatewayUrl = "ws://127.0.0.1:19031";
 const gatewayTokenValue = "gateway-token-value";
+const encoder = new TextEncoder();
 
 const baseContext = OpenclawInvocationContext.make({
   binaryPath,
@@ -134,7 +136,56 @@ const spawnFailureRunner: OpenclawCliRunner = (request) =>
     })
   );
 
+const liveSpawnerLayer = Layer.succeed(
+  ChildProcessSpawner.ChildProcessSpawner,
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("Expected a standard OpenClaw command");
+    }
+
+    expect(command.command).toBe(binaryPath);
+    expect(command.args).toEqual(["--version"]);
+    expect(command.options.extendEnv).toBe(false);
+    expect(command.options.stdin).toBe("ignore");
+    expect(command.options.stdout).toBe("pipe");
+    expect(command.options.stderr).toBe("pipe");
+    const forceKillAfter = command.options.forceKillAfter;
+    expect(forceKillAfter).toBeDefined();
+    if (forceKillAfter !== undefined) {
+      expect(Duration.toMillis(forceKillAfter)).toBe(2_000);
+    }
+
+    return Effect.succeed(
+      ChildProcessSpawner.makeHandle({
+        pid: ChildProcessSpawner.ProcessId(1),
+        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+        isRunning: Effect.succeed(false),
+        kill: () => Effect.void,
+        unref: Effect.succeed(Effect.void),
+        stdin: Sink.drain,
+        stdout: Stream.make(encoder.encode(versionLine)),
+        stderr: Stream.empty,
+        all: Stream.empty,
+        getInputFd: () => Sink.drain,
+        getOutputFd: () => Stream.empty,
+      })
+    );
+  })
+);
+
 describe("@beep/openclaw OpenclawCli service", () => {
+  layer(OpenclawCli.makeLayer().pipe(Layer.provide(liveSpawnerLayer)))((it) => {
+    it.effect(
+      "configures live child-process ownership and timeout escalation",
+      Effect.fnUntraced(function* () {
+        const cli = yield* OpenclawCli;
+        const info = yield* cli.version(baseContext);
+
+        expect(info.version).toBe("2026.7.1-2");
+      })
+    );
+  });
+
   layer(OpenclawCli.makeLayerFromRunner(successRunner))((it) => {
     it.effect(
       "runs --version hermetically and parses the pinned version line",

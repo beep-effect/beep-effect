@@ -7,13 +7,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe, Stream } from "effect";
+import { A, Str, thunkFalse } from "@beep/utils";
+import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
@@ -234,21 +234,12 @@ const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshot
 const readGitSha = Effect.fn("CoverageRegression.readGitSha")(function* (
   repoRoot: string
 ): Effect.fn.Return<string, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", ["rev-parse", "HEAD"], {
-        cwd: repoRoot,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      const output = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-      );
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output };
-    })
-  ).pipe(QualityTaskConfigurationError.mapError("Failed to read git revision."));
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["rev-parse", "HEAD"],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(QualityTaskConfigurationError.mapError("Failed to read git revision."));
 
   if (result.exitCode !== 0) {
     return yield* QualityTaskConfigurationError.new(`git rev-parse HEAD failed with exit code ${result.exitCode}.`);

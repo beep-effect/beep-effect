@@ -2,7 +2,7 @@ import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -20,7 +20,6 @@ const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   TestConsole.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(CommandPlatformLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(CommandPlatformLayer))
 );

@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
+import { runToExit } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,
@@ -49,12 +49,12 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
   vaultRoot: string
 ): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const run = (args: ReadonlyArray<string>) =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const handle = yield* ChildProcess.make("git", [...args], { cwd: vaultRoot, stderr: "pipe", stdout: "pipe" });
-        return yield* handle.exitCode;
-      })
-    ).pipe(
+    runToExit({
+      command: "git",
+      args,
+      cwd: vaultRoot,
+      stdio: "ignore",
+    }).pipe(
       ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`),
       Effect.filterOrFail(
         (exitCode) => exitCode === 0,
@@ -63,19 +63,20 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
       )
     );
   yield* run(["add", "-A", "--", ".", `:(exclude)${VAULT_DIRS.state}/**`]);
-  const status = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", ["diff", "--cached", "--quiet"], {
-        cwd: vaultRoot,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(ResearchCommandError.mapError("Failed checking vault staging state."));
+  const status = yield* runToExit({
+    command: "git",
+    args: ["diff", "--cached", "--quiet"],
+    cwd: vaultRoot,
+    stdio: "ignore",
+  }).pipe(ResearchCommandError.mapError("Failed checking vault staging state."));
   if (status === 0) {
     yield* Console.log("research daily: vault clean, nothing to commit.");
     return;
+  }
+  if (status !== 1) {
+    return yield* ResearchCommandError.make({
+      message: `git diff --cached --quiet exited with ${status} in the vault.`,
+    });
   }
   const date = Str.slice(0, 10)(DateTime.formatIso(yield* DateTime.now));
   yield* run(["commit", "-q", "-m", `capture ${date}`]);
