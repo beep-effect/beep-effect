@@ -590,7 +590,7 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
         // menu ownership, IME composition, newline policy, then send dispatch.
         // Keeping that ordering together makes Lexical command consumption
         // auditable and avoids splitting event ownership across callbacks.
-        // fallow-ignore-next-line complexity
+        // fallow-ignore-next-line complexity -- Enter orders menu, IME, code-block, newline, and send ownership
         (event) => {
           if (event === null) return false;
           // Yield Enter to a typeahead only when one is *actually* on screen.

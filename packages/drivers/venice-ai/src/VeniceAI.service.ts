@@ -818,7 +818,7 @@ const normalizeVeniceAIErrorOptions = (options: VeniceAIErrorOptionsInput): Veni
   });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the Venice boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -834,7 +834,7 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
 
 const readString = (value: unknown, key: PropertyKey): O.Option<string> =>
   // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- Venice property refinement mirrors peer drivers but stays provider-local
   O.filter(readProperty(value, key), P.isString);
 
 const tryBoolean = (evaluate: () => boolean): Result.Result<boolean, unknown> => Result.try(evaluate);
@@ -854,7 +854,7 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
     : O.none();
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice cause normalization preserves provider-specific HTTP labels
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()
@@ -1492,7 +1492,7 @@ const resolveConfig = (
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps response media classification at its provider HTTP boundary
 const isJsonContentType = (contentType: string): boolean => Str.includes("application/json")(contentType);
 
 const isTextContentType = (contentType: string): boolean =>
@@ -1532,7 +1532,7 @@ const defaultAcceptHeader = (descriptor: VeniceAIOperationDescriptor): string =>
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps path interpolation local to its operation request builder
 const applyPathParams = (path: string, params: Readonly<Record<string, string>> = {}): string =>
   pipe(
     params,
@@ -1661,7 +1661,7 @@ const executeRaw = Effect.fn("VeniceAI.executeRaw")(function* (
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice assembles typed provider response metadata at its decode boundary
 const responseContext = (response: HttpClientResponse.HttpClientResponse) => ({
   contentType: responseContentType(response),
   headers: response.headers,
@@ -1777,7 +1777,7 @@ const makeStreamingRequest = (request?: VeniceAIRequestOptions): VeniceAIRequest
 };
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps data-line parsing local to its provider SSE decoder
 const dataLine = (line: string): O.Option<string> =>
   Str.startsWith("data:")(line) ? O.some(Str.trim(Str.slice(5)(line))) : O.none();
 

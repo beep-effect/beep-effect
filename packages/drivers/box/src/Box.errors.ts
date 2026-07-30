@@ -21,7 +21,7 @@ const $I = $BoxId.create("Box.errors");
 const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
   schema: Sch
 ): Sch & {
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- driver-local codec statics avoid cross-driver coupling
   readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
   readonly fromUnknown: (input: unknown) => Sch["Type"];
 } =>
@@ -352,7 +352,7 @@ const schemaIssueLabel = (cause: unknown): O.Option<string> =>
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local cause labeling preserves Box schema issue diagnostics
 const causeLabel = (cause: unknown): string =>
   pipe(
     O.firstSomeOf([
@@ -362,7 +362,7 @@ const causeLabel = (cause: unknown): string =>
       readString("code")(cause),
     ]),
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- Box fallback labels mirror peer drivers but stay at the driver boundary
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );
 

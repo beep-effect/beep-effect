@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "complexity-ceiling-burn-down",
+    "title": "Complexity Ceiling Burn-Down",
+    "status": "active",
+    "created": "2026-07-30",
+    "updated": "2026-07-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/complexity-ceiling-burn-down",
+  "lifecycle": "active",
+  "mission": "Clear the cognitive->15 tail (60 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": null,
+    "note": "Deliberately no exploration packet: calibrated directly in the 2026-07-30 CYCLOMATIC_COMPLEXITY_STANDARD session (full-repo fallow health scan + judged panel + grill-with-docs; evidence in research/calibration.md)."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/effect-laws-v1.md",
+    "standards/architecture/DECISIONS.md",
+    "goals/complexity-ceiling-burn-down/README.md",
+    "goals/complexity-ceiling-burn-down/SPEC.md",
+    "goals/complexity-ceiling-burn-down/PLAN.md",
+    "goals/complexity-ceiling-burn-down/GOAL.md",
+    "goals/complexity-ceiling-burn-down/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/calibration.md",
+    "research/tail-inventory.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/complexity-ceiling-burn-down/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/complexity-ceiling-burn-down/GOAL.md)\" -le 4000",
+    "jq . goals/complexity-ceiling-burn-down/ops/manifest.json",
+    "rg -n \"complexity-ceiling-burn-down|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/complexity-ceiling-burn-down",
+    "git diff --check -- goals/complexity-ceiling-burn-down",
+    "bun run beep lint reflection-artifacts",
+    "bun run fallow:health:baseline:check"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "A refactor would degrade code quality to satisfy a threshold (appeasement) - record an override with reason + review date instead."
+  ]
+}

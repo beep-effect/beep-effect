@@ -96,7 +96,7 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
  */
 // The zero-behavior extraction keeps the toolbar's established event wiring
 // together so document actions and their error surface remain one region.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- toolbar keeps document actions, view controls, dirty state, and errors in one region
 export function OntologyDocumentRegion(): JSX.Element {
   const pathInput = useAtomValue(openPathInputAtom);
   const documentError = useAtomValue(ontologyDocumentErrorAtom);

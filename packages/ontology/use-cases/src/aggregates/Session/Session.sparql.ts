@@ -417,7 +417,7 @@ const validateProfile = (
 // The branches are the lexical scanner's explicit states. Keeping one forward
 // pass avoids either a false positive that permits an unbounded query or a
 // multi-pass parser whose cost grows with the input.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- lexical scan distinguishes top-level LIMIT from comments, literals, and subqueries
 const topLevelLimit = (query: string): O.Option<number> => {
   let depth = 0;
   let index = 0;

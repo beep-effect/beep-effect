@@ -98,7 +98,7 @@ export const ReviewStatus = ReviewStatusBase.pipe(
 // Required runtime-type-alias companion for the ReviewStatus schema (jsdoc
 // schema-annotation policy); the value export is consumed via ReviewStatus.Enum.*
 // in OipContent.data.ts, so only the type alias reads as unused.
-// fallow-ignore-next-line unused-type
+// fallow-ignore-next-line unused-type -- schema policy requires the type companion although only the value is consumed
 export type ReviewStatus = typeof ReviewStatus.Type;
 
 /**
@@ -346,7 +346,7 @@ export class NavItem extends S.Class<NavItem>($I`NavItem`)(
  * @category models
  * @since 0.0.0
  */
-// fallow-ignore-next-line unused-export
+// fallow-ignore-next-line unused-export -- nested public schema is consumed through HeroContent rather than direct imports
 export class HeroClip extends S.Class<HeroClip>($I`HeroClip`)(
   {
     poster: SiteAsset,

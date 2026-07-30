@@ -382,7 +382,7 @@ class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($
 ) {}
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown docs failures inside the Runpod boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();

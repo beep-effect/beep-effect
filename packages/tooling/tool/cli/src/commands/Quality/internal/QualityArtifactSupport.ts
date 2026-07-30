@@ -528,7 +528,7 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
   // Path-safe recursive directory walk: every branch (canonical re-resolution,
   // symlink-cycle guard, excluded dirs, extension/suffix filtering) is a
   // security-relevant gate; flattening the traversal would risk dropping a check.
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- path-safe walk keeps canonicalization, cycle, exclusion, and suffix gates together
   const visit = Effect.fn("QualityArtifactSupport.listSourceFiles.visit")(function* (
     current: string
   ): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> {

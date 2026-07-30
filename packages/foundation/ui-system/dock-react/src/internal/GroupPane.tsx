@@ -65,7 +65,7 @@ const Tab = (props: {
   const close = (): void => submit(makeOperation(ClosePanelCommand.make({ panelId: props.panel.id })));
   const pointerRef = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- tab dragging owns a distinct cancel handler and drag atom
     const cancel = (): void => props.graph.registry.set(props.state.dragAtom, O.none());
     const keydown = (event: KeyboardEvent): void => {
       if (Eq.equals(event.key, "Escape")) cancel();
@@ -117,7 +117,7 @@ const Tab = (props: {
           pointer,
           origin: pointer,
           moved: false,
-          // fallow-ignore-next-line code-duplication
+          // fallow-ignore-next-line code-duplication -- pointer-down captures the drag snapshot for the paired move handler
         })
       );
     };

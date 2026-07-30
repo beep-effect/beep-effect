@@ -526,12 +526,12 @@ const coverageEnvironment = (): Record<string, string | undefined> => ({
   VITEST_COVERAGE_RATCHET: "1",
 });
 
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- coverage detection stays beside its deterministic hosted environment
 const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
 ): Record<string, string | undefined> | undefined =>
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- only Turbo coverage runs receive the hosted coverage environment
   includesTurboCoverageTask(tasks, args) ? coverageEnvironment() : undefined;
 
 const linesFromText = (text: string): ReadonlyArray<string> =>

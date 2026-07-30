@@ -163,7 +163,7 @@ const isObject = (value: unknown): value is object => P.isObjectKeyword(value) &
 const hasFunctionProperty = (value: unknown, key: string): boolean =>
   isObject(value) && typeof Reflect.get(value, key) === "function";
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- structural feature detection intentionally probes the Bun shim's required API surface
 const isBunTestShim = (value: unknown): value is BunTestShim =>
   isObject(value) &&
   P.hasProperty(value, "Glob") &&
@@ -197,7 +197,7 @@ const normalizeSpawnInput = (
   return { args, command, options: commandOrOptions };
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Node adapter preserves Bun command, stdio, signal, and exit semantics
 const spawnSync = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, options?: BunSpawnSyncOptions) => {
   const normalized = normalizeSpawnInput(commandOrOptions, options);
   const result = nodeSpawnSync(normalized.command, [...normalized.args], {
@@ -248,7 +248,7 @@ const file = (path: string | URL): BunFileShim => ({
   text: () => readFile(path, "utf8"),
 });
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Bun.write compatibility accepts strings, buffers, typed views, and blobs
 const writeInput = async (input: unknown): Promise<string | Uint8Array> => {
   if (typeof input === "string") {
     return input;
@@ -286,7 +286,7 @@ const responseHeaders = (response: Response): Record<string, string> => {
   return headers;
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Node-to-Fetch bridge preserves repeated and optional request headers
 const requestHeaders = (messageHeaders: NodeJS.Dict<string | readonly string[]>): Headers => {
   const headers = new Headers();
   for (const [key, value] of Object.entries(messageHeaders)) {
@@ -316,7 +316,7 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     const chunks: Array<Buffer> = [];
     request.on("data", (chunk: Buffer) => chunks.push(chunk));
     request.on("end", () => {
-      // fallow-ignore-next-line complexity
+      // fallow-ignore-next-line complexity -- Node-to-Bun fetch bridge owns request body, response, and error lifecycle
       void (async () => {
         try {
           const url = `http://${request.headers.host ?? `${hostname}:${port}`}${request.url ?? "/"}`;
@@ -372,7 +372,7 @@ const parseToml = (content: string): unknown => {
   }
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Bun JSONL compatibility tracks consumed bytes and partial parse failures
 const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
   const values: Array<unknown> = [];
   let read = 0;
@@ -420,7 +420,7 @@ class GlobShim {
     return this.matcher(normalizeFilePath(relativePath));
   }
 
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- Bun.Glob compatibility owns scan options and recursive traversal
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
     const cwd = options?.cwd ?? process.cwd();
     const entries: Array<string> = [];
@@ -429,7 +429,7 @@ class GlobShim {
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
-    // fallow-ignore-next-line complexity
+    // fallow-ignore-next-line complexity -- recursive walker preserves Bun's dotfile, symlink, directory, and file semantics
     const visit = (absoluteDirectory: string, relativeDirectory: string): void => {
       for (const dirent of readdirSync(absoluteDirectory, { withFileTypes: true })) {
         if (options?.dot !== true && dirent.name.startsWith(".")) {
