@@ -4,7 +4,7 @@ import {
   graphPartitionIri,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { ontologyTreeItemsFor, valueFromEvent } from "@beep/ontology-ui/aggregates/Session";
+import { documentToolbarState, ontologyTreeItemsFor, valueFromEvent } from "@beep/ontology-ui/aggregates/Session";
 import {
   buildOntologySnapshotWithInference,
   InferOntologySessionInput,
@@ -38,6 +38,55 @@ const collectTreeItemIds = (items: ReadonlyArray<TreeItem>): ReadonlyArray<strin
     items,
     A.flatMap((item) => [item.id, ...collectTreeItemIds(item.children ?? [])])
   );
+
+describe("documentToolbarState", () => {
+  it("keeps every action idle and gates session-bound actions while no session is open", () => {
+    const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false });
+
+    expect(state.openLabel).toBe("Open");
+    expect(state.openBusy).toBe(false);
+    expect(state.openDisabled).toBe(false);
+    expect(state.saveLabel).toBe("Save");
+    expect(state.saveDisabled).toBe(true);
+    expect(state.previewLabel).toBe("Preview");
+    expect(state.previewDisabled).toBe(true);
+    expect(state.sessionHint).toBe("Open a document first");
+  });
+
+  it("enables session-bound actions once a session is open", () => {
+    const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: true });
+
+    expect(state.saveDisabled).toBe(false);
+    expect(state.previewDisabled).toBe(false);
+    expect(state.sessionHint).toBeUndefined();
+  });
+
+  it("marks an in-flight open busy, relabels it, and refuses re-entry", () => {
+    const state = documentToolbarState({ opening: true, saving: false, previewing: false, sessionOpen: false });
+
+    expect(state.openLabel).toBe("Opening…");
+    expect(state.openBusy).toBe(true);
+    expect(state.openDisabled).toBe(true);
+  });
+
+  it("marks an in-flight save busy without disturbing its siblings", () => {
+    const state = documentToolbarState({ opening: false, saving: true, previewing: false, sessionOpen: true });
+
+    expect(state.saveLabel).toBe("Saving…");
+    expect(state.saveBusy).toBe(true);
+    expect(state.saveDisabled).toBe(true);
+    expect(state.openDisabled).toBe(false);
+    expect(state.previewDisabled).toBe(false);
+  });
+
+  it("marks an in-flight preview busy and disabled even with a session open", () => {
+    const state = documentToolbarState({ opening: false, saving: false, previewing: true, sessionOpen: true });
+
+    expect(state.previewLabel).toBe("Previewing…");
+    expect(state.previewBusy).toBe(true);
+    expect(state.previewDisabled).toBe(true);
+  });
+});
 
 describe("OntologyWorkbench hierarchy", () => {
   it("extracts the current form value from React change events", () => {

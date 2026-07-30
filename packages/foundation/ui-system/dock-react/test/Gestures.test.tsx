@@ -193,6 +193,40 @@ describe("dock pointer gestures", { concurrent: false }, () => {
     })
   );
 
+  it.effect("clears sash and tab gestures on pointercancel without committing", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const initialRevision = mounted.graph.registry.get(mounted.graph.workspaceAtom).revision;
+      const sash = root.querySelector<HTMLElement>(`[data-sash-id='${splitId}']`);
+      if (sash === null) throw new Error("Missing sash");
+      const pane = root.querySelector<HTMLElement>(`[data-group-id='${group1}']`);
+      if (pane === null) throw new Error("Missing pane");
+      // 800px container, gap 8, even split: each pane lays out at 396px.
+      const initialWidth = "396px";
+      pointer(sash, "pointerDown", 400, 200);
+      pointer(sash, "pointerMove", 500, 200);
+      expect(pane.style.width).not.toBe(initialWidth);
+      fireEvent.pointerCancel(sash, { pointerId: 7 });
+      expect(pane.style.width).toBe(initialWidth);
+      const source = tab(panel1.id);
+      pointer(source, "pointerDown", 100, 16);
+      pointer(source, "pointerMove", 410, 200);
+      expect(root.querySelector("[data-drag-ghost]")).not.toBeNull();
+      // Over the source group's own center there is no drop target, but the
+      // ghost keeps following the pointer so the drag never looks dead.
+      pointer(source, "pointerMove", 200, 220);
+      expect(root.querySelector("[data-drop-indicator]")).toBeNull();
+      expect(root.querySelector("[data-drag-ghost]")).not.toBeNull();
+      fireEvent.pointerCancel(source, { pointerId: 7 });
+      expect(root.querySelector("[data-drag-ghost]")).toBeNull();
+      expect(root.querySelector("[data-drop-indicator]")).toBeNull();
+      yield* mounted.graph.awaitIdle;
+      expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
+      mounted.graph.dispose();
+    })
+  );
+
   it.effect("previews and commits one sash resize while ignoring no-move release", () =>
     Effect.gen(function* () {
       const mounted = yield* mount(true);

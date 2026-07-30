@@ -42,6 +42,40 @@ import type { JSX } from "react";
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
 
+/**
+ * Pure busy/disabled presentation state for the Document toolbar's async
+ * actions, derived from the in-flight flags of the open/save/preview atoms
+ * and whether a session is open.
+ *
+ * @example
+ * ```ts
+ * import { documentToolbarState } from "@beep/ontology-ui/aggregates/Session"
+ *
+ * const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false })
+ * console.log(state.saveDisabled) // true
+ * ```
+ *
+ * @category presentation
+ * @since 0.0.0
+ */
+export const documentToolbarState = (input: {
+  readonly opening: boolean;
+  readonly saving: boolean;
+  readonly previewing: boolean;
+  readonly sessionOpen: boolean;
+}) => ({
+  openBusy: input.opening,
+  openLabel: input.opening ? "Opening…" : "Open",
+  openDisabled: input.opening,
+  saveBusy: input.saving,
+  saveLabel: input.saving ? "Saving…" : "Save",
+  saveDisabled: !input.sessionOpen || input.saving,
+  previewBusy: input.previewing,
+  previewLabel: input.previewing ? "Previewing…" : "Preview",
+  previewDisabled: !input.sessionOpen || input.previewing,
+  sessionHint: input.sessionOpen ? undefined : "Open a document first",
+});
+
 const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
 const isOntologyViewMode = S.is(OntologyViewMode);
@@ -88,10 +122,12 @@ export function OntologyDocumentRegion(): JSX.Element {
   // The action atoms are AsyncResult fns: while an RPC is in flight the
   // triggering button must say so and refuse re-entry, otherwise a slow open
   // or save reads as "the button does nothing".
-  const opening = AsyncResult.isWaiting(useAtomValue(openOntologyDocumentAtom));
-  const saving = AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom));
-  const previewing = AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom));
-  const needsSessionHint = O.isNone(session) ? "Open a document first" : undefined;
+  const toolbar = documentToolbarState({
+    opening: AsyncResult.isWaiting(useAtomValue(openOntologyDocumentAtom)),
+    saving: AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom)),
+    previewing: AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom)),
+    sessionOpen: O.isSome(session),
+  });
 
   const runOpen = (): void => {
     pipe(
@@ -134,30 +170,30 @@ export function OntologyDocumentRegion(): JSX.Element {
           value={pathInput}
           onChange={(event) => setPathInput(valueFromEvent(event))}
         />
-        <Button size="sm" type="button" aria-busy={opening} disabled={opening} onClick={runOpen}>
-          {opening ? "Opening…" : "Open"}
+        <Button size="sm" type="button" aria-busy={toolbar.openBusy} disabled={toolbar.openDisabled} onClick={runOpen}>
+          {toolbar.openLabel}
         </Button>
         <Button
           size="sm"
           type="button"
           variant="outline"
-          aria-busy={saving}
-          disabled={O.isNone(session) || saving}
-          title={needsSessionHint}
+          aria-busy={toolbar.saveBusy}
+          disabled={toolbar.saveDisabled}
+          title={toolbar.sessionHint}
           onClick={runSave}
         >
-          {saving ? "Saving…" : "Save"}
+          {toolbar.saveLabel}
         </Button>
         <Button
           size="sm"
           type="button"
           variant="outline"
-          aria-busy={previewing}
-          disabled={O.isNone(session) || previewing}
-          title={needsSessionHint}
+          aria-busy={toolbar.previewBusy}
+          disabled={toolbar.previewDisabled}
+          title={toolbar.sessionHint}
           onClick={() => previewTurtle(undefined)}
         >
-          {previewing ? "Previewing…" : "Preview"}
+          {toolbar.previewLabel}
         </Button>
         <Tooltip>
           <TooltipTrigger

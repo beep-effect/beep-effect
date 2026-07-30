@@ -14,7 +14,11 @@ export { OntologyChangeLogRegion } from "./Session.changelog.tsx";
  * @category components
  * @since 0.0.0
  */
-export { OntologyDocumentRegion } from "./Session.document.tsx";
+/**
+ * @category presentation
+ * @since 0.0.0
+ */
+export { documentToolbarState, OntologyDocumentRegion } from "./Session.document.tsx";
 /**
  * @category components
  * @since 0.0.0
