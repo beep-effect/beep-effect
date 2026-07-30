@@ -518,6 +518,14 @@ const inspectElementOrder = (
     children,
     (child) => child._tag === "#text" && isString(child.value) && Str.isNonEmpty(Str.trim(child.value))
   );
+  // Content-model order ignores comments and inter-element whitespace; every
+  // other direct child is significant.
+  const firstSignificantChild = A.findFirst(
+    children,
+    (child) =>
+      child._tag !== "#comment" &&
+      !(child._tag === "#text" && isString(child.value) && Str.isEmpty(Str.trim(child.value)))
+  );
   const issue = (message: string): ReadonlyArray<HtmlConformanceIssue> => [makeIssue(path, "elementOrder", message)];
   const oneAtEdge = (tag: HtmlTag, edge: "first" | "either"): boolean => {
     const first = A.findFirstIndex(elementTags, (candidate) => candidate === tag);
@@ -583,9 +591,10 @@ const inspectElementOrder = (
         : issue("<dl> children must be complete dt+ / dd+ groups, directly or in <div> wrappers");
     }),
     Match.when("details", () =>
-      A.contains(elementTags, "summary") && oneAtEdge("summary", "first")
+      A.filter(elementTags, (tag) => tag === "summary").length === 1 &&
+      O.exists(firstSignificantChild, (child) => child._tag === "summary")
         ? A.emptyReadonly()
-        : issue("<details> must contain exactly one <summary> as its first element child")
+        : issue("<details> must contain exactly one <summary> as its first significant child")
     ),
     Match.when("fieldset", () =>
       oneAtEdge("legend", "first")
