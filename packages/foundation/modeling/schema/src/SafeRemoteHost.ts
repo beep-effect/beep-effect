@@ -172,12 +172,12 @@ const extractMappedIpv4 = (host: string): O.Option<string> =>
 // them behind abstraction would obscure which ranges are blocked. IPv4-mapped
 // IPv6 is decoded back to its IPv4 form (extractMappedIpv4) so mapped private
 // ranges classify through the same isInternalIpv4 checks.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- flat SSRF checks keep every blocked network class independently auditable
 const isInternalHost = (host: string): boolean =>
   // SSRF guard duplicated with @beep/nlp-mcp DatasetLoader.isBlockedRemoteHost by
   // design: each slice owns a self-contained, independently auditable blocklist
   // rather than coupling a foundation schema to a driver's internals.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- SSRF blocklist mirrors DatasetLoader for independent security auditing
   host === "localhost" ||
   Str.endsWith(".localhost")(host) ||
   host === "0.0.0.0" ||

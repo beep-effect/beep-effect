@@ -147,7 +147,7 @@ const isEscapedQuote = (output: string, index: number): boolean => {
 // The brace-depth/string-state machine is intentionally inlined as one linear
 // scan; splitting it would break the single-pass O(n) guarantee that bounds the
 // CLI hang fix.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- single-pass brace and string scan prevents quadratic mixed-output rescans
 const balancedTopLevelObjectSpans = (output: string): ReadonlyArray<readonly [number, number]> => {
   let spans = A.empty<readonly [number, number]>();
   let depth = 0;

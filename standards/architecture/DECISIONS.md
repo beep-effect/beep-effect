@@ -1147,6 +1147,55 @@ synchronous request/response over an event log. Recording the rule now is
 cheaper than reversing it later, since a ban would require rewriting every such
 binding.
 
+## 2026-07-30: Complexity Ceilings Become Law, And Health Becomes A Baseline Ratchet
+
+- **Status:** Active
+
+Decision:
+
+Function complexity is governed by two mechanisms, both driven by the ceilings
+pinned in `.fallowrc.jsonc` `health` (law 23 in `standards/effect-laws-v1.md`;
+the integers live in config, not prose):
+
+1. **New and changed code** fails the existing blocking `audit` lane
+   (`gate: new-only`) when a function exceeds a ceiling. The initial cognitive
+   ceiling is 8; cyclomatic 20, CRAP 30, and unit size 60 are pinned at fallow's
+   defaults so the effective gate is explicit in-repo.
+2. **The inherited tail** is frozen by a committed regression baseline
+   (`standards/fallow.health.regression-baseline.jsonc`) that the health lane
+   compares against with `--fail-on-regression`; the lane promotes from advisory
+   to blocking after three consecutive clean runs, following the
+   `quality-gate-ratchets` promotion pattern. Baselines only shrink; each
+   burn-down wave re-measures the baseline.
+
+Escape hatches are governed: every inline `fallow-ignore-*` suppression carries
+a `-- <reason>` (`require-suppression-reason: error`), and an honestly-complex
+function gets a `thresholdOverrides` entry with `reason` and a review date
+rather than a binary suppression. `goals/complexity-ceiling-burn-down` owns the
+tail remediation (the 60 functions above cognitive 15, hotspot-ranked,
+triage-first).
+
+This entry closes the health-lane deferral recorded in
+`goals/fallow-advisory-ratchets` ("recorded deferral until … calibration still
+requires a health inventory").
+
+Rationale:
+
+The deferred calibration inventory now exists (2026-07-30 session): across
+41,469 functions, p99 cognitive complexity is 6; a judged panel over the
+marginal band found every honest best-version ceiling at or under 8 except two
+outliers, while a 6-ceiling would force suppressions or crispen-violating
+helper fragmentation on roughly a third of the 7–8 band. 8 is therefore the
+tightest ceiling with near-zero false positives; 6 remains the revisit target
+once the >15 tail is gone and suppression pressure at 8 is observed.
+
+A gate alone was rejected because `new-only` attribution cannot see repo-wide
+drift (the two existing `maxCrap` overrides exist precisely because attribution
+mis-fires on import-suffix changes); a baseline alone was rejected because the
+dead-code baseline demonstrated that a written-but-never-read snapshot enforces
+nothing. The pair — gate for the margin, ratchet for the mass — is the same
+division the dead-code campaign proved.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

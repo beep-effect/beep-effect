@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-jsdoc-quality",
+    "title": "Effect-level JSDoc quality",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/effect-jsdoc-quality"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-30",
+    "updated": "2026-07-30"
+  }
+}

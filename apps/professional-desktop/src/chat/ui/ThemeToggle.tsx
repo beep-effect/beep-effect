@@ -43,7 +43,7 @@ export function ThemeToggle(): JSX.Element {
         // Incidental cross-app sun glyph: oip-web's ThemeModeToggle draws the same icon.
         // The correct dedup is a shared @beep/ui icon (which would also touch oip-web),
         // out of this packet's scope.
-        // fallow-ignore-next-line code-duplication
+        // fallow-ignore-next-line code-duplication -- sun glyph mirrors oip-web until a shared icon is introduced
         <svg
           className="size-4"
           xmlns="http://www.w3.org/2000/svg"

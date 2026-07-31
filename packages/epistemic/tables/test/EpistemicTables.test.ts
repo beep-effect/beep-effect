@@ -364,7 +364,7 @@ describe("EpistemicTables", () => {
 
   // Exhaustive per-column assertion walk over the widest table in the slice;
   // branch count is the column count, not logic to simplify.
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- exhaustive assertions cover every column of the slice's widest table
   it("round-trips an EdgeVersion row through the converters", () => {
     const version = S.decodeUnknownSync(EdgeVersionModel)(edgeVersionInput(10));
 
@@ -416,7 +416,7 @@ describe("EpistemicTables", () => {
   });
 
   // Same exhaustive column walk for the closed/Option-some variant.
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- exhaustive assertions cover the closed and Option-some column variant
   it("round-trips a closed EdgeVersion row through the converters", () => {
     const closed = S.decodeUnknownSync(EdgeVersionModel)({
       ...edgeVersionInput(11),

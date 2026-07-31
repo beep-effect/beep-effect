@@ -36,10 +36,45 @@ import { O, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
+import { AsyncResult } from "effect/unstable/reactivity";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
+
+/**
+ * Pure busy/disabled presentation state for the Document toolbar's async
+ * actions, derived from the in-flight flags of the open/save/preview atoms
+ * and whether a session is open.
+ *
+ * @example
+ * ```ts
+ * import { documentToolbarState } from "@beep/ontology-ui/aggregates/Session"
+ *
+ * const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false })
+ * console.log(state.saveDisabled) // true
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export const documentToolbarState = (input: {
+  readonly opening: boolean;
+  readonly saving: boolean;
+  readonly previewing: boolean;
+  readonly sessionOpen: boolean;
+}) => ({
+  openBusy: input.opening,
+  openLabel: input.opening ? "Opening…" : "Open",
+  openDisabled: input.opening,
+  saveBusy: input.saving,
+  saveLabel: input.saving ? "Saving…" : "Save",
+  saveDisabled: !input.sessionOpen || input.saving,
+  previewBusy: input.previewing,
+  previewLabel: input.previewing ? "Previewing…" : "Preview",
+  previewDisabled: !input.sessionOpen || input.previewing,
+  sessionHint: input.sessionOpen ? undefined : "Open a document first",
+});
 
 const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
@@ -61,7 +96,7 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
  */
 // The zero-behavior extraction keeps the toolbar's established event wiring
 // together so document actions and their error surface remain one region.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- toolbar keeps document actions, view controls, dirty state, and errors in one region
 export function OntologyDocumentRegion(): JSX.Element {
   const pathInput = useAtomValue(openPathInputAtom);
   const documentError = useAtomValue(ontologyDocumentErrorAtom);
@@ -84,6 +119,15 @@ export function OntologyDocumentRegion(): JSX.Element {
   const redoChange = useAtomSet(redoOntologyChangeAtom);
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
+  // The action atoms are AsyncResult fns: while an RPC is in flight the
+  // triggering button must say so and refuse re-entry, otherwise a slow open
+  // or save reads as "the button does nothing".
+  const toolbar = documentToolbarState({
+    opening: AsyncResult.isWaiting(useAtomValue(openOntologyDocumentAtom)),
+    saving: AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom)),
+    previewing: AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom)),
+    sessionOpen: O.isSome(session),
+  });
 
   const runOpen = (): void => {
     pipe(
@@ -126,20 +170,30 @@ export function OntologyDocumentRegion(): JSX.Element {
           value={pathInput}
           onChange={(event) => setPathInput(valueFromEvent(event))}
         />
-        <Button size="sm" type="button" onClick={runOpen}>
-          Open
-        </Button>
-        <Button size="sm" type="button" variant="outline" disabled={O.isNone(session)} onClick={runSave}>
-          Save
+        <Button size="sm" type="button" aria-busy={toolbar.openBusy} disabled={toolbar.openDisabled} onClick={runOpen}>
+          {toolbar.openLabel}
         </Button>
         <Button
           size="sm"
           type="button"
           variant="outline"
-          disabled={O.isNone(session)}
+          aria-busy={toolbar.saveBusy}
+          disabled={toolbar.saveDisabled}
+          title={toolbar.sessionHint}
+          onClick={runSave}
+        >
+          {toolbar.saveLabel}
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          aria-busy={toolbar.previewBusy}
+          disabled={toolbar.previewDisabled}
+          title={toolbar.sessionHint}
           onClick={() => previewTurtle(undefined)}
         >
-          Preview
+          {toolbar.previewLabel}
         </Button>
         <Tooltip>
           <TooltipTrigger

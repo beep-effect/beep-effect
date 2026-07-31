@@ -19,9 +19,12 @@ export class TabDrag extends S.Class<TabDrag>($I`TabDrag`)(
     panelId: PanelId,
     fromGroupId: GroupId,
     pointer: PointerPosition,
+    origin: PointerPosition,
+    moved: S.Boolean,
   },
   $I.annote("TabDrag", {
-    description: "Active tab-drag state, including its source group and latest pointer position.",
+    description:
+      "Active tab-drag state: source group, latest and initial pointer positions, and whether the pointer has traveled past the drag-promotion threshold.",
   })
 ) {}
 

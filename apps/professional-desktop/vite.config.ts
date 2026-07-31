@@ -24,7 +24,7 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
 
 // Vite treats an explicit `.ts` suffix as an exact filename, while the repository
 // convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- composition-root plugin mirrors Storybook's .ts-to-.tsx resolver by design
 const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   name: "beep:resolve-uniform-typescript-source-specifiers",
   enforce: "pre",
@@ -70,7 +70,11 @@ export default defineConfig({
     // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
     // initialize or prebundle it if a future webview path imports the package.
     exclude: ["@cosmos.gl/graph", "oxigraph"],
-    include: ["seedrandom"],
+    // three is only reached through @beep/graph-3d's lazy import on the first
+    // 3D-toggle; without pre-bundling, Vite discovers it mid-session,
+    // re-optimizes, and the stale hashed chunk URL 404s ("Failed to fetch
+    // dynamically imported module: .../.vite/deps/three.js").
+    include: ["seedrandom", "three", "three/addons/controls/TrackballControls.js"],
   },
   build: {
     // Three.js and Mermaid's generated parser each ship as one irreducible

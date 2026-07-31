@@ -31,6 +31,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 20. Model finite variants, lifecycle states, status/result cases, and case-specific payloads as discriminated unions; keep optional/nullish bags at external boundaries only when compatibility requires them.
 21. Prefer the tersest equivalent Effect helper form when behavior is unchanged: direct helper refs over trivial wrapper lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
 22. Reusable functions that directly return `Effect.gen(function*)` must use `Effect.fn` or `Effect.fnUntraced`; zero-arg one-off effect values may stay as `Effect.gen`.
+23. Functions stay within the fallow complexity ceilings pinned in `.fallowrc.jsonc` `health` (the integers live in config, not prose). Every `fallow-ignore-*` suppression carries a `-- <reason>` (enforced by the `require-suppression-reason` rule); an honestly-complex function gets a `thresholdOverrides` entry with `reason` and a review date, never a bare suppression. Prefer real seams (match helpers, schema/data-table dispatch, named concept extraction) over threshold-appeasement fragmentation.
 
 ## Allowlist Contract
 

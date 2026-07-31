@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// fallow-ignore-file unused-file
+// fallow-ignore-file unused-file -- temporarily unmounted carousel is retained for review-gate re-enable
 /**
  * Selected-matters carousel for the OIP public home page.
  *

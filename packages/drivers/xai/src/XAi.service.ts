@@ -227,7 +227,7 @@ const resolveConfig = (config: XAiConfigInput): ResolvedXAiConfig => ({
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- xAI keeps response media classification at its provider HTTP boundary
 const isJsonContentType = (contentType: string): boolean => Str.includes("application/json")(contentType);
 
 const isTextContentType = (contentType: string): boolean =>
@@ -291,7 +291,7 @@ const selectToken = (
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- xAI keeps path interpolation local to its descriptor-driven request builder
 const applyPathParams = (path: string, params: Readonly<Record<string, string>>): string =>
   pipe(
     params,
@@ -410,7 +410,7 @@ const executeRaw = Effect.fn("XAi.executeRaw")(function* (
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- xAI assembles provider-specific response metadata at its decode boundary
 const responseContext = (response: HttpClientResponse.HttpClientResponse) => ({
   contentType: responseContentType(response),
   headers: response.headers,
@@ -569,7 +569,7 @@ const decodeJsonOption = S.decodeUnknownOption(S.UnknownFromJsonString);
 const encodeJson = encodeJsonString;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- xAI keeps data-line parsing local to its provider SSE decoder
 const dataLine = (line: string): O.Option<string> =>
   Str.startsWith("data:")(line) ? O.some(Str.trim(Str.slice(5)(line))) : O.none();
 

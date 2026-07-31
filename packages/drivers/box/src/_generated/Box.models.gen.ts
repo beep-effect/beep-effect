@@ -18,7 +18,7 @@ const $I = $BoxId.create("_generated/Box.models.gen");
 const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
   schema: Sch
 ): Sch & {
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- generated-local codec statics avoid TypeScript instantiation-depth failures
   readonly decodeOption: (input: unknown) => import("effect/Option").Option<Sch["Type"]>;
   readonly fromUnknown: (input: unknown) => Sch["Type"];
 } =>

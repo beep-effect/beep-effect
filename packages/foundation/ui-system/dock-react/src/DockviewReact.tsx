@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { DockNode, DockWorkspace } from "@beep/dock";
+import { DockNode, DockWorkspace, PanelId } from "@beep/dock";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -21,11 +21,44 @@ import type { AdapterState } from "./internal/AdapterState.ts";
 
 const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
-  if (O.isNone(drag)) return null;
+  if (O.isNone(drag) || !drag.value.moved) return null;
   return O.match(dropPreviewBox(props.state, props.graph, drag.value), {
     onNone: () => null,
     onSome: (box) => <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />,
   });
+};
+
+// Follow-cursor after-image for a promoted tab drag (dockview's PointerGhost
+// pattern): without it, mid-drag there is nothing under the pointer telling
+// the user what they are carrying. Functional styles only — the shell themes
+// it via [data-drag-ghost]. translate3d keeps per-move updates off layout.
+const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
+  const drag = useAtomValue(props.state.dragAtom);
+  const panels = useAtomValue(props.graph.panelsAtom);
+  if (O.isNone(drag) || !drag.value.moved) return null;
+  return O.match(
+    A.findFirst(panels, (candidate) => PanelId.equals(candidate.id, drag.value.panelId)),
+    {
+      onNone: () => null,
+      onSome: (panel) => (
+        <div
+          data-drag-ghost=""
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transform: `translate3d(${drag.value.pointer.left + 12}px, ${drag.value.pointer.top + 10}px, 0)`,
+            pointerEvents: "none",
+            willChange: "transform",
+            opacity: 0.85,
+            zIndex: 1000,
+          }}
+        >
+          {panel.title}
+        </div>
+      ),
+    }
+  );
 };
 
 const DockviewRoot = (
@@ -82,6 +115,7 @@ const DockviewRoot = (
         <Sash key={sash.splitId} graph={props.graph} state={props.state} splitId={sash.splitId} />
       ))}
       <DropOverlay graph={props.graph} state={props.state} />
+      <DragGhost graph={props.graph} state={props.state} />
     </div>
   );
 };

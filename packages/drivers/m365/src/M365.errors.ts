@@ -258,12 +258,12 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
 };
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local string reader keeps unknown M365 causes inside its boundary
 const readString =
   (key: PropertyKey) =>
   (value: unknown): O.Option<string> =>
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- M365 property refinement mirrors peer drivers but stays provider-local
     pipe(readProperty(value, key), O.filter(P.isString));
 
 const tryBoolean = (evaluate: () => boolean): Result.Result<boolean, unknown> => Result.try(evaluate);

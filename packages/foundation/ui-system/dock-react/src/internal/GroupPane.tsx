@@ -21,7 +21,15 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, compileDrop, preFloatContextFor, pressStartsOnButton, relativePositionOf } from "./DropCompiler.ts";
+import {
+  boxStyle,
+  compileDrop,
+  exceedsDragThreshold,
+  preFloatContextFor,
+  pressStartsOnButton,
+  relativePositionOf,
+} from "./DropCompiler.ts";
+import { FloatIcon, MaximizeIcon, RestoreIcon } from "./Icons.tsx";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
@@ -57,7 +65,7 @@ const Tab = (props: {
   const close = (): void => submit(makeOperation(ClosePanelCommand.make({ panelId: props.panel.id })));
   const pointerRef = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- tab dragging owns a distinct cancel handler and drag atom
     const cancel = (): void => props.graph.registry.set(props.state.dragAtom, O.none());
     const keydown = (event: KeyboardEvent): void => {
       if (Eq.equals(event.key, "Escape")) cancel();
@@ -65,11 +73,13 @@ const Tab = (props: {
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isSome(current) && PanelId.equals(current.value.panelId, props.panel.id)) {
+        const pointer = relativePositionOf(props.state, event);
         props.graph.registry.set(
           props.state.dragAtom,
           O.some({
             ...current.value,
-            pointer: relativePositionOf(props.state, event),
+            pointer,
+            moved: current.value.moved || exceedsDragThreshold(current.value.origin, pointer),
           })
         );
       }
@@ -77,33 +87,54 @@ const Tab = (props: {
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isNone(current) || !PanelId.equals(current.value.panelId, props.panel.id)) return;
-      const finalDrag = { ...current.value, pointer: relativePositionOf(props.state, event) };
+      const pointer = relativePositionOf(props.state, event);
+      const finalDrag = {
+        ...current.value,
+        pointer,
+        // The release itself can carry the promoting displacement (jsdom
+        // tests fire down→up with no intervening move), so re-check here.
+        moved: current.value.moved || exceedsDragThreshold(current.value.origin, pointer),
+      };
       props.graph.registry.set(props.state.dragAtom, O.none());
       node.releasePointerCapture?.(event.pointerId);
-      O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
+      if (finalDrag.moved)
+        O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
       event.preventDefault();
     };
     const down = (event: PointerEvent): void => {
       if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
+      // Chrome anchors a native text selection even when the press starts on
+      // a `user-select: none` tab, then extends it across panel content as
+      // the drag leaves the strip — cancel the default before capturing.
+      event.preventDefault();
+      // preventDefault also suppresses the native click-to-focus transfer;
+      // restore it so roving tab focus and Enter/Space track the clicked tab
+      // instead of re-activating the previously focused one.
+      node.focus({ preventScroll: true });
       node.setPointerCapture?.(event.pointerId);
+      const pointer = relativePositionOf(props.state, event);
       props.graph.registry.set(
         props.state.dragAtom,
         O.some({
           panelId: props.panel.id,
           fromGroupId: props.groupId,
-          pointer: relativePositionOf(props.state, event),
-          // fallow-ignore-next-line code-duplication
+          pointer,
+          origin: pointer,
+          moved: false,
+          // fallow-ignore-next-line code-duplication -- pointer-down captures the drag snapshot for the paired move handler
         })
       );
     };
     node.addEventListener("pointerdown", down);
     node.addEventListener("pointermove", move);
     node.addEventListener("pointerup", up);
+    node.addEventListener("pointercancel", cancel);
     document.addEventListener("keydown", keydown);
     return () => {
       node.removeEventListener("pointerdown", down);
       node.removeEventListener("pointermove", move);
       node.removeEventListener("pointerup", up);
+      node.removeEventListener("pointercancel", cancel);
       document.removeEventListener("keydown", keydown);
     };
   };
@@ -122,7 +153,7 @@ const Tab = (props: {
       ref={pointerRef}
       onClick={activate}
       onKeyDown={activateFromKeyboard}
-      style={{ flex: "0 0 auto" }}
+      style={{ flex: "0 0 auto", touchAction: "none" }}
     >
       {O.match(O.fromUndefinedOr(Renderer), {
         onNone: () => props.panel.title,
@@ -390,6 +421,7 @@ export const GroupPane = (
       <button
         type="button"
         aria-label={`Float group ${props.groupId}`}
+        title="Float"
         onClick={() => {
           // Remember where this group sat so Dock can put it back
           // (neighbor, side, and split share) instead of forcing a
@@ -418,14 +450,15 @@ export const GroupPane = (
           );
         }}
       >
-        Float
+        <FloatIcon />
       </button>
       <button
         type="button"
         aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`}
+        title={O.isSome(maximized) ? "Restore" : "Maximize"}
         onClick={toggleMaximized}
       >
-        {O.isSome(maximized) ? "Restore" : "Maximize"}
+        {O.isSome(maximized) ? <RestoreIcon /> : <MaximizeIcon />}
       </button>
     </div>
   );

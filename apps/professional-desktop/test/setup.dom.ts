@@ -11,7 +11,7 @@ import { ControllableResizeObserver } from "@beep/dock-react/internal/ResizeObse
 // geometry drives it explicitly with `resize()`.
 globalThis.ResizeObserver = ControllableResizeObserver;
 
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- jsdom matchMedia shim mirrors the browser setup required by sibling UI tests
 if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
   window.matchMedia = (query: string): MediaQueryList =>
     ({
