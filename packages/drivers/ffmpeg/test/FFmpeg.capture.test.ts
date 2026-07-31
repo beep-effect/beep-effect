@@ -464,7 +464,7 @@ describe("@beep/ffmpeg capture", () => {
     ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
   });
 
-  it(
+  it.effect(
     "extracts timestamped frames and writes the frames-at manifest",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -529,7 +529,7 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
     "fails extract-frames-at without partial commits",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -565,7 +565,7 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
     "extracts a single timestamped frame to the requested path",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -597,7 +597,7 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
     "renders a gif, surfaces fileSizeBytes, and refuses overwrites",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -634,7 +634,50 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
+    "extracts a re-encoded clip and reports the staged file size",
+    Effect.fnUntraced(function* () {
+      const commands: Array<ChildProcess.StandardCommand> = [];
+
+      yield* withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const videoPath = path.join(tmpDir, "sample.webm");
+          const outPath = path.join(tmpDir, "clips", "drag.mp4");
+          yield* fs.writeFileString(videoPath, "video");
+
+          const ffmpeg = yield* FFmpeg;
+          const request = ExtractClipRequest.make({
+            codec: "h264",
+            durationSeconds: 2,
+            outPath,
+            overwrite: false,
+            startSeconds: 1.5,
+            videoPath,
+          });
+          const result = yield* ffmpeg.extractClip(request);
+
+          expect(result.durationSeconds).toBe(2);
+          expect(result.startSeconds).toBe(1.5);
+          expect(result.fileSizeBytes).toBe("fake output".length);
+          expect(yield* fs.readFileString(outPath)).toBe("fake output");
+
+          // The clip is cut without a probe; only the encode command runs.
+          expect(A.map(commands, (command) => command.command)).toEqual(["ffmpeg"]);
+          const clipCommand = commands[0];
+          expect(clipCommand?.args).toContain("libx264");
+
+          const error = yield* Effect.flip(ffmpeg.extractClip(request));
+          expect(error).toBeInstanceOf(FFmpegError);
+          expect(error.operation).toBe("extractClip");
+          expect(error.message).toContain("Refusing to overwrite existing output");
+        })
+      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
+    })
+  );
+
+  it.effect(
     "renders a contact sheet spreading tiles across the probed duration",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -672,7 +715,7 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
     "routes container metadata movflags by output extension",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -714,7 +757,7 @@ describe("@beep/ffmpeg capture", () => {
     })
   );
 
-  it(
+  it.effect(
     "parses signalstats samples from the region luminance probe",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
