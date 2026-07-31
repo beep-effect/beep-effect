@@ -241,10 +241,7 @@ describe("@beep/ffmpeg capture failures", () => {
 
           expect(error).toBeInstanceOf(FFmpegError);
           expect(error.message).toContain("Expected video input to be a file");
-          // Known mislabel: probeVideo's ensureFile call omits its operation
-          // argument, so the preflight failure inherits ensureFile's
-          // "extractFrames" default. Pinned so fixing the source fails here.
-          expect(error.operation).toBe("extractFrames");
+          expect(error.operation).toBe("probeVideo");
         })
       ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
     })

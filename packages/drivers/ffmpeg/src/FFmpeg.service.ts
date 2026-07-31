@@ -1881,7 +1881,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
       Effect.mapError((cause) => FFmpegError.fromUnknown("probeVideo", "Invalid probe video request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
-    yield* ensureFile(fs, videoPath, "video input");
+    yield* ensureFile(fs, videoPath, "video input", "probeVideo");
     const args = buildFfprobeArgs(ProbeVideoRequest.make({ videoPath }));
     const command = ChildProcess.make(config.ffprobePath, args, {
       forceKillAfter: `${config.forceKillAfterMillis} millis`,
