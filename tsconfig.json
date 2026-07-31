@@ -1731,7 +1731,10 @@
       "@beep/qa-capture": [
         "./packages/tooling/library/qa-capture/src/index.ts"
       ],
-      "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"]
+      "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"],
+      "@beep/repo-cli/commands/Qa": [
+        "./packages/tooling/tool/cli/src/commands/Qa/index.ts"
+      ]
     }
   }
 }
