@@ -26,7 +26,7 @@ const $I = $ObsId.create("Obs.models");
  * @since 0.0.0
  */
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 export const PositiveMilliseconds = S.Finite.check(
   S.makeFilterGroup(
     [

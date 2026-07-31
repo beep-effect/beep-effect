@@ -221,7 +221,7 @@ const roundOrDiscovered = (
 // Two distinct public round resolvers with the same signature. The shared
 // decode branch is already factored into roundOrDiscovered; what remains is
 // entry-point boilerplate that only merging the two public APIs could remove.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- two public round resolvers; the shared decode branch is already extracted to roundOrDiscovered
 export const resolveRound = Effect.fn("QaSession.resolveRound")(function* (
   qaRoot: string,
   round: O.Option<number>

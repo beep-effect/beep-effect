@@ -10,7 +10,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 const $I = $ExiftoolId.create("Exiftool.models");
 
 /**
@@ -29,7 +29,7 @@ const $I = $ExiftoolId.create("Exiftool.models");
  * @since 0.0.0
  */
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 export const PositiveMilliseconds = S.Finite.check(
   S.makeFilterGroup(
     [

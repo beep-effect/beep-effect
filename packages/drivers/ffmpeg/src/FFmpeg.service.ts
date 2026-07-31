@@ -1548,7 +1548,7 @@ const renderManifest = Effect.fn("FFmpeg.renderManifest")(function* (
   const encoded = yield* ExtractFramesManifest.encodeEffect(manifest).pipe(
     Effect.mapError((cause) =>
       // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-      // fallow-ignore-next-line code-duplication
+      // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
       FFmpegError.fromUnknown("extractFrames", `Failed to encode extract-frames manifest: "${manifestPath}"`, { cause })
     )
   );
@@ -1627,7 +1627,7 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
       )
     );
   // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
   if (context.request.overwrite) {
     yield* fs.remove(context.manifestPath, { force: true }).pipe(Effect.ignore);
   }
@@ -1645,48 +1645,56 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
 const frameLinePattern = /^frame:(\d+)\s+pts:\S+\s+pts_time:([-+.\dEe]+)/;
 const yavgLinePattern = /^lavfi\.signalstats\.YAVG=([-+.\dEe]+)/;
 
+type PendingLuminanceFrame = {
+  readonly frameIndex: FrameIndex;
+  readonly ptsTimeSeconds: NonNegativeSeconds;
+};
+
+const pendingFrameFromMatch = (match: RegExpMatchArray): O.Option<PendingLuminanceFrame> =>
+  O.flatMap(
+    pipe(O.fromUndefinedOr(match[1]), O.flatMap(parseNumber), O.flatMap(FrameIndex.decodeOption)),
+    (frameIndex) =>
+      pipe(
+        O.fromUndefinedOr(match[2]),
+        O.flatMap(parseNumber),
+        O.flatMap(NonNegativeSeconds.decodeOption),
+        O.map((ptsTimeSeconds) => ({ frameIndex, ptsTimeSeconds }))
+      )
+  );
+
+const lumaSampleFromMatch = (match: RegExpMatchArray, pending: PendingLuminanceFrame): O.Option<LuminanceSample> =>
+  pipe(
+    O.fromUndefinedOr(match[1]),
+    O.flatMap(parseNumber),
+    O.map((value) => Math.min(255, Math.max(0, value))),
+    O.flatMap(LumaValue.decodeOption),
+    O.map((meanLuma) =>
+      LuminanceSample.make({
+        frameIndex: pending.frameIndex,
+        meanLuma,
+        ptsTimeSeconds: pending.ptsTimeSeconds,
+      })
+    )
+  );
+
 const parseLuminanceSamples = (stdout: string): ReadonlyArray<LuminanceSample> => {
   const lines = Str.split(/\r?\n/)(stdout);
-  let pending = O.none<{ readonly frameIndex: FrameIndex; readonly ptsTimeSeconds: NonNegativeSeconds }>();
+  let pending = O.none<PendingLuminanceFrame>();
   let samples = A.empty<LuminanceSample>();
 
   for (const line of lines) {
     const frameMatch = pipe(line, Str.match(frameLinePattern));
     if (O.isSome(frameMatch)) {
-      const frameIndex = pipe(
-        O.fromUndefinedOr(frameMatch.value[1]),
-        O.flatMap(parseNumber),
-        O.flatMap(FrameIndex.decodeOption)
-      );
-      const ptsTimeSeconds = pipe(
-        O.fromUndefinedOr(frameMatch.value[2]),
-        O.flatMap(parseNumber),
-        O.flatMap(NonNegativeSeconds.decodeOption)
-      );
-      pending = O.flatMap(frameIndex, (index) =>
-        O.map(ptsTimeSeconds, (pts) => ({ frameIndex: index, ptsTimeSeconds: pts }))
-      );
+      pending = pendingFrameFromMatch(frameMatch.value);
       continue;
     }
 
     const yavgMatch = pipe(line, Str.match(yavgLinePattern));
     if (O.isSome(yavgMatch) && O.isSome(pending)) {
-      const meanLuma = pipe(
-        O.fromUndefinedOr(yavgMatch.value[1]),
-        O.flatMap(parseNumber),
-        O.map((value) => Math.min(255, Math.max(0, value))),
-        O.flatMap(LumaValue.decodeOption)
+      samples = pipe(
+        lumaSampleFromMatch(yavgMatch.value, pending.value),
+        O.match({ onNone: () => samples, onSome: (sample) => A.append(samples, sample) })
       );
-      if (O.isSome(meanLuma)) {
-        samples = A.append(
-          samples,
-          LuminanceSample.make({
-            frameIndex: pending.value.frameIndex,
-            meanLuma: meanLuma.value,
-            ptsTimeSeconds: pending.value.ptsTimeSeconds,
-          })
-        );
-      }
       pending = O.none();
     }
   }
@@ -1930,7 +1938,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
       request.manifestPath,
       O.match({
         // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-        // fallow-ignore-next-line code-duplication
+        // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
         onNone: () => path.join(outDir, "extract-frames-manifest.json"),
         onSome: path.resolve,
       })
@@ -2265,7 +2273,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
   const extractClip = Effect.fn("FFmpeg.extractClip")(function* (rawRequest: ExtractClipRequest) {
     const request = yield* ExtractClipRequest.decodeEffect(rawRequest).pipe(
       // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-      // fallow-ignore-next-line code-duplication
+      // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
       Effect.mapError((cause) => FFmpegError.fromUnknown("extractClip", "Invalid extract-clip request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
@@ -2297,7 +2305,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
   const renderGif = Effect.fn("FFmpeg.renderGif")(function* (rawRequest: RenderGifRequest) {
     const request = yield* RenderGifRequest.decodeEffect(rawRequest).pipe(
       // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-      // fallow-ignore-next-line code-duplication
+      // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
       Effect.mapError((cause) => FFmpegError.fromUnknown("renderGif", "Invalid render-gif request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
@@ -2380,7 +2388,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     rawRequest: WriteContainerMetadataRequest
   ) {
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
     const request = yield* WriteContainerMetadataRequest.decodeEffect(rawRequest).pipe(
       Effect.mapError((cause) =>
         FFmpegError.fromUnknown("writeContainerMetadata", "Invalid write-container-metadata request.", { cause })

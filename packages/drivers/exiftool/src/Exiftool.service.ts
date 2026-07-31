@@ -82,7 +82,7 @@ const defaultConfig = (input?: ExiftoolConfigInputOptions | undefined): Exiftool
   ExiftoolConfig.make(ExiftoolConfigInput.make(input ?? {}));
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -90,7 +90,7 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 const parseFiniteNumber = (value: unknown): O.Option<number> => {
   if (P.isNumber(value)) {
     return Number.isFinite(value) ? O.some(value) : O.none();

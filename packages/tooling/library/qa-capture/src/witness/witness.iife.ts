@@ -180,9 +180,9 @@ declare const decodeURIComponent: (value: string) => string;
 // The whole in-page witness is one IIFE by construction: it is bundled to a
 // browser script and guarded by `window.__beepQa`, so its helpers cannot be
 // hoisted to module scope without breaking the zero-import bundling contract.
-// CRAP is coverage-driven (cyclomatic 13 against a threshold of 20) and this
-// code is exercised by live capture rounds, not by Node unit tests.
-// fallow-ignore-next-line complexity
+// The arrow is the module body rather than a unit of logic, and the script is
+// exercised by live capture rounds, not by Node unit tests.
+// fallow-ignore-next-line complexity -- browser IIFE bundled by Bun.build; its helpers cannot hoist to module scope without breaking the zero-import contract
 (() => {
   if (window.__beepQa !== undefined) {
     return;
@@ -190,22 +190,28 @@ declare const decodeURIComponent: (value: string) => string;
 
   // Config priority: window.__BEEP_QA__ > script-src query params
   // (`/witness.js?collector=...&cursor=0`) > script data attributes.
+  // A bare `?flag` pair carries no `=`, so its value is the empty string
+  // rather than absent; `null` here means "this pair is not the one asked for".
+  const queryPairValue = (pair: string, name: string): string | null => {
+    const separator = pair.indexOf("=");
+    const key = separator === -1 ? pair : pair.slice(0, separator);
+    if (key !== name) {
+      return null;
+    }
+    return separator === -1 ? "" : decodeURIComponent(pair.slice(separator + 1));
+  };
+
   const scriptQueryParam = (name: string): string | null => {
     const script = document.currentScript;
     const src = script === null ? undefined : script.src;
-    if (src === undefined) {
-      return null;
-    }
-    const query = src.split("?")[1];
+    const query = src === undefined ? undefined : src.split("?")[1];
     if (query === undefined) {
       return null;
     }
-    const pairs = query.split("&");
-    for (const pair of pairs) {
-      const separator = pair.indexOf("=");
-      const key = separator === -1 ? pair : pair.slice(0, separator);
-      if (key === name) {
-        return separator === -1 ? "" : decodeURIComponent(pair.slice(separator + 1));
+    for (const pair of query.split("&")) {
+      const value = queryPairValue(pair, name);
+      if (value !== null) {
+        return value;
       }
     }
     return null;
@@ -290,7 +296,7 @@ declare const decodeURIComponent: (value: string) => string;
   // Deterministic selector-priority ladder: each branch is one strategy and
   // the order IS the contract. CRAP is coverage-driven here (cyclomatic 10
   // against a threshold of 20); this file is a browser IIFE, not Node-testable.
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- selector-priority ladder whose order is the contract; exercised by live capture rounds, not Node-unit-testable
   const terminalToken = (element: WitnessElement): string | null => {
     const dataQa = attributeToken(element, "data-qa");
     if (dataQa !== null) {
