@@ -24,8 +24,11 @@ import {
   ForeignAttributeName,
   ForeignElementName,
   GlobalAttributes,
+  HtmlFiniteNumber,
   HtmlNonNegativeInteger,
+  HtmlNonNegativeNumber,
   HtmlPositiveInteger,
+  HtmlPositiveNumber,
   makeSpaceSeparatedTokenList,
   PopoverTargetAction,
 } from "./Html.attributes.ts";
@@ -5231,12 +5234,12 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
   "meter",
   {
     ...GlobalAttributes,
-    high: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    low: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    min: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    optimum: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    high: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    low: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    max: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    min: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    optimum: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Meter", { description: "The <meter> element." })
@@ -5259,23 +5262,23 @@ export declare namespace Meter {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "meter";
-    readonly high: O.Option<string>;
-    readonly low: O.Option<string>;
-    readonly max: O.Option<string>;
-    readonly min: O.Option<string>;
-    readonly optimum: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly high: O.Option<number>;
+    readonly low: O.Option<number>;
+    readonly max: O.Option<number>;
+    readonly min: O.Option<number>;
+    readonly optimum: O.Option<number>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "meter";
-    readonly high?: string;
-    readonly low?: string;
-    readonly max?: string;
-    readonly min?: string;
-    readonly optimum?: string;
-    readonly value?: string;
+    readonly high?: number;
+    readonly low?: number;
+    readonly max?: number;
+    readonly min?: number;
+    readonly optimum?: number;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -6242,8 +6245,8 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
   "progress",
   {
     ...GlobalAttributes,
-    max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    max: S.OptionFromOptionalKey(HtmlPositiveNumber).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(HtmlNonNegativeNumber).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Progress", { description: "The <progress> element." })
@@ -6266,15 +6269,15 @@ export declare namespace Progress {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "progress";
-    readonly max: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly max: O.Option<number>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "progress";
-    readonly max?: string;
-    readonly value?: string;
+    readonly max?: number;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }

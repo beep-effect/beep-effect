@@ -21,8 +21,8 @@ const youtubeWatchPrefix = "https://www.youtube.com/watch?v=";
  * ```ts
  * import { youtubeEmbedUrl } from "@beep/editor/youtube-embed"
  *
- * console.log(youtubeEmbedUrl("dQw4w9WgXcQ"))
- * // "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+ * console.log(youtubeEmbedUrl("M7lc1UVf-VE"))
+ * // "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
  * ```
  *
  * @category constructors
@@ -37,8 +37,8 @@ export const youtubeEmbedUrl = (videoID: string): string => `https://www.youtube
  * ```ts
  * import { youtubeWatchUrl } from "@beep/editor/youtube-embed"
  *
- * console.log(youtubeWatchUrl("dQw4w9WgXcQ"))
- * // "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ * console.log(youtubeWatchUrl("M7lc1UVf-VE"))
+ * // "https://www.youtube.com/watch?v=M7lc1UVf-VE"
  * ```
  *
  * @category constructors
@@ -73,7 +73,7 @@ const canonicalYouTubeWatchUrl = S.makeFilter<string>(
  * import { YouTubeWatchUrl } from "@beep/editor/youtube-embed"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(YouTubeWatchUrl)("https://www.youtube.com/watch?v=dQw4w9WgXcQ")) // true
+ * console.log(S.is(YouTubeWatchUrl)("https://www.youtube.com/watch?v=M7lc1UVf-VE")) // true
  * ```
  *
  * @category schemas
@@ -92,8 +92,8 @@ export const YouTubeWatchUrl = S.String.check(canonicalYouTubeWatchUrl).pipe(
  * ```ts
  * import type { YouTubeWatchUrl } from "@beep/editor/youtube-embed"
  *
- * const watchUrl: YouTubeWatchUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- * console.log(watchUrl) // "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ * const watchUrl: YouTubeWatchUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE"
+ * console.log(watchUrl) // "https://www.youtube.com/watch?v=M7lc1UVf-VE"
  * ```
  *
  * @category models
@@ -110,7 +110,8 @@ export type YouTubeWatchUrl = typeof YouTubeWatchUrl.Type;
  * ```ts
  * import { YOUTUBE_WATCH_EVENT } from "@beep/editor/youtube-embed"
  *
- * console.log(YOUTUBE_WATCH_EVENT) // "beep:youtube-watch"
+ * const event = new CustomEvent(YOUTUBE_WATCH_EVENT, { cancelable: true })
+ * console.log(event.type) // "beep:youtube-watch"
  * ```
  *
  * @category constants
@@ -126,7 +127,7 @@ export const YOUTUBE_WATCH_EVENT = "beep:youtube-watch";
  * import { YouTubeWatchRequest } from "@beep/editor/youtube-embed"
  *
  * const request = YouTubeWatchRequest.make({
- *   url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+ *   url: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
  * })
  * console.log(request.url)
  * ```
@@ -150,7 +151,7 @@ export class YouTubeWatchRequest extends S.Class<YouTubeWatchRequest>($I`YouTube
  * ```ts
  * import type { YouTubeEmbedProps } from "@beep/editor/youtube-embed"
  *
- * const props: YouTubeEmbedProps = { videoID: "dQw4w9WgXcQ" }
+ * const props: YouTubeEmbedProps = { videoID: "M7lc1UVf-VE" }
  * console.log(props.videoID)
  * ```
  *
@@ -192,10 +193,10 @@ export const YOUTUBE_EMBED_SANDBOX = "allow-scripts allow-same-origin allow-popu
  * ```tsx
  * import { YouTubeEmbed } from "@beep/editor/youtube-embed"
  *
- * const props = { videoID: "dQw4w9WgXcQ" }
+ * const props = { videoID: "M7lc1UVf-VE" }
  * const embed = <YouTubeEmbed {...props} />
  *
- * console.log(props.videoID) // "dQw4w9WgXcQ"
+ * console.log(props.videoID) // "M7lc1UVf-VE"
  * ```
  *
  * @category components

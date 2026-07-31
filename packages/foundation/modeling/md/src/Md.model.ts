@@ -26,8 +26,8 @@ const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
  * import * as S from "effect/Schema"
  * import { CodeFenceLanguage } from "@beep/md/Md.model"
  *
- * const language = Result.getOrThrow(S.decodeUnknownResult(CodeFenceLanguage)("ts"))
- * console.log(language) // "ts"
+ * const result = S.decodeUnknownResult(CodeFenceLanguage)("ts")
+ * console.log(Result.isSuccess(result) && result.success === "ts") // true
  * ```
  *
  * @category models
@@ -56,8 +56,8 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
  * import * as S from "effect/Schema"
  * import { CodeFenceLanguage } from "@beep/md/Md.model"
  *
- * const language: CodeFenceLanguage = Result.getOrThrow(S.decodeUnknownResult(CodeFenceLanguage)("tsx"))
- * console.log(language) // "tsx"
+ * const result: Result.Result<CodeFenceLanguage, S.SchemaError> = S.decodeUnknownResult(CodeFenceLanguage)("tsx")
+ * console.log(Result.isSuccess(result) && result.success === "tsx") // true
  * ```
  *
  * @category models
@@ -78,8 +78,8 @@ export type CodeFenceLanguage = typeof CodeFenceLanguage.Type;
  * import * as S from "effect/Schema"
  * import { YouTubeVideoId } from "@beep/md/Md.model"
  *
- * const videoId = Result.getOrThrow(S.decodeUnknownResult(YouTubeVideoId)("dQw4w9WgXcQ"))
- * console.log(videoId) // "dQw4w9WgXcQ"
+ * const result = S.decodeUnknownResult(YouTubeVideoId)("M7lc1UVf-VE")
+ * console.log(Result.isSuccess(result) && result.success === "M7lc1UVf-VE") // true
  * ```
  *
  * @category models
@@ -150,11 +150,12 @@ export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableAlignment } from "@beep/md/Md.model"
  *
- * const alignment = S.decodeUnknownSync(TableAlignment)("center")
- * console.log(alignment)
+ * const result = S.decodeUnknownResult(TableAlignment)("center")
+ * console.log(Result.isSuccess(result) && result.success === "center") // true
  * ```
  *
  * @category models
@@ -187,11 +188,12 @@ export type TableAlignment = typeof TableAlignment.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { AdmonitionKind } from "@beep/md/Md.model"
  *
- * const kind = S.decodeUnknownSync(AdmonitionKind)("warning")
- * console.log(kind)
+ * const result = S.decodeUnknownResult(AdmonitionKind)("warning")
+ * console.log(Result.isSuccess(result) && result.success === "warning") // true
  * ```
  *
  * @category models
@@ -224,11 +226,12 @@ export type AdmonitionKind = typeof AdmonitionKind.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { EmbedKind } from "@beep/md/Md.model"
  *
- * const kind = S.decodeUnknownSync(EmbedKind)("video")
- * console.log(kind)
+ * const result = S.decodeUnknownResult(EmbedKind)("video")
+ * console.log(Result.isSuccess(result) && result.success === "video") // true
  * ```
  *
  * @category models
@@ -266,8 +269,8 @@ export type EmbedKind = typeof EmbedKind.Type;
  * import * as S from "effect/Schema"
  * import { InlineChildren, Text } from "@beep/md/Md.model"
  *
- * const children = Result.getOrThrow(S.decodeUnknownResult(InlineChildren)([Text.make({ value: "Hello" })]))
- * console.log(children.length) // 1
+ * const result = S.decodeUnknownResult(InlineChildren)([Text.make({ value: "Hello" })])
+ * console.log(Result.isSuccess(result) && result.success.length === 1) // true
  * ```
  *
  * @category models
@@ -1204,8 +1207,8 @@ export declare namespace BlockChildren {
  * import * as S from "effect/Schema"
  * import { ListItemChild, Text } from "@beep/md/Md.model"
  *
- * const child = Result.getOrThrow(S.decodeUnknownResult(ListItemChild)(Text.make({ value: "Hello" })))
- * console.log(child._tag) // "text"
+ * const result = S.decodeUnknownResult(ListItemChild)(Text.make({ value: "Hello" }))
+ * console.log(Result.isSuccess(result) && result.success._tag === "text") // true
  * ```
  *
  * @category models
@@ -1272,8 +1275,8 @@ export declare namespace ListItemChild {
  * import * as S from "effect/Schema"
  * import { ListItemChildren, Text } from "@beep/md/Md.model"
  *
- * const children = Result.getOrThrow(S.decodeUnknownResult(ListItemChildren)([Text.make({ value: "Hello" })]))
- * console.log(children.length) // 1
+ * const result = S.decodeUnknownResult(ListItemChildren)([Text.make({ value: "Hello" })])
+ * console.log(Result.isSuccess(result) && result.success.length === 1) // true
  * ```
  *
  * @category models
@@ -1396,8 +1399,8 @@ export declare namespace P {
  * import * as S from "effect/Schema"
  * import { HeadingLevel } from "@beep/md/Md.model"
  *
- * const level = Result.getOrThrow(S.decodeUnknownResult(HeadingLevel)(2))
- * console.log(level) // 2
+ * const result = S.decodeUnknownResult(HeadingLevel)(2)
+ * console.log(Result.isSuccess(result) && result.success === 2) // true
  * ```
  *
  * @category models
@@ -1418,8 +1421,8 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
  * import * as S from "effect/Schema"
  * import { HeadingLevel } from "@beep/md/Md.model"
  *
- * const level: HeadingLevel = Result.getOrThrow(S.decodeUnknownResult(HeadingLevel)(3))
- * console.log(level) // 3
+ * const result: Result.Result<HeadingLevel, S.SchemaError> = S.decodeUnknownResult(HeadingLevel)(3)
+ * console.log(Result.isSuccess(result) && result.success === 3) // true
  * ```
  *
  * @category models
@@ -2317,7 +2320,7 @@ export declare namespace Table {
  * ```ts
  * import { YouTube } from "@beep/md/Md.model"
  *
- * const node = YouTube.make({ videoId: "dQw4w9WgXcQ" })
+ * const node = YouTube.make({ videoId: "M7lc1UVf-VE" })
  * console.log(node._tag) // "youtube"
  * ```
  *
@@ -2343,8 +2346,8 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
  * ```ts
  * import { YouTube } from "@beep/md/Md.model"
  *
- * const node: YouTube.Type = YouTube.make({ videoId: "dQw4w9WgXcQ" })
- * console.log(node.videoId) // "dQw4w9WgXcQ"
+ * const node: YouTube.Type = YouTube.make({ videoId: "M7lc1UVf-VE" })
+ * console.log(node.videoId) // "M7lc1UVf-VE"
  * ```
  *
  * @category models

@@ -22,12 +22,13 @@ const childText = (children: ReadonlyArray<LexicalNode.Type>): string => A.join(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(JSON.stringify(nodeToPlainText(node))) // "\"\\n\""
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
  * ```
  *
  * @category getters
@@ -57,11 +58,12 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  * import { editorStateToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
- * const state = S.decodeUnknownSync(SerializedEditorState)({
+ * const result = S.decodeUnknownResult(SerializedEditorState)({
  *   root: {
  *     type: "root", version: 1, direction: null, format: "", indent: 0,
  *     children: [{
@@ -70,7 +72,7 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  *     }]
  *   }
  * })
- * console.log(editorStateToPlainText(state)) // ""
+ * console.log(Result.isSuccess(result) && editorStateToPlainText(result.success) === "") // true
  * ```
  *
  * @category getters

@@ -1,13 +1,35 @@
 // @vitest-environment jsdom
 
 import { conform, inspectConformance, serialize, untrustedHtmlValue } from "@beep/html";
-import { ForeignElement, P } from "@beep/html/Html.model";
+import { Div, ForeignElement, P } from "@beep/html/Html.model";
 import { Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 
 describe("@beep/html browser conformance", () => {
+  it("keeps every admitted data-* suffix distinct after browser parsing", () => {
+    const root = Div.make({
+      children: [],
+      dataset: O.some({
+        "-x": "hyphen",
+        "1": "digit",
+        "foo.bar": "dot",
+        méta: "unicode",
+      }),
+    });
+    const serialized = pipe(root, serialize, Effect.runSync, untrustedHtmlValue);
+    const container = document.createElement("div");
+    container.innerHTML = serialized;
+    const element = container.firstElementChild;
+
+    expect(element?.getAttributeNames()).toStrictEqual(["data--x", "data-1", "data-foo.bar", "data-méta"]);
+    expect(element?.getAttribute("data--x")).toBe("hyphen");
+    expect(element?.getAttribute("data-1")).toBe("digit");
+    expect(element?.getAttribute("data-foo.bar")).toBe("dot");
+    expect(element?.getAttribute("data-méta")).toBe("unicode");
+  });
+
   it("rejects opaque foreign trees that an HTML parser restructures", () => {
     const root = ForeignElement.make({
       namespace: "svg",

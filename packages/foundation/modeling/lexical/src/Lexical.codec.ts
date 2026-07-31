@@ -73,11 +73,12 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
- * const uri = S.decodeUnknownSync(ArtifactUri)("artifact://artifact-123")
- * console.log(uri) // "artifact://artifact-123"
+ * const result = S.decodeUnknownResult(ArtifactUri)("artifact://artifact-123")
+ * console.log(Result.isSuccess(result) && result.success === "artifact://artifact-123") // true
  * ```
  *
  * @category combinators
@@ -326,7 +327,7 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
  *
  * @example
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import { Effect } from "effect"
  * import { P, Text } from "@beep/md/Md.model"
  * import { blockToLexical } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -420,7 +421,7 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
  *
  * @example
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -575,14 +576,15 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToBlocks } from "@beep/lexical-schema/Lexical.codec"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({
+ * const result = S.decodeUnknownResult(LexicalNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(nodeToBlocks(node)[0]?._tag) // "p"
+ * console.log(Result.isSuccess(result) && nodeToBlocks(result.success)[0]?._tag === "p") // true
  * ```
  *
  * @category combinators
@@ -615,7 +617,7 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
  *
  * @example
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema/Lexical.codec"
  *

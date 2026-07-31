@@ -79,11 +79,12 @@ const YouTubeVideoIdFromLegacyInput = S.String.pipe(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
  *
- * const version = S.decodeUnknownSync(LexicalNodeVersion)(1)
- * console.log(version) // 1
+ * const result = S.decodeUnknownResult(LexicalNodeVersion)(1)
+ * console.log(Result.isSuccess(result) && result.success === 1) // true
  * ```
  *
  * @category models
@@ -209,11 +210,12 @@ const TextFormatMaskBase = NonNegativeInt.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
- * const mask = S.decodeUnknownSync(TextFormatMask)(3)
- * console.log(mask) // 3
+ * const result = S.decodeUnknownResult(TextFormatMask)(3)
+ * console.log(Result.isSuccess(result) && result.success === 3) // true
  * ```
  *
  * @category models
@@ -242,11 +244,12 @@ export type TextFormatMask = typeof TextFormatMask.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { hasTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
- * const mask = S.decodeUnknownSync(TextFormatMask)(3)
- * console.log(hasTextFormat(mask, 1)) // true
+ * const result = S.decodeUnknownResult(TextFormatMask)(3)
+ * console.log(Result.isSuccess(result) && hasTextFormat(result.success, 1)) // true
  * ```
  *
  * @category predicates
@@ -262,11 +265,12 @@ export const hasTextFormat: {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { withTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
- * const mask = S.decodeUnknownSync(TextFormatMask)(1)
- * console.log(withTextFormat(mask, 2)) // 3
+ * const result = S.decodeUnknownResult(TextFormatMask)(1)
+ * console.log(Result.isSuccess(result) && withTextFormat(result.success, 2) === 3) // true
  * ```
  *
  * @category constructors
@@ -366,11 +370,12 @@ const TextDetailMaskBase = NonNegativeInt.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
- * const mask = S.decodeUnknownSync(TextDetailMask)(1)
- * console.log(mask) // 1
+ * const result = S.decodeUnknownResult(TextDetailMask)(1)
+ * console.log(Result.isSuccess(result) && result.success === 1) // true
  * ```
  *
  * @category models
@@ -399,11 +404,12 @@ export type TextDetailMask = typeof TextDetailMask.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
- * const depth = S.decodeUnknownSync(LexicalIndentDepth)(2)
- * console.log(depth) // 2
+ * const result = S.decodeUnknownResult(LexicalIndentDepth)(2)
+ * console.log(Result.isSuccess(result) && result.success === 2) // true
  * ```
  *
  * @category models
@@ -472,11 +478,12 @@ export type TableCellHeaderState = typeof TableCellHeaderState.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
- * const span = S.decodeUnknownSync(TableCellSpan)(2)
- * console.log(span) // 2
+ * const result = S.decodeUnknownResult(TableCellSpan)(2)
+ * console.log(Result.isSuccess(result) && result.success === 2) // true
  * ```
  *
  * @category models
@@ -510,11 +517,12 @@ export type TableCellSpan = typeof TableCellSpan.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
- * const width = S.decodeUnknownSync(TableDimension)(120)
- * console.log(width) // 120
+ * const result = S.decodeUnknownResult(TableDimension)(120)
+ * console.log(Result.isSuccess(result) && result.success === 120) // true
  * ```
  *
  * @category models
@@ -814,11 +822,12 @@ const SafeInlineStyleType = S.String.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
- * const decode = S.decodeUnknownSync(SafeInlineStyle)
- * console.log(decode("position:fixed;color:red")) // "color: red"
+ * const result = S.decodeUnknownResult(SafeInlineStyle)("position:fixed;color:red")
+ * console.log(Result.isSuccess(result) && result.success === "color: red") // true
  * ```
  *
  * @category validation
@@ -872,11 +881,12 @@ const SafeStyleValueType = S.String.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
- * const decode = S.decodeUnknownSync(SafeStyleValue)
- * console.log(decode("red; position: fixed")) // ""
+ * const result = S.decodeUnknownResult(SafeStyleValue)("red; position: fixed")
+ * console.log(Result.isSuccess(result) && result.success === "") // true
  * ```
  *
  * @category validation
@@ -927,11 +937,12 @@ const SafeUrlType = S.String.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
- * const decode = S.decodeUnknownSync(SafeUrl)
- * console.log(decode("javascript:alert(1)")) // "#"
+ * const result = S.decodeUnknownResult(SafeUrl)("javascript:alert(1)")
+ * console.log(Result.isSuccess(result) && result.success === "#") // true
  * ```
  *
  * @category validation
@@ -1006,11 +1017,12 @@ export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { BaseNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: BaseNode.Type = S.decodeUnknownSync(BaseNode)({ version: 1 })
- * console.log(node.version) // 1
+ * const result: Result.Result<BaseNode.Type, S.SchemaError> = S.decodeUnknownResult(BaseNode)({ version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.version === 1) // true
  * ```
  *
  * @category models
@@ -1115,11 +1127,13 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ElementNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: ElementNode.Type = S.decodeUnknownSync(ElementNode)({ version: 1, children: [] })
- * console.log(node.children.length) // 0
+ * const result: Result.Result<ElementNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(ElementNode)({ version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.children.length === 0) // true
  * ```
  *
  * @category models
@@ -1193,13 +1207,14 @@ export class TextBase extends BaseNode.extend<TextBase>($I`TextBase`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextBase } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TextBase.Type = S.decodeUnknownSync(TextBase)({
+ * const result: Result.Result<TextBase.Type, S.SchemaError> = S.decodeUnknownResult(TextBase)({
  *   version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "hi"
  * })
- * console.log(node.text) // "hi"
+ * console.log(Result.isSuccess(result) && result.success.text === "hi") // true
  * ```
  *
  * @category models
@@ -1240,13 +1255,14 @@ export declare namespace TextBase {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(TextNode)({
+ * const result = S.decodeUnknownResult(TextNode)({
  *   type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Hello"
  * })
- * console.log(node.text) // "Hello"
+ * console.log(Result.isSuccess(result) && result.success.text === "Hello") // true
  * ```
  *
  * @category models
@@ -1264,13 +1280,14 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TextNode.Type = S.decodeUnknownSync(TextNode)({
+ * const result: Result.Result<TextNode.Type, S.SchemaError> = S.decodeUnknownResult(TextNode)({
  *   type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Hello"
  * })
- * console.log(node.text) // "Hello"
+ * console.log(Result.isSuccess(result) && result.success.text === "Hello") // true
  * ```
  *
  * @category models
@@ -1303,13 +1320,14 @@ export declare namespace TextNode {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(TabNode)({
+ * const result = S.decodeUnknownResult(TabNode)({
  *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
  * })
- * console.log(node.type) // "tab"
+ * console.log(Result.isSuccess(result) && result.success.type === "tab") // true
  * ```
  *
  * @category models
@@ -1327,13 +1345,14 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TabNode.Type = S.decodeUnknownSync(TabNode)({
+ * const result: Result.Result<TabNode.Type, S.SchemaError> = S.decodeUnknownResult(TabNode)({
  *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
  * })
- * console.log(node.type) // "tab"
+ * console.log(Result.isSuccess(result) && result.success.type === "tab") // true
  * ```
  *
  * @category models
@@ -1366,11 +1385,12 @@ export declare namespace TabNode {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(LineBreakNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result = S.decodeUnknownResult(LineBreakNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
  * @category models
@@ -1388,11 +1408,13 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: LineBreakNode.Type = S.decodeUnknownSync(LineBreakNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result: Result.Result<LineBreakNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(LineBreakNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
  * @category models
@@ -1445,11 +1467,13 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { RootNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: RootNode.Type = S.decodeUnknownSync(RootNode)({ type: "root", version: 1, children: [] })
- * console.log(node.type) // "root"
+ * const result: Result.Result<RootNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(RootNode)({ type: "root", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "root") // true
  * ```
  *
  * @category models
@@ -1502,11 +1526,13 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ParagraphNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: ParagraphNode.Type = S.decodeUnknownSync(ParagraphNode)({ type: "paragraph", version: 1, children: [] })
- * console.log(node.type) // "paragraph"
+ * const result: Result.Result<ParagraphNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(ParagraphNode)({ type: "paragraph", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "paragraph") // true
  * ```
  *
  * @category models
@@ -1560,13 +1586,14 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { HeadingNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: HeadingNode.Type = S.decodeUnknownSync(HeadingNode)({
+ * const result: Result.Result<HeadingNode.Type, S.SchemaError> = S.decodeUnknownResult(HeadingNode)({
  *   type: "heading", version: 1, children: [], tag: "h1"
  * })
- * console.log(node.tag) // "h1"
+ * console.log(Result.isSuccess(result) && result.success.tag === "h1") // true
  * ```
  *
  * @category models
@@ -1621,11 +1648,13 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: QuoteNode.Type = S.decodeUnknownSync(QuoteNode)({ type: "quote", version: 1, children: [] })
- * console.log(node.type) // "quote"
+ * const result: Result.Result<QuoteNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(QuoteNode)({ type: "quote", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "quote") // true
  * ```
  *
  * @category models
@@ -1689,13 +1718,14 @@ export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ListNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: ListNode.Type = S.decodeUnknownSync(ListNode)({
+ * const result: Result.Result<ListNode.Type, S.SchemaError> = S.decodeUnknownResult(ListNode)({
  *   type: "list", version: 1, children: [], listType: "bullet", start: 1, tag: "ul"
  * })
- * console.log(node.tag) // "ul"
+ * console.log(Result.isSuccess(result) && result.success.tag === "ul") // true
  * ```
  *
  * @category models
@@ -1770,13 +1800,14 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ListItemNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: ListItemNode.Type = S.decodeUnknownSync(ListItemNode)({
+ * const result: Result.Result<ListItemNode.Type, S.SchemaError> = S.decodeUnknownResult(ListItemNode)({
  *   type: "listitem", version: 1, children: [], value: 1
  * })
- * console.log(node.value) // 1
+ * console.log(Result.isSuccess(result) && result.success.value === 1) // true
  * ```
  *
  * @category models
@@ -1846,13 +1877,14 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LinkNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: LinkNode.Type = S.decodeUnknownSync(LinkNode)({
+ * const result: Result.Result<LinkNode.Type, S.SchemaError> = S.decodeUnknownResult(LinkNode)({
  *   type: "link", version: 1, children: [], url: "https://example.com"
  * })
- * console.log(node.url) // "https://example.com"
+ * console.log(Result.isSuccess(result) && result.success.url === "https://example.com") // true
  * ```
  *
  * @category models
@@ -1924,11 +1956,13 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { CodeNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: CodeNode.Type = S.decodeUnknownSync(CodeNode)({ type: "code", version: 1, children: [] })
- * console.log(node.type) // "code"
+ * const result: Result.Result<CodeNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(CodeNode)({ type: "code", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "code") // true
  * ```
  *
  * @category models
@@ -1967,13 +2001,14 @@ export declare namespace CodeNode {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(ArtifactRefNode)({
+ * const result = S.decodeUnknownResult(ArtifactRefNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(node.artifactId) // "artifact-123"
+ * console.log(Result.isSuccess(result) && result.success.artifactId === "artifact-123") // true
  * ```
  *
  * @category models
@@ -1998,13 +2033,14 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: ArtifactRefNode.Type = S.decodeUnknownSync(ArtifactRefNode)({
+ * const result: Result.Result<ArtifactRefNode.Type, S.SchemaError> = S.decodeUnknownResult(ArtifactRefNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(node.artifactId) // "artifact-123"
+ * console.log(Result.isSuccess(result) && result.success.artifactId === "artifact-123") // true
  * ```
  *
  * @category models
@@ -2044,13 +2080,14 @@ export declare namespace ArtifactRefNode {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(YouTubeNode)({
- *   type: "youtube", version: 1, videoID: "dQw4w9WgXcQ", format: ""
+ * const result = S.decodeUnknownResult(YouTubeNode)({
+ *   type: "youtube", version: 1, videoID: "M7lc1UVf-VE", format: ""
  * })
- * console.log(node.videoID)
+ * console.log(Result.isSuccess(result) && result.success.videoID === "M7lc1UVf-VE") // true
  * ```
  *
  * @category models
@@ -2075,13 +2112,14 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: YouTubeNode.Type = S.decodeUnknownSync(YouTubeNode)({
- *   type: "youtube", version: 1, videoID: "dQw4w9WgXcQ", format: ""
+ * const result: Result.Result<YouTubeNode.Type, S.SchemaError> = S.decodeUnknownResult(YouTubeNode)({
+ *   type: "youtube", version: 1, videoID: "M7lc1UVf-VE", format: ""
  * })
- * console.log(node.videoID)
+ * console.log(Result.isSuccess(result) && result.success.videoID === "M7lc1UVf-VE") // true
  * ```
  *
  * @category models
@@ -2178,13 +2216,14 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableCellNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TableCellNode.Type = S.decodeUnknownSync(TableCellNode)({
+ * const result: Result.Result<TableCellNode.Type, S.SchemaError> = S.decodeUnknownResult(TableCellNode)({
  *   type: "tablecell", version: 1, children: [], headerState: 0
  * })
- * console.log(node.headerState) // 0
+ * console.log(Result.isSuccess(result) && result.success.headerState === 0) // true
  * ```
  *
  * @category models
@@ -2262,11 +2301,13 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableRowNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TableRowNode.Type = S.decodeUnknownSync(TableRowNode)({ type: "tablerow", version: 1, children: [] })
- * console.log(node.type) // "tablerow"
+ * const result: Result.Result<TableRowNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(TableRowNode)({ type: "tablerow", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "tablerow") // true
  * ```
  *
  * @category models
@@ -2341,11 +2382,13 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: TableNode.Type = S.decodeUnknownSync(TableNode)({ type: "table", version: 1, children: [] })
- * console.log(node.type) // "table"
+ * const result: Result.Result<TableNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(TableNode)({ type: "table", version: 1, children: [] })
+ * console.log(Result.isSuccess(result) && result.success.type === "table") // true
  * ```
  *
  * @category models
@@ -2387,11 +2430,12 @@ export declare namespace TableNode {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
  * @category models
@@ -2445,11 +2489,13 @@ export type LexicalNode = typeof LexicalNode.Type;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
- * const node: LexicalNode.Type = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result: Result.Result<LexicalNode.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
  * @category models
@@ -2572,10 +2618,11 @@ const StrictRootNode = RootNode.check(
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
- * const state = S.decodeUnknownSync(SerializedEditorState)({
+ * const result = S.decodeUnknownResult(SerializedEditorState)({
  *   root: {
  *     type: "root", version: 1, direction: null, format: "", indent: 0,
  *     children: [{
@@ -2584,7 +2631,7 @@ const StrictRootNode = RootNode.check(
  *     }]
  *   }
  * })
- * console.log(state.root.type) // "root"
+ * console.log(Result.isSuccess(result) && result.success.root.type === "root") // true
  * ```
  *
  * @category models
@@ -2632,19 +2679,21 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
- * const state: SerializedEditorState.Type = S.decodeUnknownSync(SerializedEditorState)({
- *   root: {
- *     type: "root", version: 1, direction: null, format: "", indent: 0,
- *     children: [{
- *       type: "paragraph", version: 1, children: [],
- *       direction: null, format: "", indent: 0
- *     }]
- *   }
- * })
- * console.log(state.root.type) // "root"
+ * const result: Result.Result<SerializedEditorState.Type, S.SchemaError> =
+ *   S.decodeUnknownResult(SerializedEditorState)({
+ *     root: {
+ *       type: "root", version: 1, direction: null, format: "", indent: 0,
+ *       children: [{
+ *         type: "paragraph", version: 1, children: [],
+ *         direction: null, format: "", indent: 0
+ *       }]
+ *     }
+ *   })
+ * console.log(Result.isSuccess(result) && result.success.root.type === "root") // true
  * ```
  *
  * @category models
@@ -3118,13 +3167,14 @@ export const analyzeEditorStateCompatibility = (
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { EditorStateFromJson } from "@beep/lexical-schema/Lexical.model"
  *
- * const state = S.decodeUnknownSync(EditorStateFromJson)(
+ * const result = S.decodeUnknownResult(EditorStateFromJson)(
  *   '{"root":{"type":"root","version":1,"children":[{"type":"paragraph","version":1,"children":[],"direction":null,"format":"","indent":0}],"direction":null,"format":"","indent":0}}'
  * )
- * console.log(state.root.type) // "root"
+ * console.log(Result.isSuccess(result) && result.success.root.type === "root") // true
  * ```
  *
  * @category models

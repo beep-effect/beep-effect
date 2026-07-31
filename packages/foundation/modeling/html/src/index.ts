@@ -106,8 +106,12 @@ export {
   ForeignElementName,
   GlobalAttributesStruct,
   HeadingOffset,
+  HtmlFiniteNumber,
+  HtmlIdValue,
   HtmlNonNegativeInteger,
+  HtmlNonNegativeNumber,
   HtmlPositiveInteger,
+  HtmlPositiveNumber,
   makeSpaceSeparatedTokenList,
   Popover,
 } from "./Html.attributes.ts";

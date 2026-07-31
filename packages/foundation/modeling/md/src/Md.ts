@@ -1133,8 +1133,8 @@ export const embed = (
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
  * ```
  *
  * @category constructors
@@ -1150,8 +1150,8 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
  * ```
  *
  * @category constructors
@@ -1165,13 +1165,13 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  *
- * const program = Md.youtubeEffect("dQw4w9WgXcQ")
- * console.log(program)
+ * const program = Md.youtubeEffect("M7lc1UVf-VE")
+ * Effect.runPromise(program).then((node) => console.log(node._tag)) // "youtube"
  * ```
  *
- * @effects Decodes the supplied identifier and reports validation failures in the Effect error channel.
  * @category constructors
  * @since 0.0.0
  */
@@ -1188,7 +1188,7 @@ export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: s
  * ```ts
  * import { Md } from "@beep/md"
  *
- * const node = Md.youtubeUnsafe("dQw4w9WgXcQ")
+ * const node = Md.youtubeUnsafe("M7lc1UVf-VE")
  * console.log(node._tag) // "youtube"
  * ```
  *

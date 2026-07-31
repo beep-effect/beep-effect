@@ -10,9 +10,10 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Effect, Match, pipe, Result } from "effect";
+import { Effect, Match, Number as N, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
@@ -22,6 +23,7 @@ import type { Doctype } from "./Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
 const isHtmlTag = S.is(HtmlTag);
+const isFiniteNumber = S.is(S.Finite);
 const isString = S.is(S.String);
 
 class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
@@ -34,6 +36,7 @@ class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
     value: S.Unknown.pipe(S.optionalKey),
     alt: S.Unknown.pipe(S.optionalKey),
     href: S.Unknown.pipe(S.optionalKey),
+    id: S.Unknown.pipe(S.optionalKey),
     src: S.Unknown.pipe(S.optionalKey),
     srcset: S.Unknown.pipe(S.optionalKey),
     tabindex: S.Unknown.pipe(S.optionalKey),
@@ -72,6 +75,7 @@ export const HtmlConformanceRule = LiteralKit([
   "foreignIntegration",
   "forbiddenDescendant",
   "attributeRelationship",
+  "duplicateId",
   "obsoleteAttribute",
   "misplacedAttribute",
 ]).pipe(
@@ -315,40 +319,6 @@ const forbiddenDescendantConstraints: ReadonlyArray<ForbiddenDescendantConstrain
   { ancestor: "th", attributes: [], categories: ["heading", "sectioning"], tags: ["header", "footer"] },
 ];
 
-type AttributeRelationship = {
-  readonly tag: HtmlTag;
-  readonly when: (node: HtmlChildView) => boolean;
-  readonly required: ReadonlyArray<ReadonlyArray<keyof HtmlChildView>>;
-  readonly message: string;
-};
-
-const attributeRelationships: ReadonlyArray<AttributeRelationship> = [
-  {
-    tag: "a",
-    when: (node) => hasAttribute(node.target),
-    required: [["href"]],
-    message: "<a target> requires href",
-  },
-  {
-    tag: "area",
-    when: (node) => hasAttribute(node.href),
-    required: [["alt"]],
-    message: "<area href> requires alt text",
-  },
-  {
-    tag: "img",
-    when: () => true,
-    required: [["alt"], ["src", "srcset"]],
-    message: "<img> requires alt and at least one of src or srcset",
-  },
-  {
-    tag: "input",
-    when: (node) => attributeEquals(node.type, "image"),
-    required: [["alt"], ["src"]],
-    message: '<input type="image"> requires alt and src',
-  },
-];
-
 const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<string> => {
   const meta = ELEMENT_META[tag];
   return A.filter(meta.categories, (category) => {
@@ -428,21 +398,81 @@ const inspectAttributeRelationships = (
   node: HtmlChildView,
   tag: HtmlTag,
   path: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> =>
-  pipe(
-    attributeRelationships,
-    A.filter((relationship: AttributeRelationship) => relationship.tag === tag && relationship.when(node)),
-    A.flatMap((relationship: AttributeRelationship) =>
-      A.every(relationship.required, (alternatives) =>
-        A.some(alternatives, (attribute) => hasAttribute(node[attribute]))
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const attributes = node as unknown as Record<string, unknown>;
+  const meta = ELEMENT_META[tag];
+  const requiredIssues = A.flatMap(meta.attributeRequirements, (requirement) => {
+    const applies =
+      requirement.whenAttribute === undefined
+        ? true
+        : requirement.whenEquals === undefined
+          ? hasAttribute(attributes[requirement.whenAttribute])
+          : attributeEquals(attributes[requirement.whenAttribute], requirement.whenEquals);
+    return applies &&
+      !A.every(requirement.required, (alternatives) =>
+        A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
       )
-        ? A.emptyReadonly()
-        : [makeIssue(A.append(path, "attributes"), "attributeRelationship", relationship.message)]
+      ? [makeIssue(A.append(path, "attributes"), "attributeRelationship", requirement.message)]
+      : A.emptyReadonly();
+  });
+  const numericIssues = A.flatMap(meta.numericAttributeRelationships, (relationship) => {
+    const numberValue = (attribute: string, fallback: number | undefined): O.Option<number> =>
+      pipe(
+        attributeValue(attributes[attribute]),
+        O.filter(isFiniteNumber),
+        O.orElse(() => O.fromUndefinedOr(fallback))
+      );
+    const left = numberValue(relationship.left, relationship.leftDefault);
+    const right = numberValue(relationship.right, relationship.rightDefault);
+    return pipe(
+      O.all([left, right]),
+      O.exists(([leftValue, rightValue]) => N.isGreaterThan(leftValue, rightValue))
     )
-  );
+      ? [makeIssue(A.append(path, `attributes.${relationship.left}`), "attributeRelationship", relationship.message)]
+      : A.emptyReadonly();
+  });
+  return [...requiredIssues, ...numericIssues];
+};
 
 const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
   pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
+
+type IdOccurrence = {
+  readonly path: ReadonlyArray<string>;
+  readonly value: string;
+};
+
+const idOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): ReadonlyArray<IdOccurrence> => {
+  const id = isHtmlTag(node._tag)
+    ? attributeValue(node.id)
+    : node._tag === "#foreign"
+      ? pipe(
+          attributeValue(node.attributes),
+          O.filter(P.isObject),
+          O.flatMap((attributes) => O.fromUndefinedOr((attributes as Record<string, unknown>).id))
+        )
+      : O.none();
+  const own = pipe(
+    id,
+    O.filter(isString),
+    O.map((value) => ({ path: A.append(path, "attributes.id"), value })),
+    O.toArray
+  );
+  return [...own, ...A.flatMap(childrenOf(node), (child, index) => idOccurrences(child, childPath(path, index)))];
+};
+
+const inspectDuplicateIds = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+  pipe(
+    idOccurrences(root, []),
+    A.groupBy((occurrence) => occurrence.value),
+    R.values,
+    A.filter((occurrences) => occurrences.length > 1),
+    A.flatMap((occurrences) =>
+      A.map(occurrences, (occurrence) =>
+        makeIssue(occurrence.path, "duplicateId", `The id "${occurrence.value}" must be unique within the HTML root`)
+      )
+    )
+  );
 
 const countLabelableDescendants = (node: HtmlChildView): number =>
   A.reduce(childrenOf(node), 0, (count, child) => {
@@ -961,7 +991,7 @@ const inspectChild = (
  */
 export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConformanceIssue> => {
   const view: HtmlRootView = root;
-  return Match.value(view._tag).pipe(
+  const structuralIssues = Match.value(view._tag).pipe(
     Match.when("#document", (): ReadonlyArray<HtmlConformanceIssue> => {
       const doctype = pipe(view.doctype, O.fromUndefinedOr, O.getOrElse(O.none));
       const children = childrenOf(view);
@@ -989,6 +1019,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
     }),
     Match.orElse((): ReadonlyArray<HtmlConformanceIssue> => inspectChild(view, [], [], ["flow"]))
   );
+  return [...structuralIssues, ...inspectDuplicateIds(view)];
 };
 
 /**

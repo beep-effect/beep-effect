@@ -242,6 +242,114 @@
       }
     ]
   },
+  "attributeRequirements": {
+    "a": [
+      {
+        "message": "<a target> requires href",
+        "required": [["href"]],
+        "whenAttribute": "target"
+      }
+    ],
+    "area": [
+      {
+        "message": "<area href> requires alt text",
+        "required": [["alt"]],
+        "whenAttribute": "href"
+      }
+    ],
+    "img": [
+      {
+        "message": "<img> requires alt and at least one of src or srcset",
+        "required": [["alt"], ["src", "srcset"]]
+      }
+    ],
+    "input": [
+      {
+        "message": "<input type=\"image\"> requires alt and src",
+        "required": [["alt"], ["src"]],
+        "whenAttribute": "type",
+        "whenEquals": "image"
+      }
+    ],
+    "meter": [
+      {
+        "message": "<meter> requires value",
+        "required": [["value"]]
+      }
+    ]
+  },
+  "numericAttributeRelationships": {
+    "meter": [
+      {
+        "left": "min",
+        "leftDefault": 0,
+        "message": "<meter min> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      },
+      {
+        "left": "min",
+        "leftDefault": 0,
+        "message": "<meter value> must be greater than or equal to min",
+        "right": "value"
+      },
+      {
+        "left": "value",
+        "message": "<meter value> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      },
+      {
+        "left": "min",
+        "leftDefault": 0,
+        "message": "<meter low> must be greater than or equal to min",
+        "right": "low"
+      },
+      {
+        "left": "low",
+        "message": "<meter low> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      },
+      {
+        "left": "min",
+        "leftDefault": 0,
+        "message": "<meter high> must be greater than or equal to min",
+        "right": "high"
+      },
+      {
+        "left": "high",
+        "message": "<meter high> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      },
+      {
+        "left": "low",
+        "message": "<meter low> must be less than or equal to high",
+        "right": "high"
+      },
+      {
+        "left": "min",
+        "leftDefault": 0,
+        "message": "<meter optimum> must be greater than or equal to min",
+        "right": "optimum"
+      },
+      {
+        "left": "optimum",
+        "message": "<meter optimum> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      }
+    ],
+    "progress": [
+      {
+        "left": "value",
+        "message": "<progress value> must be less than or equal to max",
+        "right": "max",
+        "rightDefault": 1
+      }
+    ]
+  },
   "currentAttributeOverrides": {
     "body": [
       "onafterprint",
@@ -461,6 +569,16 @@
   "positiveIntegerAttributes": ["cols", "rows", "size", "span"],
   "nonNegativeIntegerAttributes": ["height", "width", "maxlength", "minlength"],
   "integerAttributes": ["li/value", "start", "tabindex"],
+  "finiteNumberAttributes": [
+    "meter/high",
+    "meter/low",
+    "meter/max",
+    "meter/min",
+    "meter/optimum",
+    "meter/value"
+  ],
+  "nonNegativeNumberAttributes": ["progress/value"],
+  "positiveNumberAttributes": ["progress/max"],
   "boundedIntegerAttributes": {
     "colspan": [1, 1000],
     "rowspan": [0, 65534]

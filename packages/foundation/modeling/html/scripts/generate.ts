@@ -147,6 +147,7 @@ interface AttributeSpec {
 }
 
 interface El {
+  readonly attributeRequirements: ReadonlyArray<AttributeRequirement>;
   readonly categories: ReadonlyArray<string>;
   readonly childGrammar: string | undefined;
   readonly children: ReadonlyArray<string>;
@@ -157,6 +158,7 @@ interface El {
   readonly encoded: string;
   readonly iface: string;
   readonly kind: Kind;
+  readonly numericAttributeRelationships: ReadonlyArray<NumericAttributeRelationship>;
   readonly obsolete: boolean;
   readonly obsoleteAttributes: ReadonlyArray<string>;
   readonly runtime: string;
@@ -205,22 +207,51 @@ class ConditionalCategoryRule extends S.Class<ConditionalCategoryRule>($I`Condit
   })
 ) {}
 
+class AttributeRequirement extends S.Class<AttributeRequirement>($I`AttributeRequirement`)(
+  {
+    message: S.String,
+    required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
+    whenAttribute: S.String.pipe(S.optionalKey),
+    whenEquals: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("AttributeRequirement", {
+    description: "A generated conditional requirement for one or more HTML attributes.",
+  })
+) {}
+
+class NumericAttributeRelationship extends S.Class<NumericAttributeRelationship>($I`NumericAttributeRelationship`)(
+  {
+    left: S.String,
+    leftDefault: S.Finite.pipe(S.optionalKey),
+    message: S.String,
+    right: S.String,
+    rightDefault: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("NumericAttributeRelationship", {
+    description: "A generated less-than-or-equal relationship between two HTML numeric attributes.",
+  })
+) {}
+
 class Classification extends S.Class<Classification>($I`Classification`)(
   {
     autocompleteAttributes: S.Array(S.String),
+    attributeRequirements: S.Record(S.String, S.Array(AttributeRequirement)),
     booleanAttributes: S.Array(S.String),
     boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
     childSequencePatterns: S.Record(S.String, S.String),
     conditionalCategories: S.Record(S.String, S.Array(ConditionalCategoryRule)),
     contentTokenExpansions: S.Record(S.String, S.Array(S.String)),
     currentAttributeOverrides: S.Record(S.String, S.Array(S.String)),
+    finiteNumberAttributes: S.Array(S.String),
     integerAttributes: S.Array(S.String),
     mathMlAttributeNameAdjustments: S.Record(S.String, S.String),
     nonNegativeIntegerAttributes: S.Array(S.String),
+    nonNegativeNumberAttributes: S.Array(S.String),
     normal: S.Array(S.String),
     emptyContentModelElements: S.Array(S.String),
     plaintext: S.Array(S.String),
     positiveIntegerAttributes: S.Array(S.String),
+    positiveNumberAttributes: S.Array(S.String),
     rawText: S.Array(S.String),
     rcData: S.Array(S.String),
     specialChildGrammars: S.Record(S.String, S.String),
@@ -228,6 +259,7 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     stringAttributes: S.Array(S.String),
     svgAttributeNameAdjustments: S.Record(S.String, S.String),
     svgElementNameAdjustments: S.Record(S.String, S.String),
+    numericAttributeRelationships: S.Record(S.String, S.Array(NumericAttributeRelationship)),
     void: S.Array(S.String),
     xmlAttributeNames: S.Array(S.String),
   },
@@ -381,9 +413,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   const autocompleteAttrs = MutableHashSet.fromIterable(classification.autocompleteAttributes);
   const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
+  const finiteNumberAttrs = MutableHashSet.fromIterable(classification.finiteNumberAttributes);
   const integerAttrs = MutableHashSet.fromIterable(classification.integerAttributes);
   const nonNegativeIntegerAttrs = MutableHashSet.fromIterable(classification.nonNegativeIntegerAttributes);
+  const nonNegativeNumberAttrs = MutableHashSet.fromIterable(classification.nonNegativeNumberAttributes);
   const positiveIntegerAttrs = MutableHashSet.fromIterable(classification.positiveIntegerAttributes);
+  const positiveNumberAttrs = MutableHashSet.fromIterable(classification.positiveNumberAttributes);
   const spaceSeparatedTokenAttrs = MutableHashSet.fromIterable(classification.spaceSeparatedTokenAttributes);
   const stringAttrs = MutableHashSet.fromIterable(classification.stringAttributes);
   const voidEls = MutableHashSet.fromIterable(classification.void);
@@ -486,6 +521,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       `HTML generator requires an exact contextual content-token expansion inventory; expected ${JSON.stringify(opaqueContentTokens)}, received ${JSON.stringify(expandedContentTokens)}`
     );
   }
+  const modeledAttributesFor = (tag: string): MutableHashSet.MutableHashSet<string> =>
+    MutableHashSet.fromIterable([
+      ...globalKeys,
+      ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+      ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
+    ]);
+
   for (const [tag, rules] of R.toEntries(classification.conditionalCategories)) {
     if (
       !MutableHashSet.has(elementNameSet, tag) ||
@@ -493,11 +535,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     ) {
       failGeneration(`HTML generator conditional-category metadata names non-current element <${tag}>`);
     }
-    const modeledAttributes = MutableHashSet.fromIterable([
-      ...globalKeys,
-      ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
-      ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
-    ]);
+    const modeledAttributes = modeledAttributesFor(tag);
     for (const rule of rules) {
       const categories = contentModel[tag]?.categories ?? [];
       if (!categories.includes(rule.category)) {
@@ -510,6 +548,72 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
       if ((rule.condition === "not-equals") !== (rule.value !== undefined)) {
         failGeneration(`HTML generator conditional category ${tag}/${rule.category} has an invalid predicate value`);
+      }
+    }
+  }
+  const attributeRequirementTags = R.keys(classification.attributeRequirements).sort();
+  const requiredAttributeRequirementTags = ["a", "area", "img", "input", "meter"];
+  if (JSON.stringify(attributeRequirementTags) !== JSON.stringify(requiredAttributeRequirementTags)) {
+    failGeneration(
+      `HTML generator requires an exact attribute-requirement inventory; expected ${JSON.stringify(requiredAttributeRequirementTags)}, received ${JSON.stringify(attributeRequirementTags)}`
+    );
+  }
+  for (const [tag, requirements] of R.toEntries(classification.attributeRequirements)) {
+    if (
+      !MutableHashSet.has(elementNameSet, tag) ||
+      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
+    ) {
+      failGeneration(`HTML generator attribute-requirement metadata names non-current element <${tag}>`);
+    }
+    const modeledAttributes = modeledAttributesFor(tag);
+    for (const requirement of requirements) {
+      if (requirement.whenEquals !== undefined && requirement.whenAttribute === undefined) {
+        failGeneration(`HTML generator attribute requirement for <${tag}> has whenEquals without whenAttribute`);
+      }
+      if (
+        requirement.whenAttribute !== undefined &&
+        !MutableHashSet.has(modeledAttributes, requirement.whenAttribute)
+      ) {
+        failGeneration(
+          `HTML generator attribute requirement for <${tag}> references unknown ${requirement.whenAttribute}`
+        );
+      }
+      for (const alternatives of requirement.required) {
+        for (const attribute of alternatives) {
+          if (!MutableHashSet.has(modeledAttributes, attribute)) {
+            failGeneration(`HTML generator attribute requirement for <${tag}> references unknown ${attribute}`);
+          }
+        }
+      }
+    }
+  }
+  const numericRelationshipTags = R.keys(classification.numericAttributeRelationships).sort();
+  const requiredNumericRelationshipTags = ["meter", "progress"];
+  if (JSON.stringify(numericRelationshipTags) !== JSON.stringify(requiredNumericRelationshipTags)) {
+    failGeneration(
+      `HTML generator requires an exact numeric-relationship inventory; expected ${JSON.stringify(requiredNumericRelationshipTags)}, received ${JSON.stringify(numericRelationshipTags)}`
+    );
+  }
+  const isNumericAttribute = (tag: string, attribute: string): boolean =>
+    isClassifiedAs(finiteNumberAttrs, tag, attribute) ||
+    isClassifiedAs(nonNegativeNumberAttrs, tag, attribute) ||
+    isClassifiedAs(positiveNumberAttrs, tag, attribute) ||
+    isClassifiedAs(integerAttrs, tag, attribute) ||
+    isClassifiedAs(nonNegativeIntegerAttrs, tag, attribute) ||
+    isClassifiedAs(positiveIntegerAttrs, tag, attribute) ||
+    classification.boundedIntegerAttributes[attribute] !== undefined;
+  for (const [tag, relationships] of R.toEntries(classification.numericAttributeRelationships)) {
+    if (relationships.length === 0) {
+      failGeneration(`HTML generator numeric-relationship metadata for <${tag}> must not be empty`);
+    }
+    const modeledAttributes = modeledAttributesFor(tag);
+    for (const relationship of relationships) {
+      for (const attribute of [relationship.left, relationship.right]) {
+        if (!MutableHashSet.has(modeledAttributes, attribute) || !isNumericAttribute(tag, attribute)) {
+          failGeneration(
+            `HTML generator numeric relationship for <${tag}> references non-numeric attribute ${attribute}`
+          );
+        }
       }
     }
   }
@@ -608,6 +712,27 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         encoded: "number",
       };
     }
+    if (isClassifiedAs(positiveNumberAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlPositiveNumber"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    if (isClassifiedAs(nonNegativeNumberAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlNonNegativeNumber"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    if (isClassifiedAs(finiteNumberAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlFiniteNumber"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
     if (isClassifiedAs(stringAttrs, el, attr)) {
       return {
         runtime: optionalRuntime("S.String"),
@@ -665,6 +790,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     return {
       tag,
       cls: className(tag),
+      attributeRequirements: classification.attributeRequirements[tag] ?? [],
       encoded,
       obsolete,
       kind,
@@ -673,6 +799,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       children: contentModel[tag]?.children ?? [],
       conditionalCategories: classification.conditionalCategories[tag] ?? [],
       currentAttributes,
+      numericAttributeRelationships: classification.numericAttributeRelationships[tag] ?? [],
       obsoleteAttributes,
       childSequencePattern: classification.childSequencePatterns[tag],
       childGrammar: classification.specialChildGrammars[tag],
@@ -1018,8 +1145,11 @@ import {
   ForeignAttributeName,
   ForeignElementName,
   GlobalAttributes,
+  HtmlFiniteNumber,
   HtmlNonNegativeInteger,
+  HtmlNonNegativeNumber,
   HtmlPositiveInteger,
+  HtmlPositiveNumber,
   makeSpaceSeparatedTokenList,
   PopoverTargetAction,
 } from "./Html.attributes.ts";
@@ -1261,7 +1391,7 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
         e.currentAttributes.length === 0
           ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
           : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${JSON.stringify(e.currentAttributes)}]`;
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)},${childSequencePattern}${childGrammar} },`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)},${childSequencePattern}${childGrammar} },`;
     })
     .join("\n");
 
@@ -1650,6 +1780,70 @@ export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pi
 export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
 
 /**
+ * Generated conditional requirement for one or more HTML attributes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlAttributeRequirement } from "@beep/html/Html.meta"
+ *
+ * const requirement = HtmlAttributeRequirement.make({
+ *   message: "target requires href",
+ *   required: [["href"]],
+ *   whenAttribute: "target"
+ * })
+ * console.log(requirement.required[0])
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>($I\`HtmlAttributeRequirement\`)(
+  {
+    message: S.String,
+    required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
+    whenAttribute: S.String.pipe(S.optionalKey),
+    whenEquals: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlAttributeRequirement", {
+    description: "Generated conditional requirement for one or more HTML attributes.",
+  })
+) {}
+
+/**
+ * Generated less-than-or-equal relationship between numeric attributes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlNumericAttributeRelationship } from "@beep/html/Html.meta"
+ *
+ * const relationship = HtmlNumericAttributeRelationship.make({
+ *   left: "value",
+ *   message: "value must not exceed max",
+ *   right: "max",
+ *   rightDefault: 1
+ * })
+ * console.log(relationship.right)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttributeRelationship>(
+  $I\`HtmlNumericAttributeRelationship\`
+)(
+  {
+    left: S.String,
+    leftDefault: S.Finite.pipe(S.optionalKey),
+    message: S.String,
+    right: S.String,
+    rightDefault: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlNumericAttributeRelationship", {
+    description: "Generated less-than-or-equal relationship between two HTML numeric attributes.",
+  })
+) {}
+
+/**
  * Schema describing one HTML element kind's metadata.
  *
  * @example
@@ -1668,7 +1862,9 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  *   children: ["flow"],
  *   currentAttributes: [],
  *   obsoleteAttributes: [],
- *   conditionalCategories: []
+ *   conditionalCategories: [],
+ *   attributeRequirements: [],
+ *   numericAttributeRelationships: []
  * })) // true
  * \`\`\`
  *
@@ -1688,6 +1884,8 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
     currentAttributes: S.Array(S.String),
     obsoleteAttributes: S.Array(S.String),
     conditionalCategories: S.Array(HtmlConditionalCategoryRule),
+    attributeRequirements: S.Array(HtmlAttributeRequirement),
+    numericAttributeRelationships: S.Array(HtmlNumericAttributeRelationship),
     childSequencePattern: S.String.pipe(S.optionalKey),
     childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
@@ -1700,7 +1898,18 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     categories: Object.freeze(value.categories),
     children: Object.freeze(value.children),
     conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
+    attributeRequirements: Object.freeze(
+      A.map(value.attributeRequirements, (requirement) =>
+        Object.freeze({
+          ...requirement,
+          required: Object.freeze(A.map(requirement.required, (alternatives) => Object.freeze(alternatives))),
+        })
+      )
+    ),
     currentAttributes: Object.freeze(value.currentAttributes),
+    numericAttributeRelationships: Object.freeze(
+      A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
+    ),
     obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
   });
 

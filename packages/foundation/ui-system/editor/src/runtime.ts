@@ -70,7 +70,9 @@ export const decodeEditorStateForRuntimeResult = (
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { decodeEditorStateForRuntime } from "@beep/editor/runtime"
+ *
  * const program = decodeEditorStateForRuntime({
  *   root: {
  *     type: "root", version: 1, direction: null, format: "", indent: 0,
@@ -80,7 +82,7 @@ export const decodeEditorStateForRuntimeResult = (
  *     }]
  *   },
  * })
- * console.log(program !== undefined) // true
+ * Effect.runPromise(program).then((state) => console.log(state.root.type)) // "root"
  * ```
  *
  * @category decoding

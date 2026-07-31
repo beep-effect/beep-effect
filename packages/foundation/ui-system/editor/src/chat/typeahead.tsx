@@ -378,20 +378,34 @@ function MentionLookupNotice({
   if (caret === undefined) {
     return null;
   }
-  return createPortal(
-    <div
-      {...typeaheadMenuMarker(editor)}
-      style={typeaheadMenuPosition({
-        caret,
-        viewportHeight: window.innerHeight,
-        viewportWidth: window.innerWidth,
-      })}
-      className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
-      role="status"
-    >
-      {message}
-    </div>,
-    anchorElementRef.current
+  return (
+    <>
+      {createPortal(
+        <span
+          {...typeaheadMenuMarker(editor)}
+          aria-disabled="true"
+          aria-label={message}
+          aria-selected="false"
+          className="sr-only"
+          role="option"
+        />,
+        anchorElementRef.current
+      )}
+      {createPortal(
+        <div
+          style={typeaheadMenuPosition({
+            caret,
+            viewportHeight: window.innerHeight,
+            viewportWidth: window.innerWidth,
+          })}
+          className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
+          role="status"
+        >
+          {message}
+        </div>,
+        anchorElementRef.current.ownerDocument.body
+      )}
+    </>
   );
 }
 
@@ -631,14 +645,14 @@ const synchronizeTypeaheadAria = (root: HTMLElement, editor: LexicalEditor): voi
 // from effects and command handlers; the short-lived observer repairs those
 // relations after Lexical's writes and disconnects as soon as this editor's
 // menu closes.
-const COMBOBOX_ARIA_ATTRIBUTES = [
+const COMBOBOX_ARIA_ATTRIBUTES: ReadonlyArray<string> = [
   "role",
   "aria-haspopup",
   "aria-autocomplete",
   "aria-expanded",
   "aria-controls",
   "aria-activedescendant",
-] as const;
+];
 
 const clearComboboxAria = (root: HTMLElement): void => {
   for (const attribute of COMBOBOX_ARIA_ATTRIBUTES) {

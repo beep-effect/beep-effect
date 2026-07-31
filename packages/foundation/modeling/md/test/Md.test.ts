@@ -148,7 +148,7 @@ describe("@beep/md", () => {
         ],
         { headerRow: true }
       ),
-      Result.getOrThrow(Md.youtube("dQw4w9WgXcQ")),
+      Result.getOrThrow(Md.youtube("M7lc1UVf-VE")),
       Md.blockquote`Hello World!`,
     ]);
 
@@ -175,7 +175,7 @@ console.log("beep")
 | --- | --- |
 | Language | \`ts\` |
 
-https://www.youtube.com/watch?v=dQw4w9WgXcQ
+https://www.youtube.com/watch?v=M7lc1UVf-VE
 
 > Hello World!`;
 
@@ -197,7 +197,7 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
             ],
             { headerRow: true }
           ),
-          Result.getOrThrow(Md.youtube("dQw4w9WgXcQ")),
+          Result.getOrThrow(Md.youtube("M7lc1UVf-VE")),
         ])
       )
     );
@@ -207,7 +207,7 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
         "<ul><li>☒ Done</li><li>☐ Todo</li></ul>" +
         "<table><thead><tr><th>Name</th><th>Value</th></tr></thead>" +
         "<tbody><tr><td>Safety</td><td><code>schema-first</code></td></tr></tbody></table>" +
-        '<p><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Watch on YouTube</a></p>'
+        '<p><a href="https://www.youtube.com/watch?v=M7lc1UVf-VE">Watch on YouTube</a></p>'
     );
   });
 
@@ -380,7 +380,7 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
         ],
         { headerRow: true }
       ),
-      Result.getOrThrow(Md.youtube("dQw4w9WgXcQ")),
+      Result.getOrThrow(Md.youtube("M7lc1UVf-VE")),
       Md.pre("no language here"),
       Md.p([Md.text("hello")]),
     ]);
@@ -618,7 +618,7 @@ ${Md.h3("Inside")}
       // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises compatibility plain-text projection.
       Md.taskList([{ text: "Done", checked: true }, "Todo"]),
       table,
-      Md.youtubeUnsafe("dQw4w9WgXcQ"),
+      Md.youtubeUnsafe("M7lc1UVf-VE"),
       Md.mathBlock("a=b"),
       Md.footnoteDef("note", [Md.p("Footnote")]),
       Md.admonition("tip", [Md.p("Admonition")]),
@@ -636,7 +636,7 @@ ${Md.h3("Inside")}
       "First\nSecond",
       "Done\nTodo",
       "Name\tValue\nLanguage\tts",
-      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=M7lc1UVf-VE",
       "a=b",
       "Footnote",
       "Admonition",
@@ -916,12 +916,12 @@ Demo video`);
   it.effect(
     "constructs YouTube embeds without throwing at validation boundaries",
     Effect.fnUntraced(function* () {
-      const decoded = Md.youtube("dQw4w9WgXcQ");
+      const decoded = Md.youtube("M7lc1UVf-VE");
 
       expect(Result.isSuccess(decoded)).toBe(true);
-      expect(Result.isFailure(Md.youtube("https://youtu.be/dQw4w9WgXcQ"))).toBe(true);
-      expect((yield* Md.youtubeEffect("dQw4w9WgXcQ"))._tag).toBe("youtube");
-      expect(Md.youtubeUnsafe("dQw4w9WgXcQ")._tag).toBe("youtube");
+      expect(Result.isFailure(Md.youtube("https://youtu.be/M7lc1UVf-VE"))).toBe(true);
+      expect((yield* Md.youtubeEffect("M7lc1UVf-VE"))._tag).toBe("youtube");
+      expect(Md.youtubeUnsafe("M7lc1UVf-VE")._tag).toBe("youtube");
     })
   );
 

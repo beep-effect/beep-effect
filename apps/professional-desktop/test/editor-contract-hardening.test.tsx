@@ -559,7 +559,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
         </ChatComposer>
       );
       fireEvent.click(screen.getByRole("button", { name: "Seed rejected mention" }));
-      yield* Effect.promise(() => screen.findByText("Mentions are unavailable right now."));
+      const failureStatus = yield* Effect.promise(() => screen.findByRole("status"));
+      expect(failureStatus).toHaveTextContent("Mentions are unavailable right now.");
 
       fireEvent.keyDown(screen.getByRole("combobox", { name: "Message composer" }), {
         code: "Enter",
@@ -592,7 +593,16 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const controls = editor.getAttribute("aria-controls");
       expect(editor).toHaveAttribute("aria-expanded", "true");
       expect(controls).toMatch(/^typeahead-menu-/u);
-      expect(controls === null ? null : document.getElementById(controls)).toHaveAttribute("role", "listbox");
+      const listbox = controls === null ? null : document.getElementById(controls);
+      expect(listbox).toHaveAttribute("role", "listbox");
+      if (listbox === null) return;
+      const noticeOption = listbox.querySelector('[role="option"]');
+      const noticeStatus = screen.getByRole("status");
+      expect(noticeOption?.parentElement).toBe(listbox);
+      expect(noticeOption).toHaveAttribute("aria-disabled", "true");
+      expect(noticeOption).toHaveAccessibleName("Looking up mentions...");
+      expect(noticeStatus).toHaveTextContent("Looking up mentions...");
+      expect(listbox).not.toContainElement(noticeStatus);
 
       fireEvent.keyDown(editor, { code: "Enter", key: "Enter", keyCode: 13 });
       expect(onSend).not.toHaveBeenCalled();
@@ -906,28 +916,28 @@ describe("editor contract hardening", { concurrent: false }, () => {
     };
     const browserFallback = vi.spyOn(window, "open").mockImplementation(() => null);
     window.addEventListener(YOUTUBE_WATCH_EVENT, onWatch);
-    const valid = render(<YouTubeEmbed videoID="dQw4w9WgXcQ" />);
+    const valid = render(<YouTubeEmbed videoID="M7lc1UVf-VE" />);
     const watchLink = screen.getByRole("link", { name: "Watch on YouTube" });
     expect(watchLink).not.toHaveAttribute("target");
     fireEvent.click(watchLink);
     window.removeEventListener(YOUTUBE_WATCH_EVENT, onWatch);
 
-    expect(request?.url).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(request?.url).toBe("https://www.youtube.com/watch?v=M7lc1UVf-VE");
     expect(browserFallback).not.toHaveBeenCalled();
     fireEvent.click(watchLink);
     expect(browserFallback).toHaveBeenCalledWith(
-      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=M7lc1UVf-VE",
       "_blank",
       "noopener,noreferrer"
     );
     expect(valid.container.querySelector("iframe")).toHaveAttribute(
       "src",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+      "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
     );
     expect(
       Result.isFailure(
         S.decodeUnknownResult(YouTubeWatchRequest)({
-          url: "https://evil.example/?v=dQw4w9WgXcQ",
+          url: "https://evil.example/?v=M7lc1UVf-VE",
         })
       )
     ).toBe(true);

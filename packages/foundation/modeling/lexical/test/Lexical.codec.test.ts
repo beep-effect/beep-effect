@@ -75,7 +75,7 @@ describe("Lexical.codec", () => {
             }),
           ],
         }),
-        MdModel.YouTube.make({ videoId: "dQw4w9WgXcQ" }),
+        MdModel.YouTube.make({ videoId: "M7lc1UVf-VE" }),
         MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("alpha")] })] }),
         MdModel.Ol.make({ children: [MdModel.Li.make({ children: [mdText("first")] })] }),
         MdModel.TaskList.make({

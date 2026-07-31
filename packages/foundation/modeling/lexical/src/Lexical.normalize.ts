@@ -58,7 +58,7 @@ const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
  * ```ts
  * import { legacyYouTubeVideoId } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(legacyYouTubeVideoId("https://youtu.be/dQw4w9WgXcQ")) // "dQw4w9WgXcQ"
+ * console.log(legacyYouTubeVideoId("https://youtu.be/M7lc1UVf-VE")) // "M7lc1UVf-VE"
  * ```
  *
  * @param value - Raw serialized YouTube embed value (bare id or legacy URL).

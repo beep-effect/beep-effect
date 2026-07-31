@@ -51,14 +51,14 @@ describe("YouTube native opener bridge", { concurrent: false }, () => {
       const valid = new CustomEvent(YOUTUBE_WATCH_EVENT, {
         cancelable: true,
         detail: YouTubeWatchRequest.make({
-          url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          url: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
         }),
       });
       window.dispatchEvent(valid);
       yield* Effect.promise(() => waitFor(() => expect(opener).toHaveBeenCalledTimes(1)));
 
       expect(valid.defaultPrevented).toBe(true);
-      expect(opener).toHaveBeenCalledWith("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+      expect(opener).toHaveBeenCalledWith("https://www.youtube.com/watch?v=M7lc1UVf-VE");
       expect(within(view.container).queryByRole("alert")).toBeNull();
     })
   );
@@ -69,7 +69,7 @@ describe("YouTube native opener bridge", { concurrent: false }, () => {
       opener.mockRejectedValueOnce(new Error("private native opener detail"));
       const view = render(<YouTubeWatchOpener />);
       const request = YouTubeWatchRequest.make({
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        url: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
       });
       const rejected = new CustomEvent(YOUTUBE_WATCH_EVENT, {
         cancelable: true,

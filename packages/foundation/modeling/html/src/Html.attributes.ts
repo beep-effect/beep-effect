@@ -612,6 +612,131 @@ export const HtmlPositiveInteger = S.Int.check(
 export type HtmlPositiveInteger = typeof HtmlPositiveInteger.Type;
 
 /**
+ * A finite number accepted by the HTML floating-point microsyntax.
+ *
+ * @example
+ * ```ts
+ * import { HtmlFiniteNumber } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlFiniteNumber)(1.5)) // true
+ * console.log(S.is(HtmlFiniteNumber)(Number.NaN)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlFiniteNumber = S.Finite.pipe(
+  $I.annoteSchema("HtmlFiniteNumber", {
+    description: "Finite number accepted by the HTML floating-point microsyntax.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlFiniteNumber}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlFiniteNumber } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlFiniteNumber = 1.5
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlFiniteNumber = typeof HtmlFiniteNumber.Type;
+
+/**
+ * A non-negative finite HTML number.
+ *
+ * @example
+ * ```ts
+ * import { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlNonNegativeNumber)(0.5)) // true
+ * console.log(S.is(HtmlNonNegativeNumber)(-1)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`HtmlNonNegativeNumberCheck`,
+    title: "HTML Non-Negative Number",
+    description: "Checks a finite HTML number greater than or equal to zero.",
+    message: "Expected a non-negative finite number",
+  })
+).pipe(
+  $I.annoteSchema("HtmlNonNegativeNumber", {
+    description: "Non-negative finite number accepted by an HTML numeric attribute.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlNonNegativeNumber}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlNonNegativeNumber = 0.5
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlNonNegativeNumber = typeof HtmlNonNegativeNumber.Type;
+
+/**
+ * A positive finite HTML number.
+ *
+ * @example
+ * ```ts
+ * import { HtmlPositiveNumber } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlPositiveNumber)(0.5)) // true
+ * console.log(S.is(HtmlPositiveNumber)(0)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlPositiveNumber = HtmlFiniteNumber.check(
+  S.isGreaterThan(0, {
+    identifier: $I`HtmlPositiveNumberCheck`,
+    title: "HTML Positive Number",
+    description: "Checks a finite HTML number greater than zero.",
+    message: "Expected a positive finite number",
+  })
+).pipe(
+  $I.annoteSchema("HtmlPositiveNumber", {
+    description: "Positive finite number accepted by an HTML numeric attribute.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlPositiveNumber}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlPositiveNumber } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlPositiveNumber = 0.5
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
+
+/**
  * Builds a schema for a space-separated list of known HTML tokens.
  *
  * Empty text is accepted because attributes such as `sandbox=""` have
@@ -846,6 +971,53 @@ export const ForeignAttributeName = S.String.check(
  */
 export type ForeignAttributeName = typeof ForeignAttributeName.Type;
 
+/**
+ * Non-empty HTML `id` value without ASCII whitespace.
+ *
+ * Tree-wide uniqueness is checked by the conformance validator because it
+ * depends on the complete root rather than one attribute value.
+ *
+ * @example
+ * ```ts
+ * import { HtmlIdValue } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlIdValue)("section-1")) // true
+ * console.log(S.is(HtmlIdValue)("two ids")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlIdValue = S.String.check(
+  S.isPattern(/^[^\t\n\f\r ]+$/u, {
+    identifier: $I`HtmlIdValueCheck`,
+    title: "HTML ID Value",
+    description: "Checks a non-empty HTML id without ASCII whitespace.",
+    message: "Expected a non-empty HTML id without ASCII whitespace",
+  })
+).pipe(
+  $I.annoteSchema("HtmlIdValue", {
+    description: "Lexically conforming HTML id value; root-wide uniqueness is checked separately.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlIdValue}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlIdValue } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlIdValue = "section-1"
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlIdValue = typeof HtmlIdValue.Type;
+
 // -----------------------------------------------------------------------------
 // field bundles
 // -----------------------------------------------------------------------------
@@ -882,7 +1054,7 @@ export const StandardGlobalAttributes = {
   headingoffset: S.OptionFromOptionalKey(HeadingOffset).pipe(SchemaUtils.withNoneDefault),
   headingreset: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
   hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
-  id: OptionalString,
+  id: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
   inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
   inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
   is: OptionalString,
@@ -907,8 +1079,8 @@ export const StandardGlobalAttributes = {
 /**
  * Key inside the AST's `dataset` attribute bag.
  *
- * The key is appended to `data-` by the serializer, so characters that could
- * terminate or split an HTML attribute name are rejected at the schema edge.
+ * The ASCII-case-fixed key is appended to `data-` by the serializer. Rejecting
+ * ASCII uppercase prevents the parser's attribute-name case-fold collisions.
  *
  * @example
  * ```ts
@@ -923,7 +1095,7 @@ export const StandardGlobalAttributes = {
  * @since 0.0.0
  */
 export const DatasetKey = S.String.check(
-  S.isPattern(/^[A-Za-z_][A-Za-z0-9_.:-]*$/u, {
+  S.isPattern(/^[^A-Z\u0000\t\n\f\r "'<>/=]+$/u, {
     identifier: $I`DatasetKeyCheck`,
     title: "HTML Dataset Key",
     description: "Checks a key that can be safely serialized after the `data-` prefix.",
@@ -931,7 +1103,7 @@ export const DatasetKey = S.String.check(
   })
 ).pipe(
   $I.annoteSchema("DatasetKey", {
-    description: "Serializable key in the AST dataset bag.",
+    description: "ASCII-case-fixed browser-stable suffix in the AST data-* attribute bag.",
   })
 );
 

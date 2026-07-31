@@ -96,9 +96,9 @@ describe("packaged YouTube security boundaries", () => {
     const isWatchRequest = (input: unknown): boolean =>
       Result.isSuccess(S.decodeUnknownResult(YouTubeWatchRequest)(input));
 
-    expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" })).toBe(true);
-    expect(isWatchRequest({ url: "https://www.youtube.com/watchXv=dQw4w9WgXcQ" })).toBe(false);
-    expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ&autoplay=1" })).toBe(false);
+    expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=M7lc1UVf-VE" })).toBe(true);
+    expect(isWatchRequest({ url: "https://www.youtube.com/watchXv=M7lc1UVf-VE" })).toBe(false);
+    expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=M7lc1UVf-VE&autoplay=1" })).toBe(false);
     expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=dQw4w9WgXc" })).toBe(false);
   });
 });

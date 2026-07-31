@@ -96,7 +96,7 @@ const fixture = {
       {
         type: "youtube",
         version: 1,
-        videoID: "dQw4w9WgXcQ",
+        videoID: "M7lc1UVf-VE",
         format: "",
       },
       {
@@ -216,7 +216,7 @@ describe("Lexical.model", () => {
     ]);
     expect(state.root.children[1]).toMatchObject({ textFormat: O.some(0), textStyle: O.some("") });
     expect(state.root.children[3]).toMatchObject({ language: O.some("typescript"), theme: O.none() });
-    expect(state.root.children[4]).toMatchObject({ videoID: "dQw4w9WgXcQ", format: "" });
+    expect(state.root.children[4]).toMatchObject({ videoID: "M7lc1UVf-VE", format: "" });
     const table = state.root.children[5];
     expect(table?.type).toBe("table");
     if (table?.type !== "table") {
@@ -486,10 +486,10 @@ describe("Lexical.model", () => {
       S.decodeUnknownSync(LexicalNode)({
         type: "youtube",
         version: 1,
-        videoID: "https://youtu.be/dQw4w9WgXcQ",
+        videoID: "https://youtu.be/M7lc1UVf-VE",
         format: "",
       })
-    ).toMatchObject({ videoID: "dQw4w9WgXcQ" });
+    ).toMatchObject({ videoID: "M7lc1UVf-VE" });
     expect(
       S.decodeUnknownSync(LexicalNode)({
         ...element,
@@ -522,7 +522,7 @@ describe("Lexical.model", () => {
     expect(plain).toContain("Plan");
     expect(plain).toContain("See the docs");
     expect(plain).toContain('console.log("beep")');
-    expect(plain).toContain("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(plain).toContain("https://www.youtube.com/watch?v=M7lc1UVf-VE");
     expect(plain).toContain("Name");
     expect(plain).toContain("Language");
     expect(plain).toContain("[artifact:artifact-123]");

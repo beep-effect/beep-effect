@@ -177,6 +177,8 @@ describe("HtmlNode AST — schema laws", () => {
           currentAttributes: [],
           obsoleteAttributes: [],
           conditionalCategories: [],
+          attributeRequirements: [],
+          numericAttributeRelationships: [],
         })
       )
     ).toStrictEqual({
@@ -191,6 +193,8 @@ describe("HtmlNode AST — schema laws", () => {
       currentAttributes: [],
       obsoleteAttributes: [],
       conditionalCategories: [],
+      attributeRequirements: [],
+      numericAttributeRelationships: [],
     });
   });
 

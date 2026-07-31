@@ -20,11 +20,20 @@ import {
   PandocApiVersion,
   PandocAttr,
   PandocDocument,
+  PandocListNumberDelimiter,
+  PandocListNumberStyle,
+  PandocMathType,
+  PandocTablePayload,
   PandocTarget,
+  Para,
   Str,
   Table,
+  UnknownBlock,
+  UnknownInline,
+  UnknownMeta,
 } from "@beep/pandoc-ast/Pandoc.model";
 import { fcRuns } from "@beep/test-utils";
+import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -33,8 +42,29 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const PandocDocumentArbitrary = S.toArbitrary(PandocDocument);
+const { report: PandocDocumentArbitraryReport, value: PandocDocumentArbitrary } = S.toArbitrary(PandocDocument, {
+  report: true,
+});
 const PandocDocumentEquivalence = S.toEquivalence(PandocDocument);
+const { report: PandocTablePayloadArbitraryReport, value: PandocTablePayloadArbitrary } = S.toArbitrary(
+  PandocTablePayload,
+  { report: true }
+);
+const SemanticClosureDocumentArbitrary = fc
+  .tuple(
+    PandocDocumentArbitrary,
+    S.toArbitrary(Table),
+    S.toArbitrary(UnknownBlock),
+    S.toArbitrary(UnknownInline),
+    S.toArbitrary(UnknownMeta)
+  )
+  .map(([document, table, unknownBlock, unknownInline, unknownMeta]) =>
+    PandocDocument.make({
+      apiVersion: document.apiVersion,
+      blocks: [...document.blocks, table, unknownBlock, Para.make({ children: [unknownInline] })],
+      meta: { ...document.meta, semanticClosure: unknownMeta },
+    })
+  );
 const JsonArbitrary = S.toArbitrary(S.Json);
 const decodeUnknownJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
 const provideScopedLayer =
@@ -88,6 +118,25 @@ const tableWire = ({
 });
 
 describe("Pandoc.codec", () => {
+  it("derives semantic documents without arbitrary warnings", () => {
+    expect(PandocDocumentArbitraryReport.warnings).toEqual([]);
+    expect(PandocTablePayloadArbitraryReport.warnings).toEqual([]);
+  });
+
+  it("preserves public model schema identities after centralizing constructor registries", () => {
+    const publicSchemas = [
+      [PandocMathType, "PandocMathType"],
+      [PandocListNumberStyle, "PandocListNumberStyle"],
+      [PandocListNumberDelimiter, "PandocListNumberDelimiter"],
+    ] as const;
+
+    for (const [schema, name] of publicSchemas) {
+      expect(S.toJsonSchemaDocument(schema).schema).toEqual({
+        $ref: `#/$defs/@beep~1pandoc-ast~1Pandoc.model~1${name}`,
+      });
+    }
+  });
+
   it("keeps the established decode names as strict API aliases", () => {
     expect(decodePandocJson).toBe(decodePandocJsonStrict);
     expect(decodePandocJsonString).toBe(decodePandocJsonStringStrict);
@@ -112,6 +161,101 @@ describe("Pandoc.codec", () => {
     (exposedWire.blocks as Array<S.Json>).push({ c: "forged", t: "Para" });
     expect(document.blocks).toEqual([{ c: [], t: "Para" }]);
     expect(Effect.runSync(encodePandocJsonLossless(document))).toEqual(input);
+  });
+
+  it("round-trips blocked object names as safe own metadata keys", () => {
+    const meta = R.fromEntries([
+      ["__proto__", { c: "proto", t: "MetaString" }],
+      ["constructor", { c: "constructor", t: "MetaString" }],
+      ["prototype", { c: "prototype", t: "MetaString" }],
+    ] as const);
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [],
+      meta,
+    };
+
+    const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+    const encoded = Effect.runSync(encodePandocJson(semantic));
+    expect(encoded.meta).toEqual(meta);
+    expect(Object.hasOwn(encoded.meta, "__proto__")).toBe(true);
+    expect(Object.getPrototypeOf(encoded.meta)).toBe(Object.prototype);
+
+    const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+  });
+
+  it("rejects shallow-only semantic table payloads while preserving their lossless wire", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [{ c: [["", [], []], null, [], null, [], null], t: "Table" }],
+      meta: {},
+    };
+
+    expect(() =>
+      Table.make({
+        payload: [["", [], []], null, [], null, [], null],
+      })
+    ).toThrow("Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.");
+    expect(() => Effect.runSync(decodePandocJsonStrict(wire))).toThrow();
+
+    const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+    expect(lossless.issues).not.toHaveLength(0);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+  });
+
+  it("uses the semantic table schema at the strict decoder boundary", () =>
+    fc.assert(
+      fc.property(PandocTablePayloadArbitrary, (payload) => {
+        const document = PandocDocument.make({ blocks: [Table.make({ payload })], meta: {} });
+        const encoded = Effect.runSync(encodePandocJson(document));
+        const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
+
+        expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
+      }),
+      fcRuns(50)
+    ));
+
+  it("retains valid future constructors in every semantic table component slot", () => {
+    const document = PandocDocument.make({
+      blocks: [
+        Table.make({
+          payload: [
+            ["", [], []],
+            { t: "FutureCaption" },
+            [{ t: "FutureColumnSpec" }],
+            { t: "FutureHead" },
+            [{ t: "FutureBody" }],
+            { t: "FutureFoot" },
+          ],
+        }),
+      ],
+      meta: {},
+    });
+    const encoded = Effect.runSync(encodePandocJson(document));
+
+    expect(Effect.runSync(decodePandocJsonStrict(encoded))).toEqual(document);
+  });
+
+  it("rejects known names from semantic unknown constructors and retains valid future constructors", () => {
+    expect(() => UnknownBlock.make({ wire: { c: "malformed-known", t: "Para" } })).toThrow(
+      "Expected a future Pandoc constructor name that is not already known."
+    );
+    expect(() => UnknownInline.make({ wire: { c: 42, t: "Str" } })).toThrow(
+      "Expected a future Pandoc constructor name that is not already known."
+    );
+    expect(() => UnknownMeta.make({ wire: { c: "true", t: "MetaBool" } })).toThrow(
+      "Expected a future Pandoc constructor name that is not already known."
+    );
+
+    const future = UnknownBlock.make({
+      wire: { c: { exact: true }, extension: "retained", t: "FutureBlock" },
+    });
+    const document = PandocDocument.make({ blocks: [future], meta: {} });
+    const encoded = Effect.runSync(encodePandocJson(document));
+
+    expect(encoded.blocks).toEqual([{ c: { exact: true }, extension: "retained", t: "FutureBlock" }]);
+    expect(Effect.runSync(decodePandocJsonStrict(encoded))).toEqual(document);
   });
 
   it("rejects payloads on known nullary constructors and reports them losslessly", () => {
@@ -552,28 +696,14 @@ describe("Pandoc.codec", () => {
       })
     ));
 
-  it("round-trips schema-derived stable Pandoc JSON documents through the object codec", () =>
+  it("keeps schema-derived semantic documents closed under encode and strict decode", () =>
     fc.assert(
-      fc.property(
-        PandocDocumentArbitrary.map((document) =>
-          PandocDocument.make({
-            apiVersion: document.apiVersion,
-            blocks: [],
-            meta: {},
-          })
-        ),
-        (document) => {
-          const encoded = Effect.runSync(encodePandocJson(document));
-          const decoded = Effect.runSync(decodePandocJson(encoded));
+      fc.property(SemanticClosureDocumentArbitrary, (document) => {
+        const encoded = Effect.runSync(encodePandocJson(document));
+        const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
 
-          expect(encoded).toEqual({
-            "pandoc-api-version": document.apiVersion,
-            blocks: [],
-            meta: {},
-          });
-          expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
-        }
-      ),
+        expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
+      }),
       fcRuns(50)
     ));
 
@@ -703,37 +833,42 @@ describe("Pandoc.codec", () => {
       })
     ));
 
-  it("keeps unknown math explicit while preserving ordered-list item semantics", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const document = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [{ c: [{ t: "FutureMath" }, "x"], t: "Math" }],
-              t: "Para",
-            },
-            {
-              c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], []],
-              t: "OrderedList",
-            },
-          ],
-          meta: {},
-        });
-        const paragraph = document.blocks[0];
-        const list = document.blocks[1];
+  it("rejects unsupported Math subtypes strictly, retains them losslessly, and preserves ordered-list semantics", () => {
+    const unsupportedMath = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [{ c: [{ c: [{ t: "FutureMath" }, "x"], t: "Math" }], t: "Para" }],
+      meta: {},
+    };
 
-        expect(paragraph?._tag).toBe("para");
-        if (paragraph?._tag === "para") {
-          expect(paragraph.children[0]?._tag).toBe("unknownInline");
-        }
-        expect(list?._tag).toBe("orderedlist");
-        if (list?._tag === "orderedlist") {
-          expect(list.style).toBe("DefaultStyle");
-          expect(list.delimiter).toBe("DefaultDelim");
-        }
+    expect(() => Effect.runSync(decodePandocJsonStrict(unsupportedMath))).toThrow();
+    const lossless = Effect.runSync(decodePandocJsonLossless(unsupportedMath));
+    expect(lossless.issues).toEqual([
+      expect.objectContaining({
+        constructor: "FutureMath",
+        path: ["blocks", 0, "c", 0, "c", 0],
+      }),
+    ]);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(unsupportedMath);
+
+    const document = Effect.runSync(
+      decodePandocJsonStrict({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], []],
+            t: "OrderedList",
+          },
+        ],
+        meta: {},
       })
-    ));
+    );
+    const list = document.blocks[0];
+    expect(list?._tag).toBe("orderedlist");
+    if (list?._tag === "orderedlist") {
+      expect(list.style).toBe("DefaultStyle");
+      expect(list.delimiter).toBe("DefaultDelim");
+    }
+  });
 
   it("rejects known or malformed nullary constructors in a Math type slot", () => {
     const malformed = [

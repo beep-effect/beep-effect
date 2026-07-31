@@ -18,11 +18,13 @@ import {
   Details,
   Div,
   Dl,
+  Document,
   Dt,
   Fieldset,
   Figcaption,
   Figure,
   ForeignElement,
+  Fragment,
   H1,
   Head,
   Hgroup,
@@ -32,10 +34,12 @@ import {
   Label,
   Legend,
   MapElement,
+  Meter,
   Optgroup,
   Option,
   P,
   Picture,
+  Progress,
   Rp,
   Rt,
   Ruby,
@@ -49,7 +53,7 @@ import {
   Track,
   Video,
 } from "@beep/html/Html.model";
-import { Comment, Text } from "@beep/html/Html.nodes";
+import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
@@ -106,6 +110,119 @@ describe("@beep/html generated attribute provenance", () => {
     } as unknown as Div;
     expect(inspectConformance(forged)).toContainEqual(expect.objectContaining({ rule: "misplacedAttribute" }));
     expect(Exit.isFailure(Effect.runSyncExit(conform(forged)))).toBe(true);
+  });
+});
+
+describe("@beep/html numeric and id conformance", () => {
+  it("enforces generated meter and progress domains and relationships", () => {
+    expect(
+      inspectConformance(
+        Meter.make({
+          children: [],
+          high: O.some(0.8),
+          low: O.some(0.2),
+          max: O.some(1),
+          min: O.some(0),
+          optimum: O.some(0.5),
+          value: O.some(0.5),
+        })
+      )
+    ).toStrictEqual([]);
+    expect(inspectConformance(Progress.make({ children: [], max: O.some(2), value: O.some(1) }))).toStrictEqual([]);
+
+    const invalid = [
+      Meter.make({ children: [] }),
+      Meter.make({ children: [], max: O.some(1), min: O.some(2), value: O.some(1) }),
+      Meter.make({ children: [], max: O.some(1), min: O.some(0), value: O.some(2) }),
+      Meter.make({ children: [], high: O.some(0.2), low: O.some(0.8), value: O.some(0.5) }),
+      Meter.make({ children: [], optimum: O.some(2), value: O.some(0.5) }),
+      Progress.make({ children: [], value: O.some(2) }),
+      Progress.make({ children: [], max: O.some(2), value: O.some(3) }),
+    ];
+    for (const root of invalid) {
+      expect(hasRule(root, "attributeRelationship")).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    expect(() => Progress.make({ children: [], max: O.some(0) })).toThrow();
+    expect(() => Progress.make({ children: [], value: O.some(-1) })).toThrow();
+    expect(() => Meter.make({ children: [], value: O.some(Number.NaN) })).toThrow();
+  });
+
+  it("keeps generated numeric relationships equivalent to their ordering laws", () =>
+    fc.assert(
+      fc.property(
+        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
+        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
+        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
+        (minimum, maximum, value) => {
+          const root = Meter.make({
+            children: [],
+            max: O.some(maximum),
+            min: O.some(minimum),
+            value: O.some(value),
+          });
+          const expected = minimum <= maximum && minimum <= value && value <= maximum;
+          expect(hasRule(root, "attributeRelationship")).toBe(!expected);
+        }
+      ),
+      fcRuns(100)
+    ));
+
+  it("reports every duplicate id occurrence at its root-relative attribute path", () => {
+    const element = Div.make({
+      children: [Span.make({ children: [], id: O.some("dup") })],
+      id: O.some("dup"),
+    });
+    expect(inspectConformance(element).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+      expect.objectContaining({ path: ["attributes.id"] }),
+      expect.objectContaining({ path: ["children.0", "attributes.id"] }),
+    ]);
+
+    const fragment = Fragment.make({
+      children: [Div.make({ children: [], id: O.some("dup") }), Span.make({ children: [], id: O.some("dup") })],
+    });
+    expect(inspectConformance(fragment).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+      expect.objectContaining({ path: ["children.0", "attributes.id"] }),
+      expect.objectContaining({ path: ["children.1", "attributes.id"] }),
+    ]);
+
+    const mixedNamespace = Fragment.make({
+      children: [
+        Div.make({ children: [], id: O.some("dup") }),
+        ForeignElement.make({
+          attributes: O.some({ id: "dup" }),
+          children: [],
+          name: "svg",
+          namespace: "svg",
+        }),
+      ],
+    });
+    expect(inspectConformance(mixedNamespace).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+      expect.objectContaining({ path: ["children.0", "attributes.id"] }),
+      expect.objectContaining({ path: ["children.1", "attributes.id"] }),
+    ]);
+
+    const document = Document.make({
+      doctype: O.some(Doctype.html()),
+      children: [
+        Html.make({
+          children: [
+            Head.make({ children: [Title.make({ content: "IDs" })] }),
+            Body.make({
+              children: [Div.make({ children: [], id: O.some("dup") }), Span.make({ children: [], id: O.some("dup") })],
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(inspectConformance(document).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+      expect.objectContaining({ path: ["children.0", "children.1", "children.0", "attributes.id"] }),
+      expect.objectContaining({ path: ["children.0", "children.1", "children.1", "attributes.id"] }),
+    ]);
+
+    expect(inspectConformance(Div.make({ children: [], id: O.some("unique") }))).toStrictEqual([]);
+    expect(() => Div.make({ children: [], id: O.some("two ids") })).toThrow();
   });
 });
 

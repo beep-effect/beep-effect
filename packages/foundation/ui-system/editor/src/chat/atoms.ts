@@ -127,7 +127,9 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
  * ```ts
  * import { TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat/atoms"
  *
- * console.log(TYPEAHEAD_MENU_ATTRIBUTE) // "data-typeahead-menu"
+ * const menu = document.createElement("div")
+ * menu.setAttribute(TYPEAHEAD_MENU_ATTRIBUTE, "editor-1")
+ * console.log(menu.getAttribute(TYPEAHEAD_MENU_ATTRIBUTE)) // "editor-1"
  * ```
  *
  * @category constants

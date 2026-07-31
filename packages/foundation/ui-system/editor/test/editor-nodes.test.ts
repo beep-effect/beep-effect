@@ -54,7 +54,7 @@ const fixtureTurn = MdModel.Document.make({
         }),
       ],
     }),
-    MdModel.YouTube.make({ videoId: "dQw4w9WgXcQ" }),
+    MdModel.YouTube.make({ videoId: "M7lc1UVf-VE" }),
     MdModel.TaskList.make({
       children: [
         MdModel.TaskItem.make({ checked: true, children: [text("ship schema")] }),

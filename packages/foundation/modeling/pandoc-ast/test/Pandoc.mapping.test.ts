@@ -292,7 +292,7 @@ describe("Pandoc.mapping", () => {
                 }),
               ],
             }),
-            Md.YouTube.make({ videoId: "dQw4w9WgXcQ" }),
+            Md.YouTube.make({ videoId: "M7lc1UVf-VE" }),
           ],
         });
 
@@ -307,7 +307,7 @@ describe("Pandoc.mapping", () => {
         expect(tableText.text).toBe("Name | Value\nRich | Ready");
 
         const youtubeLink = expectLink(expectPara(result.pandoc.blocks[1]).children[0]);
-        expect(youtubeLink.target.url).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        expect(youtubeLink.target.url).toBe("https://www.youtube.com/watch?v=M7lc1UVf-VE");
       })
     ));
 
@@ -411,8 +411,8 @@ describe("Pandoc.mapping", () => {
         }
 
         // The bare 11-character form still decodes successfully.
-        const safe = yield* decodeYouTube({ _tag: "youtube", videoId: "dQw4w9WgXcQ" });
-        expect(safe.videoId).toBe("dQw4w9WgXcQ");
+        const safe = yield* decodeYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
+        expect(safe.videoId).toBe("M7lc1UVf-VE");
       })
     ));
 

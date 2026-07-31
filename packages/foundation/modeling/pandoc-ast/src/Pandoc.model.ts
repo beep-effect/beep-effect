@@ -6,11 +6,19 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import * as S from "effect/Schema";
+import {
+  isPandocKnownConstructorName,
+  PandocListNumberDelimiter,
+  PandocListNumberStyle,
+  PandocMathType,
+  PandocTableAlignmentConstructorName,
+} from "./internal/Pandoc.registry.ts";
 
 const $I = $PandocAstId.create("Pandoc.model");
+type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
 
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
@@ -108,6 +116,29 @@ export const PandocUnknownConstructorWire = S.StructWithRest(
  * @since 0.0.0
  */
 export type PandocUnknownConstructorWire = typeof PandocUnknownConstructorWire.Type;
+
+const makePandocFutureConstructorArbitrary = (fc: ArbitraryFastCheck) =>
+  fc.string().map((suffix) => PandocUnknownConstructorWire.make({ t: `Future${suffix}` }));
+const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
+  S.check(
+    S.makeFilter((wire) => !isPandocKnownConstructorName(wire.t), {
+      identifier: $I`PandocFutureConstructorWireCheck`,
+      title: "Future Pandoc constructor",
+      description: "An opaque Pandoc constructor whose name is absent from every known constructor registry.",
+      message: "Expected a future Pandoc constructor name that is not already known.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocFutureConstructorArbitrary,
+        },
+      },
+    })
+  ),
+  $I.annoteSchema("PandocFutureConstructorWire", {
+    description: "Exact opaque JSON object whose constructor name is absent from every known registry.",
+    toArbitrary: () => makePandocFutureConstructorArbitrary,
+  })
+);
 
 /**
  * Pandoc attribute key/value pair.
@@ -283,11 +314,7 @@ export declare namespace PandocTarget {
  * @category models
  * @since 0.0.0
  */
-export const PandocMathType = LiteralKit(["InlineMath", "DisplayMath"]).pipe(
-  $I.annoteSchema("PandocMathType", {
-    description: "Pandoc math mode marker.",
-  })
-);
+export { PandocMathType };
 
 /**
  * Runtime type for {@link PandocMathType}.
@@ -318,19 +345,7 @@ export type PandocMathType = typeof PandocMathType.Type;
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberStyle = LiteralKit([
-  "DefaultStyle",
-  "Example",
-  "Decimal",
-  "LowerRoman",
-  "UpperRoman",
-  "LowerAlpha",
-  "UpperAlpha",
-]).pipe(
-  $I.annoteSchema("PandocListNumberStyle", {
-    description: "Pandoc ordered-list numbering style constructor.",
-  })
-);
+export { PandocListNumberStyle };
 
 /**
  * Runtime type for {@link PandocListNumberStyle}.
@@ -361,11 +376,7 @@ export type PandocListNumberStyle = typeof PandocListNumberStyle.Type;
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberDelimiter = LiteralKit(["DefaultDelim", "Period", "OneParen", "TwoParens"]).pipe(
-  $I.annoteSchema("PandocListNumberDelimiter", {
-    description: "Pandoc ordered-list numbering delimiter constructor.",
-  })
-);
+export { PandocListNumberDelimiter };
 
 /**
  * Runtime type for {@link PandocListNumberDelimiter}.
@@ -1380,7 +1391,7 @@ export declare namespace Math {
 export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline`)(
   "unknownInline",
   {
-    wire: PandocUnknownConstructorWire.annotateKey({
+    wire: PandocFutureConstructorWire.annotateKey({
       description: "Exact original future Pandoc constructor object.",
     }),
   },
@@ -2116,6 +2127,161 @@ export declare namespace Div {
 }
 
 const PandocAttrPayload = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
+const PandocTablePayloadShape = S.Tuple([PandocAttrPayload, S.Json, S.Array(S.Json), S.Json, S.Array(S.Json), S.Json]);
+const PandocTargetPayload = S.Tuple([S.String, S.String]);
+const pandocConstructorWithPayload = <const Name extends string, Payload extends S.Top>(t: Name, c: Payload) =>
+  S.Struct({ c, t: S.Literal(t) });
+const pandocNullaryConstructor = <const Name extends string>(t: Name) =>
+  S.Struct({ c: S.optionalKey(S.Undefined), t: S.Literal(t) });
+const PandocMathTypeWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocMathType,
+});
+const PandocListNumberStyleWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberStyle,
+});
+const PandocListNumberDelimiterWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberDelimiter,
+});
+const PandocTableAlignmentWire = S.Union([
+  S.Struct({
+    c: S.optionalKey(S.Undefined),
+    t: PandocTableAlignmentConstructorName,
+  }),
+  PandocFutureConstructorWire,
+]);
+const PandocTableColumnWidthWire = S.Union([
+  pandocConstructorWithPayload("ColWidth", S.Finite),
+  pandocNullaryConstructor("ColWidthDefault"),
+  PandocFutureConstructorWire,
+]);
+const DeferredPandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() => PandocBlockWire);
+const DeferredPandocTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() => PandocSemanticTablePayloadWire);
+
+const PandocInlineWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Str", S.String),
+    pandocNullaryConstructor("Space"),
+    pandocNullaryConstructor("SoftBreak"),
+    pandocNullaryConstructor("LineBreak"),
+    pandocConstructorWithPayload("Emph", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strong", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strikeout", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Code", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("Link", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Image", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Span", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("Note", S.Array(DeferredPandocBlockWire)),
+    pandocConstructorWithPayload("Math", S.Tuple([PandocMathTypeWire, S.String])),
+    PandocFutureConstructorWire,
+  ])
+);
+
+const PandocTableCaptionPairWire = S.Tuple([
+  PandocInlineWire.pipe(S.Array, S.NullOr),
+  S.Array(DeferredPandocBlockWire),
+]);
+const PandocTableCaptionWire = S.Union([
+  pandocConstructorWithPayload("TableCaption", PandocTableCaptionPairWire),
+  PandocTableCaptionPairWire,
+  S.Array(DeferredPandocBlockWire),
+  PandocFutureConstructorWire,
+]);
+const PandocTableColumnSpecWire = S.Union([
+  S.Tuple([PandocTableAlignmentWire, PandocTableColumnWidthWire]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableCellWire = S.Union([
+  S.Tuple([PandocAttrPayload, PandocTableAlignmentWire, S.Int, S.Int, S.Array(DeferredPandocBlockWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableRowWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableCellWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableHeadOrFootWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableRowWire)]),
+  S.Tuple([]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableBodyWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Int, S.Array(PandocTableRowWire), S.Array(PandocTableRowWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocSemanticTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Tuple([
+    PandocAttrPayload,
+    PandocTableCaptionWire,
+    S.Array(PandocTableColumnSpecWire),
+    PandocTableHeadOrFootWire,
+    S.Array(PandocTableBodyWire),
+    PandocTableHeadOrFootWire,
+  ])
+);
+
+const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Plain", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Para", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Header", S.Tuple([S.Int, PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("BlockQuote", S.Array(PandocBlockWire)),
+    pandocConstructorWithPayload("CodeBlock", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("BulletList", PandocBlockWire.pipe(S.Array, S.Array)),
+    pandocConstructorWithPayload(
+      "OrderedList",
+      S.Tuple([
+        S.Tuple([S.Int, PandocListNumberStyleWire, PandocListNumberDelimiterWire]),
+        PandocBlockWire.pipe(S.Array, S.Array),
+      ])
+    ),
+    pandocNullaryConstructor("HorizontalRule"),
+    pandocConstructorWithPayload("Div", S.Tuple([PandocAttrPayload, S.Array(PandocBlockWire)])),
+    pandocConstructorWithPayload("Table", DeferredPandocTablePayloadWire),
+    PandocFutureConstructorWire,
+  ])
+);
+const isPandocSemanticTablePayload = S.is(PandocSemanticTablePayloadWire);
+const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
+  const futureConstructor = makePandocFutureConstructorArbitrary(fc);
+  const attr = fc.tuple(fc.string(), fc.array(fc.string()), fc.array(fc.tuple(fc.string(), fc.string())));
+  const inline = fc.oneof(
+    fc.string().map((c) => S.Json.make({ c, t: "Str" })),
+    fc.constant(S.Json.make({ t: "Space" })),
+    futureConstructor
+  );
+  const block = fc.oneof(
+    fc.array(inline).map((c) => S.Json.make({ c, t: "Para" })),
+    fc.constant(S.Json.make({ t: "HorizontalRule" })),
+    futureConstructor
+  );
+  const captionPair = fc.tuple(fc.option(fc.array(inline), { nil: null }), fc.array(block));
+  const caption = fc.oneof(
+    fc.array(block),
+    captionPair,
+    captionPair.map((c) => S.Json.make({ c, t: "TableCaption" })),
+    futureConstructor
+  );
+  const alignment = fc.oneof(
+    fc.constantFrom("AlignLeft", "AlignRight", "AlignCenter", "AlignDefault").map((t) => S.Json.make({ t })),
+    futureConstructor
+  );
+  const columnWidth = fc.oneof(
+    fc.integer().map((c) => S.Json.make({ c, t: "ColWidth" })),
+    fc.constant(S.Json.make({ t: "ColWidthDefault" })),
+    futureConstructor
+  );
+  const columnSpec = fc.oneof(fc.tuple(alignment, columnWidth), futureConstructor);
+  const cell = fc.oneof(fc.tuple(attr, alignment, fc.integer(), fc.integer(), fc.array(block)), futureConstructor);
+  const row = fc.oneof(fc.tuple(attr, fc.array(cell)), futureConstructor);
+  const headOrFoot = fc.oneof(fc.constant([]), fc.tuple(attr, fc.array(row)), futureConstructor);
+  const body = fc.oneof(fc.tuple(attr, fc.integer(), fc.array(row), fc.array(row)), futureConstructor);
+
+  return fc
+    .tuple(attr, caption, fc.array(columnSpec), headOrFoot, fc.array(body), headOrFoot)
+    .map(PandocTablePayloadShape.make);
+};
 class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
   {
     c: S.optionalKey(S.Json),
@@ -2151,16 +2317,24 @@ const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCapt
  * @category tables
  * @since 0.0.0
  */
-export const PandocTablePayload = S.Tuple([
-  PandocAttrPayload,
-  S.Json,
-  S.Array(S.Json),
-  S.Json,
-  S.Array(S.Json),
-  S.Json,
-]).pipe(
+export const PandocTablePayload = PandocTablePayloadShape.pipe(
+  S.check(
+    S.makeFilter(isPandocSemanticTablePayload, {
+      identifier: $I`PandocTablePayloadSemanticCheck`,
+      title: "Semantically valid Pandoc table payload",
+      description: "A six-field Pandoc table payload accepted by the strict recursive constructor grammar.",
+      message: "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocTablePayloadArbitrary,
+        },
+      },
+    })
+  ),
   $I.annoteSchema("PandocTablePayload", {
     description: "Canonical validated six-field Pandoc table payload retained without duplicate semantic fields.",
+    toArbitrary: () => makePandocTablePayloadArbitrary,
   })
 );
 
@@ -2332,7 +2506,7 @@ export declare namespace Table {
 export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
   "unknownBlock",
   {
-    wire: PandocUnknownConstructorWire.annotateKey({
+    wire: PandocFutureConstructorWire.annotateKey({
       description: "Exact original future Pandoc constructor object.",
     }),
   },
@@ -2761,7 +2935,7 @@ export const MetaMap = S.TaggedStruct("metaMap", {
 export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
   "unknownMeta",
   {
-    wire: PandocUnknownConstructorWire.annotateKey({
+    wire: PandocFutureConstructorWire.annotateKey({
       description: "Exact original future Pandoc metadata constructor object.",
     }),
   },

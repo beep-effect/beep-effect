@@ -104,9 +104,9 @@ describe("@beep/md", () => {
     expect(Md.admonition("warning", "Body", { title: "Careful" })).type.toBe<Admonition>();
     expect(Md.embed("video", "https://example.com", { title: "Demo" })).type.toBe<Embed>();
     expect(Md.make([Md.p("Body")], { frontmatter: { title: "Doc" } })).type.toBe<Document>();
-    expect(Md.youtube("dQw4w9WgXcQ")).type.toBe<Result.Result<YouTube, S.SchemaError>>();
-    expect(Md.youtubeEffect("dQw4w9WgXcQ")).type.toBe<Effect.Effect<YouTube, S.SchemaError>>();
-    expect(Md.youtubeUnsafe("dQw4w9WgXcQ")).type.toBe<YouTube>();
+    expect(Md.youtube("M7lc1UVf-VE")).type.toBe<Result.Result<YouTube, S.SchemaError>>();
+    expect(Md.youtubeEffect("M7lc1UVf-VE")).type.toBe<Effect.Effect<YouTube, S.SchemaError>>();
+    expect(Md.youtubeUnsafe("M7lc1UVf-VE")).type.toBe<YouTube>();
     expect(Md.text("x")).type.toBeAssignableTo<Inline>();
     expect(Md.hr).type.toBeAssignableTo<Block>();
   });

@@ -27,11 +27,12 @@ export const VERSION = "0.0.0" as const;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode, nodeToPlainText } from "@beep/lexical-schema"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(JSON.stringify(nodeToPlainText(node))) // "\"\\n\""
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
  * ```
  *
  * @since 0.0.0
@@ -64,11 +65,12 @@ export {
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
  * @since 0.0.0

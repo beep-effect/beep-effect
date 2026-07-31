@@ -61,9 +61,33 @@ describe("@beep/html generator invariants", () => {
       expect(Object.isFrozen(meta.currentAttributes)).toBe(true);
       expect(Object.isFrozen(meta.obsoleteAttributes)).toBe(true);
       expect(Object.isFrozen(meta.conditionalCategories)).toBe(true);
+      expect(Object.isFrozen(meta.attributeRequirements)).toBe(true);
+      expect(Object.isFrozen(meta.numericAttributeRelationships)).toBe(true);
       for (const rule of meta.conditionalCategories) {
         expect(Object.isFrozen(rule)).toBe(true);
       }
+      for (const requirement of meta.attributeRequirements) {
+        expect(Object.isFrozen(requirement)).toBe(true);
+        expect(Object.isFrozen(requirement.required)).toBe(true);
+        for (const alternatives of requirement.required) {
+          expect(Object.isFrozen(alternatives)).toBe(true);
+        }
+      }
+      for (const relationship of meta.numericAttributeRelationships) {
+        expect(Object.isFrozen(relationship)).toBe(true);
+      }
     }
+  });
+
+  it("publishes the complete generated meter and progress relationship profiles", () => {
+    expect(ELEMENT_META.meter.attributeRequirements).toContainEqual(expect.objectContaining({ required: [["value"]] }));
+    expect(ELEMENT_META.meter.numericAttributeRelationships).toHaveLength(10);
+    expect(ELEMENT_META.progress.numericAttributeRelationships).toStrictEqual([
+      expect.objectContaining({
+        left: "value",
+        right: "max",
+        rightDefault: 1,
+      }),
+    ]);
   });
 });

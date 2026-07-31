@@ -3,8 +3,12 @@ import {
   BooleanAttribute,
   DatasetKey,
   HeadingOffset,
+  HtmlFiniteNumber,
+  HtmlIdValue,
   HtmlNonNegativeInteger,
+  HtmlNonNegativeNumber,
   HtmlPositiveInteger,
+  HtmlPositiveNumber,
   makeSpaceSeparatedTokenList,
   Popover,
 } from "@beep/html";
@@ -18,6 +22,9 @@ const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"]);
 const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
 const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger);
 const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger);
+const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber);
+const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber);
+const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber);
 
 describe("@beep/html attribute microsyntaxes", () => {
   it("derives valid presence and integer values from the production schemas", () =>
@@ -74,6 +81,31 @@ describe("@beep/html attribute microsyntaxes", () => {
     ).toThrow();
   });
 
+  it("models finite, non-negative, and positive floating-point domains", () => {
+    expect(S.is(HtmlFiniteNumber)(1.5)).toBe(true);
+    expect(S.is(HtmlFiniteNumber)(Number.NaN)).toBe(false);
+    expect(S.is(HtmlFiniteNumber)(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(S.is(HtmlNonNegativeNumber)(0)).toBe(true);
+    expect(S.is(HtmlNonNegativeNumber)(-0.1)).toBe(false);
+    expect(S.is(HtmlPositiveNumber)(0.1)).toBe(true);
+    expect(S.is(HtmlPositiveNumber)(0)).toBe(false);
+  });
+
+  it("derives only valid floating-point values from the production schemas", () =>
+    fc.assert(
+      fc.property(
+        HtmlFiniteNumberArbitrary,
+        HtmlNonNegativeNumberArbitrary,
+        HtmlPositiveNumberArbitrary,
+        (finite, nonNegative, positive) => {
+          expect(S.is(HtmlFiniteNumber)(finite)).toBe(true);
+          expect(S.is(HtmlNonNegativeNumber)(nonNegative)).toBe(true);
+          expect(S.is(HtmlPositiveNumber)(positive)).toBe(true);
+        }
+      ),
+      fcRuns(50)
+    ));
+
   it("normalizes token lists to lowercase registry order and one space", () => {
     expect(S.decodeUnknownSync(Rel)("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
     expect(S.encodeSync(Rel)("noopener noreferrer")).toBe("noopener noreferrer");
@@ -120,6 +152,14 @@ describe("@beep/html attribute microsyntaxes", () => {
     );
     expect(() => AutocompleteAttribute.make("SHIPPING email")).toThrow();
     expect(S.is(DatasetKey)("testid")).toBe(true);
+    expect(S.is(DatasetKey)("1")).toBe(true);
+    expect(S.is(DatasetKey)("-x")).toBe(true);
+    expect(S.is(DatasetKey)("méta")).toBe(true);
+    expect(S.is(DatasetKey)("TestId")).toBe(false);
     expect(S.is(DatasetKey)('x" onclick')).toBe(false);
+    expect(S.is(HtmlIdValue)("section-1")).toBe(true);
+    expect(S.is(HtmlIdValue)("")).toBe(false);
+    expect(S.is(HtmlIdValue)("two ids")).toBe(false);
+    expect(S.is(HtmlIdValue)("two\tids")).toBe(false);
   });
 });

@@ -34,12 +34,12 @@ import type { JSX } from "react";
  * const payload = {
  *   type: "youtube",
  *   version: 1,
- *   videoID: "dQw4w9WgXcQ",
+ *   videoID: "M7lc1UVf-VE",
  *   format: "",
  * } satisfies SerializedYouTubeNode
  *
  * const videoID: string = payload.videoID
- * console.log(videoID) // "dQw4w9WgXcQ"
+ * console.log(videoID) // "M7lc1UVf-VE"
  * ```
  *
  * @category models
@@ -62,7 +62,7 @@ const youtubeWrapperAttribute = "data-lexical-youtube-wrapper";
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
- * console.log($createYouTubeNode("dQw4w9WgXcQ").getType()) // "youtube"
+ * console.log($createYouTubeNode("M7lc1UVf-VE").getType()) // "youtube"
  * ```
  *
  * @category components
@@ -195,8 +195,8 @@ export class YouTubeNode extends DecoratorBlockNode {
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
- * const node = $createYouTubeNode("dQw4w9WgXcQ")
- * console.log(node.getId()) // "dQw4w9WgXcQ"
+ * const node = $createYouTubeNode("M7lc1UVf-VE")
+ * console.log(node.getId()) // "M7lc1UVf-VE"
  * ```
  *
  * @category constructors
@@ -215,7 +215,7 @@ export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): Y
  * ```tsx
  * import { $createYouTubeNode, $isYouTubeNode } from "@beep/editor/youtube-node"
  *
- * console.log($isYouTubeNode($createYouTubeNode("dQw4w9WgXcQ"))) // true
+ * console.log($isYouTubeNode($createYouTubeNode("M7lc1UVf-VE"))) // true
  * ```
  *
  * @category guards

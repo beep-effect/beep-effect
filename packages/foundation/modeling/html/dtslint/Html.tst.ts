@@ -4,7 +4,11 @@ import {
   enforceSafeHtml,
   Html,
   HtmlDocument,
+  HtmlFiniteNumber,
   HtmlFragment,
+  HtmlIdValue,
+  HtmlNonNegativeNumber,
+  HtmlPositiveNumber,
   serialize,
   serializeSafe,
 } from "@beep/html";
@@ -12,7 +16,7 @@ import { AutocompleteAttribute as SubpathAutocompleteAttribute } from "@beep/htm
 import { ConformantHtml as SubpathConformantHtml } from "@beep/html/Html.conformance";
 import { HtmlFragment as SubpathHtmlFragment } from "@beep/html/Html.contract";
 import { HtmlTag as SubpathHtmlTag } from "@beep/html/Html.meta";
-import { Button, Div, Html as HtmlElement, Input, Li } from "@beep/html/Html.model";
+import { Button, Div, Html as HtmlElement, Input, Li, Meter, Progress } from "@beep/html/Html.model";
 import { Comment } from "@beep/html/Html.nodes";
 import { SafeHtmlAst as SubpathSafeHtmlAst } from "@beep/html/Html.policy";
 import { SafeHtml as SubpathSafeHtml } from "@beep/html/Html.serialize";
@@ -45,6 +49,10 @@ describe("@beep/html contract", () => {
     expect(Comment).type.toBe<typeof Comment>();
     expect(SubpathSafeHtmlAst).type.toBe<typeof SubpathSafeHtmlAst>();
     expect(SubpathSafeHtml).type.toBe<typeof SubpathSafeHtml>();
+    expect(HtmlFiniteNumber).type.toBe<typeof HtmlFiniteNumber>();
+    expect(HtmlNonNegativeNumber).type.toBe<typeof HtmlNonNegativeNumber>();
+    expect(HtmlPositiveNumber).type.toBe<typeof HtmlPositiveNumber>();
+    expect(HtmlIdValue).type.toBe<typeof HtmlIdValue>();
   });
 
   it("exposes canonical child and root role names", () => {
@@ -85,6 +93,18 @@ describe("@beep/html contract", () => {
   it("publishes the signed integer li value domain", () => {
     const item = Li.make({ children: [], value: O.some(-2) });
     expect(item.value).type.toBe<O.Option<number>>();
+  });
+
+  it("publishes finite numeric meter and progress fields", () => {
+    const meter = Meter.make({ children: [], max: O.some(1.5), min: O.some(-1), value: O.some(0.25) });
+    const progress = Progress.make({ children: [], max: O.some(2.5), value: O.some(1.25) });
+    const encodedMeter: Meter.Encoded = { _tag: "meter", children: [], value: 0.25 };
+    const encodedProgress: Progress.Encoded = { _tag: "progress", children: [], max: 2.5 };
+
+    expect(meter.value).type.toBe<O.Option<number>>();
+    expect(progress.max).type.toBe<O.Option<number>>();
+    expect(encodedMeter.value).type.toBe<number | undefined>();
+    expect(encodedProgress.max).type.toBe<number | undefined>();
   });
 
   it("scopes popover invoker attributes to button and input elements", () => {
