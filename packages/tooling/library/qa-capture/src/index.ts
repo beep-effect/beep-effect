@@ -25,7 +25,7 @@ export * from "./ClockCorrelator.service.ts";
 /**
  * Collector HttpApi contract exports.
  *
- * @category api
+ * @category protocols
  * @since 0.0.0
  */
 export * from "./Collector.api.ts";
@@ -46,7 +46,7 @@ export * from "./ExtractionPlan.models.ts";
 /**
  * Extraction planner exports.
  *
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export * from "./ExtractionPlanner.ts";
