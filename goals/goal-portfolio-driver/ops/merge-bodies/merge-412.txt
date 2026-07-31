@@ -1,5 +1,0 @@
-Replace fixed post-interrupt sleeps in run-turn-reconciliation tests with bounded
-condition-waits on the asserted atom (10ms spaced, 3s cap). Root cause: wall-clock sleeps
-raced asynchronous interrupt reconciliation under CI load; red on main since 32c4200843,
-which surfaced but did not cause the race. Greptile P2 (refresh-signal-precedes-
-reconciliation) addressed by waiting on observable state. Proof: 6/6 forks-pool runs, 12/12.

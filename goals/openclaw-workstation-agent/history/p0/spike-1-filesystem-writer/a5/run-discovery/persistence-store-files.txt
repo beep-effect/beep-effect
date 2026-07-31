@@ -1,2 +1,0 @@
-/home/elpresidank/.cache/beep-p0-spike1a5.HoastB/spike1/state/credentials/telegram-default-allowFrom.json
-/home/elpresidank/.cache/beep-p0-spike1a5.HoastB/spike1/state/log/openclaw.log

@@ -1,6 +1,0 @@
-Config health-state write failed: OpenClaw state database /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/stampcheck/s-downgrade/state/openclaw.sqlite uses newer schema version 5; this OpenClaw build supports 1.
-[openclaw] Could not start the CLI.
-[openclaw] Reason: OpenClaw state database /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/stampcheck/s-downgrade/state/openclaw.sqlite uses newer schema version 5; this OpenClaw build supports 1.
-[openclaw] Debug: set OPENCLAW_DEBUG=1 to include the stack trace.
-[openclaw] Try: openclaw doctor
-[openclaw] Help: openclaw --help

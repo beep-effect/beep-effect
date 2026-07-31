@@ -1,7 +1,0 @@
-language js
-
-// effect-smol (v4) `no-bigint-literals`: any bigint literal (1n, 0xFFn, ...).
-// `BigInt(1)` is a CallExpression and stays allowed.
-JsBigintLiteralExpression() as $lit where {
-  register_diagnostic(span=$lit, message="Rule: BigInt literals are not allowed. Why: aligns with effect-smol code style. Fix: use BigInt(<value>) instead of a bigint literal.", severity="warn")
-}

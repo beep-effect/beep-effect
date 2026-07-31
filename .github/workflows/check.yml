@@ -1,6 +1,6 @@
 name: Check
-
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -8,826 +8,201 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
-permissions:
-  contents: read
-  pull-requests: write
+permissions: {}
 
 jobs:
-  pr-size:
-    name: PR Size Label
-    if: github.event_name == 'pull_request'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 2
-    steps:
-      - name: Label PR by size
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              per_page: 100
-            });
-            const count = files.length;
-            let label = 'size/S';
-            if (count > 50) label = 'size/XL';
-            else if (count > 20) label = 'size/L';
-            else if (count > 10) label = 'size/M';
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: [label]
-            });
-            await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
-  verify:
-    name: ${{ matrix.name }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: ${{ matrix.timeout_minutes }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: lint
-            name: Lint
-            timeout_minutes: 30
-            uses_turbo: "true"
-            install_typos: "true"
-          - id: lint-policy
-            name: Lint Policy
-            timeout_minutes: 25
-            uses_turbo: "false"
-            install_typos: "true"
-          - id: repo-sanity
-            name: Repo Sanity
-            timeout_minutes: 15
-            uses_turbo: "false"
-            install_typos: "false"
-          - id: check
-            name: Check
-            timeout_minutes: 20
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: test-unit
-            name: Test Unit
-            timeout_minutes: 30
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: test-integration
-            name: Test Integration
-            timeout_minutes: 20
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: coverage
-            name: Coverage Regression
-            timeout_minutes: 40
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: docgen
-            name: Docgen
-            timeout_minutes: 20
-            uses_turbo: "false"
-            install_typos: "false"
-          - id: codegen
-            name: Codegen Drift
-            timeout_minutes: 15
-            uses_turbo: "false"
-            install_typos: "false"
-    env:
-      # Verification runs PR-controlled code. Keep every secret-backed value on
-      # trusted push events only; PR lanes use local cache and fixture/default
-      # app configuration.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
-      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
-      DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
-      EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
-      AUTH_SECRET: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
-      BETTER_AUTH_SECRET: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
-      BETTER_AUTH_URL: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
-      SECURITY_TRUSTED_ORIGINS: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
-      LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
-      - name: Determine lane execution
-        id: lane-gate
-        shell: bash
-        run: |
-          set -euo pipefail
-          should_run=true
-          docgen_mode=none
-
-          if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            docgen_mode=affected
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-            fi
-
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-
-            if [[ -z "$changed_files" ]]; then
-              should_run=false
-            elif ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
-              should_run=false
-            elif grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)' <<< "$changed_files"; then
-              docgen_mode=full
-            fi
-          fi
-
-          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
-
-      - name: Free runner disk for verification lanes
-        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Disk before cleanup:"
-          df -h /
-          sudo rm -rf \
-            /opt/ghc \
-            /usr/local/.ghcup \
-            /usr/local/lib/android \
-            /usr/local/share/boost \
-            /usr/share/dotnet
-          sudo apt-get clean
-          docker system prune --all --force --volumes || true
-          echo "Disk after cleanup:"
-          df -h /
-
-      - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true'
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: ${{ matrix.uses_turbo }}
-          cache-write: "false"
-
-      - name: Install typos
-        if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: typos-cli@1.44.0
-
-      - name: Run verification lane
-        if: steps.lane-gate.outputs.should_run == 'true'
-        run: |
-          set -euo pipefail
-          # Lane bodies live in the beep CLI (one-round-loop P0 inversion;
-          # same-SHA parity proof recorded in
-          # goals/one-round-loop/history/p0-parity-evidence.md). This case
-          # block carries only GitHub-context orchestration: the
-          # event-dependent shape flags each lane receives.
-          shape_args=()
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
-          fi
-
-          shape_args+=(--summarize)
-
-          case "${{ matrix.id }}" in
-            lint|check|test-unit|test-integration|coverage)
-              bun run beep ci lane "${{ matrix.id }}" "${shape_args[@]}"
-              ;;
-            lint-policy|codegen)
-              bun run beep ci lane "${{ matrix.id }}"
-              ;;
-            repo-sanity)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane repo-sanity --changeset-status
-              else
-                bun run beep ci lane repo-sanity
-              fi
-              ;;
-            docgen)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
-              else
-                bun run beep ci lane docgen --mode full
-              fi
-              ;;
-          esac
-
-      - name: Append Turbo summary
-        if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
-
-      - name: Append Turbo summary (docgen affected)
-        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()
-        run: bun run beep ci append-turbo-summary
-
-      - name: Skip lane
-        if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "Skipping ${{ matrix.name }} for this change set."
-
-  professional-desktop-ipc-stdio:
-    name: Professional Desktop IPC Stdio
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 100
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
-      - name: Determine lane execution
-        id: lane-gate
-        shell: bash
-        run: |
-          set -euo pipefail
-          should_run=true
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-
-            if [[ -z "$changed_files" ]]; then
-              should_run=false
-            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/professional-desktop/|^packages/(foundation/|(agents|workspace|shared|epistemic)(/|-)|drivers/(pglite|postgres)/)|^\.github/(actions/setup-monorepo-ci/|workflows/check\.yml$)|^(bun\.lock|package\.json|turbo\.json)$)'; then
-              should_run=false
-            fi
-          fi
-
-          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Rust toolchain
-        if: steps.lane-gate.outputs.should_run == 'true'
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: true
-          cache-workspaces: apps/professional-desktop/src-tauri
-
-      - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true'
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-
-      - name: Run desktop IPC stdio proof
-        if: steps.lane-gate.outputs.should_run == 'true'
-        run: bun run beep ci lane desktop-ipc
-
-      - name: Skip lane
-        if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "Skipping desktop IPC stdio proof for this change set."
-
-  property-laws:
-    # one-round-loop P1 (D3): schema property laws for affected packages at a
-    # 400-run floor. Lands NON-required; the required flip (ruleset 10240248
-    # addition) is a P4 close criterion after a stable green history. The
-    # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
-    name: Property Laws
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    env:
-      # Same secret posture as the verify matrix: PR-controlled code gets no
-      # repository secrets and uses local Turbo cache only.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "true"
-          cache-write: "false"
-
-      - name: Run property laws lane
-        shell: bash
-        run: |
-          set -euo pipefail
-          shape_args=()
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
-          fi
-
-          shape_args+=(--summarize)
-
-          bun run beep ci lane property "${shape_args[@]}"
-
-      - name: Append Turbo summary
-        if: always()
-        run: bun run beep ci append-turbo-summary
-
-  fallow-advisory:
-    name: Fallow Advisory Envelopes
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 100
-          persist-credentials: false
-
-      - name: Determine audit base
-        id: base
-        shell: bash
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-
-          fetch_status=0
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}" || fetch_status=$?
-          elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
-            base_ref="$BEFORE_SHA"
-            git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=100 origin "$base_ref" || fetch_status=$?
-          else
-            base_ref="HEAD~1"
-          fi
-
-          echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
-          echo "base_fetch_status=$fetch_status" >> "$GITHUB_OUTPUT"
-
-      - name: Free runner disk for Fallow
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
-          # This job only needs the monorepo toolchain plus Fallow. The shared
-          # setup step can exhaust the default runner image when cleanup is
-          # skipped, so clear the large preinstalled stacks before installing.
-          echo "Disk before cleanup:"
-          df -h /
-          sudo rm -rf \
-            /opt/ghc \
-            /usr/local/.ghcup \
-            /usr/local/lib/android \
-            /usr/local/share/boost \
-            /usr/share/dotnet
-          sudo apt-get clean
-          docker system prune --all --force --volumes || true
-          echo "Disk after cleanup:"
-          df -h /
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-
-      - name: Run Fallow envelopes
-        id: fallow
-        shell: bash
-        env:
-          # Fallow runs PR-controlled `bun run beep` code; keep repository
-          # secrets on push only and use local cache for pull requests.
-          TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
-        run: |
-          # Lane body (blocking audit/dead-code, advisory sweep, status.md
-          # accounting, envelope existence) lives in the beep CLI; envelope
-          # validation, the step summary, and artifact upload stay below.
-          bun run beep ci lane fallow --base "${{ steps.base.outputs.base_ref }}"
-
-      - name: Validate Fallow envelopes
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          for lane in audit dead-code; do
-            test -s ".beep/fallow/${lane}.json"
-          done
-
-          for lane in health boundaries flags security fix-preview; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
-              --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
-              --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
-              --require-raw-output
-          done
-
-          for lane in audit dead-code; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
-              --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
-              --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
-              --require-raw-output
-          done
-
-      - name: Append Fallow summary
-        if: always()
-        shell: bash
-        run: |
-          {
-            echo "### Fallow Advisory Envelopes"
-            echo
-            echo "- base ref: \`${{ steps.base.outputs.base_ref }}\`"
-            echo "- base fetch status: \`${{ steps.base.outputs.base_fetch_status }}\`"
-            echo
-            cat .beep/fallow/status.md 2>/dev/null || echo "- lane status: unavailable"
-            echo
-            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`\n- audit introduced findings: `\(.findingAttributionSummary.introduced // "unknown")`\n- audit inherited-adjacent findings: `\(.findingAttributionSummary.inheritedAdjacent // "unknown")`"' .beep/fallow/audit.json 2>/dev/null || echo "- audit summary: unavailable"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload Fallow envelopes
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
-          path: .beep/fallow/**
-          if-no-files-found: error
-
-  knip:
-    name: Knip
-    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - run: pnpm lint
+
+  types:
+    name: Types
+    runs-on: ubuntu-latest
     permissions:
       contents: read
+    timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-          use-node: "false"
-
-      - name: Run Knip regression gate
-        run: bun run beep ci lane knip
-
-  jsdoc-ratchet:
-    name: JSDoc Ratchet
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-          use-node: "false"
-
-      - name: Run JSDoc inventory ratchet
-        shell: bash
-        run: |
-          set -euo pipefail
-          SECONDS=0
-          bun run beep ci lane jsdoc-ratchet
-          total_seconds="$SECONDS"
-          {
-            echo "### JSDoc Ratchet"
-            echo
-            echo "- command: \`bun run beep ci lane jsdoc-ratchet\` (inventory + ratchet)"
-            echo "- total wall time: \`${total_seconds}s\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - run: pnpm check
+      - run: pnpm test-types --target '>=5.9'
 
   build:
     name: Build
-    if: github.event_name == 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Set strip internals config
+        run: |
+          sed -i 's/"stripInternal": false/"stripInternal": true/' tsconfig.base.json
+      - run: pnpm build
+
+  types-deno:
+    name: Types on Deno
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+        with:
+          deno-version: v2.9.4
+      - name: Set strip internals config
+        run: |
+          sed -i 's/"stripInternal": false/"stripInternal": true/' tsconfig.base.json
+      - run: deno check .
+
+  bundle:
+    name: Bundle
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Clone base ref
+        uses: actions/checkout@v6
+        with:
+          path: base
+          ref: ${{ github.event.pull_request.base.ref }}
+      - name: Set strip internals config
+        run: |
+          sed -i 's/"stripInternal": false/"stripInternal": true/' tsconfig.base.json
+          sed -i 's/"stripInternal": false/"stripInternal": true/' base/tsconfig.base.json
+      - name: Build
+        run: |
+          pnpm build &
+          cd base && pnpm install && pnpm build &
+          wait
+      - name: Compare bundle size
+        run: node ./packages/tools/bundle/src/bin.ts compare --base-dir base/packages/tools/bundle/fixtures
+      - name: Upload stats artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-stats
+          path: stats.txt
+          if-no-files-found: error
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
-      EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-      SECURITY_TRUSTED_ORIGINS: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
-      LIVEBLOCKS_SECRET_KEY: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
+      EFFECT_INTEGRATION_TESTS: "1"
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1/2, 2/2]
+        runtime: [Node, Deno]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Pre-pull test container images
+        run: |
+          docker pull testcontainers/ryuk:0.14.0 &
+          docker pull ghcr.io/tursodatabase/libsql-server:main &
+          docker pull postgres:alpine &
+          docker pull mysql:lts &
+          docker pull vitess/vttestserver:mysql80 &
+          docker pull redis:alpine &
+          wait
+
+      - name: Install dependencies
+        if: matrix.runtime == 'Node'
+        uses: ./.github/actions/setup
+      - name: Test
+        if: matrix.runtime == 'Node'
+        run: pnpm test --shard ${{ matrix.shard }}
+
+      - name: Install dependencies
+        if: matrix.runtime == 'Deno'
+        uses: ./.github/actions/setup
         with:
-          fetch-depth: 0
+          deno-version: v2.9.4
+      - name: Test
+        if: matrix.runtime == 'Deno'
+        run: deno task test --shard ${{ matrix.shard }}
 
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: true
-          cache-write: "true"
-
-      - name: Run build checks
-        run: bun run beep ci lane build --summarize
-
-      - name: Append Turbo summary
-        if: always()
-        run: bun run beep ci append-turbo-summary
-
-  commitlint:
-    name: Commitlint
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+  doctest:
+    name: Documentation Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Test Documentation
+        run: pnpm doctest
 
-      - name: Determine commit range
-        id: range
-        shell: bash
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          set -euo pipefail
-
-          mode=range
-          from_ref=""
-          to_ref="HEAD"
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            from_ref="${PR_BASE_SHA:?missing pull request base sha}"
-            git rev-parse --verify "${from_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$from_ref"
-          elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
-            from_ref="$BEFORE_SHA"
-            to_ref="${GITHUB_SHA:-HEAD}"
-            git rev-parse --verify "${from_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$from_ref"
-            git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$to_ref"
-          else
-            mode=last
-          fi
-
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-          echo "from_ref=$from_ref" >> "$GITHUB_OUTPUT"
-          echo "to_ref=$to_ref" >> "$GITHUB_OUTPUT"
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-          use-node: "false"
-
-      - name: Run commitlint
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [[ "${{ steps.range.outputs.mode }}" == "range" ]]; then
-            bun run beep ci lane commitlint --from "${{ steps.range.outputs.from_ref }}" --to "${{ steps.range.outputs.to_ref }}"
-          else
-            bun run beep ci lane commitlint --last
-          fi
-
-  secrets:
-    name: Secret Scanning
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
-      - name: Gitleaks
-        shell: bash
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-
-          log_opts="-1"
-          config_path=".gitleaks.toml"
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            log_opts="origin/${GITHUB_BASE_REF:-main}..HEAD"
-
-            # The secret-scanning gate must NOT trust a PR-controlled scanner
-            # config: a PR could broaden the allowlist (or add .gitleaksignore
-            # fingerprints) in the SAME change to hide a planted secret and still
-            # pass the required check. For pull_request runs, scan with the base
-            # branch's already-reviewed config + ignore file instead of the PR's.
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            if git cat-file -e "${base_ref}:.gitleaks.toml" 2>/dev/null; then
-              git show "${base_ref}:.gitleaks.toml" > .gitleaks.base.toml
-              config_path=".gitleaks.base.toml"
-            fi
-            # Pin .gitleaksignore to the base too (gitleaks auto-reads it from the
-            # source root): use the base version, or none if the base has none, so
-            # a PR cannot add suppression fingerprints to its own scan.
-            if git cat-file -e "${base_ref}:.gitleaksignore" 2>/dev/null; then
-              git show "${base_ref}:.gitleaksignore" > .gitleaksignore
-            else
-              rm -f .gitleaksignore
-            fi
-          elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
-            log_opts="${BEFORE_SHA}..HEAD"
-          fi
-
-          docker run --rm \
-            -v "$PWD:/repo" \
-            -w /repo \
-            zricethezav/gitleaks@sha256:5d0147dc25c78f8cc2b9861ff8f5c9b4a41419ed60a9ce2217de5a215270b42b \
-            detect --source=/repo --config="/repo/${config_path}" --log-opts="$log_opts" --redact --no-banner
-
-  security:
-    name: Security
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+  docgen:
+    name: Documentation Generation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Generate Documentation
+        run: pnpm docgen
 
-      - name: OSV vulnerability scan
-        uses: google/osv-scanner-action/osv-scanner-action@v2.3.3
-        with:
-          scan-args: |-
-            --lockfile=bun.lock
-            --config=osv-scanner.toml
-
-      - name: Check dependency graph availability
-        if: github.event_name == 'pull_request'
-        id: dependency-graph
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
+  ai-docgen:
+    name: AI Documentation Generation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Generate AI Documentation
+        run: pnpm ai-docgen
+      - name: Verify AI Documentation is up-to-date
         run: |
-          set -euo pipefail
-
-          # Security property (CSF-022): never silently FAIL OPEN on a
-          # transient/attacker-induced gh-api error. The real attack vector is an
-          # unreachable or failing API call, so an actual `gh api` COMMAND failure
-          # (non-zero exit) fails CLOSED below.
-          #
-          # We capture the gh exit code explicitly instead of letting `set -e`
-          # abort, so we can distinguish a genuine api failure (fail closed) from
-          # a benign condition where the api SUCCEEDS but the
-          # security_and_analysis.dependency_graph.status field is absent — e.g.
-          # the GITHUB_TOKEN lacks permission to read it, or the feature config is
-          # not exposed. That benign case must NOT hard-fail; the
-          # dependency-review action that runs afterward is the real gate.
-          set +e
-          status="$(
-            gh api "repos/${GITHUB_REPOSITORY}" \
-              --jq '.security_and_analysis.dependency_graph.status // "unavailable"'
-          )"
-          gh_exit=$?
-          set -e
-
-          if [ "$gh_exit" -ne 0 ]; then
-            echo "::error::gh api call to read dependency graph status failed (exit ${gh_exit}); failing closed instead of skipping the dependency review gate."
+          if [ -n "$(git status --short)" ]; then
+            git status --short
+            echo "Run 'pnpm ai-docgen' and commit generated changes."
             exit 1
           fi
 
-          case "$status" in
-            enabled)
-              echo "enabled=true" >> "$GITHUB_OUTPUT"
-              ;;
-            disabled)
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "::notice::Skipping dependency review because GitHub dependency graph is explicitly disabled for this repository."
-              ;;
-            *)
-              # api ok but status absent/unavailable: benign token-permission or
-              # feature-config condition (the CI token cannot read
-              # security_and_analysis, or the feature config is not exposed). The
-              # actions/dependency-review-action HARD-FAILS when dependency graph
-              # is not actually enabled for the repo, so running it here would fail
-              # on a non-finding condition rather than perform a real review.
-              # SKIP it instead (fail open on undetectable availability); a genuine
-              # gh api COMMAND failure still fails closed above, and OSV scanning
-              # continues to cover dependency vulnerabilities. Enable Dependency
-              # graph in repo Settings -> Security & analysis to activate this gate.
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "::warning::Dependency graph status could not be determined (got '${status:-unavailable}'); skipping the dependency-review gate (OSV still covers dependency vulns). Enable Dependency graph in repo settings to activate it."
-              ;;
-          esac
-
-      - name: Dependency review
-        if: github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-          deny-licenses: AGPL-3.0, GPL-3.0
-          comment-summary-in-pr: on-failure
-
-  nix:
-    name: Nix Shell
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v30
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Setup Cachix (read-only)
-        if: github.event_name != 'push'
-        uses: cachix/cachix-action@v15
-        with:
-          name: beep-effect
-        continue-on-error: true
-
-      - name: Setup Cachix (trusted push)
-        if: github.event_name == 'push'
-        uses: cachix/cachix-action@v15
-        with:
-          name: beep-effect
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        continue-on-error: true
-
-      - name: Run Nix checks
-        run: bun run beep ci lane nix
-
-  sast:
-    name: SAST
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+  circular:
+    name: Circular Dependencies
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+    timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: "false"
-          cache-write: "false"
-
-      - name: Run SAST
-        run: |
-          # Semgrep runs the four registry packs (p/typescript, p/javascript,
-          # p/security-audit, p/secrets) plus the vendored, offline rules in
-          # .semgrep/first-party.yml, with --error so findings fail the lane.
-          # Config is byte-identical to the local replay (`beep ci lane sast`)
-          # — no SEMGREP_APP_TOKEN, which would only exist in CI and break that
-          # parity. See goals/one-round-loop/history/p0-parity-evidence.md §2.
-          bun run beep ci lane sast
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Check for circular dependencies
+        run: pnpm circular
