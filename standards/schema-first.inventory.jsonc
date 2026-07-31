@@ -210,16 +210,6 @@
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
     },
     {
-      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 148,
-      "owner": "@beep/epistemic-ui",
-      "reason": "Component regression decodes fixed read models to prove triage interactions, conflict states, and exact source highlighting; schema-derived property coverage lives in domain and use-case tests."
-    },
-    {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
       "symbol": "ChalkInstance",
       "kind": "exported-interface",

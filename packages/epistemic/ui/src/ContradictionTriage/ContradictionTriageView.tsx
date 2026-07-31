@@ -6,6 +6,7 @@
  */
 "use client";
 
+import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
 import { $EpistemicUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
@@ -39,6 +40,7 @@ import { WarningCircleIcon } from "@phosphor-icons/react/WarningCircle";
 import { XCircleIcon } from "@phosphor-icons/react/XCircle";
 import { DateTime, Match, Number as N, Result } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -1091,21 +1093,36 @@ function ReviewDialog({
   readonly selectedProposal: ContradictionTriageViewProps["selectedProposal"];
 }): JSX.Element {
   const supersession = O.isSome(selectedProposal);
-  const reasonMissing = Str.isEmpty(Str.trim(reason));
-  const confirmDisabled = reasonMissing || AsyncResult.isWaiting(reviewResult);
+  const normalizedReason = Str.trim(reason);
+  const reasonMissing = Str.isEmpty(normalizedReason);
+  const reasonTooLong = Str.length(normalizedReason) > CONTRADICTION_REVIEW_REASON_MAX_LENGTH;
+  const reasonInvalid = reasonMissing || reasonTooLong;
+  const confirmDisabled = reasonInvalid || AsyncResult.isWaiting(reviewResult);
+  const reviewCopy = Bool.match(supersession, {
+    onFalse: () => ({
+      action: "Confirm rejection",
+      description: "The candidate will be resolved as rejected without changing either belief.",
+      title: "Reject this contradiction candidate?",
+      variant: "destructive" as const,
+    }),
+    onTrue: () => ({
+      action: "Approve supersession",
+      description: "The selected persisted replacement will supersede its recorded belief lineage exactly as shown.",
+      title: "Approve this persisted supersession?",
+      variant: "default" as const,
+    }),
+  });
+  const reasonDescription = Bool.match(reasonTooLong, {
+    onFalse: () => "This reason is persisted with the human disposition. The proposed fact is read-only.",
+    onTrue: () => `Review reasons must contain at most ${CONTRADICTION_REVIEW_REASON_MAX_LENGTH} characters.`,
+  });
 
   return (
     <AlertDialog onOpenChange={onReviewDialogOpenChange} open={open}>
       <AlertDialogContent data-testid="contradiction-review-dialog" size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {supersession ? "Approve this persisted supersession?" : "Reject this contradiction candidate?"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {supersession
-              ? "The selected persisted replacement will supersede its recorded belief lineage exactly as shown."
-              : "The candidate will be resolved as rejected without changing either belief."}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{reviewCopy.title}</AlertDialogTitle>
+          <AlertDialogDescription>{reviewCopy.description}</AlertDialogDescription>
         </AlertDialogHeader>
         {O.match(selectedProposal, {
           onNone: () => null,
@@ -1119,20 +1136,19 @@ function ReviewDialog({
           ),
         })}
         <FieldGroup>
-          <Field data-invalid={reasonMissing}>
+          <Field data-invalid={reasonInvalid}>
             <FieldLabel htmlFor="contradiction-review-reason">Required review reason</FieldLabel>
             <Textarea
-              aria-invalid={reasonMissing}
+              aria-invalid={reasonInvalid}
               data-testid="contradiction-review-reason"
               id="contradiction-review-reason"
+              maxLength={CONTRADICTION_REVIEW_REASON_MAX_LENGTH}
               onChange={(event) => onReviewReasonChange(event.currentTarget.value)}
               placeholder="Explain the evidence and reasoning behind this decision."
               required
               value={reason}
             />
-            <FieldDescription>
-              This reason is persisted with the human disposition. The proposed fact is read-only.
-            </FieldDescription>
+            <FieldDescription>{reasonDescription}</FieldDescription>
           </Field>
         </FieldGroup>
         <AlertDialogFooter>
@@ -1141,9 +1157,9 @@ function ReviewDialog({
             data-testid="contradiction-review-confirm"
             disabled={confirmDisabled}
             onClick={onReviewConfirm}
-            variant={supersession ? "default" : "destructive"}
+            variant={reviewCopy.variant}
           >
-            {supersession ? "Approve supersession" : "Confirm rejection"}
+            {reviewCopy.action}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

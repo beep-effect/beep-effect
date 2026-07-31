@@ -703,7 +703,20 @@ export const ContradictionDispositionStatus = ContradictionDispositionStatusBase
  */
 export type ContradictionDispositionStatus = typeof ContradictionDispositionStatus.Type;
 
-const CONTRADICTION_REVIEW_REASON_MAX_LENGTH = 2_000;
+/**
+ * Maximum normalized length accepted for a contradiction review reason.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_REVIEW_REASON_MAX_LENGTH) // 2000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_REVIEW_REASON_MAX_LENGTH = 2_000;
 
 /**
  * Normalized human rationale attached to a contradiction review decision.

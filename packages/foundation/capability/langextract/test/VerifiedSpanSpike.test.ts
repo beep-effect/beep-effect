@@ -53,6 +53,17 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "maps a precomposed Hangul locator onto decomposed Jamo source text",
+    Effect.fnUntraced(function* () {
+      const source = "\u1100\u1161";
+      const anchor = yield* locateRawText(source, "\uAC00");
+
+      expect(anchor).toEqual({ endChar: 2, quote: source, startChar: 0 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
+  it.effect(
     "maps compatibility ligatures without emitting normalized text",
     Effect.fnUntraced(function* () {
       const source = "The ofﬁce filed.";
@@ -91,6 +102,15 @@ describe("verified-span hostile-text contract", () => {
     "fails duplicate normalized occurrences as ambiguous",
     Effect.fnUntraced(function* () {
       const failure = yield* locateRawText("same text; same text", "same text").pipe(Effect.flip);
+
+      expect(failure.reason).toBe("ambiguous");
+    })
+  );
+
+  it.effect(
+    "stops repetitive-source enumeration after ambiguity is established",
+    Effect.fnUntraced(function* () {
+      const failure = yield* locateRawText(Str.repeat(100_000)("a"), "a").pipe(Effect.flip);
 
       expect(failure.reason).toBe("ambiguous");
     })

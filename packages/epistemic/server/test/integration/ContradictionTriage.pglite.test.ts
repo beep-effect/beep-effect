@@ -370,10 +370,22 @@ if (!shouldRunPgliteIntegration) {
           const repeated = yield* repository.submit(
             makeSubmission(101, seeded, { receipt: "receipt-101-b", reversed: true })
           );
+          const retroactiveReceiptConflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(101, seeded, {
+                receipt: "receipt-101-retroactive",
+                recordedAt: 1_199,
+              })
+            )
+          );
 
           expect(first.duplicateCandidate).toBe(false);
           expect(repeated.duplicateCandidate).toBe(true);
           expect(repeated.candidate.id).toBe(first.candidate.id);
+          expect(ContradictionSubmissionConflict.is(retroactiveReceiptConflict)).toBe(true);
+          expect(
+            ContradictionSubmissionConflict.is(retroactiveReceiptConflict) && retroactiveReceiptConflict.reason
+          ).toBe("receipt-predates-candidate");
           const detail = yield* repository.get(
             GetContradictionCandidate.make({
               candidateId: first.candidate.id,

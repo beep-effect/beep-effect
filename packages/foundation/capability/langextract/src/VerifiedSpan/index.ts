@@ -336,6 +336,12 @@ type RawCluster = readonly [start: number, end: number, text: string];
 
 const isCombiningMark = S.is(CombiningMark);
 const isWhitespace = S.is(WhitespaceCodePoint);
+const normalizeUnicode = Str.normalize("NFKC");
+const joinsNormalizedCluster = (cluster: string, point: string): boolean =>
+  !Eq.equals(
+    normalizeUnicode(Str.concat(cluster, point)),
+    Str.concat(normalizeUnicode(cluster), normalizeUnicode(point))
+  );
 
 const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
   // This one-pass mutable accumulator is bounded by MAX_SOURCE_TEXT_LENGTH.
@@ -347,7 +353,7 @@ const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
   for (const point of source) {
     const end = start + Str.length(point);
     const previous = A.last(clusters);
-    if (isCombiningMark(point) && O.isSome(previous)) {
+    if (O.isSome(previous) && (isCombiningMark(point) || joinsNormalizedCluster(previous.value[2], point))) {
       A.spliceInPlace(clusters, {
         start: A.length(clusters) - 1,
         deleteCount: 1,
@@ -362,7 +368,7 @@ const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
   return clusters;
 };
 
-const normalizeCluster = flow(Str.normalize("NFKC"), Str.replace(/[‘’‚‛]/gu, "'"), Str.replace(/[“”„‟]/gu, '"'));
+const normalizeCluster = flow(normalizeUnicode, Str.replace(/[‘’‚‛]/gu, "'"), Str.replace(/[“”„‟]/gu, '"'));
 
 const appendNormalizedPoint = (
   starts: Array<number>,
@@ -453,7 +459,7 @@ const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<Text
   const matches: Array<TextAnchor> = A.empty();
   let normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, 0);
 
-  while (normalizedStart >= 0) {
+  while (normalizedStart >= 0 && A.length(matches) < 2) {
     const normalizedEnd = normalizedStart + Str.length(normalizedLocator);
     O.match(O.all([A.get(normalizedSource.starts, normalizedStart), A.get(normalizedSource.ends, normalizedEnd - 1)]), {
       onNone: () => undefined,

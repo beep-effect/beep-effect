@@ -3,10 +3,13 @@
 import { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
 import { ContradictionTriageView } from "@beep/epistemic-ui";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
+import { fcRuns } from "@beep/test-utils";
 import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as RpcClientError from "effect/unstable/rpc/RpcClientError";
 import { act } from "react";
@@ -366,6 +369,22 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
   let container: HTMLDivElement;
   let root: Root;
 
+  it("round-trips schema-derived queue queries", () => {
+    const encode = S.encodeResult(ContradictionTriage.ContradictionListPayload);
+    const decode = S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload);
+    const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
+
+    fc.assert(
+      fc.property(S.toArbitrary(ContradictionTriage.ContradictionListPayload), (query) => {
+        const encoded = Result.getOrThrow(encode(query));
+        const decoded = Result.getOrThrow(decode(encoded));
+
+        return equivalent(decoded, query);
+      }),
+      fcRuns(25)
+    );
+  });
+
   beforeAll(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -489,6 +508,23 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       expect(onReviewConfirm).toHaveBeenCalledOnce();
     });
   });
+
+  it("blocks review reasons over the persisted schema limit", () =>
+    renderView(
+      root,
+      makeProps({
+        reviewDialogOpen: true,
+        reviewReason: Str.repeat(2_001)("x"),
+      })
+    ).then(() => {
+      const reason = requireElement(document, '[data-testid="contradiction-review-reason"]', HTMLTextAreaElement);
+      const confirm = requireElement(document, '[data-testid="contradiction-review-confirm"]', HTMLButtonElement);
+
+      expect(reason.maxLength).toBe(2_000);
+      expect(reason.getAttribute("aria-invalid")).toBe("true");
+      expect(confirm.disabled).toBe(true);
+      expect(document.body.textContent).toContain("Review reasons must contain at most 2000 characters.");
+    }));
 
   it("makes loading, empty, stale, failure, and resolved states explicit", () =>
     renderView(

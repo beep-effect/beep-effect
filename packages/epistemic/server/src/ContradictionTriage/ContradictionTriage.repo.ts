@@ -830,6 +830,12 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                   reason: "candidate-payload-mismatch",
                 });
               }
+              if (!notLaterThan(candidate.recordedAt, command.recordedAt)) {
+                return yield* ContradictionSubmissionConflict.make({
+                  candidateKey: normalized.candidateKey,
+                  reason: "receipt-predates-candidate",
+                });
+              }
 
               const receiptSeed = ContradictionReceipt.make({
                 candidateId: candidate.id,

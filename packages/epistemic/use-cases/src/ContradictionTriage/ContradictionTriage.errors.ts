@@ -194,6 +194,7 @@ const ContradictionSubmissionConflictReasonBase = LiteralKit([
   "belief-mismatch",
   "candidate-predates-input",
   "candidate-payload-mismatch",
+  "receipt-predates-candidate",
   "receipt-key-reused",
 ]);
 
