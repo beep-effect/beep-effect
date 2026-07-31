@@ -73,6 +73,7 @@ import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+import type { JsonObject } from "@beep/schema/Json";
 import type { Crypto } from "effect";
 
 const $I = $ProfessionalDesktopId.create("contradiction/ContradictionQaSeed");
@@ -502,7 +503,7 @@ const factMatches = (actual: Readonly<Record<string, unknown>>, expected: Contra
     O.exists((decoded) => factEquivalent(decoded, expected))
   );
 
-const factRecord = (fact: ContradictionQaFact): Readonly<Record<string, unknown>> => ({
+const factRecord = (fact: ContradictionQaFact): JsonObject => ({
   issue: fact.issue,
   statement: fact.statement,
   value: fact.value,

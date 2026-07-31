@@ -727,7 +727,10 @@ ALTER TABLE "epistemic_contradiction_disposition"
 	REFERENCES "epistemic_contradiction_candidate" ("org_id", "id");--> statement-breakpoint
 ALTER TABLE "epistemic_contradiction_disposition"
 	ADD CONSTRAINT "epistemic_contradiction_disposition_status_bounded"
-	CHECK ("decision" ->> 'status' IN ('rejected', 'superseded'));--> statement-breakpoint
+	CHECK (
+		"decision" ->> 'status' IS NOT NULL
+		AND "decision" ->> 'status' IN ('rejected', 'superseded')
+	);--> statement-breakpoint
 CREATE FUNCTION epistemic_contradiction_block_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $guard$
 BEGIN

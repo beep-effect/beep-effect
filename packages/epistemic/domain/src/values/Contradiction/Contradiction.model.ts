@@ -6,10 +6,11 @@
  */
 
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { PosInt } from "@beep/schema/Int";
+import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -579,8 +580,8 @@ export class ContradictionResolutionProposal extends S.Class<ContradictionResolu
   $I`ContradictionResolutionProposal`
 )(
   {
-    fact: UnknownRecord.annotateKey({
-      description: "Immutable replacement fact proposed for the losing lineage.",
+    fact: JsonObject.annotateKey({
+      description: "Immutable JSON-safe replacement fact proposed for the losing lineage.",
     }),
     losingBelief: BeliefVersionRef.annotateKey({
       description: "Exact persisted belief version whose logical lineage the proposal would replace.",
@@ -896,8 +897,8 @@ type ContradictionEvidenceDigestFn = {
 };
 
 /**
- * Digest the exact evidence-id set of one match basis independent of pair
- * presentation order. Side binding remains in the immutable candidate payload.
+ * Digest the exact side-specific evidence-id sets of one match basis
+ * independent of pair presentation order.
  *
  * @example
  * ```ts
@@ -924,7 +925,12 @@ export const contradictionEvidenceDigest: ContradictionEvidenceDigestFn = dual(
     rightEvidenceIds: ReadonlyArray<EpistemicIdentity.EvidenceId>
   ): ContradictionEvidenceDigest =>
     ContradictionEvidenceDigest.make(
-      sha256Hex(A.join(["v1", encodeEvidenceIds([...leftEvidenceIds, ...rightEvidenceIds])], "|"))
+      sha256Hex(
+        A.join(
+          ["v2", ...A.sort([encodeEvidenceIds(leftEvidenceIds), encodeEvidenceIds(rightEvidenceIds)], Order.String)],
+          "|"
+        )
+      )
     )
 );
 
@@ -984,8 +990,8 @@ export class ContradictionProposalContent extends S.Class<ContradictionProposalC
   $I`ContradictionProposalContent`
 )(
   {
-    fact: UnknownRecord.annotateKey({
-      description: "Immutable replacement fact covered by the proposal digest.",
+    fact: JsonObject.annotateKey({
+      description: "Immutable JSON-safe replacement fact covered by the proposal digest.",
     }),
     losingBelief: BeliefVersionRef.annotateKey({
       description: "Exact persisted belief version whose logical lineage the proposal would replace.",

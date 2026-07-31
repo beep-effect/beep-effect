@@ -184,6 +184,26 @@ describe("Contradiction domain invariants", () => {
     expect(otherDetectorKey).not.toBe(otherVersionKey);
   });
 
+  it("preserves evidence-side partitions while remaining reversal invariant", () => {
+    const evidenceA = Epistemic.EvidenceId.make(10);
+    const evidenceB = Epistemic.EvidenceId.make(20);
+    const evidenceC = Epistemic.EvidenceId.make(30);
+    const oneVersusTwo = contradictionEvidenceDigest([evidenceA], [evidenceB, evidenceC]);
+    const reversed = contradictionEvidenceDigest([evidenceB, evidenceC], [evidenceA]);
+    const twoVersusOne = contradictionEvidenceDigest([evidenceA, evidenceB], [evidenceC]);
+
+    expect(reversed).toBe(oneVersusTwo);
+    expect(twoVersusOne).not.toBe(oneVersusTwo);
+  });
+
+  it("rejects proposal facts outside canonical JSON", () => {
+    const decode = S.decodeUnknownResult(ContradictionProposalContent);
+
+    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: Number.NaN } }))).toBe(true);
+    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: Number.POSITIVE_INFINITY } }))).toBe(true);
+    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: undefined } }))).toBe(true);
+  });
+
   it("derives only constructive unique collections and canonical pairs", () => {
     fc.assert(
       fc.property(

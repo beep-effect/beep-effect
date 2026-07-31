@@ -23,29 +23,14 @@ import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { DateTime, identity, Order } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.commands");
 
-/**
- * Submit one evidence-backed contradiction proposal.
- *
- * Repeated candidate identity is duplicate-suppressed, while `receiptKey`
- * preserves a durable receipt for every distinct submission.
- *
- * @example
- * ```ts
- * import { SubmitContradictionCandidate } from "@beep/epistemic-use-cases/server"
- * import * as S from "effect/Schema"
- *
- * console.log(typeof S.decodeUnknownEffect(SubmitContradictionCandidate))
- * ```
- *
- * @category commands
- * @since 0.0.0
- */
-export class SubmitContradictionCandidate extends S.Class<SubmitContradictionCandidate>(
-  $I`SubmitContradictionCandidate`
+class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCandidateStruct>(
+  $I`SubmitContradictionCandidateStruct`
 )(
   {
     assessment: ContradictionAssessment.annotateKey({
@@ -82,6 +67,63 @@ export class SubmitContradictionCandidate extends S.Class<SubmitContradictionCan
       description: "Exclusive valid-time upper bound; absent while temporally open.",
     }),
   },
+  $I.annote("SubmitContradictionCandidateStruct", {
+    description: "Structural contradiction submission before its half-open valid interval is checked.",
+  })
+) {}
+
+const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
+const submitContradictionCandidateStructArbitrary = S.toArbitraryLazy(SubmitContradictionCandidateStruct);
+
+const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.mapFields(identity)
+  .check(
+    S.makeFilter(
+      ({ validFrom, validTo }) =>
+        O.match(validTo, {
+          onNone: () => true,
+          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+        }),
+      {
+        identifier: $I`SubmitContradictionCandidateValidIntervalCheck`,
+        title: "Contradiction Candidate Valid Interval",
+        description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+        message: "Expected validFrom to be earlier than validTo when validTo is present.",
+      }
+    )
+  )
+  .annotate({
+    toArbitrary: () => (fc) =>
+      submitContradictionCandidateStructArbitrary(fc).map((submission) =>
+        SubmitContradictionCandidateStruct.make({
+          ...submission,
+          validTo: O.filter(submission.validTo, (upperBound) =>
+            validIntervalIsOrdered(submission.validFrom, upperBound)
+          ),
+        })
+      ),
+  });
+
+/**
+ * Submit one evidence-backed contradiction proposal.
+ *
+ * Repeated candidate identity is duplicate-suppressed, while `receiptKey`
+ * preserves a durable receipt for every distinct submission.
+ *
+ * @example
+ * ```ts
+ * import { SubmitContradictionCandidate } from "@beep/epistemic-use-cases/server"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(typeof S.decodeUnknownEffect(SubmitContradictionCandidate))
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export class SubmitContradictionCandidate extends S.Class<SubmitContradictionCandidate>(
+  $I`SubmitContradictionCandidate`
+)(
+  SubmitContradictionCandidateSchema,
   $I.annote("SubmitContradictionCandidate", {
     description: "Command submitting one evidence-backed contradiction proposal and durable receipt.",
   })

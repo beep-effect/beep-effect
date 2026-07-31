@@ -309,6 +309,23 @@ if (!shouldRunPgliteIntegration) {
             "epistemic_contradiction_disposition_candidate_fk"
           );
 
+          const missingDispositionStatus = yield* Effect.flip(sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 1, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${candidateId},
+              '{"reason":"missing status"}'::jsonb, 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_amissingstatus'
+            )
+          `);
+          expect(inspect(missingDispositionStatus, { depth: 10 })).toContain(
+            "epistemic_contradiction_disposition_status_bounded"
+          );
+
           yield* sql`
             INSERT INTO epistemic_contradiction_disposition (
               created_at, created_by_principal, org_id, row_version, schema_version, source,
