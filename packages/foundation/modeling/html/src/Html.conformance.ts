@@ -10,7 +10,7 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Effect, Match, Number as N, pipe, Result } from "effect";
+import { Effect, flow, Match, Number as N, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -75,6 +75,7 @@ export const HtmlConformanceRule = LiteralKit([
   "foreignIntegration",
   "forbiddenDescendant",
   "attributeRelationship",
+  "duplicateAttribute",
   "duplicateId",
   "obsoleteAttribute",
   "misplacedAttribute",
@@ -415,6 +416,14 @@ const inspectAttributeRelationships = (
       ? [makeIssue(A.append(path, "attributes"), "attributeRelationship", requirement.message)]
       : A.emptyReadonly();
   });
+  const equalityIssues = A.flatMap(meta.attributeEqualities, (equality) =>
+    pipe(
+      O.all([attributeValue(attributes[equality.left]), attributeValue(attributes[equality.right])]),
+      O.exists(([left, right]) => left !== right)
+    )
+      ? [makeIssue(A.append(path, `attributes.${equality.left}`), "attributeRelationship", equality.message)]
+      : A.emptyReadonly()
+  );
   const numericIssues = A.flatMap(meta.numericAttributeRelationships, (relationship) => {
     const numberValue = (attribute: string, fallback: number | undefined): O.Option<number> =>
       pipe(
@@ -431,7 +440,7 @@ const inspectAttributeRelationships = (
       ? [makeIssue(A.append(path, `attributes.${relationship.left}`), "attributeRelationship", relationship.message)]
       : A.emptyReadonly();
   });
-  return [...requiredIssues, ...numericIssues];
+  return [...requiredIssues, ...equalityIssues, ...numericIssues];
 };
 
 const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
@@ -470,6 +479,62 @@ const inspectDuplicateIds = (root: HtmlRootView): ReadonlyArray<HtmlConformanceI
     A.flatMap((occurrences) =>
       A.map(occurrences, (occurrence) =>
         makeIssue(occurrence.path, "duplicateId", `The id "${occurrence.value}" must be unique within the HTML root`)
+      )
+    )
+  );
+
+type UniqueAttributeOccurrence = {
+  readonly attribute: string;
+  readonly path: ReadonlyArray<string>;
+  readonly tag: HtmlTag;
+  readonly value: string;
+};
+
+const uniqueAttributeOccurrences = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>
+): ReadonlyArray<UniqueAttributeOccurrence> => {
+  const tag = node._tag;
+  const own = isHtmlTag(tag)
+    ? A.flatMap(ELEMENT_META[tag].uniqueAttributes, (attribute) =>
+        pipe(
+          attributeValue((node as unknown as Record<string, unknown>)[attribute]),
+          O.filter(isString),
+          O.map((value) => ({
+            attribute,
+            path: A.append(path, `attributes.${attribute}`),
+            tag,
+            value,
+          })),
+          O.toArray
+        )
+      )
+    : A.emptyReadonly();
+  return [
+    ...own,
+    ...A.flatMap(childrenOf(node), (child, index) => uniqueAttributeOccurrences(child, childPath(path, index))),
+  ];
+};
+
+const inspectDuplicateUniqueAttributes = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+  pipe(
+    uniqueAttributeOccurrences(root, []),
+    A.groupBy((occurrence) => `${occurrence.tag}/${occurrence.attribute}`),
+    R.values,
+    A.flatMap(
+      flow(
+        A.groupBy((occurrence) => occurrence.value),
+        R.values,
+        A.filter((occurrences) => occurrences.length > 1),
+        A.flatMap((occurrences) =>
+          A.map(occurrences, (occurrence) =>
+            makeIssue(
+              occurrence.path,
+              "duplicateAttribute",
+              `<${occurrence.tag} ${occurrence.attribute}> value "${occurrence.value}" must be unique within the HTML root`
+            )
+          )
+        )
       )
     )
   );
@@ -1019,7 +1084,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
     }),
     Match.orElse((): ReadonlyArray<HtmlConformanceIssue> => inspectChild(view, [], [], ["flow"]))
   );
-  return [...structuralIssues, ...inspectDuplicateIds(view)];
+  return [...structuralIssues, ...inspectDuplicateIds(view), ...inspectDuplicateUniqueAttributes(view)];
 };
 
 /**

@@ -3,6 +3,7 @@ import {
   decodeEditorStateLossless,
   decodeEditorStateStrict,
   EditorStateFromJson,
+  EditorStateWireFromJson,
   editorStateToPlainText,
   hasTextFormat,
   LexicalNode,
@@ -20,6 +21,7 @@ import {
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -334,6 +336,44 @@ describe("Lexical.model", () => {
     expect(O.isNone(compatibility.state)).toBe(true);
     expect(compatibility.issues).toHaveLength(1);
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
+  });
+
+  it("rejects excess fields through every strict surface while retaining their lossless wire", () => {
+    const state = {
+      root: {
+        ...element,
+        type: "root",
+        children: [{ ...element, type: "paragraph", children: [] }],
+      },
+    } as const;
+    const nodeWithExtension = { ...state.root.children[0], futureNode: true } as const;
+    const cases = [
+      [
+        { ...state, futureEnvelope: true },
+        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}]},"futureEnvelope":true}',
+      ],
+      [
+        { root: { ...state.root, futureRoot: true } },
+        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}],"futureRoot":true}}',
+      ],
+      [
+        { root: { ...state.root, children: [nodeWithExtension] } },
+        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[],"futureNode":true}]}}',
+      ],
+    ] as const;
+
+    expect(S.decodeUnknownResult(LexicalNode)(nodeWithExtension)._tag).toBe("Failure");
+    expect(O.isNone(LexicalNode.decodeOption(nodeWithExtension))).toBe(true);
+    A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
+      expect(S.decodeUnknownResult(SerializedEditorState)(stateWithExtension)._tag).toBe("Failure");
+      expect(O.isNone(SerializedEditorState.decodeOption(stateWithExtension))).toBe(true);
+      expect(S.decodeUnknownResult(EditorStateFromJson)(jsonWithExtension)._tag).toBe("Failure");
+      expect(Effect.runSyncExit(decodeEditorStateStrict(stateWithExtension))._tag).toBe("Failure");
+      expect(Effect.runSync(decodeEditorStateLossless(stateWithExtension))).toEqual(stateWithExtension);
+      expect(Effect.runSync(S.decodeUnknownEffect(EditorStateWireFromJson)(jsonWithExtension))).toEqual(
+        stateWithExtension
+      );
+    });
   });
 
   it("round-trips arbitrary open wire states without losing extension fields", () =>

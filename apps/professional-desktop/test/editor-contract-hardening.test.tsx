@@ -1142,6 +1142,21 @@ describe("editor contract hardening", { concurrent: false }, () => {
     expect(gate.message).not.toMatch(/link|URL|private|payload/u);
   });
 
+  it("describes duplicate footnote definitions without exposing their content", () => {
+    const identifier = Md.FootnoteIdentifier.make("duplicate");
+    const footnote = (value: string) =>
+      Md.FootnoteDefinition.make({
+        identifier,
+        children: [Md.P.make({ children: [Md.Text.make({ value })] })],
+      });
+    const document = Md.Document.make({ children: [footnote("private first"), footnote("private second")] });
+    const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(document));
+
+    expect(gate._tag).toBe("UnsafeDocument");
+    expect(gate.message).toMatch(/duplicate footnote definitions/u);
+    expect(gate.message).not.toMatch(/private|first|second/u);
+  });
+
   it("renders an escaped normalization preview and requires the explicit confirmation button", () => {
     const confirm = vi.fn();
     const source = `</pre><script data-normalization-xss="no">alert(1)</script>`;

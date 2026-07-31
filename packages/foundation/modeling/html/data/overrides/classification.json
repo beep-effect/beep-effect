@@ -257,6 +257,12 @@
         "whenAttribute": "href"
       }
     ],
+    "base": [
+      {
+        "message": "<base> requires href or target",
+        "required": [["href", "target"]]
+      }
+    ],
     "img": [
       {
         "message": "<img> requires alt and at least one of src or srcset",
@@ -276,7 +282,31 @@
         "message": "<meter> requires value",
         "required": [["value"]]
       }
+    ],
+    "map": [
+      {
+        "message": "<map> requires name",
+        "required": [["name"]]
+      }
+    ],
+    "track": [
+      {
+        "message": "<track> requires src",
+        "required": [["src"]]
+      }
     ]
+  },
+  "attributeEqualities": {
+    "map": [
+      {
+        "left": "id",
+        "message": "<map id> must equal name",
+        "right": "name"
+      }
+    ]
+  },
+  "uniqueAttributes": {
+    "map": ["name"]
   },
   "numericAttributeRelationships": {
     "meter": [
@@ -577,6 +607,7 @@
     "meter/optimum",
     "meter/value"
   ],
+  "htmlIdValueAttributes": ["map/name"],
   "nonNegativeNumberAttributes": ["progress/value"],
   "positiveNumberAttributes": ["progress/max"],
   "boundedIntegerAttributes": {

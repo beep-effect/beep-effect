@@ -896,6 +896,35 @@ export const HtmlBooleanAttributeName = LiteralKit([
 export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
 
 /**
+ * Generated same-value relationship between two HTML attributes.
+ *
+ * @example
+ * ```ts
+ * import { HtmlAttributeEquality } from "@beep/html/Html.meta"
+ *
+ * const equality = HtmlAttributeEquality.make({
+ *   left: "id",
+ *   message: "id must equal name",
+ *   right: "name"
+ * })
+ * console.log(equality.right) // "name"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`HtmlAttributeEquality`)(
+  {
+    left: S.String,
+    message: S.String,
+    right: S.String,
+  },
+  $I.annote("HtmlAttributeEquality", {
+    description: "Generated same-value relationship between two HTML attributes.",
+  })
+) {}
+
+/**
  * Generated conditional requirement for one or more HTML attributes.
  *
  * @example
@@ -979,8 +1008,10 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *   currentAttributes: [],
  *   obsoleteAttributes: [],
  *   conditionalCategories: [],
+ *   attributeEqualities: [],
  *   attributeRequirements: [],
- *   numericAttributeRelationships: []
+ *   numericAttributeRelationships: [],
+ *   uniqueAttributes: []
  * })) // true
  * ```
  *
@@ -1000,8 +1031,10 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I`HtmlElementMeta
     currentAttributes: S.Array(S.String),
     obsoleteAttributes: S.Array(S.String),
     conditionalCategories: S.Array(HtmlConditionalCategoryRule),
+    attributeEqualities: S.Array(HtmlAttributeEquality),
     attributeRequirements: S.Array(HtmlAttributeRequirement),
     numericAttributeRelationships: S.Array(HtmlNumericAttributeRelationship),
+    uniqueAttributes: S.Array(S.String),
     childSequencePattern: S.String.pipe(S.optionalKey),
     childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
@@ -1014,6 +1047,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     categories: Object.freeze(value.categories),
     children: Object.freeze(value.children),
     conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
+    attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
     attributeRequirements: Object.freeze(
       A.map(value.attributeRequirements, (requirement) =>
         Object.freeze({
@@ -1027,6 +1061,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
       A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
     ),
     obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+    uniqueAttributes: Object.freeze(value.uniqueAttributes),
   });
 
 const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
@@ -1045,8 +1080,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["charset", "coords", "methods", "name", "rev", "shape", "urn"],
     conditionalCategories: [{ attribute: "href", category: "interactive", condition: "present" }],
+    attributeEqualities: [],
     attributeRequirements: [{ message: "<a target> requires href", required: [["href"]], whenAttribute: "target" }],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   abbr: {
     tag: "abbr",
@@ -1060,8 +1097,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   acronym: {
     tag: "acronym",
@@ -1075,8 +1114,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   address: {
     tag: "address",
@@ -1090,8 +1131,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   applet: {
     tag: "applet",
@@ -1105,8 +1148,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   area: {
     tag: "area",
@@ -1123,8 +1168,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["hreflang", "nohref", "type"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [{ message: "<area href> requires alt text", required: [["alt"]], whenAttribute: "href" }],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   article: {
     tag: "article",
@@ -1138,8 +1185,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   aside: {
     tag: "aside",
@@ -1153,8 +1202,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   audio: {
     tag: "audio",
@@ -1171,8 +1222,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [{ attribute: "controls", category: "interactive", condition: "present" }],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "media",
   },
   b: {
@@ -1187,8 +1240,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   base: {
     tag: "base",
@@ -1202,8 +1257,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["href", "target"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
-    attributeRequirements: [],
+    attributeEqualities: [],
+    attributeRequirements: [{ message: "<base> requires href or target", required: [["href", "target"]] }],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   basefont: {
     tag: "basefont",
@@ -1217,8 +1274,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   bdi: {
     tag: "bdi",
@@ -1232,8 +1291,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   bdo: {
     tag: "bdo",
@@ -1247,8 +1308,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   bgsound: {
     tag: "bgsound",
@@ -1262,8 +1325,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   big: {
     tag: "big",
@@ -1277,8 +1342,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   blink: {
     tag: "blink",
@@ -1292,8 +1359,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   blockquote: {
     tag: "blockquote",
@@ -1307,8 +1376,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   body: {
     tag: "body",
@@ -1356,8 +1427,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "vlink",
     ],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   br: {
     tag: "br",
@@ -1371,8 +1444,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["clear"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   button: {
     tag: "button",
@@ -1413,8 +1488,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["action", "autocomplete", "enctype", "method", "novalidate", "target"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   canvas: {
     tag: "canvas",
@@ -1428,8 +1505,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["height", "width"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   caption: {
     tag: "caption",
@@ -1443,8 +1522,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   center: {
     tag: "center",
@@ -1458,8 +1539,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   cite: {
     tag: "cite",
@@ -1473,8 +1556,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   code: {
     tag: "code",
@@ -1488,8 +1573,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   col: {
     tag: "col",
@@ -1503,8 +1590,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["span"]],
     obsoleteAttributes: ["align", "char", "charoff", "valign", "width"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   colgroup: {
     tag: "colgroup",
@@ -1518,8 +1607,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["span"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "colgroup",
   },
   data: {
@@ -1534,8 +1625,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["value"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   datalist: {
     tag: "datalist",
@@ -1549,8 +1642,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "datalist",
   },
   dd: {
@@ -1565,8 +1660,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   del: {
     tag: "del",
@@ -1580,8 +1677,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite", "datetime"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   details: {
     tag: "details",
@@ -1595,8 +1694,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name", "open"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "details",
   },
   dfn: {
@@ -1611,8 +1712,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   dialog: {
     tag: "dialog",
@@ -1626,8 +1729,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["open"]],
     obsoleteAttributes: ["closedby"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   dir: {
     tag: "dir",
@@ -1641,8 +1746,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   div: {
     tag: "div",
@@ -1660,8 +1767,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   dl: {
     tag: "dl",
@@ -1675,8 +1784,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["compact"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "description-list",
   },
   dt: {
@@ -1691,8 +1802,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   em: {
     tag: "em",
@@ -1706,8 +1819,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   embed: {
     tag: "embed",
@@ -1721,8 +1836,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["height", "src", "type", "width"]],
     obsoleteAttributes: ["align", "hspace", "name", "vspace"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   fieldset: {
     tag: "fieldset",
@@ -1736,8 +1853,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "form", "name"]],
     obsoleteAttributes: ["autocomplete"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "fieldset",
   },
   figcaption: {
@@ -1752,8 +1871,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   figure: {
     tag: "figure",
@@ -1767,8 +1888,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "figure",
   },
   font: {
@@ -1783,8 +1906,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   footer: {
     tag: "footer",
@@ -1798,8 +1923,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   form: {
     tag: "form",
@@ -1816,8 +1943,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["accept", "formaction", "formenctype", "formmethod", "formnovalidate", "formtarget"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   frame: {
     tag: "frame",
@@ -1831,8 +1960,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   frameset: {
     tag: "frameset",
@@ -1846,8 +1977,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h1: {
     tag: "h1",
@@ -1861,8 +1994,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h2: {
     tag: "h2",
@@ -1876,8 +2011,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h3: {
     tag: "h3",
@@ -1891,8 +2028,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h4: {
     tag: "h4",
@@ -1906,8 +2045,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h5: {
     tag: "h5",
@@ -1921,8 +2062,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   h6: {
     tag: "h6",
@@ -1936,8 +2079,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   head: {
     tag: "head",
@@ -1951,8 +2096,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["profile"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "head",
   },
   header: {
@@ -1967,8 +2114,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   hgroup: {
     tag: "hgroup",
@@ -1982,8 +2131,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "hgroup",
   },
   hr: {
@@ -1998,8 +2149,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align", "color", "noshade", "size", "width"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   html: {
     tag: "html",
@@ -2013,8 +2166,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["manifest", "version"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "document-element",
   },
   i: {
@@ -2029,8 +2184,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   iframe: {
     tag: "iframe",
@@ -2069,8 +2226,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "vspace",
     ],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   img: {
     tag: "img",
@@ -2102,10 +2261,12 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["align", "border", "hspace", "longdesc", "lowsrc", "name", "vspace"],
     conditionalCategories: [{ attribute: "usemap", category: "interactive", condition: "present" }],
+    attributeEqualities: [],
     attributeRequirements: [
       { message: "<img> requires alt and at least one of src or srcset", required: [["alt"], ["src", "srcset"]] },
     ],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   input: {
     tag: "input",
@@ -2170,6 +2331,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       { attribute: "type", category: "interactive", condition: "not-equals", value: "hidden" },
       { attribute: "type", category: "labelable", condition: "not-equals", value: "hidden" },
     ],
+    attributeEqualities: [],
     attributeRequirements: [
       {
         message: '<input type="image"> requires alt and src',
@@ -2179,6 +2341,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       },
     ],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   ins: {
     tag: "ins",
@@ -2192,8 +2355,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite", "datetime"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   isindex: {
     tag: "isindex",
@@ -2207,8 +2372,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   kbd: {
     tag: "kbd",
@@ -2222,8 +2389,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   keygen: {
     tag: "keygen",
@@ -2237,8 +2406,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   label: {
     tag: "label",
@@ -2252,8 +2423,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["for"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   legend: {
     tag: "legend",
@@ -2267,8 +2440,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "phrasing-or-heading",
   },
   li: {
@@ -2283,8 +2458,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["value"]],
     obsoleteAttributes: ["type"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   link: {
     tag: "link",
@@ -2318,8 +2495,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["charset", "methods", "rev", "target", "urn"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   listing: {
     tag: "listing",
@@ -2333,8 +2512,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   main: {
     tag: "main",
@@ -2348,8 +2529,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   map: {
     tag: "map",
@@ -2363,8 +2546,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
-    attributeRequirements: [],
+    attributeEqualities: [{ left: "id", message: "<map id> must equal name", right: "name" }],
+    attributeRequirements: [{ message: "<map> requires name", required: [["name"]] }],
     numericAttributeRelationships: [],
+    uniqueAttributes: ["name"],
   },
   mark: {
     tag: "mark",
@@ -2378,8 +2563,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   marquee: {
     tag: "marquee",
@@ -2393,8 +2580,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["behavior", "direction", "loop", "truespeed"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   menu: {
     tag: "menu",
@@ -2408,8 +2597,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["compact", "label", "type"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   menuitem: {
     tag: "menuitem",
@@ -2423,8 +2614,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   meta: {
     tag: "meta",
@@ -2438,8 +2631,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["charset", "content", "http-equiv", "media", "name"]],
     obsoleteAttributes: ["scheme"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   meter: {
     tag: "meter",
@@ -2453,6 +2648,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["high", "low", "max", "min", "optimum", "value"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [{ message: "<meter> requires value", required: [["value"]] }],
     numericAttributeRelationships: [
       {
@@ -2477,6 +2673,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       },
       { left: "optimum", message: "<meter optimum> must be less than or equal to max", right: "max", rightDefault: 1 },
     ],
+    uniqueAttributes: [],
   },
   multicol: {
     tag: "multicol",
@@ -2490,8 +2687,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   nav: {
     tag: "nav",
@@ -2505,8 +2704,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   nextid: {
     tag: "nextid",
@@ -2520,8 +2721,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   nobr: {
     tag: "nobr",
@@ -2535,8 +2738,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   noembed: {
     tag: "noembed",
@@ -2550,8 +2755,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   noframes: {
     tag: "noframes",
@@ -2565,8 +2772,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   noscript: {
     tag: "noscript",
@@ -2580,8 +2789,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   object: {
     tag: "object",
@@ -2611,8 +2822,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "vspace",
     ],
     conditionalCategories: [{ attribute: "usemap", category: "interactive", condition: "present" }],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   ol: {
     tag: "ol",
@@ -2626,8 +2839,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["reversed", "start", "type"]],
     obsoleteAttributes: ["compact"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   optgroup: {
     tag: "optgroup",
@@ -2641,8 +2856,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "label"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "optgroup",
   },
   option: {
@@ -2657,8 +2874,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["disabled", "label", "selected", "value"]],
     obsoleteAttributes: ["name"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   output: {
     tag: "output",
@@ -2672,8 +2891,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["for", "form", "name"]],
     obsoleteAttributes: ["autocomplete", "disabled"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   p: {
     tag: "p",
@@ -2687,8 +2908,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   param: {
     tag: "param",
@@ -2702,8 +2925,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   picture: {
     tag: "picture",
@@ -2717,8 +2942,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "picture",
   },
   plaintext: {
@@ -2733,8 +2960,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   pre: {
     tag: "pre",
@@ -2748,8 +2977,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["width"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   progress: {
     tag: "progress",
@@ -2763,10 +2994,12 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["max", "value"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [
       { left: "value", message: "<progress value> must be less than or equal to max", right: "max", rightDefault: 1 },
     ],
+    uniqueAttributes: [],
   },
   q: {
     tag: "q",
@@ -2780,8 +3013,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["cite"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   rb: {
     tag: "rb",
@@ -2795,8 +3030,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   rp: {
     tag: "rp",
@@ -2810,8 +3047,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   rt: {
     tag: "rt",
@@ -2825,8 +3064,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   rtc: {
     tag: "rtc",
@@ -2840,8 +3081,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   ruby: {
     tag: "ruby",
@@ -2855,8 +3098,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "ruby",
   },
   s: {
@@ -2871,8 +3116,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   samp: {
     tag: "samp",
@@ -2886,8 +3133,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   script: {
     tag: "script",
@@ -2915,8 +3164,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: ["charset", "event", "for", "language"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   search: {
     tag: "search",
@@ -2930,8 +3181,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   section: {
     tag: "section",
@@ -2945,8 +3198,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   select: {
     tag: "select",
@@ -2973,8 +3228,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "select",
   },
   selectedcontent: {
@@ -2989,8 +3246,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   slot: {
     tag: "slot",
@@ -3004,8 +3263,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["name"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   small: {
     tag: "small",
@@ -3019,8 +3280,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   source: {
     tag: "source",
@@ -3037,8 +3300,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   spacer: {
     tag: "spacer",
@@ -3052,8 +3317,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   span: {
     tag: "span",
@@ -3067,8 +3334,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   strike: {
     tag: "strike",
@@ -3082,8 +3351,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   strong: {
     tag: "strong",
@@ -3097,8 +3368,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   style: {
     tag: "style",
@@ -3112,8 +3385,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["blocking", "media"]],
     obsoleteAttributes: ["type"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   sub: {
     tag: "sub",
@@ -3127,8 +3402,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   summary: {
     tag: "summary",
@@ -3142,8 +3419,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "phrasing-or-heading",
   },
   sup: {
@@ -3158,8 +3437,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   table: {
     tag: "table",
@@ -3186,8 +3467,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "width",
     ],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childSequencePattern: "^(?:caption,)?(?:colgroup,)*(?:thead,)?(?:(?:tbody,)*|(?:tr,)+)(?:tfoot,)?$",
     childGrammar: "table",
   },
@@ -3203,8 +3486,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align", "char", "charoff", "height", "valign"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   td: {
     tag: "td",
@@ -3230,8 +3515,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       "width",
     ],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   template: {
     tag: "template",
@@ -3255,8 +3542,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   textarea: {
     tag: "textarea",
@@ -3297,8 +3586,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   tfoot: {
     tag: "tfoot",
@@ -3312,8 +3603,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   th: {
     tag: "th",
@@ -3327,8 +3620,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["abbr", "colspan", "headers", "rowspan", "scope"]],
     obsoleteAttributes: ["align", "axis", "bgcolor", "char", "charoff", "height", "nowrap", "valign", "width"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   thead: {
     tag: "thead",
@@ -3342,8 +3637,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   time: {
     tag: "time",
@@ -3357,8 +3654,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["datetime"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   title: {
     tag: "title",
@@ -3372,8 +3671,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   tr: {
     tag: "tr",
@@ -3387,8 +3688,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["align", "bgcolor", "char", "charoff", "height", "valign"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   track: {
     tag: "track",
@@ -3402,8 +3705,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["default", "kind", "label", "src", "srclang"]],
     obsoleteAttributes: [],
     conditionalCategories: [],
-    attributeRequirements: [],
+    attributeEqualities: [],
+    attributeRequirements: [{ message: "<track> requires src", required: [["src"]] }],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   tt: {
     tag: "tt",
@@ -3417,8 +3722,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   u: {
     tag: "u",
@@ -3432,8 +3739,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   ul: {
     tag: "ul",
@@ -3447,8 +3756,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: ["compact", "type"],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   var: {
     tag: "var",
@@ -3462,8 +3773,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   video: {
     tag: "video",
@@ -3493,8 +3806,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     ],
     obsoleteAttributes: [],
     conditionalCategories: [{ attribute: "controls", category: "interactive", condition: "present" }],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
     childGrammar: "media",
   },
   wbr: {
@@ -3509,8 +3824,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
   xmp: {
     tag: "xmp",
@@ -3524,8 +3841,10 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     currentAttributes: HTML_GLOBAL_ATTRIBUTE_NAMES,
     obsoleteAttributes: [],
     conditionalCategories: [],
+    attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    uniqueAttributes: [],
   },
 };
 

@@ -5,7 +5,11 @@ import {
   documentToEditorState,
   editorStateToDocument,
   nodeToBlocks,
+  RootNode,
   SerializedEditorState,
+  TableCellNode,
+  TableNode,
+  TableRowNode,
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import { PosInt } from "@beep/schema";
@@ -15,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { TableCellHeaderState } from "@beep/lexical-schema";
 
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
 const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri);
@@ -24,6 +29,17 @@ const mdText = (value: string) => MdModel.Text.make({ value });
 
 const roundTrip = (document: MdModel.Document): MdModel.Document =>
   documentToEditorState(document).pipe(Effect.runSync, editorStateToDocument);
+
+const tableState = (headerState: TableCellHeaderState): SerializedEditorState =>
+  SerializedEditorState.make({
+    root: RootNode.make({
+      children: [
+        TableNode.make({
+          children: [TableRowNode.make({ children: [TableCellNode.make({ children: [], headerState })] })],
+        }),
+      ],
+    }),
+  });
 
 describe("Lexical.codec", () => {
   it("canonicalizes an empty Md document to one runtime-editable paragraph", () => {
@@ -138,6 +154,15 @@ describe("Lexical.codec", () => {
 
     expect(roundTrip(aligned)).toEqual(structural);
     expect(roundTrip(structural)).toEqual(structural);
+  });
+
+  it.each([
+    [0, false],
+    [1, true],
+    [2, false],
+    [3, true],
+  ] as const)("projects table header state %i to headerRow=%s", (headerState, headerRow) => {
+    expect(editorStateToDocument(tableState(headerState)).children).toEqual([expect.objectContaining({ headerRow })]);
   });
 
   it("leaves document frontmatter to the owning persistence adapter", () => {

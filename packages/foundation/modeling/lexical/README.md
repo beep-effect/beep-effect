@@ -13,12 +13,13 @@ codecs over the canonical `@beep/md` AST.
   downstream logic matches Options instead of null-checking. The encoded side
   keeps the exact Lexical wire shape (round-trip fidelity is non-negotiable;
   see `test/Lexical.model.test.ts`).
-- **Strict and lossless boundaries are separate.** Strict decoding rejects
-  unknown fields, empty roots that Lexical cannot apply, and invalid child
-  topology before editor/runtime use; lossless decoding retains those JSON
-  wires plus future nodes and extension fields for persistence and migration.
-  `documentToEditorState` migration-safely canonicalizes an empty Md document
-  to one blank paragraph.
+- **Strict and lossless boundaries are separate.** `LexicalNode`,
+  `SerializedEditorState`, `EditorStateFromJson`, and
+  `decodeEditorStateStrict` reject excess fields, empty roots that Lexical
+  cannot apply, and invalid child topology before editor/runtime use. The
+  lossless wire schemas and decoders retain those JSON wires plus future nodes
+  and extension fields for persistence and migration. `documentToEditorState`
+  migration-safely canonicalizes an empty Md document to one blank paragraph.
 - **The lossless wire schemas intentionally use `StructWithRest`.** Effect
   schema classes accept closed `Struct` fields, so a class migration would
   discard arbitrary envelope, root, node, version, and `"$"` NodeState data.
@@ -116,9 +117,11 @@ import {
 } from "@beep/lexical-schema";
 
 const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] });
-const state = Effect.runSync(documentToEditorState(document));
-const wire = S.encodeSync(SerializedEditorState)(state); // exact Lexical wire shape
-const inspected = Effect.runSync(analyzeEditorStateCompatibility(wire));
+const inspected = documentToEditorState(document).pipe(
+  Effect.flatMap(S.encodeEffect(SerializedEditorState)),
+  Effect.flatMap(analyzeEditorStateCompatibility),
+  Effect.runSync,
+);
 console.log(inspected.isCompatible); // true
 ```
 

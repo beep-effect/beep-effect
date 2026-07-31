@@ -273,12 +273,14 @@ const rawNormalizationMessage =
   "This legacy draft contains trusted raw Markdown or HTML. Review the escaped literal copy before sending.";
 
 interface DocumentViolationFlags {
+  readonly footnote: boolean;
   readonly raw: boolean;
   readonly scalar: boolean;
   readonly url: boolean;
 }
 
 const emptyDocumentViolationFlags: DocumentViolationFlags = {
+  footnote: false,
   raw: false,
   scalar: false,
   url: false,
@@ -288,6 +290,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
   A.reduce(issues, emptyDocumentViolationFlags, (flags, issue) =>
     Match.value(issue).pipe(
       Match.tagsExhaustive({
+        DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
         RawNode: () => ({ ...flags, raw: true }),
         InvalidScalar: () => ({ ...flags, scalar: true }),
         UnsafeUrl: () => ({ ...flags, url: true }),
@@ -298,6 +301,20 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
 const documentViolationReason = (issues: ReadonlyArray<DocumentSafetyViolation>): string => {
   const flags = documentViolationFlags(issues);
   return Match.value(flags).pipe(
+    Match.when(
+      { footnote: true, scalar: true, url: true },
+      () =>
+        "duplicate footnote definitions, an unsafe link or embedded URL, and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"
+    ),
+    Match.when(
+      { footnote: true, scalar: true },
+      () => "duplicate footnote definitions and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"
+    ),
+    Match.when(
+      { footnote: true, url: true },
+      () => "duplicate footnote definitions and a link or embedded URL outside the safe destination policy"
+    ),
+    Match.when({ footnote: true }, () => "duplicate footnote definitions"),
     Match.when(
       { scalar: true, url: true },
       () => "an unsafe link or embedded URL and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"

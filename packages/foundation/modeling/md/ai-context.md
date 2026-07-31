@@ -50,8 +50,9 @@ The `Result` wrapper is adapter-failure-safe, and the default HTML renderer esca
 `HtmlFragment` values should only carry content that was audited or sanitized upstream.
 
 `Document` is the general persistence model. `SafeDocument` preserves its encoded wire while excluding trusted raw
-nodes, user-content URLs outside the link/image allow lists, and scalar strings that cannot complete safe HTML
-serialization. Use `refineSafeDocument` for decoded values and `decodeSafeDocument` for encoded external input.
+nodes, user-content URLs outside the link/image allow lists, duplicate footnote definitions, and scalar strings that
+cannot complete safe HTML serialization. Use `refineSafeDocument` for decoded values and `decodeSafeDocument` for
+encoded external input.
 
 `renderSafeHtml(SafeDocument)` maps directly into the `@beep/html` AST and
 returns its opaque `SafeHtml`. Preserve that marker through intermediate code

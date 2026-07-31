@@ -147,6 +147,7 @@ interface AttributeSpec {
 }
 
 interface El {
+  readonly attributeEqualities: ReadonlyArray<AttributeEquality>;
   readonly attributeRequirements: ReadonlyArray<AttributeRequirement>;
   readonly categories: ReadonlyArray<string>;
   readonly childGrammar: string | undefined;
@@ -165,6 +166,7 @@ interface El {
   readonly tag: string;
   readonly textMode: TextMode;
   readonly type: string;
+  readonly uniqueAttributes: ReadonlyArray<string>;
 }
 
 /** A single webref definition entry from `ed/dfns/html.json`. */
@@ -219,6 +221,17 @@ class AttributeRequirement extends S.Class<AttributeRequirement>($I`AttributeReq
   })
 ) {}
 
+class AttributeEquality extends S.Class<AttributeEquality>($I`AttributeEquality`)(
+  {
+    left: S.String,
+    message: S.String,
+    right: S.String,
+  },
+  $I.annote("AttributeEquality", {
+    description: "A generated same-value relationship between two HTML attributes.",
+  })
+) {}
+
 class NumericAttributeRelationship extends S.Class<NumericAttributeRelationship>($I`NumericAttributeRelationship`)(
   {
     left: S.String,
@@ -235,6 +248,7 @@ class NumericAttributeRelationship extends S.Class<NumericAttributeRelationship>
 class Classification extends S.Class<Classification>($I`Classification`)(
   {
     autocompleteAttributes: S.Array(S.String),
+    attributeEqualities: S.Record(S.String, S.Array(AttributeEquality)),
     attributeRequirements: S.Record(S.String, S.Array(AttributeRequirement)),
     booleanAttributes: S.Array(S.String),
     boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
@@ -243,6 +257,7 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     contentTokenExpansions: S.Record(S.String, S.Array(S.String)),
     currentAttributeOverrides: S.Record(S.String, S.Array(S.String)),
     finiteNumberAttributes: S.Array(S.String),
+    htmlIdValueAttributes: S.Array(S.String),
     integerAttributes: S.Array(S.String),
     mathMlAttributeNameAdjustments: S.Record(S.String, S.String),
     nonNegativeIntegerAttributes: S.Array(S.String),
@@ -260,6 +275,7 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     svgAttributeNameAdjustments: S.Record(S.String, S.String),
     svgElementNameAdjustments: S.Record(S.String, S.String),
     numericAttributeRelationships: S.Record(S.String, S.Array(NumericAttributeRelationship)),
+    uniqueAttributes: S.Record(S.String, S.Array(S.String)),
     void: S.Array(S.String),
     xmlAttributeNames: S.Array(S.String),
   },
@@ -414,6 +430,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const autocompleteAttrs = MutableHashSet.fromIterable(classification.autocompleteAttributes);
   const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
   const finiteNumberAttrs = MutableHashSet.fromIterable(classification.finiteNumberAttributes);
+  const htmlIdValueAttrs = MutableHashSet.fromIterable(classification.htmlIdValueAttributes);
   const integerAttrs = MutableHashSet.fromIterable(classification.integerAttributes);
   const nonNegativeIntegerAttrs = MutableHashSet.fromIterable(classification.nonNegativeIntegerAttributes);
   const nonNegativeNumberAttrs = MutableHashSet.fromIterable(classification.nonNegativeNumberAttributes);
@@ -552,7 +569,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
   const attributeRequirementTags = R.keys(classification.attributeRequirements).sort();
-  const requiredAttributeRequirementTags = ["a", "area", "img", "input", "meter"];
+  const requiredAttributeRequirementTags = ["a", "area", "base", "img", "input", "map", "meter", "track"];
   if (JSON.stringify(attributeRequirementTags) !== JSON.stringify(requiredAttributeRequirementTags)) {
     failGeneration(
       `HTML generator requires an exact attribute-requirement inventory; expected ${JSON.stringify(requiredAttributeRequirementTags)}, received ${JSON.stringify(attributeRequirementTags)}`
@@ -584,6 +601,51 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
             failGeneration(`HTML generator attribute requirement for <${tag}> references unknown ${attribute}`);
           }
         }
+      }
+    }
+  }
+  const attributeEqualityTags = R.keys(classification.attributeEqualities).sort();
+  const requiredAttributeEqualityTags = ["map"];
+  if (JSON.stringify(attributeEqualityTags) !== JSON.stringify(requiredAttributeEqualityTags)) {
+    failGeneration(
+      `HTML generator requires an exact attribute-equality inventory; expected ${JSON.stringify(requiredAttributeEqualityTags)}, received ${JSON.stringify(attributeEqualityTags)}`
+    );
+  }
+  for (const [tag, equalities] of R.toEntries(classification.attributeEqualities)) {
+    const modeledAttributes = modeledAttributesFor(tag);
+    if (equalities.length !== 1 || equalities[0]?.left !== "id" || equalities[0]?.right !== "name") {
+      failGeneration(`HTML generator requires <${tag}> attribute equality to be exactly id = name`);
+    }
+    for (const equality of equalities) {
+      for (const attribute of [equality.left, equality.right]) {
+        if (!MutableHashSet.has(modeledAttributes, attribute)) {
+          failGeneration(`HTML generator attribute equality for <${tag}> references unknown ${attribute}`);
+        }
+      }
+    }
+  }
+  const htmlIdValueAttributeInventory = [...htmlIdValueAttrs].sort();
+  const requiredHtmlIdValueAttributeInventory = ["map/name"];
+  if (JSON.stringify(htmlIdValueAttributeInventory) !== JSON.stringify(requiredHtmlIdValueAttributeInventory)) {
+    failGeneration(
+      `HTML generator requires an exact HTML id-value attribute inventory; expected ${JSON.stringify(requiredHtmlIdValueAttributeInventory)}, received ${JSON.stringify(htmlIdValueAttributeInventory)}`
+    );
+  }
+  const uniqueAttributeTags = R.keys(classification.uniqueAttributes).sort();
+  const requiredUniqueAttributeTags = ["map"];
+  if (JSON.stringify(uniqueAttributeTags) !== JSON.stringify(requiredUniqueAttributeTags)) {
+    failGeneration(
+      `HTML generator requires an exact tree-unique attribute inventory; expected ${JSON.stringify(requiredUniqueAttributeTags)}, received ${JSON.stringify(uniqueAttributeTags)}`
+    );
+  }
+  for (const [tag, attributes] of R.toEntries(classification.uniqueAttributes)) {
+    if (JSON.stringify([...attributes].sort()) !== JSON.stringify(["name"])) {
+      failGeneration(`HTML generator requires <${tag}> tree-unique attributes to be exactly ["name"]`);
+    }
+    const modeledAttributes = modeledAttributesFor(tag);
+    for (const attribute of attributes) {
+      if (!MutableHashSet.has(modeledAttributes, attribute)) {
+        failGeneration(`HTML generator tree-unique attribute for <${tag}> references unknown ${attribute}`);
       }
     }
   }
@@ -733,6 +795,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         encoded: "number",
       };
     }
+    if (isClassifiedAs(htmlIdValueAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlIdValue"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
     if (isClassifiedAs(stringAttrs, el, attr)) {
       return {
         runtime: optionalRuntime("S.String"),
@@ -790,6 +859,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     return {
       tag,
       cls: className(tag),
+      attributeEqualities: classification.attributeEqualities[tag] ?? [],
       attributeRequirements: classification.attributeRequirements[tag] ?? [],
       encoded,
       obsolete,
@@ -806,6 +876,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       runtime,
       textMode,
       type,
+      uniqueAttributes: classification.uniqueAttributes[tag] ?? [],
     };
   });
 
@@ -1146,6 +1217,7 @@ import {
   ForeignElementName,
   GlobalAttributes,
   HtmlFiniteNumber,
+  HtmlIdValue,
   HtmlNonNegativeInteger,
   HtmlNonNegativeNumber,
   HtmlPositiveInteger,
@@ -1391,7 +1463,7 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
         e.currentAttributes.length === 0
           ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
           : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${JSON.stringify(e.currentAttributes)}]`;
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)},${childSequencePattern}${childGrammar} },`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeEqualities: ${JSON.stringify(e.attributeEqualities)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)}, uniqueAttributes: ${JSON.stringify(e.uniqueAttributes)},${childSequencePattern}${childGrammar} },`;
     })
     .join("\n");
 
@@ -1780,6 +1852,35 @@ export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pi
 export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
 
 /**
+ * Generated same-value relationship between two HTML attributes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlAttributeEquality } from "@beep/html/Html.meta"
+ *
+ * const equality = HtmlAttributeEquality.make({
+ *   left: "id",
+ *   message: "id must equal name",
+ *   right: "name"
+ * })
+ * console.log(equality.right) // "name"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`HtmlAttributeEquality\`)(
+  {
+    left: S.String,
+    message: S.String,
+    right: S.String,
+  },
+  $I.annote("HtmlAttributeEquality", {
+    description: "Generated same-value relationship between two HTML attributes.",
+  })
+) {}
+
+/**
  * Generated conditional requirement for one or more HTML attributes.
  *
  * @example
@@ -1863,8 +1964,10 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *   currentAttributes: [],
  *   obsoleteAttributes: [],
  *   conditionalCategories: [],
+ *   attributeEqualities: [],
  *   attributeRequirements: [],
- *   numericAttributeRelationships: []
+ *   numericAttributeRelationships: [],
+ *   uniqueAttributes: []
  * })) // true
  * \`\`\`
  *
@@ -1884,8 +1987,10 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
     currentAttributes: S.Array(S.String),
     obsoleteAttributes: S.Array(S.String),
     conditionalCategories: S.Array(HtmlConditionalCategoryRule),
+    attributeEqualities: S.Array(HtmlAttributeEquality),
     attributeRequirements: S.Array(HtmlAttributeRequirement),
     numericAttributeRelationships: S.Array(HtmlNumericAttributeRelationship),
+    uniqueAttributes: S.Array(S.String),
     childSequencePattern: S.String.pipe(S.optionalKey),
     childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
@@ -1898,6 +2003,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     categories: Object.freeze(value.categories),
     children: Object.freeze(value.children),
     conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
+    attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
     attributeRequirements: Object.freeze(
       A.map(value.attributeRequirements, (requirement) =>
         Object.freeze({
@@ -1911,6 +2017,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
       A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
     ),
     obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+    uniqueAttributes: Object.freeze(value.uniqueAttributes),
   });
 
 const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {

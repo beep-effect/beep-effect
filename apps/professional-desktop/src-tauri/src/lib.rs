@@ -84,6 +84,71 @@ struct DesktopShutdownState {
     started: AtomicBool,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SidecarReadinessState {
+    Starting,
+    Ready,
+    Failed,
+}
+
+struct SidecarReadinessInner {
+    changed: Condvar,
+    state: Mutex<SidecarReadinessState>,
+}
+
+#[derive(Clone)]
+struct SidecarReadiness {
+    inner: Arc<SidecarReadinessInner>,
+}
+
+impl SidecarReadiness {
+    fn new() -> Self {
+        Self {
+            inner: Arc::new(SidecarReadinessInner {
+                changed: Condvar::new(),
+                state: Mutex::new(SidecarReadinessState::Starting),
+            }),
+        }
+    }
+
+    fn mark_ready(&self) {
+        let mut state = recover_lock(&self.inner.state);
+        if *state == SidecarReadinessState::Starting {
+            *state = SidecarReadinessState::Ready;
+            self.inner.changed.notify_all();
+        }
+    }
+
+    fn mark_failed(&self) {
+        let mut state = recover_lock(&self.inner.state);
+        if *state == SidecarReadinessState::Starting {
+            *state = SidecarReadinessState::Failed;
+            self.inner.changed.notify_all();
+        }
+    }
+
+    fn wait_until_ready(&self, timeout: Duration) -> Result<(), String> {
+        let state = recover_lock(&self.inner.state);
+        let (state, _) = self
+            .inner
+            .changed
+            .wait_timeout_while(state, timeout, |state| {
+                *state == SidecarReadinessState::Starting
+            })
+            .unwrap_or_else(|error| error.into_inner());
+
+        match *state {
+            SidecarReadinessState::Ready => Ok(()),
+            SidecarReadinessState::Failed => {
+                Err("bundled sidecar stopped before its RPC transport was ready".to_string())
+            }
+            SidecarReadinessState::Starting => {
+                Err("timed out waiting for the bundled sidecar RPC transport".to_string())
+            }
+        }
+    }
+}
+
 impl DesktopShutdownState {
     fn new() -> Self {
         Self {
@@ -112,6 +177,8 @@ const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
 const ONTOLOGY_WORKSPACE_ROOT_ENV: &str = "ONTOLOGY_WORKSPACE_ROOT";
 const APP_LOG_LEVEL_ENV: &str = "APP_LOG_LEVEL";
 const OTEL_RESOURCE_ATTRIBUTES_ENV: &str = "OTEL_RESOURCE_ATTRIBUTES";
+const SIDECAR_READY_MARKER: &str = "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY";
+const SIDECAR_READY_TIMEOUT: Duration = Duration::from_secs(30);
 #[cfg(target_os = "linux")]
 const YOUTUBE_WEB_EXTENSION: &[u8] = include_bytes!(env!("BEEP_WEB_EXTENSION_PATH"));
 #[cfg(target_os = "linux")]
@@ -287,21 +354,37 @@ fn prepare_youtube_web_extension(cache_root: &Path) -> std::io::Result<std::path
 }
 
 #[tauri::command]
-fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
+async fn sidecar_transport(
+    state: tauri::State<'_, RpcSession>,
+    readiness: tauri::State<'_, SidecarReadiness>,
+) -> Result<SidecarTransport, String> {
     // Threat model: this token is intentionally delivered to the trusted Tauri
     // webview so the frontend can authorize loopback HTTP and IPC calls to its
     // own sidecar. It is not an XSS boundary inside the app webview; it prevents
     // unrelated local processes or external web pages from reaching the
     // write-capable sidecar RPC surface.
+    let ipc = ipc_transport();
+    if !ipc {
+        // IPC can buffer frames during boot; HTTP cannot recover a request sent
+        // before the socket listens. Keep the existing renderer transport gate
+        // closed until the complete sidecar layer emits its one-shot marker.
+        let readiness = readiness.inner().clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            readiness.wait_until_ready(SIDECAR_READY_TIMEOUT)
+        })
+        .await
+        .map_err(|error| error.to_string())??;
+    }
+
     let transport = SidecarTransport {
-        ipc: ipc_transport(),
+        ipc,
         rpc_session_token: state.token.clone(),
     };
     log::debug!(
         "event=sidecar_transport_probed transport={}",
         if transport.ipc { "ipc" } else { "http" }
     );
-    transport
+    Ok(transport)
 }
 
 #[tauri::command]
@@ -923,6 +1006,12 @@ fn log_sidecar_output(stream: &'static str, bytes: &[u8]) {
     }
 }
 
+fn observe_sidecar_readiness(readiness: &SidecarReadiness, bytes: &[u8]) {
+    if matches!(std::str::from_utf8(bytes), Ok(line) if line.trim() == SIDECAR_READY_MARKER) {
+        readiness.mark_ready();
+    }
+}
+
 /// Drain the bundled sidecar's output stream so child pipes can never fill.
 /// In IPC mode stdout is ndjson rpc and is forwarded to the webview only after
 /// a complete newline-delimited UTF-8 frame arrives. In HTTP mode stdout/stderr
@@ -933,6 +1022,7 @@ fn bridge_sidecar_events(
     ipc: bool,
     sidecar: &Sidecar,
     launch_id: String,
+    readiness: SidecarReadiness,
 ) {
     let handle = app.clone();
     let ipc_ready = Arc::clone(&sidecar.ipc_ready);
@@ -1011,9 +1101,11 @@ fn bridge_sidecar_events(
                     }
                 }
                 CommandEvent::Stderr(bytes) => {
+                    observe_sidecar_readiness(&readiness, &bytes);
                     log_sidecar_output("stderr", &bytes);
                 }
                 CommandEvent::Error(err) => {
+                    readiness.mark_failed();
                     log::error!("event=sidecar_process_error launch_id={launch_id} error={err}");
                     closed_emitted = true;
                     kill_sidecar(&sidecar_process, "process-error");
@@ -1030,6 +1122,7 @@ fn bridge_sidecar_events(
                     );
                 }
                 CommandEvent::Terminated(payload) => {
+                    readiness.mark_failed();
                     closed_emitted = true;
                     if ipc && !stdout_buffer.is_empty() {
                         let message = format!(
@@ -1074,6 +1167,7 @@ fn bridge_sidecar_events(
         }
 
         if !closed_emitted {
+            readiness.mark_failed();
             log::warn!(
                 "event=sidecar_event_stream_closed launch_id={launch_id} inbound_frames={inbound_frames} inbound_bytes={inbound_bytes}"
             );
@@ -1262,6 +1356,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(metadata)
         .manage(DesktopShutdownState::new())
+        .manage(SidecarReadiness::new())
         .manage(RpcSession {
             token: rpc_session_token(),
         })
@@ -1323,6 +1418,7 @@ pub fn run() {
             }
 
             let ipc = ipc_transport();
+            let sidecar_readiness = app.state::<SidecarReadiness>().inner().clone();
             log::info!(
                 "event=desktop_started launch_id={} session_id={} version={} build_profile={} transport={} log_level={} telemetry_enabled={}",
                 metadata.launch_id,
@@ -1436,6 +1532,7 @@ pub fn run() {
                     ipc,
                     &sidecar,
                     metadata.launch_id.clone(),
+                    sidecar_readiness,
                 );
                 log::info!(
                     "event=sidecar_spawned launch_id={} pid={child_pid} transport={} telemetry_enabled={} log_level={}",
@@ -1446,6 +1543,7 @@ pub fn run() {
                 );
                 app.manage(sidecar);
             } else {
+                sidecar_readiness.mark_ready();
                 log::info!(
                     "event=sidecar_spawn_skipped launch_id={} reason=external-dev-sidecar transport=http",
                     metadata.launch_id
@@ -1549,7 +1647,8 @@ pub fn run() {
 mod tests {
     use super::{
         authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame,
-        parse_native_logging_config, read_bounded_sidecar_line, RendererObservabilityConfig,
+        observe_sidecar_readiness, parse_native_logging_config, read_bounded_sidecar_line,
+        RendererObservabilityConfig, SidecarReadiness,
     };
     #[cfg(unix)]
     use super::{
@@ -1563,8 +1662,9 @@ mod tests {
     use std::process::{Command, Stdio};
     #[cfg(unix)]
     use std::sync::mpsc::{self, TryRecvError};
+    use std::time::Duration;
     #[cfg(unix)]
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
     use uuid::Uuid;
 
     #[cfg(target_os = "linux")]
@@ -1676,6 +1776,41 @@ mod tests {
         assert_eq!(
             read_bounded_sidecar_line(&mut reader, 8).expect("reader should reach EOF"),
             None
+        );
+    }
+
+    #[test]
+    fn waits_for_the_complete_sidecar_ready_marker() {
+        let readiness = SidecarReadiness::new();
+        let waiting_readiness = readiness.clone();
+        let (started_sender, started_receiver) = std::sync::mpsc::channel();
+        let waiter = std::thread::spawn(move || {
+            started_sender
+                .send(())
+                .expect("readiness waiter start should be observed");
+            waiting_readiness.wait_until_ready(Duration::from_secs(1))
+        });
+
+        started_receiver
+            .recv_timeout(Duration::from_secs(1))
+            .expect("readiness waiter should start");
+        assert!(!waiter.is_finished());
+        observe_sidecar_readiness(&readiness, b"BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY\r\n");
+
+        assert_eq!(
+            waiter.join().expect("readiness waiter should finish"),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn fails_readiness_wait_when_the_sidecar_stops_first() {
+        let readiness = SidecarReadiness::new();
+        readiness.mark_failed();
+
+        assert_eq!(
+            readiness.wait_until_ready(Duration::from_secs(1)),
+            Err("bundled sidecar stopped before its RPC transport was ready".to_string())
         );
     }
 

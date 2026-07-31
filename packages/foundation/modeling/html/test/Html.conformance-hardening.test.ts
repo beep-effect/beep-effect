@@ -9,6 +9,7 @@ import {
   A as Anchor,
   Area,
   Audio,
+  Base,
   Body,
   Button,
   Col,
@@ -114,6 +115,49 @@ describe("@beep/html generated attribute provenance", () => {
 });
 
 describe("@beep/html numeric and id conformance", () => {
+  it("enforces generated base, map, and track attribute laws", () => {
+    for (const root of [Base.make({}), MapElement.make({ children: [] }), Track.make({})]) {
+      expect(hasRule(root, "attributeRelationship")).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    for (const root of [
+      Base.make({ href: O.some("/docs") }),
+      Base.make({ target: O.some("_self") }),
+      MapElement.make({ children: [], id: O.some("map-one"), name: O.some("map-one") }),
+      Track.make({ src: O.some("/captions.vtt") }),
+    ]) {
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    const duplicateMaps = Fragment.make({
+      children: [
+        MapElement.make({ children: [], name: O.some("duplicate") }),
+        MapElement.make({ children: [], name: O.some("duplicate") }),
+      ],
+    });
+    expect(inspectConformance(duplicateMaps).filter((issue) => issue.rule === "duplicateAttribute")).toStrictEqual([
+      expect.objectContaining({ path: ["children.0", "attributes.name"] }),
+      expect.objectContaining({ path: ["children.1", "attributes.name"] }),
+    ]);
+    expect(Exit.isFailure(Effect.runSyncExit(conform(duplicateMaps)))).toBe(true);
+
+    const mismatchedMapIdentity = MapElement.make({
+      children: [],
+      id: O.some("map-id"),
+      name: O.some("map-name"),
+    });
+    expect(inspectConformance(mismatchedMapIdentity)).toContainEqual(
+      expect.objectContaining({ path: ["attributes.id"], rule: "attributeRelationship" })
+    );
+    expect(Exit.isFailure(Effect.runSyncExit(conform(mismatchedMapIdentity)))).toBe(true);
+
+    expect(() => MapElement.make({ children: [], name: O.some("") })).toThrow();
+    expect(() => MapElement.make({ children: [], name: O.some("two maps") })).toThrow();
+    expect(() => MapElement.make({ children: [], name: O.some("two\tmaps") })).toThrow();
+  });
+
   it("enforces generated meter and progress domains and relationships", () => {
     expect(
       inspectConformance(
@@ -263,7 +307,7 @@ describe("@beep/html generated special-child grammars", () => {
           Audio.make({
             children: [
               Source.make({ src: O.some("/sound.mp3") }),
-              Track.make({}),
+              Track.make({ src: O.some("/captions.vtt") }),
               Anchor.make({ children: [text("fallback")] }),
             ],
           }),
@@ -274,13 +318,13 @@ describe("@beep/html generated special-child grammars", () => {
           Video.make({
             children: [
               Source.make({ src: O.some("/movie.mp4") }),
-              Track.make({}),
+              Track.make({ src: O.some("/captions.vtt") }),
               Anchor.make({ children: [text("fallback")] }),
             ],
           }),
         ],
       }),
-      MapElement.make({ children: [Area.make({})] }),
+      MapElement.make({ children: [Area.make({})], name: O.some("image-map") }),
     ];
     for (const root of valid) {
       expect(inspectConformance(root)).toStrictEqual([]);
@@ -365,10 +409,10 @@ describe("@beep/html generated special-child grammars", () => {
         children: [text("fallback"), Source.make({ src: O.some("/late.mp3") })],
       }),
       Video.make({
-        children: [Track.make({}), Source.make({ src: O.some("/movie.mp4") })],
+        children: [Track.make({ src: O.some("/captions.vtt") }), Source.make({ src: O.some("/movie.mp4") })],
       }),
       Video.make({
-        children: [Anchor.make({ children: [text("fallback")] }), Track.make({})],
+        children: [Anchor.make({ children: [text("fallback")] }), Track.make({ src: O.some("/captions.vtt") })],
       }),
       Datalist.make({
         children: [Option.make({ children: [text("one")] }), text("mixed")],
@@ -423,7 +467,7 @@ describe("@beep/html generated special-child grammars", () => {
       Audio.make({
         children: [
           Source.make({ src: O.some("/sound.mp3") }),
-          Track.make({}),
+          Track.make({ src: O.some("/captions.vtt") }),
           Anchor.make({ children: [text("fallback")] }),
         ],
       }),

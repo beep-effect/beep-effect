@@ -61,10 +61,15 @@ describe("@beep/html generator invariants", () => {
       expect(Object.isFrozen(meta.currentAttributes)).toBe(true);
       expect(Object.isFrozen(meta.obsoleteAttributes)).toBe(true);
       expect(Object.isFrozen(meta.conditionalCategories)).toBe(true);
+      expect(Object.isFrozen(meta.attributeEqualities)).toBe(true);
       expect(Object.isFrozen(meta.attributeRequirements)).toBe(true);
       expect(Object.isFrozen(meta.numericAttributeRelationships)).toBe(true);
+      expect(Object.isFrozen(meta.uniqueAttributes)).toBe(true);
       for (const rule of meta.conditionalCategories) {
         expect(Object.isFrozen(rule)).toBe(true);
+      }
+      for (const equality of meta.attributeEqualities) {
+        expect(Object.isFrozen(equality)).toBe(true);
       }
       for (const requirement of meta.attributeRequirements) {
         expect(Object.isFrozen(requirement)).toBe(true);
@@ -89,5 +94,17 @@ describe("@beep/html generator invariants", () => {
         rightDefault: 1,
       }),
     ]);
+  });
+
+  it("publishes the exact required and tree-unique attribute profiles", () => {
+    expect(ELEMENT_META.base.attributeRequirements).toContainEqual(
+      expect.objectContaining({ required: [["href", "target"]] })
+    );
+    expect(ELEMENT_META.map.attributeRequirements).toContainEqual(expect.objectContaining({ required: [["name"]] }));
+    expect(ELEMENT_META.map.attributeEqualities).toStrictEqual([
+      expect.objectContaining({ left: "id", right: "name" }),
+    ]);
+    expect(ELEMENT_META.map.uniqueAttributes).toStrictEqual(["name"]);
+    expect(ELEMENT_META.track.attributeRequirements).toContainEqual(expect.objectContaining({ required: [["src"]] }));
   });
 });

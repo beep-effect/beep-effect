@@ -3,9 +3,9 @@
  *
  * The general {@link Document} schema remains lossless persistence truth.
  * `SafeDocument` is the narrower RPC/editor boundary: it rejects trusted raw
- * nodes, URL destinations outside the canonical user-content policies, and
- * strings that cannot reach the safe HTML serializer while retaining the exact
- * same encoded JSON representation.
+ * nodes, URL destinations outside the canonical user-content policies,
+ * duplicate footnote definitions, and strings that cannot reach the safe HTML
+ * serializer while retaining the exact same encoded JSON representation.
  *
  * @packageDocumentation \@beep/md/Md.safe
  * @since 0.0.0
@@ -15,16 +15,17 @@ import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html";
 import { $MdId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Match, Result } from "effect";
+import { Match, pipe, Result } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
   isUrlDestinationAllowedWithPolicy,
   UserContentImageUrlPolicySpec,
   UserContentLinkUrlPolicySpec,
 } from "./Md.escape.ts";
-import { Document, Inline, Inline as InlineSchema } from "./Md.model.ts";
-import type { Block, ListItemChild } from "./Md.model.ts";
+import { Document, FootnoteIdentifier, Inline, Inline as InlineSchema } from "./Md.model.ts";
+import type { Block, FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.safe");
 
@@ -156,6 +157,37 @@ export class ScalarSafetyViolation extends S.TaggedClass<ScalarSafetyViolation>(
 ) {}
 
 /**
+ * A repeated footnote-definition identifier that would produce duplicate HTML
+ * ids during safe projection.
+ *
+ * @example
+ * ```ts
+ * import { DuplicateFootnoteDefinitionSafetyViolation } from "@beep/md/Md.safe"
+ *
+ * const issue = DuplicateFootnoteDefinitionSafetyViolation.make({
+ *   identifier: "note",
+ *   path: ["children", 1, "identifier"],
+ * })
+ * console.log(issue._tag) // "DuplicateFootnoteDefinition"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedClass<DuplicateFootnoteDefinitionSafetyViolation>(
+  $I`DuplicateFootnoteDefinitionSafetyViolation`
+)(
+  "DuplicateFootnoteDefinition",
+  {
+    identifier: FootnoteIdentifier,
+    path: S.Array(DocumentSafetyPathSegment),
+  },
+  $I.annote("DuplicateFootnoteDefinitionSafetyViolation", {
+    description: "Path-located repeated footnote definition rejected before safe HTML projection.",
+  })
+) {}
+
+/**
  * Structured safety issue returned before a document crosses an editor or RPC
  * trust boundary.
  *
@@ -171,6 +203,7 @@ export class ScalarSafetyViolation extends S.TaggedClass<ScalarSafetyViolation>(
  * @since 0.0.0
  */
 export const DocumentSafetyViolation = S.Union([
+  DuplicateFootnoteDefinitionSafetyViolation,
   RawNodeSafetyViolation,
   ScalarSafetyViolation,
   UrlSafetyViolation,
@@ -227,10 +260,10 @@ const childrenSafetyIssues = (
 ): ReadonlyArray<DocumentSafetyViolation> =>
   pipeChildren(children, (inline, index) => inlineSafetyIssues(inline, appendPath(path, index)));
 
-const pipeChildren = <Value>(
+const pipeChildren = <Value, Output>(
   values: ReadonlyArray<Value>,
-  inspect: (value: Value, index: number) => ReadonlyArray<DocumentSafetyViolation>
-): ReadonlyArray<DocumentSafetyViolation> => A.flatMap(values, inspect);
+  inspect: (value: Value, index: number) => ReadonlyArray<Output>
+): ReadonlyArray<Output> => A.flatMap(values, inspect);
 
 const unsafeUrlIssue = (
   destination: string,
@@ -332,8 +365,76 @@ const blockSafetyIssues = (block: Block, path: SafetyPath): ReadonlyArray<Docume
     })
   );
 
+type FootnoteDefinitionOccurrence = {
+  readonly identifier: FootnoteIdentifierValue;
+  readonly path: SafetyPath;
+};
+
+const listItemChildFootnoteDefinitionOccurrences = (
+  child: ListItemChild,
+  path: SafetyPath
+): ReadonlyArray<FootnoteDefinitionOccurrence> =>
+  InlineSchema.is(child) ? A.emptyReadonly() : blockFootnoteDefinitionOccurrences(child, path);
+
+const listFootnoteDefinitionOccurrences = (
+  children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,
+  path: SafetyPath
+): ReadonlyArray<FootnoteDefinitionOccurrence> =>
+  pipeChildren(children, (item, itemIndex) =>
+    pipeChildren(item.children, (child, childIndex) =>
+      listItemChildFootnoteDefinitionOccurrences(child, appendPath(path, itemIndex, "children", childIndex))
+    )
+  );
+
+const blockFootnoteDefinitionOccurrences = (
+  block: Block,
+  path: SafetyPath
+): ReadonlyArray<FootnoteDefinitionOccurrence> =>
+  Match.value(block).pipe(
+    Match.tagsExhaustive({
+      heading: () => A.emptyReadonly(),
+      p: () => A.emptyReadonly(),
+      blockquote: ({ children }) =>
+        pipeChildren(children, (child, index) =>
+          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+        ),
+      pre: () => A.emptyReadonly(),
+      ul: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+      ol: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+      taskList: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+      table: () => A.emptyReadonly(),
+      youtube: () => A.emptyReadonly(),
+      mathBlock: () => A.emptyReadonly(),
+      footnoteDefinition: ({ children, identifier }) => [
+        { identifier, path: appendPath(path, "identifier") },
+        ...pipeChildren(children, (child, index) =>
+          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+        ),
+      ],
+      admonition: ({ children }) =>
+        pipeChildren(children, (child, index) =>
+          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+        ),
+      embed: () => A.emptyReadonly(),
+      hr: () => A.emptyReadonly(),
+    })
+  );
+
+const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> =>
+  pipe(
+    pipeChildren(document.children, (block, index) => blockFootnoteDefinitionOccurrences(block, ["children", index])),
+    A.groupBy((occurrence) => occurrence.identifier),
+    R.values,
+    A.filter((occurrences) => occurrences.length > 1),
+    A.flatMap((occurrences) =>
+      A.map(occurrences, ({ identifier, path }) =>
+        DuplicateFootnoteDefinitionSafetyViolation.make({ identifier, path })
+      )
+    )
+  );
+
 /**
- * Returns every user-content safety violation in document order.
+ * Returns every path-located user-content safety violation.
  *
  * @example
  * ```ts
@@ -348,6 +449,7 @@ const blockSafetyIssues = (block: Block, path: SafetyPath): ReadonlyArray<Docume
  */
 export const documentSafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => [
   ...pipeChildren(document.children, (block, index) => blockSafetyIssues(block, ["children", index])),
+  ...duplicateFootnoteDefinitionIssues(document),
 ];
 
 /**
@@ -380,8 +482,8 @@ const SafeDocumentCheck = S.makeFilter<Document>(
   {
     identifier: $I`SafeDocumentCheck`,
     title: "Safe Markdown Document",
-    description: "A document without trusted raw content, unsafe URLs, or invalid scalar strings.",
-    message: "Document contains trusted raw content, an unsafe URL, or an invalid scalar string.",
+    description: "A document without trusted raw content, unsafe URLs, duplicate footnotes, or invalid scalars.",
+    message: "Document contains trusted raw content, an unsafe URL, duplicate footnotes, or an invalid scalar string.",
   }
 );
 

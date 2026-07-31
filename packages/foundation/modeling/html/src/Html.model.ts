@@ -25,6 +25,7 @@ import {
   ForeignElementName,
   GlobalAttributes,
   HtmlFiniteNumber,
+  HtmlIdValue,
   HtmlNonNegativeInteger,
   HtmlNonNegativeNumber,
   HtmlPositiveInteger,
@@ -4848,7 +4849,7 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
   "map",
   {
     ...GlobalAttributes,
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("MapElement", { description: "The <map> element." })

@@ -27,7 +27,18 @@ import {
   UrlPolicySpec,
 } from "@beep/md/Md.escape";
 import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html";
-import { Block, CodeFenceLanguage, Document, Inline, Pre, Table, TableCell, TableRow, Text } from "@beep/md/Md.model";
+import {
+  Block,
+  CodeFenceLanguage,
+  Document,
+  FootnoteIdentifier,
+  Inline,
+  Pre,
+  Table,
+  TableCell,
+  TableRow,
+  Text,
+} from "@beep/md/Md.model";
 import {
   DocumentToHtmlFragment,
   DocumentToMarkdown,
@@ -53,6 +64,7 @@ import {
   renderWithUnsafe,
 } from "@beep/md/Md.render";
 import {
+  DuplicateFootnoteDefinitionSafetyViolation,
   decodeSafeDocument,
   decodeSafeDocumentUnsafe,
   documentSafetyIssues,
@@ -73,6 +85,7 @@ import type { JsonObject } from "@beep/schema";
 const InlineArbitrary = S.toArbitrary(Inline);
 const BlockArbitrary = S.toArbitrary(Block);
 const DocumentArbitrary = S.toArbitrary(Document);
+const FootnoteIdentifierArbitrary = S.toArbitrary(FootnoteIdentifier);
 const SafeDocumentArbitrary = S.toArbitrary(SafeDocument);
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform behavior remains covered until removal.
@@ -307,6 +320,44 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     expect(Result.isSuccess(safe)).toBe(true);
     expect(() => renderSafeHtml(Result.getOrThrow(safe))).not.toThrow();
   });
+
+  it("rejects duplicate footnote definitions recursively at their exact paths", () => {
+    const document = Md.make([
+      Md.footnoteDef("duplicate", "Top level"),
+      Md.blockquote([Md.ul([Md.li(Md.footnoteDef("duplicate", "Nested list"))])]),
+      Md.footnoteDef("container", [Md.footnoteDef("duplicate", "Nested definition")]),
+      Md.admonition("note", [Md.footnoteDef("duplicate", "Nested admonition")]),
+    ]);
+    const duplicateIssues = documentSafetyIssues(document).filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
+
+    expect(duplicateIssues).toMatchObject([
+      { identifier: "duplicate", path: ["children", 0, "identifier"] },
+      {
+        identifier: "duplicate",
+        path: ["children", 1, "children", 0, "children", 0, "children", 0, "identifier"],
+      },
+      { identifier: "duplicate", path: ["children", 2, "children", 0, "identifier"] },
+      { identifier: "duplicate", path: ["children", 3, "children", 0, "identifier"] },
+    ]);
+    expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+
+    const unique = refineSafeDocument(Md.make([Md.footnoteDef("first", "One"), Md.footnoteDef("second", "Two")]));
+    expect(Result.isSuccess(unique)).toBe(true);
+    expect(() => renderSafeHtml(Result.getOrThrow(unique))).not.toThrow();
+  });
+
+  it("rejects every schema-derived duplicate footnote identifier", () =>
+    fc.assert(
+      fc.property(FootnoteIdentifierArbitrary, (identifier) => {
+        const document = Md.make([Md.footnoteDef(identifier, "One"), Md.footnoteDef(identifier, "Two")]);
+        const duplicateIssues = documentSafetyIssues(document).filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
+
+        expect(duplicateIssues).toHaveLength(2);
+        expect(duplicateIssues.every((issue) => issue.identifier === identifier)).toBe(true);
+        expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+      }),
+      fcRuns(100)
+    ));
 
   it("renders every schema-derived SafeDocument without failing", () =>
     fc.assert(

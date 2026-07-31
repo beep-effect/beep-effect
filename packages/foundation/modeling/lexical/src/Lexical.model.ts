@@ -31,6 +31,10 @@ import type * as AST from "effect/SchemaAST";
 const $I = $LexicalSchemaId.create("Lexical.model");
 type MdYouTubeVideoId = typeof Md.YouTubeVideoId.Type;
 
+const strictSemanticParseOptions = {
+  onExcessProperty: "error",
+} satisfies AST.ParseOptions;
+
 const artifactRefIdPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
 const decodeYouTubeVideoId = S.decodeUnknownEffect(Md.YouTubeVideoId);
 
@@ -2464,6 +2468,7 @@ export const LexicalNode = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("LexicalNode", {
     description: "The tagged union of all v1 serialized Lexical nodes, discriminated by Lexical's own type key.",
+    parseOptions: strictSemanticParseOptions,
   }),
   SchemaUtils.withCodecStatics
 );
@@ -2643,6 +2648,7 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
   },
   $I.annote("SerializedEditorState", {
     description: "The runtime-compatible serialized Lexical editor state envelope with a non-empty root.",
+    parseOptions: strictSemanticParseOptions,
   })
 ) {
   /**
@@ -3043,9 +3049,7 @@ const losslessEditorStateDecodeError = LexicalDecodeError.new(
 export const decodeEditorStateStrictResult = (
   input: unknown
 ): Result.Result<SerializedEditorState, LexicalDecodeError> =>
-  decodeStrictEditorStateResult(input, { onExcessProperty: "error" }).pipe(
-    Result.mapError(strictEditorStateDecodeError)
-  );
+  decodeStrictEditorStateResult(input).pipe(Result.mapError(strictEditorStateDecodeError));
 
 /**
  * Decodes an unknown payload into the supported strict semantic editor state.
@@ -3127,7 +3131,7 @@ export const analyzeEditorStateCompatibilityResult = (
   decodeLosslessEditorStateResult(input).pipe(
     Result.mapError(losslessEditorStateDecodeError),
     Result.map((wire) =>
-      Result.match(inspectStrictEditorState(wire, { onExcessProperty: "error" }), {
+      Result.match(inspectStrictEditorState(wire), {
         onFailure: (error) =>
           LexicalCompatibilityResult.make({
             issues: [LexicalCompatibilityIssue.make({ message: error.message })],
@@ -3183,5 +3187,6 @@ export const analyzeEditorStateCompatibility = (
 export const EditorStateFromJson = S.fromJsonString(SerializedEditorState).pipe(
   $I.annoteSchema("EditorStateFromJson", {
     description: "Serialized Lexical editor state codec over its JSON string wire form.",
+    parseOptions: strictSemanticParseOptions,
   })
 );

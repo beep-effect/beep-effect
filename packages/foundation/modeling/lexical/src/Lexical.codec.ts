@@ -552,7 +552,12 @@ const tableHasHeaderRow = (node: TableNode): boolean =>
   pipe(
     node.children,
     A.findFirst(TableRowNode.is),
-    O.map((row) => A.some(row.children, (child) => TableCellNode.is(child) && child.headerState !== noTableCellHeader)),
+    O.map((row) =>
+      A.some(
+        row.children,
+        (child) => TableCellNode.is(child) && (child.headerState & rowTableCellHeader) !== noTableCellHeader
+      )
+    ),
     O.getOrElse(() => false)
   );
 
