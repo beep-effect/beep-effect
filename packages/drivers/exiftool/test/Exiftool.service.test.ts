@@ -110,7 +110,7 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
   );
 
 describe("@beep/exiftool service", () => {
-  it(
+  it.effect(
     "reports the exiftool version through the fake child-process layer",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -126,7 +126,7 @@ describe("@beep/exiftool service", () => {
     })
   );
 
-  it(
+  it.effect(
     "reads tags into cleaned metadata with the -config file first",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -187,7 +187,7 @@ describe("@beep/exiftool service", () => {
     })
   );
 
-  it(
+  it.effect(
     "writes tags temp-then-commit without leaving staging behind",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -226,7 +226,7 @@ describe("@beep/exiftool service", () => {
     })
   );
 
-  it(
+  it.effect(
     "embeds provenance packets through the write-tags path",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -262,7 +262,7 @@ describe("@beep/exiftool service", () => {
     })
   );
 
-  it(
+  it.effect(
     "refuses unwritable extensions before spawning and points at FFmpeg",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -300,7 +300,7 @@ describe("@beep/exiftool service", () => {
     })
   );
 
-  it(
+  it.effect(
     "normalizes failed exiftool exits into ExiftoolError",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
