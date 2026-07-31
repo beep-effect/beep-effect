@@ -265,7 +265,7 @@ export type WitnessScriptBody = typeof WitnessScriptBody.Type;
  * import { QaCollectorApiGroup } from "@beep/qa-capture"
  * console.log(QaCollectorApiGroup.identifier)
  * ```
- * @category api
+ * @category protocols
  * @since 0.0.0
  */
 export const QaCollectorApiGroup = HttpApiGroup.make("collector")
@@ -283,7 +283,7 @@ export const QaCollectorApiGroup = HttpApiGroup.make("collector")
  * import { QaCollectorApi } from "@beep/qa-capture"
  * console.log(QaCollectorApi.identifier)
  * ```
- * @category api
+ * @category protocols
  * @since 0.0.0
  */
 export const QaCollectorApi = HttpApi.make("QaCollectorApi").add(QaCollectorApiGroup);

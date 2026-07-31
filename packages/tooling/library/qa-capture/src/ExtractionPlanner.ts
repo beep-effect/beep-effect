@@ -192,7 +192,7 @@ const distancePx = (down: PointerDownEvent, x: number, y: number): number => Mat
  * )
  * console.log(windows.length)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const planWindows: {
@@ -435,7 +435,7 @@ const mergeTwo = (kept: ExtractionWindow, next: ExtractionWindow): ExtractionWin
  * const result = mergeOverlappingWindows([])
  * console.log(result.windows.length)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>): WindowFitResult => {
@@ -496,7 +496,7 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
  * )
  * console.log(bytes)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const estimateWindowBytes: {
@@ -581,7 +581,7 @@ export class BudgetFitResult extends S.Class<BudgetFitResult>($I`BudgetFitResult
  * const result = applyBudget([], ArtifactBudget.make({}))
  * console.log(result.estimatedTotalBytes)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const applyBudget: {
@@ -737,7 +737,7 @@ export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptio
  * )
  * console.log(plan.windows.length)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const buildExtractionPlan = (options: BuildExtractionPlanOptions): ExtractionPlan => {
@@ -772,7 +772,7 @@ export const buildExtractionPlan = (options: BuildExtractionPlanOptions): Extrac
  * )
  * console.log(toVideo(1753838001500))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const epochToVideoSeconds: {
@@ -917,7 +917,7 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  * )
  * console.log(requests.length)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const planDriverRequests = (options: PlanDriverRequestsOptions): ReadonlyArray<QaDriverRequest> => {

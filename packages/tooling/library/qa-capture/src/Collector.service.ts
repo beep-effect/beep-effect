@@ -15,7 +15,7 @@
 import { $QaCaptureId } from "@beep/identity/packages";
 import { SchemaUtils, UnknownRecord } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { BunHttpServer } from "@effect/platform-bun";
+import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
 import * as S from "effect/Schema";
 import { HttpMiddleware, HttpRouter, HttpServer } from "effect/unstable/http";

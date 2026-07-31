@@ -114,7 +114,7 @@ export class BeaconEdge extends S.Class<BeaconEdge>($I`BeaconEdge`)(
  * ])
  * console.log(edges.length)
  * ```
- * @category correlation
+ * @category utilities
  * @since 0.0.0
  */
 export const detectBeaconEdges = (
@@ -166,7 +166,7 @@ const byEdgeTime = Order.mapInput(Order.Number, (edge: BeaconEdge) => edge.timeS
  * const sync = fitBeaconClockSync([BeaconEdge.make({ timeSeconds: 0.4, toWhite: true })], [])
  * console.log(sync)
  * ```
- * @category correlation
+ * @category utilities
  * @since 0.0.0
  */
 export const fitBeaconClockSync: {
