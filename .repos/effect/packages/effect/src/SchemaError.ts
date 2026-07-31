@@ -22,15 +22,14 @@ const TypeId = "~effect/SchemaError/SchemaError"
  *
  * **Example** (Catching a SchemaError)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema } from "effect"
  *
  * try {
  *   Schema.decodeUnknownSync(Schema.Number)("not a number")
  * } catch (err) {
  *   if (Schema.isSchemaError(err)) {
- *     console.log(err.message)
- *     // Expected number, actual "not a number"
+ *     err.message // => "Expected number, got \"not a number\""
  *   }
  * }
  * ```

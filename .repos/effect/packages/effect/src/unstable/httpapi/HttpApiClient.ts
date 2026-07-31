@@ -629,7 +629,7 @@ export const endpoint = <
  *
  * **Example** (Building typed URLs)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema } from "effect"
  * import { HttpApi, HttpApiClient, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi"
  *
@@ -647,8 +647,7 @@ export const endpoint = <
  *
  * buildUrl.users.getUser({
  *   params: { id: "123" }
- * })
- * //=> "https://api.example.com/users/123"
+ * }) // => "https://api.example.com/users/123"
  * ```
  *
  * @category constructors

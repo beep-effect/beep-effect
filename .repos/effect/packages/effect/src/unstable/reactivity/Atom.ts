@@ -1522,12 +1522,13 @@ export const setLazy: {
  *
  * **Example** (Comparing values structurally)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Atom } from "effect/unstable/reactivity"
  *
  * const point = Atom.make({ x: 0, y: 0 }).pipe(
  *   Atom.withEquality<{ x: number; y: number }>((a, b) => a.x === b.x && a.y === b.y)
  * )
+ * point.equals({ x: 1, y: 2 }, { x: 1, y: 2 }) // => true
  * ```
  *
  * @category combinators
