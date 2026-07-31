@@ -2,6 +2,8 @@ import {
   CaptureSession,
   ClockSync,
   CollectorHandle,
+  encodeActionEventJson,
+  MarkerEvent,
   RoundNumber,
   SessionId,
   SessionManifest,
@@ -11,6 +13,7 @@ import {
 import {
   crossCheckAgainstRound,
   isCrossCheckClean,
+  QaFindingId,
   QaInventory,
   QaJudgeIngestOptions,
   QaJudgeLintOptions,
@@ -31,6 +34,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const QaLayer = SessionStore.layer.pipe(Layer.provideMerge(PlatformLayer));
@@ -75,14 +79,18 @@ const prepareRound = Effect.fnUntraced(function* (cwd: string, round: number) {
   const qaRoot = path.join(cwd, ".beep", "qa");
   const layout = yield* store.prepareRound(qaRoot, RoundNumber.make(round));
   yield* store.writeSessionManifest(layout, manifestFor(round));
-  const event = JSON.stringify({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 });
+  const event = yield* encodeActionEventJson(
+    MarkerEvent.make({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 })
+  );
   yield* fs.writeFileString(layout.eventsPath, `${event}\n`);
   return { layout, qaRoot };
 });
 
-const inventoryText = (round: number) => {
-  const fence = "`".repeat(3);
-  const body = JSON.stringify({
+const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const fence = "`".repeat(3);
+
+const inventoryText = Effect.fnUntraced(function* (round: number) {
+  const body = yield* encodeJson({
     findings: [],
     judge: { effort: "high", model: "gpt-5.6-sol" },
     requiredCount: 0,
@@ -91,7 +99,7 @@ const inventoryText = (round: number) => {
     sessionRef: "session.json",
   });
   return `judge narration\n${fence}json\n${body}\n${fence}\n`;
-};
+});
 
 describe("commands/Qa round resolution", () => {
   it("resolves an explicit --round without touching the filesystem", () =>
@@ -125,29 +133,33 @@ describe("commands/Qa round resolution", () => {
       )
     ));
 
-  it("fails an existing-round command when nothing has been recorded", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          const path = yield* Path.Path;
-          return yield* resolveExistingRound(path.join(cwd, ".beep", "qa"), O.none());
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails an existing-round command when nothing has been recorded", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            const path = yield* Path.Path;
+            return yield* resolveExistingRound(path.join(cwd, ".beep", "qa"), O.none());
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("rejects a non-positive explicit round", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          const path = yield* Path.Path;
-          return yield* resolveRound(path.join(cwd, ".beep", "qa"), O.some(0));
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects a non-positive explicit round", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            const path = yield* Path.Path;
+            return yield* resolveRound(path.join(cwd, ".beep", "qa"), O.some(0));
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa live-session control", () => {
@@ -178,17 +190,19 @@ describe("commands/Qa live-session control", () => {
       )
     ));
 
-  it("fails when no collector handle is live", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          const path = yield* Path.Path;
-          return yield* requireLiveHandle(path.join(cwd, ".beep", "qa"));
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails when no collector handle is live", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            const path = yield* Path.Path;
+            return yield* requireLiveHandle(path.join(cwd, ".beep", "qa"));
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa evidence cross-check against a round", () => {
@@ -200,11 +214,12 @@ describe("commands/Qa evidence cross-check against a round", () => {
           const inventory = QaInventory.make({
             findings: [
               {
-                evidence: [{ eventIds: [1, 999], kind: "strip", path: "frames/ghost.png" }],
+                evidence: [{ eventIds: [1, 999], frameRange: O.none(), kind: "strip", path: "frames/ghost.png" }],
                 fix: "fix it",
-                id: "R1-01",
+                id: QaFindingId.make("R1-01"),
                 lens: "selection-smear",
                 repro: "drag the sash",
+                resolvedInRound: O.none(),
                 severity: "P0",
                 title: "ghost evidence",
               },
@@ -237,11 +252,12 @@ describe("commands/Qa evidence cross-check against a round", () => {
           const inventory = QaInventory.make({
             findings: [
               {
-                evidence: [{ eventIds: [1], kind: "strip", path: "frames/real.png" }],
+                evidence: [{ eventIds: [1], frameRange: O.none(), kind: "strip", path: "frames/real.png" }],
                 fix: "fix it",
-                id: "R1-01",
+                id: QaFindingId.make("R1-01"),
                 lens: "selection-smear",
                 repro: "drag the sash",
+                resolvedInRound: O.none(),
                 severity: "P2",
                 title: "backed evidence",
               },
@@ -287,17 +303,19 @@ describe("commands/Qa report command", () => {
       )
     ));
 
-  it("fails when the requested --session directory is not a round directory", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          yield* prepareRound(cwd, 1);
-          return yield* runQaReport(cwd, QaReportOptions.make({ session: O.some(cwd) }));
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails when the requested --session directory is not a round directory", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            yield* prepareRound(cwd, 1);
+            return yield* runQaReport(cwd, QaReportOptions.make({ session: O.some(cwd) }));
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa judge ingest and lint", () => {
@@ -309,7 +327,7 @@ describe("commands/Qa judge ingest and lint", () => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, inventoryText(1));
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
 
           const inventory = yield* runQaJudgeIngest(
             cwd,
@@ -332,7 +350,7 @@ describe("commands/Qa judge ingest and lint", () => {
           const path = yield* Path.Path;
           yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, inventoryText(1));
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
 
           yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
@@ -340,72 +358,77 @@ describe("commands/Qa judge ingest and lint", () => {
       )
     ));
 
-  it("fails judge-lint when the round has no inventory yet", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          yield* prepareRound(cwd, 1);
-          return yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails judge-lint when the round has no inventory yet", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            yield* prepareRound(cwd, 1);
+            return yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("refuses an inventory citing evidence the round cannot back up", async () => {
-    const fence = "`".repeat(3);
-    const dirty = JSON.stringify({
-      findings: [
-        {
-          evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
-          fix: "fix it",
-          id: "R1-01",
-          lens: "selection-smear",
-          repro: "drag the sash",
-          severity: "P0",
-          title: "ghost evidence",
-        },
-      ],
-      judge: { effort: "high", model: "gpt-5.6-sol" },
-      requiredCount: 1,
-      round: 1,
-      schemaVersion: "qa-inventory/v1",
-      sessionRef: "session.json",
-    });
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* prepareRound(cwd, 1);
-          const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, `${fence}json\n${dirty}\n${fence}\n`);
-          return yield* runQaJudgeIngest(
-            cwd,
-            QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
-          );
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("refuses an inventory citing evidence the round cannot back up", () =>
+    Effect.gen(function* () {
+      const dirty = yield* encodeJson({
+        findings: [
+          {
+            evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
+            fix: "fix it",
+            id: "R1-01",
+            lens: "selection-smear",
+            repro: "drag the sash",
+            severity: "P0",
+            title: "ghost evidence",
+          },
+        ],
+        judge: { effort: "high", model: "gpt-5.6-sol" },
+        requiredCount: 1,
+        round: 1,
+        schemaVersion: "qa-inventory/v1",
+        sessionRef: "session.json",
+      });
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* prepareRound(cwd, 1);
+            const transcript = path.join(cwd, "judge-stdout.txt");
+            yield* fs.writeFileString(transcript, `${fence}json\n${dirty}\n${fence}\n`);
+            return yield* runQaJudgeIngest(
+              cwd,
+              QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
+            );
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("fails ingest when the judge transcript carries no fenced inventory", async () => {
-    const exit = await Effect.runPromiseExit(
-      withTempCwd(
-        Effect.fnUntraced(function* (cwd) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* prepareRound(cwd, 1);
-          const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, "the judge forgot to emit json");
-          return yield* runQaJudgeIngest(
-            cwd,
-            QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
-          );
-        })
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails ingest when the judge transcript carries no fenced inventory", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        withTempCwd(
+          Effect.fnUntraced(function* (cwd) {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* prepareRound(cwd, 1);
+            const transcript = path.join(cwd, "judge-stdout.txt");
+            yield* fs.writeFileString(transcript, "the judge forgot to emit json");
+            return yield* runQaJudgeIngest(
+              cwd,
+              QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
+            );
+          })
+        )
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });

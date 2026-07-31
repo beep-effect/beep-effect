@@ -8,6 +8,7 @@ import {
   DroppedWindow,
   ExtractionPlan,
   ExtractionWindow,
+  encodeActionEventJson,
   FocusInEvent,
   FocusOutEvent,
   GifSpec,
@@ -43,6 +44,7 @@ import {
   parseJudgeOutput,
   portlessUrlForApp,
   QaEventLog,
+  QaFindingId,
   QaInventory,
   QaJudgeRef,
   QaProbe,
@@ -74,6 +76,8 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import type { ActionEvent } from "@beep/qa-capture";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer));
@@ -97,6 +101,8 @@ const layoutFor = (root: string): RoundLayout =>
     sheetsDir: `${root}/sheets`,
     videoDir: `${root}/video`,
   });
+
+const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
 const clock = ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 4, slope: 1 });
 
@@ -138,34 +144,37 @@ describe("commands/Qa Qa.session pure helpers", () => {
       )
     ));
 
-  it("fails when neither --url nor --app is supplied", async () => {
-    const exit = await Effect.runPromiseExit(
-      resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails when neither --url nor --app is supplied", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("fails when the supplied --url is not absolute", async () => {
-    const exit = await Effect.runPromiseExit(
-      resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails when the supplied --url is not absolute", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa path helpers", () => {
-  it("derives every round-relative artifact path from one layout", () =>
-    Effect.runPromise(
-      Effect.fnUntraced(function* () {
-        const path = yield* Path.Path;
-        const layout = layoutFor("/repo/.beep/qa/round-1");
-        expect(qaRootPath(path, "/repo")).toBe("/repo/.beep/qa");
-        expect(recordHintPath(path, layout)).toBe("/repo/.beep/qa/round-1/video/record-hint.json");
-        expect(inventoryJsonPath(path, layout)).toContain("round-1");
-        expect(extractionPlanPath(path, layout)).toContain("extraction-plan.json");
-        expect(artifactBudgetPath(path, layout)).toContain("artifact-budget.json");
-      })().pipe(Effect.provide(NodePath.layer))
-    ));
+  it.effect("derives every round-relative artifact path from one layout", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const layout = layoutFor("/repo/.beep/qa/round-1");
+      expect(qaRootPath(path, "/repo")).toBe("/repo/.beep/qa");
+      expect(recordHintPath(path, layout)).toBe("/repo/.beep/qa/round-1/video/record-hint.json");
+      expect(inventoryJsonPath(path, layout)).toContain("round-1");
+      expect(extractionPlanPath(path, layout)).toContain("extraction-plan.json");
+      expect(artifactBudgetPath(path, layout)).toContain("artifact-budget.json");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
 });
 
 describe("commands/Qa Qa.session filesystem helpers", () => {
@@ -186,7 +195,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const eventsPath = `${dir}/events.ndjson`;
-          const good = JSON.stringify({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 });
+          const good = yield* encodeActionEventJson(marker("scenario:one", 1, 1754000000000));
           yield* fs.writeFileString(eventsPath, `${good}\n{"kind":"nonsense"}\n\n`);
           const log = yield* readEventLog(eventsPath);
           expect(log.events.length).toBe(1);
@@ -267,7 +276,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
           const manifestPath = `${dir}/manifest.json`;
           yield* fs.writeFileString(
             manifestPath,
-            JSON.stringify({
+            yield* encodeJson({
               scenarios: [{ assertions: [], name: "dock drag", notes: ["watch the sash"], screenshots: [] }],
             })
           );
@@ -287,7 +296,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
           const manifestPath = `${dir}/manifest.json`;
           yield* fs.writeFileString(
             manifestPath,
-            JSON.stringify({
+            yield* encodeJson({
               scenarios: [
                 {
                   assertions: [
@@ -452,7 +461,7 @@ describe("commands/Qa report warnings without a plan", () => {
 });
 
 describe("commands/Qa JudgePack timeline rendering", () => {
-  const options = (events: ReadonlyArray<ReturnType<typeof marker>>) =>
+  const options = (events: ReadonlyArray<ActionEvent>) =>
     RenderTimelineOptions.make({
       clockSync: clock,
       eventLog: QaEventLog.make({ events, rejectedCount: 0 }),
@@ -564,13 +573,14 @@ describe("commands/Qa JudgeCheck citation collection", () => {
     findings: [
       {
         evidence: [
-          { eventIds: [1, 2], kind: "strip", path: "frames/a.png" },
-          { eventIds: [2], kind: "strip", path: "frames/a.png" },
+          { eventIds: [1, 2], frameRange: O.none(), kind: "strip", path: "frames/a.png" },
+          { eventIds: [2], frameRange: O.none(), kind: "strip", path: "frames/a.png" },
         ],
         fix: "fix it",
-        id: "R1-01",
+        id: QaFindingId.make("R1-01"),
         lens: "selection-smear",
         repro: "drag",
+        resolvedInRound: O.none(),
         severity: "P0",
         title: "smear",
       },
@@ -593,7 +603,7 @@ describe("commands/Qa JudgeCheck citation collection", () => {
         {
           evidence: [{ eventIds: [11, 12], frameRange: O.some([3, 7]), kind: "strip", path: "frames/drag.png" }],
           fix: "clamp the ghost",
-          id: "R2-01",
+          id: QaFindingId.make("R2-01"),
           lens: "drag-ghost",
           repro: "drag the sash",
           resolvedInRound: O.some(3),
@@ -613,41 +623,46 @@ describe("commands/Qa JudgeCheck citation collection", () => {
     expect(markdown).toContain("frames/drag.png");
   });
 
-  it("passes a clean cross-check and fails a dirty one", async () => {
-    const clean = await Effect.runPromiseExit(
-      raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))
-    );
-    expect(Exit.isSuccess(clean)).toBe(true);
-    const dirty = await Effect.runPromiseExit(
-      raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [9], missingPaths: [] }))
-    );
-    expect(Exit.isFailure(dirty)).toBe(true);
-  });
+  it.effect("passes a clean cross-check and fails a dirty one", () =>
+    Effect.gen(function* () {
+      const clean = yield* Effect.exit(
+        raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))
+      );
+      expect(Exit.isSuccess(clean)).toBe(true);
+      const dirty = yield* Effect.exit(
+        raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [9], missingPaths: [] }))
+      );
+      expect(Exit.isFailure(dirty)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa judge output parsing", () => {
   const fence = "`".repeat(3);
-  const body = JSON.stringify({
+  const inventoryBody = {
     findings: [],
     judge: { effort: "high", model: "gpt-5.6-sol" },
     requiredCount: 0,
     round: 3,
     schemaVersion: "qa-inventory/v1",
     sessionRef: "session.json",
-  });
+  };
 
-  it("parses the last fenced block out of narrated judge output", () =>
-    Effect.runPromise(
-      Effect.map(parseJudgeOutput(`thinking out loud\n${fence}json\n${body}\n${fence}\n`), (inventory) => {
-        expect(inventory.round).toBe(3);
-        expect(inventory.requiredCount).toBe(0);
-      })
-    ));
+  it.effect("parses the last fenced block out of narrated judge output", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeJson(inventoryBody);
+      const inventory = yield* parseJudgeOutput(`thinking out loud\n${fence}json\n${body}\n${fence}\n`);
+      expect(inventory.round).toBe(3);
+      expect(inventory.requiredCount).toBe(0);
+    })
+  );
 
-  it("fails when the output carries no fenced block", async () => {
-    const exit = await Effect.runPromiseExit(parseJudgeOutput("no json here"));
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("fails when the output carries no fenced block", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(parseJudgeOutput("no json here"));
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 describe("commands/Qa harness environment", () => {
