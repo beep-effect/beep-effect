@@ -234,9 +234,6 @@ const dispositionLabel = (disposition: O.Option<ContradictionDisposition>): stri
       ),
   });
 
-const candidateSummary = (candidate: ContradictionTriage.ContradictionCandidateView["candidate"]): O.Option<string> =>
-  O.map(A.head(candidate.assessment.proposals), (proposal) => proposal.rationale);
-
 const reviewDisposition = (
   result: ComparisonPaneProps["reviewResult"],
   candidateId: ContradictionCandidateId,
@@ -411,7 +408,6 @@ function QueueRow({
   readonly selected: boolean;
 }): JSX.Element {
   const { candidate } = item;
-  const summary = candidateSummary(candidate);
 
   return (
     <Button
@@ -427,18 +423,18 @@ function QueueRow({
           <span
             className="line-clamp-2 min-w-0 text-sm font-medium"
             data-testid="contradiction-candidate-summary"
-            title={O.getOrElse(summary, () => candidate.candidateKey)}
+            title={candidate.summary}
           >
-            {O.getOrElse(summary, () => shortDigest(candidate.candidateKey))}
+            {candidate.summary}
           </span>
           <Badge variant={O.isNone(item.disposition) ? "outline" : "secondary"}>
             {dispositionLabel(item.disposition)}
           </Badge>
         </span>
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-          <span>{candidate.matchBasis.kind}</span>
+          <span>{candidate.kind}</span>
           <span aria-hidden="true">·</span>
-          <span>{confidencePercent(candidate.assessment.confidence)} confidence</span>
+          <span>{confidencePercent(candidate.confidence)} confidence</span>
           <span aria-hidden="true">·</span>
           <span>row v{candidate.rowVersion}</span>
         </span>
@@ -447,11 +443,8 @@ function QueueRow({
             {shortDigest(candidate.candidateKey)}
           </span>
           <span aria-hidden="true">·</span>
-          <span
-            className="min-w-0 truncate"
-            title={`${candidate.matchBasis.detector}@${candidate.matchBasis.detectorVersion}`}
-          >
-            {candidate.matchBasis.detector}@{candidate.matchBasis.detectorVersion}
+          <span className="min-w-0 truncate" title={`${candidate.detector}@${candidate.detectorVersion}`}>
+            {candidate.detector}@{candidate.detectorVersion}
           </span>
         </span>
       </span>

@@ -26,6 +26,7 @@ export {
  */
 export {
   ContradictionCandidatePage,
+  ContradictionCandidateSummary,
   ContradictionCandidateView,
 } from "./ContradictionTriage.ports.ts";
 /**

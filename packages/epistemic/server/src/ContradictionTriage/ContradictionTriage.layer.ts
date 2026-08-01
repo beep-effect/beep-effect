@@ -100,31 +100,40 @@ const anchorSourceActionReason = (error: SourceTextResolverError): Contradiction
     Match.orElse(() => sourceActionReason(error))
   );
 
-const toEvidenceView = (detail: ContradictionEvidenceDetail): ContradictionEvidenceView =>
-  ContradictionEvidenceView.make({
-    evidence: detail.evidence,
-    verifiedAnchor: O.map(detail.latestVerification, (verification) => verification.verifiedAnchor),
-  });
+const toEvidenceView =
+  (sourceScopeRef: ContradictionReviewScope["Service"]["sourceScopeRef"]) =>
+  (detail: ContradictionEvidenceDetail): ContradictionEvidenceView =>
+    ContradictionEvidenceView.make({
+      evidence: detail.evidence,
+      verifiedAnchor: pipe(
+        detail.latestVerification,
+        O.filter((verification) => Eq.equals(verification.verifiedAnchor.source.scopeRef, sourceScopeRef)),
+        O.map((verification) => verification.verifiedAnchor)
+      ),
+    });
 
-const toCandidateDetailView = (expanded: ContradictionCandidateExpandedDetail): ContradictionCandidateDetailView =>
-  ContradictionCandidateDetailView.make({
-    candidate: expanded.candidate,
-    disposition: expanded.disposition,
-    left: ContradictionBeliefView.make({
-      belief: expanded.left.belief,
-      evidence: A.map(expanded.left.evidence, toEvidenceView),
-    }),
-    right: ContradictionBeliefView.make({
-      belief: expanded.right.belief,
-      evidence: A.map(expanded.right.evidence, toEvidenceView),
-    }),
-  });
+const toCandidateDetailView =
+  (sourceScopeRef: ContradictionReviewScope["Service"]["sourceScopeRef"]) =>
+  (expanded: ContradictionCandidateExpandedDetail): ContradictionCandidateDetailView =>
+    ContradictionCandidateDetailView.make({
+      candidate: expanded.candidate,
+      disposition: expanded.disposition,
+      left: ContradictionBeliefView.make({
+        belief: expanded.left.belief,
+        evidence: A.map(expanded.left.evidence, toEvidenceView(sourceScopeRef)),
+      }),
+      right: ContradictionBeliefView.make({
+        belief: expanded.right.belief,
+        evidence: A.map(expanded.right.evidence, toEvidenceView(sourceScopeRef)),
+      }),
+    });
 
 const loadExpandedCandidate = Effect.fnUntraced(function* (
   repository: ContradictionTriageRepository["Service"],
   candidateId: GetContradictionCandidate["candidateId"],
   knownAt: GetContradictionCandidate["knownAt"],
   orgId: ContradictionReviewScope["Service"]["orgId"],
+  sourceScopeRef: ContradictionReviewScope["Service"]["sourceScopeRef"],
   validAt: GetContradictionCandidate["validAt"],
   context: string
 ) {
@@ -134,6 +143,7 @@ const loadExpandedCandidate = Effect.fnUntraced(function* (
         candidateId,
         knownAt,
         orgId,
+        sourceScopeRef,
         validAt,
       })
     )
@@ -213,10 +223,11 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
         candidateId,
         knownAt,
         scope.orgId,
+        scope.sourceScopeRef,
         validAt,
         "GetContradictionCandidate"
       ).pipe(
-        Effect.map(toCandidateDetailView),
+        Effect.map(toCandidateDetailView(scope.sourceScopeRef)),
         Effect.tap(() => Effect.annotateCurrentSpan("epistemic.contradiction.outcome", "found")),
         Effect.tapError((error) =>
           Effect.annotateCurrentSpan({
@@ -268,6 +279,7 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
           candidateId,
           knownAt,
           scope.orgId,
+          scope.sourceScopeRef,
           validAt,
           "GetEvidenceSourcePage"
         );

@@ -97,7 +97,7 @@ const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
 
 const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
 
-const verifiedAnchorFor = (scenario: number, label: string) =>
+const verifiedAnchorFor = (scenario: number, label: string, sourceScopeRef = "workspace:1") =>
   TextAnchorVerificationReceipt.make({
     anchor: TextAnchor.make({
       endChar: NonNegativeInt.make(8),
@@ -108,7 +108,7 @@ const verifiedAnchorFor = (scenario: number, label: string) =>
       extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
       locator: PosixPath.make(`sources/${scenario}-${label}.txt`),
       normalizationVersion: "1",
-      scopeRef: "workspace:1",
+      scopeRef: sourceScopeRef,
       sourceDigest: SourceTextDigest.make(`sha256:${digest(`source-${scenario}-${label}`)}`),
       sourceRef: `source:${scenario}:${label}`,
       textDigest: SourceTextDigest.make(`sha256:${digest(`text-${scenario}-${label}`)}`),
@@ -119,11 +119,12 @@ const insertVerification = Effect.fnUntraced(function* (
   scenario: number,
   ordinal: number,
   evidenceRow: EvidenceRow,
-  createdAt: number
+  createdAt: number,
+  sourceScopeRef = "workspace:1"
 ) {
   const db = yield* makeDrizzle();
   const evidence = fromEvidenceRow(evidenceRow);
-  const verifiedAnchor = verifiedAnchorFor(scenario, `${ordinal}`);
+  const verifiedAnchor = verifiedAnchorFor(scenario, `${ordinal}`, sourceScopeRef);
   const manifestationKey = yield* Effect.fromResult(
     EvidenceVerification.manifestationKeyFor(evidence.id, verifiedAnchor)
   );
@@ -406,6 +407,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: first.candidate.id,
               knownAt: instant(1_500),
               orgId: first.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -677,7 +679,7 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
-        "expands exact beliefs with organization-scoped verification as of query transaction time",
+        "expands exact beliefs with organization- and source-scoped verification as of query transaction time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
           const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
@@ -712,12 +714,14 @@ if (!shouldRunPgliteIntegration) {
           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
           const submitted = yield* repository.submit(makeSubmission(106, seeded));
           const selected = yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
+          yield* insertVerification(106, 6, seeded.evidenceA, 1_400, "workspace:2");
 
           const expanded = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
               knownAt: instant(1_500),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -744,6 +748,13 @@ if (!shouldRunPgliteIntegration) {
           ).toStrictEqual(O.some(selected.manifestationKey));
           expect(
             pipe(
+              evidenceA,
+              O.flatMap((detail) => detail.latestVerification),
+              O.map((verification) => verification.verifiedAnchor.source.scopeRef)
+            )
+          ).toStrictEqual(O.some("workspace:1"));
+          expect(
+            pipe(
               evidenceB,
               O.flatMap((detail) => detail.latestVerification)
             )
@@ -760,6 +771,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(1_500),
               orgId: SharedIdentity.OrganizationId.make(2),
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -768,6 +780,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(1_500),
               orgId: SharedIdentity.OrganizationId.make(2),
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -804,6 +817,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(6_000),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -824,12 +838,19 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* ContradictionTriageRepository;
           const submitted = yield* repository.submit(makeSubmission(102, seeded));
 
-          expect(
-            A.some(
-              (yield* repository.list(listQuery("open", 1_500))).items,
-              (item) => item.candidate.id === submitted.candidate.id
-            )
-          ).toBe(true);
+          const openPage = yield* repository.list(listQuery("open", 1_500));
+          const listedCandidate = pipe(
+            openPage.items,
+            A.findFirst((item) => item.candidate.id === submitted.candidate.id),
+            O.map((item) => item.candidate)
+          );
+          expect(O.map(listedCandidate, (candidate) => "assessment" in candidate)).toStrictEqual(O.some(false));
+          expect(O.map(listedCandidate, (candidate) => candidate.summary)).toStrictEqual(
+            O.some(submitted.candidate.assessment.proposals[0].rationale)
+          );
+          expect(O.map(listedCandidate, (candidate) => candidate.confidence)).toStrictEqual(
+            O.some(submitted.candidate.assessment.confidence)
+          );
           yield* TestClock.setTime(2_000);
           const wrongOrganization = yield* Effect.flip(
             repository.review(
@@ -883,6 +904,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(1_999),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -891,6 +913,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -899,6 +922,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(999),
             })
           );
@@ -907,6 +931,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(1_999),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -915,6 +940,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -923,6 +949,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(999),
             })
           );
@@ -992,6 +1019,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(1_500),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );
@@ -1000,6 +1028,7 @@ if (!shouldRunPgliteIntegration) {
               candidateId: submitted.candidate.id,
               knownAt: instant(2_500),
               orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_500),
             })
           );

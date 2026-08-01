@@ -164,7 +164,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         const deadline = yield* requireSome(
           A.findFirst(
             page.items,
-            ({ candidate }) => candidate.matchBasis.detector === "professional-desktop.qa.deadline-conflict"
+            ({ candidate }) => candidate.detector === "professional-desktop.qa.deadline-conflict"
           ),
           "expected deadline contradiction candidate"
         );
@@ -174,6 +174,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
               candidateId: deadline.candidate.id,
               knownAt: instant(1_767_225_610_000),
               orgId: 1,
+              sourceScopeRef: "workspace:1",
               validAt: instant(1_767_225_610_000),
             })
           ),

@@ -16,6 +16,7 @@ import {
   ContradictionReviewReason,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
@@ -330,6 +331,7 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
  *   candidateId: Epistemic.ContradictionCandidateId.make(7),
  *   knownAt: at,
  *   orgId: Shared.OrganizationId.make(1),
+ *   sourceScopeRef: "workspace:1",
  *   validAt: at,
  * })
  *
@@ -352,12 +354,15 @@ export class GetExpandedContradictionCandidate extends S.Class<GetExpandedContra
     orgId: Shared.OrganizationId.annotateKey({
       description: "Authenticated organization allowed to observe the detail.",
     }),
+    sourceScopeRef: SourceTextIdentity.fields.scopeRef.annotateKey({
+      description: "Authenticated source scope allowed to contribute verification metadata.",
+    }),
     validAt: EntitySchema.DateTimeFromMillis.annotateKey({
       description: "Valid-time instant at which contradiction applicability is requested.",
     }),
   },
   $I.annote("GetExpandedContradictionCandidate", {
-    description: "Server-only organization-scoped two-axis query for exact contradiction detail inputs.",
+    description: "Server-only organization- and source-scoped two-axis query for exact contradiction detail inputs.",
   })
 ) {}
 

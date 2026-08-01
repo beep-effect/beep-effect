@@ -13,6 +13,11 @@ import {
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import {
+  ContradictionAssessment,
+  ContradictionMatchBasis,
+  ContradictionResolutionProposal,
+} from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context } from "effect";
@@ -118,6 +123,53 @@ export class ContradictionSubmission extends S.Class<ContradictionSubmission>($I
 ) {}
 
 /**
+ * Bounded contradiction candidate fields required by one queue row.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionCandidateSummary } from "@beep/epistemic-use-cases/public"
+ *
+ * console.log(ContradictionCandidateSummary.fields.summary !== undefined) // true
+ * ```
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export class ContradictionCandidateSummary extends S.Class<ContradictionCandidateSummary>(
+  $I`ContradictionCandidateSummary`
+)(
+  {
+    id: ContradictionCandidate.fields.id.annotateKey({
+      description: "Candidate selected when the reviewer opens this queue row.",
+    }),
+    candidateKey: ContradictionCandidate.fields.candidateKey.annotateKey({
+      description: "Stable duplicate-suppression key displayed as the compact row identity.",
+    }),
+    confidence: ContradictionAssessment.fields.confidence.annotateKey({
+      description: "Bounded detector confidence displayed in the queue row.",
+    }),
+    detector: ContradictionMatchBasis.fields.detector.annotateKey({
+      description: "Bounded detector identity displayed in the queue row.",
+    }),
+    detectorVersion: ContradictionMatchBasis.fields.detectorVersion.annotateKey({
+      description: "Detector semantic version displayed in the queue row.",
+    }),
+    kind: ContradictionMatchBasis.fields.kind.annotateKey({
+      description: "Semantic match-basis kind displayed in the queue row.",
+    }),
+    rowVersion: ContradictionCandidate.fields.rowVersion.annotateKey({
+      description: "Candidate version displayed in the queue row.",
+    }),
+    summary: ContradictionResolutionProposal.fields.rationale.annotateKey({
+      description: "Bounded rationale from the first canonical proposal used as the row summary.",
+    }),
+  },
+  $I.annote("ContradictionCandidateSummary", {
+    description: "Bounded candidate projection returned by paginated queue reads.",
+  })
+) {}
+
+/**
  * Candidate plus its disposition as known at the requested transaction time.
  *
  * @example
@@ -133,15 +185,15 @@ export class ContradictionSubmission extends S.Class<ContradictionSubmission>($I
  */
 export class ContradictionCandidateView extends S.Class<ContradictionCandidateView>($I`ContradictionCandidateView`)(
   {
-    candidate: ContradictionCandidate.annotateKey({
-      description: "Immutable contradiction candidate.",
+    candidate: ContradictionCandidateSummary.annotateKey({
+      description: "Bounded immutable contradiction candidate summary.",
     }),
     disposition: ContradictionDisposition.pipe(S.OptionFromNullOr).annotateKey({
       description: "Disposition visible at the query's knownAt instant, when resolved.",
     }),
   },
   $I.annote("ContradictionCandidateView", {
-    description: "One immutable candidate paired with its bitemporally visible disposition.",
+    description: "One bounded candidate summary paired with its bitemporally visible disposition.",
   })
 ) {}
 

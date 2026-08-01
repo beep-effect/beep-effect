@@ -42,6 +42,7 @@ import {
   ContradictionCandidateDetail,
   ContradictionCandidateExpandedDetail,
   ContradictionCandidatePage,
+  ContradictionCandidateSummary,
   ContradictionCandidateView,
   ContradictionEvidenceDetail,
   ContradictionRepositoryUnavailable,
@@ -90,6 +91,7 @@ const edgeVersionIdEquivalent = S.toEquivalence(BeliefVersionRef.fields.edgeVers
 const proposalIdEquivalent = S.toEquivalence(ContradictionProposalId);
 const proposalById = Order.mapInput(Order.String, (proposal: ContradictionResolutionProposal) => proposal.proposalId);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
+const decodeCandidateSummary = S.decodeUnknownResult(ContradictionCandidateSummary);
 
 const projectEdgeVersionAtKnownAt = (edge: EdgeVersion, knownAt: DateTime.Utc): EdgeVersion =>
   EdgeVersion.make({
@@ -508,7 +510,8 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
           and(
             eq(evidenceVerificationTable.orgId, query.orgId),
             inArray(evidenceVerificationTable.evidenceId, evidenceIds),
-            lte(evidenceVerificationTable.createdAt, knownAt)
+            lte(evidenceVerificationTable.createdAt, knownAt),
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'source' ->> 'scopeRef' = ${query.sourceScopeRef}`
           )
         )
         .orderBy(desc(evidenceVerificationTable.createdAt), desc(evidenceVerificationTable.id))
@@ -583,7 +586,19 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       });
       const where = listWhere(query);
       const rows = yield* db
-        .select({ candidate: candidateTable, disposition: dispositionTable })
+        .select({
+          candidate: {
+            id: candidateTable.id,
+            candidateKey: candidateTable.candidateKey,
+            confidence: sql<number>`(${candidateTable.assessment} ->> 'confidence')::double precision`,
+            detector: sql<string>`${candidateTable.matchBasis} ->> 'detector'`,
+            detectorVersion: sql<string>`${candidateTable.matchBasis} ->> 'detectorVersion'`,
+            kind: sql<string>`${candidateTable.matchBasis} ->> 'kind'`,
+            rowVersion: candidateTable.rowVersion,
+            summary: sql<string>`${candidateTable.assessment} -> 'proposals' -> 0 ->> 'rationale'`,
+          },
+          disposition: dispositionTable,
+        })
         .from(candidateTable)
         .leftJoin(
           dispositionTable,
@@ -612,7 +627,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const items = yield* Effect.forEach(
         rows,
         Effect.fnUntraced(function* ({ candidate, disposition }) {
-          const decodedCandidate = yield* Effect.fromResult(fromContradictionCandidateRow(candidate));
+          const decodedCandidate = yield* Effect.fromResult(decodeCandidateSummary(candidate));
           const decodedDisposition = yield* pipe(
             O.fromNullishOr(disposition),
             O.map((row) => Effect.fromResult(fromContradictionDispositionRow(row))),

@@ -147,6 +147,17 @@ const candidateInput = {
   validTo: null,
 };
 
+const candidateSummaryInput = {
+  id: candidateInput.id,
+  candidateKey: digest,
+  confidence: 0.94,
+  detector: "contract-amount-check",
+  detectorVersion: "0.0.0",
+  kind: "independent-evidence",
+  rowVersion: candidateInput.rowVersion,
+  summary: proposalInput.rationale,
+};
+
 const detail = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionTriage.ContradictionCandidateDetailView)({
     candidate: candidateInput,
@@ -164,7 +175,7 @@ const detail = Result.getOrThrow(
 
 const queuePage = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionTriage.ContradictionCandidatePage)({
-    items: [{ candidate: candidateInput, disposition: null }],
+    items: [{ candidate: candidateSummaryInput, disposition: null }],
     total: 1,
   })
 );

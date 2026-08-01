@@ -396,6 +396,7 @@ if (Str.isEmpty(externalUrl)) {
                   candidateId,
                   knownAt: DateTime.makeUnsafe(2_000),
                   orgId: candidate.orgId,
+                  sourceScopeRef: "workspace:postgres-race",
                   validAt: DateTime.makeUnsafe(2_000),
                 })
               );
@@ -565,6 +566,7 @@ if (Str.isEmpty(externalUrl)) {
                     candidateId: firstId,
                     knownAt: DateTime.makeUnsafe(2_000),
                     orgId: firstCandidate.orgId,
+                    sourceScopeRef: "workspace:postgres-supersession-race",
                     validAt: DateTime.makeUnsafe(2_000),
                   })
                 ),
@@ -573,6 +575,7 @@ if (Str.isEmpty(externalUrl)) {
                     candidateId: secondId,
                     knownAt: DateTime.makeUnsafe(2_000),
                     orgId: secondCandidate.orgId,
+                    sourceScopeRef: "workspace:postgres-supersession-race",
                     validAt: DateTime.makeUnsafe(2_000),
                   })
                 ),
