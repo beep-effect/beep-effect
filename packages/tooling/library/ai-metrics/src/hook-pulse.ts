@@ -1,0 +1,489 @@
+/**
+ * Schema-first hook-pulse ledger contract.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { LiteralKit, NonNegNum } from "@beep/schema";
+import * as O from "@beep/utils/Option";
+import { Effect, SchemaIssue, SchemaTransformation } from "effect";
+import * as Bool from "effect/Boolean";
+import * as Eq from "effect/Equal";
+import * as S from "effect/Schema";
+
+const $I = $RepoAiMetricsId.create("hook-pulse");
+
+/**
+ * Version identifier for hook-pulse ledger records.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseSchemaVersion } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseSchemaVersion.Enum["hook-pulse/v1"])
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseSchemaVersion = LiteralKit(["hook-pulse/v1"]).pipe(
+  $I.annoteSchema("HookPulseSchemaVersion", {
+    description: "Version identifiers accepted by the hook-pulse ledger contract.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseSchemaVersion}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseSchemaVersion } from "@beep/repo-ai-metrics"
+ * const version: HookPulseSchemaVersion = "hook-pulse/v1"
+ * console.log(version)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseSchemaVersion = typeof HookPulseSchemaVersion.Type;
+
+/**
+ * Coding-agent harnesses that can emit hook-pulse records.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseAgentKind } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseAgentKind.Enum["claude-code"])
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli"]).pipe(
+  $I.annoteSchema("HookPulseAgentKind", {
+    description: "Coding-agent harnesses that emit hook-pulse ledger records.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseAgentKind}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseAgentKind } from "@beep/repo-ai-metrics"
+ * const agentKind: HookPulseAgentKind = "codex-cli"
+ * console.log(agentKind)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
+
+/**
+ * Hook events recorded by the sequence-break instrument.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseEvent } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseEvent.Enum.PreToolUse)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseEvent = LiteralKit([
+  "PreToolUse",
+  "PermissionRequest",
+  "PostToolUse",
+  "Notification",
+  "UserPromptSubmit",
+  "Stop",
+  "SessionEnd",
+  "PermissionDenied",
+]).pipe(
+  $I.annoteSchema("HookPulseEvent", {
+    description: "Hook lifecycle events retained by the hook-pulse ledger.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseEvent}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseEvent } from "@beep/repo-ai-metrics"
+ * const hookEvent: HookPulseEvent = "SessionEnd"
+ * console.log(hookEvent)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseEvent = typeof HookPulseEvent.Type;
+
+/**
+ * Experimental role of a hook-pulse emitting session.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseInstrumentClass } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseInstrumentClass.Enum.spike)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseInstrumentClass = LiteralKit(["production", "spike", "meta"]).pipe(
+  $I.annoteSchema("HookPulseInstrumentClass", {
+    description: "Experimental role used to exclude spike and meta sessions from default baselines.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseInstrumentClass}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseInstrumentClass } from "@beep/repo-ai-metrics"
+ * const instrumentClass: HookPulseInstrumentClass = "production"
+ * console.log(instrumentClass)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseInstrumentClass = typeof HookPulseInstrumentClass.Type;
+
+/**
+ * Confidence tier carried by a hook-pulse observation.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseEvidenceTier } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseEvidenceTier.Enum.observed)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseEvidenceTier = LiteralKit(["observed", "derived", "heuristic", "unknown"]).pipe(
+  $I.annoteSchema("HookPulseEvidenceTier", {
+    description: "Weakest-link evidence confidence attached to a hook-pulse record.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseEvidenceTier}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseEvidenceTier } from "@beep/repo-ai-metrics"
+ * const evidenceTier: HookPulseEvidenceTier = "unknown"
+ * console.log(evidenceTier)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
+
+/**
+ * Wait attribution attached to a hook-pulse event.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseWaitReason } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseWaitReason.Enum["plan-approval"])
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseWaitReason = LiteralKit([
+  "plan-approval",
+  "tool-permission",
+  "idle-input",
+  "none",
+  "unknown",
+]).pipe(
+  $I.annoteSchema("HookPulseWaitReason", {
+    description: "Observed or explicitly unknown reason that an agent session is waiting.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseWaitReason}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseWaitReason } from "@beep/repo-ai-metrics"
+ * const waitReason: HookPulseWaitReason = "idle-input"
+ * console.log(waitReason)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseWaitReason = typeof HookPulseWaitReason.Type;
+
+/**
+ * Content-free notification categories retained by the hook-pulse writer.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseNotificationType } from "@beep/repo-ai-metrics"
+ * console.log(HookPulseNotificationType.Enum.idle_prompt)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseNotificationType = LiteralKit(["permission_prompt", "idle_prompt"]).pipe(
+  $I.annoteSchema("HookPulseNotificationType", {
+    description: "Stable notification categories retained without notification message content.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseNotificationType}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseNotificationType } from "@beep/repo-ai-metrics"
+ * const notificationType: HookPulseNotificationType = "permission_prompt"
+ * console.log(notificationType)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseNotificationType = typeof HookPulseNotificationType.Type;
+
+/**
+ * Content-free fields forwarded from a coding-agent hook payload.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseRawEvent } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const rawEvent = S.decodeUnknownEffect(HookPulseRawEvent)({
+ *   session_id: "session-1",
+ *   hook_event_name: "PermissionRequest",
+ *   cwd: "/workspace/beep-effect2",
+ *   tool_name: "ExitPlanMode",
+ *   transcript_path: "/tmp/claude/session-1.jsonl"
+ * })
+ * console.log(rawEvent)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRawEvent`)(
+  {
+    session_id: S.NonEmptyString,
+    hook_event_name: HookPulseEvent,
+    cwd: S.String,
+    tool_name: S.OptionFromOptionalKey(S.String),
+    tool_use_id: S.OptionFromOptionalKey(S.String),
+    prompt_id: S.OptionFromOptionalKey(S.String),
+    transcript_path: S.String,
+    permission_mode: S.OptionFromOptionalKey(S.String),
+    notification_type: S.OptionFromOptionalKey(S.String),
+    duration_ms: S.OptionFromOptionalKey(NonNegNum),
+    reason: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("HookPulseRawEvent", {
+    description: "Whitelisted non-content fields forwarded from a coding-agent hook payload.",
+  })
+) {}
+
+class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPulseRawEventInput`)(
+  {
+    event: HookPulseRawEvent,
+    notifierRev: S.String,
+    instrumentClass: HookPulseInstrumentClass,
+    agentKind: HookPulseAgentKind,
+    evidenceTier: HookPulseEvidenceTier,
+    ts: S.String,
+  },
+  $I.annote("HookPulseRawEventInput", {
+    description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
+  })
+) {}
+
+const derivePermissionWaitReason = (toolName: O.Option<string>): HookPulseWaitReason =>
+  O.match(toolName, {
+    onNone: HookPulseWaitReason.thunk.unknown,
+    onSome: (name) =>
+      Bool.match(Eq.equals(name, "ExitPlanMode"), {
+        onFalse: HookPulseWaitReason.thunk["tool-permission"],
+        onTrue: HookPulseWaitReason.thunk["plan-approval"],
+      }),
+  });
+
+const deriveWaitReason = (event: HookPulseRawEvent): HookPulseWaitReason =>
+  HookPulseEvent.$match(event.hook_event_name, {
+    PreToolUse: HookPulseWaitReason.thunk.none,
+    PermissionRequest: () => derivePermissionWaitReason(event.tool_name),
+    PostToolUse: HookPulseWaitReason.thunk.none,
+    Notification: () =>
+      Bool.match(O.exists(event.notification_type, HookPulseNotificationType.is.idle_prompt), {
+        onFalse: HookPulseWaitReason.thunk.unknown,
+        onTrue: HookPulseWaitReason.thunk["idle-input"],
+      }),
+    UserPromptSubmit: HookPulseWaitReason.thunk.none,
+    Stop: HookPulseWaitReason.thunk.none,
+    SessionEnd: HookPulseWaitReason.thunk.none,
+    PermissionDenied: HookPulseWaitReason.thunk.none,
+  });
+
+const isHookPulseNotificationType = S.is(HookPulseNotificationType);
+
+/**
+ * Privacy-safe, schema-versioned record emitted once per coding-agent hook event.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseV1 } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const pulse = S.decodeUnknownEffect(HookPulseV1)({
+ *   schemaVersion: "hook-pulse/v1",
+ *   ts: "2026-08-01T06:40:07.000Z",
+ *   sessionId: "session-1",
+ *   agentKind: "claude-code",
+ *   hookEvent: "PermissionRequest",
+ *   cwd: "/workspace/beep-effect2",
+ *   notifierRev: "spike-0",
+ *   instrumentClass: "spike",
+ *   evidenceTier: "observed",
+ *   waitReason: "plan-approval",
+ *   toolName: "ExitPlanMode"
+ * })
+ * console.log(pulse)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
+  {
+    schemaVersion: HookPulseSchemaVersion,
+    ts: S.DateTimeUtcFromString,
+    sessionId: S.NonEmptyString,
+    agentKind: HookPulseAgentKind,
+    hookEvent: HookPulseEvent,
+    cwd: S.String,
+    notifierRev: S.String,
+    instrumentClass: HookPulseInstrumentClass,
+    evidenceTier: HookPulseEvidenceTier,
+    waitReason: HookPulseWaitReason,
+    toolName: S.OptionFromOptionalKey(S.String),
+    toolUseId: S.OptionFromOptionalKey(S.String),
+    promptId: S.OptionFromOptionalKey(S.String),
+    transcriptPath: S.OptionFromOptionalKey(S.String),
+    permissionMode: S.OptionFromOptionalKey(S.String),
+    notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
+    durationMs: S.OptionFromOptionalKey(NonNegNum),
+    sessionEndReason: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("HookPulseV1", {
+    description: "Privacy-safe hook event used as first-class raw history for wait attribution and replay.",
+  })
+) {}
+
+/**
+ * Codec deriving a canonical hook-pulse record from a raw hook event and writer stamps.
+ *
+ * @example
+ * ```ts
+ * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const pulse = S.decodeUnknownEffect(HookPulseV1FromRawEvent)({
+ *   event: {
+ *     session_id: "session-1",
+ *     hook_event_name: "PermissionRequest",
+ *     cwd: "/workspace/beep-effect2",
+ *     tool_name: "ExitPlanMode",
+ *     transcript_path: "/tmp/claude/session-1.jsonl"
+ *   },
+ *   notifierRev: "spike-0",
+ *   instrumentClass: "spike",
+ *   agentKind: "claude-code",
+ *   evidenceTier: "observed",
+ *   ts: "2026-08-01T06:40:07.000Z"
+ * })
+ * console.log(pulse)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
+  S.decodeTo(
+    HookPulseV1,
+    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
+      decode: (input) =>
+        Effect.succeed({
+          schemaVersion: HookPulseSchemaVersion.Enum["hook-pulse/v1"],
+          ts: input.ts,
+          sessionId: input.event.session_id,
+          agentKind: input.agentKind,
+          hookEvent: input.event.hook_event_name,
+          cwd: input.event.cwd,
+          notifierRev: input.notifierRev,
+          instrumentClass: input.instrumentClass,
+          evidenceTier: input.evidenceTier,
+          waitReason: deriveWaitReason(input.event),
+          ...O.getSomesStruct({
+            toolName: input.event.tool_name,
+            toolUseId: input.event.tool_use_id,
+            promptId: input.event.prompt_id,
+            transcriptPath: O.some(input.event.transcript_path),
+            permissionMode: input.event.permission_mode,
+            notificationType: O.filter(input.event.notification_type, isHookPulseNotificationType),
+            durationMs: input.event.duration_ms,
+            sessionEndReason: input.event.reason,
+          }),
+        }),
+      encode: (input) =>
+        O.match(O.fromUndefinedOr(input.transcriptPath), {
+          onNone: () =>
+            Effect.fail(
+              new SchemaIssue.InvalidValue(O.some(input), {
+                message: "Expected transcriptPath when encoding a canonical hook pulse as a raw hook event",
+              })
+            ),
+          onSome: (transcriptPath) =>
+            Effect.succeed(
+              HookPulseRawEventInput.make({
+                event: HookPulseRawEvent.make({
+                  session_id: input.sessionId,
+                  hook_event_name: input.hookEvent,
+                  cwd: input.cwd,
+                  tool_name: O.fromUndefinedOr(input.toolName),
+                  tool_use_id: O.fromUndefinedOr(input.toolUseId),
+                  prompt_id: O.fromUndefinedOr(input.promptId),
+                  transcript_path: transcriptPath,
+                  permission_mode: O.fromUndefinedOr(input.permissionMode),
+                  notification_type: O.fromUndefinedOr(input.notificationType),
+                  duration_ms: O.fromUndefinedOr(input.durationMs),
+                  reason: O.fromUndefinedOr(input.sessionEndReason),
+                }),
+                notifierRev: input.notifierRev,
+                instrumentClass: input.instrumentClass,
+                agentKind: input.agentKind,
+                evidenceTier: input.evidenceTier,
+                ts: input.ts,
+              })
+            ),
+        }),
+    })
+  ),
+  $I.annoteSchema("HookPulseV1FromRawEvent", {
+    description: "Canonical hook-pulse codec that derives wait attribution from whitelisted raw event fields.",
+  })
+);
+
+/**
+ * Runtime type for {@link HookPulseV1FromRawEvent}.
+ *
+ * @example
+ * ```ts
+ * import type { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
+ *
+ * const printPulse = (pulse: HookPulseV1FromRawEvent) => console.log(pulse)
+ * console.log(printPulse)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseV1FromRawEvent = typeof HookPulseV1FromRawEvent.Type;
