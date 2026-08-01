@@ -8,7 +8,7 @@ import { $LangExtractId } from "@beep/identity";
 import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, flow, identity, pipe } from "effect";
+import { Effect, flow, identity } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -436,14 +436,7 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
  */
 export const normalizeTextLocator = (value: string): string => normalizeWithRawOffsets(value).text;
 
-const indexOfFrom = (text: string, locator: string, from: number): number =>
-  pipe(
-    text,
-    Str.slice(from),
-    Str.indexOf(locator),
-    O.map((index) => index + from),
-    O.getOrElse(() => -1)
-  );
+const indexOfFrom = (text: string, locator: string, from: number): number => text.indexOf(locator, from);
 
 const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor): boolean =>
   A.some(
@@ -452,6 +445,10 @@ const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor)
   );
 
 const appendRawMatch = (matches: Array<TextAnchor>, sourceText: string, startChar: number, endChar: number): void => {
+  if (!isUtf16Boundary(sourceText, startChar) || !isUtf16Boundary(sourceText, endChar)) {
+    return;
+  }
+
   const anchor = TextAnchor.make({
     endChar: NonNegativeInt.make(endChar),
     quote: Str.slice(startChar, endChar)(sourceText),
@@ -482,17 +479,39 @@ const findRawMatches = (
 
   while (normalizedStart >= 0 && A.length(matches) < 2) {
     const normalizedEnd = normalizedStart + Str.length(normalizedLocator);
-    O.match(O.all([A.get(normalizedSource.starts, normalizedStart), A.get(normalizedSource.ends, normalizedEnd - 1)]), {
-      onNone: () => undefined,
-      onSome: ([startChar, endChar]) => {
-        const quote = Str.slice(startChar, endChar)(sourceText);
-        if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
-          appendRawMatch(matches, sourceText, startChar, endChar);
-        }
-      },
-    });
+    let nextNormalizedStart = normalizedStart + 1;
+    O.match(
+      O.all([
+        A.get(normalizedSource.starts, normalizedStart),
+        A.get(normalizedSource.ends, normalizedStart),
+        A.get(normalizedSource.ends, normalizedEnd - 1),
+      ]),
+      {
+        onNone: () => undefined,
+        onSome: ([startChar, startClusterEnd, endChar]) => {
+          const startsAtRawBoundary = !O.exists(
+            A.get(normalizedSource.starts, normalizedStart - 1),
+            Eq.equals(startChar)
+          );
+          const endsAtRawBoundary = !O.exists(A.get(normalizedSource.ends, normalizedEnd), Eq.equals(endChar));
+          if (startsAtRawBoundary && endsAtRawBoundary) {
+            const quote = Str.slice(startChar, endChar)(sourceText);
+            if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
+              appendRawMatch(matches, sourceText, startChar, endChar);
+              return;
+            }
+          }
 
-    normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, normalizedStart + 1);
+          while (
+            O.exists(A.get(normalizedSource.starts, nextNormalizedStart), (nextStart) => nextStart < startClusterEnd)
+          ) {
+            nextNormalizedStart += 1;
+          }
+        },
+      }
+    );
+
+    normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, nextNormalizedStart);
   }
 
   return matches;

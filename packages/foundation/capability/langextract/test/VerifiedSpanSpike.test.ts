@@ -42,6 +42,15 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "rejects exact raw locators that split a surrogate pair",
+    Effect.fnUntraced(function* () {
+      const failure = yield* locateRawText("😀", "\uD83D").pipe(Effect.flip);
+
+      expect(failure.reason).toBe("not-found");
+    })
+  );
+
+  it.effect(
     "maps a composed locator onto decomposed raw combining-mark text",
     Effect.fnUntraced(function* () {
       const source = "Cafe\u0301 noir";
@@ -124,6 +133,19 @@ describe("verified-span hostile-text contract", () => {
       const failure = yield* locateRawText(Str.repeat(100_000)("a"), "a").pipe(Effect.flip);
 
       expect(failure.reason).toBe("ambiguous");
+    })
+  );
+
+  it.effect(
+    "skips rejected compatibility clusters without repeatedly slicing the remaining source",
+    Effect.fnUntraced(function* () {
+      const ligatures = Str.repeat(100_000)("ﬁ");
+      const failure = yield* locateRawText(ligatures, "f").pipe(Effect.flip);
+      const source = Str.concat(ligatures, "f");
+      const anchor = yield* locateRawText(source, "f");
+
+      expect(failure.reason).toBe("not-found");
+      expect(anchor).toEqual({ endChar: 100_001, quote: "f", startChar: 100_000 });
     })
   );
 

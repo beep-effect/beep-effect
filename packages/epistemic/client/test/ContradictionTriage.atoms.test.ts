@@ -388,6 +388,34 @@ describe("@beep/epistemic-client contradiction atoms", () => {
   );
 
   it.effect(
+    "preserves a selected transaction time later than a successful review",
+    Effect.fnUntraced(function* () {
+      const registry = registryWithReviewSuccess();
+      const unmount = registry.mount(reviewContradictionCandidateAtom);
+      const command = Result.getOrThrow(
+        decodeReview({
+          candidateId: 7,
+          decision: {
+            decision: "reject",
+            reason: "The evidence concerns different periods.",
+          },
+          expectedCandidateVersion: 1,
+        })
+      );
+
+      registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(4_000));
+      registry.set(reviewContradictionCandidateAtom, command);
+      yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
+
+      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
+        O.some(4_000)
+      );
+      unmount();
+      registry.dispose();
+    })
+  );
+
+  it.effect(
     "surfaces a typed review failure through the mutation AsyncResult",
     Effect.fnUntraced(function* () {
       const registry = registryWithReviewFailure();

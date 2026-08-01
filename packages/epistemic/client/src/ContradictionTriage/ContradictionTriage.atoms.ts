@@ -544,7 +544,12 @@ export const reviewContradictionCandidateAtom = ContradictionClient.runtime.fn<R
       client("ReviewContradictionCandidate", command).pipe(
         Effect.tap((disposition) =>
           Effect.sync(() => {
-            ctx.set(contradictionKnownAtAtom, disposition.resolvedAt);
+            const knownAt = pipe(
+              AsyncResult.value(ctx(contradictionKnownAtAtom)),
+              O.map((current) => DateTime.max(current, disposition.resolvedAt)),
+              O.getOrElse(() => disposition.resolvedAt)
+            );
+            ctx.set(contradictionKnownAtAtom, knownAt);
             ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
             ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
           })
