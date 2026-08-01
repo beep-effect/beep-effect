@@ -10,8 +10,9 @@ import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { adapterState } from "./internal/AdapterState.ts";
-import { boxStyle, dropPreviewBox } from "./internal/DropCompiler.ts";
+import { boxStyle, dropPreview } from "./internal/DropCompiler.ts";
 import { FloatingPane } from "./internal/FloatingPane.tsx";
+import { DropPreview } from "./internal/Gesture.models.ts";
 import { GroupPane } from "./internal/GroupPane.tsx";
 import { PanelPortal } from "./internal/PanelHost.tsx";
 import { Sash } from "./internal/Sash.tsx";
@@ -19,12 +20,35 @@ import type { TabsNode } from "@beep/dock";
 import type { DockviewReactProps } from "./DockReact.types.ts";
 import type { AdapterState } from "./internal/AdapterState.ts";
 
+// FlexLayout's drag-rect pattern: the preview element persists while its
+// kind stays active, and CSS transitions tween its bounds — the section
+// overlay flies between groups/quadrants and the caret slides along the
+// strip instead of teleporting.
+const SECTION_TRANSITION = "left 0.15s ease-out, top 0.15s ease-out, width 0.15s ease-out, height 0.15s ease-out";
+const CARET_TRANSITION = "left 0.12s ease-out, top 0.12s ease-out, height 0.12s ease-out";
+
 const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
-  return O.match(dropPreviewBox(props.state, props.graph, drag.value), {
+  return O.match(dropPreview(props.state, props.graph, drag.value), {
     onNone: () => null,
-    onSome: (box) => <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />,
+    onSome: DropPreview.match({
+      // Joining a tab list renders IN the strip (position = insertion
+      // index), never as a layout overlay: adding a tab and creating a
+      // section must read as different acts.
+      "tab-insertion": (preview) => (
+        <div
+          data-drop-caret=""
+          style={{ ...boxStyle(preview.caretBox), transition: CARET_TRANSITION, pointerEvents: "none" }}
+        />
+      ),
+      section: (preview) => (
+        <div
+          data-drop-indicator="true"
+          style={{ ...boxStyle(preview.box), transition: SECTION_TRANSITION, pointerEvents: "none" }}
+        />
+      ),
+    }),
   });
 };
 

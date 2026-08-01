@@ -1,5 +1,6 @@
 import { AnchoredBox, DockBox, GroupId, PanelId, SplitId, SplitRatio } from "@beep/dock";
 import { $DockReactId } from "@beep/identity";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $DockReactId.create("Gesture.models");
@@ -62,6 +63,38 @@ export class SashDragVertical extends SashDragBase.extend<SashDragVertical>($I`S
     description: "Sash-resize gesture whose pointer delta is measured vertically.",
   })
 ) {}
+
+export class TabInsertionPreview extends S.Class<TabInsertionPreview>($I`TabInsertionPreview`)(
+  {
+    kind: S.tag("tab-insertion"),
+    groupId: GroupId,
+    index: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    caretBox: DockBox,
+  },
+  $I.annote("TabInsertionPreview", {
+    description:
+      "Strip-borne drop preview: the dragged tab joins this group's tab list at the caret position, none meaning append. Rendered inside the tab strip so joining a list reads differently from creating a section.",
+  })
+) {}
+
+export class SectionPreview extends S.Class<SectionPreview>($I`SectionPreview`)(
+  {
+    kind: S.tag("section"),
+    box: DockBox,
+  },
+  $I.annote("SectionPreview", {
+    description: "Layout-overlay drop preview: the drop creates a new panel section occupying this box.",
+  })
+) {}
+
+export const DropPreview = S.Union([TabInsertionPreview, SectionPreview]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("DropPreview", {
+    description:
+      "Kind-discriminated drop preview: tab-list insertion renders in the strip; section creation renders as a layout overlay.",
+  })
+);
+export type DropPreview = typeof DropPreview.Type;
 
 export const SashDrag = S.Union([SashDragHorizontal, SashDragVertical]).pipe(
   S.toTaggedUnion("axis"),

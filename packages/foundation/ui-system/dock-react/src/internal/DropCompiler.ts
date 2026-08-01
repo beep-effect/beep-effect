@@ -16,18 +16,19 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { Match, Number as N, pipe } from "effect";
+import { Match, MutableHashMap, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { commandCounter } from "./AdapterState.ts";
-import type { AnchoredBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
+import { SectionPreview, TabInsertionPreview } from "./Gesture.models.ts";
+import type { AnchoredBox, DockGeometry, MovePanelCommand, Panel, SplitNode } from "@beep/dock";
 import type { Dual2, Dual3 } from "@beep/dock/internal/Dual";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
-import type { PointerPosition, TabDrag } from "./Gesture.models.ts";
+import type { DropPreview, PointerPosition, TabDrag } from "./Gesture.models.ts";
 
 export const boxStyle = (box: DockBox): React.CSSProperties => ({
   position: "absolute",
@@ -133,6 +134,42 @@ const splitPreviewBox = (box: DockBox, side: DockSide, ratio: SplitRatio): DockB
   });
 };
 
+// Measured per-tab widths for a group, present only once EVERY tab has
+// reported a real width (the strip records them for overflow math).
+const measuredTabWidths = (
+  state: AdapterState,
+  groupId: GroupId,
+  panels: ReadonlyArray<Panel>
+): O.Option<ReadonlyArray<number>> =>
+  pipe(
+    MutableHashMap.get(state.tabWidths, groupId),
+    O.flatMap((widths) => O.all(A.map(panels, (panel) => MutableHashMap.get(widths, panel.id)))),
+    O.filter(() => A.length(panels) > 0)
+  );
+
+// Chrome's tab-strip rule: the insertion index advances when the pointer
+// crosses a tab's horizontal MIDPOINT, so hovering past the last tab reads
+// as append. Falls back to even fractions of the group width before the
+// strip has measured.
+const stripInsertionIndex = (
+  state: AdapterState,
+  groupId: GroupId,
+  panels: ReadonlyArray<Panel>,
+  box: DockBox,
+  pointerLeft: number
+): number => {
+  const stripPoint = pointerLeft - box.left;
+  const count = A.length(panels);
+  return O.match(measuredTabWidths(state, groupId, panels), {
+    onNone: () => (box.width <= 0 ? 0 : Math.floor((stripPoint / box.width) * count)),
+    onSome: (widths) =>
+      A.reduce(widths, { index: 0, edge: 0 }, (acc, width) => ({
+        index: stripPoint > acc.edge + width / 2 ? acc.index + 1 : acc.index,
+        edge: acc.edge + width,
+      })).index,
+  });
+};
+
 export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<MovePanelCommand>> = dual(
   3,
   (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<MovePanelCommand> => {
@@ -172,11 +209,9 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
       const tabs = graph.registry.get(graph.tabsAtom(group.value.groupId));
       const headerHeight = Math.min(32, group.value.box.height);
       if (point.top <= group.value.box.top + headerHeight && O.isSome(tabs)) {
-        const count = A.length(TabsNode.panels(tabs.value));
-        const rawIndex =
-          group.value.box.width <= 0
-            ? 0
-            : Math.floor(((point.left - group.value.box.left) / group.value.box.width) * count);
+        const panels = TabsNode.panels(tabs.value);
+        const count = A.length(panels);
+        const rawIndex = stripInsertionIndex(state, group.value.groupId, panels, group.value.box, point.left);
         const index = NonNegativeInt.make(Math.min(count, Math.max(0, rawIndex)));
         return O.some(
           MovePanelCommandSchema.make({
@@ -253,19 +288,64 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
   }
 );
 
-export const dropPreviewBox: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<DockBox>> = dual(
+const TAB_CARET_WIDTH_PX = 3;
+
+// Caret x prefers measured tab widths (the strip records them for overflow
+// math); before layout settles it falls back to even fractions so the caret
+// still lands between the right neighbors.
+const tabInsertionPreview = (
+  state: AdapterState,
+  graph: DockAtomGraph,
+  groupId: GroupId,
+  index: O.Option<NonNegativeInt>,
+  box: DockBox
+): TabInsertionPreview => {
+  const headerHeight = Math.min(32, box.height);
+  const panels = O.match(graph.registry.get(graph.tabsAtom(groupId)), {
+    onNone: A.empty<Panel>,
+    onSome: TabsNode.panels,
+  });
+  const count = A.length(panels);
+  const insertAt = O.match(index, {
+    onNone: () => count,
+    onSome: (position) => Math.min(position, count),
+  });
+  const offset = O.match(measuredTabWidths(state, groupId, panels), {
+    onNone: () => (count <= 0 ? 0 : (box.width * insertAt) / count),
+    onSome: (widths) => A.reduce(A.take(widths, insertAt), 0, N.sum),
+  });
+  return TabInsertionPreview.make({
+    groupId,
+    index,
+    caretBox: DockBox.make({
+      left: Math.min(box.left + offset, box.left + box.width - TAB_CARET_WIDTH_PX),
+      top: box.top,
+      width: TAB_CARET_WIDTH_PX,
+      height: headerHeight,
+    }),
+  });
+};
+
+export const dropPreview: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<DropPreview>> = dual(
   3,
-  (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<DockBox> =>
+  (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<DropPreview> =>
     pipe(
       compileDrop(state, graph, drag),
       O.flatMap(({ target }) => {
         const geometry = graph.registry.get(state.geometry.geometryAtom);
         return DockMoveTarget.match(target, {
-          tab: ({ groupId }) => groupBox(geometry, groupId),
+          tab: ({ groupId, index }) =>
+            O.map(groupBox(geometry, groupId), (box) => tabInsertionPreview(state, graph, groupId, index, box)),
           split: ({ referenceGroupId, side, newGroupRatio }) =>
-            O.map(groupBox(geometry, referenceGroupId), (box) => splitPreviewBox(box, side, newGroupRatio)),
+            O.map(groupBox(geometry, referenceGroupId), (box) =>
+              SectionPreview.make({ box: splitPreviewBox(box, side, newGroupRatio) })
+            ),
           rootSplit: ({ side, newGroupRatio }) =>
-            O.some(splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio)),
+            O.some(
+              SectionPreview.make({
+                box: splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio),
+              })
+            ),
         });
       })
     )

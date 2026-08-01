@@ -96,9 +96,21 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(source, "pointerMove", 600, 350);
       expect(indicator().style.top).toBe("200px");
       expect(indicator().style.height).toBe("200px");
+      // Center hover joins the tab list, so the preview moves INTO the
+      // strip as an insertion caret (append position) instead of a
+      // full-group overlay — adding a tab and creating a section read as
+      // different acts.
       pointer(source, "pointerMove", 600, 200);
-      expect(indicator().style.left).toBe("404px");
-      expect(indicator().style.width).toBe("396px");
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      const caret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
+      expect(caret).not.toBeNull();
+      expect(caret?.style.left).toBe("797px");
+      expect(caret?.style.height).toBe("32px");
+      // Strip hover positions the caret at the pointer's insertion index
+      // (Chrome tab-strip semantics: the position is visible and draggable).
+      pointer(source, "pointerMove", 500, 16);
+      const stripCaret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
+      expect(stripCaret?.style.left).toBe("404px");
       fireEvent.keyDown(document, { key: "Escape" });
       mounted.graph.dispose();
     })
@@ -115,7 +127,9 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // handler restores it so keyboard activation tracks the clicked tab.
       expect(document.activeElement).toBe(tab(panel2.id));
       pointer(tab(panel2.id), "pointerMove", 100, 16);
-      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      // A strip hover previews as the insertion caret, not a section overlay.
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-caret]")).not.toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
       const ghost = screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]");
       expect(ghost).not.toBeNull();
       expect(ghost?.textContent).toBe(panel2.title);
@@ -124,6 +138,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       const result = O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1)));
       expect(A.map(TabsNode.panels(result), (panel) => panel.id)).toEqual([panel2.id, panel1.id]);
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-caret]")).toBeNull();
       expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
       mounted.graph.dispose();
     })
