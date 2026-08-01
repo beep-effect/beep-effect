@@ -17,7 +17,7 @@
 
 import { FFmpeg, ProbeVideoRequest } from "@beep/ffmpeg";
 import { $RepoCliId } from "@beep/identity/packages";
-import { ClockSync, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
+import { ClockSync, END_SEEK_GUARD_SECONDS, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, Match, Number as N, Order, Path, pipe } from "effect";
@@ -714,6 +714,19 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
 // this clip precisely so a container duration exists.
 const NORMALIZED_VIDEO_NAME = "normalized.mp4";
 
+// A recording no longer than the end-seek guard cannot carry temporal
+// evidence: the guarded mapping interval [0, duration - guard] is empty, so
+// every event would render at t=0.000. A concrete-but-degenerate duration
+// therefore fails packing exactly like a missing one.
+const guardedDuration = (source: string, durationSeconds: number): Effect.Effect<number, QaCommandError> =>
+  durationSeconds > END_SEEK_GUARD_SECONDS
+    ? Effect.succeed(durationSeconds)
+    : Effect.fail(
+        QaCommandError.make({
+          message: `qa judge-pack found a ${durationSeconds}s container duration in ${source}; recordings must exceed ${END_SEEK_GUARD_SECONDS}s to carry temporal evidence.`,
+        })
+      );
+
 // Lane A's live-muxed webm reports no container duration; `qa extract`
 // writes the normalized clip exactly for this case.
 const normalizedClipDuration = Effect.fn("QaJudgePack.normalizedClipDuration")(function* (
@@ -736,7 +749,7 @@ const normalizedClipDuration = Effect.fn("QaJudgePack.normalizedClipDuration")(f
           message: `qa judge-pack found no container duration in ${source} or ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`,
         })
       ),
-    onSome: Effect.succeed,
+    onSome: (durationSeconds) => guardedDuration(normalizedPath, durationSeconds),
   });
 });
 
@@ -765,7 +778,7 @@ const requireVideoDuration = Effect.fn("QaJudgePack.requireVideoDuration")(funct
   const normalizedPath = path.join(layout.videoDir, NORMALIZED_VIDEO_NAME);
   return yield* O.match(probe.durationSeconds, {
     onNone: () => normalizedClipDuration(layout, source, normalizedPath),
-    onSome: Effect.succeed,
+    onSome: (durationSeconds) => guardedDuration(source, durationSeconds),
   });
 });
 
@@ -840,7 +853,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
       eventLog,
       legacy,
       round: options.round,
-      videoDurationSeconds: Math.max(videoDurationSeconds, 0.001),
+      videoDurationSeconds,
     })
   );
   const templatePath = path.join(cwd, JUDGE_PROMPT_TEMPLATE);

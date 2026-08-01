@@ -649,4 +649,25 @@ describe("commands/Qa judge-pack video duration", () => {
         })
       )
     ));
+
+  it("rejects a concrete duration too short to carry temporal evidence", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "zero-duration webm");
+          // A present-but-zero duration must fail exactly like a missing one:
+          // the guarded mapping interval is empty, so every event would land
+          // on t=0.000.
+          const error = yield* Effect.flip(
+            runQaJudgePack(cwd, packOptions).pipe(
+              provideScopedLayer(ffmpegStub((request) => Effect.succeed(probeOf(request.videoPath, O.some(0)))))
+            )
+          );
+          expect(error.message).toContain(`must exceed ${END_SEEK_GUARD_SECONDS}s`);
+        })
+      )
+    ));
 });
