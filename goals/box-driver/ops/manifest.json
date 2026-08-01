@@ -5,10 +5,12 @@
     "title": "Box Driver",
     "status": "completed-retained",
     "created": "2026-06-04",
-    "updated": "2026-07-14",
+    "updated": "2026-08-01",
     "packetAnchorDocument": "GOAL.md"
   },
   "mission": "Implement @beep/box as a full-surface, generated, schema-first, Effect-first technical driver around box-node-sdk v10.11.1: a custom generator emits S.Class models and per-manager method wrappers from the SDK's own TypeScript types, hand-written code provides config/errors/service/streaming Layers, plus tests, docs, quality closure, PR babysitting, and Greptile 5/5 readiness.",
+  "supersededBy": "box-typecheck-cost",
+  "supersededNote": "Mission-framing only, 2026-08-01: the 'full-surface' framing is superseded by goals/box-typecheck-cost, which scopes the generated surface to declared demand (9 of 85 managers) because the full surface costs ~4.8M type instantiations in Box.models.gen.ts alone. Implementation and closure stand; none of this packet's keyDecisions are contradicted. generate-from-sdk-types and pragmatic-generated-fidelity continue to bind.",
   "packetPath": "goals/box-driver",
   "completionGate": {
     "operator": "yeet",
