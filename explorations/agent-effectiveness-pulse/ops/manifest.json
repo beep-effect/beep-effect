@@ -3,23 +3,20 @@
   "exploration": {
     "slug": "agent-effectiveness-pulse",
     "title": "Agent Effectiveness Pulse",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "Wave-2 graduation gate: cut yeet-verdict-instrumentation + repo-replay-evals once wave-1 OTel attributes are flowing.",
-      "H8 browser-proof dimension remains unowned - revisit at wave-2 graduation.",
-      "Parquet-export root cause: tracked by ai-metrics-stack P7f (forwarder durability)."
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [
         "goals/harness-otel-adoption",
-        "goals/harness-hygiene-mechanical"
+        "goals/harness-hygiene-mechanical",
+        "goals/coding-agent-effectiveness-evidence-loop"
       ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-14",
-    "updated": "2026-07-14"
+    "updated": "2026-07-31"
   }
 }
