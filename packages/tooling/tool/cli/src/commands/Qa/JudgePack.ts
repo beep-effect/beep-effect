@@ -382,6 +382,7 @@ const eventLine = (event: ActionEvent, toVideo: (epochMs: number) => number): st
       "focus-out": (value) => value.selectorPath,
       "key-down": (value) => value.key,
       marker: (value) => value.label,
+      "pointer-cancel": (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`,
       "pointer-down": (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`,
       "pointer-enter": (value) => value.selectorPath,
       "pointer-leave": (value) => value.selectorPath,
@@ -708,6 +709,58 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
   return A.getSomes([...screenshots, ...frames, ...sheets]);
 });
 
+// Must stay in lockstep with the normalized clip name `qa extract` writes
+// (Extract.ts); extract remuxes Lane A's duration-less live-muxed webm into
+// this clip precisely so a container duration exists.
+const NORMALIZED_VIDEO_NAME = "normalized.mp4";
+
+// A judge bundle without a real video duration is corrupted temporal evidence:
+// `epochToVideoSeconds` clamps every event into [0, duration], so a degraded
+// zero would map the whole interaction onto t=0.000. Missing videos, probe
+// failures, and duration-less containers therefore fail packing instead.
+const requireVideoDuration = Effect.fn("QaJudgePack.requireVideoDuration")(function* (
+  layout: RoundLayout,
+  videoPath: O.Option<string>
+): Effect.fn.Return<number, QaCommandError, FFmpeg | Path.Path> {
+  const ffmpeg = yield* FFmpeg;
+  const path = yield* Path.Path;
+  const source = yield* O.match(videoPath, {
+    onNone: () =>
+      Effect.fail(
+        QaCommandError.make({
+          message: `qa judge-pack found no recorded video for round ${layout.round}; record and extract the round before packing.`,
+        })
+      ),
+    onSome: Effect.succeed,
+  });
+  const probe = yield* ffmpeg
+    .probeVideo(ProbeVideoRequest.make({ videoPath: source }))
+    .pipe(QaCommandError.mapError(`qa judge-pack could not probe the recorded video at ${source}.`));
+  const normalizedPath = path.join(layout.videoDir, NORMALIZED_VIDEO_NAME);
+  return yield* O.match(probe.durationSeconds, {
+    // Lane A's live-muxed webm reports no container duration; `qa extract`
+    // writes the normalized clip exactly for this case.
+    onNone: () =>
+      ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath: normalizedPath })).pipe(
+        QaCommandError.mapError(
+          `qa judge-pack could not probe the normalized clip at ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`
+        ),
+        Effect.flatMap((normalized) =>
+          O.match(normalized.durationSeconds, {
+            onNone: () =>
+              Effect.fail(
+                QaCommandError.make({
+                  message: `qa judge-pack found no container duration in ${source} or ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`,
+                })
+              ),
+            onSome: Effect.succeed,
+          })
+        )
+      ),
+    onSome: Effect.succeed,
+  });
+});
+
 const requireClockSync = (manifest: SessionManifest): Effect.Effect<ClockSync, QaCommandError> =>
   O.match(manifest.clockSync, {
     onNone: () =>
@@ -743,7 +796,6 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const store = yield* SessionStore;
-  const ffmpeg = yield* FFmpeg;
 
   const layout = store.roundLayout(qaRootPath(path, cwd), options.round);
   const manifest = yield* store
@@ -757,14 +809,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
     onNone: () => discoverRecordedVideo(layout.videoDir),
     onSome: (value) => Effect.succeed(O.some(value)),
   });
-  const videoDurationSeconds = yield* O.match(videoPath, {
-    onNone: () => Effect.succeed(0),
-    onSome: (value) =>
-      ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath: value })).pipe(
-        Effect.map((probe) => O.getOrElse(probe.durationSeconds, () => 0)),
-        Effect.orElseSucceed(() => 0)
-      ),
-  });
+  const videoDurationSeconds = yield* requireVideoDuration(layout, videoPath);
 
   const judgeDir = path.join(layout.root, "judge");
   yield* fs

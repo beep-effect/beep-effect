@@ -1,7 +1,10 @@
+import { Exiftool } from "@beep/exiftool";
+import { FFmpeg } from "@beep/ffmpeg";
 import {
   ArtifactBudget,
   BeaconEvent,
   CaptureSession,
+  ClockCorrelator,
   ClockSync,
   CssAnimationEvent,
   CssTransitionEvent,
@@ -20,8 +23,10 @@ import {
   PointerMoveEvent,
   PointerUpEvent,
   RoundLayout,
+  RoundNumber,
   ScrollEvent,
   SessionManifest,
+  SessionStore,
   Viewport,
 } from "@beep/qa-capture";
 import {
@@ -44,6 +49,7 @@ import {
   parseJudgeOutput,
   portlessUrlForApp,
   QaEventLog,
+  QaExtractOptions,
   QaFindingId,
   QaInventory,
   QaJudgeRef,
@@ -64,6 +70,7 @@ import {
   renderRoundReport,
   renderTimeline,
   resolveCaptureTarget,
+  runQaExtract,
   selectJudgeEvidence,
   windowSeqsForLabel,
   writeArtifactBudget,
@@ -663,6 +670,87 @@ describe("commands/Qa judge output parsing", () => {
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );
+});
+
+describe("commands/Qa extract --dry-run driver isolation", () => {
+  // Every method dies: the dry-run contract is "persist the plan without
+  // running any driver", so reaching ffmpeg or exiftool at all is the bug.
+  const dieFfmpeg = Layer.succeed(FFmpeg)(
+    FFmpeg.of({
+      extractClip: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      extractFrameAt: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      extractFrames: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      extractFramesAt: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      probeRegionLuminance: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      probeVideo: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      renderContactSheet: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      renderGif: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      writeContainerMetadata: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+    })
+  );
+  const dieExiftool = Layer.succeed(Exiftool)(
+    Exiftool.of({
+      readTags: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
+      version: Effect.die("qa extract --dry-run must not invoke exiftool"),
+      writeTags: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
+      writeXmpPacket: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
+    })
+  );
+  const DryRunLayer = Layer.mergeAll(
+    SessionStore.layer,
+    ClockCorrelator.layer.pipe(Layer.provide(dieFfmpeg)),
+    dieFfmpeg,
+    dieExiftool,
+    NodeChildProcessSpawner.layer
+  ).pipe(Layer.provideMerge(PlatformLayer));
+
+  const dryRunManifest = SessionManifest.make({
+    artifacts: [],
+    clockSync: O.none(),
+    eventsPath: "events.ndjson",
+    legacyManifestPath: O.none(),
+    schemaVersion: "beep.qa.capture-session.v1",
+    session: CaptureSession.make({
+      commitDirty: false,
+      commitSha: "drysha",
+      id: "qa-round-1-1754000000000",
+      lane: "playwright",
+      round: 1,
+      scenario: O.none(),
+      startedAtEpochMs: 1754000000000,
+      toolVersions: {},
+      url: "http://storybook.beep.localhost:1355/",
+      viewport: Viewport.make({ height: 1000, width: 1600 }),
+    }),
+    videoPath: O.none(),
+  });
+
+  it("persists the plan and returns before video discovery, probing, or correlation", () =>
+    Effect.runPromise(
+      Effect.acquireUseRelease(
+        Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: "beep-qa-dry-run-" })),
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const store = yield* SessionStore;
+          const layout = yield* store.prepareRound(path.join(cwd, ".beep", "qa"), RoundNumber.make(1));
+          yield* store.writeSessionManifest(layout, dryRunManifest);
+          const line = yield* encodeActionEventJson(marker("scenario:dry-run", 1, 1754000000000));
+          yield* fs.writeFileString(layout.eventsPath, `${line}\n`);
+
+          // No recorded video exists at all: the dry run must not need one.
+          const outcome = yield* runQaExtract(
+            cwd,
+            QaExtractOptions.make({ budgetMb: O.none(), dryRun: true, rules: O.none(), session: O.none() })
+          );
+          expect(outcome.artifacts).toEqual([]);
+          expect(outcome.failures).toEqual([]);
+          expect(yield* fs.exists(path.join(layout.root, "extraction-plan.json"))).toBe(true);
+          expect(yield* fs.exists(path.join(layout.videoDir, "normalized.mp4"))).toBe(false);
+        }),
+        (cwd) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(cwd, { recursive: true }).pipe(Effect.orDie))
+      ).pipe(provideScopedLayer(DryRunLayer))
+    ));
 });
 
 describe("commands/Qa harness environment", () => {

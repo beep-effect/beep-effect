@@ -17,7 +17,12 @@ import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { decodeQaInventory } from "./Inventory.schemas.ts";
-import { crossCheckAgainstRound, isCrossCheckClean, renderCrossCheckFailure } from "./JudgeCheck.ts";
+import {
+  crossCheckAgainstRound,
+  isCrossCheckClean,
+  renderCrossCheckFailure,
+  requireInventoryRound,
+} from "./JudgeCheck.ts";
 import { inventoryJsonPath } from "./JudgeIngest.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import { qaRootPath, readEventLog } from "./Qa.session.ts";
@@ -62,6 +67,9 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
   const inventory = yield* decodeQaInventory(parsed).pipe(
     QaCommandError.mapError(`qa judge-lint rejected ${inventoryPath} against the qa-inventory/v1 schema.`)
   );
+  // A copied inventory can pass another round's cross-check (seqs restart per
+  // round, frame names repeat), so round coherence is checked explicitly.
+  yield* requireInventoryRound(options.round, inventory);
 
   const eventLog = yield* readEventLog(layout.eventsPath);
   const check = yield* crossCheckAgainstRound(layout, inventory, eventLog);

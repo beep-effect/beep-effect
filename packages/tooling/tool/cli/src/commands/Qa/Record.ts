@@ -54,7 +54,7 @@ import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { QaRecordOptions } from "./Qa.schemas.ts";
-import type { CaptureTarget } from "./Qa.session.ts";
+import type { CaptureTarget, QaEventLog } from "./Qa.session.ts";
 
 const $I = $RepoCliId.create("commands/Qa/Record");
 
@@ -205,6 +205,37 @@ export class RecordOutcome extends S.Class<RecordOutcome>($I`RecordOutcome`)(
   })
 ) {}
 
+/**
+ * Fail a finished round that captured zero witness events.
+ *
+ * An event-less log means the witness was never injected or its posts were
+ * silently dropped (wrong collector origin, rewritten content type), so the
+ * round carries no gesture timeline for extraction to plan against. The
+ * evidence already on disk stays for debugging; the round just must not
+ * report as captured.
+ *
+ * @param eventLog - Decoded witness log of the finished round.
+ * @returns An Effect failing with a reported nonzero exit when the log holds no events.
+ * @example
+ * ```ts
+ * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import { requireCapturedEvents } from "@beep/repo-cli/commands/Qa/Record"
+ * import { Effect } from "effect"
+ *
+ * const program = requireCapturedEvents(QaEventLog.make({ events: [], rejectedCount: 0 }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const requireCapturedEvents = (eventLog: QaEventLog): Effect.Effect<void, CliReportedExit> =>
+  A.isReadonlyArrayEmpty(eventLog.events)
+    ? failWithReportedExit(
+        `qa record: 0 witness events captured (${eventLog.rejectedCount} rejected); the witness was not injected or its events were not delivered. See the qa-session-ops collector debugging checklist.`,
+        1
+      )
+    : Effect.void;
+
 const skeletonManifest = (options: {
   readonly commitDirty: boolean;
   readonly commitSha: string;
@@ -300,7 +331,7 @@ const runObsSession = Effect.fn("QaRecord.runObsSession")(function* (
   running: CollectorRunning,
   target: CaptureTarget,
   options: QaRecordOptions
-): Effect.fn.Return<RecordOutcome, QaCommandError, Obs> {
+): Effect.fn.Return<RecordOutcome, QaCommandError, Obs | Scope.Scope> {
   const obs = yield* Obs;
   const scene = yield* obs
     .ensureQaScene(EnsureQaSceneRequest.make({}))
@@ -308,6 +339,11 @@ const runObsSession = Effect.fn("QaRecord.runObsSession")(function* (
   const started = yield* obs
     .startRecording(StartRecordingRequest.make({ recordDirectory: layout.videoDir }))
     .pipe(QaCommandError.mapError("qa record could not start the OBS recording."));
+  // Ctrl-C interrupts this fiber at `awaitStop`, before the sequential stop
+  // below, and the scoped websocket teardown never sends StopRecord — so the
+  // stop is also registered as a scope finalizer. After a normal stop the
+  // redundant request fails inside OBS (output not active) and is swallowed.
+  yield* Effect.addFinalizer(() => obs.stopRecording().pipe(Effect.ignore));
 
   yield* printLines([
     `qa record: lane obs, round ${layout.round}`,
@@ -498,4 +534,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
   if (outcome.exitCode !== 0) {
     return yield* failWithReportedExit(`qa record: harness exited ${outcome.exitCode}`, outcome.exitCode);
   }
+  // The harness exit is mirrored first (the more specific diagnosis); a clean
+  // exit with an empty witness log is still an incomplete round.
+  yield* requireCapturedEvents(eventLog);
 });

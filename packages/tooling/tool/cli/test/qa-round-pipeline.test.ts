@@ -1,7 +1,9 @@
+import { FFmpeg, FFmpegError, NonNegativeSeconds, VideoProbe } from "@beep/ffmpeg";
 import {
   CaptureSession,
   ClockSync,
   CollectorHandle,
+  END_SEEK_GUARD_SECONDS,
   encodeActionEventJson,
   MarkerEvent,
   RoundNumber,
@@ -13,19 +15,24 @@ import {
 import {
   crossCheckAgainstRound,
   isCrossCheckClean,
+  JUDGE_PROMPT_TEMPLATE,
+  QaEventLog,
   QaFindingId,
   QaInventory,
   QaJudgeIngestOptions,
   QaJudgeLintOptions,
+  QaJudgePackOptions,
   QaJudgeRef,
   QaReportOptions,
   readEventLog,
   renderCrossCheckFailure,
+  requireCapturedEvents,
   requireLiveHandle,
   resolveExistingRound,
   resolveRound,
   runQaJudgeIngest,
   runQaJudgeLint,
+  runQaJudgePack,
   runQaReport,
 } from "@beep/repo-cli/commands/Qa";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -35,6 +42,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { ProbeVideoRequest } from "@beep/ffmpeg";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const QaLayer = SessionStore.layer.pipe(Layer.provideMerge(PlatformLayer));
@@ -100,6 +109,35 @@ const inventoryText = Effect.fnUntraced(function* (round: number) {
   });
   return `judge narration\n${fence}json\n${body}\n${fence}\n`;
 });
+
+const probeOf = (videoPath: string, durationSeconds: O.Option<number>) =>
+  VideoProbe.make({
+    durationSeconds: O.map(durationSeconds, NonNegativeSeconds.make),
+    fps: O.none(),
+    frameCount: O.none(),
+    height: O.none(),
+    rFrameRate: O.none(),
+    startTimeSeconds: O.none(),
+    videoPath,
+    width: O.none(),
+  });
+
+// Judge-pack only probes; every other driver operation must stay unreachable.
+const ffmpegStub = (probeVideo: (request: ProbeVideoRequest) => Effect.Effect<VideoProbe, FFmpegError>) =>
+  Layer.succeed(
+    FFmpeg,
+    FFmpeg.of({
+      extractClip: () => Effect.die("not implemented"),
+      extractFrameAt: () => Effect.die("not implemented"),
+      extractFrames: () => Effect.die("not implemented"),
+      extractFramesAt: () => Effect.die("not implemented"),
+      probeRegionLuminance: () => Effect.die("not implemented"),
+      probeVideo,
+      renderContactSheet: () => Effect.die("not implemented"),
+      renderGif: () => Effect.die("not implemented"),
+      writeContainerMetadata: () => Effect.die("not implemented"),
+    })
+  );
 
 describe("commands/Qa round resolution", () => {
   it("resolves an explicit --round without touching the filesystem", () =>
@@ -274,6 +312,45 @@ describe("commands/Qa evidence cross-check against a round", () => {
         })
       )
     ));
+
+  it("treats a citation that escapes the round directory as missing", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          // The cited artifact really exists — one round up. Containment, not
+          // existence, is what must reject it.
+          const round1 = yield* prepareRound(cwd, 1);
+          yield* fs.makeDirectory(round1.layout.framesDir, { recursive: true });
+          yield* fs.writeFileString(path.join(round1.layout.framesDir, "real.png"), "not really a png");
+          const { layout } = yield* prepareRound(cwd, 2);
+          const inventory = QaInventory.make({
+            findings: [
+              {
+                evidence: [{ eventIds: [1], frameRange: O.none(), kind: "strip", path: "../round-1/frames/real.png" }],
+                fix: "fix it",
+                id: QaFindingId.make("R2-01"),
+                lens: "selection-smear",
+                repro: "drag the sash",
+                resolvedInRound: O.none(),
+                severity: "P1",
+                title: "escaped evidence",
+              },
+            ],
+            judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+            requiredCount: 1,
+            round: 2,
+            schemaVersion: "qa-inventory/v1",
+            sessionRef: "session.json",
+          });
+          const eventLog = yield* readEventLog(layout.eventsPath);
+          const check = yield* crossCheckAgainstRound(layout, inventory, eventLog);
+          expect(check.missingPaths).toEqual(["../round-1/frames/real.png"]);
+          expect(isCrossCheckClean(check)).toBe(false);
+        })
+      )
+    ));
 });
 
 describe("commands/Qa report command", () => {
@@ -431,4 +508,145 @@ describe("commands/Qa judge ingest and lint", () => {
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );
+
+  it("fails judge-lint when the committed inventory declares another round", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          // A copied round-2 inventory can pass round-1's evidence cross-check
+          // (no findings cite anything), so only the round guard catches it.
+          const foreign = yield* encodeJson({
+            findings: [],
+            judge: { effort: "high", model: "gpt-5.6-sol" },
+            requiredCount: 0,
+            round: 2,
+            schemaVersion: "qa-inventory/v1",
+            sessionRef: "session.json",
+          });
+          yield* fs.writeFileString(path.join(layout.root, "inventory.json"), foreign);
+          const error = yield* Effect.flip(
+            runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
+          );
+          expect(error.message).toContain("declares round 2 but round 1 was requested");
+        })
+      )
+    ));
+});
+
+describe("commands/Qa record witness-event gate", () => {
+  it.effect("fails a finished round whose witness log holds zero events", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(requireCapturedEvents(QaEventLog.make({ events: [], rejectedCount: 3 })));
+      expect(error.exitCode).toBe(1);
+      expect(error.message).toContain("0 witness events captured (3 rejected)");
+    })
+  );
+
+  it.effect("passes a round that captured at least one witness event", () =>
+    Effect.gen(function* () {
+      yield* requireCapturedEvents(
+        QaEventLog.make({
+          events: [MarkerEvent.make({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 })],
+          rejectedCount: 0,
+        })
+      );
+    })
+  );
+});
+
+describe("commands/Qa judge-pack video duration", () => {
+  const packOptions = QaJudgePackOptions.make({ round: RoundNumber.make(1), surface: O.none() });
+
+  it("fails packing when the round has no recorded video", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          yield* prepareRound(cwd, 1);
+          const error = yield* Effect.flip(
+            runQaJudgePack(cwd, packOptions).pipe(
+              Effect.provide(ffmpegStub(() => Effect.die("probeVideo must not run without a video")))
+            )
+          );
+          expect(error.message).toContain("found no recorded video for round 1");
+        })
+      )
+    ));
+
+  it("fails packing when the recorded video cannot be probed", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "not really a video");
+          const error = yield* Effect.flip(
+            runQaJudgePack(cwd, packOptions).pipe(
+              Effect.provide(
+                ffmpegStub(() =>
+                  Effect.fail(FFmpegError.fromUnknown("probeVideo", "boom", { cause: new Error("corrupt") }))
+                )
+              )
+            )
+          );
+          expect(error.message).toContain("could not probe the recorded video");
+        })
+      )
+    ));
+
+  it("uses the normalized clip's duration when the source container reports none", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "duration-less webm");
+          const templatePath = path.join(cwd, JUDGE_PROMPT_TEMPLATE);
+          yield* fs.makeDirectory(path.dirname(templatePath), { recursive: true });
+          yield* fs.writeFileString(
+            templatePath,
+            "Round {{ROUND}} of {{SURFACE}} in {{ROUND_DIR}}: {{SCENARIO_NOTES}}"
+          );
+          const manifest = yield* runQaJudgePack(cwd, packOptions).pipe(
+            Effect.provide(
+              ffmpegStub((request) =>
+                Effect.succeed(
+                  Str.endsWith("normalized.mp4")(request.videoPath)
+                    ? probeOf(request.videoPath, O.some(12))
+                    : probeOf(request.videoPath, O.none())
+                )
+              )
+            )
+          );
+          expect(manifest.round).toBe(1);
+          // The marker's epoch maps far past the recording, so its rendered
+          // time is the end-seek-guarded clamp on the normalized clip's 12s —
+          // never 0.000.
+          const timeline = yield* fs.readFileString(path.join(layout.root, "judge", "timeline.md"));
+          expect(timeline).toContain(`t=${(12 - END_SEEK_GUARD_SECONDS).toFixed(3)}`);
+        })
+      )
+    ));
+
+  it("fails packing when neither the source nor the normalized clip carries a duration", () =>
+    Effect.runPromise(
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "duration-less webm");
+          const error = yield* Effect.flip(
+            runQaJudgePack(cwd, packOptions).pipe(
+              Effect.provide(ffmpegStub((request) => Effect.succeed(probeOf(request.videoPath, O.none()))))
+            )
+          );
+          expect(error.message).toContain("re-run `bun run beep qa extract --round 1`");
+        })
+      )
+    ));
 });

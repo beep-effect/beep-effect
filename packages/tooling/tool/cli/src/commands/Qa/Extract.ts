@@ -1,11 +1,12 @@
 /**
- * The `beep qa extract` pipeline: correlate, plan, render, stamp, report.
+ * The `beep qa extract` pipeline: plan, correlate, render, stamp, report.
  *
  * Extraction is deliberately record-less: it reads a round directory produced
  * by `beep qa record` (or hand-assembled) and needs no live browser. The order
- * is fixed — decode events, derive a {@link ClockSync}, plan windows, run the
- * ffmpeg driver requests, embed provenance in every produced artifact, then
- * update `session.json` and re-render `report.md`.
+ * is fixed — decode events, plan windows and persist the plan (the `--dry-run`
+ * boundary: nothing after it runs on a dry run), derive a {@link ClockSync},
+ * run the ffmpeg driver requests, embed provenance in every produced artifact,
+ * then update `session.json` and re-render `report.md`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -31,14 +32,16 @@ import {
   decodeExtractionPlan,
   defaultExtractionRules,
   encodeExtractionPlanJson,
+  MarkerEvent,
   PlanDriverRequestsOptions,
   planDriverRequests,
   RoundNumber,
   SessionManifest,
   SessionStore,
+  videoSecondsToEpochMs,
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, Match, Number as N, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, Match, Number as N, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -52,7 +55,14 @@ import {
   recordHintPath,
   resolveExistingRound,
 } from "./Qa.session.ts";
-import type { CaptureSession, ClockSync, ExtractionPlan, QaDriverRequest, RoundLayout } from "@beep/qa-capture";
+import type {
+  ActionEvent,
+  CaptureSession,
+  ClockSync,
+  ExtractionPlan,
+  QaDriverRequest,
+  RoundLayout,
+} from "@beep/qa-capture";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { QaExtractOptions } from "./Qa.schemas.ts";
 
@@ -60,14 +70,37 @@ const $I = $RepoCliId.create("commands/Qa/Extract");
 
 const BYTES_PER_MIB = 1024 * 1024;
 const NORMALIZED_VIDEO_NAME = "normalized.mp4";
-const NORMALIZE_TAIL_PAD_SECONDS = 5;
 const EXTRACTION_PLAN_FILE = "extraction-plan.json";
 const ARTIFACT_BUDGET_FILE = "artifact-budget.json";
 const ArtifactBudgetJson = S.fromJsonString(ArtifactBudget);
+const ToolVersionsJson = S.fromJsonString(S.Record(S.String, S.String));
 
 const isWritableByExiftool = S.is(ExiftoolWritableExtension);
 const isBeaconEvent = S.is(BeaconEvent);
+const isMarkerEvent = S.is(MarkerEvent);
 const CONTAINER_EXTENSIONS: ReadonlyArray<string> = ["mkv", "mp4", "webm"];
+
+const SCENARIO_MARKER_PREFIX = /^(?:scenario|gesture):/;
+const isScenarioMarkerLabel = (label: string): boolean =>
+  Str.startsWith("scenario:")(label) || Str.startsWith("gesture:")(label);
+
+const byMarkerTime = Order.combine(
+  Order.mapInput(Order.Number, (event: MarkerEvent) => event.tEpochMs),
+  Order.mapInput(Order.Number, (event: MarkerEvent) => event.seq)
+);
+
+// The provenance scenario identity is the last scenario:/gesture: marker the
+// harness emitted at or before the window start — session.scenario only holds
+// the harness script path (lane A) or nothing (lane B).
+const scenarioMarkerNameAt = (events: ReadonlyArray<ActionEvent>, windowStartEpochMs: number): O.Option<string> =>
+  pipe(
+    events,
+    A.filter(isMarkerEvent),
+    A.filter((event) => event.tEpochMs <= windowStartEpochMs && isScenarioMarkerLabel(event.label)),
+    A.sort(byMarkerTime),
+    A.last,
+    O.map((event) => pipe(event.label, Str.replace(SCENARIO_MARKER_PREFIX, ""), Str.trim))
+  );
 
 /**
  * Path of the sidecar extraction plan a round's last extract wrote.
@@ -349,10 +382,12 @@ const normalizeVideo = Effect.fn("QaExtract.normalizeVideo")(function* (
   const ffmpeg = yield* FFmpeg;
   const path = yield* Path.Path;
   const outPath = path.join(layout.videoDir, NORMALIZED_VIDEO_NAME);
+  // No duration: the remux must preserve the full recording. Video time zero
+  // is recording start, not first-event time, so any event-derived cut risks
+  // truncating interactions that trail the estimated span.
   yield* ffmpeg.extractClip(
     ExtractClipRequest.make({
       codec: "h264",
-      durationSeconds: Math.max(1, estimatedSeconds + NORMALIZE_TAIL_PAD_SECONDS),
       outPath,
       overwrite: true,
       startSeconds: 0,
@@ -442,6 +477,7 @@ const provenanceFor = (options: {
   readonly actionId: string;
   readonly capturedAtEpochMs: number;
   readonly clockSync: ClockSync;
+  readonly scenarioName: string;
   readonly session: CaptureSession;
   readonly sourceVideo: string;
 }): BeepQaProvenance =>
@@ -450,15 +486,20 @@ const provenanceFor = (options: {
     capturedAtEpochMs: options.capturedAtEpochMs,
     clockOffsetMs: O.some(options.clockSync.offsetMs),
     commitSha: O.some(options.session.commitSha),
-    scenarioName: O.getOrElse(options.session.scenario, () => "unknown"),
+    scenarioName: options.scenarioName,
     sessionId: options.session.id,
     sourceVideo: O.some(options.sourceVideo),
     toolVersions: O.some(options.session.toolVersions),
   });
 
-const containerMetadataPairs = (provenance: BeepQaProvenance): ReadonlyArray<MetadataPair> => [
+// The canonical eight-tag container set from the xmp-beepqa-namespace
+// contract; keys mirror the XMP field names one-to-one.
+const containerMetadataPairs = (
+  provenance: BeepQaProvenance,
+  toolVersionsText: string
+): ReadonlyArray<MetadataPair> => [
   MetadataPair.make({ key: "BEEP_QA_SESSION_ID", value: provenance.sessionId }),
-  MetadataPair.make({ key: "BEEP_QA_SCENARIO", value: provenance.scenarioName }),
+  MetadataPair.make({ key: "BEEP_QA_SCENARIO_NAME", value: provenance.scenarioName }),
   MetadataPair.make({ key: "BEEP_QA_ACTION_ID", value: provenance.actionId }),
   MetadataPair.make({ key: "BEEP_QA_CAPTURED_AT_EPOCH_MS", value: `${provenance.capturedAtEpochMs}` }),
   MetadataPair.make({
@@ -473,6 +514,7 @@ const containerMetadataPairs = (provenance: BeepQaProvenance): ReadonlyArray<Met
     key: "BEEP_QA_SOURCE_VIDEO",
     value: O.getOrElse(provenance.sourceVideo, () => "unknown"),
   }),
+  MetadataPair.make({ key: "BEEP_QA_TOOL_VERSIONS", value: toolVersionsText }),
 ];
 
 const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
@@ -494,10 +536,14 @@ const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
 
   if (A.contains(CONTAINER_EXTENSIONS, extension)) {
     const stampedPath = `${filePath}.provenance.${extension}`;
+    const toolVersionsText = yield* O.match(provenance.toolVersions, {
+      onNone: () => Effect.succeed("unknown"),
+      onSome: (versions) => S.encodeEffect(ToolVersionsJson)(versions).pipe(Effect.orElseSucceed(() => "unknown")),
+    });
     return yield* ffmpeg
       .writeContainerMetadata(
         WriteContainerMetadataRequest.make({
-          metadata: containerMetadataPairs(provenance),
+          metadata: containerMetadataPairs(provenance, toolVersionsText),
           outPath: stampedPath,
           overwrite: true,
           videoPath: filePath,
@@ -585,6 +631,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
   request: QaDriverRequest,
   context: {
     readonly clockSync: ClockSync;
+    readonly events: ReadonlyArray<ActionEvent>;
     readonly layout: RoundLayout;
     readonly plan: ExtractionPlan;
     readonly session: CaptureSession;
@@ -597,10 +644,17 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
   const stamp = Effect.fn("QaExtract.stamp")(function* (
     kind: "clip" | "frame" | "gif" | "sheet",
     absolutePath: string,
-    label: string
+    label: string,
+    capturedAt: O.Option<number>
   ) {
     const seqs = windowSeqsForLabel(context.plan, label);
-    const capturedAtEpochMs = windowStartForLabel(context.plan, label, context.session.startedAtEpochMs);
+    const windowStartEpochMs = windowStartForLabel(context.plan, label, context.session.startedAtEpochMs);
+    const capturedAtEpochMs = O.getOrElse(capturedAt, () => windowStartEpochMs);
+    const scenarioName = pipe(
+      scenarioMarkerNameAt(context.events, windowStartEpochMs),
+      O.orElse(() => context.session.scenario),
+      O.getOrElse(() => "unknown")
+    );
     const actionId = O.match(A.head(seqs), {
       onNone: () => label,
       onSome: (seq) => `${label}#${seq}`,
@@ -611,6 +665,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
         actionId,
         capturedAtEpochMs,
         clockSync: context.clockSync,
+        scenarioName,
         session: context.session,
         sourceVideo: context.sourceVideo,
       })
@@ -629,7 +684,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
       "extract-clip": (planned) =>
         ffmpeg.extractClip(planned.request).pipe(
           Effect.flatMap((result) =>
-            stamp("clip", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.[^.]+$/, "")))
+            stamp("clip", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.[^.]+$/, "")), O.none())
           ),
           Effect.catchCause(() => Effect.succeed(failed(`extract-clip failed for ${planned.request.outPath}`)))
         ),
@@ -641,7 +696,11 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
                 stamp(
                   "frame",
                   frame.path,
-                  O.getOrElse(planned.request.prefix, () => "frames")
+                  O.getOrElse(planned.request.prefix, () => "frames"),
+                  // Each strip frame carries the epoch of its own source
+                  // instant — the inverse clock fit over the requested seek —
+                  // not the shared window start.
+                  O.some(videoSecondsToEpochMs(context.clockSync)(frame.requestedTimestampSeconds))
                 )
               ),
               (outcomes) =>
@@ -655,7 +714,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
         ),
       "render-contact-sheet": (planned) =>
         ffmpeg.renderContactSheet(planned.request).pipe(
-          Effect.flatMap((result) => stamp("sheet", result.outPath, "contact-sheet")),
+          Effect.flatMap((result) => stamp("sheet", result.outPath, "contact-sheet", O.none())),
           Effect.catchCause(() =>
             Effect.succeed(
               failed(
@@ -667,7 +726,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
       "render-gif": (planned) =>
         ffmpeg.renderGif(planned.request).pipe(
           Effect.flatMap((result) =>
-            stamp("gif", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.gif$/, "")))
+            stamp("gif", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.gif$/, "")), O.none())
           ),
           Effect.catchCause(() => Effect.succeed(failed(`render-gif failed for ${planned.request.outPath}`)))
         ),
@@ -723,6 +782,37 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
   // fallow-ignore-next-line code-duplication -- every beep qa subcommand shares this service-acquisition and round-layout prologue; only the error wording differs
   const eventLog = yield* readEventLog(layout.eventsPath);
 
+  const recordedBudget = yield* readArtifactBudget(artifactBudgetPath(path, layout));
+  const budget = O.match(options.budgetMb, {
+    onNone: () => O.getOrElse(recordedBudget, () => ArtifactBudget.make({})),
+    onSome: (mib) => ArtifactBudget.make({ maxTotalBytes: mib * BYTES_PER_MIB }),
+  });
+  const plan = buildExtractionPlan(
+    BuildExtractionPlanOptions.make({
+      budget,
+      events: eventLog.events,
+      rules: O.getOrElse(options.rules, () => defaultExtractionRules),
+    })
+  );
+
+  const planJson = yield* encodeExtractionPlanJson(plan).pipe(
+    QaCommandError.mapError("qa extract could not encode the extraction plan.")
+  );
+  yield* fs
+    .writeFileString(extractionPlanPath(path, layout), planJson)
+    .pipe(QaCommandError.mapError(`qa extract could not write ${EXTRACTION_PLAN_FILE}.`));
+
+  // --dry-run promises "persist the plan without running any driver", so it
+  // returns before video discovery, probing, normalization, and clock
+  // correlation. The request count is derived from the plan itself: one strip
+  // per window, one GIF per gif spec, plus the whole-video contact sheet.
+  if (options.dryRun) {
+    const requestCount =
+      A.length(plan.windows) + A.length(A.filter(plan.windows, (window) => O.isSome(window.gif))) + 1;
+    yield* printLines(renderExtractionPlanTable(plan, requestCount));
+    return ExtractionOutcome.make({ artifacts: [], failures: [] });
+  }
+
   const videoPath = yield* O.match(manifest.videoPath, {
     onNone: () => discoverRecordedVideo(layout.videoDir),
     onSome: (value) => Effect.succeed(O.some(value)),
@@ -758,18 +848,6 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
     })
   );
 
-  const recordedBudget = yield* readArtifactBudget(artifactBudgetPath(path, layout));
-  const budget = O.match(options.budgetMb, {
-    onNone: () => O.getOrElse(recordedBudget, () => ArtifactBudget.make({})),
-    onSome: (mib) => ArtifactBudget.make({ maxTotalBytes: mib * BYTES_PER_MIB }),
-  });
-  const plan = buildExtractionPlan(
-    BuildExtractionPlanOptions.make({
-      budget,
-      events: eventLog.events,
-      rules: O.getOrElse(options.rules, () => defaultExtractionRules),
-    })
-  );
   const requests = planDriverRequests(
     PlanDriverRequestsOptions.make({
       clipsDir: layout.clipsDir,
@@ -782,21 +860,10 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
     })
   );
 
-  const planJson = yield* encodeExtractionPlanJson(plan).pipe(
-    QaCommandError.mapError("qa extract could not encode the extraction plan.")
-  );
-  yield* fs
-    .writeFileString(extractionPlanPath(path, layout), planJson)
-    .pipe(QaCommandError.mapError(`qa extract could not write ${EXTRACTION_PLAN_FILE}.`));
-
-  if (options.dryRun) {
-    yield* printLines(renderExtractionPlanTable(plan, A.length(requests)));
-    return ExtractionOutcome.make({ artifacts: [], failures: [] });
-  }
-
   const outcomes = yield* Effect.forEach(requests, (request) =>
     executeRequest(request, {
       clockSync,
+      events: eventLog.events,
       layout,
       plan,
       session: manifest.session,

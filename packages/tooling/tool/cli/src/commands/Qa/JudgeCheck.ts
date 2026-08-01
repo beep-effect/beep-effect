@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, Path, pipe } from "effect";
@@ -250,12 +251,18 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const present = yield* Effect.forEach(citedPaths(inventory), (relative) =>
-    fs.exists(path.join(layout.root, relative)).pipe(
-      Effect.map((exists) => (exists ? O.some(relative) : O.none<string>())),
-      Effect.orElseSucceed(O.none<string>)
-    )
-  );
+  // Citations are round-relative by contract; a `../` escape resolving to an
+  // artifact in another round (or anywhere above) must count as missing, not
+  // as backed evidence.
+  const present = yield* Effect.forEach(citedPaths(inventory), (relative) => {
+    const resolved = path.resolve(layout.root, relative);
+    return isPathWithinRoot(layout.root, resolved)
+      ? fs.exists(resolved).pipe(
+          Effect.map((exists) => (exists ? O.some(relative) : O.none<string>())),
+          Effect.orElseSucceed(O.none<string>)
+        )
+      : Effect.succeed(O.none<string>());
+  });
   return crossCheckEvidence(
     inventory,
     HashSet.fromIterable(A.getSomes(present)),
@@ -286,6 +293,47 @@ export const raiseCrossCheckFailure: {
     isCrossCheckClean(check)
       ? Effect.void
       : Effect.fail(QaCommandError.make({ message: renderCrossCheckFailure(round, check) }))
+);
+
+/**
+ * Fail when an inventory declares a different round than the one requested.
+ *
+ * Witness sequence numbers restart per round and frame names repeat across
+ * rounds, so a copied inventory can genuinely pass another round's evidence
+ * cross-check; the declared round has to be checked explicitly.
+ *
+ * @example
+ * ```ts
+ * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { requireInventoryRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import { Effect } from "effect"
+ *
+ * const inventory = QaInventory.make({
+ *   findings: [],
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   requiredCount: 0,
+ *   round: 1,
+ *   schemaVersion: "qa-inventory/v1",
+ *   sessionRef: "session.json"
+ * })
+ * console.log(Effect.isEffect(requireInventoryRound(1, inventory))) // true
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const requireInventoryRound: {
+  (inventory: QaInventory): (round: number) => Effect.Effect<void, QaCommandError>;
+  (round: number, inventory: QaInventory): Effect.Effect<void, QaCommandError>;
+} = dual(
+  2,
+  (round: number, inventory: QaInventory): Effect.Effect<void, QaCommandError> =>
+    inventory.round === round
+      ? Effect.void
+      : Effect.fail(
+          QaCommandError.make({
+            message: `qa judge inventory declares round ${inventory.round} but round ${round} was requested.`,
+          })
+        )
 );
 
 const FENCED_JSON = /```json\s*\r?\n([\s\S]*?)```/g;
