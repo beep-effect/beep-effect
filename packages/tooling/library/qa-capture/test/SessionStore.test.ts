@@ -70,6 +70,40 @@ describe("@beep/qa-capture session store", () => {
     }).pipe(provideScopedLayer(TestLayer))
   );
 
+  it.effect("clears recorder-owned outputs when reusing an occupied round", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* SessionStore;
+      const tmpDir = yield* fs.makeTempDirectory();
+      const qaRoot = `${tmpDir}/qa`;
+
+      const first = yield* store.prepareRound(qaRoot, 1);
+      yield* fs.writeFileString(`${first.clipsDir}/gesture-01.gif`, "stale-clip");
+      yield* fs.writeFileString(`${first.framesDir}/gesture-01-f01.png`, "stale-frame");
+      yield* fs.writeFileString(`${first.sheetsDir}/gesture-01-sheet.png`, "stale-sheet");
+      yield* fs.writeFileString(`${first.videoDir}/capture.webm`, "stale-video");
+      yield* fs.writeFileString(first.reportPath, "stale report");
+      yield* fs.writeFileString(first.sessionPath, "{}");
+      yield* fs.writeFileString(first.eventsPath, "stale-events\n");
+      const legacyManifestPath = `${first.root}/screenshots.json`;
+      yield* fs.writeFileString(legacyManifestPath, "[]");
+
+      const layout = yield* store.prepareRound(qaRoot, 1);
+      expect(yield* fs.readDirectory(layout.clipsDir)).toEqual([]);
+      expect(yield* fs.readDirectory(layout.framesDir)).toEqual([]);
+      expect(yield* fs.readDirectory(layout.sheetsDir)).toEqual([]);
+      expect(yield* fs.readDirectory(layout.videoDir)).toEqual([]);
+      expect(yield* fs.exists(layout.reportPath)).toBe(false);
+      expect(yield* fs.exists(layout.sessionPath)).toBe(false);
+      // Legacy screenshot manifests stay untouched per the round-layout
+      // contract, and events.ndjson is the collector's to truncate at serve.
+      expect(yield* fs.exists(legacyManifestPath)).toBe(true);
+      expect(yield* fs.readFileString(layout.eventsPath)).toBe("stale-events\n");
+
+      yield* fs.remove(tmpDir, { force: true, recursive: true });
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
   it.effect("round-trips session.json through the store", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

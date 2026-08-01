@@ -352,7 +352,7 @@ const makeService = Effect.fnUntraced(function* () {
     const clip = yield* ffmpeg.extractClip(
       ExtractClipRequest.make({
         codec: "h264",
-        durationSeconds: clipDurationSeconds,
+        durationSeconds: O.some(clipDurationSeconds),
         outPath: `${request.workDir}/beacon-probe.mp4`,
         overwrite: true,
         startSeconds: clipStartSeconds,

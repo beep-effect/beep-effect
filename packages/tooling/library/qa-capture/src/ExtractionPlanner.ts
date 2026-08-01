@@ -114,6 +114,41 @@ export const SHEET_ESTIMATED_BYTES = 320000;
  */
 export const MIN_GIF_SECONDS = 0.2;
 
+/**
+ * Distance in seconds frame seeks are kept away from the container endpoint.
+ *
+ * A seek at exactly the container duration decodes no frame, and one failed
+ * endpoint seek discards a window's whole staged strip, so mapped timestamps
+ * clamp to `videoDurationSeconds - END_SEEK_GUARD_SECONDS` instead.
+ *
+ * @example
+ * ```ts
+ * import { END_SEEK_GUARD_SECONDS } from "@beep/qa-capture"
+ * console.log(END_SEEK_GUARD_SECONDS)
+ * ```
+ * @category constants
+ * @since 0.0.0
+ */
+export const END_SEEK_GUARD_SECONDS = 0.1;
+
+/**
+ * Maximum width in pixels of extracted strip frames.
+ *
+ * Bounds the only judge artifact that was previously unbounded: full-viewport
+ * PNG frames of visually complex captures can exceed judge-pack's per-file
+ * byte ceiling and get dropped wholesale. 960 keeps a 1600-wide viewport
+ * legible for the vision judge while staying comfortably inside the budget.
+ *
+ * @example
+ * ```ts
+ * import { FRAME_MAX_WIDTH } from "@beep/qa-capture"
+ * console.log(FRAME_MAX_WIDTH)
+ * ```
+ * @category constants
+ * @since 0.0.0
+ */
+export const FRAME_MAX_WIDTH = 960;
+
 const DEGRADED_GIF_FPS = 10;
 const DEGRADED_GIF_WIDTH = 480;
 const DEFAULT_GIF_WIDTH = 640;
@@ -755,7 +790,11 @@ export const buildExtractionPlan = (options: BuildExtractionPlanOptions): Extrac
 
 /**
  * Convert a witness wall-clock timestamp to seconds on the video timeline,
- * clamped to `[0, videoDurationSeconds]`.
+ * clamped to `[0, max(0, videoDurationSeconds - END_SEEK_GUARD_SECONDS)]`.
+ *
+ * The upper bound stays {@link END_SEEK_GUARD_SECONDS} short of the container
+ * endpoint: there is no decodable frame at exactly the container duration, and
+ * the driver stages a window's timestamps as one fail-fast operation.
  *
  * @example
  * ```ts
@@ -770,7 +809,8 @@ export const buildExtractionPlan = (options: BuildExtractionPlanOptions): Extrac
  *   }),
  *   10
  * )
- * console.log(toVideo(1753838001500))
+ * console.log(toVideo(1753838001500)) // 1.5
+ * console.log(toVideo(1753838020000)) // 9.9
  * ```
  * @category utilities
  * @since 0.0.0
@@ -782,8 +822,43 @@ export const epochToVideoSeconds: {
   2,
   (clockSync: ClockSync, videoDurationSeconds: number) =>
     (epochMs: number): number =>
-      N.round(Math.min(Math.max((clockSync.slope * epochMs + clockSync.offsetMs) / 1000, 0), videoDurationSeconds), 3)
+      N.round(
+        Math.min(
+          Math.max((clockSync.slope * epochMs + clockSync.offsetMs) / 1000, 0),
+          Math.max(0, videoDurationSeconds - END_SEEK_GUARD_SECONDS)
+        ),
+        3
+      )
 );
+
+/**
+ * Convert a video-timeline timestamp back to the witness wall-clock epoch.
+ *
+ * The exact inverse of the affine {@link epochToVideoSeconds} mapping (before
+ * clamping), used to stamp each extracted strip frame with the capture epoch
+ * of its own source instant rather than the window start.
+ *
+ * @example
+ * ```ts
+ * import { ClockSync, videoSecondsToEpochMs } from "@beep/qa-capture"
+ * const toEpochMs = videoSecondsToEpochMs(
+ *   ClockSync.make({
+ *     confidence: "high",
+ *     method: "beacon",
+ *     offsetMs: -1753838000000,
+ *     residualRmsMs: 5,
+ *     slope: 1
+ *   })
+ * )
+ * console.log(toEpochMs(1.5)) // 1753838001500
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const videoSecondsToEpochMs =
+  (clockSync: ClockSync) =>
+  (videoSeconds: number): number =>
+    Math.round((videoSeconds * 1000 - clockSync.offsetMs) / clockSync.slope);
 
 /**
  * Input options for {@link planDriverRequests}.
@@ -875,11 +950,12 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
 /**
  * Materialize a fitted plan into `@beep/ffmpeg` driver requests.
  *
- * Emits one frame-strip request per window with frame times, one GIF request
- * per window with a GIF spec (duration clamped to the budget cap and video
- * end), and always exactly one whole-video contact-sheet request. When the
- * clock confidence is `low`, windows are padded by an extra 250 ms on both
- * sides before mapping onto the video timeline.
+ * Emits one frame-strip request per window with frame times (bounded to
+ * {@link FRAME_MAX_WIDTH} so strip frames stay inside the judge image budget),
+ * one GIF request per window with a GIF spec (duration clamped to the budget
+ * cap and video end), and always exactly one whole-video contact-sheet
+ * request. When the clock confidence is `low`, windows are padded by an extra
+ * 250 ms on both sides before mapping onto the video timeline.
  *
  * @param options - Fitted plan, clock sync, video path, and the artifact directories.
  * @returns One driver request per planned artifact, plus the whole-video contact sheet.
@@ -935,6 +1011,7 @@ export const planDriverRequests = (options: PlanDriverRequestsOptions): Readonly
       kind: "extract-frames-at",
       request: ExtractFramesAtRequest.make({
         manifestPath: O.some(`${options.framesDir}/${prefix}-manifest.json`),
+        maxWidth: O.some(FRAME_MAX_WIDTH),
         outDir: options.framesDir,
         overwrite: true,
         prefix: O.some(prefix),

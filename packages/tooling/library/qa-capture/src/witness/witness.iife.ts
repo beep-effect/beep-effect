@@ -104,7 +104,7 @@ interface WitnessScrollableElement extends WitnessElement {
 
 interface WitnessDocument {
   addEventListener(
-    type: "pointerdown" | "pointermove" | "pointerout" | "pointerover" | "pointerup",
+    type: "pointercancel" | "pointerdown" | "pointermove" | "pointerout" | "pointerover" | "pointerup",
     listener: (event: WitnessPointerEvent) => void,
     options?: WitnessListenerOptions
   ): void;
@@ -455,6 +455,27 @@ declare const decodeURIComponent: (value: string) => string;
       record({
         button: event.button,
         kind: "pointer-up",
+        pointerId: event.pointerId,
+        rect: rectOf(event.target),
+        selectorPath: selectorFor(event.target),
+        seq: nextSeq(),
+        tEpochMs: eventEpochMs(event.timeStamp),
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    { capture: true, passive: true }
+  );
+
+  document.addEventListener(
+    "pointercancel",
+    (event) => {
+      moveCursorRing(event.clientX, event.clientY, false);
+      // A cancelled gesture still closes its window: keep the final throttled
+      // move, then record the cancellation instant.
+      emitPendingMove();
+      record({
+        kind: "pointer-cancel",
         pointerId: event.pointerId,
         rect: rectOf(event.target),
         selectorPath: selectorFor(event.target),

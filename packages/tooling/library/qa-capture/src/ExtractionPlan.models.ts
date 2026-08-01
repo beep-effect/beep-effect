@@ -783,10 +783,11 @@ export class RenderContactSheetPlanned extends S.Class<RenderContactSheetPlanned
  * ```ts
  * import { ExtractClipRequest } from "@beep/ffmpeg"
  * import { ExtractClipPlanned } from "@beep/qa-capture"
+ * import * as O from "effect/Option"
  * const planned = ExtractClipPlanned.make({
  *   kind: "extract-clip",
  *   request: ExtractClipRequest.make({
- *     durationSeconds: 2,
+ *     durationSeconds: O.some(2),
  *     outPath: "./clips/drag.mp4",
  *     startSeconds: 0.8,
  *     videoPath: "./video/capture.webm"

@@ -1,17 +1,21 @@
 import {
   Collector,
+  CollectorHandle,
   CollectorServeOptions,
   decodeActionEventJson,
+  decodeCollectorHandleJson,
   EventsAccepted,
   encodeActionEventJson,
+  encodeCollectorHandleJson,
   MarkAccepted,
   MarkerEvent,
   PointerDownEvent,
+  QaCaptureError,
   Witness,
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient, HttpBody, HttpClient } from "effect/unstable/http";
@@ -117,6 +121,120 @@ describe("@beep/qa-capture collector", () => {
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
         // On-disk seqs are the canonical rewrite: strictly monotone from 1.
         expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
+
+        yield* fs.remove(tmpDir, { force: true, recursive: true });
+      }).pipe(provideScopedLayer(TestLayer)),
+    15000
+  );
+
+  it.effect(
+    "serve refuses to take over a live foreign collector handle",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const handlePath = path.join(tmpDir, "current.json");
+
+        // The test runner's parent process is guaranteed alive and foreign.
+        const foreign = CollectorHandle.make({
+          eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
+          pid: process.ppid,
+          port: 43117,
+          round: 1,
+          sessionDir: path.join(tmpDir, "round-1"),
+          sessionId: "qa-live-foreign",
+          startedAtEpochMs: 1753838000000,
+        });
+        yield* Effect.flatMap(encodeCollectorHandleJson(foreign), (json) => fs.writeFileString(handlePath, json));
+
+        const error = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const collector = yield* Collector;
+            return yield* collector.serve(
+              CollectorServeOptions.make({
+                eventsPath: path.join(tmpDir, "round-2", "events.ndjson"),
+                handlePath: O.some(handlePath),
+                port: 0,
+                round: 2,
+                sessionDir: path.join(tmpDir, "round-2"),
+                sessionId: "qa-usurper",
+              })
+            );
+          })
+        ).pipe(Effect.flip);
+
+        assert(QaCaptureError.is(error));
+        expect(pipe(error.message, Str.includes("still live"))).toBe(true);
+
+        // The live owner's handle survives the refused takeover.
+        const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
+        expect(remaining.sessionId).toBe("qa-live-foreign");
+
+        yield* fs.remove(tmpDir, { force: true, recursive: true });
+      }).pipe(provideScopedLayer(TestLayer)),
+    15000
+  );
+
+  it.effect(
+    "serve reclaims a stale dead-pid handle and teardown leaves a successor's handle in place",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const handlePath = path.join(tmpDir, "current.json");
+
+        // A finished child process yields a pid that is provably dead.
+        const deadPid = Bun.spawnSync(["true"]).pid;
+        const stale = CollectorHandle.make({
+          eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
+          pid: deadPid,
+          port: 43117,
+          round: 1,
+          sessionDir: path.join(tmpDir, "round-1"),
+          sessionId: "qa-stale-owner",
+          startedAtEpochMs: 1753838000000,
+        });
+        yield* Effect.flatMap(encodeCollectorHandleJson(stale), (json) => fs.writeFileString(handlePath, json));
+
+        const successor = CollectorHandle.make({
+          eventsPath: path.join(tmpDir, "round-3", "events.ndjson"),
+          pid: process.pid,
+          port: 43118,
+          round: 3,
+          sessionDir: path.join(tmpDir, "round-3"),
+          sessionId: "qa-successor",
+          startedAtEpochMs: 1753838000500,
+        });
+
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const collector = yield* Collector;
+            const running = yield* collector.serve(
+              CollectorServeOptions.make({
+                eventsPath: path.join(tmpDir, "round-2", "events.ndjson"),
+                handlePath: O.some(handlePath),
+                port: 0,
+                round: 2,
+                sessionDir: path.join(tmpDir, "round-2"),
+                sessionId: "qa-reclaimer",
+              })
+            );
+            // The stale handle was reclaimed by this session.
+            expect(running.handle.sessionId).toBe("qa-reclaimer");
+            const written = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
+            expect(written.sessionId).toBe("qa-reclaimer");
+
+            // Simulate a takeover while this session is still open: another
+            // session's handle replaces the file before the scope closes.
+            yield* Effect.flatMap(encodeCollectorHandleJson(successor), (json) => fs.writeFileString(handlePath, json));
+          })
+        );
+
+        // Teardown of the reclaimer must not delete the successor's handle.
+        const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
+        expect(remaining.sessionId).toBe("qa-successor");
 
         yield* fs.remove(tmpDir, { force: true, recursive: true });
       }).pipe(provideScopedLayer(TestLayer)),

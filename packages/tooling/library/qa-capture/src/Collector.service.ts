@@ -23,7 +23,13 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { decodeActionEventJson, encodeActionEventJson, MarkerEvent } from "./ActionEvent.models.ts";
 import { CollectorHealth, EventsAccepted, MarkAccepted, QaCollectorApi, StopAccepted } from "./Collector.api.ts";
 import { QaCaptureError } from "./QaCapture.errors.ts";
-import { CollectorHandle, encodeCollectorHandleJson, RoundNumber, SessionId } from "./QaCapture.models.ts";
+import {
+  CollectorHandle,
+  decodeCollectorHandleJson,
+  encodeCollectorHandleJson,
+  RoundNumber,
+  SessionId,
+} from "./QaCapture.models.ts";
 import { Witness } from "./Witness.service.ts";
 import type { Cause, Scope } from "effect";
 import type { ActionEvent } from "./ActionEvent.models.ts";
@@ -229,10 +235,56 @@ const portOfServer = (server: HttpServer.HttpServer["Service"], fallback: number
     Match.orElse(() => fallback)
   );
 
+// `process.kill(pid, 0)` probes liveness without signalling; a throw means
+// the pid is gone and its handle file is reclaimable.
+const isPidAlive = (pid: number): Effect.Effect<boolean> =>
+  Effect.sync(() => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
 const makeService = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const witness = yield* Witness;
+
+  // A missing handle file and an undecodable one both read as None: neither
+  // proves a live owner, so the caller decides between reclaiming (serve) and
+  // leaving the file untouched (teardown).
+  const readHandleFile = (handlePath: string): Effect.Effect<O.Option<CollectorHandle>> =>
+    fs.readFileString(handlePath).pipe(
+      Effect.flatMap(decodeCollectorHandleJson),
+      Effect.map(O.some),
+      Effect.catchCause(() => Effect.succeedNone)
+    );
+
+  // One live collector owns current.json per checkout: a decodable handle
+  // whose pid is alive and foreign refuses the takeover, while dead-pid or
+  // undecodable handles are stale and get overwritten.
+  const guardHandleTakeover = Effect.fnUntraced(function* (handlePath: string) {
+    const existing = yield* readHandleFile(handlePath);
+    yield* O.match(existing, {
+      onNone: () => Effect.void,
+      onSome: (previous) =>
+        Effect.flatMap(isPidAlive(previous.pid), (alive) =>
+          alive && previous.pid !== process.pid
+            ? Effect.fail(
+                QaCaptureError.make({
+                  message:
+                    `collector session "${previous.sessionId}" (pid ${previous.pid}, round ${previous.round}) is still live; ` +
+                    "stop it with `bun run beep qa stop` or remove the handle file to reclaim the session",
+                  operation: "collectorServe",
+                  path: O.some(handlePath),
+                })
+              )
+            : Effect.void
+        ),
+    });
+  });
 
   const serve = Effect.fn("Collector.serve")(function* (options: CollectorServeOptions) {
     const script = yield* witness.script;
@@ -375,7 +427,8 @@ const makeService = Effect.fnUntraced(function* () {
     yield* O.match(options.handlePath, {
       onNone: () => Effect.void,
       onSome: (handlePath) =>
-        encodeCollectorHandleJson(handle).pipe(
+        guardHandleTakeover(handlePath).pipe(
+          Effect.andThen(encodeCollectorHandleJson(handle)),
           Effect.flatMap((json) => fs.writeFileString(handlePath, json)),
           Effect.mapError((cause) =>
             QaCaptureError.fromUnknown("collectorServe", "could not write the collector handle file", {
@@ -383,7 +436,24 @@ const makeService = Effect.fnUntraced(function* () {
               path: handlePath,
             })
           ),
-          Effect.andThen(Effect.addFinalizer(() => fs.remove(handlePath, { force: true }).pipe(Effect.ignore)))
+          // Teardown removes the handle only while this session still owns
+          // it: after a stale-handle takeover the successor's handle must
+          // survive the predecessor's scope close.
+          Effect.andThen(
+            Effect.addFinalizer(() =>
+              readHandleFile(handlePath).pipe(
+                Effect.flatMap(
+                  O.match({
+                    onNone: () => Effect.void,
+                    onSome: (current) =>
+                      current.sessionId === handle.sessionId
+                        ? fs.remove(handlePath, { force: true }).pipe(Effect.ignore)
+                        : Effect.void,
+                  })
+                )
+              )
+            )
+          )
         ),
     });
 

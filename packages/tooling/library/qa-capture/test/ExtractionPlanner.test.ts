@@ -6,6 +6,8 @@ import {
   ClockSync,
   CssTransitionEvent,
   defaultExtractionRules,
+  END_SEEK_GUARD_SECONDS,
+  FRAME_MAX_WIDTH,
   MarkerEvent,
   mergeOverlappingWindows,
   OVERLAP_MERGE_GAP_MS,
@@ -17,6 +19,7 @@ import {
   PointerUpEvent,
   planDriverRequests,
   planWindows,
+  videoSecondsToEpochMs,
 } from "@beep/qa-capture";
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
@@ -237,9 +240,10 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(strips)).toBe(A.length(plan.windows));
     A.forEach(strips, (strip) => {
       if (strip.kind === "extract-frames-at") {
+        expect(strip.request.maxWidth).toEqual(O.some(FRAME_MAX_WIDTH));
         A.forEach(strip.request.timestampsSeconds, (timestamp) => {
           expect(timestamp).toBeGreaterThanOrEqual(0);
-          expect(timestamp).toBeLessThanOrEqual(10);
+          expect(timestamp).toBeLessThanOrEqual(10 - END_SEEK_GUARD_SECONDS);
         });
       }
     });
@@ -252,5 +256,60 @@ describe("@beep/qa-capture extraction planner", () => {
         expect(gif.request.startSeconds + gif.request.durationSeconds).toBeLessThanOrEqual(10 + 6);
       }
     });
+  });
+
+  // A seek at exactly the container duration decodes no frame and one failed
+  // endpoint seek discards the whole staged strip, so windows extending past
+  // the recording must clamp short of the endpoint.
+  it("keeps frame seeks and gif starts away from the exact video endpoint", () => {
+    const events = eventsForGesture({ distancePx: 40, durationMs: 1000, kind: "drag", startOffsetMs: 5000 }, 0);
+    const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ events }));
+    const clockSync = ClockSync.make({
+      confidence: "high",
+      method: "beacon",
+      offsetMs: -T0,
+      residualRmsMs: 5,
+      slope: 1,
+    });
+    const videoDurationSeconds = 2;
+    const requests = planDriverRequests(
+      PlanDriverRequestsOptions.make({
+        clipsDir: "/round/clips",
+        clockSync,
+        framesDir: "/round/frames",
+        plan,
+        sheetsDir: "/round/sheets",
+        videoDurationSeconds,
+        videoPath: "/round/video/capture.webm",
+      })
+    );
+
+    const guarded = videoDurationSeconds - END_SEEK_GUARD_SECONDS;
+    const strips = A.filter(requests, (request) => request.kind === "extract-frames-at");
+    expect(A.length(strips)).toBeGreaterThan(0);
+    A.forEach(strips, (strip) => {
+      if (strip.kind === "extract-frames-at") {
+        // Every seek of this fully-past-the-end window lands on the guarded
+        // bound — never on the undecodable container endpoint itself.
+        expect(strip.request.timestampsSeconds).toEqual([guarded]);
+      }
+    });
+    A.forEach(requests, (request) => {
+      if (request.kind === "render-gif") {
+        expect(request.request.startSeconds).toBeLessThanOrEqual(guarded);
+      }
+    });
+  });
+
+  it("inverts the epoch-to-video mapping exactly for per-frame stamping", () => {
+    const clockSync = ClockSync.make({
+      confidence: "high",
+      method: "beacon",
+      offsetMs: -T0,
+      residualRmsMs: 5,
+      slope: 1,
+    });
+    expect(videoSecondsToEpochMs(clockSync)(1.5)).toBe(T0 + 1500);
+    expect(videoSecondsToEpochMs(clockSync)(0)).toBe(T0);
   });
 });

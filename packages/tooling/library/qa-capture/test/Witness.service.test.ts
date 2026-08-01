@@ -17,6 +17,11 @@ describe("@beep/qa-capture witness bundling", () => {
         expect(script.length).toBeGreaterThan(0);
         expect(script).toContain("__beepQa");
         expect(script).toContain("/events");
+        // The cancel-reset lens needs a ground-truth cancellation instant:
+        // the witness must both listen for pointercancel and emit the
+        // schema-modeled pointer-cancel kind.
+        expect(script).toContain("pointercancel");
+        expect(script).toContain("pointer-cancel");
         // Bundling is cached: a second request returns the identical text.
         expect(yield* witness.script).toBe(script);
       }).pipe(provideScopedLayer(Witness.layer)),

@@ -320,6 +320,7 @@ export const ActionEventKind = LiteralKit([
   "focus-out",
   "key-down",
   "marker",
+  "pointer-cancel",
   "pointer-down",
   "pointer-enter",
   "pointer-leave",
@@ -567,6 +568,76 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
   },
   $I.annote("PointerUpEvent", {
     description: "Pointer released after a press.",
+  })
+) {}
+
+/**
+ * Pointer gesture cancelled before release (touch cancel, OS drag
+ * interception, or a harness-dispatched `pointercancel`).
+ *
+ * @example
+ * ```ts
+ * import { PointerCancelEvent } from "@beep/qa-capture"
+ * const event = PointerCancelEvent.make({
+ *   kind: "pointer-cancel",
+ *   pointerId: 1,
+ *   selectorPath: "[data-qa=\"dock-sash\"]",
+ *   seq: 8,
+ *   tEpochMs: 1753838000800,
+ *   x: 160,
+ *   y: 240
+ * })
+ * console.log(event.kind)
+ * ```
+ * @category events
+ * @since 0.0.0
+ */
+export class PointerCancelEvent extends S.Class<PointerCancelEvent>($I`PointerCancelEvent`)(
+  {
+    kind: S.tag("pointer-cancel").pipe(
+      $I.annoteKey("PointerCancelEvent.kind", {
+        description: "Discriminator for pointer-cancel events.",
+      })
+    ),
+    pointerId: S.Int.pipe(
+      $I.annoteKey("PointerCancelEvent.pointerId", {
+        description: "Browser pointer identity, stable across one gesture.",
+      })
+    ),
+    rect: S.OptionFromOptionalKey(DomRect).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("PointerCancelEvent.rect", {
+        description: "Bounding rectangle of the cancellation target, when resolvable.",
+      })
+    ),
+    selectorPath: SelectorPath.pipe(
+      $I.annoteKey("PointerCancelEvent.selectorPath", {
+        description: "Deterministic selector of the cancellation target.",
+      })
+    ),
+    seq: SequenceNumber.pipe(
+      $I.annoteKey("PointerCancelEvent.seq", {
+        description: "Witness sequence number.",
+      })
+    ),
+    tEpochMs: EpochMilliseconds.pipe(
+      $I.annoteKey("PointerCancelEvent.tEpochMs", {
+        description: "Event wall-clock timestamp in epoch milliseconds.",
+      })
+    ),
+    x: PixelPosition.pipe(
+      $I.annoteKey("PointerCancelEvent.x", {
+        description: "Pointer x position in viewport CSS pixels.",
+      })
+    ),
+    y: PixelPosition.pipe(
+      $I.annoteKey("PointerCancelEvent.y", {
+        description: "Pointer y position in viewport CSS pixels.",
+      })
+    ),
+  },
+  $I.annote("PointerCancelEvent", {
+    description: "Pointer gesture cancelled before release.",
   })
 ) {}
 
@@ -1195,6 +1266,7 @@ export const ActionEvent = S.Union([
   FocusOutEvent,
   KeyDownEvent,
   MarkerEvent,
+  PointerCancelEvent,
   PointerDownEvent,
   PointerEnterEvent,
   PointerLeaveEvent,

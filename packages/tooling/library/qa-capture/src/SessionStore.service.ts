@@ -228,6 +228,25 @@ const makeService = Effect.fnUntraced(function* () {
 
   const prepareRound = Effect.fn("SessionStore.prepareRound")(function* (qaRoot: string, round: RoundNumber) {
     const layout = roundLayout(qaRoot, round);
+    // A retried `qa record --round N` must not mix sessions: judge-pack lists
+    // the frames/sheets directories wholesale, so recorder-owned outputs from
+    // a prior occupant are cleared before reuse. Only the enumerated outputs
+    // are removed — legacy screenshot manifests inside the round root stay
+    // untouched per the package contract, and events.ndjson is truncated by
+    // the collector at serve.
+    yield* Effect.forEach(
+      [layout.clipsDir, layout.framesDir, layout.sheetsDir, layout.videoDir, layout.reportPath, layout.sessionPath],
+      (target) =>
+        fs.remove(target, { force: true, recursive: true }).pipe(
+          Effect.mapError((cause) =>
+            QaCaptureError.fromUnknown("sessionStore", "could not clear a stale round artifact", {
+              cause,
+              path: target,
+            })
+          )
+        ),
+      { discard: true }
+    );
     yield* Effect.forEach(
       [layout.root, layout.clipsDir, layout.framesDir, layout.sheetsDir, layout.videoDir],
       (dir) =>
