@@ -38,6 +38,8 @@ callsites
 canonicalise
 canonicalizer
 cata
+catamorphism
+catamorphisms
 catchable
 CCONJ
 CCPA

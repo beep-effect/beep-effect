@@ -277,8 +277,22 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
     status: SemanticSchemaStatus,
     specifications: S.NonEmptyArray(SemanticSchemaSpecification),
     equivalenceBasis: S.NonEmptyString,
-    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        deprecated: true,
+        description:
+          "Deprecated address field: composer-derived `iri` annotations own addressing (identity-iri-fold, 2026-08-01). Documentation payload fields remain canonical here.",
+      })
+    ),
+    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        deprecated: true,
+        description:
+          "Deprecated address field: composer-derived `curie` annotations own addressing (identity-iri-fold, 2026-08-01). Documentation payload fields remain canonical here.",
+      })
+    ),
     aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
     representations: SemanticRepresentation.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),

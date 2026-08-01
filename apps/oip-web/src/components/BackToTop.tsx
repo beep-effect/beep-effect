@@ -24,12 +24,13 @@ const backToTopVisibleAtom = Atom.make((get) => {
     return false;
   }
 
-  const update = () => get.setSelf(window.scrollY > REVEAL_OFFSET_PX);
+  const browserWindow = window;
+  const update = () => get.setSelf(browserWindow.scrollY > REVEAL_OFFSET_PX);
 
-  window.addEventListener("scroll", update, { passive: true });
-  get.addFinalizer(() => window.removeEventListener("scroll", update));
+  browserWindow.addEventListener("scroll", update, { passive: true });
+  get.addFinalizer(() => browserWindow.removeEventListener("scroll", update));
 
-  return window.scrollY > REVEAL_OFFSET_PX;
+  return browserWindow.scrollY > REVEAL_OFFSET_PX;
 });
 
 const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
