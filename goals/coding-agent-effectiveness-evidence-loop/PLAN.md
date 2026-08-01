@@ -87,6 +87,10 @@ phase's critical path.
      by its matching decision or terminal evidence and is otherwise
      tombstoned — **never** by "the next event of any kind", which would
      close an 82s approval at the ~6s corroborating Notification.
+     Pairing is a **two-hop join**: `PermissionRequest` carries no
+     `tool_use_id`, so it must be matched to the adjacent `PreToolUse`
+     (same session, same `tool_name`, same second) whose `tool_use_id` then
+     pairs with `PostToolUse`.
   5. Lease renewal must not treat `Stop` as a turn boundary — plan-mode
      turns emit no `Stop`, and the 60s idle Notification is Stop-gated, so
      plan-parked sessions are invisible to idle-based detection.

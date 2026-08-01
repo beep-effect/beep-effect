@@ -79,6 +79,19 @@ Corrections this forces:
    with this wiring. Recorded as an observed absence, not proof it never
    fires. Denial therefore leaves an open bracket exactly like plan
    rejection.
+6. **`PermissionRequest` carries no `tool_use_id`.** Its observed keys are
+   `cwd`, `hook_event_name`, `permission_mode`, `prompt_id`, `session_id`,
+   `tool_input`, `tool_name`, `transcript_path`, and sometimes
+   `permission_suggestions` — while `PreToolUse` and `PostToolUse` both
+   carry `tool_use_id`. A wait bracket therefore cannot be paired directly
+   from its start event: pairing must join `PermissionRequest` to the
+   adjacent `PreToolUse` (same session, same `tool_name`, same second),
+   whose `tool_use_id` then pairs with `PostToolUse`. P4's span
+   reconstruction must implement that two-hop join rather than assuming a
+   shared id.
+   (`permission_suggestions` is deliberately excluded from `HookPulseV1`: it
+   can carry tool-argument-shaped content, so law 3 keeps it
+   unrepresentable.)
 
 ## Round 1 — findings that survive
 
