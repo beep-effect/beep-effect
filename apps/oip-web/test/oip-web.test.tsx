@@ -12,7 +12,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
 import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRouteResponse";
 import { POST } from "@/app/api/contact/route";
+import oipManifest from "@/app/manifest";
 import Home from "@/app/page";
+import oipRobots from "@/app/robots";
+import oipSitemap from "@/app/sitemap";
 import { BackToTop } from "@/components/BackToTop";
 import { ContactForm } from "@/components/ContactForm";
 import { HERO_ROTATE_MS, HeroVideo } from "@/components/HeroVideo";
@@ -197,6 +200,12 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     Home({}).then((page) => {
       expect(React.isValidElement(page)).toBe(true);
     }));
+
+  it("publishes install and indexing metadata for the canonical OIP URL", () => {
+    expect(oipManifest()).toMatchObject({ name: "OIP - Oppold IP Law", start_url: "/" });
+    expect(oipRobots()).toMatchObject({ sitemap: "https://oip.law/sitemap.xml" });
+    expect(oipSitemap()[0]).toMatchObject({ url: "https://oip.law" });
+  });
 
   it("decodes the static OIP launch content", () => {
     const result = decodeOipSiteContentResult(oipSiteContent);
