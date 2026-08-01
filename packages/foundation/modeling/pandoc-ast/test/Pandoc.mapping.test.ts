@@ -467,6 +467,48 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("reports sole Para list-item normalization while keeping sole Plain supported", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const plainPandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[{ c: [{ c: "tight", t: "Str" }], t: "Plain" }]],
+              t: "BulletList",
+            },
+          ],
+          meta: {},
+        });
+        const paraPandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[{ c: [{ c: "loose", t: "Str" }], t: "Para" }]],
+              t: "BulletList",
+            },
+          ],
+          meta: {},
+        });
+
+        const plainResult = yield* pandocToDocument(plainPandoc);
+        const paraResult = yield* pandocToDocument(paraPandoc);
+
+        expect(plainResult.report.profile).toBe("supported");
+        expect(plainResult.report.issues).toEqual([]);
+        expect(paraResult.report.profile).toBe("gap");
+        expect(paraResult.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+          ["Para", "lossy", "/blocks/0/items/0/blocks/0"],
+        ]);
+
+        const plainRoundTrip = yield* documentToPandoc(plainResult.document);
+        const paraRoundTrip = yield* documentToPandoc(paraResult.document);
+
+        expect(expectBulletList(plainRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
+        expect(expectBulletList(paraRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
+      })
+    ));
+
   it("preserves Pandoc list item block structure", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -542,7 +584,7 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
-  it("preserves supported nested image-alt math before flattening alt text", () =>
+  it("keeps a single-Str image description in the supported profile", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const pandoc = yield* decodePandocJson({
@@ -551,7 +593,7 @@ describe("Pandoc.mapping", () => {
             {
               c: [
                 {
-                  c: [["", [], []], [{ c: [{ t: "InlineMath" }, "x"], t: "Math" }], ["diagram.png", ""]],
+                  c: [["", [], []], [{ c: "plain description", t: "Str" }], ["diagram.png", ""]],
                   t: "Image",
                 },
               ],
@@ -571,7 +613,112 @@ describe("Pandoc.mapping", () => {
         }
         expect(paragraph.children[0]?._tag).toBe("img");
         if (paragraph.children[0]?._tag === "img") {
-          expect(paragraph.children[0].alt).toBe("x");
+          expect(paragraph.children[0].alt).toBe("plain description");
+        }
+
+        const roundTrip = yield* documentToPandoc(result.document);
+        const image = expectPara(roundTrip.pandoc.blocks[0]).children[0];
+        expect(image?._tag).toBe("image");
+        if (image?._tag === "image") {
+          expect(A.map(image.children, (inline) => inline._tag)).toEqual(["str"]);
+          expect(expectStr(image.children[0]).text).toBe("plain description");
+        }
+      })
+    ));
+
+  it("reports segmented and empty image descriptions at their first affected paths", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                {
+                  c: [
+                    ["", [], []],
+                    [{ c: "plain", t: "Str" }, { t: "Space" }, { c: "description", t: "Str" }],
+                    ["segmented.png", ""],
+                  ],
+                  t: "Image",
+                },
+                {
+                  c: [["", [], []], [], ["empty.png", ""]],
+                  t: "Image",
+                },
+              ],
+              t: "Para",
+            },
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+
+        expect(result.report.profile).toBe("gap");
+        expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+          ["Image", "lossy", "/blocks/0/children/0/children/1"],
+          ["Image", "lossy", "/blocks/0/children/1/children"],
+        ]);
+
+        const roundTrip = yield* documentToPandoc(result.document);
+        const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
+        const segmentedImage = paragraph.children[0];
+        const emptyImage = paragraph.children[1];
+
+        expect(segmentedImage?._tag).toBe("image");
+        expect(emptyImage?._tag).toBe("image");
+        if (segmentedImage?._tag === "image" && emptyImage?._tag === "image") {
+          expect(A.map(segmentedImage.children, (inline) => inline._tag)).toEqual(["str"]);
+          expect(A.map(emptyImage.children, (inline) => inline._tag)).toEqual(["str"]);
+          expect(expectStr(segmentedImage.children[0]).text).toBe("plain description");
+          expect(expectStr(emptyImage.children[0]).text).toBe("");
+        }
+      })
+    ));
+
+  it("reports structured image descriptions at the degraded child and proves the flattened round trip", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                {
+                  c: [["", [], []], [{ c: [{ t: "InlineMath" }, "x"], t: "Math" }], ["math.png", ""]],
+                  t: "Image",
+                },
+                {
+                  c: [["", [], []], [{ c: [{ c: "styled", t: "Str" }], t: "Emph" }], ["emph.png", ""]],
+                  t: "Image",
+                },
+              ],
+              t: "Para",
+            },
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+
+        expect(result.report.profile).toBe("gap");
+        expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+          ["Image", "lossy", "/blocks/0/children/0/children/0"],
+          ["Image", "lossy", "/blocks/0/children/1/children/0"],
+        ]);
+
+        const roundTrip = yield* documentToPandoc(result.document);
+        const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
+        const mathImage = paragraph.children[0];
+        const emphImage = paragraph.children[1];
+
+        expect(roundTrip.report.issues).toEqual([]);
+        expect(mathImage?._tag).toBe("image");
+        expect(emphImage?._tag).toBe("image");
+        if (mathImage?._tag === "image" && emphImage?._tag === "image") {
+          expect(A.map(mathImage.children, (inline) => inline._tag)).toEqual(["str"]);
+          expect(A.map(emphImage.children, (inline) => inline._tag)).toEqual(["str"]);
+          expect(expectStr(mathImage.children[0]).text).toBe("x");
+          expect(expectStr(emphImage.children[0]).text).toBe("styled");
         }
       })
     ));

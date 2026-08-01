@@ -159,9 +159,10 @@ Generated cross-attribute rules require `srclang` when a `track` omits `kind`
 `kind="subtitles"`. Every present `srclang` must be a valid BCP 47 language tag
 against the package's pinned IANA Language Subtag Registry. Grandfathered,
 deprecated, registered private-range, extension, and private-use-only tags
-remain valid; duplicate variants or extension singletons and unregistered
-subtags do not. Failures and missing singleton attributes are reported at the
-exact attribute path.
+remain valid; extlangs require their registered primary-language prefix, while
+duplicate variants or extension singletons and unregistered subtags do not.
+Failures and missing singleton attributes are reported at the exact attribute
+path.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text

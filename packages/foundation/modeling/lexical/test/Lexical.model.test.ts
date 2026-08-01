@@ -40,6 +40,25 @@ const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
 const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire);
 
+const matchedNodeType: (node: LexicalNode) => LexicalNode["type"] = LexicalNode.match({
+  "artifact-ref": (node) => node.type,
+  code: (node) => node.type,
+  heading: (node) => node.type,
+  linebreak: (node) => node.type,
+  link: (node) => node.type,
+  list: (node) => node.type,
+  listitem: (node) => node.type,
+  paragraph: (node) => node.type,
+  quote: (node) => node.type,
+  root: (node) => node.type,
+  tab: (node) => node.type,
+  table: (node) => node.type,
+  tablecell: (node) => node.type,
+  tablerow: (node) => node.type,
+  text: (node) => node.type,
+  youtube: (node) => node.type,
+});
+
 const element = {
   version: 1,
   direction: null,
@@ -264,6 +283,7 @@ describe("Lexical.model", () => {
   it("round-trips schema-derived arbitrary nodes and states through encode/decode", () => {
     fc.assert(
       fc.property(NodeArbitrary, StateArbitrary, (node, state) => {
+        expect(matchedNodeType(node)).toBe(node.type);
         expect(LexicalNode.fromUnknown(S.encodeSync(LexicalNode)(node))).toEqual(node);
         expect(S.decodeUnknownSync(SerializedEditorState)(S.encodeSync(SerializedEditorState)(state))).toEqual(state);
         expect(SerializedEditorState.decodeOption(S.encodeSync(SerializedEditorState)(state))).toEqual(O.some(state));
@@ -401,6 +421,7 @@ describe("Lexical.model", () => {
       },
     } as const;
     const nodeWithExtension = { ...state.root.children[0], futureNode: true } as const;
+    const rootWithNestedExtension = { ...state.root, children: [nodeWithExtension] } as const;
     const cases = [
       [
         { ...state, futureEnvelope: true },
@@ -418,6 +439,8 @@ describe("Lexical.model", () => {
 
     expect(S.decodeUnknownResult(LexicalNode)(nodeWithExtension)._tag).toBe("Failure");
     expect(O.isNone(LexicalNode.decodeOption(nodeWithExtension))).toBe(true);
+    expect(S.decodeUnknownResult(LexicalNode)(rootWithNestedExtension)._tag).toBe("Failure");
+    expect(O.isNone(LexicalNode.decodeOption(rootWithNestedExtension))).toBe(true);
     A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
       expect(S.decodeUnknownResult(SerializedEditorState)(stateWithExtension)._tag).toBe("Failure");
       expect(O.isNone(SerializedEditorState.decodeOption(stateWithExtension))).toBe(true);
@@ -592,6 +615,43 @@ describe("Lexical.model", () => {
     expect(() => S.decodeUnknownSync(SerializedEditorState)(misplacedText)).toThrow();
     expect(Effect.runSync(decodeEditorStateLossless(misplacedText))).toEqual(misplacedText);
     expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
+  });
+
+  it("enforces recursive child placement and non-empty roots on the public node schema", () => {
+    const paragraph = { ...element, type: "paragraph", children: [text("valid paragraph")] };
+    const listItem = { ...element, type: "listitem", value: 1, children: [text("valid item")] };
+    const list = {
+      ...element,
+      type: "list",
+      listType: "bullet",
+      start: 1,
+      tag: "ul",
+      children: [listItem],
+    };
+    const tableCell = { ...element, type: "tablecell", headerState: 0, children: [paragraph] };
+    const tableRow = { ...element, type: "tablerow", children: [tableCell] };
+    const table = { ...element, type: "table", children: [tableRow] };
+    const root = { ...element, type: "root", children: [paragraph, list, table] };
+
+    A.forEach([text("standalone leaf"), paragraph, list, table, root], (input) => {
+      const result = S.decodeUnknownResult(LexicalNode)(input);
+      expect(Result.isSuccess(result)).toBe(true);
+      if (Result.isSuccess(result)) {
+        expect(matchedNodeType(result.success)).toBe(input.type);
+      }
+    });
+
+    A.forEach(
+      [
+        { ...element, type: "root", children: [] },
+        { ...element, type: "root", children: [text("misplaced text")] },
+        { ...list, children: [paragraph] },
+        { ...table, children: [tableCell] },
+        { ...tableRow, children: [paragraph] },
+        { ...tableCell, children: [text("misplaced cell text")] },
+      ],
+      (input) => expect(Result.isFailure(S.decodeUnknownResult(LexicalNode)(input))).toBe(true)
+    );
   });
 
   it("preserves an empty root losslessly while reporting strict incompatibility", () => {

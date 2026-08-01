@@ -176,6 +176,34 @@ const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBl
   })
 );
 
+const imageDescriptionLossPath = (children: ReadonlyArray<PandocInline.Type>, path: JsonPath): O.Option<JsonPath> => {
+  const first = children[0];
+  if (first === undefined) {
+    return O.some([...path, "children"]);
+  }
+  if (children.length === 1 && first._tag === "str") {
+    return O.none();
+  }
+  return O.some(appendIndex(path, "children", first._tag === "str" ? 1 : 0));
+};
+
+const imageDescriptionLossIssues = (
+  children: ReadonlyArray<PandocInline.Type>,
+  path: JsonPath
+): ReadonlyArray<PandocMappingIssue.Type> =>
+  O.match({
+    onNone: () => [],
+    onSome: (lossPath: JsonPath) => [
+      issue({
+        construct: "Image",
+        direction: "pandoc-to-md",
+        message: "Pandoc image descriptions other than one Str are flattened to one plain-text alt value in Md.",
+        path: lossPath,
+        severity: "lossy",
+      }),
+    ],
+  })(imageDescriptionLossPath(children, path));
+
 const pandocInlineToMd = (
   inline: PandocInline.Type,
   path: JsonPath
@@ -250,6 +278,7 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
+            ...imageDescriptionLossIssues(node.children, path),
             ...(PandocAttr.isNonEmpty(node.attr)
               ? [
                   issue({
@@ -410,7 +439,23 @@ const pandocListItemBlocksToMdChildren = (
   const first = item[0];
 
   return item.length === 1 && first !== undefined && isPlainOrPara(first)
-    ? pandocListItemBlockToMdInlines(first, appendIndex(path, "blocks", 0))
+    ? Effect.map(pandocListItemBlockToMdInlines(first, appendIndex(path, "blocks", 0)), ({ issues, value }) => ({
+        issues: [
+          ...issues,
+          ...(first._tag === "para"
+            ? [
+                issue({
+                  construct: "Para",
+                  direction: "pandoc-to-md",
+                  message: "A sole Pandoc Para list item is normalized to Plain when mapped back from Md.",
+                  path: appendIndex(path, "blocks", 0),
+                  severity: "lossy",
+                }),
+              ]
+            : []),
+        ],
+        value,
+      }))
     : Effect.map(
         Effect.forEach(item, (block, index) =>
           pandocListItemBlockToMdChildBlocks(block, appendIndex(path, "blocks", index))

@@ -61,11 +61,13 @@ version-pinned snapshots — the generator reads only these, never the network.
 - **Source:** `https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry`
 - **File-Date:** `2026-06-14`
 - **SHA-256:** `be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a`
-- **Drives:** the compact registered language, extlang, script, region,
-  variant, and grandfathered-tag sets used by `track[srclang]` conformance.
+- **Drives:** the compact registered language, extlang-to-primary-prefix,
+  script, region, variant, and grandfathered-tag data used by
+  `track[srclang]` conformance.
   Generation expands the registry's four private-use ranges and fails when
   the pinned byte hash, file date, record counts, or range inventory drifts.
-- **Validity:** RFC 5646 section 2.2.9. Deprecated registrations remain valid;
-  extension contents and registry `Prefix` recommendations are not narrowed.
+- **Validity:** RFC 5646 sections 2.2.2 and 2.2.9. Deprecated registrations
+  remain valid; extlangs require their registered primary prefix. Extension
+  contents and advisory variant-prefix recommendations are not narrowed.
 
 See `NOTICE` for required attribution.

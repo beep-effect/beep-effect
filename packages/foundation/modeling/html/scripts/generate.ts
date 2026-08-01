@@ -95,12 +95,13 @@ const IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS: Readonly<Record<LanguageSubtagRegist
 const IANA_LANGUAGE_SUBTAG_REGISTRY_RANGES = ["qaa..qtz", "Qaaa..Qabx", "QM..QZ", "XA..XZ"];
 
 interface LanguageSubtagRegistryRecord {
+  readonly prefixes: ReadonlyArray<string>;
   readonly subtagOrTag: string;
   readonly type: LanguageSubtagRegistryKind;
 }
 
 interface LanguageTagRegistryData {
-  readonly extlangs: ReadonlyArray<string>;
+  readonly extlangPrefixes: Readonly<Record<string, string>>;
   readonly fileDate: string;
   readonly grandfathered: ReadonlyArray<string>;
   readonly languages: ReadonlyArray<string>;
@@ -169,7 +170,7 @@ const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData =>
       return failGeneration(`IANA registry record has unknown Type ${type ?? "missing"}`);
     }
     if (subtagOrTag === undefined) return failGeneration(`IANA registry ${type} record has no Subtag or Tag`);
-    return { subtagOrTag, type };
+    return { prefixes: fields.get("Prefix") ?? [], subtagOrTag, type };
   });
 
   for (const [type, expected] of R.toEntries(IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS)) {
@@ -195,11 +196,33 @@ const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData =>
     return values;
   };
 
+  const extlangs = valuesFor("extlang");
+  const languages = valuesFor("language");
+  const extlangPrefixes = R.fromEntries(
+    records
+      .filter((record) => record.type === "extlang")
+      .map((record) => {
+        const [prefix] = record.prefixes;
+        if (prefix === undefined || record.prefixes.length !== 1) {
+          return failGeneration(
+            `IANA registry extlang ${record.subtagOrTag} requires exactly one Prefix; received ${JSON.stringify(record.prefixes)}`
+          );
+        }
+        const normalizedExtlang = record.subtagOrTag.toLowerCase();
+        const normalizedPrefix = prefix.toLowerCase();
+        if (!A.contains(languages, normalizedPrefix)) {
+          return failGeneration(`IANA registry extlang ${record.subtagOrTag} has invalid registered Prefix ${prefix}`);
+        }
+        return [normalizedExtlang, normalizedPrefix] as const;
+      })
+  );
+  assertExactInventory("IANA registry extlang prefix inventory", R.keys(extlangPrefixes), extlangs);
+
   return {
-    extlangs: valuesFor("extlang"),
+    extlangPrefixes,
     fileDate,
     grandfathered: valuesFor("grandfathered"),
-    languages: valuesFor("language"),
+    languages,
     regions: valuesFor("region"),
     scripts: valuesFor("script"),
     variants: valuesFor("variant"),
@@ -218,7 +241,7 @@ const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): stri
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
   languages: ReadonlyArray<string>;
-  extlangs: ReadonlyArray<string>;
+  extlangPrefixes: Readonly<Record<string, string>>;
   scripts: ReadonlyArray<string>;
   regions: ReadonlyArray<string>;
   variants: ReadonlyArray<string>;
@@ -241,7 +264,7 @@ type GeneratedLanguageTagRegistry = Readonly<{
 export const IANA_LANGUAGE_TAG_REGISTRY: GeneratedLanguageTagRegistry = Object.freeze({
   fileDate: ${JSON.stringify(registry.fileDate)},
   languages: Object.freeze(${JSON.stringify(registry.languages)}),
-  extlangs: Object.freeze(${JSON.stringify(registry.extlangs)}),
+  extlangPrefixes: Object.freeze(${JSON.stringify(registry.extlangPrefixes)}),
   scripts: Object.freeze(${JSON.stringify(registry.scripts)}),
   regions: Object.freeze(${JSON.stringify(registry.regions)}),
   variants: Object.freeze(${JSON.stringify(registry.variants)}),

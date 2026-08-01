@@ -156,6 +156,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
     expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
   });
 
+  it("does not advertise a combobox when no typeahead plugin can mount", () => {
+    render(
+      <ChatComposer namespace="typeahead-unavailable" mountConfig={{ features: { mentions: true, slash: false } }} />
+    );
+
+    const editor = screen.getByRole("textbox", { name: "Message composer" });
+    expect(editor).not.toHaveAttribute("aria-expanded");
+    expect(editor).not.toHaveAttribute("aria-controls");
+    expect(editor).not.toHaveAttribute("aria-activedescendant");
+  });
+
   it.effect(
     "catches a synchronously rejected attachment port and revokes the rolled-back URL exactly once",
     Effect.fnUntraced(function* () {
@@ -852,6 +863,75 @@ describe("editor contract hardening", { concurrent: false }, () => {
         waitFor(() => {
           expect(firstEditor).toHaveAttribute("aria-activedescendant", firstActive);
           expect(secondEditor).toHaveAttribute("aria-activedescendant", secondActive);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "collapses a vanished popup and restores only its composer's ARIA relations when it reappears",
+    Effect.fnUntraced(function* () {
+      render(
+        <>
+          <ChatComposer
+            namespace="mention-aria-recovery-first"
+            mentionSource={() => [{ id: "first", label: "First recovery option" }]}
+          >
+            <SeedEditor label="Seed first recovery mention" text="@first" />
+          </ChatComposer>
+          <ChatComposer
+            namespace="mention-aria-recovery-second"
+            mentionSource={() => [{ id: "second", label: "Second recovery option" }]}
+          >
+            <SeedEditor label="Seed second recovery mention" text="@second" />
+          </ChatComposer>
+        </>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Seed first recovery mention" }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /First recovery option/u }));
+      fireEvent.click(screen.getByRole("button", { name: "Seed second recovery mention" }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /Second recovery option/u }));
+
+      const editors = screen.getAllByRole("combobox", { name: "Message composer" });
+      const firstEditor = editors.at(0);
+      const secondEditor = editors.at(1);
+      expect(firstEditor).toBeDefined();
+      expect(secondEditor).toBeDefined();
+      if (firstEditor === undefined || secondEditor === undefined) return;
+
+      const firstControls = firstEditor.getAttribute("aria-controls");
+      const secondControls = secondEditor.getAttribute("aria-controls");
+      expect(firstControls).not.toBeNull();
+      expect(secondControls).not.toBeNull();
+      if (firstControls === null || secondControls === null) return;
+
+      const firstListbox = document.getElementById(firstControls);
+      const firstMarker = firstListbox?.querySelector<HTMLElement>(`[${TYPEAHEAD_MENU_ATTRIBUTE}]`);
+      expect(firstListbox).toHaveAttribute("role", "listbox");
+      expect(firstMarker).toBeInTheDocument();
+      if (firstListbox === null || firstMarker === null || firstMarker === undefined) return;
+
+      firstMarker.remove();
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(firstEditor).toHaveAttribute("aria-expanded", "false");
+          expect(firstEditor).not.toHaveAttribute("aria-controls");
+          expect(firstEditor).not.toHaveAttribute("aria-activedescendant");
+          expect(secondEditor).toHaveAttribute("aria-expanded", "true");
+          expect(secondEditor).toHaveAttribute("aria-controls", secondControls);
+        })
+      );
+
+      firstListbox.append(firstMarker);
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(firstEditor).toHaveAttribute("aria-expanded", "true");
+          expect(firstEditor).toHaveAttribute("aria-controls", firstControls);
+          const active = firstEditor.getAttribute("aria-activedescendant");
+          expect(firstListbox).toContainElement(active === null ? null : document.getElementById(active));
+          expect(secondEditor).toHaveAttribute("aria-expanded", "true");
+          expect(secondEditor).toHaveAttribute("aria-controls", secondControls);
         })
       );
     })

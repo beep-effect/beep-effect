@@ -364,8 +364,6 @@ describe("@beep/html track language conformance", () => {
       "en",
       "EN-us",
       "zh-Hant-TW",
-      "zh-cmn",
-      "en-cmn",
       "sl-rozaj-biske-1994",
       "en-a-myext-b-another",
       "en-x-private",
@@ -409,6 +407,17 @@ describe("@beep/html track language conformance", () => {
         const issues = kind === undefined ? languageIssues(language, O.none()) : languageIssues(language, O.some(kind));
         expect(issues).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
       }
+    }
+  });
+
+  it("requires every registered extlang to follow its IANA primary-language prefix", () => {
+    for (const language of ["ar-aao", "sgn-ads", "ms-bjn", "zh-cmn"]) {
+      expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
+    }
+    for (const language of ["en-aao", "en-ads", "en-bjn", "en-cmn"]) {
+      expect(languageIssues(language, O.some("captions"))).toContainEqual(
+        expect.objectContaining({ rule: "attributeRelationship" })
+      );
     }
   });
 

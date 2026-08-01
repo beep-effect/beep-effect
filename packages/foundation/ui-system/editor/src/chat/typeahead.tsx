@@ -625,10 +625,20 @@ const findTypeaheadAnchor = (root: HTMLElement, editor: LexicalEditor): HTMLElem
   return null;
 };
 
+const collapseTypeaheadAria = (root: HTMLElement): void => {
+  if (root.getAttribute("aria-expanded") !== "false") root.setAttribute("aria-expanded", "false");
+  root.removeAttribute("aria-controls");
+  root.removeAttribute("aria-activedescendant");
+};
+
 const synchronizeTypeaheadAria = (root: HTMLElement, editor: LexicalEditor): void => {
   const anchor = findTypeaheadAnchor(root, editor);
-  if (anchor === null || anchor.getAttribute("role") !== "listbox") return;
+  if (anchor === null || anchor.getAttribute("role") !== "listbox") {
+    collapseTypeaheadAria(root);
+    return;
+  }
   const menuId = typeaheadMenuId(editor);
+  if (root.getAttribute("aria-expanded") !== "true") root.setAttribute("aria-expanded", "true");
   if (anchor.id !== menuId) anchor.id = menuId;
   if (root.getAttribute("aria-controls") !== menuId) root.setAttribute("aria-controls", menuId);
   const selectedOption = anchor.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
@@ -675,15 +685,25 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
         rootElement.setAttribute("role", "combobox");
         rootElement.setAttribute("aria-haspopup", "listbox");
         rootElement.setAttribute("aria-autocomplete", "list");
-        rootElement.setAttribute("aria-expanded", open ? "true" : "false");
-        if (!open) return;
+        if (!open) {
+          collapseTypeaheadAria(rootElement);
+          return;
+        }
 
         synchronizeTypeaheadAria(rootElement, editor);
         const Observer = rootElement.ownerDocument.defaultView?.MutationObserver;
         if (Observer === undefined) return;
         observer = new Observer(() => synchronizeTypeaheadAria(rootElement, editor));
         observer.observe(rootElement.ownerDocument.body, {
-          attributeFilter: ["aria-activedescendant", "aria-controls", "aria-selected", "id"],
+          attributeFilter: [
+            "aria-activedescendant",
+            "aria-controls",
+            "aria-expanded",
+            "aria-selected",
+            "id",
+            "role",
+            TYPEAHEAD_MENU_ATTRIBUTE,
+          ],
           attributes: true,
           childList: true,
           subtree: true,

@@ -12,7 +12,7 @@
  * deliberately accepts JSON values only.
  */
 
-import { analyzeEditorStateCompatibility } from "@beep/lexical-schema";
+import { analyzeEditorStateCompatibility, LexicalNode } from "@beep/lexical-schema";
 import { describe, expect, it } from "tstyche";
 import type {
   ArtifactRefNode,
@@ -22,7 +22,6 @@ import type {
   ElementFormat,
   HeadingNode,
   HeadingTag,
-  LexicalNode,
   LexicalNodeWire,
   LineBreakNode,
   LinkNode,
@@ -67,6 +66,11 @@ import type {
 
 type SansChildren<T> = Omit<T, "children">;
 type SansChildrenTypeAndNodeState<T> = Omit<T, "$" | "children" | "type">;
+type LexicalNodeMatcher = {
+  readonly [Type in LexicalNode["type"]]: (node: Extract<LexicalNode, { readonly type: Type }>) => string;
+};
+
+declare const lexicalNodeMatcher: LexicalNodeMatcher;
 
 describe("@beep/lexical-schema ↔ lexical 0.48", () => {
   it("pins the shared token vocabularies", () => {
@@ -218,5 +222,12 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
       SansChildren<LexicalSerializedEditorState["root"]>
     >();
     expect<LexicalNode.Encoded>().type.toBeAssignableTo<SerializedLexicalNode>();
+  });
+
+  it("retains tagged-union and codec statics on the strict node schema", () => {
+    expect(LexicalNode.match(lexicalNodeMatcher)).type.toBeAssignableTo<(node: LexicalNode) => string>();
+    expect(LexicalNode.guards.root).type.toBeAssignableTo<(input: unknown) => input is RootNode.Type>();
+    expect(LexicalNode.fromUnknown).type.toBeCallableWith({ type: "linebreak", version: 1 });
+    expect(LexicalNode.decodeOption).type.toBeCallableWith({ type: "linebreak", version: 1 });
   });
 });

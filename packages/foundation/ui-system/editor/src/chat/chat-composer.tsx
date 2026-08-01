@@ -535,7 +535,7 @@ function ComposerFeaturePlugins({
       {features.slash ? <SlashPlugin items={slashItems} /> : null}
       {features.mentions && mentionSource !== undefined ? <MentionPlugin source={mentionSource} /> : null}
       {features.attachments ? <AttachmentPlugin /> : null}
-      {features.slash || features.mentions ? <ComboboxAriaPlugin /> : null}
+      {features.slash || (features.mentions && mentionSource !== undefined) ? <ComboboxAriaPlugin /> : null}
       <SendCommandBinding editor={editor} />
     </>
   );

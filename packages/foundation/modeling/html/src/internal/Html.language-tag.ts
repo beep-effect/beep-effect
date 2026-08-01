@@ -6,7 +6,7 @@
 import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated.ts";
 
 const languages = new Set(IANA_LANGUAGE_TAG_REGISTRY.languages);
-const extlangs = new Set(IANA_LANGUAGE_TAG_REGISTRY.extlangs);
+const extlangPrefixes = IANA_LANGUAGE_TAG_REGISTRY.extlangPrefixes;
 const scripts = new Set(IANA_LANGUAGE_TAG_REGISTRY.scripts);
 const regions = new Set(IANA_LANGUAGE_TAG_REGISTRY.regions);
 const variants = new Set(IANA_LANGUAGE_TAG_REGISTRY.variants);
@@ -24,9 +24,10 @@ const PRIVATE_USE_SUBTAG_PATTERN = /^[a-z0-9]{1,8}$/u;
  * Tests one string against RFC 5646 section 2.2.9 using the pinned IANA
  * Language Subtag Registry.
  *
- * Deprecated registrations remain valid. Extension payloads are checked for
- * RFC syntax and duplicate singletons, but not extension-specific semantics,
- * which RFC 5646 does not require a base validating processor to implement.
+ * Deprecated registrations remain valid. Registered extlangs require their
+ * IANA primary-language prefix. Extension payloads are checked for RFC syntax
+ * and duplicate singletons, but not extension-specific semantics, which RFC
+ * 5646 does not require a base validating processor to implement.
  *
  * @example
  * ```ts
@@ -61,7 +62,7 @@ export const isValidBcp47LanguageTag = (value: string): boolean => {
     possibleExtlang !== undefined &&
     possibleExtlang.length === 3 &&
     ALPHA_PATTERN.test(possibleExtlang) &&
-    extlangs.has(possibleExtlang)
+    extlangPrefixes[possibleExtlang] === primary
   ) {
     index += 1;
   }

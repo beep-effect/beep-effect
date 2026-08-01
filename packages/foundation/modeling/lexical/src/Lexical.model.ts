@@ -1062,9 +1062,9 @@ export declare namespace BaseNode {
  * hand-written namespace types — referencing the classes here would make
  * every class's base expression circular.
  */
-const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode.Encoded> => LexicalNode)).pipe(
+const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode.Encoded> => RawLexicalNode)).pipe(
   $I.annoteSchema("NodeChildren", {
-    description: "Ordered recursive child node list for serialized Lexical element nodes.",
+    description: "Ordered recursive child node list decoded structurally before the public tree grammar is checked.",
   })
 );
 
@@ -2451,24 +2451,9 @@ export declare namespace TableNode {
   }
 }
 
-/**
- * The tagged union of all v1 serialized Lexical nodes, discriminated by
- * Lexical's own `type` key.
- *
- * @example
- * ```ts
- * import { Result } from "effect"
- * import * as S from "effect/Schema"
- * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
- *
- * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const LexicalNode = S.Union([
+// Element recursion decodes through this structural union once; the exported
+// schema below performs the recursive parent-child check over the decoded tree.
+const RawLexicalNode = S.Union([
   // leaves
   TextNode,
   TabNode,
@@ -2489,8 +2474,42 @@ export const LexicalNode = S.Union([
   TableCellNode,
 ]).pipe(
   S.toTaggedUnion("type"),
+  $I.annoteSchema("RawLexicalNode", {
+    description: "Internal structural union used to decode recursive Lexical children before tree validation.",
+    parseOptions: strictSemanticParseOptions,
+  })
+);
+
+/**
+ * The strict tagged union of all v1 serialized Lexical nodes, discriminated by
+ * Lexical's own `type` key and validated against the recursive child grammar.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LexicalNode = RawLexicalNode.check(
+  S.makeFilter(isStrictLexicalNode, {
+    identifier: $I`StrictLexicalNodeTreeCheck`,
+    title: "Strict Lexical Node",
+    description:
+      "A serialized Lexical node whose recursive child topology follows the supported v1 grammar, with a non-empty document root.",
+    message: "Expected every Lexical node to appear under a compatible v1 parent and root nodes to be non-empty.",
+  })
+).pipe(
+  S.toTaggedUnion("type"),
   $I.annoteSchema("LexicalNode", {
-    description: "The tagged union of all v1 serialized Lexical nodes, discriminated by Lexical's own type key.",
+    description:
+      "The strict tagged union of v1 serialized Lexical nodes, including recursive parent-child grammar and non-empty root validation.",
     parseOptions: strictSemanticParseOptions,
   }),
   SchemaUtils.withCodecStatics
@@ -2600,6 +2619,10 @@ const isStrictListItemChildType = S.is(StrictListItemChildType);
 
 function hasStrictNodeChildren(node: LexicalNode.Type): boolean {
   return strictNodeChildren(node);
+}
+
+function isStrictLexicalNode(node: LexicalNode.Type): boolean {
+  return (node.type !== "root" || A.isReadonlyArrayNonEmpty(node.children)) && hasStrictNodeChildren(node);
 }
 
 const strictNodeChildren: (node: LexicalNode.Type) => boolean = LexicalNode.match({
