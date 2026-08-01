@@ -46,7 +46,9 @@ Plan of record: `~/.claude/plans/what-do-you-think-zany-lemon.md`.
 3. `git apply ops/falsification/sash-preventdefault-revert.patch` → run
    round-F (`falsification: true` in session provenance, 24-frame strips).
 4. Pass/fail per the locked bar above. `git apply -R` to restore.
-5. Final confirmation round → 0 required findings, twice (Lane A + Lane B).
+5. Final confirmation round → 0 required findings, twice on Lane A (met:
+   worktree rounds 5 and 11). The second lane was to be Lane B; see the
+   lane-decision row for why that became Lane C and graduated to a follow-up.
 
 ## Evidence locations
 
