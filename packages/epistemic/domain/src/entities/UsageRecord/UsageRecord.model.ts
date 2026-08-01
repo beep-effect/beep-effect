@@ -72,7 +72,9 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
   Epistemic.UsageRecordId,
   {
     fields: {
-      activityId: Epistemic.ActivityId,
+      activityId: Epistemic.ActivityId.pipe(S.OptionFromNullOr).annotateKey({
+        description: "Optional persisted provenance Activity link; encoded absence is SQL and JSON null.",
+      }),
       actor: Principal,
       costUsdApproxMicros: NonNegativeInt.pipe(S.OptionFromNullOr),
       credentialReference: OnePasswordReference.pipe(S.OptionFromNullOr),

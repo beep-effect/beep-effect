@@ -22,9 +22,12 @@
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
 import {
   AgentTurnKernel,
+  AssistantTurnEvent,
   AssistantTurnHistoryItem,
   ChatActionError,
   ChatRpcs,
+  ProviderUsageMetadata,
+  TurnGenerationError,
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
@@ -45,6 +48,7 @@ import {
   HashMap,
   Layer,
   Metric,
+  Number as N,
   Order,
   pipe,
   Ref,
@@ -57,9 +61,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
+import { approximateCostUsdMicros } from "./UsagePricing.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import type { IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
@@ -223,50 +228,62 @@ const repairOrphanedUserTurn = Effect.fn("agents.chat.repair_orphaned_user_turn"
 });
 
 // ---------------------------------------------------------------------------
-// Usage-record synthesis (fixture path)
+// Usage-record synthesis
 // ---------------------------------------------------------------------------
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
+const ACTIVITY_LINK_UNAVAILABLE = "unavailable_no_activity_store";
 
-const decodeUsageAppend = S.decodeUnknownSync(TurnFinalizationUsageAppend);
+const decodeUsageAppend = S.decodeUnknownEffect(TurnFinalizationUsageAppend);
+const encodeProviderUsage = S.encodeUnknownEffect(ProviderUsageMetadata);
 
 /**
- * Synthesize the finalized-turn {@link UsageRecord} for the fixture path. The
- * fixture kernel performs no real LLM work, so provider/model are `"fixture"`
- * and every token/cost/latency field is absent. The orgId, principal, and
- * synthesized activity/usage ids stand in for the not-yet-wired request
- * principal, matching the in-memory ThreadStore's system stand-in.
- *
- * The current kernel contract streams content only, so this record intentionally
- * carries no provider token accounting or request-principal metadata.
+ * Build the finalized-turn {@link UsageRecord} from the kernel's provider
+ * metadata and the real persisted assistant turn. `Activity` has a domain
+ * model but no persistence table, repository, or desktop sink in this slice,
+ * so `activityId` is explicitly absent and the real assistant-turn public id is
+ * retained in metadata rather than inventing an Activity id.
  */
-const fixtureUsageRecord = appendTurnFinalizationUsageRecord(
-  decodeUsageAppend({
-    createdAt: 0,
+const makeTurnFinalizationUsageRecord = Effect.fn("agents.chat.make_turn_finalization_usage_record")(function* (
+  assistant: Thread.AppendTurnResult,
+  providerUsage: ProviderUsageMetadata,
+  finalizedAt: number,
+  latencyMillis: number,
+  threadId: WorkspaceIdentity.ThreadId
+) {
+  const encodedUsage = yield* encodeProviderUsage(providerUsage);
+  const append = yield* decodeUsageAppend({
+    createdAt: finalizedAt,
     createdByPrincipal: SYSTEM_PRINCIPAL,
     entityType: "EpistemicUsageRecord",
-    id: 1,
-    orgId: 1,
-    publicId: "epistemic_usage_record_a1",
+    id: assistant.turn.id,
+    orgId: assistant.turn.orgId,
+    publicId: Str.replace("workspace_turn_", "epistemic_usage_record_")(assistant.turn.publicId),
     rowVersion: 1,
     schemaVersion: "0.0.0",
-    source: "System",
-    updatedAt: 0,
+    source: "Agent",
+    updatedAt: finalizedAt,
     updatedByPrincipal: SYSTEM_PRINCIPAL,
-    activityId: 1,
+    activityId: null,
     actor: SYSTEM_PRINCIPAL,
-    costUsdApproxMicros: null,
+    costUsdApproxMicros: O.getOrNull(approximateCostUsdMicros(providerUsage)),
     credentialReference: null,
-    inputTokens: null,
-    latencyMillis: null,
-    metadata: {},
-    model: "fixture",
-    outputTokens: null,
-    provider: "fixture",
-    totalTokens: null,
+    inputTokens: providerUsage.inputTokens,
+    latencyMillis,
+    metadata: {
+      activityLinkStatus: ACTIVITY_LINK_UNAVAILABLE,
+      assistantTurnPublicId: assistant.turn.publicId,
+      stopReason: encodedUsage.stopReason,
+      threadId,
+    },
+    model: providerUsage.model,
+    outputTokens: providerUsage.outputTokens,
+    provider: providerUsage.provider,
+    totalTokens: N.sum(providerUsage.inputTokens, providerUsage.outputTokens),
     unitCount: null,
-  })
-);
+  });
+  return appendTurnFinalizationUsageRecord(append);
+});
 
 // ---------------------------------------------------------------------------
 // Stream-and-persist tail (shared by SendMessage and EditMessage)
@@ -338,6 +355,24 @@ const streamAndPersist = (
         yield* Metric.update(Metric.withAttributes(chatTurnsTotal, { kind }), 1);
         let collected: ReadonlyArray<IndexedBlock> = A.empty<IndexedBlock>();
         const persisted = yield* Ref.make(false);
+        const finalizedAt = yield* Ref.make<O.Option<number>>(O.none());
+        const finalizedUsage = yield* Ref.make<O.Option<ProviderUsageMetadata>>(O.none());
+
+        const requireFinalization = Effect.fnUntraced(function* () {
+          const observed = O.all({
+            finalizedAt: yield* Ref.get(finalizedAt),
+            usage: yield* Ref.get(finalizedUsage),
+          });
+          return yield* O.match(observed, {
+            onNone: () =>
+              Effect.fail(
+                TurnGenerationError.make({
+                  message: "Assistant turn stream ended without a provider-usage finalization signal",
+                })
+              ),
+            onSome: Effect.succeed,
+          });
+        });
 
         // Persist runs once. A finished turn stores the streamed blocks, sorted by
         // envelope index and lifted to a Document, and appends the finalized-turn
@@ -356,7 +391,7 @@ const streamAndPersist = (
         // "(stopped)" keeps both the transcript and the history well-formed.
         const persist = Effect.fnUntraced(function* (note: O.Option<string>) {
           const committed = yield* Effect.gen(function* () {
-            if (yield* Ref.getAndSet(persisted, true)) return false;
+            if (yield* Ref.getAndSet(persisted, true)) return O.none<Thread.AppendTurnResult>();
             const content = O.match(note, {
               onNone: () =>
                 assistantContentToDocument(
@@ -364,33 +399,39 @@ const streamAndPersist = (
                 ),
               onSome: terminalNoteDocument,
             });
-            yield* store
+            const assistant = yield* store
               .appendTurn({
                 threadId,
                 parentTurnId: O.none(),
                 role: "assistant",
                 content,
               })
-              .pipe(
-                Effect.catch(toChatActionError("SendMessage.persistAssistant")),
-                Effect.andThen(
-                  setTurnRequestStatus(
-                    coordinator,
-                    requestId,
-                    TurnRequestReceipts.cases.persisted.make({ generation: requestGeneration })
-                  )
-                ),
-                Effect.tapError(() => Ref.set(persisted, false))
-              );
-            return true;
-          }).pipe(Effect.uninterruptible);
-          if (!committed) return;
+              .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
+            yield* setTurnRequestStatus(
+              coordinator,
+              requestId,
+              TurnRequestReceipts.cases.persisted.make({ generation: requestGeneration })
+            );
+            return O.some(assistant);
+          }).pipe(
+            Effect.tapError(() => Ref.set(persisted, false)),
+            Effect.uninterruptible
+          );
+          if (O.isNone(committed)) return;
           if (O.isNone(note)) {
             // The answer is committed. A usage-accounting failure must not fail
             // the turn behind it: doing so reported a delivered answer as a
             // rejected send, so the client handed the prompt back and a retry
             // produced the answer a second time. Record the miss and move on.
-            yield* usage.append(fixtureUsageRecord).pipe(
+            const finalization = yield* requireFinalization();
+            yield* makeTurnFinalizationUsageRecord(
+              committed.value,
+              finalization.usage,
+              finalization.finalizedAt,
+              N.max(0, N.subtract(finalization.finalizedAt, startedAt)),
+              threadId
+            ).pipe(
+              Effect.flatMap(usage.append),
               Effect.tapError((error) =>
                 logRedactedCause(
                   Cause.fail(error),
@@ -432,6 +473,7 @@ const streamAndPersist = (
         );
 
         const completeWithTelemetry = Effect.gen(function* () {
+          yield* requireFinalization();
           yield* persistWithTelemetry;
           yield* Metric.update(Metric.withAttributes(chatTurnsCompletedTotal, { kind }), 1);
           if (A.isReadonlyArrayEmpty(collected)) {
@@ -443,9 +485,9 @@ const streamAndPersist = (
           yield* Effect.logInfo("chat turn completed").pipe(Effect.annotateLogs({ kind }));
         });
 
-        return kernel.streamTurn(history).pipe(
-          Stream.tap(
-            Effect.fnUntraced(function* (indexed: IndexedBlock) {
+        const handleTurnEvent = Effect.fnUntraced(function* (event: AssistantTurnEvent) {
+          return yield* AssistantTurnEvent.match(event, {
+            block: Effect.fnUntraced(function* ({ block: indexed }) {
               if (A.isReadonlyArrayEmpty(collected)) {
                 const firstBlockAt = yield* Clock.currentTimeMillis;
                 yield* Metric.update(
@@ -455,6 +497,23 @@ const streamAndPersist = (
               }
               collected = A.append(collected, indexed);
               yield* Metric.update(Metric.withAttributes(chatBlocksStreamedTotal, { kind }), 1);
+              return O.some(indexed.block);
+            }),
+            finalization: Effect.fnUntraced(function* (event) {
+              const completedAt = yield* Clock.currentTimeMillis;
+              yield* Ref.set(finalizedUsage, O.some(event.usage));
+              yield* Ref.set(finalizedAt, O.some(completedAt));
+              return O.none<AssistantBlock>();
+            }),
+          });
+        });
+
+        return kernel.streamTurn(history).pipe(
+          Stream.mapEffect(handleTurnEvent),
+          Stream.flatMap(
+            O.match({
+              onNone: () => Stream.empty,
+              onSome: Stream.succeed,
             })
           ),
           Stream.tapError((error) =>
@@ -474,8 +533,7 @@ const streamAndPersist = (
               )
             )
           ),
-          // wire stays bare blocks; envelope indices are a handler-side concern
-          Stream.map((indexed): AssistantBlock => indexed.block),
+          // wire stays bare blocks; kernel events are a handler-side concern
           Stream.onEnd(completeWithTelemetry),
           // A turn that stops or fails still happened: record it (with whatever
           // had streamed) so the prompt is not left hanging. `persist` is
