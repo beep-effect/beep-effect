@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "knowledge-surface-automation",
+    "title": "Knowledge-Surface Audit & Automation",
+    "status": "active",
+    "created": "2026-07-31",
+    "updated": "2026-08-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/knowledge-surface-automation",
+  "lifecycle": "active",
+  "mission": "Turn the agent-facing knowledge surfaces (goals, explorations, skills, agent docs) into audited, gated, self-proving infrastructure with permanent new-violation gates.",
+  "statusNote": "Hand-rolled self-hosting seed packet; Workstream E's doctor adopts this packet as its first adoption test case.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provides": [
+    "knowledge/doctor",
+    "skills/warehouse",
+    "goals/graph",
+    "goals/bootstrap"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/knowledge-surface-automation/README.md",
+    "goals/knowledge-surface-automation/SPEC.md",
+    "goals/knowledge-surface-automation/PLAN.md",
+    "goals/knowledge-surface-automation/GOAL.md",
+    "goals/knowledge-surface-automation/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/prior-ritual-lessons.md",
+    "research/surface-inventory.md",
+    "research/cli-ground-truth.md",
+    "research/p1-skill-upstream-resolution.md",
+    "research/p1-knowledge-finding-schema-design.md",
+    "research/p1-manifest-capability-extension-design.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/knowledge-surface-automation/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Seed: packet + prior-ritual lessons",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Phase-0 read-only reports",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Grill remaining decisions (docs-only PR)",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Workstream A rewrite + hermetic lane; C Stage-1 gate",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Workstreams B, D, E behind gates; C Stage 2",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Renovate schedule + recurring review ritual",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/knowledge-surface-automation/GOAL.md)\" -le 4000",
+    "jq . goals/knowledge-surface-automation/ops/manifest.json",
+    "rg -n \"knowledge-surface-automation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/knowledge-surface-automation",
+    "git diff --check -- goals/knowledge-surface-automation",
+    "bun run beep lint reflection-artifacts",
+    "! rg -n \"/home/|~/YeeBois\" goals/knowledge-surface-automation --glob '!**/ops/manifest.json' --glob '!**/research/surface-inventory.md'"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "Any mutation pass would run before the corresponding Phase-0 read-only report's false-positive rate has been eyeballed.",
+    "A gate's false-positive rate cannot be driven down without weakening normalization or widening exemption markers into a laundering API; stop and grill instead.",
+    "A ratified decision (Stage-1 diff-scoped gates, manifest-derived status, bun:sqlite projection, patches-before-semantic-guides) would need reopening."
+  ]
+}
