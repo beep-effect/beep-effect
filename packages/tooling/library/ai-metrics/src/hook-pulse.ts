@@ -9,6 +9,7 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegNum } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, SchemaIssue, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -339,7 +340,35 @@ const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPuls
   });
 
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
+const areHookPulseEventsEquivalent = S.toEquivalence(HookPulseEvent);
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
+
+// Only fields semantically bound to exactly one event belong here. `toolName`,
+// `toolUseId`, and `durationMs` are deliberately left unconstrained: their
+// presence varies by harness version — a measured `PermissionRequest` carries
+// `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
+// both — so binding them to an event would reject legitimate future rows, and
+// rejecting rows costs real telemetry.
+const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason"]).pipe(
+  $I.annoteSchema("HookPulseEventOwnedField", {
+    description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
+  })
+);
+type HookPulseEventOwnedField = typeof HookPulseEventOwnedField.Type;
+
+const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
+  notificationType: HookPulseEvent.thunk.Notification,
+  sessionEndReason: HookPulseEvent.thunk.SessionEnd,
+});
+
+const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
+  areHookPulseEventsEquivalent(hookEvent, hookPulseEventOwningField(field));
+
+const filterHookPulseEventOwnedField = <A>(
+  field: HookPulseEventOwnedField,
+  hookEvent: HookPulseEvent,
+  value: O.Option<A>
+): O.Option<A> => O.filter(value, () => doesHookPulseEventOwnField(field, hookEvent));
 
 /**
  * Privacy-safe, schema-versioned record emitted once per coding-agent hook event.
@@ -388,17 +417,50 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     durationMs: S.OptionFromOptionalKey(NonNegNum),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
   }).check(
-    S.makeFilter(
-      (input) =>
-        areHookPulseWaitReasonsEquivalent(
-          input.waitReason,
-          deriveWaitReason(input.hookEvent, input.toolName, input.notificationType)
+    S.makeFilterGroup(
+      [
+        S.makeFilter(
+          (input) =>
+            A.getSomes(
+              A.map(HookPulseEventOwnedField.Options, (field) =>
+                O.match(input[field], {
+                  onNone: O.none,
+                  onSome: () =>
+                    Bool.match(doesHookPulseEventOwnField(field, input.hookEvent), {
+                      onFalse: () =>
+                        O.some({
+                          path: [field],
+                          issue: `${field} belongs to ${hookPulseEventOwningField(field)}, not hookEvent ${input.hookEvent}`,
+                        }),
+                      onTrue: O.none,
+                    }),
+                })
+              )
+            ),
+          {
+            identifier: "HookPulseEventOwnedFieldInvariant",
+            title: "Hook-pulse event-owned field invariant",
+            description: "Requires fields owned by one hook event to be absent from every other event.",
+          }
         ),
+        S.makeFilter(
+          (input) =>
+            areHookPulseWaitReasonsEquivalent(
+              input.waitReason,
+              deriveWaitReason(input.hookEvent, input.toolName, input.notificationType)
+            ),
+          {
+            identifier: "HookPulseWaitReasonInvariant",
+            title: "Hook-pulse wait-reason derivation invariant",
+            description: "Requires waitReason to agree with the value derived from the canonical hook event fields.",
+            message: "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType",
+          }
+        ),
+      ],
       {
-        identifier: "HookPulseWaitReasonInvariant",
-        title: "Hook-pulse wait-reason derivation invariant",
-        description: "Requires waitReason to agree with the value derived from the canonical hook event fields.",
-        message: "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType",
+        identifier: "HookPulseV1Invariants",
+        title: "Hook-pulse canonical record invariants",
+        description: "Checks event-owned fields and derived wait attribution for canonical hook-pulse records.",
       }
     )
   ),
@@ -476,6 +538,8 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               })
             ),
           onSome: (transcriptPath) => {
+            // toolName, toolUseId, and durationMs stay event-agnostic because harness versions emit them
+            // inconsistently; tightening their ownership would risk rejecting legitimate telemetry rows.
             const event = HookPulseRawEvent.make({
               session_id: input.sessionId,
               hook_event_name: input.hookEvent,
@@ -485,9 +549,17 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               prompt_id: O.fromUndefinedOr(input.promptId),
               transcript_path: transcriptPath,
               permission_mode: O.fromUndefinedOr(input.permissionMode),
-              notification_type: O.fromUndefinedOr(input.notificationType),
+              notification_type: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.notificationType,
+                input.hookEvent,
+                O.fromUndefinedOr(input.notificationType)
+              ),
               duration_ms: O.fromUndefinedOr(input.durationMs),
-              reason: O.fromUndefinedOr(input.sessionEndReason),
+              reason: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.sessionEndReason,
+                input.hookEvent,
+                O.fromUndefinedOr(input.sessionEndReason)
+              ),
             });
 
             return Bool.match(

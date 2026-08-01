@@ -13,6 +13,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -203,6 +204,25 @@ describe("HookPulseV1", () => {
     );
   });
 
+  it("round-trips arbitrary encodable canonical values through the raw-event codec", () => {
+    const encode = S.encodeResult(HookPulseV1FromRawEvent);
+    const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent);
+    // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
+    const arbitrary = S.toArbitrary(HookPulseV1)
+      .filter((value) => O.isSome(value.transcriptPath))
+      .filter((value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier)));
+
+    fc.assert(
+      fc.property(arbitrary, (value) => {
+        const encoded = Result.getOrThrow(encode(value));
+        const decoded = Result.getOrThrow(decode(encoded));
+
+        expect(hookPulseEquivalent(decoded, value)).toBe(true);
+      }),
+      fcRuns(50)
+    );
+  });
+
   it("derives a total wait reason for arbitrary raw events", () => {
     const encodeRawEvent = S.encodeResult(HookPulseRawEvent);
     const decodeFromRaw = S.decodeUnknownResult(HookPulseV1FromRawEvent);
@@ -333,6 +353,78 @@ describe("HookPulseV1", () => {
 
       expect(decoded.permissionDenied.sessionEndReason).toEqual(O.none());
       expect(decoded.sessionEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
+    })
+  );
+
+  it.effect(
+    "rejects sessionEndReason on a non-SessionEnd event",
+    Effect.fn("HookPulseTest.rejectsMisownedSessionEndReason")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPostToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          sessionEndReason: "misattributed termination",
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("sessionEndReason");
+      expect(failure.message).toContain("SessionEnd");
+      expect(failure.message).toContain("PostToolUse");
+    })
+  );
+
+  it.effect(
+    "rejects notificationType on a non-Notification event",
+    Effect.fn("HookPulseTest.rejectsMisownedNotificationType")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPostToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          notificationType: HookPulseNotificationType.Enum.permission_prompt,
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("notificationType");
+      expect(failure.message).toContain("Notification");
+      expect(failure.message).toContain("PostToolUse");
+    })
+  );
+
+  it.effect(
+    "round-trips fields owned by SessionEnd and Notification events",
+    Effect.fn("HookPulseTest.roundTripsEventOwnedFields")(function* () {
+      const canonical = yield* Effect.all(
+        {
+          sessionEnd: decodeHookPulseFromRaw(sessionEnd),
+          notification: decodeHookPulseFromRaw(idleNotification),
+        },
+        { concurrency: 1 }
+      );
+      const encoded = yield* Effect.all(
+        {
+          sessionEnd: encodeHookPulseToRaw(canonical.sessionEnd),
+          notification: encodeHookPulseToRaw(canonical.notification),
+        },
+        { concurrency: 1 }
+      );
+      const roundTripped = yield* Effect.all(
+        {
+          sessionEnd: decodeHookPulseFromRaw(encoded.sessionEnd),
+          notification: decodeHookPulseFromRaw(encoded.notification),
+        },
+        { concurrency: 1 }
+      );
+
+      expect(encoded.sessionEnd.event.reason).toBe("prompt_input_exit");
+      expect(encoded.notification.event.notification_type).toBe(HookPulseNotificationType.Enum.idle_prompt);
+      expect(roundTripped.sessionEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
+      expect(roundTripped.notification.notificationType).toEqual(O.some(HookPulseNotificationType.Enum.idle_prompt));
+      expect(hookPulseEquivalent(roundTripped.sessionEnd, canonical.sessionEnd)).toBe(true);
+      expect(hookPulseEquivalent(roundTripped.notification, canonical.notification)).toBe(true);
     })
   );
 
