@@ -689,7 +689,7 @@ CREATE TABLE "epistemic_contradiction_receipt" (
 --> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_org_id_btree_idx" ON "epistemic_contradiction_candidate" ("org_id");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_source_btree_idx" ON "epistemic_contradiction_candidate" ("source");--> statement-breakpoint
-CREATE UNIQUE INDEX "epistemic_contradiction_candidate_candidate_key_unique_idx" ON "epistemic_contradiction_candidate" ("candidate_key");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_candidate_org_key_unique_idx" ON "epistemic_contradiction_candidate" ("org_id", "candidate_key");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_recorded_at_btree_idx" ON "epistemic_contradiction_candidate" ("recorded_at");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_valid_from_btree_idx" ON "epistemic_contradiction_candidate" ("valid_from");--> statement-breakpoint
 CREATE UNIQUE INDEX "epistemic_contradiction_candidate_public_id_unique_idx" ON "epistemic_contradiction_candidate" ("public_id");--> statement-breakpoint

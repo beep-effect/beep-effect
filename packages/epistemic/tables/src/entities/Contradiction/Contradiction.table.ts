@@ -15,9 +15,9 @@ import {
 /**
  * PGLite/Postgres table for immutable contradiction candidates.
  *
- * The raw SQL migration owns digest checks, the tenant reference key, and
- * append-only triggers; Drizzle metadata projects the schema-first columns
- * and generated indexes only.
+ * The raw SQL migration owns organization-scoped candidate-key uniqueness,
+ * digest checks, the tenant reference key, and append-only triggers; Drizzle
+ * metadata projects the schema-first columns and generated indexes only.
  *
  * @example
  * ```ts

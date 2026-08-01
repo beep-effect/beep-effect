@@ -93,14 +93,14 @@ const proposalIdEquivalent = S.toEquivalence(ContradictionProposalId);
 const proposalById = Order.mapInput(Order.String, (proposal: ContradictionResolutionProposal) => proposal.proposalId);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
 
-const candidatePublicIdFor = (candidateKey: string) =>
-  candidatePublicId.fromUnknown(`${Epistemic.ContradictionCandidateId.tableName}_a${candidateKey}`);
+const candidatePublicIdFor = (orgId: ContradictionCandidate["orgId"], candidateKey: string) =>
+  candidatePublicId.fromUnknown(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`);
 
 const receiptPublicIdFor = (orgId: ContradictionReceipt["orgId"], receiptKey: string) =>
   receiptPublicId.fromUnknown(`${Epistemic.ContradictionReceiptId.tableName}_a${orgId}${receiptKey}`);
 
-const dispositionPublicIdFor = (candidateKey: string) =>
-  dispositionPublicId.fromUnknown(`${Epistemic.ContradictionDispositionId.tableName}_a${candidateKey}`);
+const dispositionPublicIdFor = (orgId: ContradictionDisposition["orgId"], candidateKey: string) =>
+  dispositionPublicId.fromUnknown(`${Epistemic.ContradictionDispositionId.tableName}_a${orgId}${candidateKey}`);
 
 const repositoryUnavailable =
   (operation: "get" | "list" | "review" | "submit") =>
@@ -730,7 +730,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 entityType: Epistemic.ContradictionDispositionId.entityType,
                 id: pendingDispositionId,
                 orgId: candidate.orgId,
-                publicId: dispositionPublicIdFor(candidate.candidateKey),
+                publicId: dispositionPublicIdFor(candidate.orgId, candidate.candidateKey),
                 resolvedAt,
                 resolvedBy: reviewer,
                 rowVersion: PosInt.make(1),
@@ -796,7 +796,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 matchBasis: normalized.matchBasis,
                 orgId: command.orgId,
                 pair: normalized.pair,
-                publicId: candidatePublicIdFor(normalized.candidateKey),
+                publicId: candidatePublicIdFor(command.orgId, normalized.candidateKey),
                 recordedAt: command.recordedAt,
                 rowVersion: PosInt.make(1),
                 schemaVersion: command.schemaVersion,
@@ -810,12 +810,14 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
               const inserted = yield* tx
                 .insert(candidateTable)
                 .values(candidateInsert)
-                .onConflictDoNothing({ target: candidateTable.candidateKey })
+                .onConflictDoNothing({ target: [candidateTable.orgId, candidateTable.candidateKey] })
                 .returning();
               const candidateRows = yield* tx
                 .select()
                 .from(candidateTable)
-                .where(eq(candidateTable.candidateKey, normalized.candidateKey))
+                .where(
+                  and(eq(candidateTable.orgId, command.orgId), eq(candidateTable.candidateKey, normalized.candidateKey))
+                )
                 .for("update");
               const candidateRow = yield* Effect.fromOption(A.head(candidateRows), () =>
                 ContradictionRepositoryUnavailable.during(

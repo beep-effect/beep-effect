@@ -4012,27 +4012,6 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "candidate_key",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "epistemic_contradiction_candidate_candidate_key_unique_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "epistemic_contradiction_candidate"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
           "value": "recorded_at",
           "isExpression": false,
           "asc": true,

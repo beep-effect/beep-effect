@@ -1,16 +1,21 @@
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { CandidateClaim, Evidence, EvidenceVerification } from "@beep/epistemic-domain";
+import { CandidateClaim, ContradictionCandidate, Evidence, EvidenceVerification } from "@beep/epistemic-domain";
+import * as ContradictionIdentity from "@beep/epistemic-domain/identity/Epistemic";
 import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values";
 import {
   BeliefVersionRef,
   ContradictionAssessment,
   ContradictionBeliefPair,
+  ContradictionCandidateContent,
   ContradictionMatchBasis,
   ContradictionProposalDigest,
   ContradictionProposalId,
   ContradictionReceiptKey,
   ContradictionResolutionProposal,
+  canonicalizeContradiction,
+  contradictionCandidateDigest,
+  contradictionCandidateKey,
   contradictionEvidenceDigest,
   contradictionProposalDigest,
 } from "@beep/epistemic-domain/values/Contradiction";
@@ -18,6 +23,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { DbSchema } from "@beep/epistemic-tables";
 import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim";
+import { toContradictionCandidateInsert } from "@beep/epistemic-tables/entities/Contradiction";
 import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
 import { GetContradictionCandidate, ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
@@ -41,6 +47,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import {
@@ -83,6 +90,7 @@ const isReceiptKey = S.is(ContradictionReceiptKey);
 const receiptKeyEquivalent = S.toEquivalence(ContradictionReceiptKey);
 const systemPrincipalEncoded = { component: "Runtime", kind: "System" } as const;
 const systemPrincipal = Result.getOrThrow(S.decodeUnknownResult(Principal)(systemPrincipalEncoded));
+const contradictionCandidatePublicId = PublicEntityId.factory(ContradictionIdentity.ContradictionCandidateId);
 const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
   ContradictionReviewScope.of({ orgId, sourceScopeRef: "workspace:1" });
 
@@ -445,6 +453,70 @@ if (!shouldRunPgliteIntegration) {
           expect(A.map(receiptRows, (row) => row.orgId)).toEqual(
             expect.arrayContaining([firstOrganizationId, secondOrganizationId])
           );
+        }),
+        120_000
+      );
+
+      it.effect(
+        "isolates the same candidate key across organizations",
+        Effect.fnUntraced(function* () {
+          const firstOrganizationId = SharedIdentity.OrganizationId.make(1);
+          const secondOrganizationId = SharedIdentity.OrganizationId.make(2);
+          const seeded = yield* seedScenario(109, firstOrganizationId);
+          const command = makeSubmission(109, seeded);
+          const normalized = canonicalizeContradiction(command.pair, command.matchBasis);
+          const candidateKey = contradictionCandidateKey(normalized.pair, normalized.matchBasis);
+          const candidateDigest = Result.getOrThrow(
+            contradictionCandidateDigest(
+              ContradictionCandidateContent.make({
+                assessment: command.assessment,
+                matchBasis: normalized.matchBasis,
+                pair: normalized.pair,
+                validFrom: command.validFrom,
+                validTo: command.validTo,
+              })
+            )
+          );
+          const foreignCandidate = ContradictionCandidate.make({
+            ...baseEntityFixtureInput("EpistemicContradictionCandidate", 10_902),
+            assessment: command.assessment,
+            candidateDigest,
+            candidateKey,
+            createdAt: command.recordedAt,
+            createdByPrincipal: command.receivedBy,
+            entityType: ContradictionIdentity.ContradictionCandidateId.entityType,
+            id: ContradictionIdentity.ContradictionCandidateId.make(10_902),
+            matchBasis: normalized.matchBasis,
+            orgId: secondOrganizationId,
+            pair: normalized.pair,
+            publicId: contradictionCandidatePublicId.fromUnknown(
+              `${ContradictionIdentity.ContradictionCandidateId.tableName}_aforeign${candidateKey}`
+            ),
+            recordedAt: command.recordedAt,
+            rowVersion: PosInt.make(1),
+            schemaVersion: command.schemaVersion,
+            source: command.source,
+            updatedAt: command.recordedAt,
+            updatedByPrincipal: command.receivedBy,
+            validFrom: command.validFrom,
+            validTo: command.validTo,
+          });
+          const db = yield* makeDrizzle();
+          const foreignRows = yield* db
+            .insert(DbSchema.contradictionCandidate)
+            .values(yield* Effect.fromResult(toContradictionCandidateInsert(foreignCandidate)))
+            .returning();
+          const foreignRow = yield* requireHead(foreignRows, "foreign contradiction candidate");
+
+          const repository = yield* ContradictionTriageRepository;
+          const submitted = yield* repository.submit(command);
+
+          expect(submitted.duplicateCandidate).toBe(false);
+          expect(submitted.candidate.candidateKey).toBe(foreignRow.candidateKey);
+          expect(submitted.candidate.id).not.toBe(foreignRow.id);
+          expect(submitted.candidate.orgId).toBe(firstOrganizationId);
+          expect(foreignRow.orgId).toBe(secondOrganizationId);
+          expect(submitted.receipt.candidateId).toBe(submitted.candidate.id);
         }),
         120_000
       );

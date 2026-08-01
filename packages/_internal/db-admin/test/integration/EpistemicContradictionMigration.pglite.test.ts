@@ -216,7 +216,7 @@ if (!shouldRunPgliteIntegration) {
             )
           `);
           expect(inspect(duplicateCandidate, { depth: 10 })).toContain(
-            "epistemic_contradiction_candidate_candidate_key_unique_idx"
+            "epistemic_contradiction_candidate_org_key_unique_idx"
           );
 
           const duplicateReceipt = yield* Effect.flip(sql`
@@ -242,7 +242,7 @@ if (!shouldRunPgliteIntegration) {
               match_basis, belief_pair, recorded_at, valid_from, valid_to, entity_type, public_id
             ) VALUES (
               1001, '{"component":"Runtime","kind":"System"}'::jsonb, 2, 1, '0.0.0', 'System',
-              1001, '{"component":"Runtime","kind":"System"}'::jsonb, ${Str.repeat(64)("2")}, ${Str.repeat(64)("3")},
+              1001, '{"component":"Runtime","kind":"System"}'::jsonb, ${Str.repeat(64)("c")}, ${Str.repeat(64)("3")},
               '{"confidence":0.95,"proposals":[]}'::jsonb, '{}'::jsonb, '{}'::jsonb,
               1001, 1001, NULL, 'EpistemicContradictionCandidate',
               'epistemic_contradiction_candidate_aorg2migrationproof'

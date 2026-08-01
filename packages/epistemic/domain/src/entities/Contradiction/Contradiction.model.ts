@@ -78,7 +78,6 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
     persisted: {
       candidateKey: EntitySchema.persist.text({
         columnName: "candidate_key",
-        indexHints: [EntitySchema.IndexHint.unique],
       }),
       candidateDigest: EntitySchema.persist.text({
         columnName: "candidate_digest",
