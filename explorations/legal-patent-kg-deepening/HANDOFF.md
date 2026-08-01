@@ -121,6 +121,8 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 ## First action
 
-Re-run Phase 1, bring the refreshed matrix and the three explicit grill
-branches to Benjamin, and stop. No `BRIEF.md`, `MAP.md`, packet scaffolding,
-goal graduation, publication, or merge occurs before that approval.
+Phase 1 is complete and signed off (2026-08-01 reconciliation grill — see the
+Phase 1 section above). First action is now Phase 2, starting with the
+`patent-citation-candor-gate` wedge: open its exploration packet and walk the
+normal `/explore` stages (capture → research → align) toward shaping. Goal
+graduation and merges still require Benjamin's explicit ask.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -17,14 +17,16 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Shape the first wedge: open the `patent-citation-candor-gate` exploration
-packet and draft its BRIEF (first rung: a failing CandorPolicy test over the
-existing `PatentReference` + verified-anchor substrate). The 2026-08-01
-reconciliation grill signed off the routing matrix as amended (8 clusters, 4
-proposed slugs, all three grill-gated challenges resolved without
-supersession — see [`DECISIONS.md`](./DECISIONS.md)); the remaining P1 wedges
-(`legal-position-relator-runtime`, `patent-drafting-episode-ledger`,
-FunctionalUnit into `uspto-patent-driver-depth`) queue behind it.
+Open the first wedge: create the `patent-citation-candor-gate` exploration
+packet and walk it through the normal `/explore` stages (capture → research →
+align) toward shaping (first implementation rung once shaped: a failing
+CandorPolicy test over the existing `PatentReference` + verified-anchor
+substrate). The 2026-08-01 reconciliation grill signed off the routing matrix
+as amended (8 clusters, 4 proposed slugs, all three grill-gated challenges
+resolved without supersession — see [`DECISIONS.md`](./DECISIONS.md)); the
+remaining P1 wedges (`legal-position-relator-runtime`,
+`patent-drafting-episode-ledger`, FunctionalUnit into
+`uspto-patent-driver-depth`) queue behind it.
 
 ## Read This First
 

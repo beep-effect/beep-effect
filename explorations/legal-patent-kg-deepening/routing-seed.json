@@ -129,7 +129,7 @@
     ],
     "rationale": "`[T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8]` extend existing registry and admission owners with richer metadata and states; they do not justify a graph store, new ontology authority, or another kernel. AMENDED 2026-08-01: remo1 resolved \u2014 schema-level invariants now, registry-carried SHACL only via the gated semantic-foundation M4 lane.",
     "cautions": [
-      "[remo1] route grill: ConstraintProfile challenges the standing SKOS-only registry boundary and MUST go through /grill-with-docs with Benjamin; until then, executable invariants remain outside TaxonomySeed.",
+      "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): [remo1] route grill: ConstraintProfile challenges the standing SKOS-only registry boundary and MUST go through /grill-with-docs with Benjamin; until then, executable invariants remain outside TaxonomySeed.",
       "[T2-F10] PatentLEGO vocabulary data is CC BY-SA 4.0; do not vendor its tables or JSON.",
       "[T2-F7,T3-F8] Schema-valid or repaired output is still only a candidate, never verified semantics or ontology authority."
     ],
@@ -246,8 +246,8 @@
     ],
     "rationale": "`[T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3]` need a law-owned authoritative episode and answer contract that consumes, but does not duplicate, generic memory and retrieval bricks. AMENDED 2026-08-01: absorbs the claim-limitation-support cluster as its first rung (ClaimLimitationSupport is a submachine of the DraftingEpisode state machine sharing RuntimeApprovalGate); grill annotations resolved \u2014 remo2: rows-first PracticeKgQuery + disposable in-memory @beep/rdf lane, no persistent graph store; remo3: episode ledgers are product records, Cognee projection is lossy and rebuildable.",
     "cautions": [
-      "[remo2] route grill: MatterProjection challenges the standing no-graph-store boundary and MUST go through /grill-with-docs with Benjamin before any projection store is shaped; no graph becomes authority.",
-      "[remo3,ADHD-3] route grill: Cognee's role touches the 2026-07-25 memory architecture and MUST go through /grill-with-docs with Benjamin. Product drafting records may be repo-native while Cognee remains durable operator dev-memory; do not silently redefine either role.",
+      "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): [remo2] route grill: MatterProjection challenges the standing no-graph-store boundary and MUST go through /grill-with-docs with Benjamin before any projection store is shaped; no graph becomes authority.",
+      "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): [remo3,ADHD-3] route grill: Cognee's role touches the 2026-07-25 memory architecture and MUST go through /grill-with-docs with Benjamin. Product drafting records may be repo-native while Cognee remains durable operator dev-memory; do not silently redefine either role.",
       "[T3-F5] The reported inference-event retrieval gain has no reification ablation; reproduce before claiming causality.",
       "[T1-F10] The anti-hub result is a small benchmark and supports a study fixture, not a universal law.",
       "[T4-F1,ADHD-2] Exact-span fidelity does not decide written-description support, implicit disclosure, terminology equivalence, or new matter; attorney disposition remains mandatory.",

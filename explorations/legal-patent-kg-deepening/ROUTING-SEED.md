@@ -163,9 +163,15 @@ Reconciliation amendments at the end of this file.
 
 ### Claim-limitation support and governed patent drafting
 
-- **Route / Wave:** mixed · P1
+> **MERGED 2026-08-01 (reconciliation grill):** this cluster is now the first
+> rung of `patent-drafting-episode-ledger` — ClaimLimitationSupport is a
+> submachine of the DraftingEpisode state machine sharing the same
+> `RuntimeApprovalGate`. The detail below is retained for provenance; route
+> its nuggets via the drafting-episodes cluster.
+
+- **Route / Wave:** merged → first rung of `patent-drafting-episode-ledger` · P1
 - **Nuggets:** `T4-F1`, `T4-F2`, `T4-F3`, `T4-F4`, `ADHD-2`
-- **Primary target:** `patent-drafting-promotion-gates` *(proposed slug; no repo path is asserted)*
+- **Primary target:** `patent-drafting-episode-ledger` *(proposed slug; no repo path is asserted; was `patent-drafting-promotion-gates` before the merge)*
 - **Coordinate with:** `goals/agentic-professional-runtime`, `goals/citation-verified-span-substrate`, `goals/law-docketing-patent-spine`
 - **Net-new (no existing home):**
   - `[T4-F1,ADHD-2]` `ClaimLimitationSupportSet`, ordered limitations, dependency closure, unresolved support states, and attorney disposition; source-only `rg` returned zero `ClaimLimitationSupport` symbols.
