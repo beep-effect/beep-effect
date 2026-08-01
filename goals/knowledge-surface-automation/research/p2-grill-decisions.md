@@ -115,7 +115,8 @@ it ran".
 }
 ```
 
-Append-only; the graph consumes the newest receipt per kind for evidence-backed
+Append-only; a receipt's binding `commit` is its attestation scope, and the graph
+consumes the newest receipt per kind for that commit when evaluating evidence-backed
 readiness. Only yeet/reflect tooling writes it; git history is the integrity layer
 (forging a receipt is a visible commit). Ledger semantics deliberately feeds the
 bitemporal-roadmap exploration.
@@ -254,10 +255,10 @@ than weeks of report-only patience.
 A scheduled/manually-dispatched CI job checks out a main SHA, runs the sealed mint, and
 opens a PR containing ONLY the baseline change — mirroring the existing quality
 health-baseline ratchet pattern. Merging that PR is the "reviewed" in SPEC's
-"minted ONLY by CI at a reviewed default-branch SHA". Feature branches remain
-remove-only, enforced by the doctor: a feature-branch diff that adds, replaces, or
-relabels baseline keys is itself a blocking finding. This reconciles the seal with
-main being PR-only.
+"minted ONLY by CI at a reviewed default-branch SHA". The CI-generated baseline-only
+PR is the sole exception; all other feature branches remain remove-only, enforced by
+the doctor: a feature-branch diff that adds, replaces, or relabels baseline keys is
+itself a blocking finding. This reconciles the seal with main being PR-only.
 
 ## Non-decision deliverable queued from the session
 
