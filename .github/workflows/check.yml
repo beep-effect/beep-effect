@@ -59,7 +59,7 @@ jobs:
             install_typos: "true"
           - id: lint-policy
             name: Lint Policy
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 25
             uses_turbo: "false"
             install_typos: "true"
