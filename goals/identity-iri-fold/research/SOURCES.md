@@ -62,8 +62,8 @@ replace them with uncited summaries.
 | Shipped identity/IRI core | `packages/foundation/modeling/identity` | Reuse unchanged; completed dependency. |
 | RDF vocab + semantic metadata | `packages/foundation/modeling/rdf` | Reuse; layer documentation metadata under composer-owned addressing. |
 | FOLIO ontology models | `packages/foundation/modeling/ontology/src/Ontology.models.ts` | Migration target. |
-| Identity prototype fold/projections | historical `scratchpad/identity/{Ontology,Projections}.ts` | Donor named by the MAP; verify current availability before porting. |
-| Deleted ontology prototype assets | exploration `assets/ontology-prototype/` | Salvage only if present and license/provenance remains repo-owned. |
+| Identity prototype fold/projections | `git show 61160e1baf:scratchpad/identity/{Ontology,Projections}.ts` (absent from all working trees; verified 2026-07-31) | Primary donor for fold semantics: tuple grammar, predicate-open `AssembledOntology` facts, CURIE handle resolution, `toContext`/`toJsonLd`/`toTurtle`, plus its 6 test files. Recover via `git show` at P0. |
+| Deleted ontology prototype assets | exploration `assets/ontology-prototype/` (present; repo-owned) | Secondary donor for schema-first idioms and structure: `S.Class`/`TaggedErrorClass`/`LiteralKit` patterns, complete Markdown projection (`projectMarkdown`, portable/obsidian modes), SKOS integrity semantics, `parseJsonLdOntology`. Its enumerated draft/profile reference model and authoring API stay dead. Fix `.js` → `.ts` specifiers during port. |
 | Semantic-web SHACL services | `packages/foundation/capability/semantic-web` | Downstream reference only; SHACL is out of this goal. |
 
 ## 4. Cross-links
