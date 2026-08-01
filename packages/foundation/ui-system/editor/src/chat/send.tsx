@@ -24,8 +24,9 @@ import { characterCountAtom, sendKeyBindingAtom } from "./atoms.ts";
  * plugin takes no props. With `sendOn="enter"`, plain Enter sends and any
  * modifier inserts a newline; with `sendOn="modifierEnter"`, Cmd/Ctrl+Enter
  * sends and plain Enter inserts a newline. Enter during IME composition never
- * sends or selects a visible typeahead option, including legacy `keyCode ===
- * 229` events; non-IME Enter while a typeahead menu is open selects the option.
+ * sends or selects a visible typeahead option, including legacy
+ * `keyCode === 229` events; non-IME Enter while a typeahead menu is open selects
+ * the option.
  *
  * @example
  * ```tsx

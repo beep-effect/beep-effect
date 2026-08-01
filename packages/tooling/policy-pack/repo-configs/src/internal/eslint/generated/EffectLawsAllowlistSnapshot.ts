@@ -38,6 +38,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+      "kind": "object-method",
+      "reason": "The generated pinned IANA registry is a public plain-array and plain-record snapshot consumed directly by language-tag validation. Object.freeze prevents JavaScript consumers from mutating authoritative membership data after the validator imports it.",
+      "owner": "@beep/html",
+      "issue": "HTML-GENERATED-LANGUAGE-REGISTRY-IMMUTABILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/html/src/Html.policy.ts",
       "kind": "new-map-set",
       "reason": "SafeHtmlAst provenance uses private weak issuer membership and weak proof-to-conformant-value storage so callers cannot forge safe values and the module does not strongly retain every accepted document. Effect collections do not provide weak identity semantics.",

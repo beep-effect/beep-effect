@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// cspell:words extlangs qaaa qabx
 import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
@@ -140,9 +141,7 @@ const expandLanguageSubtag = (value: string): ReadonlyArray<string> => {
   const startOrdinal = asciiAlphaOrdinal(start);
   const endOrdinal = asciiAlphaOrdinal(end);
   if (endOrdinal < startOrdinal) return failGeneration(`IANA registry range ${value} is descending`);
-  return Array.from({ length: endOrdinal - startOrdinal + 1 }, (_, index) =>
-    asciiAlphaFromOrdinal(startOrdinal + index, start.length)
-  );
+  return A.makeBy(endOrdinal - startOrdinal + 1, (index) => asciiAlphaFromOrdinal(startOrdinal + index, start.length));
 };
 
 const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData => {
@@ -155,22 +154,34 @@ const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData =>
   }
 
   const records = blocks.map((block): LanguageSubtagRegistryRecord => {
-    const fields = new Map<string, Array<string>>();
+    const fields = MutableHashMap.empty<string, Array<string>>();
     for (const line of block.trim().split("\n")) {
       const separator = line.indexOf(":");
       if (separator <= 0) continue;
       const name = line.slice(0, separator);
-      const values = fields.get(name) ?? [];
+      const values = pipe(
+        MutableHashMap.get(fields, name),
+        O.getOrElse((): Array<string> => [])
+      );
       values.push(line.slice(separator + 1).trim());
-      fields.set(name, values);
+      MutableHashMap.set(fields, name, values);
     }
-    const type = fields.get("Type")?.[0];
-    const subtagOrTag = fields.get("Subtag")?.[0] ?? fields.get("Tag")?.[0];
+    const type = pipe(MutableHashMap.get(fields, "Type"), O.flatMap(A.head), O.getOrUndefined);
+    const subtagOrTag = pipe(
+      MutableHashMap.get(fields, "Subtag"),
+      O.flatMap(A.head),
+      O.orElse(() => pipe(MutableHashMap.get(fields, "Tag"), O.flatMap(A.head))),
+      O.getOrUndefined
+    );
     if (type === undefined || !isLanguageSubtagRegistryKind(type)) {
       return failGeneration(`IANA registry record has unknown Type ${type ?? "missing"}`);
     }
     if (subtagOrTag === undefined) return failGeneration(`IANA registry ${type} record has no Subtag or Tag`);
-    return { prefixes: fields.get("Prefix") ?? [], subtagOrTag, type };
+    return {
+      prefixes: pipe(MutableHashMap.get(fields, "Prefix"), O.getOrElse(A.empty<string>)),
+      subtagOrTag,
+      type,
+    };
   });
 
   for (const [type, expected] of R.toEntries(IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS)) {
@@ -237,6 +248,9 @@ const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): stri
  *
  * @since 0.0.0
  */
+
+// Raw registered IANA subtags are authoritative data, not prose.
+// cspell:disable
 
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
@@ -2803,7 +2817,7 @@ ${R.toEntries(classification.contentTokenExpansions)
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
+import { Result } from "effect";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.

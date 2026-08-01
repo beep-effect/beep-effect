@@ -26,7 +26,7 @@ codecs over the canonical `@beep/md` AST.
   Exact unknown-field identity takes precedence over class-shaped semantics at
   this persistence boundary.
 - **Serialized NodeState is JSON-valued on both surfaces.** Strict runtime
-  admission rejects functions, symbols, bigints, and other values that JSON
+  admission rejects functions, symbols, big integers, and other values that JSON
   persistence would silently discard, while nested JSON NodeState remains
   lossless.
 - **URLs and inline styles are safe fixed points.** Decode normalizes untrusted

@@ -7,6 +7,9 @@
  * @since 0.0.0
  */
 
+// Raw registered IANA subtags are authoritative data, not prose.
+// cspell:disable
+
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
   languages: ReadonlyArray<string>;

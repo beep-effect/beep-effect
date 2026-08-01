@@ -40,6 +40,8 @@ import { toAsciiLowerCase } from "./Html.foreign.ts";
 import type { ComponentValue, FunctionNode, SimpleBlockNode } from "@csstools/css-parser-algorithms";
 import type { CSSToken } from "@csstools/css-tokenizer";
 
+// cspell:words cqmax cqmin dpcm dppx dvmax dvmin lvmax lvmin rcap svmax svmin vmax vmin
+
 const $I = $HtmlId.create("Html.source-size");
 
 const LENGTH_UNITS = [
@@ -577,7 +579,7 @@ const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
         O.map(() => NUMBER_TYPE)
       );
     }),
-    Match.orElse(() => O.none())
+    Match.orElse(O.none<NumericType>)
   );
 };
 

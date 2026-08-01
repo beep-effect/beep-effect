@@ -9,8 +9,8 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { Result } from "effect";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.

@@ -6,10 +6,8 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { flow, pipe } from "effect";
-import * as BI from "effect/BigInt";
+import { BigInt as BI, flow, MutableHashSet, pipe } from "effect";
 import { dual } from "effect/Function";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
@@ -83,39 +81,37 @@ const scanDescriptor = (input: string, start: number): number => {
 
 const normalizeWidth = flow(Str.replace(LEADING_ZEROS_PATTERN, ""), O.liftPredicate(Str.isNonEmpty));
 
-const densityKey = (descriptor: string): O.Option<DensityKey> =>
-  pipe(
-    descriptor,
-    Str.match(DENSITY_DESCRIPTOR_PATTERN),
-    O.flatMap((match) => {
-      const [, integer = "", fraction = "", leadingDotFraction = "", exponentSign = "", exponentDigits = "0"] = match;
-      const decimal = Str.isNonEmpty(fraction) ? fraction : leadingDotFraction;
-      const significant = pipe(integer, Str.concat(decimal), Str.replace(LEADING_ZEROS_PATTERN, ""));
+const densityKey = flow(
+  Str.match(DENSITY_DESCRIPTOR_PATTERN),
+  O.flatMap((match) => {
+    const [, integer = "", fraction = "", leadingDotFraction = "", exponentSign = "", exponentDigits = "0"] = match;
+    const decimal = Str.isNonEmpty(fraction) ? fraction : leadingDotFraction;
+    const significant = pipe(integer, Str.concat(decimal), Str.replace(LEADING_ZEROS_PATTERN, ""));
 
-      if (Str.isEmpty(significant)) {
-        return O.none();
-      }
+    if (Str.isEmpty(significant)) {
+      return O.none();
+    }
 
-      const coefficient = pipe(significant, Str.replace(TRAILING_ZEROS_PATTERN, ""));
-      const trailingZeros = Str.length(significant) - Str.length(coefficient);
+    const coefficient = pipe(significant, Str.replace(TRAILING_ZEROS_PATTERN, ""));
+    const trailingZeros = Str.length(significant) - Str.length(coefficient);
 
-      return pipe(
-        BI.fromString(exponentDigits),
-        O.map((explicitExponent) => {
-          const signedExponent = Str.Equivalence(exponentSign, "-")
-            ? pipe(explicitExponent, BI.multiply(BIGINT_NEGATIVE_ONE))
-            : explicitExponent;
-          const exponent = pipe(
-            signedExponent,
-            BI.subtract(BI.BigInt(Str.length(decimal))),
-            BI.sum(BI.BigInt(trailingZeros))
-          );
+    return pipe(
+      BI.fromString(exponentDigits),
+      O.map((explicitExponent) => {
+        const signedExponent = Str.Equivalence(exponentSign, "-")
+          ? pipe(explicitExponent, BI.multiply(BIGINT_NEGATIVE_ONE))
+          : explicitExponent;
+        const exponent = pipe(
+          signedExponent,
+          BI.subtract(BI.BigInt(Str.length(decimal))),
+          BI.sum(BI.BigInt(trailingZeros))
+        );
 
-          return makeDensityKey(coefficient, exponent);
-        })
-      );
-    })
-  );
+        return makeDensityKey(coefficient, exponent);
+      })
+    );
+  })
+);
 
 const parseDescriptor = (descriptor: string): O.Option<ParsedDescriptor> =>
   pipe(

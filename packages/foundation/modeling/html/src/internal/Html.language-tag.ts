@@ -3,14 +3,15 @@
  *
  * @since 0.0.0
  */
+import { HashSet, MutableHashSet } from "effect";
 import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated.ts";
 
-const languages = new Set(IANA_LANGUAGE_TAG_REGISTRY.languages);
+const languages = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.languages);
 const extlangPrefixes = IANA_LANGUAGE_TAG_REGISTRY.extlangPrefixes;
-const scripts = new Set(IANA_LANGUAGE_TAG_REGISTRY.scripts);
-const regions = new Set(IANA_LANGUAGE_TAG_REGISTRY.regions);
-const variants = new Set(IANA_LANGUAGE_TAG_REGISTRY.variants);
-const grandfathered = new Set(IANA_LANGUAGE_TAG_REGISTRY.grandfathered);
+const scripts = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.scripts);
+const regions = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.regions);
+const variants = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.variants);
+const grandfathered = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.grandfathered);
 
 const ASCII_TAG_PATTERN = /^[A-Za-z0-9-]+$/u;
 const ALPHA_PATTERN = /^[a-z]+$/u;
@@ -24,10 +25,11 @@ const PRIVATE_USE_SUBTAG_PATTERN = /^[a-z0-9]{1,8}$/u;
  * Tests one string against RFC 5646 section 2.2.9 using the pinned IANA
  * Language Subtag Registry.
  *
- * Deprecated registrations remain valid. Registered extlangs require their
- * IANA primary-language prefix. Extension payloads are checked for RFC syntax
- * and duplicate singletons, but not extension-specific semantics, which RFC
- * 5646 does not require a base validating processor to implement.
+ * Deprecated registrations remain valid. Registered extended-language subtags
+ * require their IANA primary-language prefix. Extension payloads are checked
+ * for RFC syntax and duplicate singletons, but not extension-specific
+ * semantics, which RFC 5646 does not require a base validating processor to
+ * implement.
  *
  * @example
  * ```ts
@@ -47,11 +49,11 @@ export const isValidBcp47LanguageTag = (value: string): boolean => {
   const primary = subtags[0];
   if (primary === undefined || subtags.some((subtag) => subtag.length === 0)) return false;
 
-  if (grandfathered.has(normalized)) return true;
+  if (HashSet.has(grandfathered, normalized)) return true;
   if (primary === "x") {
     return subtags.length > 1 && subtags.slice(1).every((subtag) => PRIVATE_USE_SUBTAG_PATTERN.test(subtag));
   }
-  if (primary.length < 2 || primary.length > 8 || !ALPHA_PATTERN.test(primary) || !languages.has(primary)) {
+  if (primary.length < 2 || primary.length > 8 || !ALPHA_PATTERN.test(primary) || !HashSet.has(languages, primary)) {
     return false;
   }
 
@@ -72,30 +74,30 @@ export const isValidBcp47LanguageTag = (value: string): boolean => {
     possibleScript !== undefined &&
     possibleScript.length === 4 &&
     ALPHA_PATTERN.test(possibleScript) &&
-    scripts.has(possibleScript)
+    HashSet.has(scripts, possibleScript)
   ) {
     index += 1;
   }
 
   const possibleRegion = subtags[index];
-  if (possibleRegion !== undefined && REGION_PATTERN.test(possibleRegion) && regions.has(possibleRegion)) {
+  if (possibleRegion !== undefined && REGION_PATTERN.test(possibleRegion) && HashSet.has(regions, possibleRegion)) {
     index += 1;
   }
 
-  const seenVariants = new Set<string>();
+  const seenVariants = MutableHashSet.empty<string>();
   let possibleVariant = subtags[index];
   while (possibleVariant !== undefined && VARIANT_PATTERN.test(possibleVariant)) {
-    if (!variants.has(possibleVariant) || seenVariants.has(possibleVariant)) return false;
-    seenVariants.add(possibleVariant);
+    if (!HashSet.has(variants, possibleVariant) || MutableHashSet.has(seenVariants, possibleVariant)) return false;
+    MutableHashSet.add(seenVariants, possibleVariant);
     index += 1;
     possibleVariant = subtags[index];
   }
 
-  const seenSingletons = new Set<string>();
+  const seenSingletons = MutableHashSet.empty<string>();
   let possibleSingleton = subtags[index];
   while (possibleSingleton !== undefined && EXTENSION_SINGLETON_PATTERN.test(possibleSingleton)) {
-    if (seenSingletons.has(possibleSingleton)) return false;
-    seenSingletons.add(possibleSingleton);
+    if (MutableHashSet.has(seenSingletons, possibleSingleton)) return false;
+    MutableHashSet.add(seenSingletons, possibleSingleton);
     index += 1;
     let extensionLength = 0;
     while (EXTENSION_SUBTAG_PATTERN.test(subtags[index] ?? "")) {
