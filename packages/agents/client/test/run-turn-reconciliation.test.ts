@@ -13,6 +13,7 @@ import {
 } from "@beep/agents-client/Chat.atoms";
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError } from "@beep/agents-use-cases/public";
+import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P, Text } from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -24,10 +25,10 @@ import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
-const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Keep this prompt" })] })] });
-const newerContent = Document.make({
-  children: [P.make({ children: [Text.make({ value: "Keep this newer draft" })] })],
-});
+const safeDocument = (value: string) =>
+  decodeSafeDocumentUnsafe(Document.make({ children: [P.make({ children: [Text.make({ value })] })] }));
+const content = safeDocument("Keep this prompt");
+const newerContent = safeDocument("Keep this newer draft");
 const assistantBlock = ParagraphBlock.make({
   children: [TextInline.make({ text: "A completed local reply" })],
 });

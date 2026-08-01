@@ -13,11 +13,12 @@
  * ```ts
  * import { VERSION } from "@beep/lexical-schema"
  *
- * console.log(VERSION) // "0.0.0"
+ * const packageVersion: "0.0.0" = VERSION
+ * console.log(packageVersion) // "0.0.0"
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const VERSION = "0.0.0" as const;
 
@@ -26,17 +27,18 @@ export const VERSION = "0.0.0" as const;
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode, nodeToPlainText } from "@beep/lexical-schema"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(JSON.stringify(nodeToPlainText(node))) // "\"\\n\""
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
-export * from "./Lexical.behavior.ts";
+export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
 /**
  * Md ↔ Lexical codecs over the canonical `@beep/md` AST.
  *
@@ -47,23 +49,88 @@ export * from "./Lexical.behavior.ts";
  * console.log(ARTIFACT_URI_PREFIX) // "artifact://"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
-export * from "./Lexical.codec.ts";
+export {
+  ARTIFACT_URI_PREFIX,
+  ArtifactUri,
+  blockToLexical,
+  documentToEditorState,
+  editorStateToDocument,
+  nodeToBlocks,
+} from "./Lexical.codec.ts";
 /**
  * Schema-first models of Lexical's serialized editor state.
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(node.type) // "linebreak"
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export * from "./Lexical.model.ts";
+export {
+  ArtifactRefId,
+  ArtifactRefNode,
+  analyzeEditorStateCompatibility,
+  BaseNode,
+  CodeNode,
+  Direction,
+  decodeEditorStateLossless,
+  decodeEditorStateStrict,
+  EditorStateFromJson,
+  EditorStateWireFromJson,
+  ElementFormat,
+  ElementNode,
+  HeadingNode,
+  HeadingTag,
+  hasTextFormat,
+  LexicalCompatibilityIssue,
+  LexicalCompatibilityResult,
+  LexicalDecodeError,
+  LexicalIndentDepth,
+  LexicalNode,
+  LexicalNodeVersion,
+  LexicalNodeWire,
+  LineBreakNode,
+  LinkNode,
+  ListItemNode,
+  ListNode,
+  ListTag,
+  ListType,
+  ParagraphNode,
+  QuoteNode,
+  RootNode,
+  SafeInlineStyle,
+  SafeStyleValue,
+  SafeUrl,
+  SerializedEditorState,
+  SerializedEditorStateWire,
+  TableCellHeaderState,
+  TableCellNode,
+  TableCellSpan,
+  TableDimension,
+  TableNode,
+  TableRowNode,
+  TabNode,
+  TEXT_DETAIL_MASK_ALL,
+  TEXT_FORMAT_MASK_ALL,
+  TextBase,
+  TextDetailBit,
+  TextDetailBits,
+  TextDetailMask,
+  TextFormatBit,
+  TextFormatBits,
+  TextFormatMask,
+  TextMode,
+  TextNode,
+  withTextFormat,
+  YouTubeNode,
+} from "./Lexical.model.ts";

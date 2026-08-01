@@ -1,4 +1,4 @@
-import { editorNodes } from "@beep/editor";
+import { editorNodes } from "@beep/editor/nodes";
 import {
   LexicalNode,
   SerializedEditorState,

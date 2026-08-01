@@ -246,9 +246,6 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     path: JsonPath.annotateKey({
       description: "Structured path to the construct.",
     }),
-    pointer: S.String.annotateKey({
-      description: "JSON Pointer derived from path.",
-    }),
     severity: PandocMappingSeverity.annotateKey({
       description: "Issue severity.",
     }).pipe(SchemaUtils.withConstantDefault<PandocMappingSeverity>("unsupported")),
@@ -261,7 +258,17 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     input: Omit<PandocMappingIssue.Type, "pointer" | "severity"> & {
       readonly severity?: PandocMappingSeverity;
     }
-  ): PandocMappingIssue => PandocMappingIssue.make({ ...input, pointer: JsonPath.toPointer(input.path) });
+  ): PandocMappingIssue => PandocMappingIssue.make(input);
+
+  /**
+   * JSON Pointer derived from {@link path}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get pointer(): string {
+    return JsonPath.toPointer(this.path);
+  }
 }
 
 /**
@@ -300,7 +307,13 @@ export declare namespace PandocMappingIssue {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly construct: string;
+    readonly direction: PandocMappingDirection;
+    readonly message: string;
+    readonly path: JsonPath;
+    readonly severity: PandocMappingSeverity;
+  }
 }
 
 /**
@@ -322,9 +335,6 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
     issues: S.Array(PandocMappingIssue).annotateKey({
       description: "Compatibility issues observed during mapping.",
     }),
-    profile: PandocMappingProfile.annotateKey({
-      description: "Coarse compatibility profile.",
-    }),
   },
   $I.annote("PandocCompatibilityReport", {
     description: "Compatibility report shared by both mapping directions.",
@@ -333,7 +343,17 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
   static readonly profileFromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocMappingProfile =>
     issues.length === 0 ? "supported" : "gap";
   static readonly fromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocCompatibilityReport =>
-    PandocCompatibilityReport.make({ issues, profile: PandocCompatibilityReport.profileFromIssues(issues) });
+    PandocCompatibilityReport.make({ issues });
+
+  /**
+   * Coarse compatibility profile derived from {@link issues}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get profile(): PandocMappingProfile {
+    return PandocCompatibilityReport.profileFromIssues(this.issues);
+  }
 }
 
 /**
@@ -379,6 +399,5 @@ export declare namespace PandocCompatibilityReport {
    */
   export interface Encoded {
     readonly issues: ReadonlyArray<PandocMappingIssue.Encoded>;
-    readonly profile: PandocMappingProfile;
   }
 }

@@ -34,6 +34,7 @@ import {
 } from "./layout.atoms.ts";
 import { Sidebar } from "./Sidebar.tsx";
 import { Thread } from "./Thread.tsx";
+import { YouTubeWatchOpener } from "./YouTubeWatchOpener.tsx";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { JSX } from "react";
 
@@ -102,6 +103,7 @@ export function ChatApp(): JSX.Element {
       className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
+      <YouTubeWatchOpener />
       <OrbBackground tone="green" intensity="subtle" />
       {/* No second title bar. The app's nav already says where you are, and this
           header only repeated it — costing a strip of vertical height on the one

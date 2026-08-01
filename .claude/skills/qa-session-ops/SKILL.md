@@ -8,7 +8,7 @@ description: >
   capture will not start, produces no events, records a black window, or you
   must pick a recording lane. The loop protocol itself lives in
   `browser-qa-loop`; this skill is the machinery under it.
-version: 0.1.0
+version: 0.2.0
 status: active
 ---
 
@@ -27,11 +27,15 @@ the CLI itself is broken.
 ## Lane choice
 
 See `references/lane-selection.md` for the decision table. Short version:
-Lane A (playwright) for every loop round — deterministic, headless, CI-able;
-Lane B (OBS + real Chrome) once per milestone when native drag semantics,
-real cursor, or OS selection behavior is under test.
+Lane A (playwright) for every loop round — deterministic, headless, CI-able.
+**Lane B (OBS) is deprecated as of 2026-08-01** — it cannot run unattended
+(the PipeWire portal requires human consent by design) and silently records
+black video when its restore token goes stale. Its replacement for native
+drag, cursor, and OS-selection classes is Lane C (Xvfb + `xdotool` XTEST +
+`ffmpeg x11grab` + CDP), proven as a prototype but not yet shipped as a CLI
+lane; see `browser-qa-loop` and the `recorded-qa-acceptance` packet.
 
-## OBS provisioning (Lane B)
+## OBS provisioning (Lane B — deprecated, existing sessions only)
 
 1. obs-websocket server: `server_enabled: true` in
    `~/.config/obs-studio/plugin_config/obs-websocket/config.json` (edit with

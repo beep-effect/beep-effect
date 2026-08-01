@@ -7,24 +7,25 @@
  */
 "use client";
 
-import { $EditorId } from "@beep/identity";
 import { SerializedEditorState } from "@beep/lexical-schema";
+import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
+import { O } from "@beep/utils";
+import { useAtomSet } from "@effect/atom-react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { logEditorErrorFn } from "./chat/atoms.ts";
 import { CodeBlockNode } from "./code-block-node.tsx";
 import { MermaidNode } from "./mermaid-node.tsx";
 import { editorNodes } from "./nodes.ts";
+import { decodeEditorStateForRuntimeResult } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
+import type { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
 import type { JSX } from "react";
-
-const $I = $EditorId.create("viewer");
-
-const onError = (error: Error) => Effect.runSync(Effect.logError(error));
 
 const MERMAID_LANGUAGE = "mermaid";
 
@@ -119,21 +120,105 @@ const encodeOnce = (state: SerializedEditorState.Type): { readonly decorated: st
   return result;
 };
 
-class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`)(
-  {
-    /** Optional class for the read-only content container. */
-    className: S.optionalKey(S.String).annotateKey({
-      description: "Optional class for the read-only content container.",
-    }),
-    /** The schema-decoded editor state to render. */
-    state: SerializedEditorState.annotateKey({
-      description: "The schema-decoded editor state to render.",
-    }),
-  },
-  $I.annote("EditorViewerProps", {
-    description: "Props for the EditorViewer component.",
-  })
-) {}
+/**
+ * React props for {@link EditorViewer}. This is intentionally a plain component
+ * boundary: `state` has already been decoded by {@link SerializedEditorState}.
+ *
+ * @example
+ * ```ts
+ * import type { EditorViewerProps } from "@beep/editor/viewer"
+ *
+ * const withProse = (state: EditorViewerProps["state"]): EditorViewerProps => ({
+ *   state,
+ *   className: "prose",
+ * })
+ * console.log(typeof withProse) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorViewerProps {
+  /** Optional class for the read-only content container. */
+  readonly className?: string | undefined;
+  /** The schema-decoded editor state to render. */
+  readonly state: SerializedEditorState.Type;
+}
+
+/**
+ * React props for {@link EditorCompatibilityViewer}.
+ *
+ * @example
+ * ```ts
+ * import type { EditorCompatibilityViewerProps } from "@beep/editor/viewer"
+ *
+ * const withoutExtraClasses = (
+ *   result: EditorCompatibilityViewerProps["result"]
+ * ): EditorCompatibilityViewerProps => ({ result })
+ * console.log(typeof withoutExtraClasses) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorCompatibilityViewerProps {
+  /** Optional class for either the rich viewer or inert wire fallback. */
+  readonly className?: string | undefined;
+  /** Lossless wire plus its optional strict semantic state. */
+  readonly result: LexicalCompatibilityResult;
+}
+
+/**
+ * React props for {@link EditorWireViewer}.
+ *
+ * @example
+ * ```ts
+ * import type { EditorWireViewerProps } from "@beep/editor/viewer"
+ *
+ * const props: EditorWireViewerProps = {
+ *   input: {
+ *     root: {
+ *       type: "root", version: 1,
+ *       children: [{
+ *         type: "paragraph", version: 1, children: [],
+ *         direction: null, format: "", indent: 0
+ *       }]
+ *     }
+ *   },
+ * }
+ * console.log(typeof props.input) // "object"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorWireViewerProps {
+  /** Optional class for either the rich viewer or inert wire fallback. */
+  readonly className?: string | undefined;
+  /** Unknown persisted input admitted through the lossless + strict decoders. */
+  readonly input: unknown;
+}
+
+function EditorReadOnlyFallback({
+  className,
+  input,
+  message,
+  testId,
+}: {
+  readonly className?: string | undefined;
+  readonly input: unknown;
+  readonly message: string;
+  readonly testId: string;
+}): JSX.Element {
+  return (
+    <div className={className} data-testid={testId}>
+      <p className="mb-1 text-xs text-muted-foreground">{message}</p>
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words text-sm">
+        {Result.getOrElse(encodeJson(input), () => "Document content is unavailable.")}
+      </pre>
+    </div>
+  );
+}
 
 /**
  * Read-only Lexical viewer over the `@beep/lexical-schema` v1 node
@@ -153,6 +238,19 @@ class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`
  * @since 0.0.0
  */
 export function EditorViewer({ state, className }: EditorViewerProps): JSX.Element {
+  const logEditorError = useAtomSet(logEditorErrorFn);
+  const runtimeState = decodeEditorStateForRuntimeResult(state);
+  if (Result.isFailure(runtimeState)) {
+    return (
+      <EditorReadOnlyFallback
+        className={className}
+        input={state}
+        message="Rich formatting is unavailable because this document is not compatible with the current editor."
+        testId="editor-runtime-refusal"
+      />
+    );
+  }
+
   // `initialConfig.editorState` is read once, when Lexical constructs the
   // editor: a viewer that stays mounted while its `state` prop changes would go
   // on rendering the message it was first given. Keying the composer by the
@@ -165,7 +263,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
   // whole history, serialized again, to produce a string identical to the one it
   // produced last time. The cache is keyed on the state object itself and holds it
   // weakly, so a message that scrolls out of the timeline takes its entry with it.
-  const { encoded, decorated } = encodeOnce(state);
+  const { encoded, decorated } = encodeOnce(runtimeState.success);
   return (
     <LexicalComposer
       key={encoded}
@@ -175,7 +273,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         theme: editorTheme,
         nodes: [...editorNodes, MermaidNode, CodeBlockNode],
         editorState: decorated,
-        onError,
+        onError: (error) => logEditorError(error),
       }}
     >
       {/* Non-flex wrapper: Lexical warns when the content editable's direct
@@ -189,4 +287,78 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
       </div>
     </LexicalComposer>
   );
+}
+
+/**
+ * Renders a strict compatible state through {@link EditorViewer};
+ * runtime-incompatible wire, including empty roots and future extensions,
+ * falls back to escaped JSON in a read-only `<pre>`. Unknown content is
+ * preserved and visible without asking Lexical to execute unsupported node
+ * behavior.
+ *
+ * @example
+ * ```tsx
+ * import { EditorCompatibilityViewer } from "@beep/editor/viewer"
+ * import type { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
+ *
+ * function ForwardCompatiblePreview({ result }: { readonly result: LexicalCompatibilityResult }) {
+ *   return <EditorCompatibilityViewer result={result} />
+ * }
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function EditorCompatibilityViewer({ result, className }: EditorCompatibilityViewerProps): JSX.Element {
+  return O.match(result.state, {
+    onSome: (state) => <EditorViewer state={state} className={className} />,
+    onNone: () => (
+      <EditorReadOnlyFallback
+        className={className}
+        input={result.wire}
+        message="Rich formatting is unavailable in this version. Showing the preserved read-only document."
+        testId="editor-compatibility-fallback"
+      />
+    ),
+  });
+}
+
+/**
+ * Admits unknown persisted Lexical wire through the lossless compatibility
+ * decoder before rendering. Compatible v1 input uses {@link EditorViewer};
+ * empty-root and future/extension wire is preserved as escaped read-only JSON,
+ * and malformed non-wire input is refused without mounting Lexical.
+ *
+ * @example
+ * ```tsx
+ * import { EditorWireViewer } from "@beep/editor/viewer"
+ *
+ * const wire = {
+ *   root: {
+ *     type: "root", version: 1,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
+ * }
+ * const preview = <EditorWireViewer input={wire} />
+ * console.log(preview.type.name) // "EditorWireViewer"
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function EditorWireViewer({ input, className }: EditorWireViewerProps): JSX.Element {
+  return Result.match(analyzeEditorStateCompatibilityResult(input), {
+    onFailure: () => (
+      <EditorReadOnlyFallback
+        className={className}
+        input={input}
+        message="Rich formatting is unavailable because this value is not a valid editor document."
+        testId="editor-wire-refusal"
+      />
+    ),
+    onSuccess: (result) => <EditorCompatibilityViewer result={result} className={className} />,
+  });
 }

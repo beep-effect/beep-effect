@@ -297,7 +297,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   );
 
   return (
-    <div ref={setViewport} className="flex-1 overflow-y-auto p-4" data-testid="thread">
+    <div ref={setViewport} className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="thread">
       <ThreadLoadState
         failed={AsyncResult.isFailure(timeline)}
         loading={AsyncResult.isInitial(timeline) && timeline.waiting}

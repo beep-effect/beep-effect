@@ -153,10 +153,12 @@ unchanged). Exact field names are a P1 detail; the contract is:
   picker + thumbnail/chip rendering and a typed **upload-port callback prop**
   (e.g. `onAttach(files: ReadonlyArray<File>) => …`). The editor never performs
   transport or persistence itself.
-- **Attachment value shape (app-local TS type for v1):** `{ id; filename;
-  mimeType; size; data }` where `data` is an in-memory blob/data-URL ref. MIME
-  allowlist: images for vision (`image/png`, `image/jpeg`, `image/webp`,
-  `image/gif`) + generic files; enforce a max-size cap (P1 default, e.g. 10 MB).
+- **Attachment value shape (foundation-owned runtime schema):**
+  `ComposerAttachment` carries `{ id; filename; mimeType; size; objectUrl; file }`.
+  `objectUrl` is a revocable preview-only blob URL and is never transported;
+  `AttachmentPort` receives the validated `ReadonlyArray<File>`. MIME allowlist:
+  images for vision (`image/png`, `image/jpeg`, `image/webp`, `image/gif`) +
+  generic files; enforce a max-size cap (P1 default, e.g. 10 MB).
 - **Send transport (cross-slice, GATED):** sending attachments to the model
   requires extending `SendTurnRequest` (currently `content: Document` only) with an
   `attachments` field and mapping images → Anthropic image content blocks. This is

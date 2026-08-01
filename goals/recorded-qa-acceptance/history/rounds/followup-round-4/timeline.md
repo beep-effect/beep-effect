@@ -1,0 +1,282 @@
+# Round 4 timeline
+
+Clock: `beacon` (high, residual 11.3 ms).
+Times are video seconds; `seq` values are the witness sequence numbers to cite as `eventIds`.
+
+## scenario: sash-selection-smear
+
+
+- t=10.128 seq=16 marker scenario:sash-selection-smear
+- t=10.133 seq=17 marker gesture:sash-drag-left-right
+- t=10.136 seq=18 pointer-enter [data-testid="dockview-react"]
+- t=10.136 seq=19 pointer-move @338,89
+- t=10.138 seq=20 pointer-down [data-testid="dockview-react"] > div:nth-of-type(1) @338,89
+- t=10.165 seq=21 pointer-move @303,89
+- t=10.198 seq=22 pointer-move @280,89
+- t=10.231 seq=23 pointer-move @257,89
+- t=10.264 seq=24 pointer-move @234,89
+- t=10.297 seq=25 pointer-move @211,89
+- t=10.330 seq=26 pointer-move @188,89
+- t=10.364 seq=27 pointer-move @164,89
+- t=10.397 seq=28 pointer-move @141,89
+- t=10.431 seq=29 pointer-move @118,89
+- t=10.464 seq=30 pointer-move @95,89
+- t=10.498 seq=31 pointer-move @72,89
+- t=10.531 seq=32 pointer-move @49,89
+- t=10.564 seq=33 pointer-move @26,89
+- t=10.798 seq=34 pointer-move @33,89
+- t=10.831 seq=35 pointer-move @88,89
+- t=10.865 seq=36 pointer-move @125,89
+- t=10.898 seq=37 pointer-move @163,89
+- t=10.930 seq=38 pointer-move @200,89
+- t=10.964 seq=39 pointer-move @237,89
+- t=10.997 seq=40 pointer-move @274,89
+- t=11.031 seq=41 pointer-move @311,89
+- t=11.064 seq=42 pointer-move @348,89
+- t=11.097 seq=43 pointer-move @385,89
+- t=11.130 seq=44 pointer-move @423,89
+- t=11.163 seq=45 pointer-move @460,89
+- t=11.197 seq=46 pointer-move @497,89
+- t=11.230 seq=47 pointer-move @534,89
+- t=11.249 seq=48 pointer-up [data-testid="dockview-react"] > div:nth-of-type(1) @534,89
+- t=11.249 seq=49 pointer-enter [data-testid="panel-story-constrained-neighbor-panel"]
+
+## scenario: sash-pointercancel-reset
+
+
+- t=11.678 seq=50 marker scenario:sash-pointercancel-reset
+- t=11.682 seq=51 marker gesture:sash-pointercancel
+- t=11.683 seq=52 pointer-leave [data-testid="panel-story-constrained-neighbor-panel"]
+- t=11.683 seq=53 pointer-move @369,474
+- t=11.693 seq=54 pointer-down [data-testid="dockview-react"] > div:nth-of-type(1) @369,474
+- t=11.714 seq=55 pointer-move @351,474
+- t=11.748 seq=56 pointer-move @334,474
+- t=11.781 seq=57 pointer-move @316,474
+- t=11.813 seq=58 pointer-move @298,474
+- t=11.848 seq=59 pointer-move @280,474
+- t=11.880 seq=60 pointer-move @263,474
+- t=11.914 seq=61 pointer-move @245,474
+- t=12.083 seq=62 pointer-cancel [data-testid="dockview-react"] > div:nth-of-type(1) @0,0
+- t=12.341 seq=63 pointer-move @227,474
+- t=12.361 seq=64 pointer-move @191,474
+- t=12.394 seq=65 pointer-move @155,474
+- t=12.428 seq=66 pointer-move @119,474
+- t=12.461 seq=67 pointer-move @83,474
+- t=12.478 seq=68 pointer-move @65,474
+- t=12.798 seq=69 pointer-up [data-testid="dockview-react"] > div:nth-of-type(1) @65,474
+- t=12.798 seq=70 pointer-enter [data-group-id="story-constrained"]
+- t=15.225 seq=71 animation start html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+- t=15.292 seq=72 animation cancel html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+
+## scenario: tab-drag-ghost
+
+
+- t=16.581 seq=73 marker scenario:tab-drag-ghost
+- t=16.589 seq=74 marker gesture:tab-drag-to-editor
+- t=16.589 seq=75 pointer-enter [data-panel-id="story-log"]
+- t=16.589 seq=76 pointer-move @552,52
+- t=16.591 seq=77 pointer-down [data-panel-id="story-log"] @552,52
+- t=16.593 seq=78 focus-in [data-panel-id="story-log"]
+- t=16.614 seq=79 pointer-move @562,62
+- t=16.646 seq=80 pointer-move @569,69
+- t=16.678 seq=81 pointer-move @576,76
+- t=16.712 seq=82 pointer-move @567,94
+- t=16.745 seq=83 pointer-move @540,125
+- t=16.780 seq=84 pointer-move @514,155
+- t=16.829 seq=85 pointer-move @475,201
+- t=16.864 seq=86 pointer-move @449,231
+- t=16.896 seq=87 pointer-move @422,261
+- t=16.930 seq=88 pointer-move @396,292
+- t=16.963 seq=89 pointer-move @370,322
+- t=16.996 seq=90 pointer-move @344,352
+- t=17.031 seq=91 pointer-move @317,383
+- t=17.063 seq=92 pointer-move @291,413
+- t=17.096 seq=93 pointer-move @265,444
+- t=17.129 seq=94 pointer-move @239,474
+- t=17.481 seq=95 pointer-up [data-panel-id="story-log"] @239,474
+- t=17.489 seq=96 focus-out [data-panel-id="story-log"]
+- t=17.481 seq=97 pointer-enter [data-group-id="story-editor"]
+- t=20.109 seq=98 animation start html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+- t=20.161 seq=99 animation cancel html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+
+## scenario: floating-drag-resize
+
+
+- t=21.392 seq=100 marker scenario:floating-drag-resize
+- t=21.398 seq=101 marker gesture:floating-header-drag
+- t=21.399 seq=102 pointer-enter [data-testid="dockview-react"]
+- t=21.399 seq=103 pointer-move @314,143
+- t=21.400 seq=104 pointer-down [data-testid="dockview-react"] > div:nth-of-type(1) > div:nth-of-type(1) @314,143
+- t=21.433 seq=105 pointer-move @344,164
+- t=21.466 seq=106 pointer-move @364,178
+- t=21.499 seq=107 pointer-move @384,191
+- t=21.532 seq=108 pointer-move @404,205
+- t=21.565 seq=109 pointer-move @424,219
+- t=21.598 seq=110 pointer-move @444,233
+- t=21.633 seq=111 pointer-move @464,247
+- t=21.665 seq=112 pointer-move @484,261
+- t=21.698 seq=113 pointer-move @504,275
+- t=21.731 seq=114 pointer-move @524,288
+- t=21.765 seq=115 pointer-move @544,302
+- t=21.799 seq=116 pointer-move @564,316
+- t=21.816 seq=117 pointer-move @574,323
+- t=21.832 seq=118 pointer-up [data-testid="dockview-react"] > div:nth-of-type(1) > div:nth-of-type(1) @574,323
+- t=22.273 seq=119 marker gesture:floating-grip-resize
+- t=22.273 seq=120 pointer-move @725,557
+- t=22.277 seq=121 pointer-down [data-testid="dockview-react"] > div:nth-of-type(1) > div:nth-of-type(2) @725,557
+- t=22.299 seq=122 pointer-move @737,565
+- t=22.334 seq=123 pointer-move @749,574
+- t=22.365 seq=124 pointer-move @761,582
+- t=22.399 seq=125 pointer-move @773,590
+- t=22.432 seq=126 pointer-move @785,599
+- t=22.466 seq=127 pointer-move @797,607
+- t=22.499 seq=128 pointer-move @809,616
+- t=22.533 seq=129 pointer-move @821,624
+- t=22.565 seq=130 pointer-move @833,632
+- t=22.598 seq=131 pointer-move @845,641
+- t=22.632 seq=132 pointer-move @857,649
+- t=22.649 seq=133 pointer-up [data-testid="dockview-react"] > div:nth-of-type(1) > div:nth-of-type(2) @857,649
+- t=25.158 seq=134 animation start html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+- t=25.218 seq=135 animation cancel html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+- t=25.236 seq=136 pointer-down [data-panel-id="story-quadrant-source-panel"] @41,39
+- t=25.236 seq=137 focus-in [data-panel-id="story-quadrant-source-panel"]
+- t=25.238 seq=138 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=25.238 seq=139 pointer-move @726,474
+- t=25.269 seq=140 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=25.287 seq=141 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=25.287 seq=142 pointer-move @1065,68
+- t=25.306 seq=143 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+
+## scenario: drop-quadrant-hover
+
+
+- t=26.440 seq=144 marker scenario:drop-quadrant-hover
+- t=26.445 seq=145 marker gesture:quadrant-hover-left
+- t=26.445 seq=146 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=26.445 seq=147 pointer-move @53,52
+- t=26.447 seq=148 pointer-down [data-panel-id="story-quadrant-source-panel"] @53,52
+- t=26.479 seq=149 pointer-move @64,62
+- t=26.511 seq=150 pointer-move @71,69
+- t=26.544 seq=151 pointer-move @78,76
+- t=26.578 seq=152 pointer-move @114,99
+- t=26.611 seq=153 pointer-move @179,138
+- t=26.644 seq=154 pointer-move @245,178
+- t=26.678 seq=155 pointer-move @310,217
+- t=26.711 seq=156 pointer-move @376,257
+- t=26.745 seq=157 pointer-move @441,296
+- t=26.779 seq=158 pointer-move @507,336
+- t=26.811 seq=159 pointer-move @572,375
+- t=26.844 seq=160 pointer-move @638,415
+- t=26.878 seq=161 pointer-move @703,454
+- t=27.387 seq=162 key-down Escape
+- t=26.895 seq=163 pointer-move @736,474
+- t=27.390 seq=164 pointer-up [data-panel-id="story-quadrant-source-panel"] @736,474
+- t=27.390 seq=165 pointer-leave [data-panel-id="story-quadrant-source-panel"]
+- t=27.390 seq=166 pointer-enter [data-group-id="story-quadrant-target"]
+- t=27.642 seq=167 marker gesture:quadrant-hover-right
+- t=27.644 seq=168 pointer-leave [data-group-id="story-quadrant-target"]
+- t=27.644 seq=169 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=27.644 seq=170 pointer-move @53,52
+- t=27.645 seq=171 pointer-down [data-panel-id="story-quadrant-source-panel"] @53,52
+- t=27.678 seq=172 pointer-move @64,62
+- t=27.711 seq=173 pointer-move @71,69
+- t=27.745 seq=174 pointer-move @78,76
+- t=27.778 seq=175 pointer-move @147,99
+- t=27.812 seq=176 pointer-move @278,138
+- t=27.845 seq=177 pointer-move @409,178
+- t=27.878 seq=178 pointer-move @541,217
+- t=27.911 seq=179 pointer-move @672,257
+- t=27.945 seq=180 pointer-move @803,296
+- t=27.978 seq=181 pointer-move @934,336
+- t=28.011 seq=182 pointer-move @1066,375
+- t=28.045 seq=183 pointer-move @1197,415
+- t=28.078 seq=184 pointer-move @1328,454
+- t=28.584 seq=185 key-down Escape
+- t=28.095 seq=186 pointer-move @1394,474
+- t=28.586 seq=187 pointer-up [data-panel-id="story-quadrant-source-panel"] @1394,474
+- t=28.586 seq=188 pointer-leave [data-panel-id="story-quadrant-source-panel"]
+- t=28.586 seq=189 pointer-enter [data-group-id="story-quadrant-target"]
+- t=28.838 seq=190 marker gesture:quadrant-hover-top
+- t=28.839 seq=191 pointer-leave [data-group-id="story-quadrant-target"]
+- t=28.839 seq=192 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=28.839 seq=193 pointer-move @53,52
+- t=28.840 seq=194 pointer-down [data-panel-id="story-quadrant-source-panel"] @53,52
+- t=28.861 seq=195 pointer-move @64,62
+- t=28.894 seq=196 pointer-move @71,69
+- t=28.928 seq=197 pointer-move @78,76
+- t=28.961 seq=198 pointer-move @130,79
+- t=28.994 seq=199 pointer-move @229,79
+- t=29.028 seq=200 pointer-move @327,79
+- t=29.061 seq=201 pointer-move @425,79
+- t=29.096 seq=202 pointer-move @524,79
+- t=29.128 seq=203 pointer-move @622,78
+- t=29.161 seq=204 pointer-move @721,78
+- t=29.195 seq=205 pointer-move @819,78
+- t=29.228 seq=206 pointer-move @917,78
+- t=29.261 seq=207 pointer-move @1016,78
+- t=29.766 seq=208 key-down Escape
+- t=29.278 seq=209 pointer-move @1065,78
+- t=29.768 seq=210 pointer-up [data-panel-id="story-quadrant-source-panel"] @1065,78
+- t=29.768 seq=211 pointer-leave [data-panel-id="story-quadrant-source-panel"]
+- t=29.768 seq=212 pointer-enter [data-group-id="story-quadrant-target"]
+- t=30.021 seq=213 marker gesture:quadrant-hover-bottom
+- t=30.023 seq=214 pointer-leave [data-group-id="story-quadrant-target"]
+- t=30.023 seq=215 pointer-enter [data-panel-id="story-quadrant-source-panel"]
+- t=30.023 seq=216 pointer-move @53,52
+- t=30.024 seq=217 pointer-down [data-panel-id="story-quadrant-source-panel"] @53,52
+- t=30.044 seq=218 pointer-move @60,59
+- t=30.078 seq=219 pointer-move @67,66
+- t=30.111 seq=220 pointer-move @74,72
+- t=30.145 seq=221 pointer-move @81,79
+- t=30.187 seq=222 pointer-move @179,161
+- t=30.212 seq=223 pointer-move @278,244
+- t=30.245 seq=224 pointer-move @376,326
+- t=30.277 seq=225 pointer-move @475,408
+- t=30.311 seq=226 pointer-move @573,491
+- t=30.344 seq=227 pointer-move @671,573
+- t=30.378 seq=228 pointer-move @770,655
+- t=30.411 seq=229 pointer-move @868,737
+- t=30.444 seq=230 pointer-move @967,820
+- t=30.478 seq=231 pointer-move @1065,902
+- t=30.966 seq=232 key-down Escape
+- t=30.967 seq=233 pointer-up [data-panel-id="story-quadrant-source-panel"] @1065,902
+- t=30.967 seq=234 pointer-leave [data-panel-id="story-quadrant-source-panel"]
+- t=33.275 seq=235 animation start html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+- t=33.341 seq=236 animation cancel html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)
+
+## scenario: escape-cancels-tab-drag
+
+
+- t=34.573 seq=237 marker scenario:escape-cancels-tab-drag
+- t=34.595 seq=238 pointer-enter [data-panel-id="story-notes"]
+- t=34.595 seq=239 pointer-move @77,52
+- t=34.595 seq=240 pointer-down [data-panel-id="story-notes"] @77,52
+- t=34.597 seq=241 focus-in [data-panel-id="story-notes"]
+- t=34.595 seq=242 pointer-up [data-panel-id="story-notes"] @77,52
+- t=34.804 seq=243 marker gesture:tab-drag-escape
+- t=34.805 seq=244 pointer-leave [data-panel-id="story-notes"]
+- t=34.805 seq=245 pointer-enter [data-panel-id="story-brief"]
+- t=34.805 seq=246 pointer-move @127,52
+- t=34.806 seq=247 pointer-down [data-panel-id="story-brief"] @127,52
+- t=34.808 seq=248 focus-out [data-panel-id="story-notes"]
+- t=34.808 seq=249 focus-in [data-panel-id="story-brief"]
+- t=34.827 seq=250 pointer-move @134,59
+- t=34.861 seq=251 pointer-move @141,66
+- t=34.895 seq=252 pointer-move @148,72
+- t=34.928 seq=253 pointer-move @155,79
+- t=34.961 seq=254 pointer-move @232,101
+- t=34.996 seq=255 pointer-move @309,122
+- t=35.028 seq=256 pointer-move @387,144
+- t=35.061 seq=257 pointer-move @464,166
+- t=35.094 seq=258 pointer-move @542,187
+- t=35.128 seq=259 pointer-move @619,209
+- t=35.162 seq=260 pointer-move @696,231
+- t=35.194 seq=261 pointer-move @774,252
+- t=35.228 seq=262 pointer-move @851,274
+- t=35.261 seq=263 pointer-move @929,296
+- t=35.531 seq=264 key-down Escape
+- t=35.534 seq=265 focus-out [data-panel-id="story-brief"]
+- t=35.534 seq=266 focus-in [data-panel-id="story-notes"]
+- t=35.739 seq=267 pointer-up [data-panel-id="story-brief"] @929,296
+- t=35.739 seq=268 pointer-leave [data-panel-id="story-brief"]
+- t=35.739 seq=269 pointer-enter [data-group-id="story-outline"]

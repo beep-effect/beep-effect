@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { A, thunkEmptyStr } from "@beep/utils";
+import { A } from "@beep/utils";
 import { Match } from "effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -163,8 +163,8 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
     del: ({ children }) => renderPlainTextInlines(children),
     code: ({ value }) => value,
     a: ({ children }) => renderPlainTextInlines(children),
-    img: thunkEmptyStr,
-    br: thunkEmptyStr,
+    img: ({ alt }) => alt,
+    br: () => "\n",
     inlineMath: ({ value }) => value,
     footnoteReference: ({ identifier }) => identifier,
   })
@@ -217,7 +217,7 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
     footnoteDefinition: (block) => renderPlainTextBlocks(block.children),
     admonition: (block) => renderPlainTextBlocks(block.children),
     embed: embedTitle,
-    hr: thunkEmptyStr,
+    hr: () => "",
   })
 );
 

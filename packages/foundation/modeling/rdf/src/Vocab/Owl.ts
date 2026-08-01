@@ -7,63 +7,18 @@
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { OWL_NAMESPACE } from "./generated/Owl.terms.ts";
 
 /**
- * OWL namespace IRI.
+ * Generated namespace IRI and term inventory for this vocabulary.
  *
- * @example
- * ```ts
- * import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl"
+ * Single-sourced from the `@beep/identity` `CoreVocab` registry via
+ * `bun run beep sync-data-to-ts --target vocab-terms`.
  *
- * const classIri = `${OWL_NAMESPACE}Class`
- * console.log(classIri) // "http://www.w3.org/2002/07/owl#Class"
- * ```
- *
- * @since 0.0.0
- * @category configuration
- */
-export const OWL_NAMESPACE = "http://www.w3.org/2002/07/owl#" as const;
-
-/**
- * OWL local-name inventory mirrored by `@beep/identity`.
- *
- * @example
- * ```ts
- * import { OWL_TERMS } from "@beep/rdf/Vocab/Owl"
- *
- * console.log(OWL_TERMS.includes("ObjectProperty")) // true
- * ```
- *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
-export const OWL_TERMS = [
-  "AnnotationProperty",
-  "AsymmetricProperty",
-  "Class",
-  "DatatypeProperty",
-  "FunctionalProperty",
-  "InverseFunctionalProperty",
-  "IrreflexiveProperty",
-  "NamedIndividual",
-  "Nothing",
-  "ObjectProperty",
-  "Ontology",
-  "ReflexiveProperty",
-  "SymmetricProperty",
-  "Thing",
-  "TransitiveProperty",
-  "backwardCompatibleWith",
-  "deprecated",
-  "equivalentClass",
-  "equivalentProperty",
-  "imports",
-  "incompatibleWith",
-  "inverseOf",
-  "priorVersion",
-  "sameAs",
-  "versionInfo",
-] as const;
+export { OWL_NAMESPACE, OWL_TERMS } from "./generated/Owl.terms.ts";
 
 /**
  * `owl:Class`

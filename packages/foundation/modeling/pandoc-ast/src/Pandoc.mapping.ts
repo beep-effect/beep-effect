@@ -8,8 +8,8 @@
 
 import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
-import { PosInt } from "@beep/schema";
-import { A, O } from "@beep/utils";
+import { CauseTaggedError, PosInt } from "@beep/schema";
+import { A, O, R } from "@beep/utils";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
 import {
@@ -17,6 +17,7 @@ import {
   BulletList,
   Code,
   CodeBlock,
+  DEFAULT_PANDOC_API_VERSION,
   Div,
   Emph,
   Header,
@@ -42,6 +43,31 @@ import type { JsonPath, PandocMappingDirection, PandocMappingSeverity } from "./
 
 const $I = $PandocAstId.create("Pandoc.mapping");
 
+/**
+ * Typed failure raised when a Pandoc-to-Md projection cannot be completed.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping"
+ *
+ * const handled = Effect.fail("projection failed").pipe(
+ *   PandocMappingError.mapError("Pandoc mapping failed."),
+ *   Effect.catchTag("PandocMappingError", (error) => Effect.succeed(error.message))
+ * )
+ * Effect.runPromise(handled).then(console.log)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PandocMappingError extends CauseTaggedError<PandocMappingError>($I`PandocMappingError`)(
+  "PandocMappingError",
+  $I.annote("PandocMappingError", {
+    description: "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed.",
+  })
+) {}
+
 type Projection<Value> = {
   readonly issues: ReadonlyArray<PandocMappingIssue.Type>;
   readonly value: Value;
@@ -61,7 +87,10 @@ const issue = (input: {
 }): PandocMappingIssue => PandocMappingIssue.fromPath(input);
 
 const hasCodeBlockDroppedAttr = (attr: PandocAttr.Type): boolean =>
-  attr.id.length > 0 || attr.classes.length > 1 || attr.keyValues.length > 0;
+  attr.id.length > 0 ||
+  attr.classes.length > 1 ||
+  attr.keyValues.length > 0 ||
+  O.exists(O.fromUndefinedOr(attr.classes[0]), (language) => O.isNone(Md.CodeFenceLanguage.decodeOption(language)));
 
 const hasOrderedListMarkerLoss = (node: OrderedList.Type): boolean =>
   node.style !== "DefaultStyle" || node.delimiter !== "DefaultDelim";
@@ -147,6 +176,34 @@ const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBl
   })
 );
 
+const imageDescriptionLossPath = (children: ReadonlyArray<PandocInline.Type>, path: JsonPath): O.Option<JsonPath> => {
+  const first = children[0];
+  if (first === undefined) {
+    return O.some([...path, "children"]);
+  }
+  if (children.length === 1 && first._tag === "str") {
+    return O.none();
+  }
+  return O.some(appendIndex(path, "children", first._tag === "str" ? 1 : 0));
+};
+
+const imageDescriptionLossIssues = (
+  children: ReadonlyArray<PandocInline.Type>,
+  path: JsonPath
+): ReadonlyArray<PandocMappingIssue.Type> =>
+  O.match({
+    onNone: () => [],
+    onSome: (lossPath: JsonPath) => [
+      issue({
+        construct: "Image",
+        direction: "pandoc-to-md",
+        message: "Pandoc image descriptions other than one Str are flattened to one plain-text alt value in Md.",
+        path: lossPath,
+        severity: "lossy",
+      }),
+    ],
+  })(imageDescriptionLossPath(children, path));
+
 const pandocInlineToMd = (
   inline: PandocInline.Type,
   path: JsonPath
@@ -221,6 +278,7 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
+            ...imageDescriptionLossIssues(node.children, path),
             ...(PandocAttr.isNonEmpty(node.attr)
               ? [
                   issue({
@@ -290,7 +348,7 @@ const pandocInlineToMd = (
         Effect.succeed({
           issues: [
             issue({
-              construct: node.constructor,
+              construct: node.constructorName,
               direction: "pandoc-to-md",
               message: "Pandoc inline constructor is outside the v1 supported surface.",
               path,
@@ -381,7 +439,23 @@ const pandocListItemBlocksToMdChildren = (
   const first = item[0];
 
   return item.length === 1 && first !== undefined && isPlainOrPara(first)
-    ? pandocListItemBlockToMdInlines(first, appendIndex(path, "blocks", 0))
+    ? Effect.map(pandocListItemBlockToMdInlines(first, appendIndex(path, "blocks", 0)), ({ issues, value }) => ({
+        issues: [
+          ...issues,
+          ...(first._tag === "para"
+            ? [
+                issue({
+                  construct: "Para",
+                  direction: "pandoc-to-md",
+                  message: "A sole Pandoc Para list item is normalized to Plain when mapped back from Md.",
+                  path: appendIndex(path, "blocks", 0),
+                  severity: "lossy",
+                }),
+              ]
+            : []),
+        ],
+        value,
+      }))
     : Effect.map(
         Effect.forEach(item, (block, index) =>
           pandocListItemBlockToMdChildBlocks(block, appendIndex(path, "blocks", index))
@@ -586,7 +660,8 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
                 issue({
                   construct: "CodeBlock",
                   direction: "pandoc-to-md",
-                  message: "Pandoc code block id, key/value pairs, or extra classes have no Md-core pre equivalent.",
+                  message:
+                    "Pandoc code block id, key/value pairs, extra classes, or an invalid language class have no Md-core pre equivalent.",
                   path,
                   severity: "lossy",
                 }),
@@ -669,13 +744,13 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
         Effect.succeed({
           issues: [
             issue({
-              construct: node.constructor,
+              construct: node.constructorName,
               direction: "pandoc-to-md",
               message: "Pandoc block constructor is outside the v1 supported surface.",
               path,
             }),
           ],
-          value: Md.P.make({ children: [mdText(`[${node.constructor}]`)] }),
+          value: Md.P.make({ children: [mdText(`[${node.constructorName}]`)] }),
         }),
     })
   );
@@ -1145,14 +1220,35 @@ export declare namespace DocumentToPandocResult {
  * @category mapping
  * @since 0.0.0
  */
-export const pandocToDocument = (pandoc: PandocDocument.Type): Effect.Effect<PandocToDocumentResult, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(pandoc.blocks, (block, index) => pandocBlockToMd(block, ["blocks", index])),
-    (blocks) =>
-      PandocToDocumentResult.make({
-        document: Md.Document.make({ children: A.map(blocks, (block) => block.value) }),
-        report: PandocCompatibilityReport.fromIssues(mergeIssues(blocks)),
-      })
+export const pandocToDocument = (
+  pandoc: PandocDocument.Type
+): Effect.Effect<PandocToDocumentResult, PandocMappingError> =>
+  S.encodeEffect(PandocDocument)(pandoc).pipe(
+    Effect.as(pandoc),
+    Effect.flatMap((decoded) =>
+      Effect.map(
+        Effect.forEach(decoded.blocks, (block, index) => pandocBlockToMd(block, ["blocks", index])),
+        (blocks) =>
+          PandocToDocumentResult.make({
+            document: Md.Document.make({ children: A.map(blocks, (block) => block.value) }),
+            report: PandocCompatibilityReport.fromIssues([
+              ...mergeIssues(blocks),
+              ...(!R.isEmptyReadonlyRecord(decoded.meta)
+                ? [
+                    issue({
+                      construct: "Meta",
+                      direction: "pandoc-to-md",
+                      message: "Pandoc document metadata is outside the Md document model.",
+                      path: ["meta"],
+                      severity: "lossy",
+                    }),
+                  ]
+                : []),
+            ]),
+          })
+      )
+    ),
+    PandocMappingError.mapError("Pandoc to Md mapping failed.")
   );
 
 /**
@@ -1172,16 +1268,24 @@ export const pandocToDocument = (pandoc: PandocDocument.Type): Effect.Effect<Pan
  * @category mapping
  * @since 0.0.0
  */
-export const documentToPandoc = (document: Md.Document.Type): Effect.Effect<DocumentToPandocResult, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(document.children, (block, index) => mdBlockToPandoc(block, ["children", index])),
-    (blocks) =>
-      DocumentToPandocResult.make({
-        pandoc: PandocDocument.make({
-          apiVersion: [1, 23, 1],
-          blocks: A.map(blocks, (block) => block.value),
-          meta: {},
-        }),
-        report: PandocCompatibilityReport.fromIssues(mergeIssues(blocks)),
-      })
+export const documentToPandoc = (
+  document: Md.Document.Type
+): Effect.Effect<DocumentToPandocResult, PandocMappingError> =>
+  S.encodeEffect(Md.Document)(document).pipe(
+    Effect.as(document),
+    Effect.flatMap((decoded) =>
+      Effect.map(
+        Effect.forEach(decoded.children, (block, index) => mdBlockToPandoc(block, ["children", index])),
+        (blocks) =>
+          DocumentToPandocResult.make({
+            pandoc: PandocDocument.make({
+              apiVersion: DEFAULT_PANDOC_API_VERSION,
+              blocks: A.map(blocks, (block) => block.value),
+              meta: {},
+            }),
+            report: PandocCompatibilityReport.fromIssues(mergeIssues(blocks)),
+          })
+      )
+    ),
+    PandocMappingError.mapError("Md to Pandoc mapping failed.")
   );

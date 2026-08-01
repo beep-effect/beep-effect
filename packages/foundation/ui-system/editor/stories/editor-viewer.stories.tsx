@@ -1,4 +1,4 @@
-import { EditorViewer } from "@beep/editor";
+import { EditorViewer } from "@beep/editor/viewer";
 import { ARTIFACT_URI_PREFIX, documentToEditorState } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import * as Effect from "effect/Effect";

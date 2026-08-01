@@ -1702,7 +1702,11 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   };
 
   const makeWorker = (): Worker => {
-    const nextWorker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
+    // Keep the global constructor literal at the bundler boundary. Vite only
+    // recognizes this exact shape as a module-worker entry; constructing through
+    // the captured alias turns the TypeScript source into a `data:` asset, which
+    // a restrictive packaged CSP correctly rejects.
+    const nextWorker = new Worker(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
     nextWorker.addEventListener("message", (event: MessageEvent<unknown>) => {
       // The worker posts the ENCODED result: a structured clone drops prototypes,
       // so what arrives is plain data until it is decoded back into the domain.

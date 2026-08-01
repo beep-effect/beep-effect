@@ -28,13 +28,14 @@
 import { Function as Fn, flow, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/unstable/httpapi/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
-import type { CoreVocab, VocabShape } from "./Vocab.ts";
+import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
 
 const BeepNamespace = S.Literal("@beep");
 type BeepNamespace = typeof BeepNamespace.Type;
@@ -598,6 +599,88 @@ export type DeclarationAnnotationExtras<
 export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
 
 /**
+ * SKOS classification marker written by the composer's `class` entrypoint.
+ *
+ * Drives `@type` emission during ontology projection: `"concept"` adds
+ * `skos:Concept` and `"conceptScheme"` adds `skos:ConceptScheme` beside
+ * `rdfs:Class`.
+ *
+ * @example
+ * ```ts
+ * import type { SkosClassification } from "@beep/identity"
+ *
+ * const marker: SkosClassification = "concept"
+ * console.log(marker)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type SkosClassification = "concept" | "conceptScheme";
+
+/**
+ * Options accepted by the composer's `key` entrypoint.
+ *
+ * `term` carries a borrowed vocabulary predicate as a closed CURIE literal,
+ * optionally reverse-marked with a leading `^` (SPARQL inverse-path syntax).
+ * Remaining fields mirror `annotateKey` extras.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyKeyOptions } from "@beep/identity"
+ *
+ * const options: OntologyKeyOptions = { term: "skos:prefLabel" }
+ * console.log(options.term)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
+  KeyAnnotationExtras<unknown>,
+  "identifier" | "schemaId" | "iri" | "curie"
+> & {
+  readonly term?: Predicate<Vocab> | undefined;
+  readonly identifier?: never;
+  readonly schemaId?: never;
+  readonly iri?: never;
+  readonly curie?: never;
+};
+
+/**
+ * Extras accepted by the composer's `class` entrypoint.
+ *
+ * Extends the `annote` extras with an optional SKOS classification marker;
+ * the marker is written to the `skosClassification` annotation channel.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyClassExtras } from "@beep/identity"
+ *
+ * const extras: OntologyClassExtras = { description: "A patent claim.", skos: "concept" }
+ * console.log(extras.skos)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type OntologyClassExtras<
+  SchemaType = unknown,
+  TypeParameters extends ReadonlyArray<S.Top> = readonly [],
+> = IdentityAnyAnnotationExtras<SchemaType, TypeParameters> & {
+  readonly skos?: SkosClassification | undefined;
+};
+
+declare module "effect/Schema" {
+  namespace Annotations {
+    interface Annotations {
+      readonly ontologyTerm?: string | undefined;
+      readonly skosClassification?: SkosClassification | undefined;
+    }
+  }
+}
+
+/**
  * Deprecated compatibility alias for Effect's request payload encoding metadata.
  *
  * @example
@@ -964,6 +1047,40 @@ export interface IdentityComposer<
   ): (self: Schema) => AnnotatedSchema<Schema>;
 
   /**
+   * Produce an ontology class annotation record for an Effect schema class.
+   *
+   * Identical to `annote` plus an optional SKOS classification marker written
+   * to the `skosClassification` annotation channel. This is the nominal class
+   * entrypoint for the ontology fold; membership in a fold comes from the
+   * fold's `schemas` list, not from this marker.
+   *
+   * @example
+   * ```ts
+   * import { make } from "@beep/identity"
+   *
+   * const { $MyPkgId } = make("my-pkg", { authority: "https://ns.beep.sh/", prefix: "beep" })
+   * const $I = $MyPkgId.create("patent")
+   * const ann = $I.class("Claim", { description: "A patent claim.", skos: "concept" })
+   *
+   * console.log(ann.identifier)// "@beep/my-pkg/patent/Claim"
+   * console.log(ann.skosClassification)// "concept"
+   * ```
+   *
+   * @since 0.0.0
+   * @category combinators
+   */
+  class<const Next extends TString.NonEmpty = TString.NonEmpty, const Extras extends OntologyClassExtras = {}>(
+    identifier: SegmentValue<Next>,
+    extras?: undefined | Extras
+  ): IdentityAnnotationResult<
+    `${Value}/${SegmentValue<Next>}`,
+    SegmentValue<Next>,
+    Omit<Extras, "skos">,
+    Authority,
+    Prefix
+  > & { readonly skosClassification?: SkosClassification };
+
+  /**
    * Batch-create child {@link IdentityComposer} instances for multiple module segments.
    *
    * Returns a record whose keys are `$`-prefixed PascalCase accessors (e.g. `$AuthId`)
@@ -1058,6 +1175,39 @@ export interface IdentityComposer<
   readonly iri: BoundComposerIri<Authority, Value>;
 
   /**
+   * Produce a key annotator that writes a borrowed predicate to the
+   * `ontologyTerm` channel.
+   *
+   * The predicate is a closed CURIE literal from the composer's vocabulary
+   * (`"skos:prefLabel"`), optionally reverse-marked (`"^rdfs:subClassOf"`,
+   * projected as JSON-LD `@reverse`). Owned predicates omit `term` — the
+   * fold defaults the local name from the struct key. Borrowed vocabulary
+   * never rides the owned `identifier` channel.
+   *
+   * @example
+   * ```ts
+   * import { make } from "@beep/identity"
+   * import * as S from "effect/Schema"
+   *
+   * const { $MyPkgId } = make("my-pkg", { authority: "https://ns.beep.sh/", prefix: "beep" })
+   * const $I = $MyPkgId.create("patent")
+   *
+   * const Claim = S.Struct({
+   *   prefLabel: S.String.pipe($I.key("skos:prefLabel")),
+   *   children: S.Array(S.String).pipe($I.key("^rdfs:subClassOf")),
+   *   text: S.String.pipe($I.key({ description: "Claim text." })),
+   * })
+   *
+   * console.log(S.resolveAnnotationsKey(Claim.fields.prefLabel)?.ontologyTerm)// "skos:prefLabel"
+   * ```
+   *
+   * @since 0.0.0
+   * @category combinators
+   */
+  key(term: Predicate<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
+  key(options: OntologyKeyOptions<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
+
+  /**
    * Create a child identity string by appending one segment.
    *
    * @example
@@ -1137,6 +1287,24 @@ export interface IdentityComposer<
    * @category getters
    */
   readonly value: IdentityString<Value>;
+
+  /**
+   * The vocabulary registry supplied at binding time, or `undefined` when the
+   * composer is unbound or bound without a vocabulary extension (consumers
+   * default to the core registry).
+   *
+   * @example
+   * ```ts
+   * import { CoreVocab, make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep", vocab: CoreVocab })
+   * console.log($BeepId.vocabRegistry === CoreVocab) // true
+   * ```
+   *
+   * @since 0.0.0
+   * @category getters
+   */
+  readonly vocabRegistry: Vocab | undefined;
 
   /**
    * Template tag call signature for creating child identity strings.
@@ -1564,6 +1732,31 @@ const createComposer = <
     return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
   };
 
+  type LooseOntologyKeyOptions = KeyAnnotationExtras<unknown> & {
+    readonly term?: string | undefined;
+    readonly identifier?: unknown;
+    readonly schemaId?: unknown;
+    readonly iri?: unknown;
+    readonly curie?: unknown;
+  };
+
+  const ontologyKey = (input: string | LooseOntologyKeyOptions) => {
+    const options: LooseOntologyKeyOptions = P.isString(input) ? { term: input } : input;
+    const { curie: _curie, identifier: _identifier, iri: _iri, schemaId: _schemaId, term, ...extras } = options;
+    const annotation = term === undefined ? extras : { ...extras, ontologyTerm: term };
+
+    return <Schema extends S.Top>(self: Schema): Schema["Rebuild"] => self.annotateKey(annotation);
+  };
+
+  const ontologyClass = <const Next extends TString.NonEmpty = TString.NonEmpty>(
+    identifier: SegmentValue<Next>,
+    extras?: undefined | OntologyClassExtras
+  ) => {
+    const { skos, ...rest } = extras ?? {};
+
+    return mergeIdentityAnnotation(identifier, skos === undefined ? rest : { ...rest, skosClassification: skos });
+  };
+
   return Object.defineProperties(createTemplateIdentity, {
     value: {
       value: identityValue,
@@ -1591,6 +1784,12 @@ const createComposer = <
     },
     slug: {
       value: slug,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    vocabRegistry: {
+      value: binding?.vocab,
       enumerable: true,
       writable: true,
       configurable: true,
@@ -1675,6 +1874,18 @@ const createComposer = <
     },
     annoteHttp: {
       value: annoteHttp,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    key: {
+      value: ontologyKey,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    class: {
+      value: ontologyClass,
       enumerable: true,
       writable: true,
       configurable: true,

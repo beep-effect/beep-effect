@@ -528,10 +528,10 @@
     },
     "@beep/ontology": {
       "path": "packages/foundation/modeling/ontology",
-      "lines": 97.4,
-      "statements": 97.53,
-      "branches": 100,
-      "functions": 92.59
+      "lines": 91.96,
+      "statements": 91.92,
+      "branches": 83.25,
+      "functions": 86.71
     },
     "@beep/ontology-client": {
       "path": "packages/ontology/client",

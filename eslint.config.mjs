@@ -1,5 +1,6 @@
 import { DeprecatedApisESLintConfig } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig";
 import { DocsESLintConfig } from "@beep/repo-configs/eslint/DocsESLintConfig";
+import { globalIgnores } from "eslint/config";
 
 const eslintProfile = process.env.BEEP_ESLINT_PROFILE ?? "docs";
 
@@ -18,4 +19,4 @@ const selectedESLintConfig = (() => {
   throw new Error(`Unsupported BEEP_ESLINT_PROFILE: ${eslintProfile}`);
 })();
 
-export default selectedESLintConfig;
+export default [globalIgnores(["**/src-tauri/target/**"]), ...selectedESLintConfig];

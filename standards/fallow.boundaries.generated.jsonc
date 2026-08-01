@@ -2069,6 +2069,7 @@
       {
         "from": "@beep/md",
         "allow": [
+          "@beep/html",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -2076,6 +2077,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/html",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -2254,14 +2256,16 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {

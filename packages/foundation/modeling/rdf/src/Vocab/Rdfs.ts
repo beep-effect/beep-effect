@@ -7,53 +7,18 @@
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { RDFS_NAMESPACE } from "./generated/Rdfs.terms.ts";
 
 /**
- * RDFS namespace IRI.
+ * Generated namespace IRI and term inventory for this vocabulary.
  *
- * @example
- * ```ts
- * import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs"
+ * Single-sourced from the `@beep/identity` `CoreVocab` registry via
+ * `bun run beep sync-data-to-ts --target vocab-terms`.
  *
- * const labelIri = `${RDFS_NAMESPACE}label`
- * console.log(labelIri) // "http://www.w3.org/2000/01/rdf-schema#label"
- * ```
- *
- * @since 0.0.0
- * @category configuration
- */
-export const RDFS_NAMESPACE = "http://www.w3.org/2000/01/rdf-schema#" as const;
-
-/**
- * Complete RDFS local-name inventory mirrored by `@beep/identity`.
- *
- * @example
- * ```ts
- * import { RDFS_TERMS } from "@beep/rdf/Vocab/Rdfs"
- *
- * console.log(RDFS_TERMS.includes("subClassOf")) // true
- * ```
- *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
-export const RDFS_TERMS = [
-  "Class",
-  "Container",
-  "ContainerMembershipProperty",
-  "Datatype",
-  "Literal",
-  "Resource",
-  "comment",
-  "domain",
-  "isDefinedBy",
-  "label",
-  "member",
-  "range",
-  "seeAlso",
-  "subClassOf",
-  "subPropertyOf",
-] as const;
+export { RDFS_NAMESPACE, RDFS_TERMS } from "./generated/Rdfs.terms.ts";
 
 /**
  * `rdfs:label`
