@@ -28,7 +28,7 @@ A cold session resumes from the first incomplete step.
    4. Patent LLM authoring + multi-agent IP workflows → `research/13-track-patent-llm.md`
 4. **/adhd on integration plays** — post-synthesis divergence ("what should
    beep-effect build/absorb?"), diverge/deepen as codex background jobs,
-   critic inline. Output: `research/20-adhd-integration-plays.md`.
+   critic inline. Output: `research/20-adhd-integration.md`.
 5. **Catalog + ROUTING-SEED + HANDOFF** — nugget catalog rows, routing seed
    mapping findings → goals/packets, handoff doc. Campaign stops here;
    BRIEF/MAP shaping is gated on Benjamin's sign-off.

@@ -28,12 +28,25 @@ RULES
 
 ## 1. Mined source corpus
 
-<!-- Fills during mining waves: one row per unique paper/URL distillate, with
-its distillate path under research/mined/ and track theme. -->
+Mining is COMPLETE (2026-08-01). 122 distillates exist, one per mined source,
+at `research/mined/<ID>.md` — each distillate's frontmatter carries the
+original filename, track, priority, and mine date, and its body carries
+section/page-referenced quotes. The authoritative per-source rows are
+machine-readable rather than duplicated here:
 
-| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
-|--------|-------|-----------------|------------------------|-------|-------------|
-| (pending) | mining wave 1 not yet launched | | | | |
+| Row family | Count | Authoritative ledger | What it carries |
+|------------|------:|----------------------|-----------------|
+| Papers `P001-P101` | 101 files (98 unique) | [`00-catalog.json`](./00-catalog.json) / [`00-catalog.md`](./00-catalog.md) | id → source filename, title, track, themes, priority, dupe links |
+| Papers (integrity) | 101 | [`00-inventory.json`](./00-inventory.json) | sha256 + byte size per corpus file |
+| Link scrapes `L01-L14` | 14 | catalog rows (kind `link`) + gitignored fetches under `../assets/vendor/links/` | URL, title, track |
+| Repo deep-mines `R04-R25` (9) | 9 | catalog rows + [`01-repo-triage.json`](./01-repo-triage.json) | license, port discipline, mine targets |
+
+Late additions (2026-08-01, post-synthesis): P100 (FLINT ontology paper),
+P101 (controlled-language paper), R25 (flint-ontology repo) — routed via
+[`14-addendum-new-items.md`](./14-addendum-new-items.md) as an unverified
+addendum. Findings→source traceability: every `T*-F*` finding in
+`10..13-track-*.md` and every nugget in
+[`nugget-catalog.json`](./nugget-catalog.json) cites distillate ids.
 
 ## 2. Upstream repositories & licenses
 
@@ -63,6 +76,7 @@ delta-only. -->
 | R22 FOPNet STS | `none-found` | reference only | FOP patent-triple and similarity approach; no code or data extraction. |
 | R23 `semanticlaw` | `Apache-2.0` | port with attribution | Swiss-law RDF vocabulary and collection patterns. |
 | R24 `USPTO_ClassOntology` | `none-found` | reference only | USPTO class-definition and claim-overlap reference. |
+| R25 `flint-ontology` | `Apache-2.0` (root); `MPL-2.0` (`shacl/`) | split: port with attribution (root) / clean-room pattern only (`shacl/`) | FLINT state-transition class hierarchy, SHACL shape patterns, competency questions (late addition, unverified addendum). |
 
 Full 24-row triage, including skipped repositories and exact mine targets:
 [`01-repo-triage.md`](./01-repo-triage.md) and
@@ -70,9 +84,11 @@ Full 24-row triage, including skipped repositories and exact mine targets:
 
 ## 3. External research sources
 
-- `links.md` seed URLs (15) — reproduced into the catalog during wave 1;
-  includes FIBO Legal Core, UFO-L project page, LegalRuleML 1.0 spec, and the
-  FOPNet ResearchGate entry (priority thread).
+- `links.md` seed URLs — cataloged as `L01-L14` and mined into
+  `research/mined/L*.md` distillates; includes FIBO Legal Core, UFO-L
+  project page, LegalRuleML 1.0 spec, and the FOPNet thread (priority;
+  ResearchGate blocked scraping — L13 recovered FOPNet via its
+  ScienceDirect abstract + reference list).
 
 ## 4. In-repo capability references
 

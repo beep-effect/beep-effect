@@ -17,18 +17,22 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Mine the nine licensed repo survivors while evaluating FOPNet from its paper
-and reference-only R22 evidence; R22 code and data remain out of bounds unless
-separate license clearance appears.
+Reconcile the routing seed with Benjamin: review the 9 clusters and 5
+proposed slugs in [`ROUTING-SEED.md`](./ROUTING-SEED.md), decide the three
+grill-gated standing-decision challenges (remo1 SKOS-only constraint
+profiles, remo2 derived matter projections, remo3 Cognee-as-lossy-projection)
+via `/grill-with-docs`, and obtain sign-off before any BRIEF/MAP shaping.
+The campaign is stopped at the routing seed by design.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - corpus inventory, clusters, wave-1 relation, hygiene notes.
-3. [`DECISIONS.md`](./DECISIONS.md) - the 2026-08-01 campaign-design grill log (8 locked decisions).
-4. [`RESEARCH.md`](./RESEARCH.md) - campaign operating plan; fills with findings as mining runs.
-5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (fills during mining).
-6. [`BRIEF.md`](./BRIEF.md) / [`MAP.md`](./MAP.md) - template placeholders; shaping is gated on sign-off.
+2. [`HANDOFF.md`](./HANDOFF.md) - the cold-session runbook: artifact map, constraints, next phase.
+3. [`ROUTING-SEED.md`](./ROUTING-SEED.md) / [`routing-seed.json`](./routing-seed.json) - the grounded routing matrix awaiting sign-off.
+4. [`DECISIONS.md`](./DECISIONS.md) - the 2026-08-01 campaign-design grill log (8 locked decisions).
+5. [`RESEARCH.md`](./RESEARCH.md) - campaign operating plan and capability inventory.
+6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (mining complete).
+7. [`BRIEF.md`](./BRIEF.md) / [`MAP.md`](./MAP.md) - template placeholders; shaping is gated on sign-off.
 
 ## Trail
 
@@ -42,3 +46,17 @@ separate license clearance appears.
 - 2026-08-01: completed the 24-repository shallow triage: 9 deep-mine, 11
   reference-only, 4 skip; R16 is the sole wave-1 overlap, and FOPNet-priority
   R22 is reference-only because no license evidence was found.
+- 2026-08-01: wave-1 mining complete — 119 distillates (papers P001-P099,
+  links L01-L14, repo deep-mines) in `research/mined/`; catalog + inventory
+  landed (`research/00-*`). Late corpus additions mined as P100 (FLINT),
+  P101 (controlled language), R25 (flint-ontology repo); catalog now 140 rows.
+- 2026-08-01: four deep-research track syntheses landed
+  (`research/10..13-track-*.md`): tracks 1-3 all 10 claims survived 2-of-3
+  adversarial verify; track 4 landed 8/10 with two kills reported in-file.
+  `research/14-addendum-new-items.md` routes the unverified late items.
+- 2026-08-01: /adhd integration pass (`research/20-adhd-integration.md`):
+  5 isolated codex frames × 6 ideas, critic inline, 3 deepened plays.
+- 2026-08-01: routing layer landed — `research/nugget-catalog.json` (46
+  nuggets), `ROUTING-SEED.md`/`routing-seed.json` (9 grounded clusters, 5
+  proposed slugs, 3 grill-gated challenges), `HANDOFF.md`. Campaign stopped
+  at the routing seed per DECISIONS staging; awaiting Benjamin's sign-off.
