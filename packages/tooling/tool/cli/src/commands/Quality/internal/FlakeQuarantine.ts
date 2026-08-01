@@ -36,6 +36,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { OutputBound, QualityTaskStep, StepFlakeQuarantinePolicy } from "../../../internal/process/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -349,9 +350,13 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  * Build the standalone rerun step for one quarantined Turbo task.
  *
  * Reuses the lane's `bun run <script>` invocation with an explicit package
- * filter appended and `TURBO_FORCE` removed, so an inherited forced sweep does
- * not force the rerun's dependency graph while the failed task itself (which
- * has no cache entry) still executes.
+ * filter appended and the lane's environment preserved verbatim. Preserving an
+ * inherited `TURBO_FORCE=true` is deliberate: under a forced sweep an older
+ * successful cache entry can exist at the failed task's unchanged hash, and a
+ * cache-reading rerun would replay it without invoking the compiler — a
+ * vacuous green. Keeping the lane's forcing guarantees the environment-only
+ * attribution rests on a real execution; without forcing, a flake implies a
+ * cache miss, so the task executes either way.
  *
  * @param step - The failed quarantine-eligible lane step.
  * @param task - One failed Turbo task attributed to the flake signature.
@@ -373,7 +378,7 @@ export const standaloneQuarantineRerunStep = (step: QualityTaskStep, task: Flake
     command: step.command,
     args: [...step.args, "--", `--filter=${task.packageName}`],
     cwd: step.cwd,
-    env: { ...(step.env ?? {}), TURBO_FORCE: undefined },
+    ...optionalProp("env", O.fromUndefinedOr(step.env)),
   });
 
 /**

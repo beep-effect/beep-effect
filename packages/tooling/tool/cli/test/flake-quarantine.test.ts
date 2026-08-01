@@ -136,16 +136,22 @@ describe("detectNoLocationTs2589Flake", () => {
 describe("quarantine rerun steps", () => {
   const task = FlakeQuarantineTask.make({ taskId: "@beep/box#build", packageName: "@beep/box", task: "build" });
 
-  it("builds the standalone package rerun with TURBO_FORCE stripped", () => {
+  it("builds the standalone package rerun with the lane environment preserved", () => {
     const rerun = standaloneQuarantineRerunStep(laneStep, task);
     expect(rerun.label).toBe("quality:build:flake-rerun:@beep/box");
     expect(rerun.args).toEqual(["run", "build", "--", "--filter=@beep/box"]);
     expect(rerun.cwd).toBe("/repo");
-    expect(rerun.env).toEqual({ TURBO_FORCE: undefined });
+    expect(rerun.env).toBeUndefined();
     expect(rerun.flakeQuarantine).toBeUndefined();
   });
 
-  it("builds the lane rerun with the policy stripped and TURBO_FORCE removed", () => {
+  it("keeps an inherited TURBO_FORCE on the standalone rerun so cache replay cannot green it", () => {
+    const forcedLane = QualityTaskStep.make({ ...laneStep, env: { TURBO_FORCE: "true" } });
+    const rerun = standaloneQuarantineRerunStep(forcedLane, task);
+    expect(rerun.env).toEqual({ TURBO_FORCE: "true" });
+  });
+
+  it("builds the lane rerun with the policy stripped and TURBO_FORCE removed for cache resume", () => {
     const rerun = laneQuarantineRerunStep(laneStep);
     expect(rerun.label).toBe("quality:build:flake-lane-rerun");
     expect(rerun.args).toEqual(["run", "build"]);

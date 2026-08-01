@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
-import { RepoRunContext, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
+import { RepoRunContext, repoProofStepDefinition, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
@@ -622,10 +622,13 @@ type YeetVerdictExtras = {
   readonly stash: O.Option<YeetStashState>;
 };
 
-// The quality lane runner deletes this artifact before every policy-carrying
-// lane group and writes it only when it quarantined incidents, so reading it
-// right after a run that executed a full-phase proof step cannot pick up a
-// previous run's incidents.
+// Only the pre-push proof runs the quality lane group that deletes this
+// artifact at group start and rewrites it on quarantine. Other full-phase
+// steps (review-fix proof, head-install preflight) never touch it, so a
+// verdict may read it only after a successful pre-push proof step in the same
+// run — anything else could attach a previous run's incidents.
+const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
+
 const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncidents")(function* (
   repoRoot: string
 ): Effect.fn.Return<ReadonlyArray<FlakeQuarantineIncident>, never, FileSystem.FileSystem | Path.Path> {
@@ -668,8 +671,11 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     })
   );
 
-  const ranFullPhase = A.some(executed, (entry) => entry.step.phase === "full");
-  const flakeQuarantine = ranFullPhase
+  const ranPrePushProof = A.some(
+    executed,
+    (entry) => entry.step.id === PRE_PUSH_PROOF_STEP_ID && entry.result.exitCode === 0
+  );
+  const flakeQuarantine = ranPrePushProof
     ? yield* readFlakeQuarantineIncidents(plan.context.repoRoot)
     : A.empty<FlakeQuarantineIncident>();
   if (!A.isReadonlyArrayEmpty(flakeQuarantine)) {
