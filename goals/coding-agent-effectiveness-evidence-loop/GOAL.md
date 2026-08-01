@@ -24,16 +24,18 @@ Scope:
 
 - In: `packages/tooling/library/ai-metrics`, Yeet internals under
   `packages/tooling/tool/cli/src/commands/Yeet/`, `.claude/settings.json`
-  hooks + hook scripts, a codex exec wrapper, `${XDG_STATE_HOME}/beep/`
-  operational state, this packet's docs.
+  hooks + hook scripts, a codex exec wrapper, the
+  `${XDG_STATE_HOME:-$HOME/.local/state}/beep/` operational state, this
+  packet's docs.
 - Out: product-agent runtime (`packages/agents/*`), completed packets,
   `goal-portfolio-driver` queue, ai-metrics-stack P7f in-flight work, the
   rejected traps listed in `SPEC.md` Non-Goals.
 
 Workflow:
 
-1. Inspect referenced files and current repo state; work the active `PLAN.md`
-   phase only.
+1. Inspect referenced files and current repo state; work only the phase(s)
+   the `PLAN.md` Status section names as current — that section is the single
+   authority on what may start now.
 2. Schema → service contract → implementation, per repo law. Instrument
    before treating: verify each measurement instrument before trusting or
    acting on its numbers.

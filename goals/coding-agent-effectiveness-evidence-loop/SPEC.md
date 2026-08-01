@@ -121,8 +121,8 @@ Schema-level laws for P2 models, gate-level checks in P4. All five adopted
 - `packages/tooling/tool/cli` Yeet internals (`Verdict.ts`, `ProofState.ts`,
   `Handler.ts`, `Status.ts`, new `yeet doctor`).
 - `.claude/settings.json` hooks + hook scripts; a `codex exec` wrapper.
-- `${XDG_STATE_HOME}/beep/` shared operational state (hook-pulse ledger,
-  circuit-breaker ledger, kill-switch sentinel).
+- `${XDG_STATE_HOME:-$HOME/.local/state}/beep/` shared operational state
+  (hook-pulse ledger, circuit-breaker ledger, kill-switch sentinel).
 - This packet's docs and `explorations/agent-effectiveness-pulse` linkage.
 
 ## Constraints
@@ -138,6 +138,10 @@ Schema-level laws for P2 models, gate-level checks in P4. All five adopted
 - No always-loaded instruction growth (AGENTS.md/CLAUDE.md stay flat).
 - Store migration is stop-the-collector → validate → atomic rename → verify →
   restart; never copy-then-delete, never leave dual live stores.
+- Model allocation (standing 2026-07-14 exploration sign-off constraint):
+  Fable sessions plan, design, and review; token-heavy execution lanes run
+  on codex `gpt-5.6-sol` at `--effort medium` unless escalation is
+  explicitly justified for the subtask.
 
 ## Acceptance Criteria
 

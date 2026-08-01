@@ -2,8 +2,15 @@
 
 ## Status
 
-Status: `pending` (packet opened 2026-07-31; implementation starts at P0/P1
-after the packet PR lands)
+Status: `pending` (packet opened 2026-07-31; no phase has started)
+
+**Current phases (single authority for `/goal` executors):** none until the
+packet PR lands. On landing, the current work is exactly: the P1
+instrument-verification spike (its **First step** below) first, with P0
+storage-cutover preparation permitted in parallel by a separate actor. P2–P8
+are not current until the manifest marks their predecessors' exit criteria
+met; the "proceeds in parallel" notes below describe scheduling intent
+between phases, never permission to start ahead of this section.
 
 Numbering map to the source audit plan (scratch/codex thread + ADHD
 amendments): audit P0→P0, P0.5→P1, P1→P2, P1.5→P3, P2→P4, P3→P5, P4→P6,
@@ -55,7 +62,7 @@ phase's critical path.
   harness — validate the instrument before trusting any number.
 - `hook-pulse`: one script appending schema-versioned NDJSON
   (`HookPulseV1`: sessionId, clone cwd, agent kind, hookEvent, notifierRev,
-  ts) to `${XDG_STATE_HOME}/beep/agent-evidence/hook-events/`. Schema
+  ts) to `${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence/hook-events/`. Schema
   defined in effect/Schema even though the writer is zsh+jq, so P4 replay
   ingests these files as first-class raw history.
 - Notifications: ntfy desktop/phone push on plan-approval and permission
@@ -93,9 +100,14 @@ phase's critical path.
 - Codex parity via a `codex exec` wrapper emitting the same schema; brands
   that cannot emit appear in IngestManifests as enumerated-but-unemittable
   (a quantified burn-down list, not a blind spot).
-- Heartbeat leases: SessionStart writes a lease, PostToolUse renews;
-  expired leases without terminal records trigger tombstone synthesis
-  (`evidenceTier: reconstructed`) in O(open leases).
+- Heartbeat leases: SessionStart writes a lease, and **any** hook event
+  renews it — PostToolUse, Notification, UserPromptSubmit — so a session
+  parked on a plan-approval or input wait (the p95 105-minute class this
+  packet targets) keeps a live lease while blocked. An expired lease is only
+  a tombstone **candidate**: synthesis happens at ingest reconciliation and
+  requires that the transcript/source evidence also shows no later activity,
+  so a live-but-waiting session is never tombstoned. Detection stays
+  O(open leases).
 - Coverage attestation: every ingest enumerates its denominator (clones,
   worktrees, session dirs; read / unreachable / skipped-with-reason)
   **before reading anything**.
@@ -203,10 +215,13 @@ kill/restart durability).
 One variable at a time: AGENTS/CLAUDE context weight; skill trigger
 precision and false/missed invocation rates; MCP/tool exposure and failure
 quality; hook batching and runtime; subagent decomposition and critical
-path; prompt/model/effort/cache configuration; the full Ponytail plugin as
-an optional treatment; speculative execution at approval gates as a parked
-treatment candidate. Every item ends shipped / deferred with trigger /
-rejected with reason / explicitly waived — evidence attached.
+path; prompt/model/effort/cache configuration; **browser-proof routing —
+every UI-affecting case receives real-browser (`browser-qa-loop`/Playwright)
+proof or a typed `unverified` outcome, never a jsdom-green pass alone (this
+lane owns the pulse's H8 browser-proof dimension)**; the full Ponytail
+plugin as an optional treatment; speculative execution at approval gates as
+a parked treatment candidate. Every item ends shipped / deferred with
+trigger / rejected with reason / explicitly waived — evidence attached.
 
 ## P8 — Guarded canary and closeout (audit P6)
 
