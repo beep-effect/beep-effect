@@ -6,6 +6,7 @@
  */
 
 import {
+  BeliefVersionRef,
   CanonicalContradictionBeliefPair,
   ContradictionAssessment,
   ContradictionCandidateContent,
@@ -31,6 +32,14 @@ import * as S from "effect/Schema";
 import * as Epistemic from "../../identity/Epistemic.ts";
 
 const $I = $EpistemicDomainId.create("entities/Contradiction/Contradiction.model");
+const beliefVersionRefEquivalence = S.toEquivalence(BeliefVersionRef);
+
+const proposalTargetsPair = (
+  pair: CanonicalContradictionBeliefPair,
+  proposal: ContradictionAssessment["proposals"][number]
+): boolean =>
+  beliefVersionRefEquivalence(proposal.losingBelief, pair.left) ||
+  beliefVersionRefEquivalence(proposal.losingBelief, pair.right);
 
 /**
  * Immutable, evidence-backed proposal that two exact belief versions
@@ -166,6 +175,7 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
                 this.matchBasis.evidenceDigest
               ),
               Eq.equals(contradictionCandidateKey(this.pair, this.matchBasis), this.candidateKey),
+              A.every(this.assessment.proposals, (proposal) => proposalTargetsPair(this.pair, proposal)),
               ...validProposalSeals,
               Eq.equals(candidateDigest, this.candidateDigest),
             ],

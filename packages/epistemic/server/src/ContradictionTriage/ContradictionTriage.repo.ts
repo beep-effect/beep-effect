@@ -10,7 +10,7 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
-import { unflattenEdgeSource, unflattenEdgeTarget } from "@beep/epistemic-domain/entities/EdgeVersion";
+import { EdgeVersion, unflattenEdgeSource, unflattenEdgeTarget } from "@beep/epistemic-domain/entities/EdgeVersion";
 import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
@@ -61,7 +61,6 @@ import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { supersedeEdgeFactInTransaction } from "../EdgeAuthority/EdgeAuthority.repo.ts";
-import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type {
   ContradictionCandidateKey,
@@ -91,6 +90,24 @@ const edgeVersionIdEquivalent = S.toEquivalence(BeliefVersionRef.fields.edgeVers
 const proposalIdEquivalent = S.toEquivalence(ContradictionProposalId);
 const proposalById = Order.mapInput(Order.String, (proposal: ContradictionResolutionProposal) => proposal.proposalId);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
+
+const projectEdgeVersionAtKnownAt = (edge: EdgeVersion, knownAt: DateTime.Utc): EdgeVersion =>
+  EdgeVersion.make({
+    ...edge,
+    expiredAt: O.filter(edge.expiredAt, (expiredAt) => notLaterThan(expiredAt, knownAt)),
+  });
+
+const edgeMatchesCandidateBelief = (
+  edge: EdgeVersion,
+  belief: BeliefVersionRef,
+  candidate: ContradictionCandidate
+): boolean =>
+  Eq.equals(edge.logicalKey, belief.logicalKey) &&
+  Eq.equals(edge.version, belief.version) &&
+  Eq.equals(edge.orgId, candidate.orgId) &&
+  A.some([candidate.pair.left, candidate.pair.right], (candidateBelief) =>
+    beliefRefEquivalent(belief, candidateBelief)
+  );
 
 const candidatePublicIdFor = (orgId: ContradictionCandidate["orgId"], candidateKey: string) =>
   candidatePublicId.fromUnknown(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`);
@@ -548,11 +565,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
           candidate,
           disposition,
           left: ContradictionBeliefDetail.make({
-            belief: left.value,
+            belief: projectEdgeVersionAtKnownAt(left.value, query.knownAt),
             evidence: leftEvidence,
           }),
           right: ContradictionBeliefDetail.make({
-            belief: right.value,
+            belief: projectEdgeVersionAtKnownAt(right.value, query.knownAt),
             evidence: rightEvidence,
           }),
         })
@@ -712,11 +729,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                     const edge = yield* Effect.try(() => fromEdgeVersionRow(edgeRow.value)).pipe(
                       repositoryUnavailable("review")
                     );
-                    if (
-                      !Eq.equals(edge.logicalKey, proposal.value.losingBelief.logicalKey) ||
-                      !Eq.equals(edge.version, proposal.value.losingBelief.version) ||
-                      !Eq.equals(edge.orgId, candidate.orgId)
-                    ) {
+                    if (!edgeMatchesCandidateBelief(edge, proposal.value.losingBelief, candidate)) {
                       return yield* ContradictionReviewConflict.make({
                         candidateId: command.candidateId,
                         reason: "belief-mismatch",

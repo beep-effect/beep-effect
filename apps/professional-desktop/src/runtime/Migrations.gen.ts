@@ -734,7 +734,10 @@ ALTER TABLE "epistemic_contradiction_disposition"
 		AND "decision" ->> 'status' IN ('rejected', 'superseded')
 		AND "decision" ? 'reason'
 		AND jsonb_typeof("decision" -> 'reason') = 'string'
-		AND char_length("decision" ->> 'reason') BETWEEN 1 AND 2000
+		AND (
+			char_length("decision" ->> 'reason')
+			+ regexp_count("decision" ->> 'reason', '[\\U00010000-\\U0010FFFF]')
+		) BETWEEN 1 AND 2000
 		AND "decision" ->> 'reason' ~ '[^[:space:]]'
 		AND CASE "decision" ->> 'status'
 			WHEN 'rejected' THEN TRUE

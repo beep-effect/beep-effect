@@ -13,6 +13,7 @@ import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
+import { P, R } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime, flow, identity, Order, pipe, Result } from "effect";
@@ -22,9 +23,11 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
+import type { JsonObject as JsonObjectValue } from "@beep/schema/Json";
 
 const $I = $EpistemicDomainId.create("values/Contradiction/Contradiction.model");
 
@@ -464,6 +467,34 @@ const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>):
  */
 export const CONTRADICTION_EVIDENCE_SET_MAX_COUNT = 32;
 
+/**
+ * Maximum UTF-16 length accepted for a contradiction detector identity.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_DETECTOR_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_DETECTOR_MAX_LENGTH) // 256
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_DETECTOR_MAX_LENGTH = 256;
+
+const ContradictionDetectorIdentity = S.NonEmptyString.check(
+  S.isMaxLength(CONTRADICTION_DETECTOR_MAX_LENGTH, {
+    identifier: $I`ContradictionDetectorIdentityMaximumLengthCheck`,
+    title: "Contradiction Detector Identity Maximum Length",
+    description: "Checks that a contradiction detector identity contains at most 256 UTF-16 code units.",
+    message: "Expected contradiction detector identity to contain at most 256 UTF-16 code units.",
+  })
+).pipe(
+  $I.annoteSchema("ContradictionDetectorIdentity", {
+    description: "Non-empty stable detector identity containing at most 256 UTF-16 code units.",
+  })
+);
+
 const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
   .check(
     S.isMaxLength(CONTRADICTION_EVIDENCE_SET_MAX_COUNT, {
@@ -495,7 +526,7 @@ const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
 
 class ContradictionMatchBasisStruct extends S.Class<ContradictionMatchBasisStruct>($I`ContradictionMatchBasisStruct`)(
   {
-    detector: S.NonEmptyString.annotateKey({
+    detector: ContradictionDetectorIdentity.annotateKey({
       description: "Stable detector or caller name; it identifies provenance, not authority.",
     }),
     detectorVersion: SemanticVersion.annotateKey({
@@ -603,6 +634,83 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
  */
 export const CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH = 2_000;
 
+/**
+ * Maximum canonical UTF-8 bytes accepted for one replacement fact.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_PROPOSAL_FACT_MAX_BYTES } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_PROPOSAL_FACT_MAX_BYTES) // 65536
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_PROPOSAL_FACT_MAX_BYTES = 64 * 1_024;
+
+const CONTRADICTION_PROPOSAL_FACT_MAX_DEPTH = 32;
+const CONTRADICTION_PROPOSAL_FACT_MAX_NODES = 4_096;
+
+type ProposalFactNode = {
+  readonly depth: number;
+  readonly value: S.Json;
+};
+
+const proposalFactObjectEntries = (value: S.Json): ReadonlyArray<readonly [string, S.Json]> =>
+  P.isObject(value) ? R.toEntries(value as R.ReadonlyRecord<string, S.Json>) : A.empty();
+
+const proposalFactTextCodeUnits = (value: S.Json, objectEntries: ReadonlyArray<readonly [string, S.Json]>): number =>
+  (P.isString(value) ? Str.length(value) : 0) + A.reduce(objectEntries, 0, (total, [key]) => total + Str.length(key));
+
+const proposalFactChildren = (
+  value: S.Json,
+  objectEntries: ReadonlyArray<readonly [string, S.Json]>
+): ReadonlyArray<S.Json> =>
+  A.isArray(value) ? (value as ReadonlyArray<S.Json>) : A.map(objectEntries, ([, child]) => child);
+
+const isBoundedProposalFact = (fact: JsonObjectValue): boolean => {
+  const pending: Array<ProposalFactNode> = [{ depth: 0, value: fact }];
+  let cursor = 0;
+  let minimumTextCodeUnits = 0;
+
+  while (cursor < A.length(pending)) {
+    const current = A.getUnsafe(pending, cursor);
+    if (current.depth > CONTRADICTION_PROPOSAL_FACT_MAX_DEPTH) {
+      return false;
+    }
+    cursor += 1;
+
+    const objectEntries = proposalFactObjectEntries(current.value);
+    minimumTextCodeUnits += proposalFactTextCodeUnits(current.value, objectEntries);
+    if (minimumTextCodeUnits > CONTRADICTION_PROPOSAL_FACT_MAX_BYTES) {
+      return false;
+    }
+
+    const children = proposalFactChildren(current.value, objectEntries);
+    if (A.length(pending) + A.length(children) > CONTRADICTION_PROPOSAL_FACT_MAX_NODES) {
+      return false;
+    }
+    pending.push(...A.map(children, (value) => ({ depth: current.depth + 1, value })));
+  }
+
+  return utf8ToBytes(canonicalJson(fact)).byteLength <= CONTRADICTION_PROPOSAL_FACT_MAX_BYTES;
+};
+
+const ContradictionProposalFact = JsonObject.check(
+  S.makeFilter(isBoundedProposalFact, {
+    identifier: $I`ContradictionProposalFactBoundsCheck`,
+    title: "Bounded Contradiction Proposal Fact",
+    description:
+      "Checks replacement facts before digesting: at most 64 KiB canonical UTF-8, 4,096 JSON nodes, and 32 levels.",
+    message: "Expected a bounded contradiction proposal fact.",
+  })
+).pipe(
+  $I.annoteSchema("ContradictionProposalFact", {
+    description: "JSON-safe replacement fact bounded before canonicalization, hashing, persistence, and display.",
+  })
+);
+
 const ContradictionProposalRationale = S.NonEmptyString.check(
   S.isMaxLength(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH, {
     identifier: $I`ContradictionProposalRationaleMaximumLengthCheck`,
@@ -620,7 +728,7 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
   $I`ContradictionResolutionProposalStruct`
 )(
   {
-    fact: JsonObject.annotateKey({
+    fact: ContradictionProposalFact.annotateKey({
       description: "Immutable JSON-safe replacement fact proposed for the losing lineage.",
     }),
     losingBelief: BeliefVersionRef.annotateKey({
@@ -1138,7 +1246,7 @@ export class ContradictionProposalContent extends S.Class<ContradictionProposalC
   $I`ContradictionProposalContent`
 )(
   {
-    fact: JsonObject.annotateKey({
+    fact: ContradictionProposalFact.annotateKey({
       description: "Immutable JSON-safe replacement fact covered by the proposal digest.",
     }),
     losingBelief: BeliefVersionRef.annotateKey({

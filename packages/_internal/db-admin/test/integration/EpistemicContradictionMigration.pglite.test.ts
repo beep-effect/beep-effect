@@ -360,6 +360,37 @@ if (!shouldRunPgliteIntegration) {
             "epistemic_contradiction_disposition_decision_valid"
           );
 
+          yield* sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 2, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${secondOrganizationCandidateId},
+              jsonb_build_object('reason', ${Str.repeat(1_000)("😀")}::text, 'status', 'rejected'), 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_autf16boundary'
+            )
+          `;
+
+          const oversizedUtf16DispositionReason = yield* Effect.flip(sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 1, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${candidateId},
+              jsonb_build_object('reason', ${Str.repeat(1_001)("😀")}::text, 'status', 'rejected'), 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_aoversizedutf16reason'
+            )
+          `);
+          expect(inspect(oversizedUtf16DispositionReason, { depth: 10 })).toContain(
+            "epistemic_contradiction_disposition_decision_valid"
+          );
+
           const oversizedDispositionReason = yield* Effect.flip(sql`
             INSERT INTO epistemic_contradiction_disposition (
               created_at, created_by_principal, org_id, row_version, schema_version, source,

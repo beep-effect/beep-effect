@@ -2,7 +2,9 @@ import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradi
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
+  CONTRADICTION_DETECTOR_MAX_LENGTH,
   CONTRADICTION_EVIDENCE_SET_MAX_COUNT,
+  CONTRADICTION_PROPOSAL_FACT_MAX_BYTES,
   CONTRADICTION_PROPOSAL_MAX_COUNT,
   CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH,
   ContradictionAssessment,
@@ -41,6 +43,11 @@ const left = BeliefVersionRef.make({
 const right = BeliefVersionRef.make({
   edgeVersionId: Epistemic.EdgeVersionId.make(2),
   logicalKey: LogicalEdgeKey.make(Str.repeat(64)("b")),
+  version: PosInt.make(1),
+});
+const outsider = BeliefVersionRef.make({
+  edgeVersionId: Epistemic.EdgeVersionId.make(3),
+  logicalKey: LogicalEdgeKey.make(Str.repeat(64)("d")),
   version: PosInt.make(1),
 });
 const leftEvidenceIds: readonly [Epistemic.EvidenceId] = [Epistemic.EvidenceId.make(10)];
@@ -129,6 +136,15 @@ describe("Contradiction domain invariants", () => {
     expect(Result.isFailure(decode({ ...matchBasis, leftEvidenceIds: evidenceIds }))).toBe(true);
     expect(Result.isSuccess(decode({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds }))).toBe(true);
     expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: evidenceIds }))).toBe(true);
+  });
+
+  it("bounds detector identities before candidate-key construction", () => {
+    const maximumDetector = Str.repeat(CONTRADICTION_DETECTOR_MAX_LENGTH)("d");
+    const oversizedDetector = Str.concat(maximumDetector, "d");
+    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
+
+    expect(Result.isSuccess(decode({ ...matchBasis, detector: maximumDetector }))).toBe(true);
+    expect(Result.isFailure(decode({ ...matchBasis, detector: oversizedDetector }))).toBe(true);
   });
 
   it("requires independent evidence sets to be disjoint", () => {
@@ -292,6 +308,32 @@ describe("Contradiction domain invariants", () => {
     expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: undefined } }))).toBe(true);
   });
 
+  it("bounds proposal fact bytes, node count, and nesting before digesting", () => {
+    const encodedContent = Result.getOrThrow(S.encodeUnknownResult(ContradictionProposalContent)(proposalContent));
+    const encodedProposal = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
+    const deeplyNestedFact = A.reduce(
+      A.makeBy(34, (index) => index),
+      { leaf: true } as S.Json,
+      (nested) => ({ nested })
+    );
+    const rejectedFacts: ReadonlyArray<unknown> = [
+      { payload: Str.repeat(CONTRADICTION_PROPOSAL_FACT_MAX_BYTES)("x") },
+      { values: A.makeBy(4_096, () => null) },
+      deeplyNestedFact,
+    ];
+    const decodeContent = S.decodeUnknownResult(ContradictionProposalContent);
+    const decodeProposal = S.decodeUnknownResult(ContradictionResolutionProposal);
+
+    expect(
+      A.every(
+        rejectedFacts,
+        (fact) =>
+          Result.isFailure(decodeContent({ ...encodedContent, fact })) &&
+          Result.isFailure(decodeProposal({ ...encodedProposal, fact }))
+      )
+    ).toBe(true);
+  });
+
   it("derives only constructive unique collections and canonical pairs", () => {
     fc.assert(
       fc.property(
@@ -328,6 +370,41 @@ describe("Contradiction domain invariants", () => {
 
   it("recomputes every immutable candidate seal", () => {
     expect(Result.getOrThrow(candidate.hasValidSeals())).toBe(true);
+  });
+
+  it("rejects otherwise valid seals when a proposal targets a belief outside the candidate pair", () => {
+    const unboundContent = ContradictionProposalContent.make({
+      ...proposalContent,
+      losingBelief: outsider,
+      proposalId: ContradictionProposalId.make(Str.repeat(64)("e")),
+    });
+    const unboundAssessment = ContradictionAssessment.make({
+      confidence: assessment.confidence,
+      proposals: [
+        ContradictionResolutionProposal.make({
+          ...unboundContent,
+          proposalDigest: Result.getOrThrow(contradictionProposalDigest(unboundContent)),
+        }),
+      ],
+    });
+    const unboundCandidateDigest = Result.getOrThrow(
+      contradictionCandidateDigest(
+        ContradictionCandidateContent.make({
+          assessment: unboundAssessment,
+          matchBasis,
+          pair,
+          validFrom,
+          validTo,
+        })
+      )
+    );
+    const unboundCandidate = ContradictionCandidate.make({
+      ...candidate,
+      assessment: unboundAssessment,
+      candidateDigest: unboundCandidateDigest,
+    });
+
+    expect(Result.getOrThrow(unboundCandidate.hasValidSeals())).toBe(false);
   });
 
   it("normalizes and bounds reasons persisted with both disposition decisions", () => {

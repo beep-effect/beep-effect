@@ -987,9 +987,35 @@ if (!shouldRunPgliteIntegration) {
           const before = yield* edges.readAsOf(asOf(seeded.identityA, 1_500, 1_500));
           const after = yield* edges.readAsOf(asOf(seeded.identityA, 1_500, 2_500));
           const competing = yield* edges.readAsOf(asOf(seeded.identityB, 1_500, 2_500));
+          const historicalExpanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(1_500),
+              orgId: submitted.candidate.orgId,
+              validAt: instant(1_500),
+            })
+          );
+          const currentExpanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(2_500),
+              orgId: submitted.candidate.orgId,
+              validAt: instant(1_500),
+            })
+          );
+          const losingBeliefExpiration = (expanded: typeof historicalExpanded) =>
+            pipe(
+              expanded,
+              O.flatMap((detail) =>
+                A.findFirst([detail.left.belief, detail.right.belief], (belief) => belief.id === seeded.beliefA.id)
+              ),
+              O.flatMap((belief) => belief.expiredAt)
+            );
           expect(O.map(before, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
           expect(O.map(after, (edge) => edge.fact.amount)).toStrictEqual(O.some("125"));
           expect(O.map(competing, (edge) => edge.fact.amount)).toStrictEqual(O.some("150"));
+          expect(losingBeliefExpiration(historicalExpanded)).toStrictEqual(O.none());
+          expect(losingBeliefExpiration(currentExpanded)).toStrictEqual(O.some(instant(2_000)));
           expect(
             A.some(
               (yield* repository.list(listQuery("superseded", 2_000))).items,
