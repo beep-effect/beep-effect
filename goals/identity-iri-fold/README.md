@@ -35,7 +35,7 @@ FOLIO annotation migrations, and the vocab term-inventory codegen.
 
 P0 Contract and donor audit: confirm the completed-retained core surface,
 recover the fold prototype from commit `61160e1baf` (two-donor merge with
-`assets/ontology-prototype/`), freeze the tuple grammar/diagnostics boundary,
+`explorations/identity-as-iri/assets/ontology-prototype/`), freeze the tuple grammar/diagnostics boundary,
 inventory the live FOLIO migration sites with counts, and audit barrel
 coexistence before editing.
 

@@ -40,7 +40,13 @@ identity registry.
 
 1. The ratified 2026-07-14 fold graduation and locked
    [`identity-iri-fibration-handoff.md`](../../explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md)
-   D1–D9.
+   D1–D9, as amended by the dated 2026-07-31 exploration
+   [`DECISIONS.md`](../../explorations/identity-as-iri/DECISIONS.md) entries.
+   Where the handoff and those entries conflict — the fold's package home and
+   entrypoint (`Ontology.fold($I, …)` in `@beep/ontology`, never a composer
+   `$I.ontology` method), the SKOS fact-channel collapse, and the closed
+   inline `is:` channel — the 2026-07-31 supersessions are normative and the
+   handoff's superseded clauses carry no authority.
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. Governing architecture/package standards.
 4. This `SPEC.md`.
@@ -64,6 +70,9 @@ identity registry.
   inventories (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`) regenerated from the
   identity `CoreVocab` registry via a `sync-data-to-ts` target; curated
   named-node constants stay hand-authored and byte-untouched.
+- `packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/` — the
+  `vocab-terms` target implementation and its registry entry (targets are
+  statically registered in `targets/index.ts`); in scope for this packet.
 - `packages/foundation/modeling/ontology/src/Ontology.models.ts` — FOLIO
   annotation migrations and existing cspell cleanup in the same sweep.
 
@@ -77,8 +86,11 @@ identity registry.
    relational facts are `[Subject, Predicate, Object]` tuples; property kind is
    inferred from the AST.
 3. `$I.key` defaults owned local names from struct keys and writes borrowed
-   predicates through a dedicated `term` annotation channel. Owned `identifier`
-   annotations never carry borrowed vocabulary (D5/D9).
+   predicates through the dedicated `ontologyTerm` annotation channel — the
+   scoped realization of D9's "term slot" (bare `term` is too generic for the
+   global `Annotations` namespace; precedent: `semanticSchemaMetadata`). The
+   fold reads the same `ontologyTerm` key. Owned `identifier` annotations
+   never carry borrowed vocabulary (D5/D9).
 4. Fold-only is binding. The inline `is:` channel is not planned (2026-07-31
    decision); the fold is the single authoring channel for relational facts.
 5. Assembly follows propose → gate → record. Unresolved handles and hard SKOS
@@ -87,7 +99,11 @@ identity registry.
    assembled, projections are pure and total. The assembled model is
    predicate-open: facts are subject/predicate/object records with a reverse
    marker, and the SKOS gate filters facts by predicate rather than reading
-   enumerated fields.
+   enumerated fields. Collection-family constructs (S35 `skos:Collection`
+   disjointness, S36 `skos:memberList` functionality) are explicitly outside
+   this fold's classification surface: the `$I.class` marker admits only
+   `concept | conceptScheme`, collection facts pass through ungated, and
+   S35/S36 enforcement lands with any future collection marker.
 6. Turtle uses safe PN_LOCAL escaping or full-IRI fallback; JSON-LD inverse
    predicates emit `@reverse`; Markdown anchors derive from identity slugs.
 7. FOLIO migration contracts are mandatory and idempotent: borrowed
@@ -114,9 +130,12 @@ identity registry.
 - [ ] A `rebase`d hash-namespace fixture (`https://opip.law/ns/patent#…` style)
       renders through all four projections as a golden file.
 - [ ] Negative fixtures pass: equal-label distinct resources survive unfolded;
-      an ambiguous mention yields a typed unresolved diagnostic; a reversed
-      SKOS hierarchy direction is rejected by the gate; repeated identical
-      assembly is byte-identical.
+      an ambiguous mention yields a typed unresolved diagnostic; a SKOS
+      broader/narrower cycle or contradiction (self-loop, mutual edges, or the
+      same pair asserted in both directions) is rejected with a typed failure
+      naming both IRIs — no oracle for authored intent exists, so direction
+      itself is proven by projections preserving the authored subject/object
+      order; repeated identical assembly is byte-identical.
 - [ ] All four FOLIO migration contracts land through an idempotent sweep, with
       no borrowed predicate left in the owned `identifier` channel.
 - [ ] The shared-five vocabulary term inventories are generated from the
@@ -135,8 +154,8 @@ identity registry.
 | Package proof | Focused identity/rdf/ontology check, lint, test, docgen | Green |
 | Fold determinism | Repeated fixture assembly and all projections | Byte-identical |
 | Migration sweep | Focused FOLIO tests + search for legacy forms | Idempotent; no stale borrowed identifiers |
-| Compile budget | `tsc --extendedDiagnostics` before/after on `@beep/ontology` + one heavy downstream consumer (identity-iri-core P2 methodology) | Deltas recorded in packet evidence; no unexplained blow-up |
-| Vocab generation | `sync-data-to-ts` vocab target `--check` | No drift; curated constants byte-identical |
+| Compile budget | `tsc --extendedDiagnostics` before/after (tsbuildinfo cleared) on `@beep/identity` (composer additions) and `@beep/ontology` (fold surface) — split proof; no external `@beep/ontology` consumer exists yet, so a downstream measurement is deferred until one does | Deltas recorded in packet evidence; no unexplained blow-up |
+| Vocab generation | `bun run beep sync-data-to-ts --target vocab-terms --check` | No drift; curated constants byte-identical |
 | Repo quality | `bun run beep yeet verify` | Green or unrelated failure attributed |
 
 ## Stop Conditions
