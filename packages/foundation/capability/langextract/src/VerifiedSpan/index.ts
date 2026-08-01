@@ -333,35 +333,36 @@ interface NormalizedTextWithRawOffsets {
   readonly text: string;
 }
 
-type RawCluster = readonly [start: number, end: number, text: string];
+type RawCluster = readonly [start: number, end: number];
 
 const isCombiningMark = S.is(CombiningMark);
 const isWhitespace = S.is(WhitespaceCodePoint);
 const normalizeUnicode = Str.normalize("NFKC");
-const joinsNormalizedCluster = (cluster: string, point: string): boolean =>
-  !Eq.equals(
-    normalizeUnicode(Str.concat(cluster, point)),
-    Str.concat(normalizeUnicode(cluster), normalizeUnicode(point))
+const joinsNormalizedCluster = (source: string, cluster: RawCluster, point: string): boolean => {
+  const clusterText = Str.slice(cluster[0], cluster[1])(source);
+  return !Eq.equals(
+    normalizeUnicode(Str.concat(clusterText, point)),
+    Str.concat(normalizeUnicode(clusterText), normalizeUnicode(point))
   );
+};
 
 const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
-  // This one-pass mutable accumulator is bounded by MAX_SOURCE_TEXT_LENGTH.
-  // Repository Array helpers isolate the mutation and avoid quadratic copies
-  // while retaining every normalized code unit's exact raw cluster boundary.
+  // Store only raw boundaries so a long combining-mark run never rebuilds its
+  // accumulated text. Each cluster is sliced once during normalization below.
   const clusters: Array<RawCluster> = [];
   let start = 0;
 
   for (const point of source) {
     const end = start + Str.length(point);
     const previous = A.last(clusters);
-    if (O.isSome(previous) && (isCombiningMark(point) || joinsNormalizedCluster(previous.value[2], point))) {
+    if (O.isSome(previous) && (isCombiningMark(point) || joinsNormalizedCluster(source, previous.value, point))) {
       A.spliceInPlace(clusters, {
         start: A.length(clusters) - 1,
         deleteCount: 1,
-        items: [[previous.value[0], end, Str.concat(previous.value[2], point)]],
+        items: [[previous.value[0], end]],
       });
     } else {
-      A.appendInPlace(clusters, [start, end, point]);
+      A.appendInPlace(clusters, [start, end]);
     }
     start = end;
   }
@@ -409,8 +410,8 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
   const ends: Array<number> = A.empty();
   let text = "";
 
-  for (const [sourceStart, sourceEnd, cluster] of sourceClusters(source)) {
-    for (const point of normalizeCluster(cluster)) {
+  for (const [sourceStart, sourceEnd] of sourceClusters(source)) {
+    for (const point of normalizeCluster(Str.slice(sourceStart, sourceEnd)(source))) {
       text = appendNormalizedPoint(starts, ends, text, point, sourceStart, sourceEnd);
     }
   }

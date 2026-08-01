@@ -3,6 +3,7 @@ import {
   convertTextOffsetRange,
   locateGroundedExtractions,
   locateRawText,
+  normalizeTextLocator,
   RawTextChunk,
   reconstructSourceText,
   TextOffsetRange,
@@ -61,6 +62,14 @@ describe("verified-span hostile-text contract", () => {
       expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
     })
   );
+
+  it("normalizes long combining-mark clusters from retained raw boundaries", () => {
+    const combiningMarks = 100_000;
+    const normalized = normalizeTextLocator(Str.concat("a", Str.repeat(combiningMarks)("\u0301")));
+
+    expect(Str.startsWith("á")(normalized)).toBe(true);
+    expect(Str.length(normalized)).toBe(combiningMarks);
+  });
 
   it.effect(
     "preserves an exact raw locator that ends inside a normalization cluster",

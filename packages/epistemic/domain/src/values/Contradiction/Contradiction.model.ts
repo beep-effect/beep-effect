@@ -588,6 +588,34 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
   })
 ) {}
 
+/**
+ * Maximum length accepted for a detector-supplied proposal rationale.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH) // 2000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH = 2_000;
+
+const ContradictionProposalRationale = S.NonEmptyString.check(
+  S.isMaxLength(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH, {
+    identifier: $I`ContradictionProposalRationaleMaximumLengthCheck`,
+    title: "Contradiction Proposal Rationale Maximum Length",
+    description: "Checks that a detector-supplied proposal rationale contains at most 2,000 characters.",
+    message: "Expected contradiction proposal rationale to contain at most 2,000 characters.",
+  })
+).pipe(
+  $I.annoteSchema("ContradictionProposalRationale", {
+    description: "Non-empty detector-supplied proposal rationale containing at most 2,000 characters.",
+  })
+);
+
 class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolutionProposalStruct>(
   $I`ContradictionResolutionProposalStruct`
 )(
@@ -604,7 +632,7 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
     proposalId: ContradictionProposalId.annotateKey({
       description: "Stable proposal identifier selected by public review.",
     }),
-    rationale: S.NonEmptyString.annotateKey({
+    rationale: ContradictionProposalRationale.annotateKey({
       description: "Detector-supplied rationale presented to the reviewer.",
     }),
     validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
@@ -1119,7 +1147,7 @@ export class ContradictionProposalContent extends S.Class<ContradictionProposalC
     proposalId: ContradictionProposalId.annotateKey({
       description: "Stable proposal identifier covered by the proposal digest.",
     }),
-    rationale: S.NonEmptyString.annotateKey({
+    rationale: ContradictionProposalRationale.annotateKey({
       description: "Detector-supplied rationale covered by the proposal digest.",
     }),
     validFrom: EntitySchema.DateTimeFromMillis.annotateKey({

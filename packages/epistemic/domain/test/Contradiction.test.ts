@@ -4,6 +4,7 @@ import {
   CanonicalContradictionBeliefPair,
   CONTRADICTION_EVIDENCE_SET_MAX_COUNT,
   CONTRADICTION_PROPOSAL_MAX_COUNT,
+  CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH,
   ContradictionAssessment,
   ContradictionBeliefPair,
   ContradictionCandidateContent,
@@ -199,6 +200,20 @@ describe("Contradiction domain invariants", () => {
     expect(Result.isFailure(decode({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);
     expect(Result.isFailure(decode({ ...encoded, validFrom: 1_001, validTo: 1_000 }))).toBe(true);
     expect(Result.isSuccess(decode({ ...encoded, validFrom: 1_000, validTo: 1_001 }))).toBe(true);
+  });
+
+  it("bounds detector rationales in proposal content and attached proposals", () => {
+    const encodedContent = Result.getOrThrow(S.encodeUnknownResult(ContradictionProposalContent)(proposalContent));
+    const encodedProposal = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
+    const maximumRationale = Str.repeat(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH)("r");
+    const oversizedRationale = Str.concat(maximumRationale, "r");
+    const decodeContent = S.decodeUnknownResult(ContradictionProposalContent);
+    const decodeProposal = S.decodeUnknownResult(ContradictionResolutionProposal);
+
+    expect(Result.isSuccess(decodeContent({ ...encodedContent, rationale: maximumRationale }))).toBe(true);
+    expect(Result.isFailure(decodeContent({ ...encodedContent, rationale: oversizedRationale }))).toBe(true);
+    expect(Result.isSuccess(decodeProposal({ ...encodedProposal, rationale: maximumRationale }))).toBe(true);
+    expect(Result.isFailure(decodeProposal({ ...encodedProposal, rationale: oversizedRationale }))).toBe(true);
   });
 
   it("separates unordered submissions from canonical persisted pairs", () => {
