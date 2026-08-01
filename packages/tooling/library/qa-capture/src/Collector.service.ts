@@ -262,6 +262,20 @@ const makeService = Effect.fnUntraced(function* () {
       Effect.catchCause(() => Effect.succeedNone)
     );
 
+  // Teardown removes the handle only while this session still owns it: after
+  // a stale-handle takeover the successor's handle must survive the
+  // predecessor's scope close.
+  const removeHandleIfOwned = (handlePath: string, sessionId: CollectorHandle["sessionId"]): Effect.Effect<void> =>
+    readHandleFile(handlePath).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.void,
+          onSome: (current) =>
+            current.sessionId === sessionId ? fs.remove(handlePath, { force: true }).pipe(Effect.ignore) : Effect.void,
+        })
+      )
+    );
+
   // One live collector owns current.json per checkout: a decodable handle
   // whose pid is alive and foreign refuses the takeover, while dead-pid or
   // undecodable handles are stale and get overwritten.
@@ -436,24 +450,7 @@ const makeService = Effect.fnUntraced(function* () {
               path: handlePath,
             })
           ),
-          // Teardown removes the handle only while this session still owns
-          // it: after a stale-handle takeover the successor's handle must
-          // survive the predecessor's scope close.
-          Effect.andThen(
-            Effect.addFinalizer(() =>
-              readHandleFile(handlePath).pipe(
-                Effect.flatMap(
-                  O.match({
-                    onNone: () => Effect.void,
-                    onSome: (current) =>
-                      current.sessionId === handle.sessionId
-                        ? fs.remove(handlePath, { force: true }).pipe(Effect.ignore)
-                        : Effect.void,
-                  })
-                )
-              )
-            )
-          )
+          Effect.andThen(Effect.addFinalizer(() => removeHandleIfOwned(handlePath, handle.sessionId)))
         ),
     });
 

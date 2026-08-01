@@ -714,6 +714,32 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
 // this clip precisely so a container duration exists.
 const NORMALIZED_VIDEO_NAME = "normalized.mp4";
 
+// Lane A's live-muxed webm reports no container duration; `qa extract`
+// writes the normalized clip exactly for this case.
+const normalizedClipDuration = Effect.fn("QaJudgePack.normalizedClipDuration")(function* (
+  layout: RoundLayout,
+  source: string,
+  normalizedPath: string
+): Effect.fn.Return<number, QaCommandError, FFmpeg> {
+  const ffmpeg = yield* FFmpeg;
+  const normalized = yield* ffmpeg
+    .probeVideo(ProbeVideoRequest.make({ videoPath: normalizedPath }))
+    .pipe(
+      QaCommandError.mapError(
+        `qa judge-pack could not probe the normalized clip at ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`
+      )
+    );
+  return yield* O.match(normalized.durationSeconds, {
+    onNone: () =>
+      Effect.fail(
+        QaCommandError.make({
+          message: `qa judge-pack found no container duration in ${source} or ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`,
+        })
+      ),
+    onSome: Effect.succeed,
+  });
+});
+
 // A judge bundle without a real video duration is corrupted temporal evidence:
 // `epochToVideoSeconds` clamps every event into [0, duration], so a degraded
 // zero would map the whole interaction onto t=0.000. Missing videos, probe
@@ -738,25 +764,7 @@ const requireVideoDuration = Effect.fn("QaJudgePack.requireVideoDuration")(funct
     .pipe(QaCommandError.mapError(`qa judge-pack could not probe the recorded video at ${source}.`));
   const normalizedPath = path.join(layout.videoDir, NORMALIZED_VIDEO_NAME);
   return yield* O.match(probe.durationSeconds, {
-    // Lane A's live-muxed webm reports no container duration; `qa extract`
-    // writes the normalized clip exactly for this case.
-    onNone: () =>
-      ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath: normalizedPath })).pipe(
-        QaCommandError.mapError(
-          `qa judge-pack could not probe the normalized clip at ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`
-        ),
-        Effect.flatMap((normalized) =>
-          O.match(normalized.durationSeconds, {
-            onNone: () =>
-              Effect.fail(
-                QaCommandError.make({
-                  message: `qa judge-pack found no container duration in ${source} or ${normalizedPath}; re-run \`bun run beep qa extract --round ${layout.round}\` before packing.`,
-                })
-              ),
-            onSome: Effect.succeed,
-          })
-        )
-      ),
+    onNone: () => normalizedClipDuration(layout, source, normalizedPath),
     onSome: Effect.succeed,
   });
 });

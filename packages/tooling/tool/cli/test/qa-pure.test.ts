@@ -77,6 +77,7 @@ import {
   writeRecordStartHint,
 } from "@beep/repo-cli/commands/Qa";
 import { provideScopedLayer } from "@beep/test-utils";
+import { thunk } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -675,25 +676,27 @@ describe("commands/Qa judge output parsing", () => {
 describe("commands/Qa extract --dry-run driver isolation", () => {
   // Every method dies: the dry-run contract is "persist the plan without
   // running any driver", so reaching ffmpeg or exiftool at all is the bug.
+  const ffmpegUnreachable = Effect.die("qa extract --dry-run must not invoke ffmpeg");
+  const exiftoolUnreachable = Effect.die("qa extract --dry-run must not invoke exiftool");
   const dieFfmpeg = Layer.succeed(FFmpeg)(
     FFmpeg.of({
-      extractClip: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      extractFrameAt: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      extractFrames: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      extractFramesAt: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      probeRegionLuminance: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      probeVideo: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      renderContactSheet: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      renderGif: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
-      writeContainerMetadata: () => Effect.die("qa extract --dry-run must not invoke ffmpeg"),
+      extractClip: thunk(ffmpegUnreachable),
+      extractFrameAt: thunk(ffmpegUnreachable),
+      extractFrames: thunk(ffmpegUnreachable),
+      extractFramesAt: thunk(ffmpegUnreachable),
+      probeRegionLuminance: thunk(ffmpegUnreachable),
+      probeVideo: thunk(ffmpegUnreachable),
+      renderContactSheet: thunk(ffmpegUnreachable),
+      renderGif: thunk(ffmpegUnreachable),
+      writeContainerMetadata: thunk(ffmpegUnreachable),
     })
   );
   const dieExiftool = Layer.succeed(Exiftool)(
     Exiftool.of({
-      readTags: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
-      version: Effect.die("qa extract --dry-run must not invoke exiftool"),
-      writeTags: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
-      writeXmpPacket: () => Effect.die("qa extract --dry-run must not invoke exiftool"),
+      readTags: thunk(exiftoolUnreachable),
+      version: exiftoolUnreachable,
+      writeTags: thunk(exiftoolUnreachable),
+      writeXmpPacket: thunk(exiftoolUnreachable),
     })
   );
   const DryRunLayer = Layer.mergeAll(

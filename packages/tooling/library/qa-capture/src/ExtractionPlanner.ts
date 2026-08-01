@@ -860,6 +860,8 @@ export const epochToVideoSeconds: {
  * clamping), used to stamp each extracted strip frame with the capture epoch
  * of its own source instant rather than the window start.
  *
+ * @param clockSync - Affine clock fit whose slope and offset are inverted.
+ * @returns A function mapping video seconds to epoch milliseconds.
  * @example
  * ```ts
  * import { ClockSync, videoSecondsToEpochMs } from "@beep/qa-capture"

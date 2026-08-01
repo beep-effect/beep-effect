@@ -36,6 +36,7 @@ import {
   runQaReport,
 } from "@beep/repo-cli/commands/Qa";
 import { provideScopedLayer } from "@beep/test-utils";
+import { thunk } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -123,19 +124,20 @@ const probeOf = (videoPath: string, durationSeconds: O.Option<number>) =>
   });
 
 // Judge-pack only probes; every other driver operation must stay unreachable.
+const ffmpegUnreachable = Effect.die("not implemented");
 const ffmpegStub = (probeVideo: (request: ProbeVideoRequest) => Effect.Effect<VideoProbe, FFmpegError>) =>
   Layer.succeed(
     FFmpeg,
     FFmpeg.of({
-      extractClip: () => Effect.die("not implemented"),
-      extractFrameAt: () => Effect.die("not implemented"),
-      extractFrames: () => Effect.die("not implemented"),
-      extractFramesAt: () => Effect.die("not implemented"),
-      probeRegionLuminance: () => Effect.die("not implemented"),
+      extractClip: thunk(ffmpegUnreachable),
+      extractFrameAt: thunk(ffmpegUnreachable),
+      extractFrames: thunk(ffmpegUnreachable),
+      extractFramesAt: thunk(ffmpegUnreachable),
+      probeRegionLuminance: thunk(ffmpegUnreachable),
       probeVideo,
-      renderContactSheet: () => Effect.die("not implemented"),
-      renderGif: () => Effect.die("not implemented"),
-      writeContainerMetadata: () => Effect.die("not implemented"),
+      renderContactSheet: thunk(ffmpegUnreachable),
+      renderGif: thunk(ffmpegUnreachable),
+      writeContainerMetadata: thunk(ffmpegUnreachable),
     })
   );
 
@@ -546,14 +548,12 @@ describe("commands/Qa record witness-event gate", () => {
   );
 
   it.effect("passes a round that captured at least one witness event", () =>
-    Effect.gen(function* () {
-      yield* requireCapturedEvents(
-        QaEventLog.make({
-          events: [MarkerEvent.make({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 })],
-          rejectedCount: 0,
-        })
-      );
-    })
+    requireCapturedEvents(
+      QaEventLog.make({
+        events: [MarkerEvent.make({ kind: "marker", label: "scenario:one", seq: 1, tEpochMs: 1754000000000 })],
+        rejectedCount: 0,
+      })
+    )
   );
 });
 
@@ -567,7 +567,7 @@ describe("commands/Qa judge-pack video duration", () => {
           yield* prepareRound(cwd, 1);
           const error = yield* Effect.flip(
             runQaJudgePack(cwd, packOptions).pipe(
-              Effect.provide(ffmpegStub(() => Effect.die("probeVideo must not run without a video")))
+              provideScopedLayer(ffmpegStub(() => Effect.die("probeVideo must not run without a video")))
             )
           );
           expect(error.message).toContain("found no recorded video for round 1");
@@ -585,7 +585,7 @@ describe("commands/Qa judge-pack video duration", () => {
           yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "not really a video");
           const error = yield* Effect.flip(
             runQaJudgePack(cwd, packOptions).pipe(
-              Effect.provide(
+              provideScopedLayer(
                 ffmpegStub(() =>
                   Effect.fail(FFmpegError.fromUnknown("probeVideo", "boom", { cause: new Error("corrupt") }))
                 )
@@ -612,7 +612,7 @@ describe("commands/Qa judge-pack video duration", () => {
             "Round {{ROUND}} of {{SURFACE}} in {{ROUND_DIR}}: {{SCENARIO_NOTES}}"
           );
           const manifest = yield* runQaJudgePack(cwd, packOptions).pipe(
-            Effect.provide(
+            provideScopedLayer(
               ffmpegStub((request) =>
                 Effect.succeed(
                   Str.endsWith("normalized.mp4")(request.videoPath)
@@ -642,7 +642,7 @@ describe("commands/Qa judge-pack video duration", () => {
           yield* fs.writeFileString(path.join(layout.videoDir, "capture.webm"), "duration-less webm");
           const error = yield* Effect.flip(
             runQaJudgePack(cwd, packOptions).pipe(
-              Effect.provide(ffmpegStub((request) => Effect.succeed(probeOf(request.videoPath, O.none()))))
+              provideScopedLayer(ffmpegStub((request) => Effect.succeed(probeOf(request.videoPath, O.none()))))
             )
           );
           expect(error.message).toContain("re-run `bun run beep qa extract --round 1`");
