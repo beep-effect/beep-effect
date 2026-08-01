@@ -203,6 +203,9 @@ const encodeFact = S.encodeUnknownResult(S.UnknownFromJsonString);
 
 const shortDigest = (digest: string): string => `${Str.takeLeft(12)(digest)}…`;
 
+const proposalTargetLabel = (proposal: ContradictionResolutionProposal): string =>
+  `Lineage ${shortDigest(proposal.losingBelief.logicalKey)} · edge ${proposal.losingBelief.edgeVersionId} · version ${proposal.losingBelief.version}`;
+
 const formatDateTime = (value: DateTime.DateTime): string =>
   DateTime.format(value, {
     dateStyle: "medium",
@@ -737,9 +740,15 @@ function ProposalCard({
               {shortDigest(proposal.proposalId)}
             </dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Replaces belief version</dt>
-            <dd>{proposal.losingBelief.version}</dd>
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">Replaces belief</dt>
+            <dd
+              className="truncate"
+              data-testid="contradiction-proposal-target"
+              title={proposal.losingBelief.logicalKey}
+            >
+              {proposalTargetLabel(proposal)}
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Valid from</dt>
@@ -1124,6 +1133,9 @@ function ReviewDialog({
               <span className="text-muted-foreground">Selected proposal</span>
               <span className="truncate font-mono" title={proposal.proposalId}>
                 {shortDigest(proposal.proposalId)}
+              </span>
+              <span data-testid="contradiction-review-proposal-target" title={proposal.losingBelief.logicalKey}>
+                {proposalTargetLabel(proposal)}
               </span>
             </div>
           ),

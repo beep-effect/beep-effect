@@ -57,7 +57,7 @@ import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { A, O } from "@beep/utils";
-import { and, count, desc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -91,7 +91,43 @@ const edgeVersionIdEquivalent = S.toEquivalence(BeliefVersionRef.fields.edgeVers
 const proposalIdEquivalent = S.toEquivalence(ContradictionProposalId);
 const proposalById = Order.mapInput(Order.String, (proposal: ContradictionResolutionProposal) => proposal.proposalId);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
+const earlierThan = Order.isLessThan(DateTime.Order);
 const decodeCandidateSummary = S.decodeUnknownResult(ContradictionCandidateSummary);
+
+type ValidInterval = {
+  readonly validFrom: DateTime.Utc;
+  readonly validTo: O.Option<DateTime.Utc>;
+};
+
+const startsBeforeEnd = (start: DateTime.Utc, end: O.Option<DateTime.Utc>): boolean =>
+  O.match(end, {
+    onNone: () => true,
+    onSome: (upperBound) => earlierThan(start, upperBound),
+  });
+
+const validIntervalsOverlap = (left: ValidInterval, right: ValidInterval): boolean =>
+  startsBeforeEnd(left.validFrom, right.validTo) && startsBeforeEnd(right.validFrom, left.validTo);
+
+const validIntervalContains = (outer: ValidInterval, inner: ValidInterval): boolean =>
+  notLaterThan(outer.validFrom, inner.validFrom) &&
+  O.match(outer.validTo, {
+    onNone: () => true,
+    onSome: (outerEnd) => O.exists(inner.validTo, (innerEnd) => notLaterThan(innerEnd, outerEnd)),
+  });
+
+const proposalIntervalsAreAvailable = (
+  proposals: ReadonlyArray<ContradictionResolutionProposal>,
+  survivingVersions: ReadonlyArray<EdgeVersion>
+): boolean =>
+  A.every(proposals, (proposal) =>
+    A.every(
+      survivingVersions,
+      (version) =>
+        !Eq.equals(version.logicalKey, proposal.losingBelief.logicalKey) ||
+        edgeVersionIdEquivalent(version.id, proposal.losingBelief.edgeVersionId) ||
+        !validIntervalsOverlap(proposal, version)
+    )
+  );
 
 const projectEdgeVersionAtKnownAt = (edge: EdgeVersion, knownAt: DateTime.Utc): EdgeVersion =>
   EdgeVersion.make({
@@ -169,7 +205,8 @@ const validateBeliefPair = (
           Eq.equals(version.id, ref.edgeVersionId) &&
           Eq.equals(version.logicalKey, ref.logicalKey) &&
           Eq.equals(version.version, ref.version) &&
-          Eq.equals(version.orgId, command.orgId)
+          Eq.equals(version.orgId, command.orgId) &&
+          validIntervalContains(version, command)
       )
     );
   if (!valid) {
@@ -189,6 +226,20 @@ const validateBeliefPair = (
         })
       );
 };
+
+const validateProposalIntervals = (
+  proposals: ReadonlyArray<ContradictionResolutionProposal>,
+  survivingVersions: ReadonlyArray<EdgeVersion>,
+  candidateKey: ContradictionCandidateKey
+): Effect.Effect<void, ContradictionSubmissionConflict> =>
+  proposalIntervalsAreAvailable(proposals, survivingVersions)
+    ? Effect.void
+    : Effect.fail(
+        ContradictionSubmissionConflict.make({
+          candidateKey,
+          reason: "candidate-payload-mismatch",
+        })
+      );
 
 const validateEvidenceSet = (
   command: SubmitContradictionCandidate,
@@ -503,18 +554,37 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.try(() => fromEvidenceRow(row)), {
         concurrency: 1,
       }).pipe(repositoryUnavailable("get"));
+      const verificationEvidenceIds = O.match(query.evidenceId, {
+        onNone: () => evidenceIds,
+        onSome: (requestedEvidenceId) =>
+          A.filter(evidenceIds, (evidenceId) => Eq.equals(evidenceId, requestedEvidenceId)),
+      });
       const verificationRows = yield* db
-        .select()
+        .selectDistinctOn([evidenceVerificationTable.evidenceId], getColumns(evidenceVerificationTable))
         .from(evidenceVerificationTable)
+        .innerJoin(
+          evidenceTable,
+          and(
+            eq(evidenceTable.id, evidenceVerificationTable.evidenceId),
+            eq(evidenceTable.orgId, evidenceVerificationTable.orgId)
+          )
+        )
         .where(
           and(
             eq(evidenceVerificationTable.orgId, query.orgId),
-            inArray(evidenceVerificationTable.evidenceId, evidenceIds),
+            inArray(evidenceVerificationTable.evidenceId, verificationEvidenceIds),
             lte(evidenceVerificationTable.createdAt, knownAt),
-            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'source' ->> 'scopeRef' = ${query.sourceScopeRef}`
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'source' ->> 'scopeRef' = ${query.sourceScopeRef}`,
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'startChar' = ${evidenceTable.span} ->> 'startChar'`,
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'endChar' = ${evidenceTable.span} ->> 'endChar'`,
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'quote' = ${evidenceTable.span} ->> 'quote'`
           )
         )
-        .orderBy(desc(evidenceVerificationTable.createdAt), desc(evidenceVerificationTable.id))
+        .orderBy(
+          evidenceVerificationTable.evidenceId,
+          desc(evidenceVerificationTable.createdAt),
+          desc(evidenceVerificationTable.id)
+        )
         .pipe(repositoryUnavailable("get"));
       const verifications = yield* Effect.forEach(
         verificationRows,
@@ -750,6 +820,28 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                         reason: "belief-mismatch",
                       });
                     }
+                    const survivingRows = yield* tx
+                      .select()
+                      .from(edgeTable)
+                      .where(
+                        and(
+                          eq(edgeTable.orgId, candidate.orgId),
+                          eq(edgeTable.logicalKey, edge.logicalKey),
+                          isNull(edgeTable.expiredAt)
+                        )
+                      )
+                      .for("update");
+                    const survivingVersions = yield* Effect.forEach(
+                      survivingRows,
+                      (row) => Effect.try(() => fromEdgeVersionRow(row)),
+                      { concurrency: 1 }
+                    ).pipe(repositoryUnavailable("review"));
+                    if (!proposalIntervalsAreAvailable([proposal.value], survivingVersions)) {
+                      return yield* ContradictionReviewConflict.make({
+                        candidateId: command.candidateId,
+                        reason: "stale-candidate",
+                      });
+                    }
                     const identity = yield* identityOf(candidate.id, edge);
                     const replacement = yield* supersedeEdgeFactInTransaction(
                       tx,
@@ -830,6 +922,31 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 concurrency: 1,
               }).pipe(repositoryUnavailable("submit"));
               yield* validateBeliefPair(command, versions, normalized.candidateKey);
+              const proposalLogicalKeys = pipe(
+                normalized.assessment.proposals,
+                A.map((proposal) => proposal.losingBelief.logicalKey),
+                A.dedupe
+              );
+              const survivingVersionRows = yield* tx
+                .select()
+                .from(edgeTable)
+                .where(
+                  and(
+                    eq(edgeTable.orgId, command.orgId),
+                    inArray(edgeTable.logicalKey, proposalLogicalKeys),
+                    isNull(edgeTable.expiredAt)
+                  )
+                );
+              const survivingVersions = yield* Effect.forEach(
+                survivingVersionRows,
+                (row) => Effect.try(() => fromEdgeVersionRow(row)),
+                { concurrency: 1 }
+              ).pipe(repositoryUnavailable("submit"));
+              yield* validateProposalIntervals(
+                normalized.assessment.proposals,
+                survivingVersions,
+                normalized.candidateKey
+              );
               const evidenceIds = pipe(
                 normalized.matchBasis.leftEvidenceIds,
                 A.appendAll(normalized.matchBasis.rightEvidenceIds),

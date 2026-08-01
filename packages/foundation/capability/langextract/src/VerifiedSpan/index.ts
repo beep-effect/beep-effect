@@ -477,6 +477,10 @@ const findRawMatches = (
     rawStart = indexOfFrom(sourceText, locator, rawStart + 1);
   }
 
+  if (A.length(matches) > 0) {
+    return matches;
+  }
+
   let normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, 0);
 
   while (normalizedStart >= 0 && A.length(matches) < 2) {

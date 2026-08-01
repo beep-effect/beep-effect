@@ -425,6 +425,7 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       expect(right.textContent).toContain("No preferred side");
       expect(container.textContent).toContain("The signed amendment controls over the earlier draft.");
       expect(container.textContent).toContain("Facts cannot be edited here.");
+      expect(container.textContent).toContain("Lineage aaaaaaaaaaaa… · edge 1 · version 1");
       expect(container.innerHTML).toContain(">signed amendment</mark>");
       expect(container.querySelectorAll('[data-testid="contradiction-candidate-row"]')).toHaveLength(1);
       expect(container.querySelectorAll('[data-slot="verified-source-anchor"]')).toHaveLength(1);
@@ -512,6 +513,8 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       );
 
       const reason = requireElement(document, '[data-testid="contradiction-review-reason"]', HTMLTextAreaElement);
+      const target = requireElement(document, '[data-testid="contradiction-review-proposal-target"]', HTMLElement);
+      expect(target.textContent).toBe("Lineage aaaaaaaaaaaa… · edge 1 · version 1");
       act(() => enterTextareaValue(reason, "The executed amendment is controlling."));
       act(() => requireButton(document, "Approve supersession").click());
 

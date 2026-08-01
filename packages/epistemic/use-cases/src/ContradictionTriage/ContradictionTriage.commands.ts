@@ -23,8 +23,9 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
+import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { DateTime, identity, Order } from "effect";
+import { DateTime, Effect, identity, Order } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -347,6 +348,12 @@ export class GetExpandedContradictionCandidate extends S.Class<GetExpandedContra
   {
     candidateId: Epistemic.ContradictionCandidateId.annotateKey({
       description: "Candidate whose persisted detail is requested.",
+    }),
+    evidenceId: SharedEpistemic.EvidenceId.pipe(
+      S.OptionFromNullOr,
+      S.withConstructorDefault(Effect.succeed(O.none<SharedEpistemic.EvidenceId>()))
+    ).annotateKey({
+      description: "Optional candidate-bound evidence id used to narrow verification expansion.",
     }),
     knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
       description: "Transaction-time instant at which candidate state is requested.",

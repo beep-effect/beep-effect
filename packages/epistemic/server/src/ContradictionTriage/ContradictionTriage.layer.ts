@@ -135,12 +135,14 @@ const loadExpandedCandidate = Effect.fnUntraced(function* (
   orgId: ContradictionReviewScope["Service"]["orgId"],
   sourceScopeRef: ContradictionReviewScope["Service"]["sourceScopeRef"],
   validAt: GetContradictionCandidate["validAt"],
+  evidenceId: O.Option<ContradictionEvidenceDetail["evidence"]["id"]>,
   context: string
 ) {
   const expanded = yield* repository
     .getExpanded(
       GetExpandedContradictionCandidate.make({
         candidateId,
+        evidenceId,
         knownAt,
         orgId,
         sourceScopeRef,
@@ -225,6 +227,7 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
         scope.orgId,
         scope.sourceScopeRef,
         validAt,
+        O.none(),
         "GetContradictionCandidate"
       ).pipe(
         Effect.map(toCandidateDetailView(scope.sourceScopeRef)),
@@ -281,6 +284,7 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
           scope.orgId,
           scope.sourceScopeRef,
           validAt,
+          O.some(evidenceId),
           "GetEvidenceSourcePage"
         );
         const evidence = yield* pipe(

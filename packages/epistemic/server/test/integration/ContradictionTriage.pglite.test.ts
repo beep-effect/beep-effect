@@ -67,7 +67,6 @@ import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence";
-import type { DateTime } from "effect";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
@@ -97,13 +96,9 @@ const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
 
 const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
 
-const verifiedAnchorFor = (scenario: number, label: string, sourceScopeRef = "workspace:1") =>
+const verifiedAnchorFor = (scenario: number, label: string, anchor: TextAnchor, sourceScopeRef = "workspace:1") =>
   TextAnchorVerificationReceipt.make({
-    anchor: TextAnchor.make({
-      endChar: NonNegativeInt.make(8),
-      quote: "amount A",
-      startChar: NonNegativeInt.make(0),
-    }),
+    anchor,
     source: SourceTextIdentity.make({
       extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
       locator: PosixPath.make(`sources/${scenario}-${label}.txt`),
@@ -124,7 +119,16 @@ const insertVerification = Effect.fnUntraced(function* (
 ) {
   const db = yield* makeDrizzle();
   const evidence = fromEvidenceRow(evidenceRow);
-  const verifiedAnchor = verifiedAnchorFor(scenario, `${ordinal}`, sourceScopeRef);
+  const verifiedAnchor = verifiedAnchorFor(
+    scenario,
+    `${ordinal}`,
+    TextAnchor.make({
+      endChar: evidence.span.endChar,
+      quote: evidence.span.quote,
+      startChar: evidence.span.startChar,
+    }),
+    sourceScopeRef
+  );
   const manifestationKey = yield* Effect.fromResult(
     EvidenceVerification.manifestationKeyFor(evidence.id, verifiedAnchor)
   );
@@ -275,10 +279,14 @@ type SeededScenario = {
 };
 
 interface SubmissionOptions {
+  readonly candidateValidFrom?: number;
+  readonly candidateValidTo?: number;
   readonly confidence?: number;
   readonly kind?: "independent-evidence" | "same-source-overlap";
   readonly leftEvidenceId?: EpistemicIdentity.EvidenceId;
   readonly leftEvidenceIds?: ReadonlyArray<EpistemicIdentity.EvidenceId>;
+  readonly proposalValidFrom?: number;
+  readonly proposalValidTo?: number;
   readonly receipt?: string;
   readonly recordedAt?: number;
   readonly reversed?: boolean;
@@ -298,11 +306,15 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     version: seeded.beliefB.version,
   });
   const {
+    candidateValidFrom = 1_000,
+    candidateValidTo,
     confidence = 0.95,
     kind = "independent-evidence",
     leftEvidenceId,
     leftEvidenceIds: requestedLeftEvidenceIds,
     recordedAt = 1_200,
+    proposalValidFrom = 1_000,
+    proposalValidTo,
     receipt = `receipt-${scenario}`,
     reversed = false,
     rightEvidenceId,
@@ -330,8 +342,8 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     losingBelief: beliefA,
     proposalId: ContradictionProposalId.make(digest(`proposal-${scenario}`)),
     rationale: "The signed amendment controls.",
-    validFrom: instant(1_000),
-    validTo: O.none<DateTime.Utc>(),
+    validFrom: instant(proposalValidFrom),
+    validTo: pipe(O.fromNullishOr(proposalValidTo), O.map(instant)),
   };
   const proposal = ContradictionResolutionProposal.make({
     ...proposalContent,
@@ -350,8 +362,8 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     receivedBy: systemPrincipal,
     schemaVersion: seeded.beliefA.schemaVersion,
     source: "Agent",
-    validFrom: instant(1_000),
-    validTo: O.none(),
+    validFrom: instant(candidateValidFrom),
+    validTo: pipe(O.fromNullishOr(candidateValidTo), O.map(instant)),
   });
 };
 
@@ -361,6 +373,23 @@ const asOf = (identity: typeof LogicalEdgeIdentity.Encoded, validAt: number, kno
     logicalKey: logicalEdgeKey(decodeIdentity(identity)),
     validAt,
   });
+
+const recordHistoricalBeliefA = Effect.fnUntraced(function* (seeded: SeededScenario, recordedAt: number) {
+  const edges = yield* EdgeAuthorityRepository;
+  return yield* edges.record(
+    decodeRecord({
+      fact: { amount: "90" },
+      identity: seeded.identityA,
+      orgId: seeded.beliefA.orgId,
+      recordedAt,
+      recordedBy: systemPrincipalEncoded,
+      schemaVersion: seeded.beliefA.schemaVersion,
+      source: "Agent",
+      validFrom: 0,
+      validTo: 900,
+    })
+  );
+});
 
 const listQuery = (disposition: "all" | "open" | "rejected" | "superseded", knownAt: number) =>
   ListContradictionCandidates.make({
@@ -679,6 +708,55 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
+        "requires candidate validity to stay inside both referenced belief intervals",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(112);
+          const repository = yield* ContradictionTriageRepository;
+          const db = yield* makeDrizzle();
+          const before = yield* db.select().from(DbSchema.contradictionCandidate);
+
+          const conflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(112, seeded, {
+                candidateValidFrom: 999,
+                receipt: "receipt-112-outside-belief-intersection",
+              })
+            )
+          );
+
+          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("belief-mismatch");
+          expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
+        }),
+        120_000
+      );
+
+      it.effect(
+        "rejects proposal intervals that overlap a surviving lineage interval",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(113);
+          const repository = yield* ContradictionTriageRepository;
+          const db = yield* makeDrizzle();
+          yield* recordHistoricalBeliefA(seeded, 1_150);
+          const before = yield* db.select().from(DbSchema.contradictionCandidate);
+
+          const conflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(113, seeded, {
+                proposalValidFrom: 500,
+                receipt: "receipt-113-overlapping-proposal",
+              })
+            )
+          );
+
+          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("candidate-payload-mismatch");
+          expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
+        }),
+        120_000
+      );
+
+      it.effect(
         "expands exact beliefs with organization- and source-scoped verification as of query transaction time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
@@ -697,12 +775,12 @@ if (!shouldRunPgliteIntegration) {
           });
           const unrelatedVerification = decodeVerification({
             ...baseEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
-            createdAt: 1_190,
+            createdAt: 1_450,
             evidenceId: decodedEvidenceA.id,
             manifestationKey: Result.getOrThrow(
               EvidenceVerification.manifestationKeyFor(decodedEvidenceA.id, unrelatedAnchor)
             ),
-            updatedAt: 1_190,
+            updatedAt: 1_450,
             verifiedAnchor: unrelatedAnchor,
           });
           // Simulate a legacy/corrupt row that bypassed the guarded converter:
@@ -714,6 +792,7 @@ if (!shouldRunPgliteIntegration) {
           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
           const submitted = yield* repository.submit(makeSubmission(106, seeded));
           const selected = yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
+          const selectedB = yield* insertVerification(106, 7, seeded.evidenceB, 1_350);
           yield* insertVerification(106, 6, seeded.evidenceA, 1_400, "workspace:2");
 
           const expanded = yield* repository.getExpanded(
@@ -756,15 +835,46 @@ if (!shouldRunPgliteIntegration) {
           expect(
             pipe(
               evidenceB,
-              O.flatMap((detail) => detail.latestVerification)
+              O.flatMap((detail) => detail.latestVerification),
+              O.map((verification) => verification.manifestationKey)
             )
-          ).toStrictEqual(O.none());
+          ).toStrictEqual(O.some(selectedB.manifestationKey));
           expect(A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefA.id)).toBe(
             true
           );
           expect(A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefB.id)).toBe(
             true
           );
+
+          const narrowed = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              evidenceId: O.some(decodedEvidenceA.id),
+              knownAt: instant(1_500),
+              orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
+              validAt: instant(1_500),
+            })
+          );
+          const narrowedEvidence = pipe(
+            narrowed,
+            O.map((detail) => A.appendAll(detail.left.evidence, detail.right.evidence))
+          );
+          expect(
+            pipe(
+              narrowedEvidence,
+              O.flatMap(A.findFirst((detail) => Eq.equals(detail.evidence.id, decodedEvidenceA.id))),
+              O.flatMap((detail) => detail.latestVerification),
+              O.map((verification) => verification.manifestationKey)
+            )
+          ).toStrictEqual(O.some(selected.manifestationKey));
+          expect(
+            pipe(
+              narrowedEvidence,
+              O.flatMap(A.findFirst((detail) => Eq.equals(detail.evidence.id, seeded.evidenceB.id))),
+              O.flatMap((detail) => detail.latestVerification)
+            )
+          ).toStrictEqual(O.none());
 
           const wrongOrganization = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
@@ -1051,6 +1161,47 @@ if (!shouldRunPgliteIntegration) {
               (item) => item.candidate.id === submitted.candidate.id
             )
           ).toBe(true);
+        }),
+        120_000
+      );
+
+      it.effect(
+        "refuses a proposal when a surviving overlap appears after submission",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(114);
+          const repository = yield* ContradictionTriageRepository;
+          const edges = yield* EdgeAuthorityRepository;
+          const submitted = yield* repository.submit(
+            makeSubmission(114, seeded, {
+              proposalValidFrom: 500,
+              receipt: "receipt-114-before-overlap",
+            })
+          );
+          const proposal = submitted.candidate.assessment.proposals[0];
+          yield* recordHistoricalBeliefA(seeded, 1_300);
+          yield* TestClock.setTime(2_000);
+
+          const conflict = yield* Effect.flip(
+            repository.review(
+              ReviewContradictionCandidate.make({
+                candidateId: submitted.candidate.id,
+                decision: {
+                  decision: "supersedeProposal",
+                  proposalDigest: proposal.proposalDigest,
+                  proposalId: proposal.proposalId,
+                  reason: "Attempt after the lineage gained an overlapping interval.",
+                },
+                expectedCandidateVersion: submitted.candidate.rowVersion,
+              }),
+              systemPrincipal,
+              reviewScope(submitted.candidate.orgId)
+            )
+          );
+
+          expect(ContradictionReviewConflict.is(conflict)).toBe(true);
+          expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
+          const unchanged = yield* edges.readAsOf(asOf(seeded.identityA, 1_500, 2_500));
+          expect(O.map(unchanged, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
         }),
         120_000
       );

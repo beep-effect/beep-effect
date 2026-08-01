@@ -129,6 +129,17 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "prefers one exact raw locator over a wider normalization-equivalent range",
+    Effect.fnUntraced(function* () {
+      const source = "a  b";
+      const anchor = yield* locateRawText(source, " b");
+
+      expect(anchor).toEqual({ endChar: 4, quote: " b", startChar: 2 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
+  it.effect(
     "fails duplicate normalized occurrences as ambiguous",
     Effect.fnUntraced(function* () {
       const failure = yield* locateRawText("same text; same text", "same text").pipe(Effect.flip);

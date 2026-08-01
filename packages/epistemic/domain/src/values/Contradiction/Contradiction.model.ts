@@ -312,7 +312,34 @@ const encodeBeliefRef = (ref: BeliefVersionRef): string =>
   A.join([ref.logicalKey, `${ref.edgeVersionId}`, `${ref.version}`], ":");
 
 const beliefRefOrder = Order.mapInput(Order.String, encodeBeliefRef);
-const beliefRefComesFirst = Order.isLessThanOrEqualTo(beliefRefOrder);
+const beliefRefComesBefore = Order.isLessThan(beliefRefOrder);
+const edgeVersionIdEquivalent = S.toEquivalence(BeliefVersionRef.fields.edgeVersionId);
+const beliefsAreDistinct = ({ left, right }: { readonly left: BeliefVersionRef; readonly right: BeliefVersionRef }) =>
+  !edgeVersionIdEquivalent(left.edgeVersionId, right.edgeVersionId);
+
+class ContradictionBeliefPairStruct extends S.Class<ContradictionBeliefPairStruct>($I`ContradictionBeliefPairStruct`)(
+  {
+    left: BeliefVersionRef.annotateKey({ description: "Belief presented on the left side of a submission." }),
+    right: BeliefVersionRef.annotateKey({ description: "Belief presented on the right side of a submission." }),
+  },
+  $I.annote("ContradictionBeliefPairStruct", {
+    description: "Structural contradiction belief pair before distinctness is checked.",
+  })
+) {}
+
+const DistinctBeliefPairCheck = S.makeFilter(beliefsAreDistinct, {
+  identifier: $I`DistinctBeliefPairCheck`,
+  title: "Distinct Contradiction Belief Pair",
+  description: "Checks that the two sides reference different immutable edge-version rows.",
+  message: "Expected left and right to reference different edge versions.",
+});
+
+const contradictionBeliefPairStructArbitrary = S.toArbitraryLazy(ContradictionBeliefPairStruct);
+const ContradictionBeliefPairSchema = ContradictionBeliefPairStruct.mapFields(identity)
+  .check(DistinctBeliefPairCheck)
+  .annotate({
+    toArbitrary: () => (fc) => contradictionBeliefPairStructArbitrary(fc).filter(beliefsAreDistinct),
+  });
 
 /**
  * Submission-order pair of exact conflicting belief versions.
@@ -333,40 +360,41 @@ const beliefRefComesFirst = Order.isLessThanOrEqualTo(beliefRefOrder);
  * @since 0.0.0
  */
 export class ContradictionBeliefPair extends S.Class<ContradictionBeliefPair>($I`ContradictionBeliefPair`)(
-  {
-    left: BeliefVersionRef.annotateKey({ description: "Belief presented on the left side of a submission." }),
-    right: BeliefVersionRef.annotateKey({ description: "Belief presented on the right side of a submission." }),
-  },
+  ContradictionBeliefPairSchema,
   $I.annote("ContradictionBeliefPair", {
     description: "Submission-order pair of exact conflicting belief versions.",
   })
 ) {}
 
 const CanonicalBeliefPairCheck = S.makeFilter(
-  ({ left, right }: ContradictionBeliefPair) => beliefRefComesFirst(left, right),
+  ({ left, right }: ContradictionBeliefPair) => beliefRefComesBefore(left, right),
   {
     identifier: $I`CanonicalBeliefPairCheck`,
     title: "Canonical Contradiction Belief Pair",
     description: "Checks that a persisted contradiction pair is ordered by its stable encoded belief references.",
-    message: "Expected the left belief reference to sort before or equal to the right belief reference.",
+    message: "Expected the distinct left belief reference to sort before the right belief reference.",
   }
 );
 
 const beliefVersionRefArbitrary = S.toArbitraryLazy(BeliefVersionRef);
 
 const CanonicalContradictionBeliefPairSchema = ContradictionBeliefPair.mapFields(identity)
+  .check(DistinctBeliefPairCheck)
   .check(CanonicalBeliefPairCheck)
   .annotate({
     toArbitrary: () => (fc) =>
-      fc.tuple(beliefVersionRefArbitrary(fc), beliefVersionRefArbitrary(fc)).map(([left, right]) =>
-        pipe(
-          beliefRefComesFirst(left, right),
-          Bool.match({
-            onFalse: () => ContradictionBeliefPair.make({ left: right, right: left }),
-            onTrue: () => ContradictionBeliefPair.make({ left, right }),
-          })
-        )
-      ),
+      fc
+        .tuple(beliefVersionRefArbitrary(fc), beliefVersionRefArbitrary(fc))
+        .filter(([left, right]) => beliefsAreDistinct({ left, right }))
+        .map(([left, right]) =>
+          pipe(
+            beliefRefComesBefore(left, right),
+            Bool.match({
+              onFalse: () => ContradictionBeliefPair.make({ left: right, right: left }),
+              onTrue: () => ContradictionBeliefPair.make({ left, right }),
+            })
+          )
+        ),
   });
 
 /**
@@ -1131,7 +1159,7 @@ export const canonicalizeContradiction: CanonicalizeContradiction = dual(
   2,
   (pair: ContradictionBeliefPair, matchBasis: ContradictionMatchBasis): CanonicalizedContradiction =>
     pipe(
-      beliefRefComesFirst(pair.left, pair.right),
+      beliefRefComesBefore(pair.left, pair.right),
       Bool.match({
         onFalse: () =>
           CanonicalizedContradiction.make({

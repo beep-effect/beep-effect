@@ -249,6 +249,13 @@ describe("Contradiction domain invariants", () => {
     expect(canonical.matchBasis.rightEvidenceIds).toStrictEqual(rightEvidenceIds);
   });
 
+  it("rejects self-contradictions at submission and canonical persistence boundaries", () => {
+    const selfPair = { left, right: left };
+
+    expect(Result.isFailure(S.decodeUnknownResult(ContradictionBeliefPair)(selfPair))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(CanonicalContradictionBeliefPair)(selfPair))).toBe(true);
+  });
+
   it("keys detector identities and versions independently", () => {
     const originalKey = contradictionCandidateKey(pair, matchBasis);
     const otherDetectorKey = contradictionCandidateKey(
