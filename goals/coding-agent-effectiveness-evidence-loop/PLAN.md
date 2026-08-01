@@ -9,7 +9,7 @@ spike ran 2026-08-01 and passed — see
 **Current phases (single authority for `/goal` executors):** P1 is current.
 Its **First step** (hook-semantics verification) is **complete**: all three
 wait classes emit distinguishable, sessionId-bearing events, so `HookPulseV1`
-schema authoring may now begin — subject to the five spike amendments folded
+schema authoring may now begin — subject to the seven spike amendments folded
 into the P1 section below. P0 storage-cutover preparation is permitted in
 parallel by a separate actor. P2–P8 are not current until the manifest marks
 their predecessors' exit criteria met; the "proceeds in parallel" notes below
@@ -58,7 +58,7 @@ not the telemetry rebuild. P2–P4 proceed in parallel but are off this
 phase's critical path.
 
 - **First step (before any schema): DONE 2026-08-01** — verified on Claude
-  Code 2.1.220 across two rounds and six real sessions; full evidence in
+  Code 2.1.220 across three rounds and seven real sessions; full evidence in
   `research/2026-08-01-p1-hook-semantics-spike.md`, ledger committed at
   `history/evidence/2026-08-01-hook-pulse-spike.ndjson`. All three wait
   classes emit distinguishable sessionId-bearing events, so the load-bearing

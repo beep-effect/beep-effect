@@ -15,13 +15,14 @@ requires `PostToolUse` minus its `duration_ms`. The plan's four-hook set
 (Notification / UserPromptSubmit / Stop / SessionEnd) must become the
 seven-event set named in PLAN.md P1 before `HookPulseV1` is authored.
 
-Ledger evidence for both rounds is committed at
-`history/evidence/2026-08-01-hook-pulse-spike.ndjson`: 65 rows,
+Ledger evidence for all three rounds is committed at
+`history/evidence/2026-08-01-hook-pulse-spike.ndjson`: 74 rows,
 whitelist-only. The denominator, stated precisely because this packet's
-thesis is trustworthy evidence — 64 rows from **six real sessions**, plus one
-synthetic smoke-test row (`sessionId: "s"`) written while validating the
-writer. The smoke row is retained rather than deleted: the ledger is
-append-only, so labelling a row is honest where removing it is not.
+thesis is trustworthy evidence — 73 rows from **seven real sessions** across
+three rounds, plus one synthetic smoke-test row (`sessionId: "s"`) written
+while validating the writer. The smoke row is retained rather than deleted:
+the ledger is append-only, so labelling a row is honest where removing it is
+not.
 
 ## Setup
 
@@ -37,6 +38,8 @@ append-only, so labelling a row is honest where removing it is not.
 - Round 1 wired six events (Notification, UserPromptSubmit, Stop, SessionEnd,
   then PreToolUse/PostToolUse). Round 2 added `PermissionRequest` and
   `PermissionDenied` after PR review challenged the round-1 conclusion.
+  Round 3 added `duration_ms` capture to test whether the wait-subtraction
+  rule in correction 3 was sound.
 - All permission and plan decisions were made deliberately; two accidental
   approvals are disclosed under Method errors below.
 
@@ -70,6 +73,14 @@ Corrections this forces:
    wait is `PostToolUse.ts − PermissionRequest.ts − PostToolUse.duration_ms`.
    Without that subtraction, permission waits are systematically inflated by
    the tool's own runtime.
+   **Measured, not assumed:** a third-round probe held one permission dialog
+   ~60s before approving. `PermissionRequest` 09:13:44 → `PostToolUse`
+   09:14:52 is a 68s bracket, and that `PostToolUse` reported
+   `duration_ms: 477`. `duration_ms` is therefore execution-only and
+   excludes the approval wait, so the subtraction is sound rather than
+   double-counting. The correction is negligible for a fast tool and
+   load-bearing for a slow one — which is precisely the inflation case the
+   PR review raised.
 4. **Open brackets must not be closed by "the next event of any kind"** (as
    round 1 wrongly proposed). The corroborating Notification arrives ~6s
    after `PermissionRequest`, so that rule would record ~6s for a wait
@@ -202,8 +213,8 @@ regression fixture.
 ## Evidence
 
 - Committed ledger: `history/evidence/2026-08-01-hook-pulse-spike.ndjson`
-  (65 events across both rounds; spike rows carry `instrumentClass: "spike"`
-  and `notifierRev: "spike-0"`).
+  (74 events across all three rounds; spike rows carry
+  `instrumentClass: "spike"` and `notifierRev: "spike-0"`).
 - Pane snapshots and the spike hook script live in the session scratchpad
   (tmpfs, non-durable); the committed ledger and this report are the durable
   record.

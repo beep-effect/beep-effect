@@ -52,7 +52,7 @@ storage-cutover preparation may proceed in parallel by a separate actor.
 [`research/2026-08-01-p1-hook-semantics-spike.md`](./research/2026-08-01-p1-hook-semantics-spike.md),
 ledger committed at
 [`history/evidence/2026-08-01-hook-pulse-spike.ndjson`](./history/evidence/2026-08-01-hook-pulse-spike.ndjson)
-— 65 hook events across two rounds of real Claude Code 2.1.220 sessions.
+— 74 hook events across three rounds of real Claude Code 2.1.220 sessions.
 Measured: `PermissionRequest` fires only for permission-gated calls while
 auto-approved tools complete `PreToolUse`→`PostToolUse` in ≤1s; plan
 approval bracketed at 82s and tool permission at 99s (both before
