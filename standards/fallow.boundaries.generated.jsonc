@@ -312,6 +312,12 @@
         ]
       },
       {
+        "name": "@beep/gov-legal-mcp",
+        "patterns": [
+          "packages/drivers/gov-legal-mcp/src/**"
+        ]
+      },
+      {
         "name": "@beep/govinfo",
         "patterns": [
           "packages/drivers/govinfo/src/**"
@@ -1706,6 +1712,27 @@
           "@beep/schema",
           "@beep/test-utils",
           "@beep/ui"
+        ]
+      },
+      {
+        "from": "@beep/gov-legal-mcp",
+        "allow": [
+          "@beep/ecfr",
+          "@beep/gov-legal-mcp",
+          "@beep/govinfo",
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/ecfr",
+          "@beep/gov-legal-mcp",
+          "@beep/govinfo",
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
