@@ -39,10 +39,12 @@ struct SidecarTransport {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RendererObservabilityConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
     build_commit: Option<String>,
     deployment_environment: String,
     launch_id: String,
     log_level: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
     otlp_url: Option<String>,
     qa_session_id: String,
 }
@@ -82,6 +84,71 @@ struct DesktopShutdownState {
     started: AtomicBool,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SidecarReadinessState {
+    Starting,
+    Ready,
+    Failed,
+}
+
+struct SidecarReadinessInner {
+    changed: Condvar,
+    state: Mutex<SidecarReadinessState>,
+}
+
+#[derive(Clone)]
+struct SidecarReadiness {
+    inner: Arc<SidecarReadinessInner>,
+}
+
+impl SidecarReadiness {
+    fn new() -> Self {
+        Self {
+            inner: Arc::new(SidecarReadinessInner {
+                changed: Condvar::new(),
+                state: Mutex::new(SidecarReadinessState::Starting),
+            }),
+        }
+    }
+
+    fn mark_ready(&self) {
+        let mut state = recover_lock(&self.inner.state);
+        if *state == SidecarReadinessState::Starting {
+            *state = SidecarReadinessState::Ready;
+            self.inner.changed.notify_all();
+        }
+    }
+
+    fn mark_failed(&self) {
+        let mut state = recover_lock(&self.inner.state);
+        if *state == SidecarReadinessState::Starting {
+            *state = SidecarReadinessState::Failed;
+            self.inner.changed.notify_all();
+        }
+    }
+
+    fn wait_until_ready(&self, timeout: Duration) -> Result<(), String> {
+        let state = recover_lock(&self.inner.state);
+        let (state, _) = self
+            .inner
+            .changed
+            .wait_timeout_while(state, timeout, |state| {
+                *state == SidecarReadinessState::Starting
+            })
+            .unwrap_or_else(|error| error.into_inner());
+
+        match *state {
+            SidecarReadinessState::Ready => Ok(()),
+            SidecarReadinessState::Failed => {
+                Err("bundled sidecar stopped before its RPC transport was ready".to_string())
+            }
+            SidecarReadinessState::Starting => {
+                Err("timed out waiting for the bundled sidecar RPC transport".to_string())
+            }
+        }
+    }
+}
+
 impl DesktopShutdownState {
     fn new() -> Self {
         Self {
@@ -110,6 +177,12 @@ const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
 const ONTOLOGY_WORKSPACE_ROOT_ENV: &str = "ONTOLOGY_WORKSPACE_ROOT";
 const APP_LOG_LEVEL_ENV: &str = "APP_LOG_LEVEL";
 const OTEL_RESOURCE_ATTRIBUTES_ENV: &str = "OTEL_RESOURCE_ATTRIBUTES";
+const SIDECAR_READY_MARKER: &str = "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY";
+const SIDECAR_READY_TIMEOUT: Duration = Duration::from_secs(30);
+#[cfg(target_os = "linux")]
+const YOUTUBE_WEB_EXTENSION: &[u8] = include_bytes!(env!("BEEP_WEB_EXTENSION_PATH"));
+#[cfg(target_os = "linux")]
+const YOUTUBE_WEB_EXTENSION_REVISION: &str = env!("BEEP_WEB_EXTENSION_REVISION");
 const SAFE_OBSERVABILITY_ENV: [&str; 20] = [
     "OTEL_EXPORTER_OTLP_ENDPOINT",
     "OTEL_EXPORTER_OTLP_PROTOCOL",
@@ -207,22 +280,111 @@ fn ensure_private_directory(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+fn prepare_youtube_web_extension(cache_root: &Path) -> std::io::Result<std::path::PathBuf> {
+    use std::os::unix::fs::OpenOptionsExt;
+
+    let extension_root = cache_root.join("webkit-web-extensions");
+    ensure_private_directory(&extension_root)?;
+    let extension_dir = extension_root.join(YOUTUBE_WEB_EXTENSION_REVISION);
+    ensure_private_directory(&extension_dir)?;
+
+    let extension_path = extension_dir.join("libbeep_youtube_referrer.so");
+    for entry in std::fs::read_dir(&extension_dir)? {
+        let entry = entry?;
+        if entry.path() != extension_path {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "unexpected file in the WebKit extension directory: {}",
+                    entry.path().display()
+                ),
+            ));
+        }
+    }
+
+    match std::fs::symlink_metadata(&extension_path) {
+        Ok(metadata) if !metadata.file_type().is_file() => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "WebKit extension path is not a regular file: {}",
+                    extension_path.display()
+                ),
+            ));
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error),
+    }
+
+    let current_matches = std::fs::read(&extension_path)
+        .map(|contents| contents == YOUTUBE_WEB_EXTENSION)
+        .unwrap_or(false);
+    if !current_matches {
+        let temporary_path =
+            extension_root.join(format!(".libbeep_youtube_referrer.{}.tmp", Uuid::new_v4()));
+        let write_result = (|| {
+            let mut temporary = std::fs::OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .mode(0o600)
+                .open(&temporary_path)?;
+            temporary.write_all(YOUTUBE_WEB_EXTENSION)?;
+            temporary.sync_all()?;
+            std::fs::rename(&temporary_path, &extension_path)
+        })();
+        if write_result.is_err() {
+            let _ = std::fs::remove_file(&temporary_path);
+        }
+        write_result?;
+    }
+
+    if !matches!(
+        std::fs::read(&extension_path),
+        Ok(contents) if contents == YOUTUBE_WEB_EXTENSION
+    ) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "materialized WebKit extension does not match the bundled artifact",
+        ));
+    }
+
+    Ok(extension_dir)
+}
+
 #[tauri::command]
-fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
+async fn sidecar_transport(
+    state: tauri::State<'_, RpcSession>,
+    readiness: tauri::State<'_, SidecarReadiness>,
+) -> Result<SidecarTransport, String> {
     // Threat model: this token is intentionally delivered to the trusted Tauri
     // webview so the frontend can authorize loopback HTTP and IPC calls to its
     // own sidecar. It is not an XSS boundary inside the app webview; it prevents
     // unrelated local processes or external web pages from reaching the
     // write-capable sidecar RPC surface.
+    let ipc = ipc_transport();
+    if !ipc {
+        // IPC can buffer frames during boot; HTTP cannot recover a request sent
+        // before the socket listens. Keep the existing renderer transport gate
+        // closed until the complete sidecar layer emits its one-shot marker.
+        let readiness = readiness.inner().clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            readiness.wait_until_ready(SIDECAR_READY_TIMEOUT)
+        })
+        .await
+        .map_err(|error| error.to_string())??;
+    }
+
     let transport = SidecarTransport {
-        ipc: ipc_transport(),
+        ipc,
         rpc_session_token: state.token.clone(),
     };
     log::debug!(
         "event=sidecar_transport_probed transport={}",
         if transport.ipc { "ipc" } else { "http" }
     );
-    transport
+    Ok(transport)
 }
 
 #[tauri::command]
@@ -844,6 +1006,12 @@ fn log_sidecar_output(stream: &'static str, bytes: &[u8]) {
     }
 }
 
+fn observe_sidecar_readiness(readiness: &SidecarReadiness, bytes: &[u8]) {
+    if matches!(std::str::from_utf8(bytes), Ok(line) if line.trim() == SIDECAR_READY_MARKER) {
+        readiness.mark_ready();
+    }
+}
+
 /// Drain the bundled sidecar's output stream so child pipes can never fill.
 /// In IPC mode stdout is ndjson rpc and is forwarded to the webview only after
 /// a complete newline-delimited UTF-8 frame arrives. In HTTP mode stdout/stderr
@@ -854,6 +1022,7 @@ fn bridge_sidecar_events(
     ipc: bool,
     sidecar: &Sidecar,
     launch_id: String,
+    readiness: SidecarReadiness,
 ) {
     let handle = app.clone();
     let ipc_ready = Arc::clone(&sidecar.ipc_ready);
@@ -932,9 +1101,11 @@ fn bridge_sidecar_events(
                     }
                 }
                 CommandEvent::Stderr(bytes) => {
+                    observe_sidecar_readiness(&readiness, &bytes);
                     log_sidecar_output("stderr", &bytes);
                 }
                 CommandEvent::Error(err) => {
+                    readiness.mark_failed();
                     log::error!("event=sidecar_process_error launch_id={launch_id} error={err}");
                     closed_emitted = true;
                     kill_sidecar(&sidecar_process, "process-error");
@@ -951,6 +1122,7 @@ fn bridge_sidecar_events(
                     );
                 }
                 CommandEvent::Terminated(payload) => {
+                    readiness.mark_failed();
                     closed_emitted = true;
                     if ipc && !stdout_buffer.is_empty() {
                         let message = format!(
@@ -995,6 +1167,7 @@ fn bridge_sidecar_events(
         }
 
         if !closed_emitted {
+            readiness.mark_failed();
             log::warn!(
                 "event=sidecar_event_stream_closed launch_id={launch_id} inbound_frames={inbound_frames} inbound_bytes={inbound_bytes}"
             );
@@ -1183,6 +1356,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(metadata)
         .manage(DesktopShutdownState::new())
+        .manage(SidecarReadiness::new())
         .manage(RpcSession {
             token: rpc_session_token(),
         })
@@ -1198,6 +1372,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -1210,6 +1385,30 @@ pub fn run() {
             check_for_update
         ])
         .setup(move |app| {
+            let main_window_config = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .find(|window| window.label == "main")
+                .ok_or_else(|| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::NotFound,
+                        "main webview configuration is required",
+                    )
+                })?;
+            let main_window =
+                tauri::WebviewWindowBuilder::from_config(app.handle(), main_window_config)?;
+
+            #[cfg(target_os = "linux")]
+            let main_window = main_window.extensions_path(prepare_youtube_web_extension(
+                &app.path().app_cache_dir()?,
+            )?);
+
+            // The configured window uses `create: false` so Linux can install
+            // the Web-process extension before WebKit creates the first page.
+            main_window.build()?;
+
             let metadata = app.state::<DesktopRuntimeMetadata>();
             let app_version = app.package_info().version.to_string();
             if logging.invalid_value {
@@ -1219,6 +1418,7 @@ pub fn run() {
             }
 
             let ipc = ipc_transport();
+            let sidecar_readiness = app.state::<SidecarReadiness>().inner().clone();
             log::info!(
                 "event=desktop_started launch_id={} session_id={} version={} build_profile={} transport={} log_level={} telemetry_enabled={}",
                 metadata.launch_id,
@@ -1281,20 +1481,21 @@ pub fn run() {
                     .env("BEEP_DESKTOP_BUILD_VERSION", &app_version)
                     .env("BEEP_DESKTOP_BUILD_PROFILE", build_profile());
 
+                // A packaged debug binary does not inherit a repository working
+                // directory. Always anchor PGlite in Tauri's app-data directory
+                // so debug and release sidecars cannot resolve the fallback to
+                // `/.beep` (which fails closed before the renderer can boot).
+                std::fs::create_dir_all(&data_dir)?;
+                command = command.env(
+                    "CHAT_DB_PATH",
+                    data_dir.join("chat-db").to_string_lossy().to_string(),
+                );
+
                 if cfg!(debug_assertions) {
-                    // Dev + ipc: keyless fixture kernel; the sidecar falls back to
-                    // its repo-local PGlite dir when CHAT_DB_PATH is unset.
+                    // Dev + ipc: keyless fixture kernel with app-local data.
                     command = command.env("CHAT_AGENT", "fixture");
                 } else {
-                    std::fs::create_dir_all(&data_dir)?;
-                    // CHAT_DB_PATH is a directory PGlite persists into (see the
-                    // sidecar's ChatDbConfig), not a single file.
-                    command = command
-                        .env(
-                            "CHAT_DB_PATH",
-                            data_dir.join("chat-db").to_string_lossy().to_string(),
-                        )
-                        .env("CHAT_AGENT", "anthropic");
+                    command = command.env("CHAT_AGENT", "anthropic");
                     if let Some(key) = anthropic_key() {
                         command = command.env("AI_ANTHROPIC_API_KEY", key);
                     }
@@ -1331,6 +1532,7 @@ pub fn run() {
                     ipc,
                     &sidecar,
                     metadata.launch_id.clone(),
+                    sidecar_readiness,
                 );
                 log::info!(
                     "event=sidecar_spawned launch_id={} pid={child_pid} transport={} telemetry_enabled={} log_level={}",
@@ -1341,6 +1543,7 @@ pub fn run() {
                 );
                 app.manage(sidecar);
             } else {
+                sidecar_readiness.mark_ready();
                 log::info!(
                     "event=sidecar_spawn_skipped launch_id={} reason=external-dev-sidecar transport=http",
                     metadata.launch_id
@@ -1444,21 +1647,64 @@ pub fn run() {
 mod tests {
     use super::{
         authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame,
-        parse_native_logging_config, read_bounded_sidecar_line,
+        observe_sidecar_readiness, parse_native_logging_config, read_bounded_sidecar_line,
+        RendererObservabilityConfig, SidecarReadiness,
     };
     #[cfg(unix)]
     use super::{
         kill_sidecar, monitor_sidecar_process, poll_sidecar_process, running_sidecar_pid,
         write_sidecar_frame, SidecarProcess, SidecarProcessPoll, MAX_IPC_FRAME_BYTES,
     };
+    #[cfg(target_os = "linux")]
+    use super::{prepare_youtube_web_extension, YOUTUBE_WEB_EXTENSION};
     use std::io::Cursor;
     #[cfg(unix)]
     use std::process::{Command, Stdio};
     #[cfg(unix)]
     use std::sync::mpsc::{self, TryRecvError};
+    use std::time::Duration;
     #[cfg(unix)]
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
     use uuid::Uuid;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn builds_and_materializes_the_scoped_youtube_web_extension() {
+        let status = Command::new(env!("BEEP_WEB_EXTENSION_TEST_PATH"))
+            .arg(env!("BEEP_WEB_EXTENSION_PATH"))
+            .status()
+            .expect("compiled WebKit extension contract test should run");
+        assert!(status.success());
+
+        let root = std::env::temp_dir().join(format!("beep-web-extension-{}", Uuid::new_v4()));
+        let extension_dir =
+            prepare_youtube_web_extension(&root).expect("WebKit extension should materialize");
+        let extension_path = extension_dir.join("libbeep_youtube_referrer.so");
+        assert_eq!(
+            std::fs::read(extension_path).expect("WebKit extension should be readable"),
+            YOUTUBE_WEB_EXTENSION
+        );
+
+        std::fs::remove_dir_all(root).expect("WebKit extension fixture should be removed");
+    }
+
+    #[test]
+    fn omits_absent_renderer_observability_options_from_the_wire() {
+        let encoded = serde_json::to_value(RendererObservabilityConfig {
+            build_commit: None,
+            deployment_environment: "qa".to_string(),
+            launch_id: "launch-id".to_string(),
+            log_level: "Info",
+            otlp_url: None,
+            qa_session_id: "session-id".to_string(),
+        })
+        .expect("renderer observability config should serialize");
+
+        assert!(encoded.get("buildCommit").is_none());
+        assert!(encoded.get("otlpUrl").is_none());
+        assert_eq!(encoded["deploymentEnvironment"], "qa");
+        assert_eq!(encoded["logLevel"], "Info");
+    }
 
     #[cfg(unix)]
     fn spawn_test_sidecar(script: &str) -> SidecarProcess {
@@ -1530,6 +1776,41 @@ mod tests {
         assert_eq!(
             read_bounded_sidecar_line(&mut reader, 8).expect("reader should reach EOF"),
             None
+        );
+    }
+
+    #[test]
+    fn waits_for_the_complete_sidecar_ready_marker() {
+        let readiness = SidecarReadiness::new();
+        let waiting_readiness = readiness.clone();
+        let (started_sender, started_receiver) = std::sync::mpsc::channel();
+        let waiter = std::thread::spawn(move || {
+            started_sender
+                .send(())
+                .expect("readiness waiter start should be observed");
+            waiting_readiness.wait_until_ready(Duration::from_secs(1))
+        });
+
+        started_receiver
+            .recv_timeout(Duration::from_secs(1))
+            .expect("readiness waiter should start");
+        assert!(!waiter.is_finished());
+        observe_sidecar_readiness(&readiness, b"BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY\r\n");
+
+        assert_eq!(
+            waiter.join().expect("readiness waiter should finish"),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn fails_readiness_wait_when_the_sidecar_stops_first() {
+        let readiness = SidecarReadiness::new();
+        readiness.mark_failed();
+
+        assert_eq!(
+            readiness.wait_until_ready(Duration::from_secs(1)),
+            Err("bundled sidecar stopped before its RPC transport was ready".to_string())
         );
     }
 

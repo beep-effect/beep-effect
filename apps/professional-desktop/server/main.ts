@@ -43,6 +43,7 @@ import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
+import { SidecarReadyMarker } from "@/runtime/Migrations";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
@@ -155,6 +156,9 @@ const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
           Effect.annotateLogs({ transport: ipcTransport ? "ipc" : "http" })
         )
       );
+      yield* Effect.sync(() => {
+        process.stderr.write(`${SidecarReadyMarker}\n`);
+      });
     })
   ),
   Layer.withSpan("professional_desktop.sidecar.runtime")

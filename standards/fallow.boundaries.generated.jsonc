@@ -2069,6 +2069,7 @@
       {
         "from": "@beep/md",
         "allow": [
+          "@beep/html",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -2076,6 +2077,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/html",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",

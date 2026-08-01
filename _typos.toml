@@ -111,4 +111,6 @@ extend-exclude = [
   "packages/drivers/venice-ai/swagger.yaml",
   # Vendored, version-pinned WHATWG/webref spec data for @beep/html (see data/SOURCES.md).
   "packages/foundation/modeling/html/data/**",
+  # Generated registered BCP 47 subtags are machine-owned identifiers, not prose.
+  "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
 ]

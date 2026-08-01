@@ -6,21 +6,19 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import { A, O } from "@beep/utils";
 import * as S from "effect/Schema";
+import {
+  isPandocKnownConstructorName,
+  PandocListNumberDelimiter,
+  PandocListNumberStyle,
+  PandocMathType,
+  PandocTableAlignmentConstructorName,
+} from "./internal/Pandoc.registry.ts";
 
 const $I = $PandocAstId.create("Pandoc.model");
-
-const withPandocCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown, unknown>>(self: Sch) =>
-  SchemaUtils.withStatics((schema: Sch) => {
-    const decoder = schema as Sch & S.ConstraintDecoder<unknown>;
-
-    return {
-      decodeOption: S.decodeUnknownOption(decoder),
-      fromUnknown: S.decodeUnknownSync(decoder),
-      is: S.is(schema),
-    };
-  })(self);
+type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
 
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
@@ -56,6 +54,91 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
  * @since 0.0.0
  */
 export type PandocApiVersion = typeof PandocApiVersion.Type;
+
+/**
+ * Default Pandoc JSON API version emitted by Md-to-Pandoc projections.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_PANDOC_API_VERSION } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(DEFAULT_PANDOC_API_VERSION.join(".")) // "1.23.1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DEFAULT_PANDOC_API_VERSION: PandocApiVersion = PandocApiVersion.make([1, 23, 1]);
+
+/**
+ * Exact JSON object retained for a future Pandoc constructor.
+ *
+ * The `c` payload is genuinely optional because Pandoc nullary constructors
+ * omit it. Rest fields remain part of the semantic opaque node so a future
+ * constructor can round-trip without guessing which fields matter.
+ *
+ * @example
+ * ```ts
+ * import { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const wire = PandocUnknownConstructorWire.make({ t: "Future", extension: true })
+ * console.log(wire.extension) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocUnknownConstructorWire = S.StructWithRest(
+  S.Struct({
+    c: S.optionalKey(S.Json),
+    t: S.String,
+  }),
+  [S.Record(S.String, S.Json)]
+).pipe(
+  $I.annoteSchema("PandocUnknownConstructorWire", {
+    description: "Exact opaque JSON object for an unknown future Pandoc constructor.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link PandocUnknownConstructorWire}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const wire: PandocUnknownConstructorWire = { t: "Future" }
+ * console.log(wire.t) // "Future"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocUnknownConstructorWire = typeof PandocUnknownConstructorWire.Type;
+
+const makePandocFutureConstructorArbitrary = (fc: ArbitraryFastCheck) =>
+  fc.string().map((suffix) => PandocUnknownConstructorWire.make({ t: `Future${suffix}` }));
+const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
+  S.check(
+    S.makeFilter((wire) => !isPandocKnownConstructorName(wire.t), {
+      identifier: $I`PandocFutureConstructorWireCheck`,
+      title: "Future Pandoc constructor",
+      description: "An opaque Pandoc constructor whose name is absent from every known constructor registry.",
+      message: "Expected a future Pandoc constructor name that is not already known.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocFutureConstructorArbitrary,
+        },
+      },
+    })
+  ),
+  $I.annoteSchema("PandocFutureConstructorWire", {
+    description: "Exact opaque JSON object whose constructor name is absent from every known registry.",
+    toArbitrary: () => makePandocFutureConstructorArbitrary,
+  })
+);
 
 /**
  * Pandoc attribute key/value pair.
@@ -110,15 +193,17 @@ export type PandocKeyValue = typeof PandocKeyValue.Type;
  */
 export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
   {
-    classes: S.Array(S.String).annotateKey({
+    classes: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])).annotateKey({
       description: "Pandoc attribute classes.",
     }),
-    id: S.String.annotateKey({
+    id: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
       description: "Pandoc attribute identifier.",
     }),
-    keyValues: S.Array(PandocKeyValue).annotateKey({
-      description: "Pandoc attribute key/value pairs.",
-    }),
+    keyValues: S.Array(PandocKeyValue)
+      .pipe(SchemaUtils.withConstantDefault<ReadonlyArray<PandocKeyValue>>([]))
+      .annotateKey({
+        description: "Pandoc attribute key/value pairs.",
+      }),
   },
   $I.annote("PandocAttr", {
     description: "Pandoc attribute triple represented with named fields.",
@@ -175,7 +260,7 @@ export declare namespace PandocAttr {
  */
 export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
   {
-    title: S.String.annotateKey({
+    title: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
       description: "Pandoc target title.",
     }),
     url: S.String.annotateKey({
@@ -229,11 +314,7 @@ export declare namespace PandocTarget {
  * @category models
  * @since 0.0.0
  */
-export const PandocMathType = LiteralKit(["InlineMath", "DisplayMath"]).pipe(
-  $I.annoteSchema("PandocMathType", {
-    description: "Pandoc math mode marker.",
-  })
-);
+export { PandocMathType };
 
 /**
  * Runtime type for {@link PandocMathType}.
@@ -264,19 +345,7 @@ export type PandocMathType = typeof PandocMathType.Type;
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberStyle = LiteralKit([
-  "DefaultStyle",
-  "Example",
-  "Decimal",
-  "LowerRoman",
-  "UpperRoman",
-  "LowerAlpha",
-  "UpperAlpha",
-]).pipe(
-  $I.annoteSchema("PandocListNumberStyle", {
-    description: "Pandoc ordered-list numbering style constructor.",
-  })
-);
+export { PandocListNumberStyle };
 
 /**
  * Runtime type for {@link PandocListNumberStyle}.
@@ -307,11 +376,7 @@ export type PandocListNumberStyle = typeof PandocListNumberStyle.Type;
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberDelimiter = LiteralKit(["DefaultDelim", "Period", "OneParen", "TwoParens"]).pipe(
-  $I.annoteSchema("PandocListNumberDelimiter", {
-    description: "Pandoc ordered-list numbering delimiter constructor.",
-  })
-);
+export { PandocListNumberDelimiter };
 
 /**
  * Runtime type for {@link PandocListNumberDelimiter}.
@@ -345,7 +410,7 @@ export type PandocListNumberDelimiter = typeof PandocListNumberDelimiter.Type;
  * @since 0.0.0
  */
 export const PandocInlineChildren = S.Array(
-  S.suspend((): S.Codec<PandocInline.Type, PandocInline.Encoded, unknown, unknown> => PandocInline)
+  S.suspend((): S.Codec<PandocInline.Type, PandocInline.Encoded> => PandocInline)
 ).pipe(
   $I.annoteSchema("PandocInlineChildren", {
     description: "Recursive Pandoc inline child list.",
@@ -410,7 +475,7 @@ export declare namespace PandocInlineChildren {
  * @since 0.0.0
  */
 export const PandocBlockChildren = S.Array(
-  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded, unknown, unknown> => PandocBlock)
+  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded> => PandocBlock)
 ).pipe(
   $I.annoteSchema("PandocBlockChildren", {
     description: "Recursive Pandoc block child list.",
@@ -475,7 +540,7 @@ export declare namespace PandocBlockChildren {
  * @since 0.0.0
  */
 export const PandocListItem = S.Array(
-  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded, unknown, unknown> => PandocBlock)
+  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded> => PandocBlock)
 ).pipe(
   $I.annoteSchema("PandocListItem", {
     description: "One Pandoc list item as a list of blocks.",
@@ -1310,14 +1375,14 @@ export declare namespace Math {
 }
 
 /**
- * Pandoc inline constructor outside the supported v1 surface.
+ * Future Pandoc inline constructor outside the pinned 1.23.1 registry.
  *
  * @example
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
- * console.log(node.constructor) // "Cite"
+ * const node = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * console.log(node.constructorName) // "FutureInline"
  * ```
  *
  * @category models
@@ -1326,17 +1391,34 @@ export declare namespace Math {
 export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline`)(
   "unknownInline",
   {
-    constructor: S.String.annotateKey({
-      description: "Original Pandoc constructor name.",
-    }),
-    payload: S.Unknown.annotateKey({
-      description: "Original Pandoc constructor payload.",
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc constructor object.",
     }),
   },
   $I.annote("UnknownInline", {
-    description: "Pandoc inline constructor outside the supported v1 surface.",
+    description: "Future Pandoc inline constructor outside the pinned 1.23.1 registry.",
   })
-) {}
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
 
 /**
  * Companion namespace for {@link UnknownInline}.
@@ -1345,8 +1427,8 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownInline.Type = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
- * console.log(node.constructor) // "Cite"
+ * const node: UnknownInline.Type = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * console.log(node.constructorName) // "FutureInline"
  * ```
  *
  * @category models
@@ -1358,14 +1440,18 @@ export declare namespace UnknownInline {
    */
   export interface Type {
     readonly _tag: "unknownInline";
-    readonly constructor: string;
-    readonly payload: unknown;
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "unknownInline";
+    readonly wire: PandocUnknownConstructorWire;
+  }
 }
 
 /**
@@ -1402,7 +1488,7 @@ export const PandocInline = S.Union([
   $I.annoteSchema("PandocInline", {
     description: "Pandoc inline union for the v1 compatibility slice.",
   }),
-  withPandocCodecStatics
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1832,7 +1918,10 @@ export declare namespace BulletList {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "bulletlist";
+    readonly items: ReadonlyArray<ReadonlyArray<PandocBlock.Encoded>>;
+  }
 }
 
 /**
@@ -1909,7 +1998,13 @@ export declare namespace OrderedList {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "orderedlist";
+    readonly delimiter: PandocListNumberDelimiter;
+    readonly items: ReadonlyArray<ReadonlyArray<PandocBlock.Encoded>>;
+    readonly start: number;
+    readonly style: PandocListNumberStyle;
+  }
 }
 
 /**
@@ -2031,14 +2126,290 @@ export declare namespace Div {
   }
 }
 
+const PandocAttrPayload = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
+const PandocTablePayloadShape = S.Tuple([PandocAttrPayload, S.Json, S.Array(S.Json), S.Json, S.Array(S.Json), S.Json]);
+const PandocTargetPayload = S.Tuple([S.String, S.String]);
+const pandocConstructorWithPayload = <const Name extends string, Payload extends S.Top>(t: Name, c: Payload) =>
+  S.Struct({ c, t: S.Literal(t) });
+const pandocNullaryConstructor = <const Name extends string>(t: Name) =>
+  S.Struct({ c: S.optionalKey(S.Undefined), t: S.Literal(t) });
+const PandocMathTypeWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocMathType,
+});
+const PandocListNumberStyleWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberStyle,
+});
+const PandocListNumberDelimiterWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberDelimiter,
+});
+const PandocTableAlignmentWire = S.Union([
+  S.Struct({
+    c: S.optionalKey(S.Undefined),
+    t: PandocTableAlignmentConstructorName,
+  }),
+  PandocFutureConstructorWire,
+]);
+const PandocTableColumnWidthWire = S.Union([
+  pandocConstructorWithPayload("ColWidth", S.Finite),
+  pandocNullaryConstructor("ColWidthDefault"),
+  PandocFutureConstructorWire,
+]);
+const DeferredPandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() => PandocBlockWire);
+const DeferredPandocTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() => PandocSemanticTablePayloadWire);
+
+const PandocInlineWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Str", S.String),
+    pandocNullaryConstructor("Space"),
+    pandocNullaryConstructor("SoftBreak"),
+    pandocNullaryConstructor("LineBreak"),
+    pandocConstructorWithPayload("Emph", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strong", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strikeout", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Code", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("Link", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Image", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Span", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("Note", S.Array(DeferredPandocBlockWire)),
+    pandocConstructorWithPayload("Math", S.Tuple([PandocMathTypeWire, S.String])),
+    PandocFutureConstructorWire,
+  ])
+);
+
+const PandocTableCaptionPairWire = S.Tuple([
+  PandocInlineWire.pipe(S.Array, S.NullOr),
+  S.Array(DeferredPandocBlockWire),
+]);
+const PandocTableCaptionWire = S.Union([PandocTableCaptionPairWire, PandocFutureConstructorWire]);
+const PandocTableColumnSpecWire = S.Union([
+  S.Tuple([PandocTableAlignmentWire, PandocTableColumnWidthWire]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableCellWire = S.Union([
+  S.Tuple([PandocAttrPayload, PandocTableAlignmentWire, S.Int, S.Int, S.Array(DeferredPandocBlockWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableRowWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableCellWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableHeadOrFootWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableRowWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableBodyWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Int, S.Array(PandocTableRowWire), S.Array(PandocTableRowWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocSemanticTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Tuple([
+    PandocAttrPayload,
+    PandocTableCaptionWire,
+    S.Array(PandocTableColumnSpecWire),
+    PandocTableHeadOrFootWire,
+    S.Array(PandocTableBodyWire),
+    PandocTableHeadOrFootWire,
+  ])
+);
+
+const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Plain", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Para", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Header", S.Tuple([S.Int, PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("BlockQuote", S.Array(PandocBlockWire)),
+    pandocConstructorWithPayload("CodeBlock", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("BulletList", PandocBlockWire.pipe(S.Array, S.Array)),
+    pandocConstructorWithPayload(
+      "OrderedList",
+      S.Tuple([
+        S.Tuple([S.Int, PandocListNumberStyleWire, PandocListNumberDelimiterWire]),
+        PandocBlockWire.pipe(S.Array, S.Array),
+      ])
+    ),
+    pandocNullaryConstructor("HorizontalRule"),
+    pandocConstructorWithPayload("Div", S.Tuple([PandocAttrPayload, S.Array(PandocBlockWire)])),
+    pandocConstructorWithPayload("Table", DeferredPandocTablePayloadWire),
+    PandocFutureConstructorWire,
+  ])
+);
+const isPandocSemanticTablePayload = S.is(PandocSemanticTablePayloadWire);
+const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
+  const futureConstructor = makePandocFutureConstructorArbitrary(fc);
+  const attr = fc.tuple(fc.string(), fc.array(fc.string()), fc.array(fc.tuple(fc.string(), fc.string())));
+  const inline = fc.oneof(
+    fc.string().map((c) => S.Json.make({ c, t: "Str" })),
+    fc.constant(S.Json.make({ t: "Space" })),
+    futureConstructor
+  );
+  const block = fc.oneof(
+    fc.array(inline).map((c) => S.Json.make({ c, t: "Para" })),
+    fc.constant(S.Json.make({ t: "HorizontalRule" })),
+    futureConstructor
+  );
+  const captionPair = fc.tuple(fc.option(fc.array(inline), { nil: null }), fc.array(block));
+  const caption = fc.oneof(captionPair, futureConstructor);
+  const alignment = fc.oneof(
+    fc.constantFrom("AlignLeft", "AlignRight", "AlignCenter", "AlignDefault").map((t) => S.Json.make({ t })),
+    futureConstructor
+  );
+  const columnWidth = fc.oneof(
+    fc.integer().map((c) => S.Json.make({ c, t: "ColWidth" })),
+    fc.constant(S.Json.make({ t: "ColWidthDefault" })),
+    futureConstructor
+  );
+  const columnSpec = fc.oneof(fc.tuple(alignment, columnWidth), futureConstructor);
+  const cell = fc.oneof(fc.tuple(attr, alignment, fc.integer(), fc.integer(), fc.array(block)), futureConstructor);
+  const row = fc.oneof(fc.tuple(attr, fc.array(cell)), futureConstructor);
+  const headOrFoot = fc.oneof(fc.tuple(attr, fc.array(row)), futureConstructor);
+  const body = fc.oneof(fc.tuple(attr, fc.integer(), fc.array(row), fc.array(row)), futureConstructor);
+
+  return fc
+    .tuple(attr, caption, fc.array(columnSpec), headOrFoot, fc.array(body), headOrFoot)
+    .map(PandocTablePayloadShape.make);
+};
+class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
+  {
+    c: S.optionalKey(S.Json),
+    t: S.String,
+  },
+  $I.annote("PandocConstructorJson", {
+    description: "Internal structural view of a Pandoc JSON constructor.",
+  })
+) {}
+const PandocJsonArray = S.Array(S.Json);
+const PandocTableCaptionPair = S.Tuple([S.NullOr(PandocJsonArray), PandocJsonArray]);
+const decodePandocConstructorOption = S.decodeUnknownOption(PandocConstructorJson);
+const decodePandocJsonArrayOption = S.decodeUnknownOption(PandocJsonArray);
+const decodePandocStringOption = S.decodeUnknownOption(S.String);
+const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCaptionPair);
+
+/**
+ * Canonical validated Pandoc table payload.
+ *
+ * @remarks
+ * Tables remain an explicit compatibility gap, so the complete six-field JSON
+ * tuple is retained as the sole stored truth. Attribute and caption inspection
+ * are derived from this payload by {@link Table}.
+ *
+ * @example
+ * ```ts
+ * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const payload = PandocTablePayload.make([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
+ * console.log(payload.length) // 6
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const PandocTablePayload = PandocTablePayloadShape.pipe(
+  S.check(
+    S.makeFilter(isPandocSemanticTablePayload, {
+      identifier: $I`PandocTablePayloadSemanticCheck`,
+      title: "Semantically valid Pandoc table payload",
+      description: "A six-field Pandoc table payload accepted by the strict recursive constructor grammar.",
+      message: "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocTablePayloadArbitrary,
+        },
+      },
+    })
+  ),
+  $I.annoteSchema("PandocTablePayload", {
+    description: "Canonical validated six-field Pandoc table payload retained without duplicate semantic fields.",
+    toArbitrary: () => makePandocTablePayloadArbitrary,
+  })
+);
+
+/**
+ * Runtime type for {@link PandocTablePayload}.
+ *
+ * @example
+ * ```ts
+ * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(PandocTablePayload)([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
+ * if (Result.isSuccess(decoded)) {
+ *   const payload: PandocTablePayload = decoded.success
+ *   console.log(payload.length) // 6
+ * }
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export type PandocTablePayload = typeof PandocTablePayload.Type;
+
+const tableCaptionInlineFromWire = (input: S.Json): O.Option<PandocInline.Type> =>
+  O.flatMap(decodePandocConstructorOption(input), (wire) => {
+    if (wire.t === "Str") {
+      return O.map(decodePandocStringOption(wire.c), (text) => Str.make({ text }));
+    }
+    if (wire.t === "Space") {
+      return O.some(Space.make());
+    }
+    if (wire.t === "SoftBreak") {
+      return O.some(SoftBreak.make());
+    }
+    if (wire.t === "LineBreak") {
+      return O.some(LineBreak.make());
+    }
+    return O.none();
+  });
+
+const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
+  O.getOrElse(
+    O.map(
+      O.flatMap(
+        O.filter(decodePandocConstructorOption(input), (wire) => wire.t === "Plain" || wire.t === "Para"),
+        (wire) => decodePandocJsonArrayOption(wire.c)
+      ),
+      (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire))
+    ),
+    A.emptyReadonly
+  );
+
+const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
+  O.match(decodePandocTableCaptionPairOption(input), {
+    onNone: A.emptyReadonly,
+    onSome: ([shortCaption, longCaption]) => {
+      const short = shortCaption === null ? [] : A.getSomes(A.map(shortCaption, tableCaptionInlineFromWire));
+      return A.isReadonlyArrayNonEmpty(short) ? short : A.flatMap(longCaption, tableCaptionInlinesFromBlockWire);
+    },
+  });
+
 /**
  * Pandoc table block captured as an explicit gap node.
  *
  * @example
  * ```ts
- * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
+ * const node = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
  * console.log(node._tag) // "table"
  * ```
  *
@@ -2048,29 +2419,46 @@ export declare namespace Div {
 export class Table extends S.TaggedClass<Table>($I`Table`)(
   "table",
   {
-    attr: PandocAttr.annotateKey({
-      description: "Table attributes.",
-    }),
-    caption: PandocInlineChildren.annotateKey({
-      description: "Best-effort table caption inline children.",
-    }),
-    payload: S.Unknown.annotateKey({
+    payload: PandocTablePayload.annotateKey({
       description: "Original Pandoc table payload.",
     }),
   },
   $I.annote("Table", {
     description: "Pandoc table block captured as an explicit gap node.",
   })
-) {}
+) {
+  /**
+   * Table attributes derived from the canonical payload.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get attr(): PandocAttr {
+    const [id, classes, keyValues] = this.payload[0];
+    return PandocAttr.make({ classes, id, keyValues });
+  }
+
+  /**
+   * Best-effort caption derived from the canonical payload.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get caption(): ReadonlyArray<PandocInline.Type> {
+    return tableCaptionFromPayload(this.payload[1]);
+  }
+}
 
 /**
  * Companion namespace for {@link Table}.
  *
  * @example
  * ```ts
- * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: Table.Type = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
+ * const node: Table.Type = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
  * console.log(node._tag) // "table"
  * ```
  *
@@ -2085,7 +2473,7 @@ export declare namespace Table {
     readonly _tag: "table";
     readonly attr: PandocAttr.Type;
     readonly caption: PandocInlineChildren.Type;
-    readonly payload: unknown;
+    readonly payload: PandocTablePayload;
   }
 
   /**
@@ -2093,21 +2481,19 @@ export declare namespace Table {
    */
   export interface Encoded {
     readonly _tag: "table";
-    readonly attr: PandocAttr.Encoded;
-    readonly caption: PandocInlineChildren.Encoded;
-    readonly payload: unknown;
+    readonly payload: PandocTablePayload;
   }
 }
 
 /**
- * Pandoc block constructor outside the supported v1 surface.
+ * Future Pandoc block constructor outside the pinned 1.23.1 registry.
  *
  * @example
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownBlock.make({ constructor: "Figure", payload: {} })
- * console.log(node.constructor) // "Figure"
+ * const node = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * console.log(node.constructorName) // "FutureBlock"
  * ```
  *
  * @category models
@@ -2116,17 +2502,34 @@ export declare namespace Table {
 export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
   "unknownBlock",
   {
-    constructor: S.String.annotateKey({
-      description: "Original Pandoc constructor name.",
-    }),
-    payload: S.Unknown.annotateKey({
-      description: "Original Pandoc constructor payload.",
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc constructor object.",
     }),
   },
   $I.annote("UnknownBlock", {
-    description: "Pandoc block constructor outside the supported v1 surface.",
+    description: "Future Pandoc block constructor outside the pinned 1.23.1 registry.",
   })
-) {}
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
 
 /**
  * Companion namespace for {@link UnknownBlock}.
@@ -2135,8 +2538,8 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownBlock.Type = UnknownBlock.make({ constructor: "Figure", payload: {} })
- * console.log(node.constructor) // "Figure"
+ * const node: UnknownBlock.Type = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * console.log(node.constructorName) // "FutureBlock"
  * ```
  *
  * @category models
@@ -2148,14 +2551,18 @@ export declare namespace UnknownBlock {
    */
   export interface Type {
     readonly _tag: "unknownBlock";
-    readonly constructor: string;
-    readonly payload: unknown;
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "unknownBlock";
+    readonly wire: PandocUnknownConstructorWire;
+  }
 }
 
 /**
@@ -2189,7 +2596,7 @@ export const PandocBlock = S.Union([
   $I.annoteSchema("PandocBlock", {
     description: "Pandoc block union for the v1 compatibility slice.",
   }),
-  withPandocCodecStatics
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -2257,24 +2664,563 @@ export declare namespace PandocBlock {
 }
 
 /**
- * Pandoc document metadata.
+ * Companion recursive type knot for {@link PandocMetaValue}.
  *
  * @example
  * ```ts
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
- * import { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ * import { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const decode = S.decodeUnknownSync(PandocMeta)
- * console.log(decode({ title: "Doc" }).title)
+ * const decoded = S.decodeUnknownResult(PandocMetaValue)({
+ *   _tag: "metaList",
+ *   values: [{ _tag: "metaString", value: "Document" }],
+ * })
+ * if (Result.isSuccess(decoded)) {
+ *   const value: PandocMetaValue.Type = decoded.success
+ *   console.log(value._tag) // "metaList"
+ * }
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PandocMeta = S.Record(S.String, S.Unknown).pipe(
-  $I.annoteSchema("PandocMeta", {
-    description: "Pandoc document metadata.",
+export declare namespace PandocMetaValue {
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBoolShape {
+    readonly _tag: "metaBool";
+    readonly value: boolean;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaStringShape {
+    readonly _tag: "metaString";
+    readonly value: string;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesEncodedShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksEncodedShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Type>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListEncodedShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Encoded>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Type>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapEncodedShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Encoded>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaShape {
+    readonly _tag: "unknownMeta";
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaEncodedShape {
+    readonly _tag: "unknownMeta";
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export type Type =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesShape
+    | MetaBlocksShape
+    | MetaListShape
+    | MetaMapShape
+    | UnknownMetaShape;
+
+  /**
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesEncodedShape
+    | MetaBlocksEncodedShape
+    | MetaListEncodedShape
+    | MetaMapEncodedShape
+    | UnknownMetaEncodedShape;
+}
+
+const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Encoded> = S.suspend(
+  () => PandocMetaValue
+);
+
+/**
+ * Boolean Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaBool.make({ value: true }).value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
+  $I.annoteSchema("MetaBool", { description: "Boolean Pandoc metadata value." })
+);
+
+/**
+ * String Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaString.make({ value: "Document" }).value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe(
+  $I.annoteSchema("MetaString", { description: "String Pandoc metadata value." })
+);
+
+/**
+ * Inline-list Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaInlines.make({ children: [] }).children.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlineChildren }).pipe(
+  $I.annoteSchema("MetaInlines", { description: "Inline-list Pandoc metadata value." })
+);
+
+/**
+ * Block-list Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaBlocks.make({ children: [] }).children.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockChildren }).pipe(
+  $I.annoteSchema("MetaBlocks", { description: "Block-list Pandoc metadata value." })
+);
+
+/**
+ * Recursive list Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaList, MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaList.make({ values: [MetaString.make({ value: "one" })] }).values.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaValue.pipe(S.Array) }).pipe(
+  $I.annoteSchema("MetaList", { description: "Recursive list Pandoc metadata value." })
+);
+
+/**
+ * Recursive mapping Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaMap, MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaMap.make({ entries: { title: MetaString.make({ value: "Doc" }) } }).entries.title)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaMap = S.TaggedStruct("metaMap", {
+  entries: S.Record(S.String, DeferredPandocMetaValue),
+}).pipe($I.annoteSchema("MetaMap", { description: "Recursive mapping Pandoc metadata value." }));
+
+/**
+ * Future Pandoc metadata constructor outside the supported surface.
+ *
+ * @example
+ * ```ts
+ * import { UnknownMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(UnknownMeta.make({ wire: { t: "MetaFuture" } }).constructorName)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
+  "unknownMeta",
+  {
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc metadata constructor object.",
+    }),
+  },
+  $I.annote("UnknownMeta", {
+    description: "Future Pandoc metadata constructor outside the supported surface.",
   })
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
+
+/**
+ * Recursive semantic Pandoc metadata-value union.
+ *
+ * @example
+ * ```ts
+ * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(PandocMetaValue.is(MetaString.make({ value: "Doc" })))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocMetaValue = S.Union([
+  MetaBool,
+  MetaString,
+  MetaInlines,
+  MetaBlocks,
+  MetaList,
+  MetaMap,
+  UnknownMeta,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("PandocMetaValue", {
+    description: "Recursive semantic Pandoc metadata-value union.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Decoded boolean metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBool = MetaBool.make({ value: true })
+ * console.log(value.value) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBool = typeof MetaBool.Type;
+
+/**
+ * Decoded string metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaString = MetaString.make({ value: "Document" })
+ * console.log(value.value) // "Document"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaString = typeof MetaString.Type;
+
+/**
+ * Decoded inline-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlines = MetaInlines.make({ children: [] })
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlines = typeof MetaInlines.Type;
+
+/**
+ * Encoded inline-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaInlinesEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlinesEncoded = { _tag: "metaInlines", children: [] }
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlinesEncoded = typeof MetaInlines.Encoded;
+
+/**
+ * Decoded block-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocks = MetaBlocks.make({ children: [] })
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocks = typeof MetaBlocks.Type;
+
+/**
+ * Encoded block-list metadata payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaBlocksEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocksEncoded = { _tag: "metaBlocks", children: [] }
+ * console.log(value.children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocksEncoded = typeof MetaBlocks.Encoded;
+
+/**
+ * Decoded recursive metadata-list payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaList } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaList = MetaList.make({ values: [] })
+ * console.log(value.values.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaList = typeof MetaList.Type;
+
+/**
+ * Encoded recursive metadata-list payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaListEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaListEncoded = { _tag: "metaList", values: [] }
+ * console.log(value.values.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaListEncoded = typeof MetaList.Encoded;
+
+/**
+ * Decoded recursive metadata-map payload.
+ *
+ * @example
+ * ```ts
+ * import { MetaMap } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMap = MetaMap.make({ entries: {} })
+ * console.log(Object.keys(value.entries).length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMap = typeof MetaMap.Type;
+
+/**
+ * Encoded recursive metadata-map payload.
+ *
+ * @example
+ * ```ts
+ * import type { MetaMapEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMapEncoded = { _tag: "metaMap", entries: {} }
+ * console.log(Object.keys(value.entries).length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMapEncoded = typeof MetaMap.Encoded;
+
+/**
+ * Encoded exact future metadata constructor.
+ *
+ * @example
+ * ```ts
+ * import type { UnknownMetaEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: UnknownMetaEncoded = { _tag: "unknownMeta", wire: { t: "MetaFuture" } }
+ * console.log(value.wire.t) // "MetaFuture"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnknownMetaEncoded = typeof UnknownMeta.Encoded;
+
+/**
+ * Recursive decoded Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ * import type { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValue = MetaString.make({ value: "Document" })
+ * console.log(value._tag) // "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValue = typeof PandocMetaValue.Type;
+
+/**
+ * Recursive encoded Pandoc metadata value.
+ *
+ * @example
+ * ```ts
+ * import type { PandocMetaValueEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValueEncoded = { _tag: "metaString", value: "Document" }
+ * console.log(value._tag) // "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
+
+/**
+ * Pandoc document metadata map.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { MetaString, PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const result = S.decodeUnknownResult(PandocMeta)({
+ *   title: MetaString.make({ value: "Doc" }),
+ * })
+ * console.log(Result.isSuccess(result)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
+  $I.annoteSchema("PandocMeta", {
+    description: "Recursive semantic Pandoc document metadata map.",
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -2282,10 +3228,11 @@ export const PandocMeta = S.Record(S.String, S.Unknown).pipe(
  *
  * @example
  * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  * import type { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const meta: PandocMeta = { title: "Doc" }
- * console.log(meta.title)
+ * const meta: PandocMeta = { title: MetaString.make({ value: "Document" }) }
+ * console.log(meta.title?._tag) // "metaString"
  * ```
  *
  * @category models
@@ -2310,7 +3257,9 @@ export type PandocMeta = typeof PandocMeta.Type;
 export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocument`)(
   "pandocDocument",
   {
-    apiVersion: PandocApiVersion.annotateKey({
+    apiVersion: PandocApiVersion.pipe(
+      SchemaUtils.withConstantDefault<PandocApiVersion>(DEFAULT_PANDOC_API_VERSION)
+    ).annotateKey({
       description: "Pandoc API version tuple.",
     }),
     blocks: PandocBlockChildren.annotateKey({

@@ -13,6 +13,11 @@ derived from the following sources. Attribution is required and provided here.
    - License: Creative Commons Attribution 4.0 International (CC-BY-4.0).
    - "HTML Standard" by WHATWG, used under CC-BY-4.0.
 
-These upstream sources are themselves extracted from the WHATWG HTML Standard.
-Generated schema source under src/ is a derivative of the above and carries the
-same attribution obligations.
+3. IANA Language Subtag Registry
+   (https://www.iana.org/assignments/language-subtag-registry/)
+   - File: data/iana/language-subtag-registry.txt
+   - Drives RFC 5646 / BCP 47 language-tag validity checks.
+
+The W3C webref snapshots are themselves extracted from the WHATWG HTML
+Standard. Generated schema source under src/ is a derivative of the applicable
+sources above and carries the same attribution obligations.

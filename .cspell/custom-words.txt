@@ -363,3 +363,9 @@ yeet
 zazuko
 opclass
 pkey
+lossily
+mathml
+noresize
+nullary
+rcdata
+srcdoc

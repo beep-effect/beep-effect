@@ -12,6 +12,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { renderSafeHtml, safeHtmlValue } from "./Md.html.ts";
 import {
   Admonition,
   A as ANode,
@@ -65,9 +66,24 @@ import {
   renderWith,
   renderWithUnsafe,
 } from "./Md.render.ts";
+import {
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
+  documentSafetyIssues,
+  refineSafeDocument,
+} from "./Md.safe.ts";
 import type { JsonObject } from "@beep/schema";
 import type { Result } from "effect";
-import type { AdmonitionKind, Block, EmbedKind, Inline, ListItemChild, TableAlignment } from "./Md.model.ts";
+import type {
+  AdmonitionKind,
+  Block,
+  EmbedKind,
+  Inline,
+  ListItemChild,
+  TableAlignment,
+  TaskListItemSpec,
+} from "./Md.model.ts";
 
 /**
  * Inline constructor input accepted by text-oriented builders.
@@ -266,8 +282,23 @@ export type ListItemContentBuilder<Node> = {
  */
 export type ListItemInput = ListItemContent | Li;
 
+type TaskListCompatibilityInput =
+  | string
+  | TaskItem
+  | {
+      readonly text: string;
+      readonly checked?: boolean;
+    }
+  | {
+      readonly children: ListItemContent;
+      readonly checked?: boolean;
+    };
+
 /**
  * Input accepted by task list constructors.
+ *
+ * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
+ * {@link taskListFromItems}. This union remains for shorthand compatibility.
  *
  * @example
  * ```ts
@@ -280,17 +311,7 @@ export type ListItemInput = ListItemContent | Li;
  * @category models
  * @since 0.0.0
  */
-export type TaskListItemInput =
-  | string
-  | TaskItem
-  | {
-      readonly text: string;
-      readonly checked?: boolean;
-    }
-  | {
-      readonly children: ListItemContent;
-      readonly checked?: boolean;
-    };
+export type TaskListItemInput = TaskListCompatibilityInput;
 
 /**
  * Input accepted by table cell constructors.
@@ -498,7 +519,7 @@ const makeListItemContentBuilder = <Node>(
 
 const asListItem = (input: ListItemInput): Li => (Li.is(input) ? input : li(input));
 
-const asTaskItem = (input: TaskListItemInput): TaskItem =>
+const asTaskItem = (input: TaskListCompatibilityInput): TaskItem =>
   Match.value(input).pipe(
     Match.when(TaskItem.is, (item) => item),
     Match.when(P.isString, (value) => taskItem(value)),
@@ -895,6 +916,9 @@ export const taskItem = (children: ListItemContent, options: { readonly checked?
     ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
   });
 
+const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInput>): TaskList =>
+  TaskList.make({ children: A.map(children, asTaskItem) });
+
 /**
  * Creates a GFM task list block.
  *
@@ -906,11 +930,31 @@ export const taskItem = (children: ListItemContent, options: { readonly checked?
  * console.log(node._tag) // "taskList"
  * ```
  *
+ * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+ * ambiguous strings and object shapes for compatibility.
  * @category constructors
  * @since 0.0.0
  */
-export const taskList = (children: ReadonlyArray<TaskListItemInput>): TaskList =>
-  TaskList.make({ children: A.map(children, asTaskItem) });
+export const taskList = taskListCompatibility;
+
+/**
+ * Creates a GFM task list from canonical tagged task items.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.taskListFromItems([
+ *   Md.taskItem("Done", { checked: true }),
+ *   Md.taskItem("Todo"),
+ * ])
+ * console.log(node.children.length) // 2
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): TaskList => TaskList.make({ children });
 
 /**
  * Creates a block quote container.
@@ -1089,8 +1133,8 @@ export const embed = (
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
  * ```
  *
  * @category constructors
@@ -1106,8 +1150,8 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
  * ```
  *
  * @category constructors
@@ -1121,10 +1165,11 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  *
- * const program = Md.youtubeEffect("dQw4w9WgXcQ")
- * console.log(program)
+ * const program = Md.youtubeEffect("M7lc1UVf-VE")
+ * Effect.runPromise(program).then((node) => console.log(node._tag)) // "youtube"
  * ```
  *
  * @category constructors
@@ -1143,7 +1188,7 @@ export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: s
  * ```ts
  * import { Md } from "@beep/md"
  *
- * const node = Md.youtubeUnsafe("dQw4w9WgXcQ")
+ * const node = Md.youtubeUnsafe("M7lc1UVf-VE")
  * console.log(node._tag) // "youtube"
  * ```
  *
@@ -1215,7 +1260,11 @@ export const Md = {
   blockquote,
   br,
   code,
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
   del,
+  documentSafetyIssues,
   embed,
   em,
   footnoteDef,
@@ -1239,6 +1288,7 @@ export const Md = {
   pre,
   rawHtml,
   rawMarkdown,
+  refineSafeDocument,
   render,
   renderEffectWith,
   renderEffectWithUnsafe,
@@ -1246,15 +1296,22 @@ export const Md = {
   renderHtmlUnsafe,
   renderPlainText,
   renderPlainTextUnsafe,
+  renderSafeHtml,
   renderUnsafe,
   renderWith,
   renderWithUnsafe,
   strong,
+  safeHtmlValue,
   table,
   tableCell,
   tableRow,
   taskItem,
-  taskList,
+  /**
+   * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+   * ambiguous strings and object shapes for compatibility.
+   */
+  taskList: taskListCompatibility,
+  taskListFromItems,
   text,
   ul,
   youtube,

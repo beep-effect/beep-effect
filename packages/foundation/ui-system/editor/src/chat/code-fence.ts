@@ -33,10 +33,20 @@ const CODE_FENCE_OPENER = /^[ \t]*`{3,}([\w-]+)?[ \t]?$/;
  *
  * @example
  * ```ts
- * import { $isInsideCodeBlock } from "@beep/editor/chat"
+ * import { $isInsideCodeBlock } from "@beep/editor/chat/code-fence"
+ * import { $createCodeNode, CodeNode } from "@lexical/code"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { $createTextNode, $getRoot } from "lexical"
  *
- * // Inside a Lexical read/update context:
- * const inCode = $isInsideCodeBlock()
+ * const editor = createHeadlessEditor({ nodes: [CodeNode] })
+ * editor.update(() => {
+ *   const code = $createCodeNode("ts")
+ *   const text = $createTextNode("const answer = 42")
+ *   code.append(text)
+ *   $getRoot().append(code)
+ *   text.select(text.getTextContentSize(), text.getTextContentSize())
+ *   console.log($isInsideCodeBlock()) // true
+ * }, { discrete: true })
  * ```
  *
  * @category guards
@@ -55,10 +65,20 @@ export const $isInsideCodeBlock = (): boolean => {
  *
  * @example
  * ```ts
- * import { $openCodeFence } from "@beep/editor/chat"
+ * import { $openCodeFence } from "@beep/editor/chat/code-fence"
+ * import { CodeNode } from "@lexical/code"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { $createParagraphNode, $createTextNode, $getRoot } from "lexical"
  *
- * // Inside a Lexical update context, on Enter:
- * const opened = $openCodeFence()
+ * const editor = createHeadlessEditor({ nodes: [CodeNode] })
+ * editor.update(() => {
+ *   const paragraph = $createParagraphNode()
+ *   const text = $createTextNode("\u0060\u0060\u0060ts")
+ *   paragraph.append(text)
+ *   $getRoot().append(paragraph)
+ *   text.select(text.getTextContentSize(), text.getTextContentSize())
+ *   console.log($openCodeFence()) // true
+ * }, { discrete: true })
  * ```
  *
  * @category commands

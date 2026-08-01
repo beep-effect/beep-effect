@@ -228,12 +228,28 @@
       "reason": "Integration descriptor intentionally couples an Effectful handler with generated JSON-schema objects; the owning Effect AI Tool schemas remain the executable parameter and success truth."
     },
     {
-      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
-      "symbol": "HtmlElementMeta",
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "LexicalNodeWire",
       "kind": "object-struct-schema",
       "status": "exception",
-      "owner": "@beep/html",
-      "reason": "Generated metadata-lookup schema for the ELEMENT_META table (not a domain entity); an annotated S.Struct with a derived type is intentional over S.Class."
+      "owner": "@beep/lexical-schema",
+      "reason": "Lossless persistence and migration wire schema. S.StructWithRest must retain every unknown future node field, version, opaque child, and NodeState key exactly; an S.Class has a closed field set and would discard required wire data. Exact decode/encode identity is property-tested."
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "SerializedEditorStateWire",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/lexical-schema",
+      "reason": "Lossless editor-state envelope whose root and nested nodes admit arbitrary future extension keys. S.StructWithRest preserves those keys exactly; an S.Class would close the envelope and violate the property-tested wire identity contract."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "symbol": "PandocUnknownConstructorWire",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/pandoc-ast",
+      "reason": "Exact future-constructor wire schema. S.StructWithRest preserves every unknown top-level Pandoc JSON field unchanged; an S.Class cannot retain arbitrary future keys and would break strict/lossless interchange identity."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
@@ -318,6 +334,14 @@
       "line": 9,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "symbol": "ChatComposerMountConfig",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/editor",
+      "reason": "React mount-time runtime contract containing non-serializable attachment and send callback ports. It is seeded into editor-scoped Atom state once per mount and is not persisted or admitted from an external data boundary."
     },
     {
       "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",

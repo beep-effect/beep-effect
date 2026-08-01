@@ -41,7 +41,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * @example
  * ```ts
- * import { SerializedCodeBlockNode } from "@beep/editor"
+ * import { SerializedCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * const payload = SerializedCodeBlockNode.make({
  *   format: "",
@@ -76,7 +76,7 @@ const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(
  *
  * @example
  * ```tsx
- * import { $createCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($createCodeBlockNode("export {}", "typescript").getType()) // "codeblock"
  * ```
@@ -94,23 +94,19 @@ export class CodeBlockNode extends DecoratorBlockNode {
     this.__language = language;
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override getType(): string {
     return "codeblock";
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override clone(node: CodeBlockNode): CodeBlockNode {
     return new CodeBlockNode(node.__code, node.__language, node.__format, node.__key);
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): CodeBlockNode {
     const decoded = Result.getOrThrowWith(decodeSerializedCodeBlockNode(serializedNode), schemaIssueToError);
     return $createCodeBlockNode(decoded.code, decoded.language);
   }
 
-  // fallow-ignore-next-line unused-class-member -- called by Lexical serialization.
   override exportJSON(): SerializedCodeBlockNode {
     const serialized = super.exportJSON();
     return SerializedCodeBlockNode.make({
@@ -122,12 +118,10 @@ export class CodeBlockNode extends DecoratorBlockNode {
   }
 
   // Copying the message, or exporting it to plain text, still yields the code.
-  // fallow-ignore-next-line unused-class-member -- called by Lexical text export.
   override getTextContent(): string {
     return this.__code;
   }
 
-  // fallow-ignore-next-line unused-class-member -- called by Lexical rendering.
   override decorate(_editor: LexicalEditor, _config: EditorConfig): JSX.Element {
     return <CodeBlockView code={this.__code} language={this.__language} />;
   }
@@ -138,7 +132,7 @@ export class CodeBlockNode extends DecoratorBlockNode {
  *
  * @example
  * ```ts
- * import { $createCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($createCodeBlockNode("export {}", "ts").getTextContent()) // "export {}"
  * ```
@@ -154,7 +148,7 @@ export const $createCodeBlockNode = (code: string, language: string): CodeBlockN
  *
  * @example
  * ```ts
- * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor"
+ * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * console.log($isCodeBlockNode($createCodeBlockNode("x", "ts"))) // true
  * ```

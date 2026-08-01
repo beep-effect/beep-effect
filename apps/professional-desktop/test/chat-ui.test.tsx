@@ -101,7 +101,7 @@ describe("StreamingBlocks", () => {
           { cells: [{ children: [{ type: "text", text: "Language" }] }, { children: [{ type: "text", text: "TS" }] }] },
         ],
       },
-      { type: "youtube", videoId: "dQw4w9WgXcQ" },
+      { type: "youtube", videoId: "M7lc1UVf-VE" },
     ];
 
     const { container } = render(<StreamingBlocks blocks={blocks} />);
@@ -119,7 +119,7 @@ describe("StreamingBlocks", () => {
     expect(container.querySelector("table")).toHaveTextContent("Language");
     expect(container.querySelector("iframe")).toHaveAttribute(
       "src",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+      "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
     );
   });
 

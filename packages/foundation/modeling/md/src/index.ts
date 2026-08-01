@@ -12,11 +12,12 @@
  * ```ts
  * import { VERSION } from "@beep/md"
  *
- * console.log(VERSION) // "0.0.2"
+ * const version: "0.0.2" = VERSION
+ * console.log(version)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const VERSION = "0.0.2" as const;
 
@@ -31,8 +32,8 @@ export const VERSION = "0.0.2" as const;
  * console.log(renderPlainTextBlocks([Md.h1("Hello")])) // "Hello"
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export * from "./Md.behavior.ts";
 /**
@@ -45,10 +46,26 @@ export * from "./Md.behavior.ts";
  * console.log(escapeMarkdownText("#")) // "\\#"
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export * from "./Md.escape.ts";
+/**
+ * Direct safe-HTML AST projection and opaque safe-output rendering.
+ *
+ * @example
+ * ```ts
+ * import { Md, renderSafeHtml, safeHtmlValue } from "@beep/md"
+ * import { Result } from "effect"
+ *
+ * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
+ * console.log(safeHtmlValue(renderSafeHtml(document))) // "<p>Hello</p>"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export * from "./Md.html.ts";
 /**
  * Schema-first Markdown AST models.
  *
@@ -59,8 +76,8 @@ export * from "./Md.escape.ts";
  * console.log(Document.make({ children: [] })._tag) // "document"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./Md.model.ts";
 /**
@@ -73,10 +90,25 @@ export * from "./Md.model.ts";
  * console.log(MarkdownAdapter.render(Md.make([Md.p`Hello`]))) // "Hello"
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export * from "./Md.render.ts";
+/**
+ * Branded user-content trust-boundary refinements and structured safety issues.
+ *
+ * @example
+ * ```ts
+ * import { Md, refineSafeDocument } from "@beep/md"
+ * import { Result } from "effect"
+ *
+ * console.log(Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")])))) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Md.safe.ts";
 /**
  * Public Markdown builder namespace and constructor helpers.
  *
@@ -89,7 +121,7 @@ export * from "./Md.render.ts";
  * console.log(Result.getOrThrow(markdown)) // "# Hello"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export * from "./Md.ts";

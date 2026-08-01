@@ -15,6 +15,7 @@ import { AssistantBlock, ParagraphBlock, TextInline } from "@beep/agents-domain/
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
+import { SafeDocument } from "@beep/md/Md.safe";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -657,12 +658,13 @@ export const reportDecodeFailureAtom = ChatClient.runtime.fn<void>()(
  * @example
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
- * import { Document, P, Text } from "@beep/md/Md.model"
+ * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
- * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
+ * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
+ * const content = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * const request = SendTurnRequest.make({ threadId, content })
  *
  * console.log(request._tag) // "send"
@@ -675,7 +677,7 @@ export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnReq
   threadId: WorkspaceIdentity.ThreadId.annotateKey({
     description: "Thread receiving the new user message.",
   }),
-  content: Document.annotateKey({
+  content: SafeDocument.annotateKey({
     description: "User content to append as a new message.",
   }),
 }) {}
@@ -686,13 +688,14 @@ export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnReq
  * @example
  * ```ts
  * import { EditTurnRequest } from "@beep/agents-client"
- * import { Document, P, Text } from "@beep/md/Md.model"
+ * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
- * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
- * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Try again" })] })] })
+ * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
+ * const turnId = Result.getOrThrow(S.decodeUnknownResult(Workspace.TurnId)(20))
+ * const content = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Try again")])))
  * const request = EditTurnRequest.make({ threadId, turnId, content })
  *
  * console.log(request._tag) // "edit"
@@ -708,7 +711,7 @@ export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnReq
   turnId: WorkspaceIdentity.TurnId.annotateKey({
     description: "Turn whose user message is replaced before regenerating.",
   }),
-  content: Document.annotateKey({
+  content: SafeDocument.annotateKey({
     description: "Replacement user content for the edited turn.",
   }),
 }) {}
@@ -719,12 +722,13 @@ export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnReq
  * @example
  * ```ts
  * import { SendTurnRequest, TurnRequest } from "@beep/agents-client"
- * import { Document, P, Text } from "@beep/md/Md.model"
+ * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
- * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
+ * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
+ * const content = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * const request = SendTurnRequest.make({ threadId, content })
  * const label = TurnRequest.match(request, {
  *   send: () => "new turn",
@@ -749,12 +753,13 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
  * import type { TurnRequest } from "@beep/agents-client"
- * import { Document, P, Text } from "@beep/md/Md.model"
+ * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
- * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
+ * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
+ * const content = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * const request: TurnRequest = SendTurnRequest.make({ threadId, content })
  *
  * console.log(request._tag) // "send"
@@ -800,15 +805,16 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * @example
  * ```ts
  * import { runTurnAtom, SendTurnRequest, TurnRequest } from "@beep/agents-client"
- * import { Document, P, Text } from "@beep/md/Md.model"
+ * import { Md } from "@beep/md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { Atom } from "effect/unstable/reactivity"
  *
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
- * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
- * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Summarize this" })] })] })
+ * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
+ * const content = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Summarize this")])))
  * const request: WriteValue<typeof runTurnAtom> = SendTurnRequest.make({ threadId, content })
  * const mode = TurnRequest.match(request, {
  *   send: () => "stream a new assistant turn",

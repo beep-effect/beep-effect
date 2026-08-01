@@ -265,7 +265,7 @@ describe("@beep/professional-desktop chat contract", () => {
             }),
           ],
         }),
-        Md.YouTube.make({ videoId: "dQw4w9WgXcQ" }),
+        Md.YouTube.make({ videoId: "M7lc1UVf-VE" }),
         Md.BlockQuote.make({ children: [Md.P.make({ children: [Md.Text.make({ value: "Quoted note" })] })] }),
         Md.TaskList.make({
           children: [Md.TaskItem.make({ checked: false, children: [Md.Text.make({ value: "Ship docs" })] })],
@@ -280,7 +280,7 @@ describe("@beep/professional-desktop chat contract", () => {
     // surface their watch URL, blockquotes recurse, and task items keep their text.
     expect(text).toContain("Feature\tStatus");
     expect(text).toContain("Rich blocks\tReady");
-    expect(text).toContain("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(text).toContain("https://www.youtube.com/watch?v=M7lc1UVf-VE");
     expect(text).toContain("Quoted note");
     expect(text).toContain("Ship docs");
   });
