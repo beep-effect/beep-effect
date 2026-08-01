@@ -313,7 +313,7 @@ describe("@beep/ffmpeg", () => {
     ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
   });
 
-  it(
+  it.effect(
     "extracts frames into final names and writes the default manifest",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -360,7 +360,7 @@ describe("@beep/ffmpeg", () => {
     })
   );
 
-  it(
+  it.effect(
     "fails before overwriting an existing frame target",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -397,7 +397,7 @@ describe("@beep/ffmpeg", () => {
     })
   );
 
-  it(
+  it.effect(
     "normalizes failed ffmpeg exits into FFmpegError",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];

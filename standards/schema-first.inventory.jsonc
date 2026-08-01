@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-31",
+  "generatedOn": "2026-08-01",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -122,6 +122,14 @@
       "line": 194,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
+    },
+    {
+      "file": "packages/drivers/obs/src/ObsProtocol.service.ts",
+      "symbol": "ObsProtocolShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/obs",
+      "reason": "Live obs-websocket connection handle, not data: events is a Stream, subscribeEvents is a scoped Effect, and request is an Effectful call. Only the hello and identified payloads are schema-backed (ObsHello, ObsIdentified); the handle itself has no decode or persistence boundary."
     },
     {
       "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
@@ -354,6 +362,14 @@
       "line": 71,
       "owner": "@beep/ontology-server",
       "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
+      "symbol": "CollectorRunning",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/qa-capture",
+      "reason": "Live collector handle scoped to one recording round: awaitStop, eventsWritten, and rejectedCount are Effects reading server-local Refs and a Deferred. The persisted part is already modeled by CollectorHandle, which this interface carries; the running server itself never crosses a decode boundary."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",

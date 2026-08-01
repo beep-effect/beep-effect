@@ -35,7 +35,10 @@ import type { CliJsonError } from "./Json.ts";
 export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
   lines: ReadonlyArray<string>
 ): Effect.fn.Return<void> {
-  yield* Effect.forEach(lines, Console.log, { discard: true });
+  // The lambda is load-bearing: `Effect.forEach` passes the element index as a
+  // second argument, and `Console.log` is variadic, so a bare reference prints
+  // the index after every line.
+  yield* Effect.forEach(lines, (line) => Console.log(line), { discard: true });
 });
 
 /**

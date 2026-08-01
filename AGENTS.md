@@ -75,6 +75,13 @@ Ship reliable code with effect-first and schema-first patterns.
 - Never launch raw `vite`/`next`/`storybook dev` or test against numeric
   localhost ports; `PORTLESS=0 <script>` is diagnostic-only.
 
+## Browser QA
+
+- Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded
+  evidence via `bun run beep qa` (record → extract → judge); judge inventories
+  are schema-validated (`qa-inventory/v1`). GIFs are for humans; the vision
+  judge reads frame strips and contact sheets.
+
 ## Docs & Knowledge
 
 - `docs/` is tracked authored documentation (see `docs/README.md`); docgen
@@ -103,6 +110,11 @@ Ship reliable code with effect-first and schema-first patterns.
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
   it returned.
+- UI motion evidence: prefer `bun run beep qa` + the `qa-session-ops` skill
+  (lane choice lives there); evidence reading via `motion-evidence-review`;
+  artifact provenance via `exif-provenance`; the `chrome-devtools` MCP (slim,
+  default-disabled) for perf-trace/computed-style introspection during QA
+  sessions. No QA MCP server.
 
 ## Context Economy
 

@@ -264,6 +264,12 @@
         ]
       },
       {
+        "name": "@beep/exiftool",
+        "patterns": [
+          "packages/drivers/exiftool/src/**"
+        ]
+      },
+      {
         "name": "@beep/face-detection",
         "patterns": [
           "packages/drivers/face-detection/src/**"
@@ -438,6 +444,12 @@
         ]
       },
       {
+        "name": "@beep/obs",
+        "patterns": [
+          "packages/drivers/obs/src/**"
+        ]
+      },
+      {
         "name": "@beep/observability",
         "patterns": [
           "packages/foundation/capability/observability/src/**"
@@ -573,6 +585,12 @@
         "name": "@beep/provenance",
         "patterns": [
           "packages/foundation/modeling/provenance/src/**"
+        ]
+      },
+      {
+        "name": "@beep/qa-capture",
+        "patterns": [
+          "packages/tooling/library/qa-capture/src/**"
         ]
       },
       {
@@ -1569,6 +1587,23 @@
         ]
       },
       {
+        "from": "@beep/exiftool",
+        "allow": [
+          "@beep/exiftool",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/exiftool",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/face-detection",
         "allow": [
           "@beep/face-detection",
@@ -2106,6 +2141,23 @@
         ]
       },
       {
+        "from": "@beep/obs",
+        "allow": [
+          "@beep/identity",
+          "@beep/obs",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/obs",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/observability",
         "allow": [
           "@beep/colors",
@@ -2615,6 +2667,25 @@
         ]
       },
       {
+        "from": "@beep/qa-capture",
+        "allow": [
+          "@beep/ffmpeg",
+          "@beep/identity",
+          "@beep/qa-capture",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/ffmpeg",
+          "@beep/identity",
+          "@beep/qa-capture",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/rdf",
         "allow": [
           "@beep/identity",
@@ -2679,6 +2750,7 @@
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
+          "@beep/exiftool",
           "@beep/face-detection",
           "@beep/ffmpeg",
           "@beep/file-processing",
@@ -2686,8 +2758,10 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/md",
+          "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
           "@beep/repo-configs",
@@ -2704,6 +2778,7 @@
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
+          "@beep/exiftool",
           "@beep/face-detection",
           "@beep/ffmpeg",
           "@beep/file-processing",
@@ -2711,8 +2786,10 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/md",
+          "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
           "@beep/repo-configs",

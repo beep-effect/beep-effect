@@ -179,7 +179,10 @@ const generatedComposers = $I.compose(
   "epistemic-config",
   "law-practice-tables",
   "practice-kg-mcp",
-  "openclaw"
+  "openclaw",
+  "obs",
+  "exiftool",
+  "qa-capture"
 );
 
 const composers = {
@@ -2241,3 +2244,51 @@ export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"
  * @category configuration
  */
 export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composers.$OpenclawId;
+
+/**
+ * Identity composer for `@beep/obs`.
+ *
+ * @example
+ * ```typescript
+ * import { $ObsId } from "@beep/identity"
+ *
+ * const id = $ObsId.make("Obs")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $ObsId: Identity.IdentityComposer<"@beep/obs"> = composers.$ObsId;
+
+/**
+ * Identity composer for `@beep/exiftool`.
+ *
+ * @example
+ * ```typescript
+ * import { $ExiftoolId } from "@beep/identity"
+ *
+ * const id = $ExiftoolId.make("Exiftool")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $ExiftoolId: Identity.IdentityComposer<"@beep/exiftool"> = composers.$ExiftoolId;
+
+/**
+ * Identity composer for `@beep/qa-capture`.
+ *
+ * @example
+ * ```typescript
+ * import { $QaCaptureId } from "@beep/identity"
+ *
+ * const id = $QaCaptureId.make("QaCapture")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = composers.$QaCaptureId;
