@@ -21,10 +21,12 @@ export class TabDrag extends S.Class<TabDrag>($I`TabDrag`)(
     pointer: PointerPosition,
     origin: PointerPosition,
     moved: S.Boolean,
+    concluded: S.Boolean,
+    pointerId: S.Int,
   },
   $I.annote("TabDrag", {
     description:
-      "Active tab-drag state: source group, latest and initial pointer positions, and whether the pointer has traveled past the drag-promotion threshold.",
+      "Active tab-drag state: source group, latest and initial pointer positions, whether the pointer has traveled past the drag-promotion threshold, and whether the gesture has concluded (Escape-cancel or commit). A concluded promoted drag stays recorded until its release's trailing click is swallowed — or until the next press — so the click can neither activate the dragged tab nor re-point focus at the source group.",
   })
 ) {}
 
@@ -35,9 +37,11 @@ export class SashDragBase extends S.Class<SashDragBase>($I`SashDragBase`)(
     initialRatio: SplitRatio,
     extent: S.Finite,
     moved: S.Boolean,
+    pointerId: S.Int,
   },
   $I.annote("SashDragBase", {
-    description: "Shared state captured while resizing a split sash.",
+    description:
+      "Shared state captured while resizing a split sash, including the captured pointer identity so cancellation can release the real capture (synthetic pointercancel events carry a default pointerId, not the captured one).",
   })
 ) {}
 

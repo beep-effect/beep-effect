@@ -66,6 +66,7 @@ export const pressStartsOnButton = (event: PointerEvent): boolean =>
 // (dockview's PointerDragSource threshold): taps and plain clicks never show
 // drag chrome (ghost, drop indicator) or compile a drop.
 const DRAG_THRESHOLD = 5;
+const ROOT_EDGE_BAND_PX = 8;
 export const exceedsDragThreshold: Dual2<PointerPosition, PointerPosition, boolean> = dual(
   2,
   (origin: PointerPosition, pointer: PointerPosition): boolean => {
@@ -138,7 +139,11 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
     const geometry = graph.registry.get(state.geometry.geometryAtom);
     const container = graph.registry.get(state.containerAtom);
     const point = drag.pointer;
-    const outer = Math.min(32, Math.min(container.width, container.height) / 6);
+    // A thin strip: any wider and the root band shadows the bottom/right
+    // quadrant of every edge-adjacent group, so hovers aimed at a group's
+    // own edge compile to a container-spanning root split (QA finding: the
+    // bottom drop preview spanned both panels instead of the target group).
+    const outer = Math.min(ROOT_EDGE_BAND_PX, Math.min(container.width, container.height) / 6);
     const rootSide: O.Option<DockSide> = Match.value(point).pipe(
       Match.when(
         ({ left }) => left <= container.left + outer,

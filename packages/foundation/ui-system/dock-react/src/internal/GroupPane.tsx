@@ -29,6 +29,7 @@ import {
   pressStartsOnButton,
   relativePositionOf,
 } from "./DropCompiler.ts";
+import { TabDrag } from "./Gesture.models.ts";
 import { FloatIcon, MaximizeIcon, RestoreIcon } from "./Icons.tsx";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
@@ -66,13 +67,61 @@ const Tab = (props: {
   const pointerRef = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
     // fallow-ignore-next-line code-duplication -- tab dragging owns a distinct cancel handler and drag atom
-    const cancel = (): void => props.graph.registry.set(props.state.dragAtom, O.none());
+    const clearDrag = (): void => {
+      const current = props.graph.registry.get(props.state.dragAtom);
+      props.graph.registry.set(props.state.dragAtom, O.none());
+      // Synthetic pointercancel events skip the implicit capture release a
+      // real input-source cancel performs, and carry a default pointerId
+      // rather than the captured one — release the identity recorded at
+      // the press.
+      O.match(current, {
+        onNone: () => undefined,
+        onSome: (drag) => {
+          node.releasePointerCapture?.(drag.pointerId);
+          return undefined;
+        },
+      });
+    };
+    // Escape on a PROMOTED drag concludes it but keeps the record so the
+    // release's trailing click can be recognized and swallowed; an
+    // unpromoted press (no drag chrome shown) clears outright so the
+    // release still reads as a plain activation click. pointercancel also
+    // clears outright: no click ever follows a pointercancel.
+    const cancelWithEscape = (): void => {
+      const current = props.graph.registry.get(props.state.dragAtom);
+      props.graph.registry.set(
+        props.state.dragAtom,
+        O.flatMap(current, (drag) => (drag.moved ? O.some(TabDrag.make({ ...drag, concluded: true })) : O.none()))
+      );
+      // The press moved focus to the dragged tab; hand it back to the
+      // group's active tab so the cancelled gesture leaves no focus trace
+      // (roving tabindex: focus follows activation). Only the owning tab's
+      // listener restores — sibling keydown listeners may already have
+      // concluded the drag by the time this one runs, and focusing the
+      // active tab is idempotent.
+      if (O.exists(current, (drag) => drag.moved && PanelId.equals(drag.panelId, props.panel.id))) {
+        const active = node
+          .closest("[data-group-id]")
+          ?.querySelector<HTMLElement>("[data-panel-id][data-active='true']");
+        active?.focus({ preventScroll: true });
+      }
+    };
     const keydown = (event: KeyboardEvent): void => {
-      if (Eq.equals(event.key, "Escape")) cancel();
+      if (Eq.equals(event.key, "Escape")) cancelWithEscape();
+    };
+    const click = (event: MouseEvent): void => {
+      const current = props.graph.registry.get(props.state.dragAtom);
+      if (O.exists(current, (drag) => drag.concluded && PanelId.equals(drag.panelId, props.panel.id))) {
+        props.graph.registry.set(props.state.dragAtom, O.none());
+        // The capture target receives a click for the cancelled drag's
+        // release; it is not an activation click.
+        event.stopPropagation();
+        event.preventDefault();
+      }
     };
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
-      if (O.isSome(current) && PanelId.equals(current.value.panelId, props.panel.id)) {
+      if (O.isSome(current) && !current.value.concluded && PanelId.equals(current.value.panelId, props.panel.id)) {
         const pointer = relativePositionOf(props.state, event);
         props.graph.registry.set(
           props.state.dragAtom,
@@ -87,6 +136,12 @@ const Tab = (props: {
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isNone(current) || !PanelId.equals(current.value.panelId, props.panel.id)) return;
+      if (current.value.concluded) {
+        // The concluded record stays for the trailing click to consume.
+        node.releasePointerCapture?.(event.pointerId);
+        event.preventDefault();
+        return;
+      }
       const pointer = relativePositionOf(props.state, event);
       const finalDrag = {
         ...current.value,
@@ -95,13 +150,28 @@ const Tab = (props: {
         // tests fire down→up with no intervening move), so re-check here.
         moved: current.value.moved || exceedsDragThreshold(current.value.origin, pointer),
       };
-      props.graph.registry.set(props.state.dragAtom, O.none());
+      // A promoted drag concludes but stays recorded: its trailing click
+      // must not activate the source tab or re-point focus at the source
+      // group after the panel has moved. An unpromoted press clears so the
+      // release reads as a plain click.
+      props.graph.registry.set(
+        props.state.dragAtom,
+        finalDrag.moved ? O.some(TabDrag.make({ ...finalDrag, concluded: true })) : O.none()
+      );
       node.releasePointerCapture?.(event.pointerId);
       if (finalDrag.moved)
         O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
       event.preventDefault();
     };
     const down = (event: PointerEvent): void => {
+      // A concluded record whose trailing click never arrived (touch and
+      // pen releases produce no click) must not outlive the next press
+      // anywhere on the tab — including its buttons, whose presses return
+      // early below and would otherwise leave the stale record to swallow
+      // the button's own click.
+      if (O.exists(props.graph.registry.get(props.state.dragAtom), (drag) => drag.concluded)) {
+        props.graph.registry.set(props.state.dragAtom, O.none());
+      }
       if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
       // Chrome anchors a native text selection even when the press starts on
       // a `user-select: none` tab, then extends it across panel content as
@@ -121,6 +191,8 @@ const Tab = (props: {
           pointer,
           origin: pointer,
           moved: false,
+          concluded: false,
+          pointerId: event.pointerId,
           // fallow-ignore-next-line code-duplication -- pointer-down captures the drag snapshot for the paired move handler
         })
       );
@@ -128,13 +200,15 @@ const Tab = (props: {
     node.addEventListener("pointerdown", down);
     node.addEventListener("pointermove", move);
     node.addEventListener("pointerup", up);
-    node.addEventListener("pointercancel", cancel);
+    node.addEventListener("pointercancel", clearDrag);
+    node.addEventListener("click", click);
     document.addEventListener("keydown", keydown);
     return () => {
       node.removeEventListener("pointerdown", down);
       node.removeEventListener("pointermove", move);
       node.removeEventListener("pointerup", up);
-      node.removeEventListener("pointercancel", cancel);
+      node.removeEventListener("pointercancel", clearDrag);
+      node.removeEventListener("click", click);
       document.removeEventListener("keydown", keydown);
     };
   };

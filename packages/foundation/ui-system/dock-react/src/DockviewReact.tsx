@@ -21,12 +21,24 @@ import type { AdapterState } from "./internal/AdapterState.ts";
 
 const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
-  if (O.isNone(drag) || !drag.value.moved) return null;
+  if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
   return O.match(dropPreviewBox(props.state, props.graph, drag.value), {
     onNone: () => null,
     onSome: (box) => <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />,
   });
 };
+
+// The label renders trailing the pointer by default and anchors to the
+// pointer's other side once its far edge would cross the container (QA
+// finding: the drag label clipped at right and bottom drop zones). The
+// ellipsis cap bounds the label's true extent, so the flip threshold and
+// the flipped-side clamp are exact rather than a guessed band — long
+// titles cannot out-grow the flip, and narrow containers cannot clip the
+// flipped label off the left edge.
+const GHOST_MAX_WIDTH_PX = 240;
+const GHOST_LINE_HEIGHT_PX = 24;
+const GHOST_OFFSET_X_PX = 12;
+const GHOST_OFFSET_Y_PX = 10;
 
 // Follow-cursor after-image for a promoted tab drag (dockview's PointerGhost
 // pattern): without it, mid-drag there is nothing under the pointer telling
@@ -35,7 +47,17 @@ const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; reado
 const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   const panels = useAtomValue(props.graph.panelsAtom);
-  if (O.isNone(drag) || !drag.value.moved) return null;
+  const container = useAtomValue(props.state.containerAtom);
+  if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
+  const flipX = drag.value.pointer.left + GHOST_OFFSET_X_PX + GHOST_MAX_WIDTH_PX > container.width;
+  const flipY = drag.value.pointer.top + GHOST_OFFSET_Y_PX + GHOST_LINE_HEIGHT_PX > container.height;
+  const anchor = `${flipX ? " translateX(-100%)" : ""}${flipY ? " translateY(-100%)" : ""}`;
+  const ghostX = flipX
+    ? Math.max(drag.value.pointer.left - GHOST_OFFSET_X_PX, GHOST_MAX_WIDTH_PX)
+    : drag.value.pointer.left + GHOST_OFFSET_X_PX;
+  const ghostY = flipY
+    ? Math.max(drag.value.pointer.top - GHOST_OFFSET_Y_PX, GHOST_LINE_HEIGHT_PX)
+    : drag.value.pointer.top + GHOST_OFFSET_Y_PX;
   return O.match(
     A.findFirst(panels, (candidate) => PanelId.equals(candidate.id, drag.value.panelId)),
     {
@@ -47,7 +69,11 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
             position: "absolute",
             left: 0,
             top: 0,
-            transform: `translate3d(${drag.value.pointer.left + 12}px, ${drag.value.pointer.top + 10}px, 0)`,
+            transform: `translate3d(${ghostX}px, ${ghostY}px, 0)${anchor}`,
+            maxWidth: GHOST_MAX_WIDTH_PX,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
             pointerEvents: "none",
             willChange: "transform",
             opacity: 0.85,

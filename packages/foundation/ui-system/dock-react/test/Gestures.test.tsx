@@ -186,12 +186,67 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       fireEvent.keyDown(document, { key: "Escape" });
       if (mounted.api === undefined) throw new Error("Missing adapter API");
+      // Escape on an UNPROMOTED press clears outright — no drag chrome was
+      // shown, so the release must still read as a plain activation click.
+      // (A promoted drag instead concludes and keeps its record; see the
+      // activation-leak test.)
       expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       pointer(tab(panel1.id), "pointerUp", 400, 220);
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("a cross-group drop concludes the record and the next press heals it", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const source = tab(panel1.id);
+      // Promote and drop panel1 into group2's center (cross-group move).
+      pointer(source, "pointerDown", 100, 16);
+      pointer(source, "pointerMove", 600, 200);
+      pointer(source, "pointerUp", 600, 200);
+      // The record concludes rather than clearing: were the source node
+      // still mounted (same-group reorder), the trailing click would be
+      // swallowed instead of re-activating via the stale group closure.
+      if (mounted.api === undefined) throw new Error("Missing adapter API");
+      expect(O.exists(mounted.graph.registry.get(mounted.api.atoms.drag), (drag) => drag.concluded)).toBe(true);
+      // Here the move unmounted the source node, so the trailing click
+      // lands on a detached element: no activation, and the concluded
+      // record lingers (touch and pen releases produce no click at all).
+      fireEvent.click(source, { clientX: 600, clientY: 200 });
+      yield* mounted.graph.awaitIdle;
+      expect(O.exists(mounted.graph.registry.get(mounted.api.atoms.drag), (drag) => drag.concluded)).toBe(true);
+      // The next press anywhere on a tab clears the stale record before the
+      // button guard can early-return past it.
+      pointer(tab(panel3.id), "pointerDown", 600, 16);
+      pointer(tab(panel3.id), "pointerUp", 600, 16);
+      yield* mounted.graph.awaitIdle;
+      expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("Escape-cancelled drag release does not activate the dragged tab", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount();
+      expect(O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1))).active.id).toBe(panel1.id);
+      pointer(tab(panel2.id), "pointerDown", 600, 16);
+      expect(document.activeElement).toBe(tab(panel2.id));
+      pointer(tab(panel2.id), "pointerMove", 100, 200);
+      fireEvent.keyDown(document, { key: "Escape" });
+      // Escape hands focus back to the group's active tab: the cancelled
+      // gesture must leave no focus trace on the dragged tab.
+      expect(document.activeElement).toBe(tab(panel1.id));
+      pointer(tab(panel2.id), "pointerUp", 100, 200);
+      // The browser delivers the trailing click to the pointer-capture target
+      // even though the release happened far from the tab strip; a cancelled
+      // drag's release must not read as an activation click.
+      fireEvent.click(tab(panel2.id), { clientX: 100, clientY: 200 });
+      yield* mounted.graph.awaitIdle;
+      expect(O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1))).active.id).toBe(panel1.id);
       mounted.graph.dispose();
     })
   );
