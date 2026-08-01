@@ -5,8 +5,8 @@
  * Wraps `@beep/editor`'s {@link ChatComposer} (toolbar, `/` slash, `@` mentions,
  * attachment capture, plain-Enter-to-send, character count, send/stop) and
  * injects the product meaning: the formatting/insert slash items, a workspace
- * mention source, and the send/attachment wiring. The foundation owns the
- * mechanism; this file owns the meaning.
+ * mention source, send wiring, and attachment-transport status. The foundation
+ * owns the mechanism; this file owns the meaning.
  *
  * The composer surfaces content via `onSerializedChange`; the latest serialized
  * state is held in a per-thread atom and the persisted draft is mirrored into
@@ -30,6 +30,7 @@ import {
   runTurnAtom,
   turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
+import { attachmentsAtom } from "@beep/editor/chat/atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
 import { MentionOption } from "@beep/editor/chat/config";
@@ -42,7 +43,6 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import {
   ComposerDocumentSafetyGate,
-  composerAttachmentHandlerAtom,
   composerCancelEditHandlerAtom,
   composerConfirmNormalizationHandlerAtoms,
   composerDocumentSafetyGateAtoms,
@@ -55,7 +55,7 @@ import {
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { EditTarget } from "@beep/agents-client/Chat.atoms";
 import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer";
-import type { AttachmentPort, MentionSource } from "@beep/editor/chat/config";
+import type { MentionSource } from "@beep/editor/chat/config";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { JSX } from "react";
@@ -183,7 +183,6 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   const draftRevision = useAtomValue(draftRevisionAtoms(threadId));
   const draft = useAtomValue(composerDraftSeedAtoms(threadId)(draftRevision));
   const safetyRefusal = useAtomValue(composerSafetyRefusalAtoms(threadId));
-  const onAttach = useAtomValue(composerAttachmentHandlerAtom);
   const cancelEdit = useAtomValue(composerCancelEditHandlerAtom);
   const stop = useAtomValue(composerStopHandlerAtom);
 
@@ -212,7 +211,6 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
     onStop: stop,
     streaming,
     sendLabel: isEditing ? "Rewrite" : "Send",
-    onAttach,
   };
 
   return (
@@ -239,7 +237,6 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
 
 interface ThreadComposerProps {
   readonly content?: Md.Document;
-  readonly onAttach: AttachmentPort;
   readonly onStop: () => void;
   readonly sendLabel: string;
   readonly streaming: boolean;
@@ -264,6 +261,27 @@ function ComposerSafetyGateNotice({
   });
 }
 
+function AttachmentTransportNotice(): JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
+  const attachments = useAtomValue(attachmentsAtom(editor));
+
+  return A.match(attachments, {
+    onEmpty: () => null,
+    onNonEmpty: (attachments) => {
+      const count = A.length(attachments);
+      return (
+        <p
+          className="mx-3 mt-2 rounded border border-border bg-muted/40 px-2 py-1.5 text-xs text-muted-foreground"
+          role="status"
+        >
+          Captured {count} attachment{count === 1 ? "" : "s"} — attachments are previewed locally and aren't sent to the
+          model yet.
+        </p>
+      );
+    },
+  });
+}
+
 const editorStateAtomFor = (
   content: Md.Document | undefined
 ): Atom.Atom<AsyncResult.AsyncResult<SerializedEditorState, unknown>> =>
@@ -275,14 +293,7 @@ const editorStateAtomFor = (
 // read — the editor mounts WITH the seed (no empty frame); a codec failure
 // degrades to an empty editor. The send handler receives the editor's live state
 // at send time, so there is no latest-state mirror to seed here.
-function ThreadComposer({
-  content,
-  onAttach,
-  onStop,
-  sendLabel,
-  streaming,
-  threadId,
-}: ThreadComposerProps): JSX.Element {
+function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: ThreadComposerProps): JSX.Element {
   const safetySeed = content ?? emptyDocument;
   const safetyGate = useAtomValue(composerDocumentSafetyGateAtoms(threadId)(safetySeed));
   const confirmNormalization = useAtomValue(composerConfirmNormalizationHandlerAtoms(threadId)(safetySeed));
@@ -290,7 +301,7 @@ function ThreadComposer({
   const onSerializedChange = useAtomValue(composerSerializedChangeHandlerAtoms(threadId)(safetySeed));
   const initialState = useAtomValue(editorStateAtomFor(content));
   const seedState = O.flatMap(O.fromUndefinedOr(content), () => AsyncResult.value(initialState));
-  const mountConfig: ChatComposerMountConfig = { onAttach, onSend };
+  const mountConfig: ChatComposerMountConfig = { onSend };
 
   return (
     <ChatComposer
@@ -305,6 +316,7 @@ function ThreadComposer({
       slashItems={defaultChatSlashItems}
       mentionSource={mentionSource}
     >
+      <AttachmentTransportNotice />
       <ComposerSafetyGateNotice gate={safetyGate} onConfirm={confirmNormalization} />
     </ChatComposer>
   );

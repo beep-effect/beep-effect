@@ -1499,6 +1499,11 @@ describe("editor contract hardening", { concurrent: false }, () => {
         },
       });
       yield* Effect.promise(() => screen.findByRole("button", { name: "Remove legacy.png" }));
+      const attachmentStatus = screen.getByText(/^Captured 1 attachment/);
+      expect(attachmentStatus).toHaveAttribute("role", "status");
+      expect(attachmentStatus).toHaveTextContent("Captured 1 attachment");
+      expect(attachmentStatus).toHaveTextContent("attachments are previewed locally and aren't sent to the model yet");
+      expect(attachmentStatus.closest('[data-testid="composer"]')).not.toBeNull();
 
       fireEvent.click(screen.getByRole("button", { name: "Send escaped literal copy" }));
 
@@ -1508,6 +1513,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       yield* Effect.promise(() =>
         waitFor(() => expect(screen.getByRole("combobox", { name: "Message composer" })).not.toHaveTextContent(source))
       );
+      expect(screen.queryByText(/^Captured 1 attachment/)).not.toBeInTheDocument();
       expect(createObjectUrl).toHaveBeenCalledTimes(1);
       expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
 

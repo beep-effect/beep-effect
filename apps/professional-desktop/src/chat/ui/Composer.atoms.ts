@@ -569,18 +569,6 @@ const cancelComposerEditAtom = professionalBrowserRuntime.fn<void>()(
   })
 );
 
-const reportAttachmentsAtom = professionalBrowserRuntime.fn<ReadonlyArray<File>>()(
-  Effect.fnUntraced(function* (files) {
-    const count = A.length(files);
-    yield* Effect.sync(() =>
-      toast.info(
-        `Captured ${count} attachment${count === 1 ? "" : "s"} — sending attachments to the model isn't wired yet.`,
-        { position: "top-center" }
-      )
-    );
-  })
-);
-
 /**
  * Stable editor-change handler that delegates draft projection and state writes
  * to the professional atom runtime.
@@ -872,22 +860,4 @@ export const composerStopHandlerAtom = Atom.make((get) => {
 export const composerCancelEditHandlerAtom = Atom.make((get) => {
   get.mount(cancelComposerEditAtom);
   return (): void => get.set(cancelComposerEditAtom, void 0);
-});
-
-/**
- * Stable attachment handler backed by a runtime notification effect.
- *
- * @example
- * ```ts
- * import { composerAttachmentHandlerAtom } from "@/chat/ui/Composer.atoms"
- *
- * console.log(typeof composerAttachmentHandlerAtom === "object") // true
- * ```
- *
- * @category atoms
- * @since 0.0.0
- */
-export const composerAttachmentHandlerAtom = Atom.make((get) => {
-  get.mount(reportAttachmentsAtom);
-  return (files: ReadonlyArray<File>): void => get.set(reportAttachmentsAtom, files);
 });
