@@ -91,19 +91,34 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [x] E2E on a dev machine: create thread → send rich-block message →
+- [ ] E2E on a dev machine: create thread → send rich-block message →
       streamed assistant turn renders block-by-block → edit creates a branch
       with version-selector UX → cancel-in-flight leaves no partial row →
       relaunch app, thread history intact (PGlite).
+      *(2026-07-31 audit: evidenced piecewise, not as one recorded UI run —
+      the browser E2E covered render/stream/persist-across-reload, the
+      finalize fix was proven over a standalone rpc client, and
+      edit-as-branch/cancel are contract-test-proven. A single full-UI pass
+      was never recorded; see the Exception Ledger.)*
 - [x] Fixture agent runs behind the same kernel interface and powers the
       app-level contract tests (no real-LLM dependency in CI).
-- [x] `UsageRecord` rows appear at turn finalization with provider, model,
+- [ ] `UsageRecord` rows appear at turn finalization with provider, model,
       tokens, latency, approximate cost, Activity link.
+      *(2026-07-31 audit: only row-at-finalization persistence shipped —
+      `ChatOrchestrator` appends `fixtureUsageRecord` on every path,
+      including live Anthropic, with null tokens/latency/cost and a
+      synthesized Activity id. Provider usage metadata capture remains open;
+      see the Exception Ledger.)*
 - [x] ThreadTimeline (single-branch degenerate view) renders history +
       tool-call placeholders + cost rollup.
 - [x] Webview and sidecar spans join into one trace; perceived-latency and
       decode-failure metrics emit.
 - [x] Repo quality gates pass; no unrelated refactors or formatting churn.
+      *(Waiver on record: PR #243 was admin-merged during a GitHub outage
+      with the hosted `Check` and `Lint Policy` lanes still red (infra
+      artifacts — see README/Exception Ledger). Both lanes have since proven
+      green against `main` content repeatedly, e.g. the 2026-07-31 PR #524
+      run at `main` parity.)*
 
 ## Verification Matrix
 
@@ -138,4 +153,6 @@ candidate gating; v1 block scope; convergence target professional-desktop.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Full dev-machine UI E2E evidenced piecewise only | E2E acceptance criterion | packet owner | Browser E2E + rpc-client finalize proof + contract tests cover the flow's pieces; no single recorded full-UI pass (edit-as-branch, version selector, UI cancel in one run) exists | A recorded full-UI E2E pass (e.g. via the browser-qa-loop skill) lands in `history/` |
+| UsageRecord provider fields unpopulated | UsageRecord acceptance criterion | packet owner | `fixtureUsageRecord` (null tokens/latency/cost, synthesized Activity id) is appended on every path including live Anthropic; kernel carries no provider usage metadata | Kernel surfaces provider usage metadata and the orchestrator appends real token/latency/cost + Activity link |
+| PR #243 admin-merged with two hosted lanes red | Quality-gates acceptance criterion | packet owner | GitHub outage at merge time; `Check` passed locally identically to CI, `Lint Policy` hit the outage timeout (recorded in README) | Satisfied in substance — both lanes green on subsequent `main`-parity runs (e.g. PR #524, 2026-07-31); row retained as the waiver record |

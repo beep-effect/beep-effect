@@ -184,10 +184,13 @@ unchanged). Exact field names are a P1 detail; the contract is:
       sidebar, thread, message views, and composer.
 - [x] Green radial-glow background rendered via the existing `@beep/ui`
       `OrbBackground tone="green"`.
-- [x] `@beep/editor` exposes a typed (TypeScript, not `effect/Schema`)
-      feature-flag config toggling toolbar, slash, mentions, attachments, and
-      send-key behavior; the bare `EditorComposer` and existing stories/consumers
-      are unchanged (additive only).
+- [x] `@beep/editor` exposes a typed feature-flag config toggling toolbar,
+      slash, mentions, attachments, and send-key behavior; the bare
+      `EditorComposer` and existing stories/consumers are unchanged (additive
+      only). *(Shipped schema-first — `ComposerFeatures` is an `S.Class` in
+      `src/chat/config.ts`; the original "TypeScript, not `effect/Schema`"
+      carve-out was superseded during implementation, as recorded in
+      Constraints.)*
 - [x] Chat composer shows a fixed formatting toolbar (bold/italic/lists/quote/
       link/code), a working `/` menu (formatting/insert items), `@` mention
       typeahead (ephemeral, app-injected source), attachment capture (drag-drop +
