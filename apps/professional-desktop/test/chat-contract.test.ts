@@ -7,8 +7,8 @@
  * their use-case Effects/streams (no rpc transport).
  */
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
-import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/proof";
-import { AgentTurnKernel, IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import { FixtureTurnKernel, fixtureBlocksFor, fixtureEventsFor } from "@beep/agents-use-cases/proof";
+import { AgentTurnKernel, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
@@ -87,10 +87,22 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(items[0]?.content).toStrictEqual(content);
       expect(items[1]?.content).toStrictEqual(assistantContentToDocument([...expectedBlocks]));
 
-      // 3) exactly one usage record, provider "fixture"
+      // 3) exactly one finalized usage row with the fixture kernel's exact
+      // provider accounting and an explicit absent Activity link.
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(1);
-      expect(usage[0]?.provider).toBe("fixture");
+      const record = O.getOrThrow(A.head(usage));
+      expect(record.provider).toBe("fixture");
+      expect(record.model).toBe("fixture");
+      expect(record.orgId).toBe(thread.orgId);
+      expect(O.getOrThrow(record.inputTokens)).toBe(12);
+      expect(O.getOrThrow(record.outputTokens)).toBe(8);
+      expect(O.getOrThrow(record.totalTokens)).toBe(20);
+      expect(O.getOrThrow(record.latencyMillis)).toBe(0);
+      expect(O.getOrThrow(record.costUsdApproxMicros)).toBe(0);
+      expect(O.isNone(record.activityId)).toBe(true);
+      expect(record.metadata.activityLinkStatus).toBe("unavailable_no_activity_store");
+      expect(record.metadata.stopReason).toBe("stop");
 
       // The successful stream records completion and duration telemetry in the
       // same Effect runtime that executed the contract.
@@ -446,10 +458,8 @@ describe("@beep/professional-desktop chat contract", () => {
     Effect.fnUntraced(function* () {
       const historyRef = yield* Ref.make<ReadonlyArray<TurnHistoryItemType>>(A.empty());
       const CaptureKernel = Layer.succeed(AgentTurnKernel)({
-        streamTurn: (history: ReadonlyArray<TurnHistoryItemType>): Stream.Stream<IndexedBlock> => {
-          const indexedBlocks = A.map(fixtureBlocksFor(history), (block, index): IndexedBlock => ({ block, index }));
-          return Stream.unwrap(Ref.set(historyRef, history).pipe(Effect.as(Stream.fromIterable(indexedBlocks))));
-        },
+        streamTurn: (history: ReadonlyArray<TurnHistoryItemType>) =>
+          Stream.unwrap(Ref.set(historyRef, history).pipe(Effect.as(Stream.fromIterable(fixtureEventsFor(history))))),
       });
 
       yield* Effect.gen(function* () {
@@ -507,7 +517,7 @@ describe("@beep/professional-desktop chat contract", () => {
             Effect.gen(function* () {
               yield* Ref.update(histories, (all) => [...all, history]);
               yield* Deferred.await(release);
-              return Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! }));
+              return Stream.fromIterable(fixtureEventsFor(history));
             })
           ),
       });
@@ -553,7 +563,7 @@ describe("@beep/professional-desktop chat contract", () => {
           Stream.unwrap(
             Deferred.succeed(enteredKernel, undefined).pipe(
               Effect.andThen(Deferred.await(release)),
-              Effect.as(Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! })))
+              Effect.as(Stream.fromIterable(fixtureEventsFor(history)))
             )
           ),
       });

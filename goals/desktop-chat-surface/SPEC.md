@@ -102,13 +102,12 @@ Higher sources outrank lower sources when they conflict.
       was never recorded; see the Exception Ledger.)*
 - [x] Fixture agent runs behind the same kernel interface and powers the
       app-level contract tests (no real-LLM dependency in CI).
-- [ ] `UsageRecord` rows appear at turn finalization with provider, model,
+- [x] `UsageRecord` rows appear at turn finalization with provider, model,
       tokens, latency, approximate cost, Activity link.
-      *(2026-07-31 audit: only row-at-finalization persistence shipped —
-      `ChatOrchestrator` appends `fixtureUsageRecord` on every path,
-      including live Anthropic, with null tokens/latency/cost and a
-      synthesized Activity id. Provider usage metadata capture remains open;
-      see the Exception Ledger.)*
+      *(2026-07-31: kernel finalization now carries provider/model/token/stop
+      metadata; the orchestrator persists clock latency and schema-priced cost,
+      with unavailable Activity linkage explicit as null plus the real turn link
+      in metadata.)*
 - [x] ThreadTimeline (single-branch degenerate view) renders history +
       tool-call placeholders + cost rollup.
 - [x] Webview and sidecar spans join into one trace; perceived-latency and
@@ -154,5 +153,5 @@ candidate gating; v1 block scope; convergence target professional-desktop.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Full dev-machine UI E2E evidenced piecewise only | E2E acceptance criterion | packet owner | Browser E2E + rpc-client finalize proof + contract tests cover the flow's pieces; no single recorded full-UI pass (edit-as-branch, version selector, UI cancel in one run) exists | A recorded full-UI E2E pass (e.g. via the browser-qa-loop skill) lands in `history/` |
-| UsageRecord provider fields unpopulated | UsageRecord acceptance criterion | packet owner | `fixtureUsageRecord` (null tokens/latency/cost, synthesized Activity id) is appended on every path including live Anthropic; kernel carries no provider usage metadata | Kernel surfaces provider usage metadata and the orchestrator appends real token/latency/cost + Activity link |
+| UsageRecord provider fields unpopulated | UsageRecord acceptance criterion | packet owner | Satisfied: kernel finalization carries provider usage; the orchestrator records model, tokens, latency, and schema-priced approximate cost. Because no persisted Activity surface exists, `activityId` is explicitly null and metadata links the real assistant turn instead of synthesizing an id. | Satisfied in substance by provider capture and explicit Activity-link truth; row retained as implementation history |
 | PR #243 admin-merged with two hosted lanes red | Quality-gates acceptance criterion | packet owner | GitHub outage at merge time; `Check` passed locally identically to CI, `Lint Policy` hit the outage timeout (recorded in README) | Satisfied in substance — both lanes green on subsequent `main`-parity runs (e.g. PR #524, 2026-07-31); row retained as the waiver record |

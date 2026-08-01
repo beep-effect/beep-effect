@@ -112,7 +112,7 @@ describe("@beep/epistemic-domain", () => {
     const appended = appendTurnFinalizationUsageRecord(decoded);
 
     expect(appended).toBeInstanceOf(UsageRecord);
-    expect(appended.activityId).toBe(5);
+    expect(O.getOrThrow(appended.activityId)).toBe(5);
     expect(appended.entityType).toBe("EpistemicUsageRecord");
     expect(O.getOrElse(appended.credentialReference, () => "")).toBe("op://Private/Claude/token");
     expect(O.getOrElse(appended.unitCount, () => 0)).toBe(0);

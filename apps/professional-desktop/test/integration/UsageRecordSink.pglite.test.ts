@@ -22,7 +22,7 @@ const makeInProcessPgliteLayer = () =>
 const decodeUsageAppend = S.decodeUnknownSync(TurnFinalizationUsageAppend);
 
 const usageAppendInput = {
-  activityId: 7,
+  activityId: null,
   actor: { kind: "System", component: "Runtime" },
   costUsdApproxMicros: null,
   createdAt: 100,
@@ -81,7 +81,7 @@ if (!shouldRunPgliteIntegration) {
 
           const decoded = UsageRecordTable.fromUsageRecordRow(rows[0]!);
           expect(decoded.provider).toBe("fixture");
-          expect(decoded.activityId).toBe(7);
+          expect(O.isNone(decoded.activityId)).toBe(true);
           expect(O.getOrNull(decoded.inputTokens)).toBe(12);
           expect(O.isNone(decoded.unitCount)).toBe(true);
         }),

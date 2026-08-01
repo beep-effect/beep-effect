@@ -627,4 +627,8 @@ CREATE TRIGGER epistemic_execution_outcome_block_truncate
   FOR EACH STATEMENT EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();
 `,
   },
+  {
+    name: "20260801021411_usage_record_optional_activity",
+    sql: `ALTER TABLE "epistemic_usage_record" ALTER COLUMN "activity_id" DROP NOT NULL;`,
+  },
 ];
