@@ -95,6 +95,15 @@ phase's critical path.
   blocks, with an escalation ladder and per-session storm damping (one ping
   per retry storm). Stretch: remote Approve/Deny action buttons bridging to
   `ccd_session send_message`.
+  - **Escalation triggers on `PreToolUse`, never on idle notifications.**
+    Plan-parked sessions emit no `Stop` and therefore no idle Notification
+    (spike amendment 4), so an idle-driven ladder would be silent on exactly
+    the headline p95 105-minute wait class. The plan-approval trigger is
+    `PreToolUse{tool_name: "ExitPlanMode"}` and the permission trigger is a
+    `PreToolUse` whose matching `PostToolUse` has not arrived; escalation
+    timers run off the open bracket's age, independent of any notifier
+    event. Idle notifications may raise ladder urgency but must never be a
+    trigger's sole precondition.
 - Method: instrument-before-treat. ~1 week log-only baseline across clones,
   then flip notifications on — an interrupted time-series is legitimate for
   a 10–20x expected effect. `notifierRev` stamps every event so later
