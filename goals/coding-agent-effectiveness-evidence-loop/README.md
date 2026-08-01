@@ -38,15 +38,29 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Packet opened (docs-only PR). Next concrete action: P1's instrument
-verification spike — wire Notification/UserPromptSubmit/Stop/SessionEnd
-hooks in one scratch clone and confirm each wait class emits a
-distinguishable, sessionId-bearing event — in parallel with P0's storage
-cutover preparation. See [`PLAN.md`](./PLAN.md).
+P1 is in progress. Its instrument-verification first step passed on
+2026-08-01: all three wait classes (tool permission, plan approval, 60s
+idle) emit distinguishable, sessionId-bearing hook events. Next concrete
+action: author `HookPulseV1` in effect/Schema under the seven binding spike
+amendments in [`PLAN.md`](./PLAN.md) — most importantly a seven-event hook
+set in which **`PermissionRequest`** (not `PreToolUse`) is the wait-start
+marker and `waitReason` derives from `PermissionRequest.tool_name`. P0
+storage-cutover preparation may proceed in parallel by a separate actor.
 
 ## Latest Evidence
 
-Not started (packet-creation PR is the first artifact).
+[`research/2026-08-01-p1-hook-semantics-spike.md`](./research/2026-08-01-p1-hook-semantics-spike.md),
+ledger committed at
+[`history/evidence/2026-08-01-hook-pulse-spike.ndjson`](./history/evidence/2026-08-01-hook-pulse-spike.ndjson)
+— 74 hook events across three rounds of real Claude Code 2.1.220 sessions.
+Measured: `PermissionRequest` fires only for permission-gated calls while
+auto-approved tools complete `PreToolUse`→`PostToolUse` in ≤1s; plan
+approval bracketed at 82s and tool permission at 99s (both before
+subtracting `PostToolUse.duration_ms`); idle notification at exactly 60s
+after `Stop`, once, never repeating; `SIGKILL` emits no `SessionEnd`
+(confirms P2's tombstone requirement); plan-mode turns emit no `Stop`;
+denials and plan rejections leave open brackets with no closing event;
+every ledger value is an enum, UUID, path, timestamp, or tool name.
 
 ## Notes
 
