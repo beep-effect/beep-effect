@@ -47,8 +47,8 @@ Standing bricks wave 2 composes against (verify at mining time):
 - `goals/semantic-foundation` — SKOS concept schemes under
   `https://ns.beep.sh/`, FOLIO alignment policy, `@beep/ontology`
   registry/loader; no graph store, no SPARQL engine (locked wave-1 outcome).
-- `foundation/capability/langextract` — source-grounded char-span extraction
-  (absorbed from effect-langextract).
+- `@beep/langextract` (`packages/foundation/capability/langextract`) —
+  source-grounded char-span extraction (absorbed from effect-langextract).
 - Epistemic slice goals — `epistemic-bitemporal-edge-core`,
   `epistemic-claim-lifecycle-gate`, `epistemic-contradiction-triage`;
   EvidenceSpan-as-jsonb decision.
