@@ -4,6 +4,36 @@ Dated decision log for the memory architecture standard. Records decisions as th
 
 ---
 
+## 2026-08-01: Drafting Episodes Are Product Records; Cognee May Project Them (Clarification)
+
+**Context:** The legal-patent-kg-deepening campaign's /adhd
+remove-assumption lens surfaced a challenge: a law-practice `DraftingEpisode`
+ledger whose beep store is authoritative and whose Cognee memory is a
+rebuildable lossy projection with recent-raw-episode fallback — read by the
+campaign as demoting Cognee against the 2026-07-25 entry's "sole always-on
+dev-memory incumbent" wording.
+
+**Decision (clarification, not supersession):** Replayable drafting/derivation
+episode ledgers are **product records** owned by the professional runtime's
+product tables — repo-native, authoritative, append-only. Cognee's always-on
+operator dev-memory role is unchanged. Cognee MAY additionally carry lossy,
+disposable projections of committed product events for retrieval ergonomics,
+rebuilt from the ledger at any time, and is never their authority. This is the
+mirror image of the 2026-07-25 binding boundary: product tables never become an
+operator-memory backend, and operator memory never becomes product authority —
+projection traffic from product ledgers into Cognee crosses neither line.
+
+**Consequences:**
+
+- "Sole always-on dev-memory" describes operator recall, not product
+  retrieval; future research passes should not read it as a product-retrieval
+  monopoly.
+- Product surfaces that adopt a Cognee projection must ship a
+  rebuild-from-ledger path and a deterministic fallback (e.g. recent raw
+  episode tails) so Cognee unavailability degrades reads, never truth.
+- Origin: `explorations/legal-patent-kg-deepening/DECISIONS.md`
+  (2026-08-01 reconciliation grill, episode-ledger entry).
+
 ## 2026-07-25: Bitemporal Port Landed — Graphiti Retirement Trigger Fires
 
 **Context:** The 2026-07-08 entry below conditioned graphiti-memory's

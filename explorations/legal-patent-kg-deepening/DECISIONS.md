@@ -137,3 +137,96 @@ landscape` opened, without implying supersession. Rejected:
 `patent-kg-harvest` (under-represents the legal-core/Hohfeld and GraphRAG
 tracks), `legal-patent-ontology-kg-research` (wordy; "research" is redundant
 for an exploration packet).
+
+## 2026-08-01 — reconciliation grill: remo1 (constraint profiles)
+
+**Question:** Do executable Hohfeld/FLINT correlativity invariants attached to
+registry schemes supersede wave-1's SKOS-only registry stance?
+
+**Answer:** No supersession — layered sequencing. Correlativity lands now as
+Effect Schema constructs (LiteralKit eight-position domain + correlative bimap
+in the consuming domain package; registry data untouched). Registry-carried
+executable shapes route into the existing semantic-foundation **M4 Intake
+ClaimGate Shapes** gate (bounded `ShaclValidationService` in
+`@beep/semantic-web`; SPARQL remains unsupported) when workbench/intake
+consumers prove need.
+
+**Rationale:** Grounding showed the "challenge" was miscast: wave-1 locks *no
+graph store or SPARQL engine for the registry*, while the SPEC already
+sanctions bounded SHACL validation behind M4. Rejected: fast-tracking a
+ConstraintProfile now (pulls M4 forward before its gate condition), and
+schema-only-forever (forecloses data-driven workbench validation the SPEC
+already plans).
+
+## 2026-08-01 — reconciliation grill: remo2 (matter projections)
+
+**Question:** Does a derived, queryable MatterProjection in practice-kg-mcp
+violate the no-graph-store stance?
+
+**Answer:** No — rows first plus an in-memory RDF lane. The contract is
+`PracticeKgQuery`: typed Effect queries over materialized rows rebuilt from
+accepted claims, never authoritative. Lineage/path queries may spin a
+disposable in-memory `@beep/rdf` dataset session through the existing bounded
+`SparqlQueryService` (the ontology-workbench Session pattern). No persistent
+graph store; this entry is the scope note.
+
+**Rationale:** The no-graph-store lock is scoped to the `@beep/ontology`
+registry surface; memory-architecture doctrine already frames graph/search as
+projections; the bounded in-memory machinery already exists in the workbench
+slice. Rejected: relational-only (hand-rolls lineage queries the repo already
+solved) and a persistent embedded store (genuine supersession nothing yet
+justifies — revisit only if projection rebuild cost hurts in practice).
+
+## 2026-08-01 — reconciliation grill: remo3 (episode ledger vs Cognee)
+
+**Question:** Does the DraftingEpisode ledger with Cognee as a lossy
+projection supersede the 2026-07-25 memory-architecture decision?
+
+**Answer:** No — classify and clarify. The DraftingEpisode ledger is
+law-practice **product records**: repo-native, authoritative, append-only.
+Cognee's always-on dev-memory role is unchanged; it may additionally carry a
+lossy, rebuildable projection of committed episode events for product
+retrieval, with recent-raw-episode fallback, and is never their authority. A
+clarifying entry lands in `standards/memory-architecture/04-decision-log.md`.
+
+**Rationale:** The 2026-07-25 entry already binds "product tables are the
+professional runtime's authority and NEVER become an operator-memory
+backend"; this direction (operator tool projecting product records for
+retrieval) was simply unwritten, which is why the /adhd lens flagged it.
+Rejected: full demotion of Cognee for dev-memory too (unjustified
+supersession), and classify-without-clarifying (the ambiguity would keep
+generating false challenges).
+
+## 2026-08-01 — reconciliation grill: slug set
+
+**Question:** Keep the routing seed's five proposed exploration slugs?
+
+**Answer:** Merge to four: `patent-drafting-promotion-gates` folds into
+`patent-drafting-episode-ledger` as its first rung. Final set:
+`legal-position-relator-runtime` (P1), `legal-rule-time-identity` (P2),
+`patent-citation-candor-gate` (P1), `patent-drafting-episode-ledger` (P1,
+absorbing limitation-support promotion gates).
+
+**Rationale:** The deepen sketches make ClaimLimitationSupport a submachine
+of the DraftingEpisode state machine sharing the same RuntimeApprovalGate —
+two packets would split ownership of one schema. Rejected: keep-five
+(divergent schema ownership risk) and consolidate-to-three (the candor gate's
+substrate — uspto-prosecution-read + citation goals — is genuinely separate;
+a merged wedge stops being problem-shaped).
+
+## 2026-08-01 — reconciliation grill: first wedge + sign-off
+
+**Question:** Which P1 wedge shapes first, and is the routing seed signed
+off?
+
+**Answer:** Signed off as amended (nine clusters → eight after the merge;
+four proposed slugs; grill annotations resolved). First wedge:
+`patent-citation-candor-gate`. BRIEF/MAP shaping may begin with that packet.
+
+**Rationale:** Four of five /adhd frames converged on citation-event
+reification independently; the first step is one failing CandorPolicy test
+over existing PatentReference + verified-anchor substrate; it retires a live
+duty-of-candor risk without waiting on any other wedge. Rejected as first:
+relator runtime (foundational but blocks nothing), episode ledger (largest
+scope; its limitation-support rung depends on citation-verified-span-substrate
+P0), FunctionalUnit cluster (analysis tooling over risk-retiring capability).

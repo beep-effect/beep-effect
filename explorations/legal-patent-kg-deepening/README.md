@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -17,12 +17,16 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Reconcile the routing seed with Benjamin: review the 9 clusters and 5
-proposed slugs in [`ROUTING-SEED.md`](./ROUTING-SEED.md), decide the three
-grill-gated standing-decision challenges (remo1 SKOS-only constraint
-profiles, remo2 derived matter projections, remo3 Cognee-as-lossy-projection)
-via `/grill-with-docs`, and obtain sign-off before any BRIEF/MAP shaping.
-The campaign is stopped at the routing seed by design.
+Open the first wedge: create the `patent-citation-candor-gate` exploration
+packet and walk it through the normal `/explore` stages (capture → research →
+align) toward shaping (first implementation rung once shaped: a failing
+CandorPolicy test over the existing `PatentReference` + verified-anchor
+substrate). The 2026-08-01 reconciliation grill signed off the routing matrix
+as amended (8 clusters, 4 proposed slugs, all three grill-gated challenges
+resolved without supersession — see [`DECISIONS.md`](./DECISIONS.md)); the
+remaining P1 wedges (`legal-position-relator-runtime`,
+`patent-drafting-episode-ledger`, FunctionalUnit into
+`uspto-patent-driver-depth`) queue behind it.
 
 ## Read This First
 
@@ -60,3 +64,9 @@ The campaign is stopped at the routing seed by design.
   nuggets), `ROUTING-SEED.md`/`routing-seed.json` (9 grounded clusters, 5
   proposed slugs, 3 grill-gated challenges), `HANDOFF.md`. Campaign stopped
   at the routing seed per DECISIONS staging; awaiting Benjamin's sign-off.
+- 2026-08-01: reconciliation grill with Benjamin — matrix SIGNED OFF as
+  amended: remo1/remo2/remo3 all resolved without supersession (five new
+  DECISIONS entries + a clarifying memory-architecture decision-log entry);
+  promotion-gates cluster merged into `patent-drafting-episode-ledger` (4
+  proposed slugs); first wedge = `patent-citation-candor-gate`. Stage
+  research → align.
