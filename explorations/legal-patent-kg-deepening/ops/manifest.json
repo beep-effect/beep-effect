@@ -6,8 +6,8 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "FOPNet: is the functional-semantic patent KG pattern portable to the epistemic slice and patent tooling, and what would a schema-first port look like?",
-      "Do the Hohfeldian formalization papers change semantic-foundation's SKOS-first stance, or route to a new epistemic capability?",
+      "Routing-seed reconciliation: review ROUTING-SEED.md's 9 clusters and 5 proposed slugs with Benjamin and gate them into the explorations/ -> goals/ pipeline (reconciliation-first).",
+      "Grill-gated challenges to standing decisions: remo1 (executable ConstraintProfile vs wave-1 SKOS-only), remo2 (derived MatterProjection vs no-graph-store), remo3 (Cognee as lossy projection vs 2026-07-25 memory doctrine) - each needs /grill-with-docs, never silent routing.",
       "Endpoint gate: BRIEF/MAP shaping is blocked on Benjamin's sign-off over the syntheses + ROUTING-SEED (locked 2026-08-01)."
     ],
     "sources": ["research/SOURCES.md"],

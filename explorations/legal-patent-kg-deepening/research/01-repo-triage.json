@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "lpkd-repo-triage/v1",
+  "generated": "2026-08-01",
+  "rows": [
+    {
+      "id": "R01",
+      "name": "ai-legal-claude",
+      "verdict": "skip",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "Claude Code contract-review prompt and agent bundle with PDF-report scripts, but no ontology, knowledge-graph schema, or patent dataset.",
+      "mineTargets": []
+    },
+    {
+      "id": "R02",
+      "name": "awesome-legal-data",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "CC0-1.0",
+      "oneLiner": "A single curated README of legal datasets, corpora, portals, benchmarks, and tools organized mostly by jurisdiction, with no bundled dataset.",
+      "mineTargets": []
+    },
+    {
+      "id": "R03",
+      "name": "CapturingLegalReasoningPaths",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "Japanese court-judgment reasoning-path assets comprising a lightweight JSON-LD legal-KG ontology, bilingual extraction prompts, and an annotated spreadsheet.",
+      "mineTargets": []
+    },
+    {
+      "id": "R04",
+      "name": "cjeu-ontology-mappings",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "CC-BY-4.0",
+      "oneLiner": "A spreadsheet coverage study mapping selected CJEU case-law properties to ELI, CDM, LAKI, MetaLex, LKIF, and Oikeus.",
+      "mineTargets": ["mappingfile.xlsx"]
+    },
+    {
+      "id": "R05",
+      "name": "CommonCoreOntologies",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "BSD-3-Clause",
+      "oneLiner": "A BFO-aligned suite of eleven generic mid-level OWL ontologies with modular and merged releases, documentation, and release tooling.",
+      "mineTargets": [
+        "src/cco-modules/",
+        "src/cco-merged/",
+        "documentation/user-guides/"
+      ]
+    },
+    {
+      "id": "R06",
+      "name": "DAOnt",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "CC-BY-SA-4.0",
+      "oneLiner": "An EU Data Act ontology integrating LKIF-Core, ODRL, and DPV with contract examples and SPARQL-driven compliance-checking code.",
+      "mineTargets": [
+        "DAOnt.ttl",
+        "compliance-checks/queries/",
+        "compliance-checks/compliance_checker.py"
+      ]
+    },
+    {
+      "id": "R07",
+      "name": "GLEIO",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "An RDF/OWL vocabulary for current and historical Legal Entity Identifier reference data, accompanied by a JSON schema and white paper.",
+      "mineTargets": []
+    },
+    {
+      "id": "R08",
+      "name": "knowledge_graph",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "A proof of concept that regex-extracts violators, violations, actions, fines, and dates from SEC litigation releases into tabular and nested graph outputs.",
+      "mineTargets": []
+    },
+    {
+      "id": "R09",
+      "name": "Legal-Ontologies",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "CC-BY-SA-4.0",
+      "oneLiner": "A curated README of legal ontology and knowledge-graph resources, datasets, development tools, and tutorials, without bundled ontology artifacts.",
+      "mineTargets": []
+    },
+    {
+      "id": "R10",
+      "name": "Legal-Ontology-Learning",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "MIT",
+      "oneLiner": "A Python legal-domain ontology-learning experiment pipeline covering preprocessing, topic modeling, word and topic clustering, and cluster evaluation.",
+      "mineTargets": [
+        "src/topic_model.py",
+        "src/topics_clustering.py",
+        "src/clusters_evaluation.py"
+      ]
+    },
+    {
+      "id": "R11",
+      "name": "legal-ontology-population",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "A single OWL mapping artifact between LKIF and YAGO created for MIREL legal ontology population.",
+      "mineTargets": []
+    },
+    {
+      "id": "R12",
+      "name": "LegalCaseKnowledgeGraph",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "A Chinese legal-case dataset pairing narrative case facts with hand-structured subject-relation-object triples; it is not a FOPNet repository.",
+      "mineTargets": []
+    },
+    {
+      "id": "R13",
+      "name": "LegalDatasets",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "Apache-2.0",
+      "oneLiner": "A DVC-backed collection of legal-data scrapers and dataset preparation lanes built around a normalized multilingual legal-document JSONL schema.",
+      "mineTargets": [
+        "pretrain/Scraping/",
+        "finetune/lextreme/",
+        "scripts/create_statistics.py"
+      ]
+    },
+    {
+      "id": "R14",
+      "name": "LegalPapers",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "A README-only bibliography of legal-intelligence datasets and papers across prediction, extraction, retrieval, summarization, and question answering.",
+      "mineTargets": []
+    },
+    {
+      "id": "R15",
+      "name": "LegalPP",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "MIT",
+      "oneLiner": "Code and a packaged LegalLPP dataset for text-guided legal-provision prediction framed as knowledge-graph completion with BERT embeddings and R-GCN or GAT encoders.",
+      "mineTargets": ["data.zip", "dataset.py", "module/graph_encoder.py"]
+    },
+    {
+      "id": "R16",
+      "name": "lkif-core",
+      "verdict": "skip",
+      "wave1Overlap": true,
+      "license": "CC-BY-4.0",
+      "oneLiner": "The fifteen-module LKIF-Core legal ontology library in OWL and Turtle, already vendored, verified, and assessed in the wave-1 legal-ontology-landscape packet.",
+      "mineTargets": []
+    },
+    {
+      "id": "R17",
+      "name": "llm4oe-slr",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "CC-BY-4.0",
+      "oneLiner": "Reproducible systematic-review tables covering 36 papers and 49 studies of LLM-supported ontology-engineering tasks, methods, evaluations, and datasets.",
+      "mineTargets": [
+        "Data Extraction/Full_Data_Extraction_from_36_papers.xlsx",
+        "Data Extraction/Data_Extraction_for_RQ2.xlsx",
+        "Experiment Datasets/full_experiment_datasets_summary.xlsx"
+      ]
+    },
+    {
+      "id": "R18",
+      "name": "O3POntology",
+      "verdict": "skip",
+      "wave1Overlap": false,
+      "license": "MIT",
+      "oneLiner": "A BFO-aligned OWL 2 DL domain ontology for offshore petroleum-production plants, not legal or patent knowledge.",
+      "mineTargets": []
+    },
+    {
+      "id": "R19",
+      "name": "patentlego-ontology",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "CC-BY-SA-4.0",
+      "oneLiner": "A prose v0.1 functional patent-block vocabulary defining typed inputs and outputs, purpose categories, energy roles, scale, domain, connection points, and system templates.",
+      "mineTargets": ["PatentLEGO_README.md"]
+    },
+    {
+      "id": "R20",
+      "name": "patentprocess-ontology",
+      "verdict": "skip",
+      "wave1Overlap": false,
+      "license": "EPL-1.0+",
+      "oneLiner": "A skeletal Clojure project template whose README remains boilerplate and whose shallow tree exposes no ontology artifact or implementation source.",
+      "mineTargets": []
+    },
+    {
+      "id": "R21",
+      "name": "raglex",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "A multi-jurisdiction legal-corpus harvester and hybrid search system with content-addressed raw storage, document versions, citation resolution, graph expansion, adapters, and a PostgreSQL schema.",
+      "mineTargets": []
+    },
+    {
+      "id": "R22",
+      "name": "Semantic-Text-Similarity-STS-with-functional-semantic-knowledge-FOP-in-patents",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "The FOPNet-priority implementation: Function-Object-Property patent triples, sample patent and IPC data, weighted semantic-similarity algorithms, and MAP, MRR, NDCG, and recall evaluation code; absent license evidence prevents extraction.",
+      "mineTargets": []
+    },
+    {
+      "id": "R23",
+      "name": "semanticlaw",
+      "verdict": "deep-mine",
+      "wave1Overlap": false,
+      "license": "Apache-2.0",
+      "oneLiner": "Swiss-law RDF vocabularies and example statute graphs with a Python collector that represents legal texts as RDF.",
+      "mineTargets": [
+        "swisslaw.ttl",
+        "collector.py",
+        "0_Bundesgesetz_über_die_Jagd.ttl"
+      ]
+    },
+    {
+      "id": "R24",
+      "name": "USPTO_ClassOntology",
+      "verdict": "reference-only",
+      "wave1Overlap": false,
+      "license": "none-found",
+      "oneLiner": "Python scripts and RAR archives for collecting USPTO class definitions and comparing them with patent claims; the repository LICENSE file is empty.",
+      "mineTargets": []
+    }
+  ]
+}
