@@ -337,20 +337,61 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "rejects inconsistent wait reasons and round-trips consistent ones",
+    "rejects inconsistent canonical wait reasons and decodes consistent plan approvals",
     Effect.fn("HookPulseTest.rejectsInconsistentWaitReasons")(function* () {
-      const consistent = yield* decodeHookPulseFromRaw(approvedToolPermissionRequest);
-      const inconsistent = HookPulseV1.make({
-        ...consistent,
-        waitReason: HookPulseWaitReason.Enum["idle-input"],
-      });
+      const consistent = yield* decodeHookPulseFromRaw(approvedPlanPermissionRequest);
+      const encoded = yield* encodeHookPulse(consistent);
 
-      const failure = yield* Effect.flip(encodeHookPulseToRaw(inconsistent));
-      const encoded = yield* encodeHookPulseToRaw(consistent);
-      const roundTripped = yield* decodeHookPulseFromRaw(encoded);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          hookEvent: HookPulseEvent.Enum.PostToolUse,
+        })
+      );
+      const decoded = yield* decodeHookPulse(encoded);
+      const raw = yield* encodeHookPulseToRaw(decoded);
+      const roundTripped = yield* decodeHookPulseFromRaw(raw);
 
       expect(failure._tag).toBe("SchemaError");
-      expect(hookPulseEquivalent(roundTripped, consistent)).toBe(true);
+      expect(failure.message).toContain(
+        "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType"
+      );
+      expect(decoded.hookEvent).toBe("PermissionRequest");
+      expect(decoded.toolName).toEqual(O.some("ExitPlanMode"));
+      expect(decoded.waitReason).toBe("plan-approval");
+      expect(hookPulseEquivalent(roundTripped, decoded)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "clamps derived records without upgrading weaker evidence tiers",
+    Effect.fn("HookPulseTest.clampsDerivedEvidenceTier")(function* () {
+      const inputTiers = [
+        HookPulseEvidenceTier.Enum.observed,
+        HookPulseEvidenceTier.Enum.derived,
+        HookPulseEvidenceTier.Enum.heuristic,
+        HookPulseEvidenceTier.Enum.unknown,
+      ];
+      const expectedTiers = ["derived", "derived", "heuristic", "unknown"];
+      const decoded = yield* Effect.forEach(
+        inputTiers,
+        (evidenceTier) => decodeHookPulseFromRaw({ ...approvedToolPermissionRequest, evidenceTier }),
+        { concurrency: 1 }
+      );
+      const encoded = yield* Effect.forEach(
+        inputTiers,
+        (evidenceTier) =>
+          encodeHookPulseToRaw(
+            HookPulseV1.make({
+              ...decoded[0],
+              evidenceTier,
+            })
+          ),
+        { concurrency: 1 }
+      );
+
+      expect(A.map(decoded, (record) => record.evidenceTier)).toEqual(expectedTiers);
+      expect(A.map(encoded, (record) => record.evidenceTier)).toEqual(expectedTiers);
     })
   );
 

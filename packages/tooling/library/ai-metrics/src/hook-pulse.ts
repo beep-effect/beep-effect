@@ -310,13 +310,17 @@ const derivePermissionWaitReason = (toolName: O.Option<string>): HookPulseWaitRe
       }),
   });
 
-const deriveWaitReason = (event: HookPulseRawEvent): HookPulseWaitReason =>
-  HookPulseEvent.$match(event.hook_event_name, {
+const deriveWaitReason = (
+  hookEvent: HookPulseEvent,
+  toolName: O.Option<string>,
+  notificationType: O.Option<string>
+): HookPulseWaitReason =>
+  HookPulseEvent.$match(hookEvent, {
     PreToolUse: HookPulseWaitReason.thunk.none,
-    PermissionRequest: () => derivePermissionWaitReason(event.tool_name),
+    PermissionRequest: () => derivePermissionWaitReason(toolName),
     PostToolUse: HookPulseWaitReason.thunk.none,
     Notification: () =>
-      Bool.match(O.exists(event.notification_type, HookPulseNotificationType.is.idle_prompt), {
+      Bool.match(O.exists(notificationType, HookPulseNotificationType.is.idle_prompt), {
         onFalse: HookPulseWaitReason.thunk.unknown,
         onTrue: HookPulseWaitReason.thunk["idle-input"],
       }),
@@ -324,6 +328,14 @@ const deriveWaitReason = (event: HookPulseRawEvent): HookPulseWaitReason =>
     Stop: HookPulseWaitReason.thunk.none,
     SessionEnd: HookPulseWaitReason.thunk.none,
     PermissionDenied: HookPulseWaitReason.thunk.none,
+  });
+
+const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPulseEvidenceTier =>
+  HookPulseEvidenceTier.$match(evidenceTier, {
+    observed: HookPulseEvidenceTier.thunk.derived,
+    derived: HookPulseEvidenceTier.thunk.derived,
+    heuristic: HookPulseEvidenceTier.thunk.heuristic,
+    unknown: HookPulseEvidenceTier.thunk.unknown,
   });
 
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
@@ -356,7 +368,7 @@ const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
  * @since 0.0.0
  */
 export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
-  {
+  S.Struct({
     schemaVersion: HookPulseSchemaVersion,
     ts: S.DateTimeUtcFromString,
     sessionId: S.NonEmptyString,
@@ -375,7 +387,21 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
     durationMs: S.OptionFromOptionalKey(NonNegNum),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
-  },
+  }).check(
+    S.makeFilter(
+      (input) =>
+        areHookPulseWaitReasonsEquivalent(
+          input.waitReason,
+          deriveWaitReason(input.hookEvent, input.toolName, input.notificationType)
+        ),
+      {
+        identifier: "HookPulseWaitReasonInvariant",
+        title: "Hook-pulse wait-reason derivation invariant",
+        description: "Requires waitReason to agree with the value derived from the canonical hook event fields.",
+        message: "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType",
+      }
+    )
+  ),
   $I.annote("HookPulseV1", {
     description: "Privacy-safe hook event used as first-class raw history for wait attribution and replay.",
   })
@@ -422,8 +448,12 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
           cwd: input.event.cwd,
           notifierRev: input.notifierRev,
           instrumentClass: input.instrumentClass,
-          evidenceTier: input.evidenceTier,
-          waitReason: deriveWaitReason(input.event),
+          evidenceTier: clampDerivedEvidenceTier(input.evidenceTier),
+          waitReason: deriveWaitReason(
+            input.event.hook_event_name,
+            input.event.tool_name,
+            input.event.notification_type
+          ),
           ...O.getSomesStruct({
             toolName: input.event.tool_name,
             toolUseId: input.event.tool_use_id,
@@ -460,25 +490,31 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               reason: O.fromUndefinedOr(input.sessionEndReason),
             });
 
-            return Bool.match(areHookPulseWaitReasonsEquivalent(input.waitReason, deriveWaitReason(event)), {
-              onFalse: () =>
-                Effect.fail(
-                  new SchemaIssue.InvalidValue(O.some(input), {
-                    message: "Expected waitReason to match the value derived from the encoded raw hook event",
-                  })
-                ),
-              onTrue: () =>
-                Effect.succeed(
-                  HookPulseRawEventInput.make({
-                    event,
-                    notifierRev: input.notifierRev,
-                    instrumentClass: input.instrumentClass,
-                    agentKind: input.agentKind,
-                    evidenceTier: input.evidenceTier,
-                    ts: input.ts,
-                  })
-                ),
-            });
+            return Bool.match(
+              areHookPulseWaitReasonsEquivalent(
+                input.waitReason,
+                deriveWaitReason(event.hook_event_name, event.tool_name, event.notification_type)
+              ),
+              {
+                onFalse: () =>
+                  Effect.fail(
+                    new SchemaIssue.InvalidValue(O.some(input), {
+                      message: "Expected waitReason to match the value derived from the encoded raw hook event",
+                    })
+                  ),
+                onTrue: () =>
+                  Effect.succeed(
+                    HookPulseRawEventInput.make({
+                      event,
+                      notifierRev: input.notifierRev,
+                      instrumentClass: input.instrumentClass,
+                      agentKind: input.agentKind,
+                      evidenceTier: clampDerivedEvidenceTier(input.evidenceTier),
+                      ts: input.ts,
+                    })
+                  ),
+              }
+            );
           },
         }),
     })
