@@ -75,6 +75,7 @@ export const HtmlConformanceRule = LiteralKit([
   "obsoleteElement",
   "documentDoctype",
   "documentRoot",
+  "documentCardinality",
   "contentModel",
   "elementOrder",
   "foreignIntegration",
@@ -301,29 +302,48 @@ const attributeEquals = (value: unknown, expected: string): boolean =>
     O.exists((candidate) => candidate === expected)
   );
 
-type ForbiddenDescendantConstraint = {
-  readonly ancestor: HtmlTag;
-  readonly attributes: ReadonlyArray<keyof HtmlChildView>;
-  readonly categories: ReadonlyArray<string>;
-  readonly tags: ReadonlyArray<HtmlTag>;
+const hasNonBlankStringAttribute = (value: unknown): boolean =>
+  pipe(attributeValue(value), O.filter(isString), O.exists(flow(Str.trim, Str.isNonEmpty)));
+
+const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
+  pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
+
+type ElementOccurrence = {
+  readonly node: HtmlChildView;
+  readonly path: ReadonlyArray<string>;
+  readonly tag: HtmlTag;
 };
 
-const forbiddenDescendantConstraints: ReadonlyArray<ForbiddenDescendantConstraint> = [
-  { ancestor: "a", attributes: ["tabindex"], categories: ["interactive"], tags: ["a"] },
-  {
-    ancestor: "address",
-    attributes: [],
-    categories: ["heading", "sectioning"],
-    tags: ["address", "header", "footer"],
-  },
-  { ancestor: "button", attributes: ["tabindex"], categories: ["interactive"], tags: [] },
-  { ancestor: "dt", attributes: [], categories: ["heading", "sectioning"], tags: ["header", "footer"] },
-  { ancestor: "form", attributes: [], categories: [], tags: ["form"] },
-  { ancestor: "label", attributes: [], categories: [], tags: ["label"] },
-  { ancestor: "meter", attributes: [], categories: [], tags: ["meter"] },
-  { ancestor: "progress", attributes: [], categories: [], tags: ["progress"] },
-  { ancestor: "th", attributes: [], categories: ["heading", "sectioning"], tags: ["header", "footer"] },
-];
+const elementOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): ReadonlyArray<ElementOccurrence> => {
+  const own = isHtmlTag(node._tag) ? [{ node, path, tag: node._tag }] : A.emptyReadonly<ElementOccurrence>();
+  return [...own, ...A.flatMap(childrenOf(node), (child, index) => elementOccurrences(child, childPath(path, index)))];
+};
+
+const forbiddenDescendantConstraints = pipe(
+  R.toEntries(ELEMENT_META),
+  A.flatMap(([ancestor, meta]) =>
+    pipe(
+      meta.rules.forbiddenDescendants,
+      O.fromUndefinedOr,
+      O.map((rule) => ({ ancestor, ...rule })),
+      O.toArray
+    )
+  )
+);
+
+const forbiddenNamedAncestorConstraints = pipe(
+  R.toEntries(ELEMENT_META),
+  A.flatMap(([descendant, meta]) =>
+    pipe(
+      meta.rules.forbiddenNamedAncestors,
+      O.fromUndefinedOr,
+      O.match({
+        onNone: A.emptyReadonly,
+        onSome: A.map((condition) => ({ descendant, ...condition })),
+      })
+    )
+  )
+);
 
 const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<string> => {
   const meta = ELEMENT_META[tag];
@@ -351,11 +371,11 @@ const inspectForbiddenDescendants = (
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   const categories = effectiveCategories(node, tag);
-  return A.flatMap(forbiddenDescendantConstraints, (constraint) =>
+  const descendantIssues = A.flatMap(forbiddenDescendantConstraints, (constraint) =>
     A.contains(ancestors, constraint.ancestor)
       ? pipe(
           constraint.attributes,
-          A.findFirst((attribute) => hasAttribute(node[attribute])),
+          A.findFirst((attribute) => hasAttribute(Reflect.get(node, attribute))),
           O.match({
             onNone: () =>
               A.contains(constraint.tags, tag) ||
@@ -373,6 +393,32 @@ const inspectForbiddenDescendants = (
         )
       : A.emptyReadonly()
   );
+  const ancestorIssues = pipe(
+    ELEMENT_META[tag].rules.permittedAncestors,
+    O.fromUndefinedOr,
+    O.flatMap((permitted) =>
+      A.findFirst(ancestors, (ancestor) => !isHtmlTag(ancestor) || !A.contains(permitted, ancestor))
+    ),
+    O.map((ancestor) => makeIssue(path, "forbiddenDescendant", `<${tag}> is forbidden beneath <${ancestor}>`)),
+    O.toArray
+  );
+  const namedAncestorIssues = A.flatMap(forbiddenNamedAncestorConstraints, (constraint) =>
+    constraint.tag === tag &&
+    A.some(constraint.attributes, (attribute) => hasNonBlankStringAttribute(Reflect.get(node, attribute)))
+      ? pipe(
+          elementOccurrences(node, path),
+          A.filter((occurrence) => occurrence.tag === constraint.descendant),
+          A.map((occurrence) =>
+            makeIssue(
+              occurrence.path,
+              "forbiddenDescendant",
+              `<${constraint.descendant}> is forbidden beneath named <${constraint.tag}>`
+            )
+          )
+        )
+      : A.emptyReadonly()
+  );
+  return [...descendantIssues, ...ancestorIssues, ...namedAncestorIssues];
 };
 
 const inspectElementAttributes = (
@@ -463,8 +509,33 @@ const inspectAttributeRelationships = (
   return [...requiredIssues, ...equalityIssues, ...numericIssues];
 };
 
-const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
-  pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
+const inspectDocumentVisibilityLimits = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> => {
+  const occurrences = elementOccurrences(root, []);
+  return A.flatMap(R.toEntries(ELEMENT_META), ([tag, meta]) =>
+    pipe(
+      meta.rules.documentVisibilityLimit,
+      O.fromUndefinedOr,
+      O.match({
+        onNone: A.emptyReadonly,
+        onSome: ({ maximum, unlessAttribute }): ReadonlyArray<HtmlConformanceIssue> => {
+          const visible = A.filter(
+            occurrences,
+            (occurrence) => occurrence.tag === tag && !hasAttribute(Reflect.get(occurrence.node, unlessAttribute))
+          );
+          return visible.length > maximum
+            ? A.map(visible, (occurrence) =>
+                makeIssue(
+                  occurrence.path,
+                  "documentCardinality",
+                  `<${tag}> may appear visibly at most ${maximum} time per document`
+                )
+              )
+            : A.emptyReadonly();
+        },
+      })
+    )
+  );
+};
 
 type IdOccurrence = {
   readonly path: ReadonlyArray<string>;
@@ -577,6 +648,29 @@ const inspectLabelableDescendants = (
 const effectiveContentTokens = (tokens: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.flatMap(tokens, (token) => HTML_CONTENT_TOKEN_EXPANSIONS[token] ?? [token]);
 
+const contentTokensFor = (
+  tag: HtmlTag,
+  ancestors: ReadonlyArray<string>,
+  ancestorContentTokens: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  Match.value(ELEMENT_META[tag].childGrammar).pipe(
+    Match.when("contextual-div", () => {
+      if (O.contains(A.last(ancestors), "dl")) return ["dt", "dd", "script-supporting elements"];
+      return A.some(ancestors, (ancestor) => ancestor === "option" || ancestor === "optgroup" || ancestor === "select")
+        ? ancestorContentTokens
+        : ["flow"];
+    }),
+    Match.orElse(() => {
+      const ownTokens = effectiveContentTokens(ELEMENT_META[tag].children);
+      return A.contains(ownTokens, "transparent")
+        ? A.appendAll(
+            A.filter(ownTokens, (token) => token !== "transparent"),
+            ancestorContentTokens
+          )
+        : ownTokens;
+    })
+  );
+
 const isScriptSupporting = (tag: string): boolean => tag === "script" || tag === "template";
 const tableChildSequencePattern = new RegExp(
   pipe(
@@ -618,7 +712,7 @@ const inspectChildModel = (
   parent: HtmlChildView,
   children: ReadonlyArray<HtmlChildView>,
   path: ReadonlyArray<string>,
-  ancestorContentTokens: ReadonlyArray<string>
+  tokens: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> =>
   pipe(
     parent._tag,
@@ -626,13 +720,6 @@ const inspectChildModel = (
     O.match({
       onNone: A.emptyReadonly,
       onSome: (tag): ReadonlyArray<HtmlConformanceIssue> => {
-        const ownTokens = effectiveContentTokens(ELEMENT_META[tag].children);
-        const tokens = A.contains(ownTokens, "transparent")
-          ? A.appendAll(
-              A.filter(ownTokens, (token) => token !== "transparent"),
-              ancestorContentTokens
-            )
-          : ownTokens;
         if (tag === "noscript") {
           return [
             makeIssue(
@@ -671,12 +758,14 @@ const inspectChildModel = (
     })
   );
 
-const descriptionGroupSequence = /^(?:(?:dt,)+(?:dd,)+)+$/u;
+const descriptionGroupSequence = /^(?:dt,)+(?:dd,)+$/u;
+const descriptionGroupsSequence = /^(?:(?:dt,)+(?:dd,)+)+$/u;
 
 const inspectElementOrder = (
   parent: HtmlChildView,
   children: ReadonlyArray<HtmlChildView>,
-  path: ReadonlyArray<string>
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   /* istanbul ignore next -- inspectChild invokes order inspection only after deriving an HtmlTag */
   if (!isHtmlTag(parent._tag)) return A.emptyReadonly();
@@ -710,8 +799,10 @@ const inspectElementOrder = (
         (first.value === 0 || (edge === "either" && first.value === significantChildren.length - 1)))
     );
   };
-  const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean =>
+  const isDescriptionGroup = (tags: ReadonlyArray<HtmlTag>): boolean =>
     descriptionGroupSequence.test(`${A.join(tags, ",")},`);
+  const isDescriptionGroups = (tags: ReadonlyArray<HtmlTag>): boolean =>
+    descriptionGroupsSequence.test(`${A.join(tags, ",")},`);
 
   return Match.value(ELEMENT_META[parent._tag].childGrammar).pipe(
     Match.when("document-element", () =>
@@ -748,12 +839,17 @@ const inspectElementOrder = (
                 nested._tag !== "dt" &&
                 nested._tag !== "dd")
           );
-          return !invalidNested && isDescriptionGroups(nestedTags);
+          return !invalidNested && isDescriptionGroup(nestedTags);
         });
       return (sequenceTags.length === 0 || direct || wrapped) && !significantText
         ? A.emptyReadonly()
         : issue("<dl> children must be complete dt+ / dd+ groups, directly or in <div> wrappers");
     }),
+    Match.when("contextual-div", () =>
+      O.contains(A.last(ancestors), "dl") && (!isDescriptionGroup(sequenceTags) || significantText)
+        ? issue("A <div> child of <dl> must contain one complete dt+ / dd+ group")
+        : A.emptyReadonly()
+    ),
     Match.when("details", () =>
       A.filter(elementTags, (tag) => tag === "summary").length === 1 &&
       O.exists(firstSignificantChild, (child) => child._tag === "summary")
@@ -1060,15 +1156,21 @@ const inspectChild = (
           ? [makeIssue(path, "obsoleteElement", `<${tag}> is obsolete and non-conforming`)]
           : A.empty<HtmlConformanceIssue>();
       const ownTokens = effectiveContentTokens(meta.children);
-      const childContentTokens = A.contains(ownTokens, "transparent") ? ancestorContentTokens : ownTokens;
+      const contentTokens = contentTokensFor(tag, ancestors, ancestorContentTokens);
+      const childContentTokens =
+        meta.childGrammar === "contextual-div"
+          ? contentTokens
+          : A.contains(ownTokens, "transparent")
+            ? ancestorContentTokens
+            : ownTokens;
       const local = [
         ...own,
         ...inspectForbiddenDescendants(node, tag, path, ancestors),
         ...inspectLabelableDescendants(node, tag, path),
         ...inspectElementAttributes(node, tag, path),
         ...inspectAttributeRelationships(node, tag, path, ancestors),
-        ...inspectChildModel(node, children, path, ancestorContentTokens),
-        ...inspectElementOrder(node, children, path),
+        ...inspectChildModel(node, children, path, contentTokens),
+        ...inspectElementOrder(node, children, path, ancestors),
       ];
       return A.appendAll(
         local,
@@ -1115,6 +1217,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
         ...doctypeIssues,
         ...rootIssues,
         ...A.flatMap(children, (child, index) => inspectChild(child, childPath([], index), [], ["html"])),
+        ...inspectDocumentVisibilityLimits(view),
       ];
     }),
     Match.when("#fragment", (): ReadonlyArray<HtmlConformanceIssue> => {

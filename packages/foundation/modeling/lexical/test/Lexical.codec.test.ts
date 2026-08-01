@@ -521,6 +521,51 @@ describe("Lexical.codec", () => {
     }
   });
 
+  it("preserves plain-text content when a list item block is not representable in Lexical", () => {
+    const document = MdModel.Document.make({
+      children: [
+        MdModel.Ul.make({
+          children: [
+            MdModel.Li.make({
+              children: [
+                MdModel.P.make({
+                  children: [
+                    mdText("text"),
+                    MdModel.RawMarkdown.make({ value: "**raw**" }),
+                    MdModel.RawHtml.make({ value: "<b>raw</b>" }),
+                    MdModel.Strong.make({ children: [mdText("strong")] }),
+                    MdModel.Em.make({ children: [mdText("em")] }),
+                    MdModel.Del.make({ children: [mdText("del")] }),
+                    MdModel.Code.make({ value: "code" }),
+                    MdModel.A.make({ href: "https://example.com", children: [mdText("link")] }),
+                    MdModel.Img.make({ src: "https://example.com/image.png", alt: "image" }),
+                    MdModel.Br.make({}),
+                    MdModel.InlineMath.make({ value: "x+y" }),
+                    MdModel.FootnoteReference.make({ identifier: "note" }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    expect(roundTrip(document)).toEqual(
+      MdModel.Document.make({
+        children: [
+          MdModel.Ul.make({
+            children: [
+              MdModel.Li.make({
+                children: [mdText("text**raw**<b>raw</b>strongemdelcodelinkimage\nx+ynote")],
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+  });
+
   it("projects schema-derived arbitrary editor states onto valid Md documents (totality)", () => {
     fc.assert(
       fc.property(StateArbitrary, (state) => {

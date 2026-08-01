@@ -10,7 +10,11 @@ import { CauseTaggedError, SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
-import { isPandocKnownConstructorName, isPandocTableAlignmentConstructorName } from "./internal/Pandoc.registry.ts";
+import {
+  isPandocKnownConstructorName,
+  isPandocSupportedConstructorName,
+  isPandocTableAlignmentConstructorName,
+} from "./internal/Pandoc.registry.ts";
 import {
   BlockQuote,
   BulletList,
@@ -580,6 +584,26 @@ const rejectKnownConstructorInContext = (
     )
   );
 
+const rejectUnsupportedCurrentConstructor = (
+  wire: PandocConstructorWire,
+  context: PandocConstructorContext
+): Effect.Effect<never, S.SchemaError> =>
+  Effect.fail(
+    new S.SchemaError(
+      new SchemaIssue.InvalidValue(O.some(wire), {
+        message: `Pandoc 1.23.1 ${context} constructor ${wire.t} is outside the strict semantic subset`,
+      })
+    )
+  );
+
+const rejectKnownConstructor = (
+  wire: PandocConstructorWire,
+  context: PandocConstructorContext
+): Effect.Effect<never, S.SchemaError> =>
+  isPandocSupportedConstructorName(wire.t)
+    ? rejectKnownConstructorInContext(wire, context)
+    : rejectUnsupportedCurrentConstructor(wire, context);
+
 const rejectUnsupportedConstructorInSlot = (
   wire: PandocConstructorWire,
   slot: string
@@ -730,7 +754,7 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
       Match.when("Math", () => decodeMathInline(wire)),
       Match.orElse(() =>
         isPandocKnownConstructorName(wire.t)
-          ? rejectKnownConstructorInContext(wire, "inline")
+          ? rejectKnownConstructor(wire, "inline")
           : Effect.succeed(unknownInline(wire))
       )
     )
@@ -820,7 +844,7 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
       Match.when("Table", () => decodeTableBlock(wire.c)),
       Match.orElse(() =>
         isPandocKnownConstructorName(wire.t)
-          ? rejectKnownConstructorInContext(wire, "block")
+          ? rejectKnownConstructor(wire, "block")
           : Effect.succeed(unknownBlock(wire))
       )
     )
@@ -850,7 +874,7 @@ function decodeMetaValue(input: unknown): Effect.Effect<PandocMetaValue, S.Schem
       ),
       Match.orElse(() =>
         isPandocKnownConstructorName(wire.t)
-          ? rejectKnownConstructorInContext(wire, "meta")
+          ? rejectKnownConstructor(wire, "meta")
           : Effect.succeed(UnknownMeta.make({ wire }))
       )
     )
@@ -1134,7 +1158,9 @@ const inspectUnmatchedConstructor = (
           PandocLosslessIssue.make({
             constructor: wire.t,
             context,
-            message: `Known Pandoc constructor ${wire.t} cannot occur in ${context} context`,
+            message: isPandocSupportedConstructorName(wire.t)
+              ? `Known Pandoc constructor ${wire.t} cannot occur in ${context} context`
+              : `Pandoc 1.23.1 ${context} constructor ${wire.t} is outside the strict semantic subset`,
             path,
           }),
         ]

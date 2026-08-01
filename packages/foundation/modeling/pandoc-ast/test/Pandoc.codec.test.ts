@@ -67,6 +67,86 @@ const SemanticClosureDocumentArbitrary = fc
   );
 const JsonArbitrary = S.toArbitrary(S.Json);
 const decodeUnknownJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const pinnedPandocConstructorNames = [
+  "Pandoc",
+  "Meta",
+  "MetaMap",
+  "MetaList",
+  "MetaBool",
+  "MetaString",
+  "MetaInlines",
+  "MetaBlocks",
+  "DefaultStyle",
+  "Example",
+  "Decimal",
+  "LowerRoman",
+  "UpperRoman",
+  "LowerAlpha",
+  "UpperAlpha",
+  "DefaultDelim",
+  "Period",
+  "OneParen",
+  "TwoParens",
+  "Format",
+  "RowHeadColumns",
+  "AlignLeft",
+  "AlignRight",
+  "AlignCenter",
+  "AlignDefault",
+  "ColWidth",
+  "ColWidthDefault",
+  "Row",
+  "TableHead",
+  "TableBody",
+  "TableFoot",
+  "Caption",
+  "Cell",
+  "RowSpan",
+  "ColSpan",
+  "Plain",
+  "Para",
+  "LineBlock",
+  "CodeBlock",
+  "RawBlock",
+  "BlockQuote",
+  "OrderedList",
+  "BulletList",
+  "DefinitionList",
+  "Header",
+  "HorizontalRule",
+  "Table",
+  "Figure",
+  "Div",
+  "SingleQuote",
+  "DoubleQuote",
+  "DisplayMath",
+  "InlineMath",
+  "Str",
+  "Emph",
+  "Underline",
+  "Strong",
+  "Strikeout",
+  "Superscript",
+  "Subscript",
+  "SmallCaps",
+  "Quoted",
+  "Cite",
+  "Code",
+  "Space",
+  "SoftBreak",
+  "LineBreak",
+  "Math",
+  "RawInline",
+  "Link",
+  "Image",
+  "Note",
+  "Span",
+  "Citation",
+  "AuthorInText",
+  "SuppressAuthor",
+  "NormalCitation",
+  "TableCaption",
+];
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -85,22 +165,26 @@ const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
 );
 
 const tableWire = ({
+  caption = [null, []],
   cellAlignment = { t: "AlignDefault" },
   columnAlignment = { t: "AlignDefault" },
   columnWidth = { t: "ColWidthDefault" },
+  headRows = [],
 }: {
+  readonly caption?: unknown;
   readonly cellAlignment?: unknown;
   readonly columnAlignment?: unknown;
   readonly columnWidth?: unknown;
+  readonly headRows?: ReadonlyArray<unknown>;
 } = {}) => ({
   "pandoc-api-version": [1, 23, 1],
   blocks: [
     {
       c: [
         ["", [], []],
-        [null, []],
+        caption,
         [[columnAlignment, columnWidth]],
-        [["", [], []], []],
+        [["", [], []], headRows],
         [
           [
             ["", [], []],
@@ -238,13 +322,16 @@ describe("Pandoc.codec", () => {
   });
 
   it("rejects known names from semantic unknown constructors and retains valid future constructors", () => {
-    expect(() => UnknownBlock.make({ wire: { c: "malformed-known", t: "Para" } })).toThrow(
+    expect(pinnedPandocConstructorNames).toHaveLength(78);
+    for (const name of pinnedPandocConstructorNames) {
+      expect(() => UnknownBlock.make({ wire: { t: name } })).toThrow(
+        "Expected a future Pandoc constructor name that is not already known."
+      );
+    }
+    expect(() => UnknownInline.make({ wire: { c: 42, t: "Row" } })).toThrow(
       "Expected a future Pandoc constructor name that is not already known."
     );
-    expect(() => UnknownInline.make({ wire: { c: 42, t: "Str" } })).toThrow(
-      "Expected a future Pandoc constructor name that is not already known."
-    );
-    expect(() => UnknownMeta.make({ wire: { c: "true", t: "MetaBool" } })).toThrow(
+    expect(() => UnknownMeta.make({ wire: { c: 42, t: "Citation" } })).toThrow(
       "Expected a future Pandoc constructor name that is not already known."
     );
 
@@ -256,6 +343,53 @@ describe("Pandoc.codec", () => {
 
     expect(encoded.blocks).toEqual([{ c: { exact: true }, extension: "retained", t: "FutureBlock" }]);
     expect(Effect.runSync(decodePandocJsonStrict(encoded))).toEqual(document);
+  });
+
+  it("rejects pinned current constructors outside the semantic subset and reports them losslessly", () => {
+    const unsupported = [
+      {
+        expected: ["Cite", "inline", "/blocks/0/c/0"],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: [{ c: 42, t: "Cite" }], t: "Para" }],
+          meta: {},
+        },
+      },
+      {
+        expected: ["Figure", "block", "/blocks/0"],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: {}, t: "Figure" }],
+          meta: {},
+        },
+      },
+    ] as const;
+
+    for (const { expected, wire } of unsupported) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([expected]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+
+    const futureWire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        { c: {}, t: "FutureFigure" },
+        { c: [{ c: 42, t: "FutureCite" }], t: "Para" },
+      ],
+      meta: {},
+    };
+    const semantic = Effect.runSync(decodePandocJsonStrict(futureWire));
+    expect(semantic.blocks[0]?._tag).toBe("unknownBlock");
+    const paragraph = semantic.blocks[1];
+    expect(paragraph?._tag).toBe("para");
+    if (paragraph?._tag === "para") {
+      expect(paragraph.children[0]?._tag).toBe("unknownInline");
+    }
+    const lossless = Effect.runSync(decodePandocJsonLossless(futureWire));
+    expect(lossless.issues).toEqual([]);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(futureWire);
   });
 
   it("rejects payloads on known nullary constructors and reports them losslessly", () => {
@@ -432,6 +566,47 @@ describe("Pandoc.codec", () => {
       ]);
       expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
     }
+  });
+
+  it("rejects pinned structural and newtype constructors nested in opaque table slots", () => {
+    const malformed = [
+      {
+        expected: ["Caption", "/blocks/0/c/1"],
+        wire: tableWire({ caption: { c: 42, t: "Caption" } }),
+      },
+      {
+        expected: ["Row", "/blocks/0/c/3/1/0"],
+        wire: tableWire({ headRows: [{ c: 42, t: "Row" }] }),
+      },
+      {
+        expected: ["RowSpan", "/blocks/0/c/3/1/0/1/0"],
+        wire: tableWire({
+          headRows: [[["", [], []], [{ c: 42, t: "RowSpan" }]]],
+        }),
+      },
+    ] as const;
+
+    for (const { expected, wire } of malformed) {
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        [expected[0], "block", expected[1]],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+
+    const futureWire = tableWire({
+      caption: { c: { exact: "caption" }, extension: true, t: "FutureCaption" },
+      headRows: [
+        { c: { exact: "row" }, extension: [1, 2], t: "FutureRow" },
+        [["", [], []], [{ c: { exact: "row-span" }, extension: { retained: true }, t: "FutureRowSpan" }]],
+      ],
+    });
+    const semantic = Effect.runSync(decodePandocJsonStrict(futureWire));
+    expect(Effect.runSync(encodePandocJson(semantic))).toEqual(futureWire);
+    const lossless = Effect.runSync(decodePandocJsonLossless(futureWire));
+    expect(lossless.issues).toEqual([]);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(futureWire);
   });
 
   it("rejects malformed standard table constructors and retains their exact wire losslessly", () => {

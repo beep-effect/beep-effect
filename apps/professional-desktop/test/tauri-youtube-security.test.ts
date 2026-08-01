@@ -74,9 +74,11 @@ describe("packaged YouTube security boundaries", () => {
     ]);
   });
 
-  it("keeps packaged workers on same-origin generated assets", () => {
+  it("keeps packaged workers scoped while permitting blob attachment previews", () => {
     expect(directiveSources(tauriConfig.app.security.csp, "worker-src")).toEqual(["'self'"]);
     expect(directiveSources(tauriConfig.app.security.devCsp, "worker-src")).toEqual(["'self'"]);
+    expect(directiveSources(tauriConfig.app.security.csp, "img-src")).toEqual(["'self'", "blob:"]);
+    expect(directiveSources(tauriConfig.app.security.devCsp, "img-src")).toEqual(["'self'", "blob:"]);
     expect(tauriConfig.app.security.csp).not.toContain("data:");
     expect(tauriConfig.app.security.devCsp).not.toContain("data:");
   });

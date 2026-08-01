@@ -40,12 +40,13 @@ first page. “Watch on YouTube” cancels its click and emits a typed, cancelab
 request. The Tauri desktop claims validated requests and uses the official
 opener plugin; an unclaimed browser request is opened explicitly. If the native
 opener rejects a claimed request, an accessible notice retains both a retry and
-an explicit browser fallback. Every path remains scoped to canonical watch URLs
-with an exact eleven-character video id.
+a keyboard-focusable, self-selecting URL fallback. Every path remains scoped to
+canonical watch URLs with an exact eleven-character video id.
 
 The packaged CSP keeps scripts, workers, and application assets on `'self'`;
 the ontology projection worker is emitted as a same-origin module asset rather
-than a `data:` URL. `style-src` additionally permits inline styles because the
-dock and resizable-panel runtimes calculate geometry through DOM style
-properties. This exception does not extend to scripts, frames, URLs rendered
+than a `data:` URL. `img-src` additionally permits `blob:` solely for revocable
+in-memory attachment thumbnails, and `style-src` permits inline styles because
+the dock and resizable-panel runtimes calculate geometry through DOM style
+properties. These exceptions do not extend to scripts, frames, URLs rendered
 from Markdown, or serialized HTML.

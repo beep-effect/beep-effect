@@ -5,44 +5,96 @@ import * as S from "effect/Schema";
 const $I = $PandocAstId.create("internal/Pandoc.registry");
 const $ModelI = $PandocAstId.create("Pandoc.model");
 
-const PandocInlineConstructorName = LiteralKit([
+const PandocCurrentInlineConstructorName = LiteralKit([
   "Str",
+  "Emph",
+  "Underline",
+  "Strong",
+  "Strikeout",
+  "Superscript",
+  "Subscript",
+  "SmallCaps",
+  "Quoted",
+  "Cite",
+  "Code",
   "Space",
   "SoftBreak",
   "LineBreak",
-  "Emph",
-  "Strong",
-  "Strikeout",
-  "Code",
+  "Math",
+  "RawInline",
   "Link",
   "Image",
-  "Span",
   "Note",
-  "Math",
+  "Span",
 ]).pipe(
-  $I.annoteSchema("PandocInlineConstructorName", {
-    description: "Constructor names recognized by the strict Pandoc inline decoder.",
+  $I.annoteSchema("PandocCurrentInlineConstructorName", {
+    description: "Exhaustive Pandoc 1.23.1 inline constructor-name registry.",
   })
 );
 
-const PandocBlockConstructorName = LiteralKit([
+const PandocSupportedInlineConstructorName = LiteralKit(
+  PandocCurrentInlineConstructorName.pickOptions([
+    "Str",
+    "Space",
+    "SoftBreak",
+    "LineBreak",
+    "Emph",
+    "Strong",
+    "Strikeout",
+    "Code",
+    "Link",
+    "Image",
+    "Span",
+    "Note",
+    "Math",
+  ])
+).pipe(
+  $I.annoteSchema("PandocSupportedInlineConstructorName", {
+    description: "Pandoc inline constructors represented by the strict semantic model.",
+  })
+);
+
+const PandocCurrentBlockConstructorName = LiteralKit([
   "Plain",
   "Para",
-  "Header",
-  "BlockQuote",
+  "LineBlock",
   "CodeBlock",
-  "BulletList",
+  "RawBlock",
+  "BlockQuote",
   "OrderedList",
+  "BulletList",
+  "DefinitionList",
+  "Header",
   "HorizontalRule",
-  "Div",
   "Table",
+  "Figure",
+  "Div",
 ]).pipe(
-  $I.annoteSchema("PandocBlockConstructorName", {
-    description: "Constructor names recognized by the strict Pandoc block decoder.",
+  $I.annoteSchema("PandocCurrentBlockConstructorName", {
+    description: "Exhaustive Pandoc 1.23.1 block constructor-name registry.",
   })
 );
 
-const PandocMetaConstructorName = LiteralKit([
+const PandocSupportedBlockConstructorName = LiteralKit(
+  PandocCurrentBlockConstructorName.pickOptions([
+    "Plain",
+    "Para",
+    "Header",
+    "BlockQuote",
+    "CodeBlock",
+    "BulletList",
+    "OrderedList",
+    "HorizontalRule",
+    "Div",
+    "Table",
+  ])
+).pipe(
+  $I.annoteSchema("PandocSupportedBlockConstructorName", {
+    description: "Pandoc block constructors represented by the strict semantic model.",
+  })
+);
+
+const PandocCurrentMetaConstructorName = LiteralKit([
   "MetaBool",
   "MetaString",
   "MetaInlines",
@@ -50,8 +102,40 @@ const PandocMetaConstructorName = LiteralKit([
   "MetaList",
   "MetaMap",
 ]).pipe(
-  $I.annoteSchema("PandocMetaConstructorName", {
-    description: "Constructor names recognized by the strict Pandoc metadata decoder.",
+  $I.annoteSchema("PandocCurrentMetaConstructorName", {
+    description: "Exhaustive Pandoc 1.23.1 metadata constructor-name registry.",
+  })
+);
+
+const PandocQuoteTypeConstructorName = LiteralKit(["SingleQuote", "DoubleQuote"]).pipe(
+  $I.annoteSchema("PandocQuoteTypeConstructorName", {
+    description: "Exhaustive Pandoc 1.23.1 quote-type constructor-name registry.",
+  })
+);
+
+const PandocCitationModeConstructorName = LiteralKit(["AuthorInText", "SuppressAuthor", "NormalCitation"]).pipe(
+  $I.annoteSchema("PandocCitationModeConstructorName", {
+    description: "Exhaustive Pandoc 1.23.1 citation-mode constructor-name registry.",
+  })
+);
+
+const PandocCurrentStructuralConstructorName = LiteralKit([
+  "Pandoc",
+  "Meta",
+  "Format",
+  "RowHeadColumns",
+  "Row",
+  "TableHead",
+  "TableBody",
+  "TableFoot",
+  "Caption",
+  "Cell",
+  "RowSpan",
+  "ColSpan",
+  "Citation",
+]).pipe(
+  $I.annoteSchema("PandocCurrentStructuralConstructorName", {
+    description: "Pandoc 1.23.1 data and newtype constructor names whose JSON forms are structural or envelope-owned.",
   })
 );
 
@@ -130,9 +214,12 @@ export const PandocListNumberDelimiter = LiteralKit(["DefaultDelim", "Period", "
 );
 
 const PandocKnownConstructorName = S.Union([
-  PandocInlineConstructorName,
-  PandocBlockConstructorName,
-  PandocMetaConstructorName,
+  PandocCurrentInlineConstructorName,
+  PandocCurrentBlockConstructorName,
+  PandocCurrentMetaConstructorName,
+  PandocQuoteTypeConstructorName,
+  PandocCitationModeConstructorName,
+  PandocCurrentStructuralConstructorName,
   PandocTableAlignmentConstructorName,
   PandocTableColumnWidthConstructorName,
   PandocMathType,
@@ -141,7 +228,23 @@ const PandocKnownConstructorName = S.Union([
   S.Literal("TableCaption"),
 ]).pipe(
   $I.annoteSchema("PandocKnownConstructorName", {
-    description: "Complete constructor-name registry understood anywhere by the strict Pandoc decoder.",
+    description: "Exhaustive Pandoc 1.23.1 constructor-name registry plus the supported TableCaption wire alias.",
+  })
+);
+
+const PandocSupportedConstructorName = S.Union([
+  PandocSupportedInlineConstructorName,
+  PandocSupportedBlockConstructorName,
+  PandocCurrentMetaConstructorName,
+  PandocTableAlignmentConstructorName,
+  PandocTableColumnWidthConstructorName,
+  PandocMathType,
+  PandocListNumberStyle,
+  PandocListNumberDelimiter,
+  S.Literal("TableCaption"),
+]).pipe(
+  $I.annoteSchema("PandocSupportedConstructorName", {
+    description: "Pandoc constructor names represented by the strict semantic model or its structural slots.",
   })
 );
 
@@ -153,6 +256,14 @@ const PandocKnownConstructorName = S.Union([
  * @since 0.0.0
  */
 export const isPandocKnownConstructorName = S.is(PandocKnownConstructorName);
+
+/**
+ * Returns whether a known constructor belongs to the strict semantic subset.
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isPandocSupportedConstructorName = S.is(PandocSupportedConstructorName);
 
 /**
  * Returns whether a name is a Pandoc table-alignment constructor.

@@ -162,6 +162,7 @@ interface El {
   readonly numericAttributeRelationships: ReadonlyArray<NumericAttributeRelationship>;
   readonly obsolete: boolean;
   readonly obsoleteAttributes: ReadonlyArray<string>;
+  readonly rules: ReviewedConformanceRules;
   readonly runtime: string;
   readonly tag: string;
   readonly textMode: TextMode;
@@ -206,6 +207,53 @@ class ConditionalCategoryRule extends S.Class<ConditionalCategoryRule>($I`Condit
   },
   $I.annote("ConditionalCategoryRule", {
     description: "An attribute predicate controlling membership in an HTML content category.",
+  })
+) {}
+
+class ReviewedForbiddenDescendants extends S.Class<ReviewedForbiddenDescendants>($I`ReviewedForbiddenDescendants`)(
+  {
+    attributes: S.Array(S.String),
+    categories: S.Array(S.String),
+    tags: S.Array(S.String),
+  },
+  $I.annote("ReviewedForbiddenDescendants", {
+    description: "Reviewed descendant exclusions attached to one generated HTML element profile.",
+  })
+) {}
+
+class ReviewedForbiddenNamedAncestor extends S.Class<ReviewedForbiddenNamedAncestor>(
+  $I`ReviewedForbiddenNamedAncestor`
+)(
+  {
+    attributes: S.String.pipe(S.NonEmptyArray),
+    tag: S.String,
+  },
+  $I.annote("ReviewedForbiddenNamedAncestor", {
+    description: "Reviewed named-ancestor exclusion attached to one generated HTML element profile.",
+  })
+) {}
+
+class ReviewedDocumentVisibilityLimit extends S.Class<ReviewedDocumentVisibilityLimit>(
+  $I`ReviewedDocumentVisibilityLimit`
+)(
+  {
+    maximum: S.Int.check(S.isGreaterThan(0)),
+    unlessAttribute: S.String,
+  },
+  $I.annote("ReviewedDocumentVisibilityLimit", {
+    description: "Reviewed document-wide visible-element cardinality limit.",
+  })
+) {}
+
+class ReviewedConformanceRules extends S.Class<ReviewedConformanceRules>($I`ReviewedConformanceRules`)(
+  {
+    documentVisibilityLimit: ReviewedDocumentVisibilityLimit.pipe(S.optionalKey),
+    forbiddenDescendants: ReviewedForbiddenDescendants.pipe(S.optionalKey),
+    forbiddenNamedAncestors: ReviewedForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
+    permittedAncestors: S.String.pipe(S.NonEmptyArray, S.optionalKey),
+  },
+  $I.annote("ReviewedConformanceRules", {
+    description: "Reviewed element-specific rules omitted from the tabular WHATWG element index.",
   })
 ) {}
 
@@ -256,6 +304,7 @@ class Classification extends S.Class<Classification>($I`Classification`)(
     boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
     childSequencePatterns: S.Record(S.String, S.String),
     conditionalCategories: S.Record(S.String, S.Array(ConditionalCategoryRule)),
+    conformanceRules: S.Record(S.String, ReviewedConformanceRules),
     contentTokenExpansions: S.Record(S.String, S.Array(S.String)),
     currentAttributeOverrides: S.Record(S.String, S.Array(S.String)),
     finiteNumberAttributes: S.Array(S.String),
@@ -506,6 +555,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "colgroup",
     "datalist",
     "details",
+    "div",
     "dl",
     "fieldset",
     "figure",
@@ -546,6 +596,162 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
       ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
     ]);
+
+  const requiredConformanceRuleTags = [
+    "a",
+    "address",
+    "audio",
+    "button",
+    "dfn",
+    "dt",
+    "footer",
+    "form",
+    "header",
+    "label",
+    "main",
+    "meter",
+    "progress",
+    "th",
+    "video",
+  ];
+  const configuredConformanceRuleTags = R.keys(classification.conformanceRules).sort();
+  if (JSON.stringify(configuredConformanceRuleTags) !== JSON.stringify(requiredConformanceRuleTags)) {
+    failGeneration(
+      `HTML generator requires an exact reviewed conformance-rule inventory; expected ${JSON.stringify(requiredConformanceRuleTags)}, received ${JSON.stringify(configuredConformanceRuleTags)}`
+    );
+  }
+  const configuredForbiddenDescendantTags = R.toEntries(classification.conformanceRules)
+    .filter(([, rules]) => rules.forbiddenDescendants !== undefined)
+    .map(([tag]) => tag)
+    .sort();
+  const requiredForbiddenDescendantTags = [
+    "a",
+    "address",
+    "audio",
+    "button",
+    "dfn",
+    "dt",
+    "footer",
+    "form",
+    "header",
+    "label",
+    "meter",
+    "progress",
+    "th",
+    "video",
+  ];
+  if (JSON.stringify(configuredForbiddenDescendantTags) !== JSON.stringify(requiredForbiddenDescendantTags)) {
+    failGeneration(
+      `HTML generator requires an exact forbidden-descendant inventory; expected ${JSON.stringify(requiredForbiddenDescendantTags)}, received ${JSON.stringify(configuredForbiddenDescendantTags)}`
+    );
+  }
+  const configuredPermittedAncestorTags = R.toEntries(classification.conformanceRules)
+    .filter(([, rules]) => rules.permittedAncestors !== undefined)
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(configuredPermittedAncestorTags) !== JSON.stringify(["main"])) {
+    failGeneration(
+      `HTML generator requires permitted-ancestor metadata exactly for <main>; received ${JSON.stringify(configuredPermittedAncestorTags)}`
+    );
+  }
+  const configuredDocumentVisibilityTags = R.toEntries(classification.conformanceRules)
+    .filter(([, rules]) => rules.documentVisibilityLimit !== undefined)
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(configuredDocumentVisibilityTags) !== JSON.stringify(["main"])) {
+    failGeneration(
+      `HTML generator requires document-visibility metadata exactly for <main>; received ${JSON.stringify(configuredDocumentVisibilityTags)}`
+    );
+  }
+  const configuredForbiddenNamedAncestors = classification.conformanceRules.main?.forbiddenNamedAncestors;
+  const requiredForbiddenNamedAncestors = [{ attributes: ["aria-label", "aria-labelledby", "title"], tag: "form" }];
+  if (JSON.stringify(configuredForbiddenNamedAncestors) !== JSON.stringify(requiredForbiddenNamedAncestors)) {
+    failGeneration(
+      `HTML generator requires the exact named-ancestor exclusion for <main>; expected ${JSON.stringify(requiredForbiddenNamedAncestors)}, received ${JSON.stringify(configuredForbiddenNamedAncestors)}`
+    );
+  }
+  const knownCategories = MutableHashSet.fromIterable(
+    R.values(contentModel).flatMap((entry) => entry.categories ?? [])
+  );
+  for (const [tag, rules] of R.toEntries(classification.conformanceRules)) {
+    if (
+      !MutableHashSet.has(elementNameSet, tag) ||
+      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
+    ) {
+      failGeneration(`HTML generator conformance rules name non-current element <${tag}>`);
+    }
+    if (
+      rules.forbiddenDescendants === undefined &&
+      rules.forbiddenNamedAncestors === undefined &&
+      rules.permittedAncestors === undefined &&
+      rules.documentVisibilityLimit === undefined
+    ) {
+      failGeneration(`HTML generator conformance rules for <${tag}> must not be empty`);
+    }
+    if (rules.forbiddenDescendants !== undefined) {
+      const { attributes, categories, tags } = rules.forbiddenDescendants;
+      if (attributes.length + categories.length + tags.length === 0) {
+        failGeneration(`HTML generator forbidden-descendant rules for <${tag}> must not be empty`);
+      }
+      for (const attribute of attributes) {
+        if (!MutableHashSet.has(globalKeys, attribute)) {
+          failGeneration(
+            `HTML generator forbidden-descendant rules for <${tag}> reference non-global attribute ${attribute}`
+          );
+        }
+      }
+      for (const category of categories) {
+        if (!MutableHashSet.has(knownCategories, category)) {
+          failGeneration(
+            `HTML generator forbidden-descendant rules for <${tag}> reference unknown category ${category}`
+          );
+        }
+      }
+      for (const descendantTag of tags) {
+        if (
+          !MutableHashSet.has(elementNameSet, descendantTag) ||
+          isObsolete(elementDfns.find((entry) => entry.linkingText[0] === descendantTag))
+        ) {
+          failGeneration(
+            `HTML generator forbidden-descendant rules for <${tag}> reference non-current <${descendantTag}>`
+          );
+        }
+      }
+    }
+    for (const ancestorTag of rules.permittedAncestors ?? []) {
+      if (
+        !MutableHashSet.has(elementNameSet, ancestorTag) ||
+        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === ancestorTag))
+      ) {
+        failGeneration(`HTML generator conformance rules for <${tag}> permit non-current <${ancestorTag}>`);
+      }
+    }
+    for (const condition of rules.forbiddenNamedAncestors ?? []) {
+      if (
+        !MutableHashSet.has(elementNameSet, condition.tag) ||
+        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === condition.tag))
+      ) {
+        failGeneration(`HTML generator named-ancestor rules for <${tag}> reference non-current <${condition.tag}>`);
+      }
+      const ancestorAttributes = modeledAttributesFor(condition.tag);
+      for (const attribute of condition.attributes) {
+        if (!MutableHashSet.has(ancestorAttributes, attribute)) {
+          failGeneration(
+            `HTML generator named-ancestor rules for <${tag}> reference unknown <${condition.tag} ${attribute}>`
+          );
+        }
+      }
+    }
+    if (rules.documentVisibilityLimit !== undefined) {
+      const { maximum, unlessAttribute } = rules.documentVisibilityLimit;
+      if (maximum < 1) {
+        failGeneration(`HTML generator document-visibility limit for <${tag}> must be positive`);
+      }
+      if (!MutableHashSet.has(modeledAttributesFor(tag), unlessAttribute)) {
+        failGeneration(`HTML generator document-visibility limit for <${tag}> references unknown ${unlessAttribute}`);
+      }
+    }
+  }
 
   for (const [tag, rules] of R.toEntries(classification.conditionalCategories)) {
     if (
@@ -886,6 +1092,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       currentAttributes,
       numericAttributeRelationships: classification.numericAttributeRelationships[tag] ?? [],
       obsoleteAttributes,
+      rules: classification.conformanceRules[tag] ?? ReviewedConformanceRules.make({}),
       childSequencePattern: classification.childSequencePatterns[tag],
       childGrammar: classification.specialChildGrammars[tag],
       runtime,
@@ -1478,7 +1685,7 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
         e.currentAttributes.length === 0
           ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
           : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${JSON.stringify(e.currentAttributes)}]`;
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeEqualities: ${JSON.stringify(e.attributeEqualities)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)}, uniqueAttributes: ${JSON.stringify(e.uniqueAttributes)},${childSequencePattern}${childGrammar} },`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeEqualities: ${JSON.stringify(e.attributeEqualities)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)}, rules: ${JSON.stringify(e.rules)}, uniqueAttributes: ${JSON.stringify(e.uniqueAttributes)},${childSequencePattern}${childGrammar} },`;
     })
     .join("\n");
 
@@ -1962,6 +2169,118 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
 ) {}
 
 /**
+ * Generated exclusions that apply to every descendant of one HTML element.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlForbiddenDescendants } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlForbiddenDescendants.make({
+ *   attributes: [],
+ *   categories: [],
+ *   tags: ["dfn"]
+ * })
+ * console.log(rule.tags[0]) // "dfn"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlForbiddenDescendants extends S.Class<HtmlForbiddenDescendants>($I\`HtmlForbiddenDescendants\`)(
+  {
+    attributes: S.Array(S.String),
+    categories: S.Array(HtmlCategory),
+    tags: S.Array(HtmlTag),
+  },
+  $I.annote("HtmlForbiddenDescendants", {
+    description: "Generated exclusions applying to every descendant of one HTML element.",
+  })
+) {}
+
+/**
+ * Generated exclusion for an ancestor with an author-provided accessible name.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlForbiddenNamedAncestor } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlForbiddenNamedAncestor.make({
+ *   attributes: ["aria-label", "aria-labelledby", "title"],
+ *   tag: "form"
+ * })
+ * console.log(rule.tag) // "form"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlForbiddenNamedAncestor extends S.Class<HtmlForbiddenNamedAncestor>(
+  $I\`HtmlForbiddenNamedAncestor\`
+)(
+  {
+    attributes: S.String.pipe(S.NonEmptyArray),
+    tag: HtmlTag,
+  },
+  $I.annote("HtmlForbiddenNamedAncestor", {
+    description: "Generated ancestor exclusion activated by a nonblank accessible-name source attribute.",
+  })
+) {}
+
+/**
+ * Generated document-wide visibility-aware element limit.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlDocumentVisibilityLimit } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlDocumentVisibilityLimit.make({ maximum: 1, unlessAttribute: "hidden" })
+ * console.log(rule.maximum) // 1
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlDocumentVisibilityLimit extends S.Class<HtmlDocumentVisibilityLimit>(
+  $I\`HtmlDocumentVisibilityLimit\`
+)(
+  {
+    maximum: S.Int.check(S.isGreaterThan(0)),
+    unlessAttribute: S.String,
+  },
+  $I.annote("HtmlDocumentVisibilityLimit", {
+    description: "Generated document-wide visible-element cardinality limit.",
+  })
+) {}
+
+/**
+ * Generated element-specific conformance rules absent from the tabular WHATWG index.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlElementConformanceRules } from "@beep/html/Html.meta"
+ *
+ * const rules = HtmlElementConformanceRules.make({ permittedAncestors: ["body", "html"] })
+ * console.log(rules.permittedAncestors)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceRules>(
+  $I\`HtmlElementConformanceRules\`
+)(
+  {
+    documentVisibilityLimit: HtmlDocumentVisibilityLimit.pipe(S.optionalKey),
+    forbiddenDescendants: HtmlForbiddenDescendants.pipe(S.optionalKey),
+    forbiddenNamedAncestors: HtmlForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
+    permittedAncestors: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
+  },
+  $I.annote("HtmlElementConformanceRules", {
+    description: "Generated element-specific rules absent from the tabular WHATWG element index.",
+  })
+) {}
+
+/**
  * Schema describing one HTML element kind's metadata.
  *
  * @example
@@ -1984,6 +2303,7 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *   attributeEqualities: [],
  *   attributeRequirements: [],
  *   numericAttributeRelationships: [],
+ *   rules: {},
  *   uniqueAttributes: []
  * })) // true
  * \`\`\`
@@ -2007,12 +2327,36 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMet
     attributeEqualities: S.Array(HtmlAttributeEquality),
     attributeRequirements: S.Array(HtmlAttributeRequirement),
     numericAttributeRelationships: S.Array(HtmlNumericAttributeRelationship),
+    rules: HtmlElementConformanceRules,
     uniqueAttributes: S.Array(S.String),
     childSequencePattern: S.String.pipe(S.optionalKey),
     childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
+
+const freezeElementConformanceRules = (value: HtmlElementConformanceRules): HtmlElementConformanceRules => {
+  if (value.documentVisibilityLimit !== undefined) {
+    Object.freeze(value.documentVisibilityLimit);
+  }
+  if (value.forbiddenDescendants !== undefined) {
+    Object.freeze(value.forbiddenDescendants.attributes);
+    Object.freeze(value.forbiddenDescendants.categories);
+    Object.freeze(value.forbiddenDescendants.tags);
+    Object.freeze(value.forbiddenDescendants);
+  }
+  if (value.forbiddenNamedAncestors !== undefined) {
+    for (const condition of value.forbiddenNamedAncestors) {
+      Object.freeze(condition.attributes);
+      Object.freeze(condition);
+    }
+    Object.freeze(value.forbiddenNamedAncestors);
+  }
+  if (value.permittedAncestors !== undefined) {
+    Object.freeze(value.permittedAncestors);
+  }
+  return Object.freeze(value);
+};
 
 const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
   Object.freeze({
@@ -2040,6 +2384,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
       A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
     ),
     obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+    rules: freezeElementConformanceRules(value.rules),
     uniqueAttributes: Object.freeze(value.uniqueAttributes),
   });
 

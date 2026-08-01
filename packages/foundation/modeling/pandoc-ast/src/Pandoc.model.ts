@@ -1375,14 +1375,14 @@ export declare namespace Math {
 }
 
 /**
- * Pandoc inline constructor outside the supported v1 surface.
+ * Future Pandoc inline constructor outside the pinned 1.23.1 registry.
  *
  * @example
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownInline.make({ wire: { c: { citations: [] }, t: "Cite" } })
- * console.log(node.constructorName) // "Cite"
+ * const node = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * console.log(node.constructorName) // "FutureInline"
  * ```
  *
  * @category models
@@ -1396,7 +1396,7 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
     }),
   },
   $I.annote("UnknownInline", {
-    description: "Pandoc inline constructor outside the supported v1 surface.",
+    description: "Future Pandoc inline constructor outside the pinned 1.23.1 registry.",
   })
 ) {
   /**
@@ -1427,8 +1427,8 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownInline.Type = UnknownInline.make({ wire: { c: { citations: [] }, t: "Cite" } })
- * console.log(node.constructorName) // "Cite"
+ * const node: UnknownInline.Type = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * console.log(node.constructorName) // "FutureInline"
  * ```
  *
  * @category models
@@ -2490,14 +2490,14 @@ export declare namespace Table {
 }
 
 /**
- * Pandoc block constructor outside the supported v1 surface.
+ * Future Pandoc block constructor outside the pinned 1.23.1 registry.
  *
  * @example
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownBlock.make({ wire: { c: {}, t: "Figure" } })
- * console.log(node.constructorName) // "Figure"
+ * const node = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * console.log(node.constructorName) // "FutureBlock"
  * ```
  *
  * @category models
@@ -2511,7 +2511,7 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
     }),
   },
   $I.annote("UnknownBlock", {
-    description: "Pandoc block constructor outside the supported v1 surface.",
+    description: "Future Pandoc block constructor outside the pinned 1.23.1 registry.",
   })
 ) {
   /**
@@ -2542,8 +2542,8 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownBlock.Type = UnknownBlock.make({ wire: { c: {}, t: "Figure" } })
- * console.log(node.constructorName) // "Figure"
+ * const node: UnknownBlock.Type = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * console.log(node.constructorName) // "FutureBlock"
  * ```
  *
  * @category models

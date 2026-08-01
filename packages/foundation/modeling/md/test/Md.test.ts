@@ -891,6 +891,43 @@ Demo video`);
     expect(html).toContain("<figcaption>Caption</figcaption>");
   });
 
+  it("renders policy-denied top-level and nested YouTube blocks as inert text", () => {
+    const youtube = Result.getOrThrow(Md.youtube("abcDEF123_-"));
+    const document = Md.make([youtube, Md.blockquote([youtube]), Md.ul([Md.li([youtube])])]);
+    const denyAll = AllowListUrlPolicySpec.make({
+      schemes: [],
+      allowRelative: false,
+      allowProtocolRelative: false,
+      allowBackslashRelative: false,
+    });
+    const httpOnly = AllowListUrlPolicySpec.make({
+      schemes: ["http:"],
+      allowRelative: false,
+      allowProtocolRelative: false,
+      allowBackslashRelative: false,
+    });
+
+    for (const urlPolicy of [denyAll, httpOnly]) {
+      const markdown = renderWithUnsafe(makeMarkdownAdapter({ urlPolicy }), document);
+      const html = renderWithUnsafe(makeHtmlFragmentAdapter({ urlPolicy }), document);
+
+      expect(markdown).toBe("YouTube video\n\n> YouTube video\n\n- YouTube video");
+      expect(markdown).not.toContain("#");
+      expect(markdown).not.toContain("youtube.com");
+      expect(html).toBe("YouTube video\n<blockquote>YouTube video</blockquote>\n<ul><li>YouTube video</li></ul>");
+      expect(html).not.toContain("<iframe");
+      expect(html).not.toContain('src="#"');
+      expect(html).not.toContain("youtube-nocookie.com");
+    }
+
+    expect(renderWithUnsafe(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), Md.make([youtube]))).toBe(
+      "https://www.youtube.com/watch?v=abcDEF123_-"
+    );
+    expect(
+      renderWithUnsafe(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), Md.make([youtube]))
+    ).toContain('src="https://www.youtube-nocookie.com/embed/abcDEF123_-"');
+  });
+
   it("refines user-authored documents without changing their encoded wire", () => {
     const document = Md.make([Md.p([Md.a("https://example.com", "Safe"), Md.img("/logo.png", "Logo")])]);
     const safe = Result.getOrThrow(refineSafeDocument(document));

@@ -340,9 +340,9 @@ describe("@beep/html canonical serialization", () => {
       namespace: "svg",
       name: "svg",
       attributes: O.some({ viewBox: "0 0 1 1", fill: "none" }),
-      children: [],
+      children: [text("<label>"), Comment.make({ value: "foreign note" })],
     });
-    expect(serializeSync(foreign)).toBe('<svg fill="none" viewBox="0 0 1 1"></svg>');
+    expect(serializeSync(foreign)).toBe('<svg fill="none" viewBox="0 0 1 1">&lt;label&gt;<!--foreign note--></svg>');
 
     const active = ForeignElement.make({
       namespace: "svg",

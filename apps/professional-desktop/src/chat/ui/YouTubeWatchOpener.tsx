@@ -93,15 +93,17 @@ const renderOpenFailure = (
           <button className="underline underline-offset-2" type="button" onClick={() => retry(failure.request)}>
             Retry
           </button>
-          <a
-            className="underline underline-offset-2"
-            href={failure.request.url}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Open in browser
-          </a>
         </div>
+        <p className="mt-2">Copy this link:</p>
+        <input
+          aria-label="YouTube watch URL"
+          className="mt-1 block w-full rounded border border-border bg-transparent px-2 py-1 font-mono text-xs"
+          data-testid="youtube-watch-copy-url"
+          onFocus={(event) => event.currentTarget.select()}
+          readOnly
+          type="url"
+          value={failure.request.url}
+        />
       </div>
     ),
   });

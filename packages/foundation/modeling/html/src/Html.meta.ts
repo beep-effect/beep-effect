@@ -337,6 +337,7 @@ export type HtmlContentToken = typeof HtmlContentToken.Type;
  */
 export const HtmlChildGrammar = LiteralKit([
   "colgroup",
+  "contextual-div",
   "datalist",
   "description-list",
   "details",
@@ -991,6 +992,112 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
 ) {}
 
 /**
+ * Generated exclusions that apply to every descendant of one HTML element.
+ *
+ * @example
+ * ```ts
+ * import { HtmlForbiddenDescendants } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlForbiddenDescendants.make({
+ *   attributes: [],
+ *   categories: [],
+ *   tags: ["dfn"]
+ * })
+ * console.log(rule.tags[0]) // "dfn"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlForbiddenDescendants extends S.Class<HtmlForbiddenDescendants>($I`HtmlForbiddenDescendants`)(
+  {
+    attributes: S.Array(S.String),
+    categories: S.Array(HtmlCategory),
+    tags: S.Array(HtmlTag),
+  },
+  $I.annote("HtmlForbiddenDescendants", {
+    description: "Generated exclusions applying to every descendant of one HTML element.",
+  })
+) {}
+
+/**
+ * Generated exclusion for an ancestor with an author-provided accessible name.
+ *
+ * @example
+ * ```ts
+ * import { HtmlForbiddenNamedAncestor } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlForbiddenNamedAncestor.make({
+ *   attributes: ["aria-label", "aria-labelledby", "title"],
+ *   tag: "form"
+ * })
+ * console.log(rule.tag) // "form"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlForbiddenNamedAncestor extends S.Class<HtmlForbiddenNamedAncestor>($I`HtmlForbiddenNamedAncestor`)(
+  {
+    attributes: S.String.pipe(S.NonEmptyArray),
+    tag: HtmlTag,
+  },
+  $I.annote("HtmlForbiddenNamedAncestor", {
+    description: "Generated ancestor exclusion activated by a nonblank accessible-name source attribute.",
+  })
+) {}
+
+/**
+ * Generated document-wide visibility-aware element limit.
+ *
+ * @example
+ * ```ts
+ * import { HtmlDocumentVisibilityLimit } from "@beep/html/Html.meta"
+ *
+ * const rule = HtmlDocumentVisibilityLimit.make({ maximum: 1, unlessAttribute: "hidden" })
+ * console.log(rule.maximum) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlDocumentVisibilityLimit extends S.Class<HtmlDocumentVisibilityLimit>($I`HtmlDocumentVisibilityLimit`)(
+  {
+    maximum: S.Int.check(S.isGreaterThan(0)),
+    unlessAttribute: S.String,
+  },
+  $I.annote("HtmlDocumentVisibilityLimit", {
+    description: "Generated document-wide visible-element cardinality limit.",
+  })
+) {}
+
+/**
+ * Generated element-specific conformance rules absent from the tabular WHATWG index.
+ *
+ * @example
+ * ```ts
+ * import { HtmlElementConformanceRules } from "@beep/html/Html.meta"
+ *
+ * const rules = HtmlElementConformanceRules.make({ permittedAncestors: ["body", "html"] })
+ * console.log(rules.permittedAncestors)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceRules>($I`HtmlElementConformanceRules`)(
+  {
+    documentVisibilityLimit: HtmlDocumentVisibilityLimit.pipe(S.optionalKey),
+    forbiddenDescendants: HtmlForbiddenDescendants.pipe(S.optionalKey),
+    forbiddenNamedAncestors: HtmlForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
+    permittedAncestors: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
+  },
+  $I.annote("HtmlElementConformanceRules", {
+    description: "Generated element-specific rules absent from the tabular WHATWG element index.",
+  })
+) {}
+
+/**
  * Schema describing one HTML element kind's metadata.
  *
  * @example
@@ -1013,6 +1120,7 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *   attributeEqualities: [],
  *   attributeRequirements: [],
  *   numericAttributeRelationships: [],
+ *   rules: {},
  *   uniqueAttributes: []
  * })) // true
  * ```
@@ -1036,12 +1144,36 @@ export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I`HtmlElementMeta
     attributeEqualities: S.Array(HtmlAttributeEquality),
     attributeRequirements: S.Array(HtmlAttributeRequirement),
     numericAttributeRelationships: S.Array(HtmlNumericAttributeRelationship),
+    rules: HtmlElementConformanceRules,
     uniqueAttributes: S.Array(S.String),
     childSequencePattern: S.String.pipe(S.optionalKey),
     childGrammar: HtmlChildGrammar.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
 ) {}
+
+const freezeElementConformanceRules = (value: HtmlElementConformanceRules): HtmlElementConformanceRules => {
+  if (value.documentVisibilityLimit !== undefined) {
+    Object.freeze(value.documentVisibilityLimit);
+  }
+  if (value.forbiddenDescendants !== undefined) {
+    Object.freeze(value.forbiddenDescendants.attributes);
+    Object.freeze(value.forbiddenDescendants.categories);
+    Object.freeze(value.forbiddenDescendants.tags);
+    Object.freeze(value.forbiddenDescendants);
+  }
+  if (value.forbiddenNamedAncestors !== undefined) {
+    for (const condition of value.forbiddenNamedAncestors) {
+      Object.freeze(condition.attributes);
+      Object.freeze(condition);
+    }
+    Object.freeze(value.forbiddenNamedAncestors);
+  }
+  if (value.permittedAncestors !== undefined) {
+    Object.freeze(value.permittedAncestors);
+  }
+  return Object.freeze(value);
+};
 
 const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
   Object.freeze({
@@ -1069,6 +1201,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
       A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
     ),
     obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
+    rules: freezeElementConformanceRules(value.rules),
     uniqueAttributes: Object.freeze(value.uniqueAttributes),
   });
 
@@ -1091,6 +1224,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [{ message: "<a target> requires href", required: [["href"]], whenAttribute: "target" }],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: ["tabindex"], categories: ["interactive"], tags: ["a"] } },
     uniqueAttributes: [],
   },
   abbr: {
@@ -1108,6 +1242,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   acronym: {
@@ -1125,6 +1260,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   address: {
@@ -1142,6 +1278,13 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {
+      forbiddenDescendants: {
+        attributes: [],
+        categories: ["heading", "sectioning"],
+        tags: ["address", "footer", "header"],
+      },
+    },
     uniqueAttributes: [],
   },
   applet: {
@@ -1159,6 +1302,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   area: {
@@ -1179,6 +1323,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [{ message: "<area href> requires alt text", required: [["alt"]], whenAttribute: "href" }],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   article: {
@@ -1196,6 +1341,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   aside: {
@@ -1213,6 +1359,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   audio: {
@@ -1233,6 +1380,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["audio", "video"] } },
     uniqueAttributes: [],
     childGrammar: "media",
   },
@@ -1251,6 +1399,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   base: {
@@ -1268,6 +1417,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [{ message: "<base> requires href or target", required: [["href", "target"]] }],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   basefont: {
@@ -1285,6 +1435,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   bdi: {
@@ -1302,6 +1453,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   bdo: {
@@ -1319,6 +1471,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   bgsound: {
@@ -1336,6 +1489,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   big: {
@@ -1353,6 +1507,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   blink: {
@@ -1370,6 +1525,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   blockquote: {
@@ -1387,6 +1543,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   body: {
@@ -1438,6 +1595,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   br: {
@@ -1455,6 +1613,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   button: {
@@ -1499,6 +1658,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: ["tabindex"], categories: ["interactive"], tags: [] } },
     uniqueAttributes: [],
   },
   canvas: {
@@ -1516,6 +1676,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   caption: {
@@ -1533,6 +1694,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   center: {
@@ -1550,6 +1712,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   cite: {
@@ -1567,6 +1730,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   code: {
@@ -1584,6 +1748,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   col: {
@@ -1601,6 +1766,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   colgroup: {
@@ -1618,6 +1784,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "colgroup",
   },
@@ -1636,6 +1803,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   datalist: {
@@ -1653,6 +1821,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "datalist",
   },
@@ -1671,6 +1840,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   del: {
@@ -1688,6 +1858,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   details: {
@@ -1705,6 +1876,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "details",
   },
@@ -1723,6 +1895,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["dfn"] } },
     uniqueAttributes: [],
   },
   dialog: {
@@ -1740,6 +1913,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   dir: {
@@ -1757,6 +1931,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   div: {
@@ -1778,7 +1953,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
+    childGrammar: "contextual-div",
   },
   dl: {
     tag: "dl",
@@ -1795,6 +1972,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "description-list",
   },
@@ -1813,6 +1991,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {
+      forbiddenDescendants: { attributes: [], categories: ["heading", "sectioning"], tags: ["footer", "header"] },
+    },
     uniqueAttributes: [],
   },
   em: {
@@ -1830,6 +2011,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   embed: {
@@ -1847,6 +2029,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   fieldset: {
@@ -1864,6 +2047,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "fieldset",
   },
@@ -1882,6 +2066,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   figure: {
@@ -1899,6 +2084,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "figure",
   },
@@ -1917,6 +2103,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   footer: {
@@ -1934,6 +2121,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["footer", "header"] } },
     uniqueAttributes: [],
   },
   form: {
@@ -1954,6 +2142,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["form"] } },
     uniqueAttributes: [],
   },
   frame: {
@@ -1971,6 +2160,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   frameset: {
@@ -1988,6 +2178,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h1: {
@@ -2005,6 +2196,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h2: {
@@ -2022,6 +2214,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h3: {
@@ -2039,6 +2232,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h4: {
@@ -2056,6 +2250,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h5: {
@@ -2073,6 +2268,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   h6: {
@@ -2090,6 +2286,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   head: {
@@ -2107,6 +2304,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "head",
   },
@@ -2125,6 +2323,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["footer", "header"] } },
     uniqueAttributes: [],
   },
   hgroup: {
@@ -2142,6 +2341,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "hgroup",
   },
@@ -2160,6 +2360,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   html: {
@@ -2177,6 +2378,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "document-element",
   },
@@ -2195,6 +2397,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   iframe: {
@@ -2237,6 +2440,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   img: {
@@ -2274,6 +2478,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       { message: "<img> requires alt and at least one of src or srcset", required: [["alt"], ["src", "srcset"]] },
     ],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   input: {
@@ -2349,6 +2554,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       },
     ],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   ins: {
@@ -2366,6 +2572,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   isindex: {
@@ -2383,6 +2590,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   kbd: {
@@ -2400,6 +2608,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   keygen: {
@@ -2417,6 +2626,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   label: {
@@ -2434,6 +2644,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["label"] } },
     uniqueAttributes: [],
   },
   legend: {
@@ -2451,6 +2662,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "phrasing-or-heading",
   },
@@ -2469,6 +2681,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   link: {
@@ -2506,6 +2719,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   listing: {
@@ -2523,6 +2737,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   main: {
@@ -2540,6 +2755,11 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {
+      documentVisibilityLimit: { maximum: 1, unlessAttribute: "hidden" },
+      forbiddenNamedAncestors: [{ attributes: ["aria-label", "aria-labelledby", "title"], tag: "form" }],
+      permittedAncestors: ["body", "div", "form", "html"],
+    },
     uniqueAttributes: [],
   },
   map: {
@@ -2557,6 +2777,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [{ left: "id", message: "<map id> must equal name", right: "name" }],
     attributeRequirements: [{ message: "<map> requires name", required: [["name"]] }],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: ["name"],
   },
   mark: {
@@ -2574,6 +2795,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   marquee: {
@@ -2591,6 +2813,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   menu: {
@@ -2608,6 +2831,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   menuitem: {
@@ -2625,6 +2849,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   meta: {
@@ -2642,6 +2867,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   meter: {
@@ -2681,6 +2907,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       },
       { left: "optimum", message: "<meter optimum> must be less than or equal to max", right: "max", rightDefault: 1 },
     ],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["meter"] } },
     uniqueAttributes: [],
   },
   multicol: {
@@ -2698,6 +2925,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   nav: {
@@ -2715,6 +2943,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   nextid: {
@@ -2732,6 +2961,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   nobr: {
@@ -2749,6 +2979,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   noembed: {
@@ -2766,6 +2997,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   noframes: {
@@ -2783,6 +3015,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   noscript: {
@@ -2800,6 +3033,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   object: {
@@ -2833,6 +3067,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   ol: {
@@ -2850,6 +3085,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   optgroup: {
@@ -2867,6 +3103,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "optgroup",
   },
@@ -2885,6 +3122,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   output: {
@@ -2902,6 +3140,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   p: {
@@ -2919,6 +3158,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   param: {
@@ -2936,6 +3176,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   picture: {
@@ -2953,6 +3194,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "picture",
   },
@@ -2971,6 +3213,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   pre: {
@@ -2988,6 +3231,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   progress: {
@@ -3007,6 +3251,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     numericAttributeRelationships: [
       { left: "value", message: "<progress value> must be less than or equal to max", right: "max", rightDefault: 1 },
     ],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["progress"] } },
     uniqueAttributes: [],
   },
   q: {
@@ -3024,6 +3269,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   rb: {
@@ -3041,6 +3287,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   rp: {
@@ -3058,6 +3305,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   rt: {
@@ -3075,6 +3323,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   rtc: {
@@ -3092,6 +3341,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   ruby: {
@@ -3109,6 +3359,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "ruby",
   },
@@ -3127,6 +3378,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   samp: {
@@ -3144,6 +3396,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   script: {
@@ -3175,6 +3428,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   search: {
@@ -3192,6 +3446,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   section: {
@@ -3209,6 +3464,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   select: {
@@ -3239,6 +3495,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "select",
   },
@@ -3257,6 +3514,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   slot: {
@@ -3274,6 +3532,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   small: {
@@ -3291,6 +3550,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   source: {
@@ -3324,6 +3584,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       },
     ],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   spacer: {
@@ -3341,6 +3602,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   span: {
@@ -3358,6 +3620,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   strike: {
@@ -3375,6 +3638,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   strong: {
@@ -3392,6 +3656,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   style: {
@@ -3409,6 +3674,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   sub: {
@@ -3426,6 +3692,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   summary: {
@@ -3443,6 +3710,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childGrammar: "phrasing-or-heading",
   },
@@ -3461,6 +3729,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   table: {
@@ -3491,6 +3760,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
     childSequencePattern: "^(?:caption,)?(?:colgroup,)*(?:thead,)?(?:(?:tbody,)*|(?:tr,)+)(?:tfoot,)?$",
     childGrammar: "table",
@@ -3510,6 +3780,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   td: {
@@ -3539,6 +3810,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   template: {
@@ -3566,6 +3838,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   textarea: {
@@ -3610,6 +3883,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   tfoot: {
@@ -3627,6 +3901,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   th: {
@@ -3644,6 +3919,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {
+      forbiddenDescendants: { attributes: [], categories: ["heading", "sectioning"], tags: ["footer", "header"] },
+    },
     uniqueAttributes: [],
   },
   thead: {
@@ -3661,6 +3939,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   time: {
@@ -3678,6 +3957,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   title: {
@@ -3695,6 +3975,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   tr: {
@@ -3712,6 +3993,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   track: {
@@ -3729,6 +4011,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [{ message: "<track> requires src", required: [["src"]] }],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   tt: {
@@ -3746,6 +4029,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   u: {
@@ -3763,6 +4047,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   ul: {
@@ -3780,6 +4065,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   var: {
@@ -3797,6 +4083,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   video: {
@@ -3830,6 +4117,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: { forbiddenDescendants: { attributes: [], categories: [], tags: ["audio", "video"] } },
     uniqueAttributes: [],
     childGrammar: "media",
   },
@@ -3848,6 +4136,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
   xmp: {
@@ -3865,6 +4154,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     attributeEqualities: [],
     attributeRequirements: [],
     numericAttributeRelationships: [],
+    rules: {},
     uniqueAttributes: [],
   },
 };

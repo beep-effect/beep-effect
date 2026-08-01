@@ -176,6 +176,7 @@
     "colgroup": "colgroup",
     "datalist": "datalist",
     "details": "details",
+    "div": "contextual-div",
     "dl": "description-list",
     "fieldset": "fieldset",
     "figure": "figure",
@@ -241,6 +242,119 @@
         "condition": "present"
       }
     ]
+  },
+  "conformanceRules": {
+    "a": {
+      "forbiddenDescendants": {
+        "attributes": ["tabindex"],
+        "categories": ["interactive"],
+        "tags": ["a"]
+      }
+    },
+    "address": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": ["heading", "sectioning"],
+        "tags": ["address", "footer", "header"]
+      }
+    },
+    "audio": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["audio", "video"]
+      }
+    },
+    "button": {
+      "forbiddenDescendants": {
+        "attributes": ["tabindex"],
+        "categories": ["interactive"],
+        "tags": []
+      }
+    },
+    "dfn": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["dfn"]
+      }
+    },
+    "dt": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": ["heading", "sectioning"],
+        "tags": ["footer", "header"]
+      }
+    },
+    "footer": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["footer", "header"]
+      }
+    },
+    "form": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["form"]
+      }
+    },
+    "header": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["footer", "header"]
+      }
+    },
+    "label": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["label"]
+      }
+    },
+    "main": {
+      "documentVisibilityLimit": {
+        "maximum": 1,
+        "unlessAttribute": "hidden"
+      },
+      "forbiddenNamedAncestors": [
+        {
+          "attributes": ["aria-label", "aria-labelledby", "title"],
+          "tag": "form"
+        }
+      ],
+      "permittedAncestors": ["body", "div", "form", "html"]
+    },
+    "meter": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["meter"]
+      }
+    },
+    "progress": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["progress"]
+      }
+    },
+    "th": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": ["heading", "sectioning"],
+        "tags": ["footer", "header"]
+      }
+    },
+    "video": {
+      "forbiddenDescendants": {
+        "attributes": [],
+        "categories": [],
+        "tags": ["audio", "video"]
+      }
+    }
   },
   "attributeRequirements": {
     "a": [

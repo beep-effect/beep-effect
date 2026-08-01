@@ -180,6 +180,7 @@ describe("HtmlNode AST — schema laws", () => {
           attributeEqualities: [],
           attributeRequirements: [],
           numericAttributeRelationships: [],
+          rules: {},
           uniqueAttributes: [],
         })
       )
@@ -198,6 +199,7 @@ describe("HtmlNode AST — schema laws", () => {
       attributeEqualities: [],
       attributeRequirements: [],
       numericAttributeRelationships: [],
+      rules: {},
       uniqueAttributes: [],
     });
   });

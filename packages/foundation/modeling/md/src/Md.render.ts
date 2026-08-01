@@ -21,6 +21,7 @@ import {
   escapeHtmlUrlAttributeWithPolicy,
   escapeMarkdownDestinationWithPolicy,
   escapeMarkdownText,
+  isUrlDestinationAllowedWithPolicy,
   joinBlocks,
   normalizeUrlPolicy,
   prefixLines,
@@ -1131,7 +1132,12 @@ const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): str
           A.join("\n")
         ),
       table: (table) => renderMarkdownTableWithPolicy(policy, table),
-      youtube: ({ videoId }) => youtubeWatchUrl(videoId),
+      youtube: ({ videoId }) => {
+        const destination = youtubeWatchUrl(videoId);
+        return isUrlDestinationAllowedWithPolicy(destination, policy)
+          ? escapeMarkdownDestinationWithPolicy(destination, policy)
+          : escapeMarkdownText("YouTube video");
+      },
       mathBlock: renderMarkdownMathBlock,
       footnoteDefinition: ({ children, identifier }) => {
         const body = renderMarkdownBlocksWithPolicy(policy, children);
@@ -1202,8 +1208,12 @@ const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string 
           joinEmpty
         )}</ul>`,
       table: (table) => renderHtmlTableWithPolicy(policy, table),
-      youtube: ({ videoId }) =>
-        `<iframe src="${escapeHtmlUrlAttributeWithPolicy(youtubeEmbedUrl(videoId), policy)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+      youtube: ({ videoId }) => {
+        const destination = youtubeEmbedUrl(videoId);
+        return isUrlDestinationAllowedWithPolicy(destination, policy)
+          ? `<iframe src="${escapeHtmlUrlAttributeWithPolicy(destination, policy)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+          : Html.escapeHtml("YouTube video");
+      },
       mathBlock: ({ value }) => `<div class="math math-display">${Html.escapeHtml(value)}</div>`,
       footnoteDefinition: ({ children, identifier }) =>
         `<section id="fn-${Html.escapeHtml(identifier)}" class="footnote-definition"><sup>${Html.escapeHtml(identifier)}</sup>${renderHtmlBlocksWithPolicy(policy, children)}</section>`,

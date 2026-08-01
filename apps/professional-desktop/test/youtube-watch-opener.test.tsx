@@ -86,12 +86,16 @@ describe("YouTube native opener bridge", { concurrent: false }, () => {
       const alert = within(view.container).getByRole("alert");
       expect(rejected.defaultPrevented).toBe(true);
       expect(alert).not.toHaveTextContent("private native opener detail");
-      expect(within(alert).getByRole("link", { name: "Open in browser" })).toHaveAttribute("href", request.url);
-      expect(within(alert).getByRole("link", { name: "Open in browser" })).toHaveAttribute("target", "_blank");
-      expect(within(alert).getByRole("link", { name: "Open in browser" })).toHaveAttribute(
-        "rel",
-        "noopener noreferrer"
-      );
+      expect(within(alert).queryByRole("link")).toBeNull();
+      expect(within(alert).getByText("Copy this link:")).toBeVisible();
+      const copyUrl = within(alert).getByRole("textbox", { name: "YouTube watch URL" });
+      expect(copyUrl).toHaveValue(request.url);
+      expect(copyUrl).toHaveAttribute("readonly");
+      expect(copyUrl).toHaveProperty("tabIndex", 0);
+      yield* Effect.sync(() => copyUrl.focus());
+      expect(copyUrl).toHaveFocus();
+      expect(copyUrl).toHaveProperty("selectionStart", 0);
+      expect(copyUrl).toHaveProperty("selectionEnd", request.url.length);
 
       yield* Effect.sync(() => fireEvent.click(within(alert).getByRole("button", { name: "Retry" })));
       yield* Effect.promise(() => waitFor(() => expect(opener).toHaveBeenCalledTimes(2)));

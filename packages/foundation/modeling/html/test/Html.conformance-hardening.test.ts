@@ -8,6 +8,7 @@ import {
 import {
   A as Anchor,
   Area,
+  Article,
   Audio,
   Base,
   Body,
@@ -17,6 +18,7 @@ import {
   Datalist,
   Dd,
   Details,
+  Dfn,
   Div,
   Dl,
   Document,
@@ -24,16 +26,20 @@ import {
   Fieldset,
   Figcaption,
   Figure,
+  Footer,
   ForeignElement,
+  Form,
   Fragment,
   H1,
   Head,
+  Header,
   Hgroup,
   Html,
   Img,
   Input,
   Label,
   Legend,
+  Main,
   MapElement,
   Meter,
   Optgroup,
@@ -566,6 +572,133 @@ describe("@beep/html generated special-child grammars", () => {
     );
     expect(hasRule(Button.make({ children: [Input.make({ type: O.some("text") })] }), "forbiddenDescendant")).toBe(
       true
+    );
+  });
+
+  it("enforces every generated descendant exclusion through nested fallback content", () => {
+    const cases = [
+      [
+        Dfn.make({ children: [Span.make({ children: [Dfn.make({ children: [text("nested")] })] })] }),
+        ["children.0", "children.0"],
+      ],
+      [
+        Header.make({ children: [Div.make({ children: [Footer.make({ children: [] })] })] }),
+        ["children.0", "children.0"],
+      ],
+      [
+        Footer.make({ children: [Div.make({ children: [Header.make({ children: [] })] })] }),
+        ["children.0", "children.0"],
+      ],
+      [
+        Video.make({ children: [Div.make({ children: [Audio.make({ children: [] })] })] }),
+        ["children.0", "children.0"],
+      ],
+      [
+        Audio.make({ children: [Div.make({ children: [Video.make({ children: [] })] })] }),
+        ["children.0", "children.0"],
+      ],
+    ] as const;
+
+    for (const [root, path] of cases) {
+      expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+  });
+
+  it("enforces generated main ancestry and document-visible cardinality", () => {
+    const nestedMain = Article.make({
+      children: [Div.make({ children: [Main.make({ children: [] })] })],
+    });
+    expect(inspectConformance(nestedMain)).toContainEqual(
+      expect.objectContaining({ path: ["children.0", "children.0"], rule: "forbiddenDescendant" })
+    );
+
+    const documentWith = (...children: ReadonlyArray<Main>) =>
+      Document.make({
+        doctype: O.some(Doctype.html()),
+        children: [
+          Html.make({
+            children: [Head.make({ children: [Title.make({ content: "Main conformance" })] }), Body.make({ children })],
+          }),
+        ],
+      });
+    const twoVisible = documentWith(Main.make({ children: [] }), Main.make({ children: [] }));
+    expect(inspectConformance(twoVisible).filter((issue) => issue.rule === "documentCardinality")).toStrictEqual([
+      expect.objectContaining({ path: ["children.0", "children.1", "children.0"] }),
+      expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
+    ]);
+    expect(Exit.isFailure(Effect.runSyncExit(conform(twoVisible)))).toBe(true);
+
+    const hiddenAware = documentWith(
+      Main.make({ children: [] }),
+      Main.make({ children: [], hidden: O.some("hidden") }),
+      Main.make({ children: [], hidden: O.some("until-found") })
+    );
+    expect(inspectConformance(hiddenAware)).toStrictEqual([]);
+    expect(
+      inspectConformance(Fragment.make({ children: [Main.make({ children: [] }), Main.make({ children: [] })] }))
+    ).toStrictEqual([]);
+    expect(inspectConformance(Body.make({ children: [Main.make({ children: [] })] }))).toStrictEqual([]);
+    expect(inspectConformance(Div.make({ children: [Main.make({ children: [] })] }))).toStrictEqual([]);
+  });
+
+  it("rejects main beneath forms with author-provided accessible names", () => {
+    const cases = [
+      [Form.make({ "aria-label": O.some("Named form"), children: [Main.make({ children: [] })] }), ["children.0"]],
+      [
+        Form.make({
+          "aria-labelledby": O.some("form-name"),
+          children: [
+            Span.make({ id: O.some("form-name"), children: [text("Named form")] }),
+            Main.make({ children: [] }),
+          ],
+        }),
+        ["children.1"],
+      ],
+      [Form.make({ title: O.some("Named form"), children: [Main.make({ children: [] })] }), ["children.0"]],
+    ] as const;
+
+    for (const [root, path] of cases) {
+      expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    expect(inspectConformance(Form.make({ children: [Main.make({ children: [] })] }))).toStrictEqual([]);
+    expect(
+      inspectConformance(Form.make({ "aria-label": O.some(" \n\t "), children: [Main.make({ children: [] })] }))
+    ).toStrictEqual([]);
+  });
+
+  it("uses the generated contextual div grammar instead of the lossy index union", () => {
+    const invalidStandalone = Div.make({ children: [Optgroup.make({ children: [] })] });
+    expect(inspectConformance(invalidStandalone)).toContainEqual(
+      expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
+    );
+    expect(Exit.isFailure(Effect.runSyncExit(conform(invalidStandalone)))).toBe(true);
+
+    const validDescriptionGroup = Dl.make({
+      children: [
+        Div.make({
+          children: [Dt.make({ children: [text("term")] }), Dd.make({ children: [text("definition")] })],
+        }),
+      ],
+    });
+    expect(inspectConformance(validDescriptionGroup)).toStrictEqual([]);
+
+    const twoGroupsInOneWrapper = Dl.make({
+      children: [
+        Div.make({
+          children: [
+            Dt.make({ children: [] }),
+            Dd.make({ children: [] }),
+            Dt.make({ children: [] }),
+            Dd.make({ children: [] }),
+          ],
+        }),
+      ],
+    });
+    expect(inspectConformance(twoGroupsInOneWrapper)).toContainEqual(
+      expect.objectContaining({ path: ["children.0"], rule: "elementOrder" })
     );
   });
 

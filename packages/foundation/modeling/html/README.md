@@ -132,6 +132,11 @@ attribute-conditional categories such as interactive anchors and media.
 profiles cover cardinality, ordering, alternatives, and attribute-conditional
 branches for document/head, description lists, disclosure/fieldset/figure,
 colgroups, media/picture, ruby, datalist/select, hgroup, and tables.
+Reviewed descendant exclusions, permitted-ancestor sets, named-ancestor
+accessible-name conditions, and document-visible cardinality limits live only
+in `data/overrides/classification.json`; generation validates their complete
+tag/category/attribute coverage and publishes them on each element's
+`ELEMENT_META[tag].rules` profile.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text

@@ -88,7 +88,8 @@ URL escaping is centralized in `Md.escape`. `UrlPolicySpec` is the canonical tag
 Markdown output defaults to `CompatibilityUrlPolicySpec`. HTML fragments default to `BrowserSafeUrlPolicySpec`, which
 allows relative links plus `http:`, `https:`, `mailto:`, `tel:`, and package-owned `artifact:` links while blocking
 protocol-relative and backslash-bearing relative destinations. Custom policies are threaded through the recursive
-render fold; nested links in lists, tables, footnotes, admonitions, and embeds cannot fall back to a built-in policy.
+render fold; nested links in lists, tables, footnotes, admonitions, embeds, and YouTube destinations cannot fall back
+to a built-in policy.
 
 Use `makeMarkdownAdapter({ urlPolicy })`, `makeHtmlFragmentAdapter({ urlPolicy })`, or the `*WithPolicy` escape helpers
 when a sink needs stricter behavior such as `StrictWebUrlPolicySpec`. `UrlPolicy` and the old policy constants remain

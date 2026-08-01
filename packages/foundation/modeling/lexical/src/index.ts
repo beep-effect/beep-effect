@@ -17,8 +17,8 @@
  * console.log(packageVersion) // "0.0.0"
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const VERSION = "0.0.0" as const;
 
@@ -35,8 +35,8 @@ export const VERSION = "0.0.0" as const;
  * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
 /**
@@ -49,8 +49,8 @@ export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
  * console.log(ARTIFACT_URI_PREFIX) // "artifact://"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export {
   ARTIFACT_URI_PREFIX,
@@ -73,8 +73,8 @@ export {
  * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export {
   ArtifactRefId,
