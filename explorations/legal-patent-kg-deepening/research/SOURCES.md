@@ -43,7 +43,30 @@ delta-only. -->
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| (pending) | repo triage not yet launched | | |
+| R02 `awesome-legal-data` | `CC0-1.0` | reference only | Dataset and portal lookup list. |
+| R03 `CapturingLegalReasoningPaths` | `none-found` | reference only | Reasoning-path ontology, prompts, and annotated-data reference. |
+| R04 `cjeu-ontology-mappings` | `CC-BY-4.0` | port with attribution | CJEU cross-ontology mapping workbook. |
+| R05 `CommonCoreOntologies` | `BSD-3-Clause` | port with attribution | Mid-level ontology modules and release patterns. |
+| R06 `DAOnt` | `CC-BY-SA-4.0` | clean-room pattern only | Data Act deontic and executable compliance patterns. |
+| R07 `GLEIO` | `none-found` | reference only | LEI ontology and temporal-reference-data design. |
+| R08 `knowledge_graph` | `none-found` | reference only | SEC litigation extraction and nested-KG reference. |
+| R09 `Legal-Ontologies` | `CC-BY-SA-4.0` | reference only | Legal ontology and KG lookup list. |
+| R10 `Legal-Ontology-Learning` | `MIT` | port with attribution | Ontology-learning pipeline patterns. |
+| R11 `legal-ontology-population` | `none-found` | reference only | LKIF-to-YAGO mapping reference. |
+| R12 `LegalCaseKnowledgeGraph` | `none-found` | reference only | Chinese case narrative and triples dataset reference. |
+| R13 `LegalDatasets` | `Apache-2.0` | port with attribution | Legal-document schema and dataset-intake patterns. |
+| R14 `LegalPapers` | `none-found` | reference only | Legal-intelligence bibliography. |
+| R15 `LegalPP` | `MIT` | port with attribution | LegalLPP dataset and text-guided KG-completion patterns. |
+| R17 `llm4oe-slr` | `CC-BY-4.0` | port with attribution | Structured LLM-for-ontology-engineering evidence tables. |
+| R19 `patentlego-ontology` | `CC-BY-SA-4.0` | clean-room pattern only | Functional patent-block vocabulary and connection patterns. |
+| R21 `raglex` | `none-found` | reference only | Legal corpus, citation graph, and retrieval architecture. |
+| R22 FOPNet STS | `none-found` | reference only | FOP patent-triple and similarity approach; no code or data extraction. |
+| R23 `semanticlaw` | `Apache-2.0` | port with attribution | Swiss-law RDF vocabulary and collection patterns. |
+| R24 `USPTO_ClassOntology` | `none-found` | reference only | USPTO class-definition and claim-overlap reference. |
+
+Full 24-row triage, including skipped repositories and exact mine targets:
+[`01-repo-triage.md`](./01-repo-triage.md) and
+[`01-repo-triage.json`](./01-repo-triage.json).
 
 ## 3. External research sources
 
