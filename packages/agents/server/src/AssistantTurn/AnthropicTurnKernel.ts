@@ -134,7 +134,9 @@ const decodeProviderUsage = S.decodeUnknownEffect(ProviderUsageMetadata);
 
 const makeProviderUsage = Effect.fn("AnthropicTurnKernel.makeProviderUsage")(function* (
   modelId: O.Option<string>,
-  finish: O.Option<Response.FinishPart>
+  finish: O.Option<Response.FinishPart>,
+  repairInputTokens: number,
+  repairOutputTokens: number
 ) {
   const required = O.all({
     finish,
@@ -148,9 +150,9 @@ const makeProviderUsage = Effect.fn("AnthropicTurnKernel.makeProviderUsage")(fun
     });
   }
   return yield* decodeProviderUsage({
-    inputTokens: required.value.inputTokens,
+    inputTokens: required.value.inputTokens + repairInputTokens,
     model: required.value.model,
-    outputTokens: required.value.outputTokens,
+    outputTokens: required.value.outputTokens + repairOutputTokens,
     provider: "anthropic",
     stopReason: required.value.finish.reason,
   }).pipe(
@@ -190,6 +192,8 @@ const streamTurn = (
       const holdingAfterFailure = yield* Ref.make(false);
       const modelId = yield* Ref.make<O.Option<string>>(O.none());
       const finish = yield* Ref.make<O.Option<Response.FinishPart>>(O.none());
+      const repairInputTokens = yield* Ref.make(0);
+      const repairOutputTokens = yield* Ref.make(0);
       const validated = parts.pipe(
         Stream.tap(captureProviderMetadata(modelId, finish)),
         Stream.flatMap((part) => (part.type === "tool-params-delta" ? Stream.succeed(part.delta) : Stream.empty)),
@@ -208,13 +212,20 @@ const streamTurn = (
             return Stream.fromIterable(validAfterFirstFailure);
           }
           const repaired = yield* repairInvalidBlocks(failed);
-          return Stream.fromIterable(sortedIndexedBlocks(A.appendAll(repaired, validAfterFirstFailure)));
+          yield* Ref.set(repairInputTokens, repaired.inputTokens);
+          yield* Ref.set(repairOutputTokens, repaired.outputTokens);
+          return Stream.fromIterable(sortedIndexedBlocks(A.appendAll(repaired.blocks, validAfterFirstFailure)));
         })
       );
 
       const finalization = Stream.unwrap(
         Effect.gen(function* () {
-          const usage = yield* makeProviderUsage(yield* Ref.get(modelId), yield* Ref.get(finish));
+          const usage = yield* makeProviderUsage(
+            yield* Ref.get(modelId),
+            yield* Ref.get(finish),
+            yield* Ref.get(repairInputTokens),
+            yield* Ref.get(repairOutputTokens)
+          );
           return Stream.succeed(AssistantTurnFinalization.make({ usage }));
         })
       );

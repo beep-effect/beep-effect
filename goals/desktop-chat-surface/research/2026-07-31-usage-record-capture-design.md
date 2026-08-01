@@ -2,7 +2,8 @@
 
 Date: 2026-07-31
 
-Status: implemented and targeted proof is green. The credentialed real-Anthropic E2E was intentionally not run.
+Status: implemented and targeted proof is green. The credentialed real-Anthropic E2E was run by the
+orchestrating session after implementation and passed (1/1) over the live kernel + PGlite path.
 
 ## Decisions
 
@@ -55,7 +56,9 @@ Status: implemented and targeted proof is green. The credentialed real-Anthropic
 
 ## Remaining
 
-- Run `apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts` from the credentialed orchestrating
-  session to prove live returned model/token values.
+- ~~Run the credentialed real-Anthropic E2E~~ — done post-implementation by the orchestrating session
+  (green, 2026-07-31; live returned model/token values proven).
+- Repair-call usage accounting and legacy fabricated-`activityId` cleanup were added during PR #527
+  review (see the migration and `BlockRepair` usage plumbing).
 - A non-null `activityId` requires a real Epistemic Activity table/repository/sink and an atomic Activity + UsageRecord
   append design; that architecture is not present in this slice today.

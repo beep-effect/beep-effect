@@ -13,12 +13,16 @@ const providerState = vi.hoisted(
     parts: ReadonlyArray<Response.StreamPartEncoded>;
     providerError: AiError.AiError | undefined;
     repairError: string | undefined;
+    repairInputTokens: number;
     repairJson: string;
+    repairOutputTokens: number;
   } => ({
     parts: [],
     providerError: undefined,
     repairError: undefined,
+    repairInputTokens: 3,
     repairJson: '{"repairs":[]}',
+    repairOutputTokens: 2,
   })
 );
 
@@ -28,6 +32,7 @@ vi.mock("@beep/anthropic", (importOriginal) =>
       effect.Effect.gen(function* () {
         const actual = yield* effect.Effect.tryPromise(() => importOriginal<typeof import("@beep/anthropic")>());
         const languageModel = yield* effect.Effect.tryPromise(() => import("effect/unstable/ai/LanguageModel"));
+        const response = yield* effect.Effect.tryPromise(() => import("effect/unstable/ai/Response"));
         const TestLanguageModel = effect.Layer.effect(
           languageModel.LanguageModel,
           languageModel.make({
@@ -44,7 +49,24 @@ vi.mock("@beep/anthropic", (importOriginal) =>
           AnthropicTurnPlan: effect.ExecutionPlan.make({ provide: TestLanguageModel }),
           generateAnthropicToolJson: () =>
             providerState.repairError === undefined
-              ? effect.Effect.succeed(providerState.repairJson)
+              ? effect.Effect.succeed(
+                  actual.AnthropicToolJsonResponse.make({
+                    paramsJson: providerState.repairJson,
+                    usage: response.Usage.make({
+                      inputTokens: {
+                        cacheRead: undefined,
+                        cacheWrite: undefined,
+                        total: providerState.repairInputTokens,
+                        uncached: providerState.repairInputTokens,
+                      },
+                      outputTokens: {
+                        reasoning: undefined,
+                        text: providerState.repairOutputTokens,
+                        total: providerState.repairOutputTokens,
+                      },
+                    }),
+                  })
+                )
               : effect.Effect.fail(
                   actual.RepairError.make({
                     message: providerState.repairError,
@@ -90,7 +112,9 @@ beforeEach(() => {
   providerState.parts = [];
   providerState.providerError = undefined;
   providerState.repairError = undefined;
+  providerState.repairInputTokens = 3;
   providerState.repairJson = '{"repairs":[]}';
+  providerState.repairOutputTokens = 2;
 });
 
 describe("AnthropicTurnKernel", () => {
@@ -151,7 +175,7 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("repairs an invalid block and preserves envelope order before finalization", () =>
+    it.effect("repairs an invalid block and adds repair-call usage to finalization", () =>
       Effect.gen(function* () {
         const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
         providerState.parts = [
@@ -162,6 +186,8 @@ describe("AnthropicTurnKernel", () => {
         ];
         providerState.repairJson =
           '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"repaired"}]}}]}';
+        providerState.repairInputTokens = 5;
+        providerState.repairOutputTokens = 3;
 
         const events = A.fromIterable(yield* runTurn);
 
@@ -171,6 +197,10 @@ describe("AnthropicTurnKernel", () => {
         });
         expect(events[1]).toMatchObject({
           block: { block: { children: [{ text: "already valid" }] }, index: 1 },
+        });
+        expect(events[2]).toMatchObject({
+          type: "finalization",
+          usage: { inputTokens: 17, outputTokens: 11 },
         });
       })
     );
