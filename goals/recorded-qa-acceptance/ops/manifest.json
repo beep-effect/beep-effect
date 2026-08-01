@@ -2,14 +2,14 @@
   "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "recorded-qa-acceptance",
-    "title": "Recorded QA Acceptance — dock-react gesture verification",
-    "status": "active",
+    "title": "Recorded QA Acceptance \u2014 dock-react gesture verification",
+    "status": "completed-retained",
     "created": "2026-07-30",
-    "updated": "2026-07-30",
+    "updated": "2026-08-01",
     "packetAnchorDocument": "README.md"
   },
   "packetPath": "goals/recorded-qa-acceptance",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Prove the beep qa recording/extraction/judging system end-to-end on the dock-react pointer fixes, including a falsification round demonstrating true-positive detection.",
   "executionCapable": false,
   "reflectionRequired": true,
@@ -21,13 +21,14 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the falsification round is a true positive, two consecutive clean structured rounds pass (one per lane), judge-lint is green on every round, and the campaign ships through Yeet.",
+    "statement": "Achieved 2026-08-01 on amended criteria (see README lane-decision and falsification rows): clean structured Lane A rounds on the fixed build (worktree rounds 5 and 11, requiredCount 0), judge-lint and evidence cross-check green on every round, and live-fire true-positive evidence (five real defects caught that harness assertions missed). Lane B retired as structurally human-gated; Lane C (Xvfb + XTEST) proven and graduated to a follow-up packet along with the smear-capable fixture.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
     "goals/recorded-qa-acceptance/README.md",
-    ".claude/skills/browser-qa-loop/SKILL.md"
+    ".claude/skills/browser-qa-loop/SKILL.md",
+    "goals/recorded-qa-acceptance/history/rounds/followup-notes.md"
   ]
 }

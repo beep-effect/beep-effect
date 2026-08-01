@@ -130,6 +130,12 @@
   box-shadow: 0 6px 18px color-mix(in oklch, var(--foreground) 30%, transparent);
 }
 
+.desktop-dock [data-drop-caret] {
+  background: var(--dock-drop-accent, #3b82f6);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+}
+
 .desktop-dock [data-drop-indicator] {
   background: color-mix(in oklch, var(--primary) 18%, transparent);
   border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
