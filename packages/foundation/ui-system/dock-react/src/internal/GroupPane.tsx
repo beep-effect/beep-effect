@@ -202,6 +202,7 @@ const Tab = (props: {
     node.addEventListener("pointerup", up);
     node.addEventListener("pointercancel", clearDrag);
     node.addEventListener("click", click);
+    // fallow-ignore-next-line code-duplication -- listener registration and its mirrored teardown must name the same closures inline; extracting them would hide the identity contract that makes removeEventListener work
     document.addEventListener("keydown", keydown);
     return () => {
       node.removeEventListener("pointerdown", down);

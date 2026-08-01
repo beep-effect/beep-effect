@@ -16,9 +16,10 @@ import { DropPreview } from "./internal/Gesture.models.ts";
 import { GroupPane } from "./internal/GroupPane.tsx";
 import { PanelPortal } from "./internal/PanelHost.tsx";
 import { Sash } from "./internal/Sash.tsx";
-import type { TabsNode } from "@beep/dock";
+import type { DockBox, TabsNode } from "@beep/dock";
 import type { DockviewReactProps } from "./DockReact.types.ts";
 import type { AdapterState } from "./internal/AdapterState.ts";
+import type { PointerPosition } from "./internal/Gesture.models.ts";
 
 // FlexLayout's drag-rect pattern: the preview element persists while its
 // kind stays active, and CSS transitions tween its bounds — the section
@@ -64,6 +65,35 @@ const GHOST_LINE_HEIGHT_PX = 24;
 const GHOST_OFFSET_X_PX = 12;
 const GHOST_OFFSET_Y_PX = 10;
 
+type GhostPlacement = {
+  readonly anchor: string;
+  readonly x: number;
+  readonly y: number;
+};
+
+// Per-axis: trail the pointer while the label's far edge fits, otherwise
+// anchor to the pointer's other side (translate -100%) and clamp so the
+// flipped label cannot cross the container's near edge either.
+const ghostAxis = (
+  pointer: number,
+  extent: number,
+  offset: number,
+  span: number
+): { readonly flipped: boolean; readonly position: number } =>
+  pointer + offset + span > extent
+    ? { flipped: true, position: Math.max(pointer - offset, span) }
+    : { flipped: false, position: pointer + offset };
+
+const ghostPlacement = (pointer: PointerPosition, container: DockBox): GhostPlacement => {
+  const horizontal = ghostAxis(pointer.left, container.width, GHOST_OFFSET_X_PX, GHOST_MAX_WIDTH_PX);
+  const vertical = ghostAxis(pointer.top, container.height, GHOST_OFFSET_Y_PX, GHOST_LINE_HEIGHT_PX);
+  return {
+    anchor: `${horizontal.flipped ? " translateX(-100%)" : ""}${vertical.flipped ? " translateY(-100%)" : ""}`,
+    x: horizontal.position,
+    y: vertical.position,
+  };
+};
+
 // Follow-cursor after-image for a promoted tab drag (dockview's PointerGhost
 // pattern): without it, mid-drag there is nothing under the pointer telling
 // the user what they are carrying. Functional styles only — the shell themes
@@ -73,15 +103,7 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
   const panels = useAtomValue(props.graph.panelsAtom);
   const container = useAtomValue(props.state.containerAtom);
   if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
-  const flipX = drag.value.pointer.left + GHOST_OFFSET_X_PX + GHOST_MAX_WIDTH_PX > container.width;
-  const flipY = drag.value.pointer.top + GHOST_OFFSET_Y_PX + GHOST_LINE_HEIGHT_PX > container.height;
-  const anchor = `${flipX ? " translateX(-100%)" : ""}${flipY ? " translateY(-100%)" : ""}`;
-  const ghostX = flipX
-    ? Math.max(drag.value.pointer.left - GHOST_OFFSET_X_PX, GHOST_MAX_WIDTH_PX)
-    : drag.value.pointer.left + GHOST_OFFSET_X_PX;
-  const ghostY = flipY
-    ? Math.max(drag.value.pointer.top - GHOST_OFFSET_Y_PX, GHOST_LINE_HEIGHT_PX)
-    : drag.value.pointer.top + GHOST_OFFSET_Y_PX;
+  const placement = ghostPlacement(drag.value.pointer, container);
   return O.match(
     A.findFirst(panels, (candidate) => PanelId.equals(candidate.id, drag.value.panelId)),
     {
@@ -93,7 +115,7 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
             position: "absolute",
             left: 0,
             top: 0,
-            transform: `translate3d(${ghostX}px, ${ghostY}px, 0)${anchor}`,
+            transform: `translate3d(${placement.x}px, ${placement.y}px, 0)${placement.anchor}`,
             maxWidth: GHOST_MAX_WIDTH_PX,
             overflow: "hidden",
             textOverflow: "ellipsis",

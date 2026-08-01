@@ -1,6 +1,6 @@
 # Recorded QA Acceptance — dock-react gesture verification
 
-Lifecycle: active
+Lifecycle: completed-retained
 
 Campaign charter. End-to-end acceptance of the UI Verification System
 (`beep qa` record → extract → judge) against the dock-react pointer-gesture
