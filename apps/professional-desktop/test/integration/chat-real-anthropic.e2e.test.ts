@@ -53,7 +53,7 @@ const prompt = [
   "Return exactly these three rich blocks and no prose:",
   "1. A mermaid diagram code block with language mermaid. Use: graph TD\\n  A[Client] --> B[Sidecar] --> C[Persisted @beep/md]",
   "2. A table block with headerRow true, columns Feature and Status, and one row Rich blocks / Ready.",
-  "3. A youtube block with videoId dQw4w9WgXcQ.",
+  "3. A youtube block with videoId M7lc1UVf-VE.",
 ].join("\n");
 
 const migrateAll = Effect.fnUntraced(function* () {
@@ -75,7 +75,7 @@ const hasStreamedTable = (blocks: ReadonlyArray<unknown>): boolean =>
   A.some(blocks, (block) => P.isObject(block) && block.type === "table");
 
 const hasStreamedYouTube = (blocks: ReadonlyArray<unknown>): boolean =>
-  A.some(blocks, (block) => P.isObject(block) && block.type === "youtube" && block.videoId === "dQw4w9WgXcQ");
+  A.some(blocks, (block) => P.isObject(block) && block.type === "youtube" && block.videoId === "M7lc1UVf-VE");
 
 const persistedAssistantDocuments = (timeline: Thread.ThreadTimeline): ReadonlyArray<Md.Document.Type> =>
   pipe(
@@ -100,7 +100,7 @@ const hasPersistedTable = (document: Md.Document.Type): boolean =>
   A.some(document.children, (block) => block._tag === "table");
 
 const hasPersistedYouTube = (document: Md.Document.Type): boolean =>
-  A.some(document.children, (block) => block._tag === "youtube" && block.videoId === "dQw4w9WgXcQ");
+  A.some(document.children, (block) => block._tag === "youtube" && block.videoId === "M7lc1UVf-VE");
 
 const RealAnthropicChatLayer = Layer.mergeAll(
   ThreadLayers.ThreadStoreDrizzleLayer,

@@ -1,6 +1,14 @@
-import { BrowserSafeUrlPolicy, Md, makeHtmlFragmentAdapter, makeMarkdownAdapter } from "@beep/md";
-import { Effect } from "effect";
+import {
+  BrowserSafeUrlPolicySpec,
+  decodeSafeDocumentUnsafe,
+  Md,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
+  renderSafeHtml,
+} from "@beep/md";
+import { Effect, Result } from "effect";
 import { describe, expect, it } from "tstyche";
+import type { SafeHtml } from "@beep/html";
 import type {
   Admonition,
   Block,
@@ -35,18 +43,25 @@ import type {
   P,
   PureRenderAdapter,
   RenderError,
+  SafeDocument,
   Strong,
   Table,
   TaskItem,
   TaskList,
-  TaskListItemInput,
+  TaskListItemSpec,
   Ul,
   UrlRenderOptions,
   YouTube,
 } from "@beep/md";
 import type { HtmlFragment, Markdown } from "@beep/schema";
-import type { Result } from "effect";
 import type * as S from "effect/Schema";
+
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToMarkdownCompatibility = DocumentToMarkdown;
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToHtmlFragmentCompatibility = DocumentToHtmlFragment;
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform output typing remains covered until removal.
+type DocumentToPlainTextCompatibility = DocumentToPlainText;
 
 describe("@beep/md", () => {
   it("keeps document, block, and inline constructors typed", () => {
@@ -75,7 +90,10 @@ describe("@beep/md", () => {
     expect(Md.blockquote`${["a", "b"]}`).type.toBe<BlockQuote>();
     expect(Md.ul(["One", Md.li("Two"), [Md.strong("Three")]])).type.toBe<Ul>();
     expect(Md.taskItem("Done", { checked: true })).type.toBe<TaskItem>();
+    expect(Md.taskListFromItems([Md.taskItem("Done", { checked: true })])).type.toBe<TaskList>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Verifies the retained ambiguous-input compatibility signature.
     expect(Md.taskList(["Todo", { text: "Done", checked: true }, Md.taskItem("Maybe")])).type.toBe<TaskList>();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Verifies the retained block-child compatibility signature.
     expect(Md.taskList([{ children: [Md.p("Parent"), Md.ul(["Child"])], checked: true }])).type.toBe<TaskList>();
     expect(Md.inlineMath("a^2")).type.toBe<InlineMath>();
     expect(Md.footnoteRef("note-1")).type.toBe<FootnoteReference>();
@@ -86,9 +104,9 @@ describe("@beep/md", () => {
     expect(Md.admonition("warning", "Body", { title: "Careful" })).type.toBe<Admonition>();
     expect(Md.embed("video", "https://example.com", { title: "Demo" })).type.toBe<Embed>();
     expect(Md.make([Md.p("Body")], { frontmatter: { title: "Doc" } })).type.toBe<Document>();
-    expect(Md.youtube("dQw4w9WgXcQ")).type.toBe<Result.Result<YouTube, S.SchemaError>>();
-    expect(Md.youtubeEffect("dQw4w9WgXcQ")).type.toBe<Effect.Effect<YouTube, S.SchemaError>>();
-    expect(Md.youtubeUnsafe("dQw4w9WgXcQ")).type.toBe<YouTube>();
+    expect(Md.youtube("M7lc1UVf-VE")).type.toBe<Result.Result<YouTube, S.SchemaError>>();
+    expect(Md.youtubeEffect("M7lc1UVf-VE")).type.toBe<Effect.Effect<YouTube, S.SchemaError>>();
+    expect(Md.youtubeUnsafe("M7lc1UVf-VE")).type.toBe<YouTube>();
     expect(Md.text("x")).type.toBeAssignableTo<Inline>();
     expect(Md.hr).type.toBeAssignableTo<Block>();
   });
@@ -104,11 +122,7 @@ describe("@beep/md", () => {
     expect<Li>().type.toBeAssignableTo<ListItemInput>();
     expect<Block>().type.toBeAssignableTo<ListItemChildInput>();
     expect<[ListItemChildInput, ListItemChildInput]>().type.toBeAssignableTo<ListItemContent>();
-    expect<{ readonly text: string; readonly checked?: boolean }>().type.toBeAssignableTo<TaskListItemInput>();
-    expect<{
-      readonly children: ListItemContent;
-      readonly checked?: boolean;
-    }>().type.toBeAssignableTo<TaskListItemInput>();
+    expect<TaskItem>().type.toBeAssignableTo<TaskListItemSpec>();
 
     const strongBuilder: InlineContentBuilder<Strong> = Md.strong;
     const blockquoteBuilder: BlockContentBuilder<BlockQuote> = Md.blockquote;
@@ -146,11 +160,18 @@ describe("@beep/md", () => {
     expect(Md.MarkdownAdapter).type.toBe<PureRenderAdapter<Markdown>>();
     expect(Md.HtmlFragmentAdapter).type.toBe<PureRenderAdapter<HtmlFragment>>();
     expect(Md.PlainTextAdapter).type.toBe<PureRenderAdapter<string>>();
-    const renderOptions: UrlRenderOptions = { urlPolicy: BrowserSafeUrlPolicy };
+    const renderOptions: UrlRenderOptions = { urlPolicy: BrowserSafeUrlPolicySpec };
     expect(renderOptions).type.toBe<UrlRenderOptions>();
-    expect(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<Markdown>>();
-    expect(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<HtmlFragment>>();
-    expect(Md.makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<Markdown>>();
+    expect(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec })).type.toBe<PureRenderAdapter<Markdown>>();
+    expect(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicySpec })).type.toBe<
+      PureRenderAdapter<HtmlFragment>
+    >();
+    expect(Md.makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec })).type.toBe<PureRenderAdapter<Markdown>>();
+    const safeDocument = Result.getOrThrow(Md.refineSafeDocument(document));
+    expect(decodeSafeDocumentUnsafe).type.toBe<(input: unknown) => SafeDocument>();
+    expect(decodeSafeDocumentUnsafe(document)).type.toBe<SafeDocument>();
+    expect(renderSafeHtml(safeDocument)).type.toBe<SafeHtml>();
+    expect(Md.renderSafeHtml(safeDocument)).type.toBe<SafeHtml>();
 
     const bytesAdapter: EffectRenderAdapter<Uint8Array, "pdf-error", "fonts"> = {
       name: "bytes",
@@ -165,9 +186,9 @@ describe("@beep/md", () => {
   });
 
   it("exposes schema transformation types and future effectful adapter shape", () => {
-    expect<DocumentToMarkdown>().type.toBe<Markdown>();
-    expect<DocumentToHtmlFragment>().type.toBe<HtmlFragment>();
-    expect<DocumentToPlainText>().type.toBe<string>();
+    expect<DocumentToMarkdownCompatibility>().type.toBe<Markdown>();
+    expect<DocumentToHtmlFragmentCompatibility>().type.toBe<HtmlFragment>();
+    expect<DocumentToPlainTextCompatibility>().type.toBe<string>();
 
     type BytesAdapter = EffectRenderAdapter<Uint8Array, Error, never>;
     expect<BytesAdapter["name"]>().type.toBe<string>();

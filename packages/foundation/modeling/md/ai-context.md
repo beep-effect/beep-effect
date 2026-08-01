@@ -25,6 +25,8 @@ material for capability, fixture, and security comparison only.
 | `Md.ts` | Public `Md` DSL namespace and constructor helpers |
 | `Md.render.ts` | Pure/effectful render adapter contracts, render APIs, and schema transformations |
 | `Md.escape.ts` | Markdown/HTML escaping, URL policy sanitation, code-language sanitation, and render primitives |
+| `Md.html.ts` | Direct `SafeDocument` to conformant/safe `@beep/html` AST projection |
+| `Md.safe.ts` | Branded user-content refinements and path-located trust-boundary issues |
 
 ## Usage Patterns
 
@@ -47,8 +49,18 @@ The `Result` wrapper is adapter-failure-safe, and the default HTML renderer esca
 `Md.rawHtml(...)`. Trusted HTML remains an explicit adapter boundary: custom adapters or externally-branded
 `HtmlFragment` values should only carry content that was audited or sanitized upstream.
 
-`Md.rawMarkdown(...)` is trusted Markdown source. URL-bearing render sinks should choose the default compatibility
-policy, `BrowserSafeUrlPolicy`, or `StrictWebUrlPolicy` explicitly when the sink is security-sensitive.
+`Document` is the general persistence model. `SafeDocument` preserves its encoded wire while excluding trusted raw
+nodes, user-content URLs outside the link/image allow lists, duplicate footnote definitions, and scalar strings that
+cannot complete safe HTML serialization. Use `refineSafeDocument` for decoded values and `decodeSafeDocument` for
+encoded external input.
+
+`renderSafeHtml(SafeDocument)` maps directly into the `@beep/html` AST and
+returns its opaque `SafeHtml`. Preserve that marker through intermediate code
+and call `safeHtmlValue` only at a final browser or framework sink.
+
+`Md.rawMarkdown(...)` is trusted Markdown source. URL-bearing render sinks should choose
+`CompatibilityUrlPolicySpec`, `BrowserSafeUrlPolicySpec`, or `StrictWebUrlPolicySpec` explicitly. `UrlPolicySpec`
+is normalized once and applied inside the recursive render fold; legacy `UrlPolicy` values are compatibility adapters.
 
 ## Design Decisions
 
@@ -57,11 +69,14 @@ policy, `BrowserSafeUrlPolicy`, or `StrictWebUrlPolicy` explicitly when the sink
 | Result-returning pure render APIs | Keeps synchronous rendering explicit about adapter failure while avoiding `Effect.run*` at library call sites. |
 | Unsafe render mirrors | Preserve direct adapter calls where original thrown-error behavior is intentional. |
 | Trusted raw HTML boundaries | Default rendering escapes `rawHtml`; only custom adapters or external `HtmlFragment` values should be treated as trusted HTML boundaries. |
+| General vs safe document schemas | Persistence remains lossless; editor/RPC user input uses a same-wire branded refinement with structured issues. |
+| Typed safe-HTML projection | Avoids an HTML parser/string sanitizer in foundation code while retaining conformance, policy, and provenance proofs. |
+| Schema-owned URL policy | A tagged canonical policy prevents nested rendering from silently reverting to built-in defaults. |
 | No parser dependency | Keeps `@beep/md` as repo-owned foundation modeling substrate; external parser engines remain reference or driver concerns. |
 
 ## Dependencies
 
-**Internal**: `@beep/identity`, `@beep/schema`, `@beep/utils`
+**Internal**: `@beep/html`, `@beep/identity`, `@beep/schema`, `@beep/utils`
 **External**: `effect`
 
 ## Related

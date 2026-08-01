@@ -16,18 +16,19 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { Match, Number as N, pipe } from "effect";
+import { Match, MutableHashMap, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { commandCounter } from "./AdapterState.ts";
-import type { AnchoredBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
+import { SectionPreview, TabInsertionPreview } from "./Gesture.models.ts";
+import type { AnchoredBox, DockGeometry, MovePanelCommand, Panel, SplitNode } from "@beep/dock";
 import type { Dual2, Dual3 } from "@beep/dock/internal/Dual";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
-import type { PointerPosition, TabDrag } from "./Gesture.models.ts";
+import type { DropPreview, PointerPosition, TabDrag, TabRect } from "./Gesture.models.ts";
 
 export const boxStyle = (box: DockBox): React.CSSProperties => ({
   position: "absolute",
@@ -62,10 +63,18 @@ export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPositi
 export const pressStartsOnButton = (event: PointerEvent): boolean =>
   event.target instanceof Element && P.isNotNull(event.target.closest("button"));
 
+// A native cancellation has already released capture, and releasing a pointer
+// the element no longer captures throws NotFoundError straight out of the
+// handler — so ownership is checked first.
+export const releaseCapture: Dual2<HTMLElement, number, void> = dual(2, (node: HTMLElement, pointerId: number) => {
+  if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
+});
+
 // A press only promotes to a drag once the pointer travels past this radius
 // (dockview's PointerDragSource threshold): taps and plain clicks never show
 // drag chrome (ghost, drop indicator) or compile a drop.
 const DRAG_THRESHOLD = 5;
+const ROOT_EDGE_BAND_PX = 8;
 export const exceedsDragThreshold: Dual2<PointerPosition, PointerPosition, boolean> = dual(
   2,
   (origin: PointerPosition, pointer: PointerPosition): boolean => {
@@ -132,13 +141,84 @@ const splitPreviewBox = (box: DockBox, side: DockSide, ratio: SplitRatio): DockB
   });
 };
 
+// The tabs actually rendered in a group's strip, paired with their logical
+// index and ordered left to right. Overflowed panels have no rect, so they
+// are absent here — targeting must never resolve to a tab the user cannot
+// see, and the strip's padding/gaps live in these measurements rather than
+// in group-box arithmetic.
+type RenderedTab = {
+  readonly logicalIndex: number;
+  readonly rect: TabRect;
+};
+
+const renderedTabs = (
+  state: AdapterState,
+  groupId: GroupId,
+  panels: ReadonlyArray<Panel>
+): ReadonlyArray<RenderedTab> =>
+  pipe(
+    MutableHashMap.get(state.tabRects, groupId),
+    O.match({
+      onNone: A.empty<RenderedTab>,
+      onSome: (rects) =>
+        pipe(
+          A.reduce(panels, A.empty<RenderedTab>(), (acc, panel: Panel, logicalIndex) =>
+            pipe(
+              MutableHashMap.get(rects, panel.id),
+              O.map((rect) => A.append(acc, { logicalIndex, rect })),
+              O.getOrElse(() => acc)
+            )
+          ),
+          A.sort(Order.mapInput(Order.Number, (tab: RenderedTab) => tab.rect.left))
+        ),
+    })
+  );
+
+// Chrome's tab-strip rule: the insertion index advances once the pointer
+// crosses a tab's horizontal MIDPOINT, so hovering past the last tab reads as
+// append. The answer is a LOGICAL index — the position in the group's panel
+// list — derived from rendered geometry, so an overflowed strip cannot insert
+// before a hidden tab. Falls back to even fractions of the group box before
+// the strip has measured anything.
+const stripInsertionIndex = (
+  state: AdapterState,
+  groupId: GroupId,
+  panels: ReadonlyArray<Panel>,
+  box: DockBox,
+  pointerLeft: number
+): number => {
+  const rendered = renderedTabs(state, groupId, panels);
+  if (A.length(rendered) === 0) {
+    const count = A.length(panels);
+    return box.width <= 0 ? 0 : Math.floor(((pointerLeft - box.left) / box.width) * count);
+  }
+  // Past every rendered midpoint the drop appends after the last rendered
+  // tab, which is one past ITS logical position rather than the list length —
+  // a hidden tail must stay behind the visible one.
+  const appendIndex = pipe(
+    A.last(rendered),
+    O.map((tab) => tab.logicalIndex + 1),
+    O.getOrElse(() => A.length(panels))
+  );
+  return pipe(
+    rendered,
+    A.findFirst((tab) => pointerLeft <= tab.rect.left + tab.rect.width / 2),
+    O.map((tab) => tab.logicalIndex),
+    O.getOrElse(() => appendIndex)
+  );
+};
+
 export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<MovePanelCommand>> = dual(
   3,
   (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<MovePanelCommand> => {
     const geometry = graph.registry.get(state.geometry.geometryAtom);
     const container = graph.registry.get(state.containerAtom);
     const point = drag.pointer;
-    const outer = Math.min(32, Math.min(container.width, container.height) / 6);
+    // A thin strip: any wider and the root band shadows the bottom/right
+    // quadrant of every edge-adjacent group, so hovers aimed at a group's
+    // own edge compile to a container-spanning root split (QA finding: the
+    // bottom drop preview spanned both panels instead of the target group).
+    const outer = Math.min(ROOT_EDGE_BAND_PX, Math.min(container.width, container.height) / 6);
     const rootSide: O.Option<DockSide> = Match.value(point).pipe(
       Match.when(
         ({ left }) => left <= container.left + outer,
@@ -167,11 +247,9 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
       const tabs = graph.registry.get(graph.tabsAtom(group.value.groupId));
       const headerHeight = Math.min(32, group.value.box.height);
       if (point.top <= group.value.box.top + headerHeight && O.isSome(tabs)) {
-        const count = A.length(TabsNode.panels(tabs.value));
-        const rawIndex =
-          group.value.box.width <= 0
-            ? 0
-            : Math.floor(((point.left - group.value.box.left) / group.value.box.width) * count);
+        const panels = TabsNode.panels(tabs.value);
+        const count = A.length(panels);
+        const rawIndex = stripInsertionIndex(state, group.value.groupId, panels, group.value.box, point.left);
         const index = NonNegativeInt.make(Math.min(count, Math.max(0, rawIndex)));
         return O.some(
           MovePanelCommandSchema.make({
@@ -248,19 +326,76 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
   }
 );
 
-export const dropPreviewBox: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<DockBox>> = dual(
+const TAB_CARET_WIDTH_PX = 3;
+
+// Caret x prefers measured tab widths (the strip records them for overflow
+// math); before layout settles it falls back to even fractions so the caret
+// still lands between the right neighbors.
+const tabInsertionPreview = (
+  state: AdapterState,
+  graph: DockAtomGraph,
+  groupId: GroupId,
+  index: O.Option<NonNegativeInt>,
+  box: DockBox
+): TabInsertionPreview => {
+  const headerHeight = Math.min(32, box.height);
+  const panels = O.match(graph.registry.get(graph.tabsAtom(groupId)), {
+    onNone: A.empty<Panel>,
+    onSome: TabsNode.panels,
+  });
+  const count = A.length(panels);
+  const insertAt = O.match(index, {
+    onNone: () => count,
+    onSome: (position) => Math.min(position, count),
+  });
+  // The caret sits on the rendered boundary it would insert at: the leading
+  // edge of the tab now occupying that logical position, or trailing the last
+  // rendered tab when appending. Falls back to even fractions of the group box
+  // before the strip has measured.
+  const rendered = renderedTabs(state, groupId, panels);
+  const trailingEdge = pipe(
+    A.last(rendered),
+    O.map((tab) => tab.rect.left + tab.rect.width),
+    O.getOrElse(() => box.left + (count <= 0 ? 0 : (box.width * insertAt) / count))
+  );
+  const caretLeft = pipe(
+    rendered,
+    A.findFirst((tab) => tab.logicalIndex >= insertAt),
+    O.map((tab) => tab.rect.left),
+    O.getOrElse(() => trailingEdge)
+  );
+  return TabInsertionPreview.make({
+    groupId,
+    index,
+    caretBox: DockBox.make({
+      left: Math.min(Math.max(caretLeft, box.left), box.left + box.width - TAB_CARET_WIDTH_PX),
+      top: box.top,
+      width: TAB_CARET_WIDTH_PX,
+      height: headerHeight,
+    }),
+  });
+};
+
+export const dropPreview: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<DropPreview>> = dual(
   3,
-  (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<DockBox> =>
+  (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<DropPreview> =>
     pipe(
       compileDrop(state, graph, drag),
       O.flatMap(({ target }) => {
         const geometry = graph.registry.get(state.geometry.geometryAtom);
         return DockMoveTarget.match(target, {
-          tab: ({ groupId }) => groupBox(geometry, groupId),
+          tab: ({ groupId, index }) =>
+            O.map(groupBox(geometry, groupId), (box) => tabInsertionPreview(state, graph, groupId, index, box)),
           split: ({ referenceGroupId, side, newGroupRatio }) =>
-            O.map(groupBox(geometry, referenceGroupId), (box) => splitPreviewBox(box, side, newGroupRatio)),
+            O.map(groupBox(geometry, referenceGroupId), (box) =>
+              SectionPreview.make({ box: splitPreviewBox(box, side, newGroupRatio) })
+            ),
           rootSplit: ({ side, newGroupRatio }) =>
-            O.some(splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio)),
+            O.some(
+              SectionPreview.make({
+                box: splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio),
+              })
+            ),
         });
       })
     )

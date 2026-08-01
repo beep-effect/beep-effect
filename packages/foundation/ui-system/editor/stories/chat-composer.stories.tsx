@@ -1,7 +1,8 @@
-import { ChatComposer, EditorComposer } from "@beep/editor";
+import { ChatComposer } from "@beep/editor/chat/chat-composer";
+import { EditorComposer } from "@beep/editor/composer";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { draftReplyInitialState as initialState } from "./fixtures.ts";
-import type { MentionOption } from "@beep/editor";
+import type { MentionOption } from "@beep/editor/chat/config";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 // Sample app-injected `@` mention source (ephemeral; serializes to plain text).
@@ -17,7 +18,12 @@ const meta = {
   title: "Editor/ChatComposer",
   component: ChatComposer,
   tags: ["autodocs"],
-  args: { onSerializedChange: fn(), onSend: fn(), placeholder: "Message…", mentionSource: sampleMentionSource },
+  args: {
+    onSerializedChange: fn(),
+    mountConfig: { onSend: fn() },
+    placeholder: "Message…",
+    mentionSource: sampleMentionSource,
+  },
   parameters: {
     layout: "padded",
     docs: {
@@ -48,7 +54,9 @@ export const Default: Story = {
 /** Every feature disabled — reduces to the minimal editable surface + send. */
 export const MinimalSubset: Story = {
   args: {
-    features: { toolbar: false, slash: false, mentions: false, attachments: false, characterCount: false },
+    mountConfig: {
+      features: { toolbar: false, slash: false, mentions: false, attachments: false, characterCount: false },
+    },
   },
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -92,7 +100,7 @@ export const EmptyEnterIsNoOp: Story = {
     void expect(editable).not.toBeNull();
     (editable as HTMLElement).focus();
     return userEvent.keyboard("{Enter}").then(() => {
-      void expect(args.onSend).not.toHaveBeenCalled();
+      void expect(args.mountConfig?.onSend).not.toHaveBeenCalled();
     });
   },
 };

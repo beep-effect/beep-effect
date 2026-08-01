@@ -5,6 +5,12 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
+      // Deep schema sweeps and coverage instrumentation are CPU-bound enough
+      // that running both Lexical test files together starves their 400-run
+      // properties. Preserve normal file parallelism, but serialize the two
+      // files for resource-intensive lanes while each suite serializes its own
+      // tests.
+      fileParallelism: !(vitestCoverageRunActive || fcDeepSweepActive),
       // These suites compile large recursive Lexical schemas (`S.toArbitrary`
       // + first-touch decoder compilation of `SerializedEditorState`) and run
       // codec round-trip property tests over arbitrary editor states. Under v8

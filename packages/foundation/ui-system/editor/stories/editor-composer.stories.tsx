@@ -1,4 +1,4 @@
-import { EditorComposer } from "@beep/editor";
+import { EditorComposer } from "@beep/editor/composer";
 import { expect, fn, within } from "storybook/test";
 import { draftReplyInitialState as initialState } from "./fixtures.ts";
 import type { Meta, StoryObj } from "@storybook/react-vite";

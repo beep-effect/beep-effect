@@ -24,12 +24,13 @@ import { characterCountAtom, sendKeyBindingAtom } from "./atoms.ts";
  * plugin takes no props. With `sendOn="enter"`, plain Enter sends and any
  * modifier inserts a newline; with `sendOn="modifierEnter"`, Cmd/Ctrl+Enter
  * sends and plain Enter inserts a newline. Enter during IME composition never
- * sends, including legacy `keyCode === 229` events, and Enter while a typeahead
- * menu is open selects the option instead.
+ * sends or selects a visible typeahead option, including legacy
+ * `keyCode === 229` events; non-IME Enter while a typeahead menu is open selects
+ * the option.
  *
  * @example
  * ```tsx
- * import { SendPlugin } from "@beep/editor/chat"
+ * import { SendPlugin } from "@beep/editor/chat/send"
  *
  * function EnterToSend() {
  *   return <SendPlugin />
@@ -52,7 +53,7 @@ export function SendPlugin(): null {
  *
  * @example
  * ```tsx
- * import { useCharacterCount } from "@beep/editor/chat"
+ * import { useCharacterCount } from "@beep/editor/chat/send"
  *
  * function CharacterCounter() {
  *   const count = useCharacterCount()

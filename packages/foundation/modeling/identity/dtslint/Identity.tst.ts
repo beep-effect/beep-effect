@@ -224,6 +224,39 @@ describe("Identity", () => {
     );
   });
 
+  it("types the key entrypoint against the closed vocabulary", () => {
+    const { $PatentId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.compose("patent");
+
+    const borrowed = S.String.pipe($PatentId.key("skos:prefLabel"));
+    const reversed = S.Array(S.String).pipe($PatentId.key("^rdfs:subClassOf"));
+    const owned = S.NonEmptyString.pipe($PatentId.key({ description: "Claim text." }));
+
+    expect(borrowed).type.toBe<typeof S.String>();
+    expect(reversed).type.toBeAssignableTo<S.Top>();
+    expect(owned).type.toBe<typeof S.NonEmptyString>();
+
+    // @ts-expect-error!
+    $PatentId.key("skos:prefLabl");
+
+    // @ts-expect-error!
+    $PatentId.key("nope:term");
+
+    // @ts-expect-error!
+    $PatentId.key({ identifier: "forged" });
+  });
+
+  it("types the class entrypoint with owned identity literals and the skos marker", () => {
+    const { $PatentId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.compose("patent");
+    const annotation = $PatentId.class("Claim", { description: "A patent claim.", skos: "concept" });
+
+    expect(annotation.identifier).type.toBe<IdentityString<"@beep/patent/Claim">>();
+    expect(annotation.title).type.toBe<"Claim">();
+    expect(annotation.skosClassification).type.toBeAssignableTo<"concept" | "conceptScheme" | undefined>();
+
+    // @ts-expect-error!
+    $PatentId.class("Claim", { skos: "collection" });
+  });
+
   it("supports base normalization while preserving keys/literals", () => {
     const fromPrefixed = make("@beep/schema").$SchemaId;
     const fromAt = make("@schema").$SchemaId;

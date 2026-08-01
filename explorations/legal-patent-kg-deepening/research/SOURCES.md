@@ -28,12 +28,25 @@ RULES
 
 ## 1. Mined source corpus
 
-<!-- Fills during mining waves: one row per unique paper/URL distillate, with
-its distillate path under research/mined/ and track theme. -->
+Mining is COMPLETE (2026-08-01). 122 distillates exist, one per mined source,
+at `research/mined/<ID>.md` — each distillate's frontmatter carries the
+original filename, track, priority, and mine date, and its body carries
+section/page-referenced quotes. The authoritative per-source rows are
+machine-readable rather than duplicated here:
 
-| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
-|--------|-------|-----------------|------------------------|-------|-------------|
-| (pending) | mining wave 1 not yet launched | | | | |
+| Row family | Count | Authoritative ledger | What it carries |
+|------------|------:|----------------------|-----------------|
+| Papers `P001-P101` | 101 files (98 unique) | [`00-catalog.json`](./00-catalog.json) / [`00-catalog.md`](./00-catalog.md) | id → source filename, title, track, themes, priority, dupe links |
+| Papers (integrity) | 101 | [`00-inventory.json`](./00-inventory.json) | sha256 + byte size per corpus file |
+| Link scrapes `L01-L14` | 14 | catalog rows (kind `link`) + gitignored fetches under `../assets/vendor/links/` | URL, title, track |
+| Repo deep-mines `R04-R25` (9) | 9 | catalog rows + [`01-repo-triage.json`](./01-repo-triage.json) | license, port discipline, mine targets |
+
+Late additions (2026-08-01, post-synthesis): P100 (FLINT ontology paper),
+P101 (controlled-language paper), R25 (flint-ontology repo) — routed via
+[`14-addendum-new-items.md`](./14-addendum-new-items.md) as an unverified
+addendum. Findings→source traceability: every `T*-F*` finding in
+`10..13-track-*.md` and every nugget in
+[`nugget-catalog.json`](./nugget-catalog.json) cites distillate ids.
 
 ## 2. Upstream repositories & licenses
 
@@ -43,13 +56,39 @@ delta-only. -->
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| (pending) | repo triage not yet launched | | |
+| R02 `awesome-legal-data` | `CC0-1.0` | reference only | Dataset and portal lookup list. |
+| R03 `CapturingLegalReasoningPaths` | `none-found` | reference only | Reasoning-path ontology, prompts, and annotated-data reference. |
+| R04 `cjeu-ontology-mappings` | `CC-BY-4.0` | port with attribution | CJEU cross-ontology mapping workbook. |
+| R05 `CommonCoreOntologies` | `BSD-3-Clause` | port with attribution | Mid-level ontology modules and release patterns. |
+| R06 `DAOnt` | `CC-BY-SA-4.0` | clean-room pattern only | Data Act deontic and executable compliance patterns. |
+| R07 `GLEIO` | `none-found` | reference only | LEI ontology and temporal-reference-data design. |
+| R08 `knowledge_graph` | `none-found` | reference only | SEC litigation extraction and nested-KG reference. |
+| R09 `Legal-Ontologies` | `CC-BY-SA-4.0` | reference only | Legal ontology and KG lookup list. |
+| R10 `Legal-Ontology-Learning` | `MIT` | port with attribution | Ontology-learning pipeline patterns. |
+| R11 `legal-ontology-population` | `none-found` | reference only | LKIF-to-YAGO mapping reference. |
+| R12 `LegalCaseKnowledgeGraph` | `none-found` | reference only | Chinese case narrative and triples dataset reference. |
+| R13 `LegalDatasets` | `Apache-2.0` | port with attribution | Legal-document schema and dataset-intake patterns. |
+| R14 `LegalPapers` | `none-found` | reference only | Legal-intelligence bibliography. |
+| R15 `LegalPP` | `MIT` | port with attribution | LegalLPP dataset and text-guided KG-completion patterns. |
+| R17 `llm4oe-slr` | `CC-BY-4.0` | port with attribution | Structured LLM-for-ontology-engineering evidence tables. |
+| R19 `patentlego-ontology` | `CC-BY-SA-4.0` | clean-room pattern only | Functional patent-block vocabulary and connection patterns. |
+| R21 `raglex` | `none-found` | reference only | Legal corpus, citation graph, and retrieval architecture. |
+| R22 FOPNet STS | `none-found` | reference only | FOP patent-triple and similarity approach; no code or data extraction. |
+| R23 `semanticlaw` | `Apache-2.0` | port with attribution | Swiss-law RDF vocabulary and collection patterns. |
+| R24 `USPTO_ClassOntology` | `none-found` | reference only | USPTO class-definition and claim-overlap reference. |
+| R25 `flint-ontology` | `Apache-2.0` (root); `MPL-2.0` (`shacl/`) | split: port with attribution (root) / clean-room pattern only (`shacl/`) | FLINT state-transition class hierarchy, SHACL shape patterns, competency questions (late addition, unverified addendum). |
+
+Full 24-row triage, including skipped repositories and exact mine targets:
+[`01-repo-triage.md`](./01-repo-triage.md) and
+[`01-repo-triage.json`](./01-repo-triage.json).
 
 ## 3. External research sources
 
-- `links.md` seed URLs (15) — reproduced into the catalog during wave 1;
-  includes FIBO Legal Core, UFO-L project page, LegalRuleML 1.0 spec, and the
-  FOPNet ResearchGate entry (priority thread).
+- `links.md` seed URLs — cataloged as `L01-L14` and mined into
+  `research/mined/L*.md` distillates; includes FIBO Legal Core, UFO-L
+  project page, LegalRuleML 1.0 spec, and the FOPNet thread (priority;
+  ResearchGate blocked scraping — L13 recovered FOPNet via its
+  ScienceDirect abstract + reference list).
 
 ## 4. In-repo capability references
 

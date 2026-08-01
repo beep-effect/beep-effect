@@ -125,9 +125,12 @@ const browserSidecarTransport = (): SidecarTransport => {
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
 // the Tauri Promise boundary and schema-decoded — and in a plain browser it is
-// HTTP. `Effect.suspend` defers the runtime check to when the atom runs, keeping
-// the original deferred semantics. A rejected invoke or decode failure flows to
-// the atom's `AsyncResult.Failure` and renders the unavailable state.
+// HTTP. Packaged HTTP commands resolve only after the bundled sidecar reports
+// that its complete RPC runtime is live, so this existing gate also prevents
+// query atoms from racing a cold start. `Effect.suspend` defers the runtime
+// check to when the atom runs, keeping the original deferred semantics. A
+// rejected invoke or decode failure flows to the atom's `AsyncResult.Failure`
+// and renders the unavailable state.
 const readSidecarTransport = Effect.suspend(() =>
   hasTauriRuntime()
     ? Effect.tryPromise(() => import("@tauri-apps/api/core")).pipe(

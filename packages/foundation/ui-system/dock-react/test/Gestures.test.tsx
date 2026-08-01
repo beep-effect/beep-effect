@@ -96,9 +96,21 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(source, "pointerMove", 600, 350);
       expect(indicator().style.top).toBe("200px");
       expect(indicator().style.height).toBe("200px");
+      // Center hover joins the tab list, so the preview moves INTO the
+      // strip as an insertion caret (append position) instead of a
+      // full-group overlay — adding a tab and creating a section read as
+      // different acts.
       pointer(source, "pointerMove", 600, 200);
-      expect(indicator().style.left).toBe("404px");
-      expect(indicator().style.width).toBe("396px");
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      const caret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
+      expect(caret).not.toBeNull();
+      expect(caret?.style.left).toBe("797px");
+      expect(caret?.style.height).toBe("32px");
+      // Strip hover positions the caret at the pointer's insertion index
+      // (Chrome tab-strip semantics: the position is visible and draggable).
+      pointer(source, "pointerMove", 500, 16);
+      const stripCaret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
+      expect(stripCaret?.style.left).toBe("404px");
       fireEvent.keyDown(document, { key: "Escape" });
       mounted.graph.dispose();
     })
@@ -115,7 +127,9 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // handler restores it so keyboard activation tracks the clicked tab.
       expect(document.activeElement).toBe(tab(panel2.id));
       pointer(tab(panel2.id), "pointerMove", 100, 16);
-      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).not.toBeNull();
+      // A strip hover previews as the insertion caret, not a section overlay.
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-caret]")).not.toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
       const ghost = screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]");
       expect(ghost).not.toBeNull();
       expect(ghost?.textContent).toBe(panel2.title);
@@ -124,6 +138,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       const result = O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1)));
       expect(A.map(TabsNode.panels(result), (panel) => panel.id)).toEqual([panel2.id, panel1.id]);
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
+      expect(screen.getByTestId("dockview-react").querySelector("[data-drop-caret]")).toBeNull();
       expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
       mounted.graph.dispose();
     })
@@ -186,12 +201,144 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       fireEvent.keyDown(document, { key: "Escape" });
       if (mounted.api === undefined) throw new Error("Missing adapter API");
+      // Escape on an UNPROMOTED press clears outright — no drag chrome was
+      // shown, so the release must still read as a plain activation click.
+      // (A promoted drag instead concludes and keeps its record; see the
+      // activation-leak test.)
       expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       pointer(tab(panel1.id), "pointerUp", 400, 220);
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("a cross-group drop concludes the record and the next press heals it", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const source = tab(panel1.id);
+      // Promote and drop panel1 into group2's center (cross-group move).
+      pointer(source, "pointerDown", 100, 16);
+      pointer(source, "pointerMove", 600, 200);
+      pointer(source, "pointerUp", 600, 200);
+      // The record concludes rather than clearing: were the source node
+      // still mounted (same-group reorder), the trailing click would be
+      // swallowed instead of re-activating via the stale group closure.
+      if (mounted.api === undefined) throw new Error("Missing adapter API");
+      expect(O.exists(mounted.graph.registry.get(mounted.api.atoms.drag), (drag) => drag.concluded)).toBe(true);
+      // Here the move unmounted the source node, so the trailing click
+      // lands on a detached element: no activation, and the concluded
+      // record lingers (touch and pen releases produce no click at all).
+      fireEvent.click(source, { clientX: 600, clientY: 200 });
+      yield* mounted.graph.awaitIdle;
+      expect(O.exists(mounted.graph.registry.get(mounted.api.atoms.drag), (drag) => drag.concluded)).toBe(true);
+      // The next press anywhere on a tab clears the stale record before the
+      // button guard can early-return past it.
+      pointer(tab(panel3.id), "pointerDown", 600, 16);
+      pointer(tab(panel3.id), "pointerUp", 600, 16);
+      yield* mounted.graph.awaitIdle;
+      expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("positions the insertion caret by measured tab midpoints", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
+      if (strip === null) throw new Error("Missing tab strip");
+      // jsdom reports every rect as zero-width, so the strip never records
+      // real tab widths and the measured branch of the insertion-index rule
+      // stays unreachable. Stub the two tabs at 100px and 60px, then drive a
+      // resize so measureStrip records them.
+      // Rects must carry real lefts: targeting reads rendered geometry, so
+      // laying both tabs at x=0 would describe a strip that cannot exist.
+      const rects = new Map([
+        [panel1.id, { left: 0, width: 100 }],
+        [panel2.id, { left: 100, width: 60 }],
+      ]);
+      for (const [panelId, rect] of rects) {
+        const node = tab(panelId);
+        node.getBoundingClientRect = () => new DOMRect(rect.left, 0, rect.width, 24);
+      }
+      resize(strip, { width: 400, height: 24 });
+
+      const source = tab(panel3.id);
+      const caretLeft = (): string => {
+        const node = root.querySelector<HTMLElement>("[data-drop-caret]");
+        if (node === null) throw new Error("Missing drop caret");
+        return node.style.left;
+      };
+      pointer(source, "pointerDown", 600, 16);
+      // Before the first tab's midpoint (50px): index 0, caret at the strip start.
+      pointer(source, "pointerMove", 20, 16);
+      expect(caretLeft()).toBe("0px");
+      // Past the first midpoint but before the second (100 + 30 = 130): index 1.
+      pointer(source, "pointerMove", 90, 16);
+      expect(caretLeft()).toBe("100px");
+      // Past the second midpoint: append at index 2, caret after both tabs.
+      pointer(source, "pointerMove", 150, 16);
+      expect(caretLeft()).toBe("160px");
+      fireEvent.keyDown(document, { key: "Escape" });
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("targets rendered tabs when the strip has padding and hidden overflow", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
+      if (strip === null) throw new Error("Missing tab strip");
+      // A themed strip pads its content (the desktop shell uses 4px 6px with a
+      // 2px gap), so tabs do NOT start at the group box's left edge. Only
+      // panel2 is rendered here — panel1 stands in for an overflowed tab with
+      // no rect at all.
+      const node = tab(panel2.id);
+      node.getBoundingClientRect = () => new DOMRect(56, 0, 60, 24);
+      tab(panel1.id).getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
+      resize(strip, { width: 400, height: 24 });
+
+      const source = tab(panel3.id);
+      const caret = (): HTMLElement => {
+        const found = root.querySelector<HTMLElement>("[data-drop-caret]");
+        if (found === null) throw new Error("Missing drop caret");
+        return found;
+      };
+      pointer(source, "pointerDown", 600, 16);
+      // Before the rendered tab's midpoint (56 + 30 = 86): the caret sits on
+      // that tab's real left edge, inside the padding — not at the box edge.
+      pointer(source, "pointerMove", 70, 16);
+      expect(caret().style.left).toBe("56px");
+      // Past it: append trailing the rendered tab, never before a hidden one.
+      pointer(source, "pointerMove", 100, 16);
+      expect(caret().style.left).toBe("116px");
+      fireEvent.keyDown(document, { key: "Escape" });
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("Escape-cancelled drag release does not activate the dragged tab", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount();
+      expect(O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1))).active.id).toBe(panel1.id);
+      pointer(tab(panel2.id), "pointerDown", 600, 16);
+      expect(document.activeElement).toBe(tab(panel2.id));
+      pointer(tab(panel2.id), "pointerMove", 100, 200);
+      fireEvent.keyDown(document, { key: "Escape" });
+      // Escape hands focus back to the group's active tab: the cancelled
+      // gesture must leave no focus trace on the dragged tab.
+      expect(document.activeElement).toBe(tab(panel1.id));
+      pointer(tab(panel2.id), "pointerUp", 100, 200);
+      // The browser delivers the trailing click to the pointer-capture target
+      // even though the release happened far from the tab strip; a cancelled
+      // drag's release must not read as an activation click.
+      fireEvent.click(tab(panel2.id), { clientX: 100, clientY: 200 });
+      yield* mounted.graph.awaitIdle;
+      expect(O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1))).active.id).toBe(panel1.id);
       mounted.graph.dispose();
     })
   );

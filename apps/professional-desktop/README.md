@@ -1,3 +1,5 @@
+<!-- cspell:words Referer -->
+
 # @beep/professional-desktop
 
 ## Chat Database Compatibility
@@ -7,3 +9,44 @@ The desktop sidecar owns `CHAT_DB_PATH` with the bundled in-process PGlite runti
 If an existing `CHAT_DB_PATH` was created by an older desktop build and cannot be opened by the current runtime, boot fails closed and leaves that directory untouched. To preserve data, run the older build once, export the chat database, then import it into a fresh directory created by the current build. To reset local state, move the old `chat-db` directory aside or point `CHAT_DB_PATH` at an empty directory before launching the current build.
 
 The sidecar writes `.beep-pglite-inprocess-v2` only after the current runtime opens the directory and migrations finish. That marker means future boots still probe the directory, but they do not treat it as a legacy non-PGlite folder.
+
+## Rich-content boundaries
+
+Composer drafts remain general `@beep/md` documents so persisted content is not
+silently rewritten. Before send, the desktop refines the draft through
+`@beep/md/Md.safe`. A legacy draft containing trusted raw HTML or Markdown is
+projected into the editor as literal text, but its original persisted form stays
+untouched. The composer shows an escaped preview and requires an explicit
+“Send escaped literal copy” action before the normalized safe document can be
+submitted. An out-of-policy link or embedded URL is non-confirmable and must be
+edited first, as is text containing a NUL character or lone UTF-16 surrogate.
+
+The desktop persists canonical `@beep/md` content, not Lexical wire. Persisted
+messages are projected to the editor vocabulary for rich rendering; if that
+projection fails, the app renders the Md plain-text projection as React text.
+Consumers that do persist unknown Lexical wire should use the editor package's
+exported `EditorWireViewer` or `EditorWireComposer` admission surfaces, which
+keep malformed, empty-root, or forward-compatible wire escaped and read-only.
+
+YouTube players use only
+`https://www.youtube-nocookie.com` frames. Production and development CSP both
+declare that exact `frame-src`. On Linux, WebKitGTK adds the installed Tauri app
+identity as the `Referer` header only for an exact privacy-enhanced embed
+request; other requests are unchanged. The native build compiles that policy
+into a WebKit Web-process extension, uses the honored
+[`WebKitWebPage::send-request`](https://webkitgtk.org/reference/webkit2gtk-web-extension/2.42.4/signal.WebPage.send-request.html)
+mutation point, bundles it into the executable, and loads it before creating the
+first page. “Watch on YouTube” cancels its click and emits a typed, cancelable
+request. The Tauri desktop claims validated requests and uses the official
+opener plugin; an unclaimed browser request is opened explicitly. If the native
+opener rejects a claimed request, an accessible notice retains both a retry and
+a keyboard-focusable, self-selecting URL fallback. Every path remains scoped to
+canonical watch URLs with an exact eleven-character video id.
+
+The packaged CSP keeps scripts, workers, and application assets on `'self'`;
+the ontology projection worker is emitted as a same-origin module asset rather
+than a `data:` URL. `img-src` additionally permits `blob:` solely for revocable
+in-memory attachment thumbnails, and `style-src` permits inline styles because
+the dock and resizable-panel runtimes calculate geometry through DOM style
+properties. These exceptions do not extend to scripts, frames, URLs rendered
+from Markdown, or serialized HTML.

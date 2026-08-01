@@ -40,7 +40,7 @@ import type {
   RestoreMaximizedCommand,
 } from "@beep/dock";
 import type { DockAtomGraph, DockTitleMinimaOptions, DockviewAdapterApi } from "../DockReact.types.ts";
-import type { FloatingGesture, FloatingOverride, RatioOverride, SashDrag, TabDrag } from "./Gesture.models.ts";
+import type { FloatingGesture, FloatingOverride, RatioOverride, SashDrag, TabDrag, TabRect } from "./Gesture.models.ts";
 
 export type AdapterState = {
   readonly containerAtom: Atom.Writable<DockBox>;
@@ -49,6 +49,14 @@ export type AdapterState = {
   readonly overflowAtom: (groupId: GroupId) => Atom.Writable<ReadonlyArray<PanelId>>;
   readonly overflowOpenAtom: (groupId: GroupId) => Atom.Writable<boolean>;
   readonly tabWidths: MutableHashMap.MutableHashMap<GroupId, MutableHashMap.MutableHashMap<PanelId, number>>;
+  /**
+   * Root-relative geometry of each RENDERED tab, recorded by the strip's own
+   * measurement pass. Drop targeting reads this rather than deriving offsets
+   * from the group box: the strip carries padding and gaps the box does not
+   * describe, and overflowed panels are absent from the DOM entirely, so a
+   * logical-panel walk would target hidden tabs.
+   */
+  readonly tabRects: MutableHashMap.MutableHashMap<GroupId, MutableHashMap.MutableHashMap<PanelId, TabRect>>;
   readonly resizeAtom: Atom.Writable<O.Option<SashDrag>>;
   readonly ratioOverrideAtom: Atom.Writable<O.Option<RatioOverride>>;
   readonly floatingGestureAtom: Atom.Writable<O.Option<FloatingGesture>>;
@@ -283,6 +291,7 @@ export const adapterState = (
     overflowAtom,
     overflowOpenAtom,
     tabWidths: MutableHashMap.empty<GroupId, MutableHashMap.MutableHashMap<PanelId, number>>(),
+    tabRects: MutableHashMap.empty<GroupId, MutableHashMap.MutableHashMap<PanelId, TabRect>>(),
     resizeAtom,
     ratioOverrideAtom,
     floatingGestureAtom,

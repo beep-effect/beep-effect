@@ -7,55 +7,18 @@
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { RDF_NAMESPACE } from "./generated/Rdf.terms.ts";
 
 /**
- * RDF namespace IRI.
+ * Generated namespace IRI and term inventory for this vocabulary.
  *
- * @example
- * ```ts
- * import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf"
+ * Single-sourced from the `@beep/identity` `CoreVocab` registry via
+ * `bun run beep sync-data-to-ts --target vocab-terms`.
  *
- * const typeIri = `${RDF_NAMESPACE}type`
- * console.log(typeIri) // "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
- * ```
- *
- * @since 0.0.0
- * @category configuration
- */
-export const RDF_NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#" as const;
-
-/**
- * Finite RDF local-name inventory mirrored by `@beep/identity`.
- *
- * @example
- * ```ts
- * import { RDF_TERMS } from "@beep/rdf/Vocab/Rdf"
- *
- * console.log(RDF_TERMS.includes("type")) // true
- * ```
- *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
-export const RDF_TERMS = [
-  "Alt",
-  "Bag",
-  "HTML",
-  "List",
-  "Property",
-  "Seq",
-  "Statement",
-  "XMLLiteral",
-  "first",
-  "langString",
-  "nil",
-  "object",
-  "predicate",
-  "rest",
-  "subject",
-  "type",
-  "value",
-] as const;
+export { RDF_NAMESPACE, RDF_TERMS } from "./generated/Rdf.terms.ts";
 
 /**
  * `rdf:type`
