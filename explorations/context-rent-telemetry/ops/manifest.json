@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "context-rent-telemetry",
+    "title": "Context Rent Telemetry",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Which harness telemetry signal can attribute an agent behavior change to a specific CLAUDE.md / skill line?",
+      "What is the unit of rent: token-weight x load frequency, or measured behavioral lift per line?",
+      "Can agent-effectiveness-loop's Phoenix substrate serve as the measurement backend without new infrastructure?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/knowledge-surface-automation"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-31",
+    "updated": "2026-07-31"
+  }
+}

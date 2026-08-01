@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "bitemporal-goal-roadmap",
+    "title": "Bitemporal Goal Roadmap (--as-of)",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Event ledger source of truth: derived from git history of manifests, or an explicit append-only ledger file?",
+      "Does --as-of reuse the epistemic-bitemporal-edge-core kernel, or is a simpler single-timeline projection enough?",
+      "What queries justify the cost beyond nostalgia — retroactive frontier audits, velocity measurement, respec forensics?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/knowledge-surface-automation",
+        "goals/epistemic-bitemporal-edge-core"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-31",
+    "updated": "2026-07-31"
+  }
+}
