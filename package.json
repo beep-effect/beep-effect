@@ -271,7 +271,7 @@
     "vaul": "^1.1.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
-    "whatwg-url": "^17.1.0",
+    "whatwg-url": "17.1.0",
     "wink-eng-lite-web-model": "^1.8.1",
     "wink-nlp": "^2.4.0",
     "wink-nlp-utils": "^2.1.0",

@@ -1,15 +1,24 @@
-declare module "whatwg-url" {
+declare module "whatwg-url/lib/url-state-machine.js" {
   const urlRecordTypeId: unique symbol;
 
-  interface UrlRecord {
+  export interface UrlRecord {
     readonly [urlRecordTypeId]: typeof urlRecordTypeId;
   }
+
+  export function parseURL(input: string): UrlRecord | null;
+}
+
+declare module "whatwg-url/lib/url-string-validator.js" {
+  import type { UrlRecord } from "whatwg-url/lib/url-state-machine.js";
 
   interface UrlOptions {
     readonly baseURL?: UrlRecord;
   }
 
   export function isValidURLString(input: string, options?: UrlOptions): boolean;
+}
 
-  export function parseURL(input: string, options?: UrlOptions): UrlRecord | null;
+declare module "whatwg-url" {
+  export { parseURL } from "whatwg-url/lib/url-state-machine.js";
+  export { isValidURLString } from "whatwg-url/lib/url-string-validator.js";
 }

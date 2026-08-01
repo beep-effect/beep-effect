@@ -7,8 +7,6 @@
  * @packageDocumentation \@beep/html/Html.conformance
  * @since 0.0.0
  */
-/// <reference path="./whatwg-url.d.ts" />
-
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
@@ -22,7 +20,10 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isValidURLString, parseURL } from "whatwg-url";
+// The package root initializes Node WebIDL wrappers. These pure subpaths keep
+// the author-validity algorithm exact without pulling that layer into browsers.
+import { parseURL } from "whatwg-url/lib/url-state-machine.js";
+import { isValidURLString } from "whatwg-url/lib/url-string-validator.js";
 import { stripHtmlAsciiWhitespace, tokenizeHtmlSpaceSeparated } from "./Html.attributes.ts";
 import {
   isForeignAttributeNameFixedPoint,

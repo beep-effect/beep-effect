@@ -5,6 +5,7 @@ import {
   LinkRelationList,
   makeAsciiCaseInsensitiveEnumerated,
   makeSpaceSeparatedTokenList,
+  stripHtmlAsciiWhitespace,
 } from "@beep/html/Html.attributes";
 import {
   HtmlElementMeta,
@@ -81,14 +82,17 @@ import {
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Result } from "effect";
+import { Effect, Exit, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
+import { isValidURLString, parseURL } from "whatwg-url";
 
 const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList);
+const htmlUrlValidationBase = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
   inspectConformance(root).some((issue) => issue.rule === rule);
@@ -100,6 +104,20 @@ const issuesAtPath = (
     inspectConformance(root),
     (issue) => issue.path.length === path.length && A.every(issue.path, (segment, index) => path[index] === segment)
   );
+
+const isOracleValidHtmlUrl = (value: string): boolean => {
+  const candidate = stripHtmlAsciiWhitespace(value);
+  return (
+    Str.isNonEmpty(candidate) &&
+    pipe(
+      htmlUrlValidationBase,
+      O.exists((baseURL) => isValidURLString(candidate, { baseURL }))
+    )
+  );
+};
+
+const isConformantLinkUrl = (value: string): boolean =>
+  !A.isReadonlyArrayNonEmpty(inspectConformance(Link.make({ href: O.some(value), rel: O.some("canonical") })));
 
 describe("@beep/html generated attribute provenance", () => {
   it("reconciles reviewed current gaps and reports obsolete or misplaced attributes", () => {
@@ -936,6 +954,44 @@ describe("@beep/html generated special-child grammars", () => {
         Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("preload\u00a0stylesheet") })
       )
     ).toContainEqual(expect.objectContaining({ path: ["attributes"], rule: "attributeRelationship" }));
+  });
+
+  it("keeps browser-safe production URL validation aligned with the WHATWG oracle", () => {
+    const representative = [
+      "/relative/path",
+      "#fragment",
+      "https://example.com/resource",
+      "mailto:reader@example.com",
+      "\u00a0",
+      "not a url",
+      "bad%url",
+      "bad\turl",
+      "https:example.com",
+      "https://127.1/",
+      "https://exam%70le.org/",
+      "https://[::1",
+      "https://example.com:70000/",
+    ];
+    for (const value of representative) {
+      expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
+    }
+
+    const candidate = fc.oneof(
+      fc.string({ unit: "binary", maxLength: 96 }),
+      fc
+        .tuple(
+          fc.constantFrom("/", "./", "../", "//", "#", "?", "https://", "mailto:", "data:"),
+          fc.string({ unit: "binary", maxLength: 64 })
+        )
+        .map(([prefix, suffix]) => `${prefix}${suffix}`)
+    );
+
+    fc.assert(
+      fc.property(candidate, (value) => {
+        expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
+      }),
+      fcRuns(500)
+    );
   });
 
   it("enforces every generated descendant exclusion through nested fallback content", () => {
