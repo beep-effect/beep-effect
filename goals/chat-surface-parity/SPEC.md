@@ -117,14 +117,14 @@ reusing `Pre`.
 
 ## Acceptance Criteria
 
-- [ ] Sidecar exposes Effect DevTools when `DEVTOOLS=true` (via `@beep/observability/server`); OTLP unchanged.
-- [ ] App wraps the root in an app-local `RegistryProvider`; failed turns surface a toast.
-- [ ] Turn-lifecycle metrics emit; a Grafana chat dashboard is provisioned; threads get derived titles.
-- [ ] Invalid streamed blocks are repaired (Haiku) where possible (unrepairable ones dropped + logged); repair metric + span emit; a failed repair *call* dies at the handler as `ChatActionError`.
-- [ ] Mermaid (`Pre[language=mermaid]`), table, and youtube blocks stream, validate, persist as `@beep/md`, and render in both the streaming view and the read-only viewer.
-- [ ] New foundation nodes have Md↔Lexical round-trip + JSON-boundary tests; no regression in the `@beep/md`/`@beep/lexical-schema` consumers (agents-*, workspace-*, `@beep/repo-cli`).
-- [ ] No-partial-row-on-cancel contract preserved; intentional divergences untouched.
-- [ ] Repo quality gates pass; no unrelated refactors or formatting churn.
+- [x] Sidecar exposes Effect DevTools when `DEVTOOLS=true` (via `@beep/observability/server`); OTLP unchanged.
+- [x] App wraps the root in an app-local `RegistryProvider`; failed turns surface a toast.
+- [x] Turn-lifecycle metrics emit; a Grafana chat dashboard is provisioned; threads get derived titles.
+- [x] Invalid streamed blocks are repaired (Haiku) where possible (unrepairable ones dropped + logged); repair metric + span emit; a failed repair *call* dies at the handler as `ChatActionError`.
+- [x] Mermaid (`Pre[language=mermaid]`), table, and youtube blocks stream, validate, persist as `@beep/md`, and render in both the streaming view and the read-only viewer.
+- [x] New foundation nodes have Md↔Lexical round-trip + JSON-boundary tests; no regression in the `@beep/md`/`@beep/lexical-schema` consumers (agents-*, workspace-*, `@beep/repo-cli`).
+- [x] No-partial-row-on-cancel contract preserved; intentional divergences untouched.
+- [x] Repo quality gates pass; no unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
