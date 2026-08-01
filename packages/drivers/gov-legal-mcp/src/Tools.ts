@@ -21,15 +21,31 @@ import {
   searchResultsOperation,
   TitlesResponse,
 } from "@beep/ecfr";
-import { GovinfoError, Search } from "@beep/govinfo";
+import { GovinfoErrorReason, Search } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
+import { TaggedErrorClass } from "@beep/schema";
+import { Result } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
-import { ProductionToolNameCollisionReport } from "./ToolNames.ts";
+import { resolveProductionToolName, ToolNameCandidate } from "./ToolNames.ts";
 
 const $I = $GovLegalMcpId.create("Tools");
-void ProductionToolNameCollisionReport;
+
+const productionToolName = <const WireName extends string>(
+  source: string,
+  operationId: string,
+  expectedWireName: WireName
+): WireName =>
+  Result.getOrThrowWith(
+    resolveProductionToolName(ToolNameCandidate.make({ source, operationId }), expectedWireName),
+    (error) => error
+  );
+
+const govinfoSearchToolName = productionToolName("govinfo", "search", "govinfo_search");
+const ecfrListTitlesToolName = productionToolName("ecfr", listTitlesOperation.operationId, "ecfr_list_titles");
+const ecfrSearchResultsToolName = productionToolName("ecfr", searchResultsOperation.operationId, "ecfr_search_results");
+const ecfrGetStructureToolName = productionToolName("ecfr", getStructureOperation.operationId, "ecfr_get_structure");
 
 /**
  * Empty object accepted by the upstream `listTitles` operation.
@@ -55,6 +71,30 @@ export class EcfrListTitlesParams extends S.Class<EcfrListTitlesParams>($I`EcfrL
 ) {}
 
 /**
+ * Sanitized GovInfo search failure returned across the MCP host boundary.
+ * Raw driver causes and request URLs are deliberately omitted.
+ *
+ * @example
+ * ```ts
+ * import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools"
+ *
+ * const failure = GovinfoSearchFailure.make({ reason: "transport" })
+ * console.log(failure.reason)
+ * // "transport"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GovinfoSearchFailure extends TaggedErrorClass<GovinfoSearchFailure>($I`GovinfoSearchFailure`)(
+  "GovinfoSearchFailure",
+  { reason: GovinfoErrorReason },
+  $I.annote("GovinfoSearchFailure", {
+    description: "Sanitized GovInfo search failure that omits raw driver causes and HTTP request details.",
+  })
+) {}
+
+/**
  * Search GovInfo's official corpus with the public `Search.Payload` contract.
  * Preserves upstream operationId `search` in the tool description.
  *
@@ -70,9 +110,9 @@ export class EcfrListTitlesParams extends S.Class<EcfrListTitlesParams>($I`EcfrL
  * @since 0.0.0
  */
 export const GovinfoSearchTool = annotateFourHints(
-  Tool.make("govinfo_search", {
+  Tool.make(govinfoSearchToolName, {
     description: "Search GovInfo's official corpus. Upstream operationId: search.",
-    failure: GovinfoError,
+    failure: GovinfoSearchFailure,
     failureMode: "return",
     parameters: Search.Payload,
     success: Search.Success,
@@ -95,7 +135,7 @@ export const GovinfoSearchTool = annotateFourHints(
  * @since 0.0.0
  */
 export const EcfrListTitlesTool = annotateFourHints(
-  Tool.make("ecfr_list_titles", {
+  Tool.make(ecfrListTitlesToolName, {
     description: `List the official CFR title catalog. Upstream operationId: ${listTitlesOperation.operationId}.`,
     failure: EcfrError,
     failureMode: "return",
@@ -120,7 +160,7 @@ export const EcfrListTitlesTool = annotateFourHints(
  * @since 0.0.0
  */
 export const EcfrSearchResultsTool = annotateFourHints(
-  Tool.make("ecfr_search_results", {
+  Tool.make(ecfrSearchResultsToolName, {
     description: `Search paginated eCFR content. Upstream operationId: ${searchResultsOperation.operationId}.`,
     failure: EcfrError,
     failureMode: "return",
@@ -145,7 +185,7 @@ export const EcfrSearchResultsTool = annotateFourHints(
  * @since 0.0.0
  */
 export const EcfrGetStructureTool = annotateFourHints(
-  Tool.make("ecfr_get_structure", {
+  Tool.make(ecfrGetStructureToolName, {
     description: `Fetch a dated CFR title hierarchy. Upstream operationId: ${getStructureOperation.operationId}.`,
     failure: EcfrError,
     failureMode: "return",

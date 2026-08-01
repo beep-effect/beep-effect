@@ -10,6 +10,13 @@
  */
 
 /**
+ * Generated package release version.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export { VERSION } from "./_generated/version.ts";
+/**
  * Thin driver-delegating handler layers.
  *
  * @category layers
@@ -44,19 +51,3 @@ export * from "./ToolNames.ts";
  * @since 0.0.0
  */
 export * from "./Tools.ts";
-
-/**
- * Package version.
- *
- * @example
- * ```ts
- * import { VERSION } from "@beep/gov-legal-mcp"
- *
- * console.log(VERSION)
- * // "0.0.0"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const VERSION = "0.0.0";

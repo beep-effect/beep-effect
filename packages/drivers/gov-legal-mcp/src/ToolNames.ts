@@ -16,6 +16,8 @@ import { $GovLegalMcpId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -56,6 +58,12 @@ const CollisionFailureReason = LiteralKit(["duplicate_normalized", "duplicate_fi
 const ReportDuplicateVerdict = LiteralKit(["clean", "duplicate"]).annotate(
   $I.annote("ReportDuplicateVerdict", {
     description: "Aggregate collision verdict for a complete tool-name report.",
+  })
+);
+
+const RegistrationFailureReason = LiteralKit(["missing_candidate", "wire_name_drift"]).annotate(
+  $I.annote("RegistrationFailureReason", {
+    description: "Reasons a registered MCP tool declaration can disagree with the validated production report.",
   })
 );
 
@@ -240,6 +248,45 @@ export class ToolNameCollisionError extends TaggedErrorClass<ToolNameCollisionEr
   })
 ) {}
 
+/**
+ * Typed rejection of a tool declaration absent from or drifted against the
+ * validated production collision report.
+ *
+ * @example
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import {
+ *   resolveProductionToolName,
+ *   ToolNameCandidate,
+ *   ToolNameRegistrationError
+ * } from "@beep/gov-legal-mcp/ToolNames"
+ *
+ * const result = resolveProductionToolName(
+ *   ToolNameCandidate.make({ source: "ecfr", operationId: "missing" }),
+ *   "ecfr_missing"
+ * )
+ * console.log(Result.isFailure(result) && result.failure instanceof ToolNameRegistrationError)
+ * // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ToolNameRegistrationError extends TaggedErrorClass<ToolNameRegistrationError>(
+  $I`ToolNameRegistrationError`
+)(
+  "ToolNameRegistrationError",
+  {
+    candidate: ToolNameCandidate,
+    expectedWireName: NormalizedWireName,
+    message: S.NonEmptyString,
+    reason: RegistrationFailureReason,
+  },
+  $I.annote("ToolNameRegistrationError", {
+    description: "Typed fail-closed rejection of a tool declaration that disagrees with the production report.",
+  })
+) {}
+
 type GroupedRows = HashMap.HashMap<string, ReadonlyArray<ToolNameCollisionRow>>;
 
 const rowOrder = Order.combine(
@@ -249,6 +296,8 @@ const rowOrder = Order.combine(
     Order.mapInput(Order.String, (row: ToolNameCollisionRow) => row.originalOperationId)
   )
 );
+const candidateEquivalence = S.toEquivalence(ToolNameCandidate);
+const stringEquivalence = S.toEquivalence(S.String);
 
 const candidateText = (candidate: ToolNameCandidate): string => `${candidate.source}_${candidate.operationId}`;
 
@@ -534,4 +583,76 @@ export const ProductionToolNameCandidates: ReadonlyArray<ToolNameCandidate> = [
 export const ProductionToolNameCollisionReport = Result.getOrThrowWith(
   buildToolNameCollisionReport(ProductionToolNameCandidates),
   (error) => error
+);
+
+/**
+ * Resolve one registered tool name through the validated production report,
+ * failing when the declaration is absent or its expected wire name drifted.
+ *
+ * @example
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import { resolveProductionToolName, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
+ *
+ * const result = resolveProductionToolName(
+ *   ToolNameCandidate.make({ source: "ecfr", operationId: "listTitles" }),
+ *   "ecfr_list_titles"
+ * )
+ * console.log(Result.getOrThrow(result))
+ * // "ecfr_list_titles"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const resolveProductionToolName: {
+  <const WireName extends string>(
+    expectedWireName: WireName
+  ): (candidate: ToolNameCandidate) => Result.Result<WireName, ToolNameRegistrationError>;
+  <const WireName extends string>(
+    candidate: ToolNameCandidate,
+    expectedWireName: WireName
+  ): Result.Result<WireName, ToolNameRegistrationError>;
+} = dual(
+  2,
+  <const WireName extends string>(
+    candidate: ToolNameCandidate,
+    expectedWireName: WireName
+  ): Result.Result<WireName, ToolNameRegistrationError> =>
+    pipe(
+      ProductionToolNameCollisionReport.candidates,
+      A.findFirst((row) =>
+        candidateEquivalence(
+          candidate,
+          ToolNameCandidate.make({ operationId: row.originalOperationId, source: row.source })
+        )
+      ),
+      O.match({
+        onNone: () =>
+          Result.fail(
+            ToolNameRegistrationError.make({
+              candidate,
+              expectedWireName,
+              message: "Registered MCP tool candidate is absent from the validated production report.",
+              reason: "missing_candidate",
+            })
+          ),
+        onSome: (row) =>
+          pipe(
+            stringEquivalence(row.finalWireName, expectedWireName),
+            Bool.match({
+              onFalse: () =>
+                Result.fail(
+                  ToolNameRegistrationError.make({
+                    candidate,
+                    expectedWireName,
+                    message: "Registered MCP wire name drifted from the validated production report.",
+                    reason: "wire_name_drift",
+                  })
+                ),
+              onTrue: () => Result.succeed(expectedWireName),
+            })
+          ),
+      })
+    )
 );

@@ -22,18 +22,21 @@ import {
   EcfrSourceAuthRegistration,
   EcfrToolkit,
   EcfrToolkitHandlersLive,
+  GovinfoSearchFailure,
   GovinfoSourceAuthRegistration,
   GovinfoToolkit,
   GovinfoToolkitHandlersLive,
   ProductionToolNameCollisionReport,
   projectToolNameCandidate,
   renderToolNameCollisionReport,
+  resolveProductionToolName,
   ToolNameCandidate,
   ToolNameCollisionError,
   ToolNameCollisionReport,
   ToolNameCollisionRow,
+  VERSION,
 } from "@beep/gov-legal-mcp";
-import { Govinfo, GovinfoConfigInput, Search } from "@beep/govinfo";
+import { Govinfo, GovinfoConfigInput, GovinfoError, GovinfoErrorOptions, Search } from "@beep/govinfo";
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -62,6 +65,9 @@ import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import type * as Context from "effect/Context";
 
 const SENTINEL = "gov-legal-sensitive-sentinel";
+const GOVINFO_API_KEY_SENTINEL = "synthetic-test-key";
+const sensitiveSpanAttributeKeys = ["parameters", "url.full", "url.path", "url.query"];
+const sensitiveValues = [SENTINEL, GOVINFO_API_KEY_SENTINEL];
 const ECFR_TITLE_PATH = "/api/versioner/v1/titles.json";
 const ECFR_SEARCH_PATH = "/api/search/v1/results";
 const ECFR_STRUCTURE_PATH = "/api/versioner/v1/structure/";
@@ -110,8 +116,25 @@ const FixtureEcfr = Ecfr.makeLayer(EcfrConfigInput.make({})).pipe(
 );
 
 const FixtureGovinfo = Govinfo.makeLayer(
-  GovinfoConfigInput.make({ apiKey: O.some(Redacted.make("synthetic-test-key")) })
+  GovinfoConfigInput.make({ apiKey: O.some(Redacted.make(GOVINFO_API_KEY_SENTINEL)) })
 ).pipe(Layer.provide(FixtureHttpClient), Layer.provide(RateLimiter.layerStoreMemory));
+
+const rawGovinfoFailure = GovinfoError.of(
+  "transport",
+  GovinfoErrorOptions.make({
+    cause: O.some(`https://api.govinfo.gov/search?api_key=${GOVINFO_API_KEY_SENTINEL}&query=${SENTINEL}`),
+  })
+);
+
+const FixtureFailingGovinfo = Layer.succeed(
+  Govinfo,
+  Govinfo.of({
+    rateLimit: Effect.succeed(O.none()),
+    search: Effect.fn("FixtureGovinfo.search")(function* (_request: Search.Payload) {
+      return yield* rawGovinfoFailure;
+    }),
+  })
+);
 
 const EcfrRegistrationLayer = sanitizedToolkit(EcfrToolkit).pipe(
   Layer.provide(EcfrToolkitHandlersLive),
@@ -121,6 +144,11 @@ const EcfrRegistrationLayer = sanitizedToolkit(EcfrToolkit).pipe(
 const GovinfoRegistrationLayer = sanitizedToolkit(GovinfoToolkit).pipe(
   Layer.provide(GovinfoToolkitHandlersLive),
   Layer.provide(FixtureGovinfo)
+);
+
+const FailingGovinfoRegistrationLayer = sanitizedToolkit(GovinfoToolkit).pipe(
+  Layer.provide(GovinfoToolkitHandlersLive),
+  Layer.provide(FixtureFailingGovinfo)
 );
 
 const buildFixtureLayer = (environment: Readonly<Record<string, string>>) =>
@@ -137,6 +165,15 @@ const buildEcfrOnlyLayer = () =>
     McpServer.McpServer.layer,
     composeGatedLayers(gatedLayer(EcfrSourceAuthRegistration, EcfrRegistrationLayer)).pipe(
       Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
+      Layer.orDie
+    )
+  );
+
+const buildFailingGovinfoLayer = () =>
+  Layer.mergeAll(
+    McpServer.McpServer.layer,
+    composeGatedLayers(gatedLayer(GovinfoSourceAuthRegistration, FailingGovinfoRegistrationLayer)).pipe(
+      Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ GOVINFO_API_KEY: "fixture-secret" }))),
       Layer.orDie
     )
   );
@@ -187,11 +224,11 @@ const makeRecordingTracer = (): { readonly completed: Array<RecordedSpan>; reado
 const isUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   P.isObject(value) && !P.isNull(value) && !A.isArray(value);
 
-const containsSentinel = (value: unknown): boolean =>
+const containsSensitiveValue = (value: unknown): boolean =>
   Match.value(value).pipe(
-    Match.when(P.isString, Str.includes(SENTINEL)),
-    Match.when(A.isArray, A.some(containsSentinel)),
-    Match.when(isUnknownRecord, (record) => pipe(record, R.values, A.some(containsSentinel))),
+    Match.when(P.isString, (text) => A.some(sensitiveValues, (sensitive) => Str.includes(sensitive)(text))),
+    Match.when(A.isArray, A.some(containsSensitiveValue)),
+    Match.when(isUnknownRecord, (record) => pipe(record, R.values, A.some(containsSensitiveValue))),
     Match.orElse(() => false)
   );
 
@@ -333,7 +370,7 @@ describe("gov-legal MCP frozen contract", () => {
     );
 
     it.effect(
-      "suppresses sentinel parameters from every completed tool span while retaining tool attributes",
+      "keeps HTTP tracing enabled while suppressing request parameters from every completed span",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const { completed, tracer } = makeRecordingTracer();
@@ -344,15 +381,19 @@ describe("gov-legal MCP frozen contract", () => {
             server.callTool({ name: "ecfr_search_results", arguments: ecfrSearchArguments }),
             server.callTool({ name: "ecfr_get_structure", arguments: ecfrStructureArguments }),
             server.callTool({ name: "govinfo_search", arguments: govinfoArguments }),
-          ]).pipe(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+          ]),
           tracer
         );
 
         assert.isTrue(A.isReadonlyArrayNonEmpty(completed));
+        assert.isTrue(A.some(completed, (span) => Str.startsWith("http.client ")(span.name)));
         const sensitiveAttributes = A.flatMap(completed, (span) =>
           pipe(
             span.attributes,
-            A.filter((attribute) => attribute.key === "parameters" || containsSentinel(attribute.value)),
+            A.filter(
+              (attribute) =>
+                A.contains(sensitiveSpanAttributeKeys, attribute.key) || containsSensitiveValue(attribute.value)
+            ),
             A.map((attribute) => ({ attribute, span: span.name }))
           )
         );
@@ -389,6 +430,22 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
+  layer(buildFailingGovinfoLayer())("when GovInfo returns a raw transport failure", (it) => {
+    it.effect(
+      "returns only the package-local sanitized failure envelope",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
+
+        assert.isTrue(result.isError);
+        const failure = yield* S.decodeUnknownEffect(GovinfoSearchFailure)(result.structuredContent);
+        assert.strictEqual(failure.reason, "transport");
+        assert.deepEqual(result.structuredContent, { _tag: "GovinfoSearchFailure", reason: "transport" });
+        assert.isFalse(containsSensitiveValue(result));
+      })
+    );
+  });
+
   it.effect(
     "fails closed on cross-driver normalization collisions",
     Effect.fnUntraced(function* () {
@@ -402,6 +459,30 @@ describe("gov-legal MCP frozen contract", () => {
       assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
     })
   );
+
+  it("fails closed when a registered declaration is absent or its wire name drifts", () => {
+    const missingReason = resolveProductionToolName(
+      ToolNameCandidate.make({ source: "ecfr", operationId: "missing" }),
+      "ecfr_missing"
+    ).pipe(
+      Result.match({
+        onFailure: (error) => error.reason,
+        onSuccess: () => "unexpected_success",
+      })
+    );
+    const driftReason = resolveProductionToolName(
+      ToolNameCandidate.make({ source: "ecfr", operationId: "listTitles" }),
+      "ecfr_drifted"
+    ).pipe(
+      Result.match({
+        onFailure: (error) => error.reason,
+        onSuccess: () => "unexpected_success",
+      })
+    );
+
+    assert.strictEqual(missingReason, "missing_candidate");
+    assert.strictEqual(driftReason, "wire_name_drift");
+  });
 
   it.effect(
     "marks punctuation normalization duplicates before failing",
@@ -449,6 +530,7 @@ describe("gov-legal MCP frozen contract", () => {
     Effect.fnUntraced(function* () {
       const bin = yield* Effect.promise(() => import("@beep/gov-legal-mcp/bin"));
       assert.strictEqual(bin.SERVER_CONFIG.name, "beep-gov-legal");
+      assert.strictEqual(bin.SERVER_CONFIG.version, VERSION);
       assert.strictEqual(typeof bin.runGovLegalMcpServer, "function");
     })
   );

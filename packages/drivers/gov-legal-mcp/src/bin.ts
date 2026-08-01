@@ -7,7 +7,8 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
-import { Layer } from "effect";
+import { Effect, Layer, Logger } from "effect";
+import { VERSION } from "./_generated/version.ts";
 import { GovLegalMcpServerConfig, makeServerLayer } from "./Server.ts";
 
 /**
@@ -24,7 +25,7 @@ import { GovLegalMcpServerConfig, makeServerLayer } from "./Server.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const SERVER_CONFIG = GovLegalMcpServerConfig.make({ name: "beep-gov-legal", version: "0.0.0" });
+export const SERVER_CONFIG = GovLegalMcpServerConfig.make({ name: "beep-gov-legal", version: VERSION });
 
 /**
  * Launch the stdio server explicitly; importing this module does not launch it.
@@ -41,7 +42,10 @@ export const SERVER_CONFIG = GovLegalMcpServerConfig.make({ name: "beep-gov-lega
  * @since 0.0.0
  */
 export const runGovLegalMcpServer = (): void => {
-  Layer.launch(makeServerLayer(SERVER_CONFIG).pipe(Layer.provide(NodeStdio.layer))).pipe(NodeRuntime.runMain);
+  Layer.launch(makeServerLayer(SERVER_CONFIG).pipe(Layer.provide(NodeStdio.layer))).pipe(
+    Effect.provideService(Logger.LogToStderr, true),
+    NodeRuntime.runMain
+  );
 };
 
 if (import.meta.main) {
