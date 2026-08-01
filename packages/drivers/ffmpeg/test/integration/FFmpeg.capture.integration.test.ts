@@ -290,7 +290,7 @@ describe("@beep/ffmpeg live capture", () => {
             const clip = yield* ffmpeg.extractClip(
               ExtractClipRequest.make({
                 codec: "vp9",
-                durationSeconds: 1,
+                durationSeconds: O.some(1),
                 outPath: clipPath,
                 overwrite: false,
                 startSeconds: 0.25,

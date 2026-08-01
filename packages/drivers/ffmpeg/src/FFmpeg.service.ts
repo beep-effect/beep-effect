@@ -600,6 +600,13 @@ export class BuildExtractFrameAtArgsOptions extends S.Class<BuildExtractFrameAtA
   $I`BuildExtractFrameAtArgsOptions`
 )(
   {
+    maxWidth: S.OptionFromOptionalKey(VideoDimension).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("BuildExtractFrameAtArgsOptions.maxWidth", {
+        description:
+          "Optional maximum output width in pixels applied via a scale filter; absent, frames keep the source resolution.",
+      })
+    ),
     outputPath: S.String.pipe(
       $I.annoteKey("BuildExtractFrameAtArgsOptions.outputPath", {
         description: "Destination path for the single extracted PNG frame.",
@@ -634,7 +641,9 @@ const BuildExtractFrameAtArgs = Fn({
  * Build ffmpeg arguments for extracting one frame at an exact timestamp.
  *
  * Uses input-side `-ss` before `-i` (keyframe seek plus decode-discard) with
- * `-frames:v 1`, which is both fast and frame-accurate.
+ * `-frames:v 1`, which is both fast and frame-accurate. A `maxWidth` bound
+ * adds a `scale` filter that shrinks wider sources while leaving narrower
+ * ones untouched, keeping strip frames inside downstream byte budgets.
  *
  * @example
  * ```ts
@@ -651,21 +660,26 @@ const BuildExtractFrameAtArgs = Fn({
  * @category utilities
  * @since 0.0.0
  */
-export const buildExtractFrameAtArgs: (options: BuildExtractFrameAtArgsOptions) => ReadonlyArray<string> =
-  BuildExtractFrameAtArgs.implementSync((options) => [
-    "-hide_banner",
-    "-nostdin",
-    "-y",
-    "-ss",
-    options.timestamp,
-    "-i",
-    options.videoPath,
-    "-frames:v",
-    "1",
-    "-update",
-    "1",
-    options.outputPath,
-  ]);
+export const buildExtractFrameAtArgs: (
+  options: (typeof BuildExtractFrameAtArgsOptions)["Encoded"]
+) => ReadonlyArray<string> = BuildExtractFrameAtArgs.implementSync((options) => [
+  "-hide_banner",
+  "-nostdin",
+  "-y",
+  "-ss",
+  options.timestamp,
+  "-i",
+  options.videoPath,
+  "-frames:v",
+  "1",
+  ...O.match(options.maxWidth, {
+    onNone: (): ReadonlyArray<string> => [],
+    onSome: (maxWidth): ReadonlyArray<string> => ["-vf", `scale='min(iw,${maxWidth})':-2`],
+  }),
+  "-update",
+  "1",
+  options.outputPath,
+]);
 
 const clipCodecArgs: Record<ClipCodec, ReadonlyArray<string>> = {
   h264: ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart"],
@@ -678,10 +692,11 @@ const clipCodecArgs: Record<ClipCodec, ReadonlyArray<string>> = {
  * @example
  * ```ts
  * import { BuildExtractClipArgsOptions } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
  * const options = BuildExtractClipArgsOptions.make({
  *   codec: "h264",
- *   duration: "2",
+ *   duration: O.some("2"),
  *   outputPath: "./clips/drag.mp4",
  *   start: "1.5",
  *   videoPath: "./capture.webm"
@@ -699,9 +714,10 @@ export class BuildExtractClipArgsOptions extends S.Class<BuildExtractClipArgsOpt
         description: "Encoder preset selecting the codec argument block.",
       })
     ),
-    duration: S.String.pipe(
+    duration: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
       $I.annoteKey("BuildExtractClipArgsOptions.duration", {
-        description: "Duration text (seconds) passed as output-side -t; never -to.",
+        description: "Optional duration text (seconds) passed as output-side -t (never -to); absent, no -t is emitted.",
       })
     ),
     outputPath: S.String.pipe(
@@ -738,7 +754,8 @@ const BuildExtractClipArgs = Fn({
  * Build ffmpeg arguments for cutting a re-encoded clip.
  *
  * Input-side `-ss` plus output `-t` (never `-to`) so the clip's timestamps
- * restart at zero — downstream frame extraction depends on that reset.
+ * restart at zero — downstream frame extraction depends on that reset. When no
+ * duration is supplied `-t` is omitted and the clip runs to the source end.
  *
  * @example
  * ```ts
@@ -757,7 +774,7 @@ const BuildExtractClipArgs = Fn({
  * @category utilities
  * @since 0.0.0
  */
-export const buildExtractClipArgs: (options: BuildExtractClipArgsOptions) => ReadonlyArray<string> =
+export const buildExtractClipArgs: (options: (typeof BuildExtractClipArgsOptions)["Encoded"]) => ReadonlyArray<string> =
   BuildExtractClipArgs.implementSync((options) => [
     "-hide_banner",
     "-nostdin",
@@ -766,8 +783,10 @@ export const buildExtractClipArgs: (options: BuildExtractClipArgsOptions) => Rea
     options.start,
     "-i",
     options.videoPath,
-    "-t",
-    options.duration,
+    ...O.match(options.duration, {
+      onNone: (): ReadonlyArray<string> => [],
+      onSome: (duration): ReadonlyArray<string> => ["-t", duration],
+    }),
     ...clipCodecArgs[options.codec],
     options.outputPath,
   ]);
@@ -2217,6 +2236,11 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
             const args = buildExtractFrameAtArgs({
               outputPath: tempPath,
               timestamp: `${entry.timestampSeconds}`,
+              ...pipe(
+                request.maxWidth,
+                O.map((maxWidth) => ({ maxWidth })),
+                O.getOrElse(() => ({}))
+              ),
               videoPath,
             });
             const result = yield* runProcess(
@@ -2282,10 +2306,14 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
       argsForTarget: (target) =>
         buildExtractClipArgs({
           codec: request.codec,
-          duration: `${request.durationSeconds}`,
           outputPath: target,
           start: `${request.startSeconds}`,
           videoPath,
+          ...pipe(
+            request.durationSeconds,
+            O.map((seconds) => ({ duration: `${seconds}` })),
+            O.getOrElse(() => ({}))
+          ),
         }),
       failureMessage: `ffmpeg could not extract a clip from "${videoPath}".`,
       operation: "extractClip",

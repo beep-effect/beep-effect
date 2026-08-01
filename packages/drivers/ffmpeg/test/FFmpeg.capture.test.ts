@@ -650,7 +650,7 @@ describe("@beep/ffmpeg capture", () => {
           const ffmpeg = yield* FFmpeg;
           const request = ExtractClipRequest.make({
             codec: "h264",
-            durationSeconds: 2,
+            durationSeconds: O.some(2),
             outPath,
             overwrite: false,
             startSeconds: 1.5,
@@ -658,7 +658,7 @@ describe("@beep/ffmpeg capture", () => {
           });
           const result = yield* ffmpeg.extractClip(request);
 
-          expect(result.durationSeconds).toBe(2);
+          expect(result.durationSeconds).toEqual(O.some(2));
           expect(result.startSeconds).toBe(1.5);
           expect(result.fileSizeBytes).toBe("fake output".length);
           expect(yield* fs.readFileString(outPath)).toBe("fake output");

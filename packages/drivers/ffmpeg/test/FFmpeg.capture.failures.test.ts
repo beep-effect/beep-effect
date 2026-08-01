@@ -449,7 +449,7 @@ describe("@beep/ffmpeg capture failures", () => {
             ffmpeg.extractClip(
               ExtractClipRequest.make({
                 codec: "vp9",
-                durationSeconds: 2,
+                durationSeconds: O.some(2),
                 outPath,
                 overwrite: false,
                 startSeconds: 1.5,
@@ -487,7 +487,7 @@ describe("@beep/ffmpeg capture failures", () => {
             ffmpeg.extractClip(
               ExtractClipRequest.make({
                 codec: "h264",
-                durationSeconds: 2,
+                durationSeconds: O.some(2),
                 outPath,
                 overwrite: false,
                 startSeconds: 0,

@@ -606,6 +606,7 @@ export class TimestampedFrame extends S.Class<TimestampedFrame>($I`TimestampedFr
  *
  * const request = ExtractFramesAtRequest.make({
  *   manifestPath: O.none(),
+ *   maxWidth: O.some(960),
  *   outDir: "./frames",
  *   overwrite: false,
  *   prefix: O.none(),
@@ -625,6 +626,13 @@ export class ExtractFramesAtRequest extends S.Class<ExtractFramesAtRequest>($I`E
       S.withDecodingDefault(Effect.succeed(O.none<string>())),
       $I.annoteKey("ExtractFramesAtRequest.manifestPath", {
         description: "Optional manifest path; defaults inside the output directory when absent.",
+      })
+    ),
+    maxWidth: S.Option(VideoDimension).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<VideoDimension>())),
+      S.withDecodingDefault(Effect.succeed(O.none<VideoDimension>())),
+      $I.annoteKey("ExtractFramesAtRequest.maxWidth", {
+        description: "Optional maximum frame width in pixels; wider sources are scaled down, narrower ones untouched.",
       })
     ),
     outDir: S.String.pipe(
@@ -855,15 +863,18 @@ export class ExtractFramesAtResult extends S.Class<ExtractFramesAtResult>($I`Ext
  * Request to cut a re-encoded clip out of a video.
  *
  * Uses input-side `-ss` plus output `-t` (never `-to`) so clip timestamps
- * restart at zero.
+ * restart at zero. When `durationSeconds` is absent no `-t` is emitted and the
+ * clip runs to the end of the source — the remux path duration-less recordings
+ * depend on to preserve their full span.
  *
  * @example
  * ```ts
  * import { ExtractClipRequest } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
  * const request = ExtractClipRequest.make({
  *   codec: "h264",
- *   durationSeconds: 2,
+ *   durationSeconds: O.some(2),
  *   outPath: "./clips/drag.mp4",
  *   overwrite: false,
  *   startSeconds: 1.5,
@@ -883,9 +894,12 @@ export class ExtractClipRequest extends S.Class<ExtractClipRequest>($I`ExtractCl
         description: "Encoder preset; h264 targets mp4 outputs, vp9 targets webm outputs.",
       })
     ),
-    durationSeconds: PositiveSeconds.pipe(
+    durationSeconds: S.Option(PositiveSeconds).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<PositiveSeconds>())),
+      S.withDecodingDefault(Effect.succeed(O.none<PositiveSeconds>())),
       $I.annoteKey("ExtractClipRequest.durationSeconds", {
-        description: "Clip duration in seconds passed as output-side -t.",
+        description:
+          "Optional clip duration in seconds passed as output-side -t; absent, the clip runs to the end of the source.",
       })
     ),
     outPath: S.String.pipe(
@@ -924,9 +938,10 @@ export class ExtractClipRequest extends S.Class<ExtractClipRequest>($I`ExtractCl
  * @example
  * ```ts
  * import { ExtractClipResult } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
  * const result = ExtractClipResult.make({
- *   durationSeconds: 2,
+ *   durationSeconds: O.some(2),
  *   fileSizeBytes: 4096,
  *   outPath: "./clips/drag.mp4",
  *   startSeconds: 1.5,
@@ -940,9 +955,11 @@ export class ExtractClipRequest extends S.Class<ExtractClipRequest>($I`ExtractCl
  */
 export class ExtractClipResult extends S.Class<ExtractClipResult>($I`ExtractClipResult`)(
   {
-    durationSeconds: PositiveSeconds.pipe(
+    durationSeconds: S.Option(PositiveSeconds).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<PositiveSeconds>())),
+      S.withDecodingDefault(Effect.succeed(O.none<PositiveSeconds>())),
       $I.annoteKey("ExtractClipResult.durationSeconds", {
-        description: "Requested clip duration in seconds.",
+        description: "Requested clip duration in seconds, when the request carried one.",
       })
     ),
     fileSizeBytes: FileSizeBytes.pipe(
@@ -1505,7 +1522,6 @@ export const decodeExtractFramesAtRequest = ExtractFramesAtRequest.decodeEffect;
  * import { decodeExtractClipRequest } from "@beep/ffmpeg"
  *
  * const effect = decodeExtractClipRequest({
- *   durationSeconds: 2,
  *   outPath: "./clips/drag.mp4",
  *   startSeconds: 1.5,
  *   videoPath: "./capture.webm"
