@@ -30,6 +30,24 @@
  * Each entry names the demand that keeps it: removing a manager whose demand
  * disappears is as valid as adding one, and both require a re-measurement.
  *
+ * @example
+ * ```ts
+ * import { GENERATED_MANAGERS } from "./box.surface.ts"
+ * import * as A from "effect/Array"
+ * import * as MutableHashSet from "effect/MutableHashSet"
+ *
+ * // How `generate.ts` filters the SDK's 85 `BoxClient` managers down to the
+ * // wrapped surface, and reports what it dropped.
+ * const allowed = MutableHashSet.fromIterable(GENERATED_MANAGERS)
+ * const discovered = ["files", "folders", "retentionPolicies"]
+ *
+ * const wrapped = A.filter(discovered, (name) => MutableHashSet.has(allowed, name))
+ * const dropped = A.filter(discovered, (name) => !MutableHashSet.has(allowed, name))
+ *
+ * console.log(wrapped) // ["files", "folders"]
+ * console.log(dropped) // ["retentionPolicies"]
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
