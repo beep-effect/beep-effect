@@ -47,9 +47,9 @@ owner or approved proposed slug, and its eventual packet evidence.
 ## Hard constraints
 
 1. Never silently re-litigate wave-1 or `goals/semantic-foundation`; challenges are named align branches, not implementation shortcuts.
-2. `[remo1] ConstraintProfile`, `[remo2] MatterProjection`, and `[remo3/ADHD-3] Cognee role` MUST each go through `/grill-with-docs` with Benjamin, one question at a time.
-3. `BRIEF.md` and `MAP.md` shaping is GATED on Benjamin's sign-off; this campaign STOPS at `ROUTING-SEED.md` + `routing-seed.json`.
-4. Do not scaffold, append into an existing packet, or change packet state before routing approval.
+2. The `[remo1]`/`[remo2]`/`[remo3]` grills are DECIDED (2026-08-01 reconciliation, see `DECISIONS.md`); apply the resolved boundaries — schema-level invariants with SHACL only via the semantic-foundation M4 gate, rows-first MatterProjection with no persistent graph store, and episode ledgers as product records with Cognee as lossy projection. Do not re-open them without a new grill.
+3. Routing is SIGNED OFF (2026-08-01): shaping may proceed wedge-by-wedge starting with `patent-citation-candor-gate`, each new packet walking capture → research → align before its BRIEF; wedges beyond the approved four slugs still need Benjamin's routing approval.
+4. Do not scaffold outside the approved wedge order, and do not change another packet's state without its own routing approval.
 5. Keep `P100`, `P101`, and `R25` `unverified-addendum`; verify before adoption.
 6. Keep `T4-R1` and `T4-R2` as rejected evidence; do not resurrect them as gaps.
 7. Do not rebuild `TaxonomySeed`, `EdgeVersion`, `TextAnchor`, `EvidenceSpan`, `ClaimGate`, runtime draft/gate contracts, USPTO drift handling, or weighted RRF.
