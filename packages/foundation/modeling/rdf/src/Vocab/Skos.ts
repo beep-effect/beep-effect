@@ -6,72 +6,18 @@
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { SKOS_NAMESPACE } from "./generated/Skos.terms.ts";
 
 /**
- * SKOS namespace IRI.
+ * Generated namespace IRI and term inventory for this vocabulary.
  *
- * @see https://www.w3.org/TR/skos-reference/
- * @example
- * ```ts
- * import { SKOS_NAMESPACE } from "@beep/rdf/Vocab/Skos"
+ * Single-sourced from the `@beep/identity` `CoreVocab` registry via
+ * `bun run beep sync-data-to-ts --target vocab-terms`.
  *
- * const conceptIri = `${SKOS_NAMESPACE}Concept`
- * const isSkosConcept = conceptIri === "http://www.w3.org/2004/02/skos/core#Concept"
- * console.log(isSkosConcept) // true
- * ```
- *
- * @since 0.0.0
- * @category configuration
- */
-export const SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#" as const;
-
-/**
- * Complete SKOS core local-name inventory mirrored by `@beep/identity`.
- *
- * @example
- * ```ts
- * import { SKOS_TERMS } from "@beep/rdf/Vocab/Skos"
- *
- * console.log(SKOS_TERMS.includes("prefLabel")) // true
- * ```
- *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
-export const SKOS_TERMS = [
-  "Collection",
-  "Concept",
-  "ConceptScheme",
-  "OrderedCollection",
-  "altLabel",
-  "broadMatch",
-  "broader",
-  "broaderTransitive",
-  "changeNote",
-  "closeMatch",
-  "definition",
-  "editorialNote",
-  "exactMatch",
-  "example",
-  "hasTopConcept",
-  "hiddenLabel",
-  "historyNote",
-  "inScheme",
-  "mappingRelation",
-  "member",
-  "memberList",
-  "narrowMatch",
-  "narrower",
-  "narrowerTransitive",
-  "notation",
-  "note",
-  "prefLabel",
-  "related",
-  "relatedMatch",
-  "scopeNote",
-  "semanticRelation",
-  "topConceptOf",
-] as const;
+export { SKOS_NAMESPACE, SKOS_TERMS } from "./generated/Skos.terms.ts";
 
 /**
  * `skos:Concept`

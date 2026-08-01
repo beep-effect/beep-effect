@@ -33,11 +33,9 @@ FOLIO annotation migrations, and the vocab term-inventory codegen.
 
 ## Current Phase
 
-P0 Contract and donor audit: confirm the completed-retained core surface,
-recover the fold prototype from commit `61160e1baf` (two-donor merge with
-`explorations/identity-as-iri/assets/ontology-prototype/`), freeze the tuple grammar/diagnostics boundary,
-inventory the live FOLIO migration sites with counts, and audit barrel
-coexistence before editing.
+P3 Close: P0-P2 landed on `feat/identity-iri-fold` — evidence in
+[`history/p0-p2-evidence.md`](./history/p0-p2-evidence.md). Remaining:
+reflection, yeet publish, hosted checks to mergeable.
 
 ## Latest Evidence
 

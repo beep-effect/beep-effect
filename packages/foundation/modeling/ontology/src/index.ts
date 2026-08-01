@@ -5,6 +5,34 @@
  */
 
 /**
+ * Assembly walk and fold entrypoint for the identity-backed ontology fold.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./Fold.assembly.ts";
+/**
+ * Pure Markdown projection over assembled ontologies.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export * from "./Fold.markdown.ts";
+/**
+ * Schema-first models for the ontology fold.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Fold.models.ts";
+/**
+ * Pure JSON-LD, context, and Turtle projections over assembled ontologies.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export * from "./Fold.projections.ts";
+/**
  * @since 0.0.0
  * @category configuration
  */

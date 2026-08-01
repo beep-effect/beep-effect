@@ -293,82 +293,81 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
   {
     iri: FolioIriToken.annotateKey({
       title: "Iri",
-      identifier: "https://www.w3.org/2002/07/owl#Class",
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:label",
         title: "Label",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
     sub_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:subClassOf",
         title: "Sub Class Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subClassOf",
       })
     ),
     parent_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "^rdfs:subClassOf",
         title: "Parent Class Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subClassOf",
       })
     ),
     is_defined_by: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:isDefinedBy",
         title: "Is Defined By",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#isDefinedBy",
       })
     ),
     see_also: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:seeAlso",
         title: "See Also",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#seeAlso",
       })
     ),
     comment: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:comment",
         title: "Comment",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#comment",
       })
     ),
     deprecated: S.Boolean.pipe(
       SchemaUtils.withKeyDefaults(false),
-      S.annotateKey({
+      $I.key({
+        term: "owl:deprecated",
         title: "Deprecated",
-        identifier: "https://www.w3.org/2002/07/owl#deprecated",
         default: false,
       })
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:prefLabel",
         title: "Preferred Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#prefLabel",
       })
     ),
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:altLabel",
         title: "Alternative Labels",
-        identifier: "https://www.w3.org/2004/02/skos/core#altLabel",
       })
     ),
     translations: S.Record(S.String, S.String).pipe(
@@ -382,83 +381,83 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     hidden_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:hiddenLabel",
         title: "Hidden Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#hiddenLabel",
       })
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:definition",
         title: "Definition",
-        identifier: "https://www.w3.org/2004/02/skos/core#definition",
       })
     ),
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:example",
         title: "Examples",
-        identifier: "https://www.w3.org/2004/02/skos/core#example",
       })
     ),
     notes: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:note",
         title: "Notes",
-        identifier: "https://www.w3.org/2004/02/skos/core#note",
       })
     ),
     history_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:historyNote",
         title: "History Note",
-        identifier: "https://www.w3.org/2004/02/skos/core#historyNote",
       })
     ),
     editorial_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:editorialNote",
         title: "Editorial Note",
-        identifier: "https://www.w3.org/2004/02/skos/core#editorialNote",
       })
     ),
     in_scheme: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:inScheme",
         title: "In Scheme",
-        identifier: "https://www.w3.org/2004/02/skos/core#inScheme",
       })
     ),
     identifier: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:identifier",
         title: "Identifier",
-        identifier: "https://purl.org/dc/elements/1.1/identifier",
       })
     ),
     description: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:description",
         title: "Description",
-        identifier: "https://purl.org/dc/elements/1.1/description",
       })
     ),
     source: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:source",
         title: "Source",
-        identifier: "https://purl.org/dc/elements/1.1/source",
       })
     ),
     country: S.String.pipe(
@@ -466,7 +465,6 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         title: "Country",
-        identifier: "https://www.loc.gov/mads/rdf/v1#country",
         documentation: "https://www.loc.gov/standards/mads/mads-outline-2-1.html#country",
       })
     ),
@@ -494,83 +492,82 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
   {
     iri: FolioIriToken.annotateKey({
       title: "Iri",
-      identifier: "https://www.w3.org/2002/07/owl#ObjectProperty",
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:label",
         title: "Label",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
     sub_property_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:subPropertyOf",
         title: "Sub Property Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subPropertyOf",
       })
     ),
     domain: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:domain",
         title: "Domain",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#domain",
       })
     ),
     range: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:range",
         title: "Range",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#range",
       })
     ),
     inverse_of: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "owl:inverseOf",
         title: "Inverse Of",
-        identifier: "https://www.w3.org/2002/07/owl#inverseOf",
       })
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:prefLabel",
         title: "Preferred Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#prefLabel",
       })
     ),
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:altLabel",
         title: "Alternative Labels",
-        identifier: "https://www.w3.org/2004/02/skos/core#altLabel",
       })
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:definition",
         title: "Definition",
-        identifier: "https://www.w3.org/2004/02/skos/core#definition",
       })
     ),
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:example",
         title: "Examples",
-        identifier: "https://www.w3.org/2004/02/skos/core#example",
       })
     ),
   },

@@ -18,6 +18,9 @@
       "path": "../schema/tsconfig.json"
     },
     {
+      "path": "../utils/tsconfig.json"
+    },
+    {
       "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]

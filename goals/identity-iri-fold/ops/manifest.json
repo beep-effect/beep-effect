@@ -11,7 +11,7 @@
   "packetPath": "goals/identity-iri-fold",
   "lifecycle": "active",
   "mission": "Join the identity composer to a schema-validated ontology fold (split surface: $I.key/$I.class in identity, Ontology.fold in @beep/ontology) with deterministic predicate-open projections and idempotent FOLIO migrations.",
-  "statusNote": "identity-iri-core is completed-retained (5/5); the dependency edge is satisfied. identity-iri-fibered remains held until this fold lands. 2026-07-31 grill superseded packaging to the split surface, collapsed SKOS into the fact channel, closed inline is: sugar as not planned, and adopted compile-budget/rebase/negative-fixture/vocab-codegen hardening; donor provenance pinned to commit 61160e1baf.",
+  "statusNote": "P0-P2 complete on feat/identity-iri-fold (stacked on PR #530 docs branch): $I.key/$I.class composer methods, Ontology.fold + four pure projections, SKOS gate, negative/rebase fixtures, idempotent FOLIO sweep (28 borrowed -> $I.key, 3 vocab-less, ^rdfs:subClassOf direction fix), vocab-terms sync target (187 terms/5 namespaces), address-field deprecations, compile-budget deltas recorded in history/p0-p2-evidence.md. P3 close in progress: reflection + yeet publish to mergeable. identity-iri-fibered remains held.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -56,14 +56,26 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Contract and donor audit", "status": "pending" },
-    { "id": "P1", "name": "Fold and projections", "status": "pending" },
+    {
+      "id": "P0",
+      "name": "Contract and donor audit",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Fold and projections",
+      "status": "complete"
+    },
     {
       "id": "P2",
       "name": "FOLIO migration and verification",
-      "status": "pending"
+      "status": "complete"
     },
-    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "in-progress"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/identity-iri-fold/GOAL.md)\" -le 4000",
