@@ -44,6 +44,12 @@ type EmitMessage = (message: ObsIncomingMessage) => Effect.Effect<void>;
 type FakeObsServerOptions = {
   readonly authentication?: ObsAuthChallenge | undefined;
   readonly onRequest?: ((envelope: ObsRequestEnvelope, emit: EmitMessage) => Effect.Effect<void>) | undefined;
+  /**
+   * When set, the server answers Identify by closing the connection with this
+   * code instead of Identified — how obs-websocket rejects bad credentials
+   * (close code 4009).
+   */
+  readonly rejectIdentifyWithCloseCode?: number | undefined;
 };
 
 /**
@@ -70,15 +76,16 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
     rpcVersion: 1,
   });
 
+  const identifyResponse =
+    options?.rejectIdentifyWithCloseCode === undefined
+      ? emitMessage(ObsIdentifiedMessage.make({ d: ObsIdentified.make({ negotiatedRpcVersion: 1 }) }))
+      : Queue.end(incoming).pipe(Effect.asVoid);
+
   const handleClientFrame = (text: string): Effect.Effect<void> =>
     decodeObsOutgoingMessageJson(text).pipe(
       Effect.flatMap((message) =>
         message.op === 1
-          ? Ref.update(identifies, A.append(message.d)).pipe(
-              Effect.andThen(
-                emitMessage(ObsIdentifiedMessage.make({ d: ObsIdentified.make({ negotiatedRpcVersion: 1 }) }))
-              )
-            )
+          ? Ref.update(identifies, A.append(message.d)).pipe(Effect.andThen(identifyResponse))
           : (options?.onRequest?.(message.d, emitMessage) ?? Effect.void)
       ),
       Effect.orDie
@@ -96,7 +103,13 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
             })
           )
         ),
-        Effect.andThen(Effect.fail(Socket.SocketError.make({ reason: Socket.SocketCloseError.make({ code: 1006 }) })))
+        Effect.andThen(
+          Effect.fail(
+            Socket.SocketError.make({
+              reason: Socket.SocketCloseError.make({ code: options?.rejectIdentifyWithCloseCode ?? 1006 }),
+            })
+          )
+        )
       ),
     writer: Effect.succeed((chunk) => {
       if (Socket.isCloseEvent(chunk)) {
@@ -193,8 +206,33 @@ describe("ObsProtocol.connectWith", () => {
       ).pipe(Effect.flip);
 
       assert(ObsError.is(error));
-      expect(error.operation).toBe("connect");
+      // "authenticate", not "connect": the server was reachable, so the
+      // spawn-and-retry recovery in Obs.connectAndMake must not engage.
+      expect(error.operation).toBe("authenticate");
       expect(pipe(error.message, Str.includes("password"))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "tags a close-4009 handshake rejection as an authentication failure",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const server = yield* makeFakeObsServer({
+            authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }),
+            rejectIdentifyWithCloseCode: 4009,
+          });
+          return yield* ObsProtocol.connectWith(
+            server.socket,
+            resolveObsConfig({ password: O.some(Redacted.make("wrong-password")) })
+          );
+        })
+      ).pipe(Effect.flip);
+
+      assert(ObsError.is(error));
+      expect(error.operation).toBe("authenticate");
+      assert(O.isSome(error.closeCode));
+      expect(error.closeCode.value).toBe(4009);
     })
   );
 

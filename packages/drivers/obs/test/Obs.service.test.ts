@@ -141,13 +141,15 @@ describe("Obs", () => {
           expect(A.contains(requestTypes, "CreateScene")).toBe(true);
           expect(A.contains(requestTypes, "CreateInput")).toBe(true);
           expect(A.contains(requestTypes, "SetCurrentProgramScene")).toBe(true);
+          // CreateInput attaches the fresh input itself: no attachment check.
+          expect(A.contains(requestTypes, "GetSceneItemList")).toBe(false);
         })
       );
     })
   );
 
   it.effect(
-    "ensureQaScene is idempotent when the scene and input already exist",
+    "ensureQaScene is idempotent when the scene and input already exist and the input is attached",
     Effect.fnUntraced(function* () {
       yield* withObs(
         {
@@ -158,6 +160,8 @@ describe("Obs", () => {
                 inputSettings: { RestoreToken: "portal-token-2" },
               })
             ),
+          GetSceneItemList: () =>
+            Effect.succeed(O.some({ sceneItems: [{ sceneItemId: 1, sourceName: "beep-qa-capture" }] })),
           GetSceneList: () =>
             Effect.succeed(
               O.some({
@@ -176,7 +180,51 @@ describe("Obs", () => {
           const requestTypes = calledTypes(yield* calls);
           expect(A.contains(requestTypes, "CreateScene")).toBe(false);
           expect(A.contains(requestTypes, "CreateInput")).toBe(false);
+          expect(A.contains(requestTypes, "CreateSceneItem")).toBe(false);
           expect(A.contains(requestTypes, "SetCurrentProgramScene")).toBe(true);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "ensureQaScene attaches a pre-existing global input that is missing from the QA scene",
+    Effect.fnUntraced(function* () {
+      yield* withObs(
+        {
+          CreateSceneItem: () => Effect.succeed(O.some({ sceneItemId: 7 })),
+          GetInputSettings: () =>
+            Effect.succeed(
+              O.some({
+                inputKind: "pipewire-screen-capture-source",
+                inputSettings: { RestoreToken: "portal-token-3" },
+              })
+            ),
+          // The input exists globally (attached to some other scene), so the
+          // freshly-considered QA scene's item list does not reference it.
+          GetSceneItemList: () =>
+            Effect.succeed(O.some({ sceneItems: [{ sceneItemId: 2, sourceName: "unrelated-source" }] })),
+          GetSceneList: () =>
+            Effect.succeed(
+              O.some({
+                currentProgramSceneName: "beep-qa",
+                scenes: [{ sceneIndex: 0, sceneName: "beep-qa", sceneUuid: "scene-uuid-1" }],
+              })
+            ),
+        },
+        Effect.fnUntraced(function* (obs, calls) {
+          const result = yield* obs.ensureQaScene();
+          expect(result.inputCreated).toBe(false);
+
+          const recorded = yield* calls;
+          expect(A.contains(calledTypes(recorded), "CreateInput")).toBe(false);
+          const createSceneItem = A.findFirst(recorded, (call) => call.requestType === "CreateSceneItem");
+          assert(O.isSome(createSceneItem));
+          assert(O.isSome(createSceneItem.value.requestData));
+          expect(createSceneItem.value.requestData.value).toEqual({
+            sceneName: "beep-qa",
+            sourceName: "beep-qa-capture",
+          });
         })
       );
     })

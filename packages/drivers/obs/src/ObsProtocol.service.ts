@@ -65,6 +65,10 @@ import type {
 const $I = $ObsId.create("ObsProtocol.service");
 
 const OBS_EVENT_PUBSUB_CAPACITY = 256;
+// obs-websocket closes the session with WebSocketCloseCode
+// AuthenticationFailed (4009) when the Identify authentication string is
+// rejected — a reachability-independent failure the driver must not retry.
+const OBS_CLOSE_CODE_AUTHENTICATION_FAILED = 4009;
 const OBS_WEBSOCKET_SUBPROTOCOL = "obswebsocket.json";
 const OBS_WEBSOCKET_CONFIG_HINT =
   "Ensure OBS Studio is running with the WebSocket server enabled — Tools → WebSocket Server Settings in OBS, " +
@@ -164,7 +168,10 @@ const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError
         ObsError.make({
           closeCode: O.some(reason.code),
           message: `obs-websocket connection closed (${reason.message}).`,
-          operation: "connect",
+          // Close 4009 means the server was reachable and rejected the
+          // credentials: tag it "authenticate" so connect-keyed spawn/retry
+          // predicates surface it immediately instead of relaunching OBS.
+          operation: reason.code === OBS_CLOSE_CODE_AUTHENTICATION_FAILED ? "authenticate" : "connect",
         }),
       SocketReadError: (reason) =>
         ObsError.fromUnknown("connect", "Reading from the obs-websocket connection failed.", {
@@ -265,7 +272,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
             message:
               "obs-websocket requires authentication but no password is configured. " +
               "Provide ObsConfigInput.password (for example from OBS_WEBSOCKET_PASSWORD).",
-            operation: "connect",
+            operation: "authenticate",
           })
         ),
       onSome: (password) =>

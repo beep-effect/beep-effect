@@ -47,6 +47,7 @@ const ObsRequestTypeBase = LiteralKit([
   "GetInputSettings",
   "SetInputSettings",
   "GetSceneItemList",
+  "CreateSceneItem",
 ]);
 
 /**

@@ -29,6 +29,7 @@ import {
   ObsInputSettingsInfo,
   ObsRecordStateChangedEvent,
   ObsRecordStatus,
+  ObsSceneItemList,
   ObsSceneList,
   ObsStopRecordResult,
   ObsVersionInfo,
@@ -191,6 +192,19 @@ const makeService = Effect.fn("Obs.make")(function* (
         inputSettings: {},
         sceneName: request.sceneName,
       });
+    } else {
+      // GetInputSettings is a global lookup: the input can exist while being
+      // attached to a different scene, so cross-check the target scene's item
+      // list and attach the capture input when it is missing.
+      const sceneItems = yield* protocol
+        .request("GetSceneItemList", { sceneName: request.sceneName })
+        .pipe(Effect.flatMap(decodeResponseData("ensureQaScene", "GetSceneItemList", ObsSceneItemList.decodeEffect)));
+      const inputAttached = A.some(sceneItems.sceneItems, (item) =>
+        O.exists(O.filter(R.get(item, "sourceName"), P.isString), (name) => name === request.inputName)
+      );
+      if (!inputAttached) {
+        yield* protocol.request("CreateSceneItem", { sceneName: request.sceneName, sourceName: request.inputName });
+      }
     }
 
     const settings = yield* O.match(existingSettings, {
@@ -368,7 +382,9 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    * Build the fully-connected layer: probe the obs-websocket server, spawn
    * `obs --minimize-to-tray` detached (with `unref`, so it outlives this
    * process) when the probe is refused, then retry-connect on a spaced
-   * schedule capped at ~15 seconds before failing.
+   * schedule capped at ~15 seconds before failing. Authentication failures
+   * (missing password, close code 4009) mean the server was reachable, so
+   * they fail immediately without spawning or retrying.
    *
    * Provide `Socket.layerWebSocketConstructorGlobal` from
    * `effect/unstable/socket` (Bun global WebSocket) plus a platform
