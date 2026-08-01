@@ -24,7 +24,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -97,7 +97,7 @@
     "rg -n \"knowledge-surface-automation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/knowledge-surface-automation",
     "git diff --check -- goals/knowledge-surface-automation",
     "bun run beep lint reflection-artifacts",
-    "! rg -n \"/home/|~/YeeBois\" goals/knowledge-surface-automation --glob '!research/surface-inventory.md'"
+    "! rg -n \"/home/|~/YeeBois\" goals/knowledge-surface-automation --glob '!**/ops/manifest.json' --glob '!**/research/surface-inventory.md'"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

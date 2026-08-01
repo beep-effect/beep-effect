@@ -2,7 +2,7 @@
 
 Execution order is ratified (see SPEC.md). Phases map to `ops/manifest.json`.
 
-## P0 — Seed: packet + prior-ritual lessons (in progress)
+## P0 — Seed: packet + prior-ritual lessons (complete)
 
 1. Hand-create this packet on branch `knowledge-surface-automation` (done — this is it;
    it deliberately predates `beep goals bootstrap` so Workstream E's doctor can adopt it
@@ -24,9 +24,15 @@ Exit: research trio exists, packet validates against `beep goals doctor`, branch
   only semantic additions surface. No gate wiring yet.
 - `beep skills provenance <skill>` for ONE GitHub-backed customized skill; explicit
   upstream repo+commit resolution task for every skills.sh-sourced skill.
-- `beep knowledge refs --tree HEAD --json` over `repo://goal/*` refs in
-  AGENTS.md/CLAUDE.md, resolving slugs against tracked manifests, measuring mismatches.
+- `beep knowledge refs --tree HEAD --json` over current repo-relative and machine-local
+  references in agent-facing files, plus representative `repo://goal/*` fixtures;
+  resolve tracked targets and goal slugs, classify false positives, and measure
+  mismatches.
 - Manifest graph inventory + decode tests (additive `provides`/`requires` decode proof).
+- Workstream E pure-plan report: `beep goals bootstrap --plan --json` for a representative
+  input and `beep goals adopt knowledge-surface-automation --plan --json` for this packet;
+  report paths, ownership boundaries, preservation decisions, and validation requirements
+  without writing.
 
 Rule: read-only. No mutation until each report's false-positive rate is eyeballed.
 
@@ -48,8 +54,9 @@ PR before any implementation PR (per feedback-grill-decisions-pr-separation).
 - B: snapshot + patch series + materialize/check + clearing house + hunk ledger.
 - D: manifest `provides`/`requires` + bun:sqlite projection + `next`/`explain` +
   Mermaid INDEX block; evidence receipts with C; scout, respec --dry-run, relics.
-- E: compileMaterializationPlan + bootstrap/graduate/adopt + atomic publish + capsules;
-  adopt THIS packet as the first adoption case.
+- E, only after Benjamin reviews P1's pure-plan report: compileMaterializationPlan +
+  bootstrap/graduate/adopt + atomic publish + capsules; adopt THIS packet as the first
+  adoption case.
 - C Stage 2 (sealed baseline + counterfactual tests + debt leases + causal grouping)
   only after Stage-1 precision is proven.
 

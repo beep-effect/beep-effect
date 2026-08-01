@@ -30,7 +30,7 @@ infrastructure.
   canonical status from `goals/<slug>/ops/manifest.json`). Lifecycle statuses (LiteralKit):
   `active | paused | completed-retained | superseded | reference`; phase statuses
   `pending | in-progress | complete | superseded`; manifest schema `initiative-manifest/v2`.
-- `beep skills` exists with `check` and `update`
+- `beep skills` exists with `update` and its `--check` mode
   (`packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts`). `skills-lock.json`
   records per skill: `source`, `sourceType` ("github" | "local"), `skillPath`,
   `computedHash`; the updater also manages the `.codex/config.toml` skills table.
@@ -89,11 +89,12 @@ Reference-integrity architecture (incremental, behind `beep knowledge`):
   torture variant (randomized clone depth, spaced/Unicode directory names, read-only
   home) to flush hidden base-address assumptions.
 
-First step (read-only): `beep knowledge refs --tree HEAD --json` covering `repo://goal/*`
-references in `AGENTS.md`/`CLAUDE.md`, resolving slugs against tracked manifests,
-measuring mismatches. Load-bearing risk: split-brain identity drift (copied comments
-identifying the wrong object) — relink/doctor must treat identity-path disagreement as a
-hard failure.
+First step (read-only): `beep knowledge refs --tree HEAD --json` inventories the current
+repo-relative and machine-local reference forms across agent-facing files and exercises
+representative `repo://goal/*` fixtures until live dual-write identities exist. It resolves
+tracked targets and goal slugs, classifies false positives, and measures mismatches.
+Load-bearing risk: split-brain identity drift (copied comments identifying the wrong
+object) — relink/doctor must treat identity-path disagreement as a hard failure.
 
 ## Workstream B — vendored-skill supply chain ("bonded warehouse")
 
@@ -102,7 +103,7 @@ pinned to an immutable revision (upstream SHA + snapshot hash in the lockfile); 
 ordered LOCAL PATCH SERIES (plain git patches to start — graduate a customization to a
 semantic guide with anchors + preconditions only after upstream drift breaks it
 repeatedly); (3) installed copies are RECONSTRUCTED (`beep skills materialize`);
-`beep skills check` fails on hand-edited output via a reconstructed-output hash.
+`beep skills update --check` fails on hand-edited output via a reconstructed-output hash.
 
 - **Clearing house**: one verified effective tree per skill feeds BOTH `.claude/skills/`
   and `.agents/skills/` through thin adapters, with a cross-target equivalence check so
@@ -146,7 +147,7 @@ command, assertion) proving only semantic additions surface.
 
 **Stage 2 — full `beep knowledge doctor`, hardened against gaming from day one:**
 
-- Full-corpus scan reusing `beep goals doctor` / `beep skills check` as domain
+- Full-corpus scan reusing `beep goals doctor` / `beep skills update --check` as domain
   evaluators; extraction covers paths, commands, `@beep/*` symbols, packet-status claims,
   skill sources, licenses.
 - **Sealed baseline**: keys minted ONLY by CI at a reviewed default-branch SHA; feature
@@ -244,6 +245,13 @@ conventions (grill item).
   packet (self-hosting proof).
 - Accompanying SKILL.md so agents discover the lifecycle surface (bootstrap, set-status,
   next, explain, scout, graduate, adopt); a specialized subagent once the CLI settles.
+
+First step (read-only): implement only the pure plan surfaces, then report
+`beep goals bootstrap --plan --json` for a representative input and
+`beep goals adopt knowledge-surface-automation --plan --json` for THIS packet. The
+report covers proposed paths, ownership classification, preservation decisions, and
+validation requirements without writing; Benjamin reviews its false positives before
+any materializer or publish path exists.
 
 Load-bearing risk: ownership misclassification overwriting authored knowledge — hence
 whole-file ownership preference, golden tests, and patch-not-overwrite on drifted regions.

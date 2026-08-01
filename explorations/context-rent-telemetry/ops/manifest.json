@@ -12,7 +12,7 @@
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/knowledge-surface-automation"],
+      "goals": [],
       "docs": [],
       "supersededBy": null
     },

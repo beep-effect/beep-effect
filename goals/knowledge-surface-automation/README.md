@@ -40,10 +40,11 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 - Phase-0 read-only reports (in progress). P0 seed is complete: packet, research
-trio, and P1 design/provenance drafts are landed. Next concrete action: the P2 grill
-session over the open questions collected in the three `research/p1-*.md` documents,
-then the Phase-0 report commands (`KnowledgeFinding` golden tests, `beep skills
-provenance`, `beep knowledge refs --tree HEAD`).
+trio, and P1 design/provenance drafts are landed. Next concrete action: finish and review
+the Phase-0 report commands (`KnowledgeFinding` golden tests, `beep skills provenance`,
+`beep knowledge refs --tree HEAD`, manifest graph inventory, and Workstream E's pure
+bootstrap/adoption plans), then run the P2 grill over the open questions collected in
+the three `research/p1-*.md` documents.
 
 ## Latest Evidence
 

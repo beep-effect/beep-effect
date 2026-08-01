@@ -12,10 +12,7 @@
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [
-        "goals/knowledge-surface-automation",
-        "goals/epistemic-bitemporal-edge-core"
-      ],
+      "goals": [],
       "docs": [],
       "supersededBy": null
     },
