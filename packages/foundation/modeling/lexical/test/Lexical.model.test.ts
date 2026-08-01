@@ -225,7 +225,7 @@ const fixture = {
   },
 };
 
-describe("Lexical.model", () => {
+describe("Lexical.model", { concurrent: false }, () => {
   it("decodes the fixture editor state and captures nullish wire values as Options", () => {
     const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
 

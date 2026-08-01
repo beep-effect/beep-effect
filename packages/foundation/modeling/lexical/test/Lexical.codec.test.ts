@@ -43,7 +43,7 @@ const tableState = (headerState: TableCellHeaderState): SerializedEditorState =>
     }),
   });
 
-describe("Lexical.codec", () => {
+describe("Lexical.codec", { concurrent: false }, () => {
   it("canonicalizes an empty Md document to one runtime-editable paragraph", () => {
     const empty = MdModel.Document.make({ children: [] });
     const state = Effect.runSync(documentToEditorState(empty));
