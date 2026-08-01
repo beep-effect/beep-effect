@@ -1734,7 +1734,9 @@
       "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"],
       "@beep/repo-cli/commands/Qa": [
         "./packages/tooling/tool/cli/src/commands/Qa/index.ts"
-      ]
+      ],
+      "@beep/gov-legal-mcp": ["./packages/drivers/gov-legal-mcp/src/index.ts"],
+      "@beep/gov-legal-mcp/*": ["./packages/drivers/gov-legal-mcp/src/*"]
     }
   }
 }
