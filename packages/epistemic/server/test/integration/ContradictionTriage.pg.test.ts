@@ -29,12 +29,13 @@ import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentit
 import { makeDrizzleContradictionTriageRepository, makeDrizzleEdgeAuthorityRepository } from "@beep/epistemic-server";
 import { DbSchema } from "@beep/epistemic-tables";
 import { toContradictionCandidateInsert } from "@beep/epistemic-tables/entities/Contradiction";
-import { GetContradictionCandidate, ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
+import { ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
 import {
   ContradictionReviewConflict,
   ContradictionReviewScope,
   ContradictionTriageRepository,
   EdgeAuthorityRepository,
+  GetExpandedContradictionCandidate,
   RecordEdgeFact,
   SupersessionConflict,
 } from "@beep/epistemic-use-cases/server";
@@ -391,9 +392,10 @@ if (Str.isEmpty(externalUrl)) {
             Effect.gen(function* () {
               const restarted = yield* openStack();
               return yield* restarted.repository.get(
-                GetContradictionCandidate.make({
+                GetExpandedContradictionCandidate.make({
                   candidateId,
                   knownAt: DateTime.makeUnsafe(2_000),
+                  orgId: candidate.orgId,
                   validAt: DateTime.makeUnsafe(2_000),
                 })
               );
@@ -559,16 +561,18 @@ if (Str.isEmpty(externalUrl)) {
               const restarted = yield* openStack();
               const candidates = yield* Effect.all([
                 restarted.repository.get(
-                  GetContradictionCandidate.make({
+                  GetExpandedContradictionCandidate.make({
                     candidateId: firstId,
                     knownAt: DateTime.makeUnsafe(2_000),
+                    orgId: firstCandidate.orgId,
                     validAt: DateTime.makeUnsafe(2_000),
                   })
                 ),
                 restarted.repository.get(
-                  GetContradictionCandidate.make({
+                  GetExpandedContradictionCandidate.make({
                     candidateId: secondId,
                     knownAt: DateTime.makeUnsafe(2_000),
+                    orgId: secondCandidate.orgId,
                     validAt: DateTime.makeUnsafe(2_000),
                   })
                 ),

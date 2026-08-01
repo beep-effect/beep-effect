@@ -26,7 +26,7 @@ import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/Candidat
 import { toContradictionCandidateInsert } from "@beep/epistemic-tables/entities/Contradiction";
 import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
-import { GetContradictionCandidate, ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
+import { ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public";
 import {
   ContradictionReviewConflict,
   ContradictionReviewScope,
@@ -60,6 +60,7 @@ import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, flow, Layer, pipe } from "effect";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -274,11 +275,14 @@ type SeededScenario = {
 
 interface SubmissionOptions {
   readonly confidence?: number;
+  readonly kind?: "independent-evidence" | "same-source-overlap";
   readonly leftEvidenceId?: EpistemicIdentity.EvidenceId;
+  readonly leftEvidenceIds?: ReadonlyArray<EpistemicIdentity.EvidenceId>;
   readonly receipt?: string;
   readonly recordedAt?: number;
   readonly reversed?: boolean;
   readonly rightEvidenceId?: EpistemicIdentity.EvidenceId;
+  readonly rightEvidenceIds?: ReadonlyArray<EpistemicIdentity.EvidenceId>;
 }
 
 const makeSubmission = (scenario: number, seeded: SeededScenario, options: SubmissionOptions = {}) => {
@@ -294,11 +298,14 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
   });
   const {
     confidence = 0.95,
+    kind = "independent-evidence",
     leftEvidenceId,
+    leftEvidenceIds: requestedLeftEvidenceIds,
     recordedAt = 1_200,
     receipt = `receipt-${scenario}`,
     reversed = false,
     rightEvidenceId,
+    rightEvidenceIds: requestedRightEvidenceIds,
   } = options;
   const [pairLeft, pairRight, defaultLeftEvidenceId, defaultRightEvidenceId] = reversed
     ? [beliefB, beliefA, seeded.evidenceB.id, seeded.evidenceA.id]
@@ -307,13 +314,13 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     left: pairLeft,
     right: pairRight,
   });
-  const leftEvidenceIds = decodeEvidenceIds([leftEvidenceId ?? defaultLeftEvidenceId]);
-  const rightEvidenceIds = decodeEvidenceIds([rightEvidenceId ?? defaultRightEvidenceId]);
+  const leftEvidenceIds = decodeEvidenceIds(requestedLeftEvidenceIds ?? [leftEvidenceId ?? defaultLeftEvidenceId]);
+  const rightEvidenceIds = decodeEvidenceIds(requestedRightEvidenceIds ?? [rightEvidenceId ?? defaultRightEvidenceId]);
   const matchBasis = ContradictionMatchBasis.make({
     detector: "fixture",
     detectorVersion: seeded.beliefA.schemaVersion,
     evidenceDigest: contradictionEvidenceDigest(leftEvidenceIds, rightEvidenceIds),
-    kind: "independent-evidence",
+    kind,
     leftEvidenceIds,
     rightEvidenceIds,
   });
@@ -395,9 +402,10 @@ if (!shouldRunPgliteIntegration) {
             ContradictionSubmissionConflict.is(retroactiveReceiptConflict) && retroactiveReceiptConflict.reason
           ).toBe("receipt-predates-candidate");
           const detail = yield* repository.get(
-            GetContradictionCandidate.make({
+            GetExpandedContradictionCandidate.make({
               candidateId: first.candidate.id,
               knownAt: instant(1_500),
+              orgId: first.candidate.orgId,
               validAt: instant(1_500),
             })
           );
@@ -418,6 +426,38 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
+        "duplicate-suppresses retries that reorder evidence within one side",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(111);
+          const repository = yield* ContradictionTriageRepository;
+          const evidenceAId = EpistemicIdentity.EvidenceId.make(seeded.evidenceA.id);
+          const evidenceBId = EpistemicIdentity.EvidenceId.make(seeded.evidenceB.id);
+          const first = yield* repository.submit(
+            makeSubmission(111, seeded, {
+              kind: "same-source-overlap",
+              leftEvidenceIds: [evidenceBId, evidenceAId],
+              receipt: "receipt-111-a",
+              rightEvidenceIds: [evidenceBId],
+            })
+          );
+          const repeated = yield* repository.submit(
+            makeSubmission(111, seeded, {
+              kind: "same-source-overlap",
+              leftEvidenceIds: [evidenceAId, evidenceBId],
+              receipt: "receipt-111-b",
+              rightEvidenceIds: [evidenceBId],
+            })
+          );
+
+          expect(repeated.duplicateCandidate).toBe(true);
+          expect(repeated.candidate.id).toBe(first.candidate.id);
+          expect(repeated.candidate.candidateDigest).toBe(first.candidate.candidateDigest);
+          expect(repeated.candidate.matchBasis).toStrictEqual(first.candidate.matchBasis);
+        }),
+        120_000
+      );
+
+      it.effect(
         "scopes receipt idempotency to the organization without cross-selecting",
         Effect.fnUntraced(function* () {
           const firstOrganizationId = SharedIdentity.OrganizationId.make(1);
@@ -431,10 +471,25 @@ if (!shouldRunPgliteIntegration) {
 
           const first = yield* repository.submit(firstCommand);
           const repeated = yield* repository.submit(firstCommand);
+          const receiptPayloadConflicts = yield* Effect.forEach(
+            [
+              SubmitContradictionCandidate.make({ ...firstCommand, recordedAt: instant(1_300) }),
+              SubmitContradictionCandidate.make({ ...firstCommand, source: "Connector" }),
+            ],
+            (changedCommand) => Effect.flip(repository.submit(changedCommand)),
+            { concurrency: 1 }
+          );
           const second = yield* repository.submit(secondCommand);
 
           expect(first.duplicateCandidate).toBe(false);
           expect(repeated.duplicateCandidate).toBe(true);
+          expect(
+            A.every(
+              receiptPayloadConflicts,
+              (conflict) =>
+                ContradictionSubmissionConflict.is(conflict) && Eq.equals(conflict.reason, "receipt-key-reused")
+            )
+          ).toBe(true);
           expect(repeated.receipt.id).toBe(first.receipt.id);
           expect(repeated.receipt.publicId).toBe(first.receipt.publicId);
           expect(repeated.receipt.orgId).toBe(firstOrganizationId);
@@ -708,7 +763,16 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(1_500),
             })
           );
+          const wrongOrganizationReceiptDetail = yield* repository.get(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(1_500),
+              orgId: SharedIdentity.OrganizationId.make(2),
+              validAt: instant(1_500),
+            })
+          );
           expect(wrongOrganization).toStrictEqual(O.none());
+          expect(wrongOrganizationReceiptDetail).toStrictEqual(O.none());
         }),
         120_000
       );
@@ -736,9 +800,10 @@ if (!shouldRunPgliteIntegration) {
           expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
 
           const detail = yield* repository.get(
-            GetContradictionCandidate.make({
+            GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
               knownAt: instant(6_000),
+              orgId: submitted.candidate.orgId,
               validAt: instant(1_500),
             })
           );
@@ -814,23 +879,26 @@ if (!shouldRunPgliteIntegration) {
           ).toBe(true);
 
           const historicalDetail = yield* repository.get(
-            GetContradictionCandidate.make({
+            GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
               knownAt: instant(1_999),
+              orgId: submitted.candidate.orgId,
               validAt: instant(1_500),
             })
           );
           const currentDetail = yield* repository.get(
-            GetContradictionCandidate.make({
+            GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
+              orgId: submitted.candidate.orgId,
               validAt: instant(1_500),
             })
           );
           const outsideValidity = yield* repository.get(
-            GetContradictionCandidate.make({
+            GetExpandedContradictionCandidate.make({
               candidateId: submitted.candidate.id,
               knownAt: instant(2_000),
+              orgId: submitted.candidate.orgId,
               validAt: instant(999),
             })
           );
@@ -875,13 +943,13 @@ if (!shouldRunPgliteIntegration) {
           expect(
             pipe(
               historicalExpanded,
-              O.flatMap((expanded) => expanded.detail.disposition)
+              O.flatMap((expanded) => expanded.disposition)
             )
           ).toStrictEqual(O.none());
           expect(
             pipe(
               currentExpanded,
-              O.flatMap((expanded) => expanded.detail.disposition),
+              O.flatMap((expanded) => expanded.disposition),
               O.map((detail) => detail.decision.status)
             )
           ).toStrictEqual(O.some("rejected"));

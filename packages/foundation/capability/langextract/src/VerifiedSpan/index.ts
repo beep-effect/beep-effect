@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $LangExtractId } from "@beep/identity";
+import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
 import { A, O } from "@beep/utils";
@@ -712,6 +713,9 @@ export const locateGroundedExtractions = Effect.fn("VerifiedSpan.locateGroundedE
   sourceText: string,
   extractions: ReadonlyArray<GroundedExtraction>
 ): Effect.fn.Return<ReadonlyArray<TextAnchor>, VerifiedSpanError> {
+  if (A.length(extractions) > MAX_EXTRACTION_CANDIDATES) {
+    return yield* VerifiedSpanError.fromReason("limit-exceeded");
+  }
   if (Eq.equals(A.length(extractions), 0)) {
     return [];
   }

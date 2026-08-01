@@ -1,4 +1,4 @@
-import { GroundedExtraction } from "@beep/langextract/Extraction";
+import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import {
   convertTextOffsetRange,
   locateGroundedExtractions,
@@ -12,6 +12,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
@@ -205,6 +206,24 @@ describe("verified-span hostile-text contract", () => {
       expect(strict).toEqual([{ endChar: 27, quote: "“Affirmed.”", startChar: 16 }]);
       expect(fuzzyFailure.reason).toBe("not-found");
       expect(fuzzyFailure.candidateIndex).toBe(0);
+    })
+  );
+
+  it.effect(
+    "rejects oversized direct extraction batches before scanning source text",
+    Effect.fnUntraced(function* () {
+      const extraction = GroundedExtraction.make({
+        alignmentStatus: "unaligned",
+        label: "quotation",
+        text: "missing",
+      });
+      const failure = yield* locateGroundedExtractions(
+        "source",
+        A.replicate(extraction, MAX_EXTRACTION_CANDIDATES + 1)
+      ).pipe(Effect.flip);
+
+      expect(failure.reason).toBe("limit-exceeded");
+      expect(failure.candidateIndex).toBeUndefined();
     })
   );
 

@@ -16,7 +16,6 @@ import {
   BeliefVersionRef,
   ContradictionAssessment,
   ContradictionDispositionDecision,
-  ContradictionMatchBasis,
   ContradictionProposalId,
   canonicalizeContradiction,
   contradictionCandidateDigest,
@@ -196,18 +195,39 @@ const validateEvidenceSet = (
       );
 };
 
-const normalizeSubmission = Effect.fnUntraced(function* (command: SubmitContradictionCandidate) {
-  const normalized = canonicalizeContradiction(command.pair, command.matchBasis);
-  const computedEvidenceDigest = contradictionEvidenceDigest(
-    normalized.matchBasis.leftEvidenceIds,
-    normalized.matchBasis.rightEvidenceIds
+const receiptMatchesSubmission = (
+  receipt: ContradictionReceipt,
+  candidate: ContradictionCandidate,
+  command: SubmitContradictionCandidate
+): boolean =>
+  A.every(
+    [
+      [receipt.candidateId, candidate.id],
+      [receipt.createdAt, command.recordedAt],
+      [receipt.createdByPrincipal, command.receivedBy],
+      [receipt.orgId, command.orgId],
+      [receipt.publicId, receiptPublicIdFor(command.orgId, command.receiptKey)],
+      [receipt.receiptKey, command.receiptKey],
+      [receipt.receivedAt, command.recordedAt],
+      [receipt.receivedBy, command.receivedBy],
+      [receipt.rowVersion, PosInt.make(1)],
+      [receipt.schemaVersion, command.schemaVersion],
+      [receipt.source, command.source],
+      [receipt.updatedAt, command.recordedAt],
+      [receipt.updatedByPrincipal, command.receivedBy],
+    ],
+    ([persisted, submitted]) => Eq.equals(persisted, submitted)
   );
-  const matchBasis = ContradictionMatchBasis.make({
-    ...normalized.matchBasis,
-    evidenceDigest: computedEvidenceDigest,
-  });
+
+const normalizeSubmission = Effect.fnUntraced(function* (command: SubmitContradictionCandidate) {
+  const submittedEvidenceDigest = contradictionEvidenceDigest(
+    command.matchBasis.leftEvidenceIds,
+    command.matchBasis.rightEvidenceIds
+  );
+  const normalized = canonicalizeContradiction(command.pair, command.matchBasis);
+  const matchBasis = normalized.matchBasis;
   const candidateKey = contradictionCandidateKey(normalized.pair, matchBasis);
-  if (!Eq.equals(command.matchBasis.evidenceDigest, computedEvidenceDigest)) {
+  if (!Eq.equals(command.matchBasis.evidenceDigest, submittedEvidenceDigest)) {
     return yield* ContradictionSubmissionConflict.make({
       candidateKey,
       reason: "candidate-payload-mismatch",
@@ -340,6 +360,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         .where(
           and(
             eq(candidateTable.id, query.candidateId),
+            eq(candidateTable.orgId, query.orgId),
             lte(candidateTable.validFrom, validAt),
             or(isNull(candidateTable.validTo), gt(candidateTable.validTo, validAt)),
             lte(candidateTable.recordedAt, knownAt)
@@ -353,12 +374,24 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const dispositions = yield* db
         .select()
         .from(dispositionTable)
-        .where(and(eq(dispositionTable.candidateId, query.candidateId), lte(dispositionTable.resolvedAt, knownAt)))
+        .where(
+          and(
+            eq(dispositionTable.candidateId, query.candidateId),
+            eq(dispositionTable.orgId, query.orgId),
+            lte(dispositionTable.resolvedAt, knownAt)
+          )
+        )
         .pipe(repositoryUnavailable("get"));
       const receipts = yield* db
         .select()
         .from(receiptTable)
-        .where(and(eq(receiptTable.candidateId, query.candidateId), lte(receiptTable.receivedAt, knownAt)))
+        .where(
+          and(
+            eq(receiptTable.candidateId, query.candidateId),
+            eq(receiptTable.orgId, query.orgId),
+            lte(receiptTable.receivedAt, knownAt)
+          )
+        )
         .orderBy(receiptTable.receivedAt, receiptTable.id)
         .pipe(repositoryUnavailable("get"));
       const candidate = yield* Effect.fromResult(fromContradictionCandidateRow(candidateRow.value)).pipe(
@@ -496,13 +529,13 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
       const dispositions = yield* db
         .select()
         .from(dispositionTable)
-        .where(and(eq(dispositionTable.candidateId, query.candidateId), lte(dispositionTable.resolvedAt, knownAt)))
-        .pipe(repositoryUnavailable("get"));
-      const receipts = yield* db
-        .select()
-        .from(receiptTable)
-        .where(and(eq(receiptTable.candidateId, query.candidateId), lte(receiptTable.receivedAt, knownAt)))
-        .orderBy(receiptTable.receivedAt, receiptTable.id)
+        .where(
+          and(
+            eq(dispositionTable.candidateId, query.candidateId),
+            eq(dispositionTable.orgId, query.orgId),
+            lte(dispositionTable.resolvedAt, knownAt)
+          )
+        )
         .pipe(repositoryUnavailable("get"));
       const disposition = yield* pipe(
         A.head(dispositions),
@@ -510,18 +543,10 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         Effect.transposeOption,
         repositoryUnavailable("get")
       );
-      const decodedReceipts = yield* Effect.forEach(
-        receipts,
-        (row) => Effect.fromResult(fromContradictionReceiptRow(row)),
-        { concurrency: 1 }
-      ).pipe(repositoryUnavailable("get"));
       return O.some(
         ContradictionCandidateExpandedDetail.make({
-          detail: ContradictionCandidateDetail.make({
-            candidate,
-            disposition,
-            receipts: decodedReceipts,
-          }),
+          candidate,
+          disposition,
           left: ContradictionBeliefDetail.make({
             belief: left.value,
             evidence: leftEvidence,
@@ -875,7 +900,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 )
               );
               const receipt = yield* Effect.fromResult(fromContradictionReceiptRow(receiptRow));
-              if (!Eq.equals(receipt.candidateId, candidate.id)) {
+              if (!receiptMatchesSubmission(receipt, candidate, command)) {
                 return yield* ContradictionSubmissionConflict.make({
                   candidateKey: normalized.candidateKey,
                   reason: "receipt-key-reused",

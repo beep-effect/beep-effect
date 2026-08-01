@@ -108,8 +108,8 @@ const toEvidenceView = (detail: ContradictionEvidenceDetail): ContradictionEvide
 
 const toCandidateDetailView = (expanded: ContradictionCandidateExpandedDetail): ContradictionCandidateDetailView =>
   ContradictionCandidateDetailView.make({
-    candidate: expanded.detail.candidate,
-    disposition: expanded.detail.disposition,
+    candidate: expanded.candidate,
+    disposition: expanded.disposition,
     left: ContradictionBeliefView.make({
       belief: expanded.left.belief,
       evidence: A.map(expanded.left.evidence, toEvidenceView),

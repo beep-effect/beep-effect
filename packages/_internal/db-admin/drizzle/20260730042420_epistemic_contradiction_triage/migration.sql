@@ -95,10 +95,33 @@ ALTER TABLE "epistemic_contradiction_disposition"
 	FOREIGN KEY ("org_id", "candidate_id")
 	REFERENCES "epistemic_contradiction_candidate" ("org_id", "id");--> statement-breakpoint
 ALTER TABLE "epistemic_contradiction_disposition"
-	ADD CONSTRAINT "epistemic_contradiction_disposition_status_bounded"
+	ADD CONSTRAINT "epistemic_contradiction_disposition_decision_valid"
 	CHECK (
-		"decision" ->> 'status' IS NOT NULL
+		jsonb_typeof("decision") = 'object'
+		AND "decision" ? 'status'
+		AND jsonb_typeof("decision" -> 'status') = 'string'
 		AND "decision" ->> 'status' IN ('rejected', 'superseded')
+		AND "decision" ? 'reason'
+		AND jsonb_typeof("decision" -> 'reason') = 'string'
+		AND char_length("decision" ->> 'reason') BETWEEN 1 AND 2000
+		AND "decision" ->> 'reason' ~ '[^[:space:]]'
+		AND CASE "decision" ->> 'status'
+			WHEN 'rejected' THEN TRUE
+			WHEN 'superseded' THEN
+				"decision" ? 'formerEdgeVersionId'
+				AND jsonb_typeof("decision" -> 'formerEdgeVersionId') = 'number'
+				AND "decision" ->> 'formerEdgeVersionId' ~ '^[1-9][0-9]*$'
+				AND "decision" ? 'proposalDigest'
+				AND jsonb_typeof("decision" -> 'proposalDigest') = 'string'
+				AND "decision" ->> 'proposalDigest' ~ '^[0-9a-f]{64}$'
+				AND "decision" ? 'proposalId'
+				AND jsonb_typeof("decision" -> 'proposalId') = 'string'
+				AND "decision" ->> 'proposalId' ~ '^[0-9a-f]{64}$'
+				AND "decision" ? 'replacementEdgeVersionId'
+				AND jsonb_typeof("decision" -> 'replacementEdgeVersionId') = 'number'
+				AND "decision" ->> 'replacementEdgeVersionId' ~ '^[1-9][0-9]*$'
+			ELSE FALSE
+		END
 	);--> statement-breakpoint
 CREATE FUNCTION epistemic_contradiction_block_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $guard$

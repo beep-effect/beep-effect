@@ -24,7 +24,6 @@ import type { Effect } from "effect";
 import type * as O from "effect/Option";
 import type { EdgeAuthorityError } from "../EdgeAuthority/index.ts";
 import type {
-  GetContradictionCandidate,
   GetExpandedContradictionCandidate,
   ListContradictionCandidates,
   ReviewContradictionCandidate,
@@ -276,7 +275,7 @@ export class ContradictionBeliefDetail extends S.Class<ContradictionBeliefDetail
  * ```ts
  * import { ContradictionCandidateExpandedDetail } from "@beep/epistemic-use-cases/server"
  *
- * console.log(ContradictionCandidateExpandedDetail.fields.detail !== undefined) // true
+ * console.log(ContradictionCandidateExpandedDetail.fields.candidate !== undefined) // true
  * console.log(ContradictionCandidateExpandedDetail.fields.left !== undefined) // true
  * console.log(ContradictionCandidateExpandedDetail.fields.right !== undefined) // true
  * ```
@@ -288,8 +287,11 @@ export class ContradictionCandidateExpandedDetail extends S.Class<ContradictionC
   $I`ContradictionCandidateExpandedDetail`
 )(
   {
-    detail: ContradictionCandidateDetail.annotateKey({
-      description: "Candidate, disposition, proposals, and receipt history.",
+    candidate: ContradictionCandidate.annotateKey({
+      description: "Immutable candidate applicable at validAt and recorded no later than knownAt.",
+    }),
+    disposition: ContradictionDisposition.pipe(S.OptionFromNullOr).annotateKey({
+      description: "Recorded disposition only when its resolvedAt instant is no later than knownAt.",
     }),
     left: ContradictionBeliefDetail.annotateKey({
       description: "Exact left belief and side-bound evidence.",
@@ -319,7 +321,7 @@ export class ContradictionCandidateExpandedDetail extends S.Class<ContradictionC
  */
 export interface ContradictionTriageRepositoryShape {
   readonly get: (
-    query: GetContradictionCandidate
+    query: GetExpandedContradictionCandidate
   ) => Effect.Effect<O.Option<ContradictionCandidateDetail>, ContradictionRepositoryUnavailable>;
   readonly getExpanded: (
     query: GetExpandedContradictionCandidate

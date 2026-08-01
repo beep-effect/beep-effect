@@ -15,7 +15,6 @@ import {
 } from "@beep/epistemic-use-cases/public";
 import {
   ContradictionBeliefDetail,
-  ContradictionCandidateDetail,
   ContradictionCandidateExpandedDetail,
   ContradictionCandidatePage,
   ContradictionEvidenceDetail,
@@ -178,11 +177,8 @@ const makeExpanded = (verifiedAnchor: TextAnchorVerificationReceipt): Contradict
     verifiedAnchor,
   });
   return ContradictionCandidateExpandedDetail.make({
-    detail: ContradictionCandidateDetail.make({
-      candidate,
-      disposition: O.none(),
-      receipts: [],
-    }),
+    candidate,
+    disposition: O.none(),
     left: ContradictionBeliefDetail.make({
       belief: leftBelief,
       evidence: [

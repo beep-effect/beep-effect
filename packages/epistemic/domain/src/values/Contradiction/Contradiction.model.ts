@@ -445,6 +445,7 @@ export type ContradictionMatchBasisKind = typeof ContradictionMatchBasisKind.Typ
 
 const evidenceIdEquivalence = S.toEquivalence(EpistemicIdentity.EvidenceId);
 const evidenceIdArbitrary = S.toArbitraryLazy(EpistemicIdentity.EvidenceId);
+const evidenceIdOrder = Order.mapInput(Order.String, (evidenceId: EpistemicIdentity.EvidenceId) => `${evidenceId}`);
 const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>): boolean =>
   Eq.equals(A.length(A.dedupeWith(ids, evidenceIdEquivalence)), A.length(ids));
 
@@ -652,7 +653,30 @@ const proposalsShareId = (self: ContradictionResolutionProposal, that: Contradic
 const hasUniqueProposalIds = (proposals: ReadonlyArray<ContradictionResolutionProposal>): boolean =>
   Eq.equals(A.length(A.dedupeWith(proposals, proposalsShareId)), A.length(proposals));
 
+/**
+ * Maximum proposals retained for one contradiction candidate.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_PROPOSAL_MAX_COUNT } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_PROPOSAL_MAX_COUNT) // 32
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_PROPOSAL_MAX_COUNT = 32;
+
 const UniqueNonEmptyContradictionProposals = S.NonEmptyArray(ContradictionResolutionProposal)
+  .check(
+    S.isMaxLength(CONTRADICTION_PROPOSAL_MAX_COUNT, {
+      identifier: $I`UniqueNonEmptyContradictionProposalsMaximumLengthCheck`,
+      title: "Contradiction Proposal Maximum Count",
+      description: "Checks that one candidate retains at most 32 human-reviewable proposals.",
+      message: "Expected at most 32 contradiction proposals.",
+    })
+  )
   .check(
     S.makeFilter(hasUniqueProposalIds, {
       identifier: $I`UniqueNonEmptyContradictionProposalsCheck`,
@@ -873,6 +897,45 @@ export const ContradictionDispositionDecision = ContradictionDispositionDecision
  */
 export type ContradictionDispositionDecision = typeof ContradictionDispositionDecision.Type;
 
+const sortEvidenceIds = A.sort(evidenceIdOrder);
+
+const encodeEvidenceIds = flow(
+  sortEvidenceIds,
+  A.map((id: EpistemicIdentity.EvidenceId) => `${id}`),
+  A.join(",")
+);
+
+const sha256Hex = (value: string): string => bytesToHex(sha256(utf8ToBytes(value)));
+
+const evidenceDigestForSides = (
+  leftEvidenceIds: ReadonlyArray<EpistemicIdentity.EvidenceId>,
+  rightEvidenceIds: ReadonlyArray<EpistemicIdentity.EvidenceId>
+): ContradictionEvidenceDigest =>
+  ContradictionEvidenceDigest.make(
+    sha256Hex(
+      A.join(["v3", `left:${encodeEvidenceIds(leftEvidenceIds)}`, `right:${encodeEvidenceIds(rightEvidenceIds)}`], "|")
+    )
+  );
+
+const bindEvidenceSides = (
+  matchBasis: ContradictionMatchBasis,
+  leftEvidenceIds: ContradictionMatchBasis["leftEvidenceIds"],
+  rightEvidenceIds: ContradictionMatchBasis["rightEvidenceIds"]
+): ContradictionMatchBasis =>
+  pipe(
+    {
+      leftEvidenceIds: sortEvidenceIds(leftEvidenceIds),
+      rightEvidenceIds: sortEvidenceIds(rightEvidenceIds),
+    },
+    ({ leftEvidenceIds: canonicalLeftEvidenceIds, rightEvidenceIds: canonicalRightEvidenceIds }) =>
+      ContradictionMatchBasis.make({
+        ...matchBasis,
+        evidenceDigest: evidenceDigestForSides(canonicalLeftEvidenceIds, canonicalRightEvidenceIds),
+        leftEvidenceIds: canonicalLeftEvidenceIds,
+        rightEvidenceIds: canonicalRightEvidenceIds,
+      })
+  );
+
 class CanonicalizedContradiction extends S.Class<CanonicalizedContradiction>($I`CanonicalizedContradiction`)(
   {
     matchBasis: ContradictionMatchBasis,
@@ -913,29 +976,17 @@ export const canonicalizeContradiction: CanonicalizeContradiction = dual(
       Bool.match({
         onFalse: () =>
           CanonicalizedContradiction.make({
-            matchBasis: ContradictionMatchBasis.make({
-              ...matchBasis,
-              leftEvidenceIds: matchBasis.rightEvidenceIds,
-              rightEvidenceIds: matchBasis.leftEvidenceIds,
-            }),
+            matchBasis: bindEvidenceSides(matchBasis, matchBasis.rightEvidenceIds, matchBasis.leftEvidenceIds),
             pair: CanonicalContradictionBeliefPair.make({ left: pair.right, right: pair.left }),
           }),
         onTrue: () =>
           CanonicalizedContradiction.make({
-            matchBasis,
+            matchBasis: bindEvidenceSides(matchBasis, matchBasis.leftEvidenceIds, matchBasis.rightEvidenceIds),
             pair: CanonicalContradictionBeliefPair.make({ left: pair.left, right: pair.right }),
           }),
       })
     )
 );
-
-const encodeEvidenceIds = flow(
-  A.map((id: EpistemicIdentity.EvidenceId) => `${id}`),
-  A.sort(Order.String),
-  A.join(",")
-);
-
-const sha256Hex = (value: string): string => bytesToHex(sha256(utf8ToBytes(value)));
 
 type ContradictionEvidenceDigestFn = {
   (
@@ -948,8 +999,11 @@ type ContradictionEvidenceDigestFn = {
 };
 
 /**
- * Digest the exact side-specific evidence-id sets of one match basis
- * independent of pair presentation order.
+ * Digest the exact side-specific evidence-id sets of one match basis.
+ *
+ * Each partition remains bound to its named side. Canonicalize the belief pair
+ * and match basis together when presentation-order-independent identity is
+ * required.
  *
  * @example
  * ```ts
@@ -974,15 +1028,7 @@ export const contradictionEvidenceDigest: ContradictionEvidenceDigestFn = dual(
   (
     leftEvidenceIds: ReadonlyArray<EpistemicIdentity.EvidenceId>,
     rightEvidenceIds: ReadonlyArray<EpistemicIdentity.EvidenceId>
-  ): ContradictionEvidenceDigest =>
-    ContradictionEvidenceDigest.make(
-      sha256Hex(
-        A.join(
-          ["v2", ...A.sort([encodeEvidenceIds(leftEvidenceIds), encodeEvidenceIds(rightEvidenceIds)], Order.String)],
-          "|"
-        )
-      )
-    )
+  ): ContradictionEvidenceDigest => evidenceDigestForSides(leftEvidenceIds, rightEvidenceIds)
 );
 
 type ContradictionCandidateKeyFn = {

@@ -323,7 +323,58 @@ if (!shouldRunPgliteIntegration) {
             )
           `);
           expect(inspect(missingDispositionStatus, { depth: 10 })).toContain(
-            "epistemic_contradiction_disposition_status_bounded"
+            "epistemic_contradiction_disposition_decision_valid"
+          );
+
+          const missingRejectedReason = yield* Effect.flip(sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 1, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${candidateId},
+              '{"status":"rejected"}'::jsonb, 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_amissingreason'
+            )
+          `);
+          expect(inspect(missingRejectedReason, { depth: 10 })).toContain(
+            "epistemic_contradiction_disposition_decision_valid"
+          );
+
+          const incompleteSupersession = yield* Effect.flip(sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 1, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${candidateId},
+              '{"reason":"missing authority identifiers","status":"superseded"}'::jsonb, 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_aincompletesupersession'
+            )
+          `);
+          expect(inspect(incompleteSupersession, { depth: 10 })).toContain(
+            "epistemic_contradiction_disposition_decision_valid"
+          );
+
+          const oversizedDispositionReason = yield* Effect.flip(sql`
+            INSERT INTO epistemic_contradiction_disposition (
+              created_at, created_by_principal, org_id, row_version, schema_version, source,
+              updated_at, updated_by_principal, candidate_id, decision, resolved_at,
+              resolved_by, entity_type, public_id
+            ) VALUES (
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, 1, 1, '0.0.0', 'System',
+              1002, '{"component":"Runtime","kind":"System"}'::jsonb, ${candidateId},
+              jsonb_build_object('reason', ${Str.repeat(2_001)("x")}::text, 'status', 'rejected'), 1002,
+              '{"component":"Runtime","kind":"System"}'::jsonb, 'EpistemicContradictionDisposition',
+              'epistemic_contradiction_disposition_aoversizedreason'
+            )
+          `);
+          expect(inspect(oversizedDispositionReason, { depth: 10 })).toContain(
+            "epistemic_contradiction_disposition_decision_valid"
           );
 
           yield* sql`

@@ -2,6 +2,7 @@ import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradi
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
+  CONTRADICTION_PROPOSAL_MAX_COUNT,
   ContradictionAssessment,
   ContradictionBeliefPair,
   ContradictionCandidateContent,
@@ -151,6 +152,32 @@ describe("Contradiction domain invariants", () => {
     ).toBe(true);
   });
 
+  it("bounds the number of proposals retained by one assessment", () => {
+    const proposals = A.makeBy(CONTRADICTION_PROPOSAL_MAX_COUNT + 1, (index) => {
+      const content = ContradictionProposalContent.make({
+        ...proposalContent,
+        proposalId: ContradictionProposalId.make(`${Str.repeat(62)("0")}${Str.padStart(2, "0")(`${index}`)}`),
+      });
+      return ContradictionResolutionProposal.make({
+        ...content,
+        proposalDigest: Result.getOrThrow(contradictionProposalDigest(content)),
+      });
+    });
+    const encodeProposal = S.encodeUnknownResult(ContradictionResolutionProposal);
+    const encodedProposals = A.map(proposals, (value) => Result.getOrThrow(encodeProposal(value)));
+    const decode = S.decodeUnknownResult(ContradictionAssessment);
+
+    expect(
+      Result.isSuccess(
+        decode({
+          confidence: 0.95,
+          proposals: A.take(encodedProposals, CONTRADICTION_PROPOSAL_MAX_COUNT),
+        })
+      )
+    ).toBe(true);
+    expect(Result.isFailure(decode({ confidence: 0.95, proposals: encodedProposals }))).toBe(true);
+  });
+
   it("rejects empty or reversed proposal validity intervals", () => {
     const encoded = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
     const decode = S.decodeUnknownResult(ContradictionResolutionProposal);
@@ -193,16 +220,39 @@ describe("Contradiction domain invariants", () => {
     expect(otherDetectorKey).not.toBe(otherVersionKey);
   });
 
-  it("preserves evidence-side partitions while remaining reversal invariant", () => {
+  it("binds evidence partitions to beliefs while canonicalization remains reversal invariant", () => {
     const evidenceA = Epistemic.EvidenceId.make(10);
     const evidenceB = Epistemic.EvidenceId.make(20);
     const evidenceC = Epistemic.EvidenceId.make(30);
     const oneVersusTwo = contradictionEvidenceDigest([evidenceA], [evidenceB, evidenceC]);
     const reversed = contradictionEvidenceDigest([evidenceB, evidenceC], [evidenceA]);
-    const twoVersusOne = contradictionEvidenceDigest([evidenceA, evidenceB], [evidenceC]);
+    const originalBasis = ContradictionMatchBasis.make({
+      ...matchBasis,
+      evidenceDigest: oneVersusTwo,
+      leftEvidenceIds: [evidenceA],
+      rightEvidenceIds: [evidenceB, evidenceC],
+    });
+    const reversedPair = ContradictionBeliefPair.make({ left: right, right: left });
+    const reversedBasis = ContradictionMatchBasis.make({
+      ...originalBasis,
+      evidenceDigest: reversed,
+      leftEvidenceIds: originalBasis.rightEvidenceIds,
+      rightEvidenceIds: originalBasis.leftEvidenceIds,
+    });
+    const canonicalOriginal = canonicalizeContradiction(pair, originalBasis);
+    const canonicalReversed = canonicalizeContradiction(reversedPair, reversedBasis);
+    const reorderedBasis = ContradictionMatchBasis.make({
+      ...originalBasis,
+      leftEvidenceIds: originalBasis.leftEvidenceIds,
+      rightEvidenceIds: [evidenceC, evidenceB],
+    });
+    const canonicalReordered = canonicalizeContradiction(pair, reorderedBasis);
 
-    expect(reversed).toBe(oneVersusTwo);
-    expect(twoVersusOne).not.toBe(oneVersusTwo);
+    expect(reversed).not.toBe(oneVersusTwo);
+    expect(canonicalReversed).toStrictEqual(canonicalOriginal);
+    expect(canonicalReordered).toStrictEqual(canonicalOriginal);
+    expect(contradictionCandidateKey(reversedPair, reversedBasis)).toBe(contradictionCandidateKey(pair, originalBasis));
+    expect(contradictionCandidateKey(pair, reversedBasis)).not.toBe(contradictionCandidateKey(pair, originalBasis));
   });
 
   it("rejects proposal facts outside canonical JSON", () => {
