@@ -244,6 +244,47 @@ describe("dock pointer gestures", { concurrent: false }, () => {
     })
   );
 
+  it.effect("positions the insertion caret by measured tab midpoints", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
+      if (strip === null) throw new Error("Missing tab strip");
+      // jsdom reports every rect as zero-width, so the strip never records
+      // real tab widths and the measured branch of the insertion-index rule
+      // stays unreachable. Stub the two tabs at 100px and 60px, then drive a
+      // resize so measureStrip records them.
+      const widths = new Map([
+        [panel1.id, 100],
+        [panel2.id, 60],
+      ]);
+      for (const [panelId, width] of widths) {
+        const node = tab(panelId);
+        node.getBoundingClientRect = () => new DOMRect(0, 0, width, 24);
+      }
+      resize(strip, { width: 400, height: 24 });
+
+      const source = tab(panel3.id);
+      const caretLeft = (): string => {
+        const node = root.querySelector<HTMLElement>("[data-drop-caret]");
+        if (node === null) throw new Error("Missing drop caret");
+        return node.style.left;
+      };
+      pointer(source, "pointerDown", 600, 16);
+      // Before the first tab's midpoint (50px): index 0, caret at the strip start.
+      pointer(source, "pointerMove", 20, 16);
+      expect(caretLeft()).toBe("0px");
+      // Past the first midpoint but before the second (100 + 30 = 130): index 1.
+      pointer(source, "pointerMove", 90, 16);
+      expect(caretLeft()).toBe("100px");
+      // Past the second midpoint: append at index 2, caret after both tabs.
+      pointer(source, "pointerMove", 150, 16);
+      expect(caretLeft()).toBe("160px");
+      fireEvent.keyDown(document, { key: "Escape" });
+      mounted.graph.dispose();
+    })
+  );
+
   it.effect("Escape-cancelled drag release does not activate the dragged tab", () =>
     Effect.gen(function* () {
       const mounted = yield* mount();
