@@ -9,6 +9,7 @@ import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnch
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
@@ -232,6 +233,14 @@ describe("EvidenceVerificationTable", () => {
     });
     expect(
       Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedEvidenceVerification, evidence))
+    ).toBe(true);
+
+    const mismatchedOrganizationVerification = EvidenceVerificationModel.make({
+      ...verification,
+      orgId: SharedIdentity.OrganizationId.make(2),
+    });
+    expect(
+      Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedOrganizationVerification, evidence))
     ).toBe(true);
   });
 

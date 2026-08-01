@@ -458,7 +458,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
           and(
             eq(evidenceVerificationTable.orgId, query.orgId),
             inArray(evidenceVerificationTable.evidenceId, evidenceIds),
-            lte(evidenceVerificationTable.createdAt, DateTime.toEpochMillis(candidate.recordedAt))
+            lte(evidenceVerificationTable.createdAt, knownAt)
           )
         )
         .orderBy(desc(evidenceVerificationTable.createdAt), desc(evidenceVerificationTable.id))
@@ -603,7 +603,6 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         db
           .transaction(
             Effect.fnUntraced(function* (tx) {
-              const resolvedAt = yield* DateTime.now;
               const candidateRows = yield* tx
                 .select()
                 .from(candidateTable)
@@ -617,7 +616,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 });
               }
               const candidate = yield* Effect.fromResult(fromContradictionCandidateRow(candidateRow.value));
-              if (!Eq.equals(candidate.rowVersion, command.expectedCandidateVersion)) {
+              const resolvedAt = yield* DateTime.now;
+              if (
+                DateTime.isLessThan(resolvedAt, candidate.recordedAt) ||
+                !Eq.equals(candidate.rowVersion, command.expectedCandidateVersion)
+              ) {
                 return yield* ContradictionReviewConflict.make({
                   candidateId: command.candidateId,
                   reason: "stale-candidate",

@@ -53,6 +53,17 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "preserves an exact raw locator that ends inside a normalization cluster",
+    Effect.fnUntraced(function* () {
+      const source = "Cafe\u0301 noir";
+      const anchor = yield* locateRawText(source, "Cafe");
+
+      expect(anchor).toEqual({ endChar: 4, quote: "Cafe", startChar: 0 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
+  it.effect(
     "maps a precomposed Hangul locator onto decomposed Jamo source text",
     Effect.fnUntraced(function* () {
       const source = "\u1100\u1161";

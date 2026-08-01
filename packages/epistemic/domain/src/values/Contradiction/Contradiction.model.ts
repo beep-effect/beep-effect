@@ -15,11 +15,12 @@ import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { flow, identity, Order, pipe, Result } from "effect";
+import { DateTime, flow, identity, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
@@ -563,21 +564,8 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
   })
 ) {}
 
-/**
- * Human-reviewable replacement proposed for one conflicting lineage.
- *
- * @example
- * ```ts
- * import { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction"
- *
- * console.log(ContradictionResolutionProposal.fields.proposalDigest !== undefined)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export class ContradictionResolutionProposal extends S.Class<ContradictionResolutionProposal>(
-  $I`ContradictionResolutionProposal`
+class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolutionProposalStruct>(
+  $I`ContradictionResolutionProposalStruct`
 )(
   {
     fact: JsonObject.annotateKey({
@@ -602,6 +590,56 @@ export class ContradictionResolutionProposal extends S.Class<ContradictionResolu
       description: "Exclusive valid-time upper bound of the replacement, when known.",
     }),
   },
+  $I.annote("ContradictionResolutionProposalStruct", {
+    description: "Structural contradiction proposal before its half-open valid interval is checked.",
+  })
+) {}
+
+const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
+const contradictionResolutionProposalStructArbitrary = S.toArbitraryLazy(ContradictionResolutionProposalStruct);
+const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity)
+  .check(
+    S.makeFilter(
+      ({ validFrom, validTo }) =>
+        O.match(validTo, {
+          onNone: () => true,
+          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+        }),
+      {
+        identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
+        title: "Contradiction Resolution Proposal Valid Interval",
+        description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
+        message: "Expected validFrom to be earlier than validTo when validTo is present.",
+      }
+    )
+  )
+  .annotate({
+    toArbitrary: () => (fc) =>
+      contradictionResolutionProposalStructArbitrary(fc).map((proposal) =>
+        ContradictionResolutionProposalStruct.make({
+          ...proposal,
+          validTo: O.filter(proposal.validTo, (upperBound) => validIntervalIsOrdered(proposal.validFrom, upperBound)),
+        })
+      ),
+  });
+
+/**
+ * Human-reviewable replacement proposed for one conflicting lineage.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(ContradictionResolutionProposal.fields.proposalDigest !== undefined)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class ContradictionResolutionProposal extends S.Class<ContradictionResolutionProposal>(
+  $I`ContradictionResolutionProposal`
+)(
+  ContradictionResolutionProposalSchema,
   $I.annote("ContradictionResolutionProposal", {
     description: "Human-reviewable replacement proposed for one conflicting logical lineage.",
   })

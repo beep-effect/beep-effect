@@ -23,16 +23,18 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { O } from "@beep/utils";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Effect, FileSystem, Layer, Match, Path } from "effect";
+import { Cache, Effect, FileSystem, Layer, Match, Path } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
 import type { ResolveSourceTextRequest } from "@beep/file-processing/SourceText";
+import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");
 const LOCATOR_NORMALIZATION_VERSION = "1";
+const CANONICAL_TEXT_CACHE_CAPACITY = 32;
 const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 const utf8Encoder = new TextEncoder();
 const sourceTextDigestEquals = S.toEquivalence(SourceTextDigest);
@@ -181,6 +183,13 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const vaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
+  const canonicalTextCache = yield* Cache.make<SourceTextIdentity, ResolvedSourceText, SourceTextResolverError>({
+    capacity: CANONICAL_TEXT_CACHE_CAPACITY,
+    lookup: () =>
+      Effect.fail(
+        SourceTextResolverError.new("extraction-failed", "Canonical source text must be verified before it is cached.")
+      ),
+  });
 
   return SourceTextResolver.of({
     resolve: Effect.fn("source_text.resolve")((request) =>
@@ -252,35 +261,44 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
           "The source bytes no longer match the pinned source digest."
         );
 
-        const extension = Str.toLowerCase(Str.slice(1)(path.extname(resolvedPath)));
-        const format = classifyFormatFromExtension(extension);
-        const text = yield* Match.value(format).pipe(
-          Match.whenOr("plain-text", "markdown", () => decodeUtf8(bytes, request.identity.extractor)),
-          Match.when("pdf-text-layer", () =>
-            extractDocumentText(request, resolvedPath, extension, "pdf-text-layer", bytes, fileProcessing, path)
-          ),
-          Match.when("docx", () =>
-            extractDocumentText(request, resolvedPath, extension, "docx", bytes, fileProcessing, path)
-          ),
-          Match.orElse(() =>
-            Effect.fail(
-              SourceTextResolverError.new(
-                "extractor-unavailable",
-                `No canonical source-text extractor is available for extension "${extension}".`
+        const cached = yield* Cache.getOption(canonicalTextCache, request.identity);
+        const source = yield* O.match(cached, {
+          onNone: Effect.fn("source_text.resolve.cache_miss")(function* () {
+            const extension = Str.toLowerCase(Str.slice(1)(path.extname(resolvedPath)));
+            const format = classifyFormatFromExtension(extension);
+            const text = yield* Match.value(format).pipe(
+              Match.whenOr("plain-text", "markdown", () => decodeUtf8(bytes, request.identity.extractor)),
+              Match.when("pdf-text-layer", () =>
+                extractDocumentText(request, resolvedPath, extension, "pdf-text-layer", bytes, fileProcessing, path)
+              ),
+              Match.when("docx", () =>
+                extractDocumentText(request, resolvedPath, extension, "docx", bytes, fileProcessing, path)
+              ),
+              Match.orElse(() =>
+                Effect.fail(
+                  SourceTextResolverError.new(
+                    "extractor-unavailable",
+                    `No canonical source-text extractor is available for extension "${extension}".`
+                  )
+                )
               )
-            )
-          )
-        );
-        const textDigest = yield* digestBytes(utf8Encoder.encode(text)).pipe(Effect.provide(crypto));
-        yield* verifyDigest(
-          textDigest,
-          request.identity.textDigest,
-          "text-digest-mismatch",
-          "The canonical text no longer matches the pinned text digest."
-        );
+            );
+            const textDigest = yield* digestBytes(utf8Encoder.encode(text)).pipe(Effect.provide(crypto));
+            yield* verifyDigest(
+              textDigest,
+              request.identity.textDigest,
+              "text-digest-mismatch",
+              "The canonical text no longer matches the pinned text digest."
+            );
+            const resolved = ResolvedSourceText.make({ identity: request.identity, text });
+            yield* Cache.set(canonicalTextCache, request.identity, resolved);
+            return resolved;
+          }),
+          onSome: Effect.succeed,
+        });
 
         yield* Effect.annotateCurrentSpan("source_text.outcome", "resolved");
-        return ResolvedSourceText.make({ identity: request.identity, text });
+        return source;
       }).pipe(
         Effect.tapError((error) =>
           Effect.annotateCurrentSpan({

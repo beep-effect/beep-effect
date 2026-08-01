@@ -622,7 +622,7 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
-        "expands exact beliefs with organization-scoped verification as of candidate time",
+        "expands exact beliefs with organization-scoped verification as of query transaction time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
           const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
@@ -630,13 +630,13 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
           yield* insertVerification(106, 1, seeded.evidenceA, 1_100);
           yield* insertVerification(106, 2, seeded.evidenceA, 1_150);
-          const selected = yield* insertVerification(106, 3, seeded.evidenceA, 1_150);
+          const preCandidateVerification = yield* insertVerification(106, 3, seeded.evidenceA, 1_150);
           const unrelatedAnchor = TextAnchorVerificationReceipt.make({
             anchor: TextAnchor.make({
-              ...selected.verifiedAnchor.anchor,
+              ...preCandidateVerification.verifiedAnchor.anchor,
               quote: "amount B",
             }),
-            source: selected.verifiedAnchor.source,
+            source: preCandidateVerification.verifiedAnchor.source,
           });
           const unrelatedVerification = decodeVerification({
             ...baseEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
@@ -656,7 +656,7 @@ if (!shouldRunPgliteIntegration) {
           const { id: _id, ...uncheckedUnrelatedInsert } = encodedUnrelated;
           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
           const submitted = yield* repository.submit(makeSubmission(106, seeded));
-          yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
+          const selected = yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
 
           const expanded = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
@@ -709,6 +709,45 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           expect(wrongOrganization).toStrictEqual(O.none());
+        }),
+        120_000
+      );
+
+      it.effect(
+        "refuses to record a review before the candidate transaction time",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(110);
+          const repository = yield* ContradictionTriageRepository;
+          const submitted = yield* repository.submit(makeSubmission(110, seeded, { recordedAt: 5_000 }));
+          yield* TestClock.setTime(2_000);
+
+          const conflict = yield* Effect.flip(
+            repository.review(
+              ReviewContradictionCandidate.make({
+                candidateId: submitted.candidate.id,
+                decision: { decision: "reject", reason: "A review cannot predate the candidate." },
+                expectedCandidateVersion: submitted.candidate.rowVersion,
+              }),
+              systemPrincipal,
+              reviewScope(submitted.candidate.orgId)
+            )
+          );
+          expect(ContradictionReviewConflict.is(conflict)).toBe(true);
+          expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
+
+          const detail = yield* repository.get(
+            GetContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(6_000),
+              validAt: instant(1_500),
+            })
+          );
+          expect(
+            pipe(
+              detail,
+              O.flatMap((value) => value.disposition)
+            )
+          ).toStrictEqual(O.none());
         }),
         120_000
       );

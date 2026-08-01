@@ -19,15 +19,17 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Document, Packer, Paragraph, TextRun } from "docx";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import { FastCheck as fc } from "effect/testing";
+import type { ExtractFileOperation } from "@beep/file-processing/Operation";
 
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer);
 const WorkspaceVaultLayer = WorkspaceVaultStoreInMemoryLayer.pipe(
@@ -278,6 +280,59 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
       expect(source.text).toBe(canonicalText);
       expect(source.identity.extractor.version).toBe(DOC_TEXT_ENGINE_VERSION);
     }, provideScopedLayer(ResolverTestLayer))
+  );
+
+  it.effect(
+    "reuses canonical document text while rechecking pinned source bytes",
+    Effect.fnUntraced(function* () {
+      const extractionCount = yield* Ref.make(0);
+      const countingDocTextEngine = {
+        ...DocTextFileProcessingEngine,
+        extract: Effect.fnUntraced(function* (operation: ExtractFileOperation) {
+          yield* Ref.update(extractionCount, N.increment);
+          return yield* DocTextFileProcessingEngine.extract(operation);
+        }),
+      };
+      const countingFileProcessingLayer = makeFileProcessingServiceLayer([countingDocTextEngine]).pipe(
+        Layer.provideMerge(BunCrypto.layer)
+      );
+      const countingResolverTestLayer = WorkspaceSourceTextResolverLayer.pipe(
+        Layer.provideMerge(Layer.mergeAll(PlatformLayer, WorkspaceVaultLayer, countingFileProcessingLayer))
+      );
+
+      yield* Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-source-text-cache-" });
+        const locator = "source.docx";
+        const sourcePath = path.join(root, locator);
+        const bytes = yield* Effect.promise(() => makeDocx("Cached canonical source"));
+        const sourceDigest = yield* digestBytes(bytes);
+        const canonicalText = "Cached canonical source\n\n";
+        const textDigest = yield* digestBytes(new TextEncoder().encode(canonicalText));
+        const identityInput = {
+          extractorName: DocTextFileProcessingEngine.descriptor.name,
+          extractorVersion: DOC_TEXT_ENGINE_VERSION,
+          locator,
+          sourceDigest,
+          textDigest,
+        };
+        const identity = identityFor(identityInput);
+        yield* fs.writeFile(sourcePath, bytes);
+        yield* configureVault(root);
+
+        const first = yield* resolve(identity);
+        const second = yield* resolve(identityFor(identityInput));
+        expect(first.text).toBe(canonicalText);
+        expect(second.text).toBe(canonicalText);
+        expect(yield* Ref.get(extractionCount)).toBe(1);
+
+        yield* fs.writeFile(sourcePath, yield* Effect.promise(() => makeDocx("Drifted source")));
+        const drift = yield* resolve(identity).pipe(Effect.flip);
+        expect(drift.reason).toBe("source-digest-mismatch");
+        expect(yield* Ref.get(extractionCount)).toBe(1);
+      }).pipe(provideScopedLayer(countingResolverTestLayer));
+    })
   );
 
   it.effect(

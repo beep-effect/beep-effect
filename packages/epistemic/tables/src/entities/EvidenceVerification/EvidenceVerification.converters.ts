@@ -68,20 +68,22 @@ const validateEvidenceAssociation = (
   verification: EvidenceVerification,
   evidence: Evidence
 ): Result.Result<EvidenceVerification, S.SchemaError> =>
+  Eq.equals(verification.orgId, evidence.orgId) &&
   Eq.equals(verification.evidenceId, evidence.id) &&
   EvidenceSpan.matchesAnchor(evidence.span, verification.verifiedAnchor.anchor)
     ? Result.succeed(verification)
     : Result.fail(
         new S.SchemaError(
           new SchemaIssue.InvalidValue(O.some(verification.verifiedAnchor.anchor), {
-            message: "Evidence-verification association does not match the referenced evidence id and span.",
+            message:
+              "Evidence-verification association does not match the referenced organization, evidence id, and span.",
           })
         )
       );
 
 /**
  * Convert an EvidenceVerification entity into an insert row after proving its
- * evidence id and verified anchor match the referenced evidence span.
+ * organization, evidence id, and verified anchor match the referenced evidence.
  *
  * The database-managed serial id is omitted so inserts use the table sequence.
  *

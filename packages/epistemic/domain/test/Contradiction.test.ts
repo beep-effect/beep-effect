@@ -151,6 +151,15 @@ describe("Contradiction domain invariants", () => {
     ).toBe(true);
   });
 
+  it("rejects empty or reversed proposal validity intervals", () => {
+    const encoded = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
+    const decode = S.decodeUnknownResult(ContradictionResolutionProposal);
+
+    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);
+    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_001, validTo: 1_000 }))).toBe(true);
+    expect(Result.isSuccess(decode({ ...encoded, validFrom: 1_000, validTo: 1_001 }))).toBe(true);
+  });
+
   it("separates unordered submissions from canonical persisted pairs", () => {
     const reversed = ContradictionBeliefPair.make({ left: right, right: left });
     const reversedBasis = ContradictionMatchBasis.make({
@@ -223,6 +232,14 @@ describe("Contradiction domain invariants", () => {
           expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
             arbitraryAssessment.proposals.length
           );
+          expect(
+            A.every(arbitraryAssessment.proposals, ({ validFrom, validTo }) =>
+              O.match(validTo, {
+                onNone: () => true,
+                onSome: (upperBound) => DateTime.isLessThan(validFrom, upperBound),
+              })
+            )
+          ).toBe(true);
           expect(S.is(CanonicalContradictionBeliefPair)(canonicalPair)).toBe(true);
         }
       ),

@@ -451,12 +451,33 @@ const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor)
     (anchor) => Eq.equals(anchor.startChar, candidate.startChar) && Eq.equals(anchor.endChar, candidate.endChar)
   );
 
-const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<TextAnchor> => {
+const appendRawMatch = (matches: Array<TextAnchor>, sourceText: string, startChar: number, endChar: number): void => {
+  const anchor = TextAnchor.make({
+    endChar: NonNegativeInt.make(endChar),
+    quote: Str.slice(startChar, endChar)(sourceText),
+    startChar: NonNegativeInt.make(startChar),
+  });
+  if (!hasSameRange(matches, anchor)) {
+    A.appendInPlace(matches, anchor);
+  }
+};
+
+const findRawMatches = (
+  sourceText: string,
+  normalizedSource: NormalizedTextWithRawOffsets,
+  locator: string
+): ReadonlyArray<TextAnchor> => {
   // crispen: overlapping-match enumeration is deliberately explicit; replacing
   // it with a first-match combinator would violate the ambiguity contract.
   const normalizedLocator = normalizeTextLocator(locator);
-  const normalizedSource = normalizeWithRawOffsets(sourceText);
   const matches: Array<TextAnchor> = A.empty();
+  let rawStart = indexOfFrom(sourceText, locator, 0);
+
+  while (rawStart >= 0 && A.length(matches) < 2) {
+    appendRawMatch(matches, sourceText, rawStart, rawStart + Str.length(locator));
+    rawStart = indexOfFrom(sourceText, locator, rawStart + 1);
+  }
+
   let normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, 0);
 
   while (normalizedStart >= 0 && A.length(matches) < 2) {
@@ -466,14 +487,7 @@ const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<Text
       onSome: ([startChar, endChar]) => {
         const quote = Str.slice(startChar, endChar)(sourceText);
         if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
-          const anchor = TextAnchor.make({
-            endChar: NonNegativeInt.make(endChar),
-            quote,
-            startChar: NonNegativeInt.make(startChar),
-          });
-          if (!hasSameRange(matches, anchor)) {
-            A.appendInPlace(matches, anchor);
-          }
+          appendRawMatch(matches, sourceText, startChar, endChar);
         }
       },
     });
@@ -483,6 +497,32 @@ const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<Text
 
   return matches;
 };
+
+const locatePreparedRawText = Effect.fnUntraced(function* (
+  sourceText: string,
+  normalizedSource: NormalizedTextWithRawOffsets,
+  locator: string
+): Effect.fn.Return<TextAnchor, VerifiedSpanError> {
+  if (Str.isEmpty(Str.trim(locator))) {
+    return yield* VerifiedSpanError.fromReason("absent-text");
+  }
+  if (Str.length(locator) > MAX_LOCATOR_LENGTH) {
+    return yield* VerifiedSpanError.fromReason("limit-exceeded");
+  }
+
+  const matches = findRawMatches(sourceText, normalizedSource, locator);
+  if (Eq.equals(A.length(matches), 0)) {
+    return yield* VerifiedSpanError.fromReason("not-found");
+  }
+  if (A.length(matches) > 1) {
+    return yield* VerifiedSpanError.fromReason("ambiguous");
+  }
+
+  return yield* O.match(A.head(matches), {
+    onNone: () => Effect.fail(VerifiedSpanError.fromReason("not-found")),
+    onSome: Effect.succeed,
+  });
+});
 
 /**
  * Locate one normalized candidate and recover its unique exact raw slice.
@@ -507,25 +547,14 @@ export const locateRawText = Effect.fn("VerifiedSpan.locateRawText")(function* (
   sourceText: string,
   locator: string
 ): Effect.fn.Return<TextAnchor, VerifiedSpanError> {
-  if (Str.isEmpty(sourceText) || Str.isEmpty(Str.trim(locator))) {
+  if (Str.isEmpty(sourceText)) {
     return yield* VerifiedSpanError.fromReason("absent-text");
   }
-  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH || Str.length(locator) > MAX_LOCATOR_LENGTH) {
+  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH) {
     return yield* VerifiedSpanError.fromReason("limit-exceeded");
   }
 
-  const matches = findRawMatches(sourceText, locator);
-  if (Eq.equals(A.length(matches), 0)) {
-    return yield* VerifiedSpanError.fromReason("not-found");
-  }
-  if (A.length(matches) > 1) {
-    return yield* VerifiedSpanError.fromReason("ambiguous");
-  }
-
-  return yield* O.match(A.head(matches), {
-    onNone: () => Effect.fail(VerifiedSpanError.fromReason("not-found")),
-    onSome: Effect.succeed,
-  });
+  return yield* locatePreparedRawText(sourceText, normalizeWithRawOffsets(sourceText), locator);
 });
 
 /**
@@ -664,10 +693,20 @@ export const locateGroundedExtractions = Effect.fn("VerifiedSpan.locateGroundedE
   sourceText: string,
   extractions: ReadonlyArray<GroundedExtraction>
 ): Effect.fn.Return<ReadonlyArray<TextAnchor>, VerifiedSpanError> {
+  if (Eq.equals(A.length(extractions), 0)) {
+    return [];
+  }
+  if (Str.isEmpty(sourceText)) {
+    return yield* VerifiedSpanError.fromReason("absent-text");
+  }
+  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH) {
+    return yield* VerifiedSpanError.fromReason("limit-exceeded");
+  }
+  const normalizedSource = normalizeWithRawOffsets(sourceText);
   return yield* Effect.forEach(
     extractions,
     (extraction, index) =>
-      locateRawText(sourceText, extraction.text).pipe(
+      locatePreparedRawText(sourceText, normalizedSource, extraction.text).pipe(
         Effect.mapError((error) =>
           VerifiedSpanError.make({
             candidateIndex: NonNegativeInt.make(index),
