@@ -2313,7 +2313,7 @@ export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = compo
 export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = composers.$GovLegalMcpId;
 
 /**
-  * Identity composer for `@beep/epistemic-client`.
+ * Identity composer for `@beep/epistemic-client`.
  *
  * @example
  * ```typescript

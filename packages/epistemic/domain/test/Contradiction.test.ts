@@ -2,6 +2,7 @@ import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradi
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
+  CONTRADICTION_EVIDENCE_SET_MAX_COUNT,
   CONTRADICTION_PROPOSAL_MAX_COUNT,
   ContradictionAssessment,
   ContradictionBeliefPair,
@@ -114,6 +115,19 @@ describe("Contradiction domain invariants", () => {
 
     expect(Result.isFailure(decode({ ...matchBasis, leftEvidenceIds: [duplicate, duplicate] }))).toBe(true);
     expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] }))).toBe(true);
+  });
+
+  it("bounds each evidence set retained by one match basis", () => {
+    const evidenceIds = A.makeBy(CONTRADICTION_EVIDENCE_SET_MAX_COUNT + 1, (index) =>
+      Epistemic.EvidenceId.make(index + 1_000)
+    );
+    const boundedEvidenceIds = A.take(evidenceIds, CONTRADICTION_EVIDENCE_SET_MAX_COUNT);
+    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
+
+    expect(Result.isSuccess(decode({ ...matchBasis, leftEvidenceIds: boundedEvidenceIds }))).toBe(true);
+    expect(Result.isFailure(decode({ ...matchBasis, leftEvidenceIds: evidenceIds }))).toBe(true);
+    expect(Result.isSuccess(decode({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds }))).toBe(true);
+    expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: evidenceIds }))).toBe(true);
   });
 
   it("requires independent evidence sets to be disjoint", () => {

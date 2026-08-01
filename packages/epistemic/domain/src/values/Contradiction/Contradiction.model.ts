@@ -449,7 +449,30 @@ const evidenceIdOrder = Order.mapInput(Order.String, (evidenceId: EpistemicIdent
 const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>): boolean =>
   Eq.equals(A.length(A.dedupeWith(ids, evidenceIdEquivalence)), A.length(ids));
 
+/**
+ * Maximum evidence identifiers retained on either side of one contradiction.
+ *
+ * @example
+ * ```ts
+ * import { CONTRADICTION_EVIDENCE_SET_MAX_COUNT } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(CONTRADICTION_EVIDENCE_SET_MAX_COUNT) // 32
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CONTRADICTION_EVIDENCE_SET_MAX_COUNT = 32;
+
 const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
+  .check(
+    S.isMaxLength(CONTRADICTION_EVIDENCE_SET_MAX_COUNT, {
+      identifier: $I`UniqueNonEmptyEvidenceIdsMaximumLengthCheck`,
+      title: "Contradiction Evidence Set Maximum Count",
+      description: "Checks that either side of one contradiction retains at most 32 evidence identifiers.",
+      message: "Expected at most 32 EvidenceIds in either contradiction evidence set.",
+    })
+  )
   .check(
     S.makeFilter(hasUniqueEvidenceIds, {
       identifier: $I`UniqueNonEmptyEvidenceIdsCheck`,
