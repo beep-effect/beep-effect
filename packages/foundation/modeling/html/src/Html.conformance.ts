@@ -1,5 +1,3 @@
-/// <reference path="./whatwg-url.d.ts" />
-
 /**
  * Pure conformance checks for the generated HTML AST.
  *
@@ -9,6 +7,8 @@
  * @packageDocumentation \@beep/html/Html.conformance
  * @since 0.0.0
  */
+/// <reference path="./whatwg-url.d.ts" />
+
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";

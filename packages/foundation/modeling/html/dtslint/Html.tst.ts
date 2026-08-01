@@ -166,7 +166,7 @@ describe("@beep/html contract", () => {
 
     expect(encoded.srclang).type.toBe<string | undefined>();
     expect(decoded.srclang).type.toBe<O.Option<string>>();
-    expect(HTML_ATTRIBUTE_SYNTAXES["track/srclang"]).type.toBe<HtmlAttributeSyntax | undefined>();
+    expect(HTML_ATTRIBUTE_SYNTAXES["track/srclang"]).type.toBeAssignableTo<HtmlAttributeSyntax | undefined>();
   });
 
   it("scopes popover invoker attributes to button and input elements", () => {

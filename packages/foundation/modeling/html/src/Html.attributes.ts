@@ -688,7 +688,15 @@ export const CrossOrigin = CrossOriginInput.pipe(
 );
 
 /**
- * Type for {@link CrossOrigin}. {@inheritDoc CrossOrigin}
+ * Decoded type of {@link CrossOrigin}.
+ *
+ * @example
+ * ```ts
+ * import type { CrossOrigin } from "@beep/html/Html.attributes"
+ *
+ * const value: CrossOrigin = "anonymous"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -722,7 +730,15 @@ export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
 ]).pipe($I.annoteSchema("ReferrerPolicy", { description: "Canonical HTML referrer-policy keyword." }));
 
 /**
- * Type for {@link ReferrerPolicy}. {@inheritDoc ReferrerPolicy}
+ * Decoded type of {@link ReferrerPolicy}.
+ *
+ * @example
+ * ```ts
+ * import type { ReferrerPolicy } from "@beep/html/Html.attributes"
+ *
+ * const value: ReferrerPolicy = "strict-origin"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -751,7 +767,15 @@ export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
 );
 
 /**
- * Type for {@link Utf8Charset}. {@inheritDoc Utf8Charset}
+ * Decoded type of {@link Utf8Charset}.
+ *
+ * @example
+ * ```ts
+ * import type { Utf8Charset } from "@beep/html/Html.attributes"
+ *
+ * const value: Utf8Charset = "utf-8"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -780,7 +804,15 @@ export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]
 );
 
 /**
- * Type for {@link FormAutocomplete}. {@inheritDoc FormAutocomplete}
+ * Decoded type of {@link FormAutocomplete}.
+ *
+ * @example
+ * ```ts
+ * import type { FormAutocomplete } from "@beep/html/Html.attributes"
+ *
+ * const value: FormAutocomplete = "off"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -826,7 +858,15 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
 );
 
 /**
- * Type for {@link ButtonCommand}. {@inheritDoc ButtonCommand}
+ * Decoded type of {@link ButtonCommand}.
+ *
+ * @example
+ * ```ts
+ * import type { ButtonCommand } from "@beep/html/Html.attributes"
+ *
+ * const value: ButtonCommand = "show-modal"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1109,7 +1149,15 @@ export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), Ht
 );
 
 /**
- * Type for {@link HtmlStep}. {@inheritDoc HtmlStep}
+ * Decoded type of {@link HtmlStep}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlStep } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlStep = "any"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1294,7 +1342,15 @@ export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined,
 );
 
 /**
- * Type for {@link HtmlRelationList}. {@inheritDoc HtmlRelationList}
+ * Decoded type of {@link HtmlRelationList}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlRelationList } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlRelationList = "me x-beep"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1336,7 +1392,15 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
 );
 
 /**
- * Type for {@link LinkRelationList}. {@inheritDoc LinkRelationList}
+ * Decoded type of {@link LinkRelationList}.
+ *
+ * @example
+ * ```ts
+ * import type { LinkRelationList } from "@beep/html/Html.attributes"
+ *
+ * const value: LinkRelationList = "icon"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1366,7 +1430,15 @@ export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
 );
 
 /**
- * Type for {@link HtmlIdReferenceList}. {@inheritDoc HtmlIdReferenceList}
+ * Decoded type of {@link HtmlIdReferenceList}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlIdReferenceList } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlIdReferenceList = "first second"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1421,7 +1493,15 @@ export const MetadataName = MetadataNameInput.pipe(
 );
 
 /**
- * Type for {@link MetadataName}. {@inheritDoc MetadataName}
+ * Decoded type of {@link MetadataName}.
+ *
+ * @example
+ * ```ts
+ * import type { MetadataName } from "@beep/html/Html.attributes"
+ *
+ * const value: MetadataName = "x-beep"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
