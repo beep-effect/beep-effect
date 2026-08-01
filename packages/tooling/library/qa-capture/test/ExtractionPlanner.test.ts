@@ -12,6 +12,7 @@ import {
   mergeOverlappingWindows,
   OVERLAP_MERGE_GAP_MS,
   PlanDriverRequestsOptions,
+  PointerCancelEvent,
   PointerDownEvent,
   PointerEnterEvent,
   PointerLeaveEvent,
@@ -132,6 +133,47 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(window?.endEpochMs).toBe(T0 + 1000 + 300);
     expect(O.isSome(window?.gif ?? O.none())).toBe(true);
     expect(A.length(window?.frameTimesEpochMs ?? [])).toBe(3);
+  });
+
+  it("keeps a cancelled drag as a drag-cancel window with its post-roll", () => {
+    const events = eventsForGesture({ distancePx: 40, durationMs: 1000, kind: "drag", startOffsetMs: 0 }, 0);
+    const [down, move] = events;
+    const cancelled = [
+      ...(down === undefined ? [] : [down]),
+      ...(move === undefined ? [] : [move]),
+      PointerCancelEvent.make({
+        kind: "pointer-cancel",
+        pointerId: 0,
+        selectorPath: '[data-qa="target-0"]',
+        seq: 4,
+        tEpochMs: T0 + 1000,
+        x: 140,
+        y: 100,
+      }),
+    ];
+    const windows = planWindows(cancelled, defaultExtractionRules);
+    expect(A.length(windows)).toBe(1);
+    expect(windows[0]?.ruleKind).toBe("drag");
+    expect(windows[0]?.label).toBe('drag-cancel:[data-qa="target-0"]');
+    expect(windows[0]?.endEpochMs).toBe(T0 + 1000 + 300);
+  });
+
+  it("drops a cancelled press below the drag threshold", () => {
+    const events = eventsForGesture({ distancePx: 0, durationMs: 200, kind: "click", startOffsetMs: 0 }, 0);
+    const [down] = events;
+    const cancelled = [
+      ...(down === undefined ? [] : [down]),
+      PointerCancelEvent.make({
+        kind: "pointer-cancel",
+        pointerId: 0,
+        selectorPath: '[data-qa="target-0"]',
+        seq: 4,
+        tEpochMs: T0 + 200,
+        x: 100,
+        y: 100,
+      }),
+    ];
+    expect(A.length(planWindows(cancelled, defaultExtractionRules))).toBe(0);
   });
 
   it("classifies sub-threshold pointer travel as a click strip", () => {

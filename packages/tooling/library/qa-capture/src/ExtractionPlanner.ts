@@ -296,6 +296,28 @@ export const planWindows: {
         closeSpanEvent(animationRule, open, event, `animation:${event.animationName}@${event.selectorPath}`);
       },
       marker: (event) => pushSpan(markerRule, event.tEpochMs, event.tEpochMs, `marker:${event.label}`, [event.seq]),
+      "pointer-cancel": (event) => {
+        const open = MutableHashMap.get(state.openPointers, event.pointerId);
+        MutableHashMap.remove(state.openPointers, event.pointerId);
+        O.match(open, {
+          onNone: () => undefined,
+          onSome: (tracked) => {
+            const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
+            const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
+            // A cancelled press below the drag threshold left nothing on
+            // screen worth judging; a cancelled drag must show the
+            // post-cancel reset, so it keeps the drag window (and its
+            // post-roll) under a label the judge can tell apart.
+            if (isDrag) {
+              pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag-cancel:${tracked.down.selectorPath}`, [
+                tracked.down.seq,
+                event.seq,
+              ]);
+            }
+            return undefined;
+          },
+        });
+      },
       "pointer-down": (event) =>
         MutableHashMap.set(state.openPointers, event.pointerId, { down: event, maxDistancePx: 0 }),
       "pointer-enter": (event) => MutableHashMap.set(state.openHovers, event.selectorPath, event),
