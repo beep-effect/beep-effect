@@ -40,6 +40,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
+  research-stage: wave 2 of the legal/patent ontology-KG strand
+  (`legal-ontology-landscape` graduated into
+  [`semantic-foundation`](../goals/semantic-foundation/README.md)); mine a
+  hand-curated corpus (~120 papers, ~24 repos, FOPNet priority thread) via
+  codex-inside-Workflow, four sequential deep-research tracks, post-synthesis
+  /adhd; endpoint = nugget catalog + ROUTING-SEED + HANDOFF, shaping gated on
+  sign-off (8 decisions locked 2026-08-01).
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill

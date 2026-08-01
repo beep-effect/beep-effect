@@ -12,6 +12,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
+import { GENERATED_MANAGERS } from "./box.surface.ts";
 import type { PlatformError } from "effect";
 
 const $I = $BoxId.create("scripts/generate");
@@ -19,6 +20,13 @@ const $I = $BoxId.create("scripts/generate");
 const scriptDir = import.meta.dirname;
 
 const BYTE_OR_EVENT_PATTERN = /\b(?:ByteStream|EventStream)\b/;
+
+// Model cross-references in generated schema expressions are always emitted as
+// `S.suspend(() => Name)` by `schemaForReference`, so this is the whole edge set
+// of the declaration graph the reachability prune walks.
+const SUSPEND_REFERENCE_PATTERN = /S\.suspend\(\(\) => ([A-Za-z_$][A-Za-z0-9_$]*)\)/g;
+
+const GENERATED_MODELS_MODULE = "Box.models.gen";
 
 /**
  * The declaration flavour extracted from a Box SDK type surface: an `interface`,
@@ -100,6 +108,7 @@ class ManagerProperty extends S.Class<ManagerProperty>($I`ManagerProperty`)(
 class BoxSdkPaths extends S.Class<BoxSdkPaths>($I`BoxSdkPaths`)(
   {
     clientPath: S.String,
+    handWrittenSourceRoot: S.String,
     modelsOutputPath: S.String,
     operationsOutputPath: S.String,
     schemaDirectories: S.Array(S.String),
@@ -668,6 +677,114 @@ const sortDeclarations = (declarations: ReadonlyArray<GeneratedDeclaration>): Re
   return sorted;
 };
 
+const referencedDeclarationNames = (expression: string): ReadonlyArray<string> =>
+  A.getSomes(
+    A.map(A.fromIterable(expression.matchAll(SUSPEND_REFERENCE_PATTERN)), (match) => O.fromNullishOr(match[1]))
+  );
+
+const declarationExpressions = (declaration: GeneratedDeclaration): ReadonlyArray<string> => {
+  const fieldExpressions = A.map(declaration.fields ?? A.empty<GeneratedField>(), (field) => field.schemaExpression);
+  return declaration.schemaExpression === undefined
+    ? fieldExpressions
+    : A.append(fieldExpressions, declaration.schemaExpression);
+};
+
+// Every declaration name a single declaration depends on: its `.extend` base
+// class plus every `S.suspend` reference in its own schema expressions.
+const declarationReferences = (declaration: GeneratedDeclaration): ReadonlyArray<string> => {
+  const references = A.flatMap(declarationExpressions(declaration), referencedDeclarationNames);
+  return declaration.baseName === undefined ? references : A.prepend(references, declaration.baseName);
+};
+
+/**
+ * Walk the declaration graph from `roots`, following `S.suspend` references and
+ * `.extend` base names, and return every declaration name that must be emitted.
+ */
+const reachableDeclarationNames = (
+  declarations: ReadonlyArray<GeneratedDeclaration>,
+  roots: ReadonlyArray<string>
+): MutableHashSet.MutableHashSet<string> => {
+  const declarationsByName = HashMap.fromIterable(
+    A.map(declarations, (declaration) => [declaration.name, declaration] as const)
+  );
+  const reached = MutableHashSet.empty<string>();
+
+  const visit = (name: string): void => {
+    if (MutableHashSet.has(reached, name)) {
+      return;
+    }
+    MutableHashSet.add(reached, name);
+
+    pipe(
+      HashMap.get(declarationsByName, name),
+      O.match({
+        onNone: () => {},
+        onSome: (declaration) => A.forEach(declarationReferences(declaration), visit),
+      })
+    );
+  };
+
+  for (const root of roots) {
+    visit(root);
+  }
+
+  return reached;
+};
+
+// `M.Foo` in a value position.
+const propertyAccessMemberName = (node: ts.Node, alias: string): string | undefined =>
+  ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === alias
+    ? node.name.text
+    : undefined;
+
+// `M.Foo` in a type position.
+const qualifiedMemberName = (node: ts.Node, alias: string): string | undefined =>
+  ts.isQualifiedName(node) && ts.isIdentifier(node.left) && node.left.text === alias ? node.right.text : undefined;
+
+const aliasMemberName = (node: ts.Node, alias: string): string | undefined =>
+  propertyAccessMemberName(node, alias) ?? qualifiedMemberName(node, alias);
+
+const namespaceMemberNames = (sourceFile: ts.SourceFile, alias: string): ReadonlyArray<string> => {
+  let names = A.empty<string>();
+
+  const visit = (node: ts.Node): void => {
+    const member = aliasMemberName(node, alias);
+    if (member !== undefined) {
+      names = A.append(names, member);
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  ts.forEachChild(sourceFile, visit);
+  return names;
+};
+
+const isGeneratedModelsImport = (statement: ts.Statement): statement is ts.ImportDeclaration =>
+  ts.isImportDeclaration(statement) &&
+  ts.isStringLiteral(statement.moduleSpecifier) &&
+  Str.includes(GENERATED_MODELS_MODULE)(statement.moduleSpecifier.text);
+
+const generatedModelsImportBindings = (statement: ts.Statement): ts.NamedImportBindings | undefined =>
+  isGeneratedModelsImport(statement) ? statement.importClause?.namedBindings : undefined;
+
+const bindingModelNames = (sourceFile: ts.SourceFile, bindings: ts.NamedImportBindings): ReadonlyArray<string> =>
+  ts.isNamespaceImport(bindings)
+    ? namespaceMemberNames(sourceFile, bindings.name.text)
+    : A.map(bindings.elements, (element) => (element.propertyName ?? element.name).text);
+
+const importedModelNames = (sourceFile: ts.SourceFile): ReadonlyArray<string> => {
+  let names = A.empty<string>();
+
+  for (const statement of sourceFile.statements) {
+    const bindings = generatedModelsImportBindings(statement);
+    if (bindings !== undefined) {
+      names = A.appendAll(names, bindingModelNames(sourceFile, bindings));
+    }
+  }
+
+  return names;
+};
+
 const sourceFileFor = Effect.fn("Box.generate.sourceFileFor")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
@@ -675,10 +792,11 @@ const sourceFileFor = Effect.fn("Box.generate.sourceFileFor")(function* (filePat
 });
 
 const findFiles: (
-  directory: string
+  directory: string,
+  include: (filePath: string) => boolean
 ) => Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fn(
   "Box.generate.findFiles"
-)(function* (directory: string) {
+)(function* (directory: string, include: (filePath: string) => boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = yield* fs.readDirectory(directory);
@@ -688,14 +806,22 @@ const findFiles: (
       const entryPath = path.join(directory, entry);
       const info = yield* fs.stat(entryPath);
       if (info.type === "Directory") {
-        return yield* findFiles(entryPath);
+        return yield* findFiles(entryPath, include);
       }
-      return Str.endsWith(".d.ts")(entryPath) ? A.of(entryPath) : A.empty<string>();
+      return include(entryPath) ? A.of(entryPath) : A.empty<string>();
     }),
     { concurrency: "unbounded" }
   );
   return A.sort(A.flatten(nested), ascending);
 });
+
+const isDeclarationFile = Str.endsWith(".d.ts");
+
+// The driver's own hand-written sources are a second root set for the model
+// closure: `Box.streaming.ts` supplies the byte/event operations the generator
+// deliberately skips, and still needs their payload models emitted.
+const isHandWrittenSourceFile = (filePath: string): boolean =>
+  Str.endsWith(".ts")(filePath) && !Str.includes("_generated")(filePath);
 
 const writeGeneratedFile = Effect.fn("Box.generate.writeGeneratedFile")(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -704,14 +830,37 @@ const writeGeneratedFile = Effect.fn("Box.generate.writeGeneratedFile")(function
   yield* fs.writeFileString(filePath, `${Str.trimEnd(content)}\n`);
 });
 
+// Walk up for the installed SDK rather than assuming it sits in the repo root's
+// node_modules: git worktrees have no node_modules of their own and resolve
+// against the primary checkout.
+const findSdkRoot = Effect.fn("Box.generate.findSdkRoot")(function* (startDirectory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let directory = startDirectory;
+
+  for (;;) {
+    const candidate = path.resolve(directory, "node_modules/box-node-sdk");
+    if (yield* fs.exists(candidate)) {
+      return candidate;
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) {
+      return yield* Effect.die(
+        `Could not find node_modules/box-node-sdk above ${startDirectory}. Run bun install first.`
+      );
+    }
+    directory = parent;
+  }
+});
+
 const resolveBoxPaths = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
-  const repoRoot = path.resolve(scriptDir, "../../../..");
   const packageRoot = path.resolve(scriptDir, "..");
-  const sdkRoot = path.resolve(repoRoot, "node_modules/box-node-sdk");
+  const sdkRoot = yield* findSdkRoot(packageRoot);
   const generatedRoot = path.resolve(packageRoot, "src/_generated");
   return {
     clientPath: path.resolve(sdkRoot, "lib/client.d.ts"),
+    handWrittenSourceRoot: path.resolve(packageRoot, "src"),
     modelsOutputPath: path.resolve(generatedRoot, "Box.models.gen.ts"),
     operationsOutputPath: path.resolve(generatedRoot, "Box.operations.gen.ts"),
     schemaDirectories: [path.resolve(sdkRoot, "lib/schemas"), path.resolve(sdkRoot, "lib/managers")],
@@ -774,6 +923,20 @@ const collectDeclarations = Effect.fn("Box.generate.collectDeclarations")(functi
   }
 
   return sortDeclarations(declarations);
+});
+
+const collectHandWrittenModelRoots = Effect.fn("Box.generate.collectHandWrittenModelRoots")(function* (
+  sourceRoot: string
+) {
+  const files = yield* findFiles(sourceRoot, isHandWrittenSourceFile);
+  let names = A.empty<string>();
+
+  for (const file of files) {
+    const sourceFile = yield* sourceFileFor(file);
+    names = A.appendAll(names, importedModelNames(sourceFile));
+  }
+
+  return A.dedupe(A.sort(names, ascending));
 });
 
 const collectManagerProperties = Effect.fn("Box.generate.collectManagerProperties")(function* (clientPath: string) {
@@ -1432,9 +1595,11 @@ export const makeGeneratedOperations = (client: unknown, runSdkCall: BoxRunSdkCa
 
 const generate = Effect.gen(function* () {
   const paths = yield* resolveBoxPaths();
-  const sourceFiles = yield* Effect.forEach(paths.schemaDirectories, findFiles, { concurrency: "unbounded" }).pipe(
-    Effect.map(A.flatten)
-  );
+  const sourceFiles = yield* Effect.forEach(
+    paths.schemaDirectories,
+    (directory) => findFiles(directory, isDeclarationFile),
+    { concurrency: "unbounded" }
+  ).pipe(Effect.map(A.flatten));
   const declarationNames = yield* collectDeclarationNames(sourceFiles);
   const nonJsonDeclarationNames = yield* collectNonJsonDeclarationNames(sourceFiles);
   const state: GenerationState = {
@@ -1443,16 +1608,66 @@ const generate = Effect.gen(function* () {
     nonJsonDeclarationNames,
   };
   const declarations = yield* collectDeclarations(sourceFiles, state);
-  const managerProperties = yield* collectManagerProperties(paths.clientPath);
+  const allManagerProperties = yield* collectManagerProperties(paths.clientPath);
+
+  // Demand-scoped surface: only the managers named in `box.surface.ts` are
+  // wrapped. See goals/box-typecheck-cost/SPEC.md.
+  const allowedManagers = MutableHashSet.fromIterable(GENERATED_MANAGERS);
+  const managerProperties = A.filter(allManagerProperties, (property) =>
+    MutableHashSet.has(allowedManagers, property.managerName)
+  );
+  const droppedManagers = A.filter(
+    A.map(allManagerProperties, (property) => property.managerName),
+    (managerName) => !MutableHashSet.has(allowedManagers, managerName)
+  );
+  const unknownManagers = A.filter(
+    GENERATED_MANAGERS,
+    (managerName) => !A.some(allManagerProperties, (property) => property.managerName === managerName)
+  );
+
   const methods = yield* collectManagerMethods(managerProperties, state, paths.sdkRoot);
 
-  yield* writeGeneratedFile(paths.modelsOutputPath, renderModelsFile(declarations, methods.generated, methods.wrapped));
+  // Model roots come from the kept operations plus the driver's own hand-written
+  // sources; everything else is pruned by reachability.
+  const handWrittenRoots = yield* collectHandWrittenModelRoots(paths.handWrittenSourceRoot);
+  const operationRoots = A.flatMap(methods.generated, (method) =>
+    A.appendAll(
+      referencedDeclarationNames(method.successSchemaExpression),
+      A.flatMap(method.parameters, (parameter) => referencedDeclarationNames(parameter.schemaExpression))
+    )
+  );
+  const reachable = reachableDeclarationNames(declarations, A.appendAll(operationRoots, handWrittenRoots));
+  const keptDeclarations = A.filter(declarations, (declaration) => MutableHashSet.has(reachable, declaration.name));
+
+  yield* writeGeneratedFile(
+    paths.modelsOutputPath,
+    renderModelsFile(keptDeclarations, methods.generated, methods.wrapped)
+  );
   yield* writeGeneratedFile(paths.operationsOutputPath, renderOperationsFile(methods.generated));
 
   const constrainedTypes = A.sort(A.fromIterable(state.constrainedTypes), ascending);
 
-  yield* Effect.log(`Generated ${A.length(declarations)} Box model schemas.`);
+  yield* Effect.log(
+    `Generated ${A.length(keptDeclarations)} Box model schemas (pruned ${
+      A.length(declarations) - A.length(keptDeclarations)
+    } unreachable of ${A.length(declarations)}).`
+  );
   yield* Effect.log(`Generated ${A.length(methods.generated)} Box JSON operations.`);
+  yield* Effect.log(
+    `Wrapped ${A.length(managerProperties)} of ${A.length(allManagerProperties)} SDK managers. Dropped ${A.length(
+      droppedManagers
+    )}: ${A.match(droppedManagers, {
+      onEmpty: () => "none",
+      onNonEmpty: (values) => A.join(A.sort(values, ascending), ", "),
+    })}.`
+  );
+  yield* A.match(unknownManagers, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (values) =>
+      Effect.logWarning(
+        `box.surface.ts names ${A.length(values)} manager(s) absent from BoxClient: ${A.join(values, ", ")}.`
+      ),
+  });
   yield* Effect.log(
     `Skipped ${A.length(methods.skipped)} byte/event operations: ${A.match(methods.skipped, {
       onEmpty: () => "none",

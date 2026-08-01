@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        {
+          "eventIds": [53, 56],
+          "kind": "frame",
+          "path": "frames/drag-w4_00003.png"
+        },
+        {
+          "eventIds": [64, 65],
+          "kind": "frame",
+          "path": "frames/drag-w4_00004.png"
+        }
+      ],
+      "fix": "Route pointercancel through the same synchronous drag teardown as pointerup, including releasing pointer capture and clearing the active sash state before the next paint.",
+      "id": "R2-01",
+      "lens": "cancel-reset",
+      "repro": "Begin dragging the constrained-layout sash, dispatch pointercancel at seq 64, and inspect the next frame before the subsequent pointer move; the sash remains bright blue instead of matching the pre-gesture frame.",
+      "severity": "P1",
+      "title": "Pointer cancellation leaves the sash in its active drag state"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [244, 246, 247],
+          "kind": "frame",
+          "path": "frames/drag-w20_00000.png"
+        },
+        {
+          "eventIds": [251, 267, 268],
+          "kind": "frame",
+          "path": "frames/drag-w20_00002.png"
+        },
+        {
+          "eventIds": [267, 268],
+          "kind": "screenshot",
+          "path": "escape-cancels-tab-drag--after-escape.png"
+        }
+      ],
+      "fix": "Snapshot the focused tab when the drag begins and restore it during Escape teardown after clearing drag and drop-preview state.",
+      "id": "R2-02",
+      "lens": "cancel-reset",
+      "repro": "Focus Notes, start dragging Brief toward Outline, press Escape at seq 267, then release; the post-cancel frame retains the focus-visible outline on Brief instead of restoring the pre-gesture Notes focus state.",
+      "severity": "P1",
+      "title": "Escape leaves focus on the canceled dragged tab"
+    }
+  ],
+  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
+  "requiredCount": 2,
+  "round": 2,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

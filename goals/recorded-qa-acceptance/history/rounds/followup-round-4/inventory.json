@@ -1,0 +1,30 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        { "eventIds": [], "kind": "frame", "path": "frames/drag-w4_00003.png" },
+        {
+          "eventIds": [62, 63],
+          "kind": "frame",
+          "path": "frames/drag-w4_00004.png"
+        },
+        {
+          "eventIds": [69],
+          "kind": "frame",
+          "path": "frames/drag-w4_00005.png"
+        }
+      ],
+      "fix": "Route pointercancel through the same synchronous teardown as pointerup: clear the active sash and resize state, release pointer capture, and ignore subsequent moves for the canceled pointer without waiting for pointerup.",
+      "id": "R4-01",
+      "lens": "cancel-reset",
+      "repro": "Begin dragging the constrained-layout sash, dispatch pointercancel, then move the pointer before releasing it; the next frame still shows the bright-blue active sash until the later pointerup.",
+      "severity": "P1",
+      "title": "Pointer cancellation leaves the sash active until pointerup"
+    }
+  ],
+  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
+  "requiredCount": 1,
+  "round": 4,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

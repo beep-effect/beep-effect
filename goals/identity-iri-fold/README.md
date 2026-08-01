@@ -8,10 +8,11 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Repopulate `@beep/ontology` around the identity composer’s `$I.key`,
-`$I.class`, and `$I.ontology` fold, then ship validated assembled ontologies,
-pure JSON-LD/context/Turtle/Markdown projections, and the ratified FOLIO
-annotation migrations.
+Repopulate `@beep/ontology` around the split authoring surface — composer
+`$I.key`/`$I.class` writers in `@beep/identity` and the `Ontology.fold`
+entrypoint in `@beep/ontology` — then ship validated predicate-open assembled
+ontologies, pure JSON-LD/context/Turtle/Markdown projections, the ratified
+FOLIO annotation migrations, and the vocab term-inventory codegen.
 
 ## Launch
 
@@ -33,16 +34,25 @@ annotation migrations.
 ## Current Phase
 
 P0 Contract and donor audit: confirm the completed-retained core surface,
-freeze the tuple grammar/diagnostics boundary, inventory the live FOLIO
-migration sites, and reconcile the on-disk projection donors before editing.
+recover the fold prototype from commit `61160e1baf` (two-donor merge with
+`explorations/identity-as-iri/assets/ontology-prototype/`), freeze the tuple grammar/diagnostics boundary,
+inventory the live FOLIO migration sites with counts, and audit barrel
+coexistence before editing.
 
 ## Latest Evidence
 
 Dependency satisfied: [`identity-iri-core`](../identity-iri-core/README.md) is
 completed-retained (5/5), merged through PR #289.
 
+2026-07-31 pre-execution grill (recorded in the exploration
+[`DECISIONS.md`](../../explorations/identity-as-iri/DECISIONS.md)): packaging
+superseded to the split surface; SKOS collapsed into the fact channel; inline
+`is:` sugar closed as not planned; four hardening acceptance items and the
+in-packet vocab codegen adopted into `SPEC.md`.
+
 ## Notes
 
 The sequence is strict: core → fold → fibered. `identity-iri-fibered` remains
 held until this packet lands. Do not absorb the Fibered kit, registry/store
-layers, or SHACL projection.
+layers, or SHACL projection. `@beep/ontology` repopulation is additive: the
+FOLIO models and semantic-foundation M1 taxonomy surface stay in place.

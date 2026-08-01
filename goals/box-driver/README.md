@@ -9,6 +9,14 @@ Implementation complete. The full `@beep/box` driver shipped in merge commit
 Current generated artifacts expose 85 manager groups, 333 JSON operations, and
 531 model schemas, with byte/event operations supplied by `Box.streaming.ts`.
 
+> **Superseded mission framing (2026-08-01).** The "full-surface" framing below
+> is historical. `goals/box-typecheck-cost` scopes the generated surface to
+> declared demand (9 of 85 managers) because the full surface costs ~4.8M type
+> instantiations in `Box.models.gen.ts` alone. That packet contradicts none of
+> the 10 locked `keyDecisions` here — `generate-from-sdk-types` and
+> `pragmatic-generated-fidelity` both continue to bind; only the generator's
+> input scope changes.
+
 ## Mission
 
 Implement a robust `@beep/box` driver that wraps the full `box-node-sdk` v10.11.1

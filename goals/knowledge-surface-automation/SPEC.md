@@ -256,18 +256,31 @@ any materializer or publish path exists.
 Load-bearing risk: ownership misclassification overwriting authored knowledge — hence
 whole-file ownership preference, golden tests, and patch-not-overwrite on drifted regions.
 
-## Remaining decisions to grill (P2)
+## Remaining decisions to grill (P2) — RATIFIED 2026-08-01
 
-- Capability slug naming conventions and granularity (D).
-- Which external skills get warehouse treatment first; resolved upstream repo+commit for
-  each skills.sh-sourced skill (B).
-- `beep:ref` comment placement conventions and which surfaces count as "durable
-  high-churn" for dual-write (A).
-- Context-bloat pruning candidates in CLAUDE.md/AGENTS.md — present as a diff with
-  token-weight estimates (C).
-- Renovate vs scheduled agent session as the update trigger (B) — Renovate recommended;
-  confirm.
-- `ops/evidence.json` shape and which yeet lanes mint receipts (D↔C shared primitive).
+The P2 grill session is complete. All 24 decisions (this list plus the open questions in
+the three `research/p1-*.md` documents) are ratified in
+`research/p2-grill-decisions.md`, which is doctrine of equal standing with this SPEC:
+do not relitigate in implementation PRs. One-line outcomes:
+
+- Capability slugs (D): strict two-segment `S.TemplateLiteral`, durable abilities only,
+  no aliases in v1, informational collisions, ratcheted duplicate findings,
+  schema-rejected self-cycles (→ D1–D6).
+- Evaluator semantics (D): frontier-only `executionCapable` exclusion with annotated
+  routing; strand + re-declare for superseded/reference providers (→ D7–D8).
+- Evidence receipts (D↔C): `goal-evidence/v1` append-only ledger; mint lanes are
+  publish, strict closeout, and reflect — never bare verify (→ D9–D10).
+- Warehouse (B): full `skills-lock/v2` shape as audited; wave 1 = all 8 resolved
+  entries with shadcn as provenance pilot; Renovate confirmed; two-strike hunk rule for
+  patch→guide promotion (→ B1–B4).
+- References (A): same-line trailing + heading-scope `beep:ref`; dual-write on
+  portfolio surfaces only in v1 (→ A1–A2).
+- Self-proving docs (C): no archival opt-ins before Stage 2; info-string fence tokens;
+  reserved option-probe class; fail-closed `--base`; digest-level index-drift;
+  measured-hybrid document identity; zero-FP promotion window; CI-generated
+  baseline-only PRs (→ C1–C8).
+- Context-bloat pruning candidates in CLAUDE.md/AGENTS.md remain a queued deliverable
+  (diff + token-weight estimates), not a grill decision.
 
 ## Spin-off explorations to capture (not built here)
 
