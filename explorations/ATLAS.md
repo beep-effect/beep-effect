@@ -40,6 +40,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
+  spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
+  instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
+  frontmatter) actually change agent behavior, so context pruning becomes
+  empirical instead of taste; candidate backend is the
+  agent-effectiveness-loop Phoenix substrate.
+- [`bitemporal-goal-roadmap`](./bitemporal-goal-roadmap/README.md) — capture-stage
+  spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
+  and named sibling of
+  [`goals/epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md):
+  `beep goals next --as-of <commit|date>` replays the capability roadmap graph
+  over an event ledger; deliberately outside Workstream D's now-view v1.
 - [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
