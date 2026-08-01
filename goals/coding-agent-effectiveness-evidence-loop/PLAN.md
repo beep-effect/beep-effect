@@ -2,15 +2,19 @@
 
 ## Status
 
-Status: `pending` (packet opened 2026-07-31; no phase has started)
+Status: `in-progress` (packet opened 2026-07-31; P1 instrument-verification
+spike ran 2026-08-01 and passed — see
+`research/2026-08-01-p1-hook-semantics-spike.md`)
 
-**Current phases (single authority for `/goal` executors):** none until the
-packet PR lands. On landing, the current work is exactly: the P1
-instrument-verification spike (its **First step** below) first, with P0
-storage-cutover preparation permitted in parallel by a separate actor. P2–P8
-are not current until the manifest marks their predecessors' exit criteria
-met; the "proceeds in parallel" notes below describe scheduling intent
-between phases, never permission to start ahead of this section.
+**Current phases (single authority for `/goal` executors):** P1 is current.
+Its **First step** (hook-semantics verification) is **complete**: all three
+wait classes emit distinguishable, sessionId-bearing events, so `HookPulseV1`
+schema authoring may now begin — subject to the five spike amendments folded
+into the P1 section below. P0 storage-cutover preparation is permitted in
+parallel by a separate actor. P2–P8 are not current until the manifest marks
+their predecessors' exit criteria met; the "proceeds in parallel" notes below
+describe scheduling intent between phases, never permission to start ahead of
+this section.
 
 Numbering map to the source audit plan (scratch/codex thread + ADHD
 amendments): audit P0→P0, P0.5→P1, P1→P2, P1.5→P3, P2→P4, P3→P5, P4→P6,
@@ -21,7 +25,7 @@ P5→P7, P6→P8.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Storage cutover + identity registry | pending | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. |
-| P1 Sequence-break instrument | pending | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured, notifications live, interrupted time-series recorded; breaker kills retry storms. |
+| P1 Sequence-break instrument | in-progress | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured, notifications live, interrupted time-series recorded; breaker kills retry storms. (First step done 2026-08-01: hook semantics verified.) |
 | P2 Telemetry-v2 truth model | pending | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
 | P3 Yeet mistrial + proof durability | pending | Exhibit-required verdicts, mistrial outcome, per-lane durable proofs, `yeet doctor`. | Exhibit-less failure undecodable; interrupted publish resumes as cache hit; doctor names blocking edge. |
 | P4 Replay, dedup, trust gates | pending | Replay all raw history into v2; replay-twice-diff determinism; gates pass. | Zero duplicate identities; attestation coverage ≥95%; score families replace composite. |
@@ -53,18 +57,40 @@ The headline wait (plan-approval p95 105 min) needs hooks and timestamps,
 not the telemetry rebuild. P2–P4 proceed in parallel but are off this
 phase's critical path.
 
-- **First step (before any schema):** in one scratch clone, wire
-  Notification / UserPromptSubmit / Stop / SessionEnd hook entries invoking
-  a one-line append script; deliberately trigger a plan approval, a
-  permission prompt, and a 60s idle; confirm each wait class emits a
-  distinguishable sessionId-bearing event. **Load-bearing risk:** hook
-  firing semantics for the plan-approval path are unverified on this
-  harness — validate the instrument before trusting any number.
+- **First step (before any schema): DONE 2026-08-01** — verified on Claude
+  Code 2.1.220 across four real sessions; full evidence in
+  `research/2026-08-01-p1-hook-semantics-spike.md`. All three wait classes
+  emit distinguishable sessionId-bearing events, so the load-bearing risk is
+  retired. The spike also invalidated three design assumptions; the
+  amendments below are binding on the schema work.
+- **Spike amendments (binding):**
+  1. The hook set is **six** events — `PreToolUse` and `PostToolUse` join
+     Notification / UserPromptSubmit / Stop / SessionEnd. `PreToolUse` is
+     the canonical wait-**start** marker and the only carrier of tool
+     identity (the permission Notification message omits the tool name);
+     `PostToolUse` is the only wait-**end** marker.
+  2. `waitReason` derives from `PreToolUse.tool_name`
+     (`ExitPlanMode` ⇒ plan approval), never from Notification message
+     text — `notification_type` is `permission_prompt` for both tool
+     permissions and plan approvals. Unmatched shapes yield `unknown`.
+  3. Wait spans model **open brackets** as first-class state: a rejected
+     plan or a crash yields a start with no end.
+  4. Lease renewal must not treat `Stop` as a turn boundary — plan-mode
+     turns emit no `Stop`, and the 60s idle Notification is Stop-gated, so
+     plan-parked sessions are invisible to idle-based detection.
+  5. The whitelist projection happens **in the hook writer**: raw payloads
+     carry `prompt`, `last_assistant_message`, `tool_input`, and
+     `tool_response`, so privacy-by-unrepresentability cannot be a
+     downstream filter.
 - `hook-pulse`: one script appending schema-versioned NDJSON
-  (`HookPulseV1`: sessionId, clone cwd, agent kind, hookEvent, notifierRev,
-  ts) to `${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence/hook-events/`. Schema
+  (`HookPulseV1`: sessionId, clone cwd, agent kind, hookEvent, toolName,
+  waitReason, notifierRev, ts) to
+  `${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence/hook-events/`. Schema
   defined in effect/Schema even though the writer is zsh+jq, so P4 replay
-  ingests these files as first-class raw history.
+  ingests these files as first-class raw history. Fixtures must include a
+  no-match Notification case: jq's `capture()` returns an empty stream on
+  no-match, which silently annihilates the whole output object while the
+  fail-open script still exits 0 (this defect was caught in the spike).
 - Notifications: ntfy desktop/phone push on plan-approval and permission
   blocks, with an escalation ladder and per-session storm damping (one ping
   per retry storm). Stretch: remote Approve/Deny action buttons bridging to

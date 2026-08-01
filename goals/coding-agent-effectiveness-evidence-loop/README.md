@@ -38,15 +38,24 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Packet opened (docs-only PR). Next concrete action: P1's instrument
-verification spike — wire Notification/UserPromptSubmit/Stop/SessionEnd
-hooks in one scratch clone and confirm each wait class emits a
-distinguishable, sessionId-bearing event — in parallel with P0's storage
-cutover preparation. See [`PLAN.md`](./PLAN.md).
+P1 is in progress. Its instrument-verification first step passed on
+2026-08-01: all three wait classes (tool permission, plan approval, 60s
+idle) emit distinguishable, sessionId-bearing hook events. Next concrete
+action: author `HookPulseV1` in effect/Schema under the five binding spike
+amendments in [`PLAN.md`](./PLAN.md) — most importantly a six-event hook set
+(`PreToolUse`/`PostToolUse` added) with `waitReason` derived from
+`PreToolUse.tool_name`. P0 storage-cutover preparation may proceed in
+parallel by a separate actor.
 
 ## Latest Evidence
 
-Not started (packet-creation PR is the first artifact).
+[`research/2026-08-01-p1-hook-semantics-spike.md`](./research/2026-08-01-p1-hook-semantics-spike.md) —
+43 hook events across 4 real Claude Code 2.1.220 sessions. Measured: plan
+approval bracketed at 82s and tool permission at 99s via
+`PreToolUse`→`PostToolUse`; idle notification at exactly 60s after `Stop`
+(twice); `SIGKILL` emits no `SessionEnd` (confirms P2's tombstone
+requirement); plan-mode turns emit no `Stop`; ledger privacy sweep clean
+across all 43 events.
 
 ## Notes
 
