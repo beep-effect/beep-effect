@@ -21,6 +21,8 @@ const TRAILING_ZEROS_PATTERN = /0+$/u;
 
 type DensityKey = string;
 type ParsedDescriptor = readonly [profile: "width", value: string] | readonly [profile: "density", value: DensityKey];
+type ParsedCandidate = readonly [descriptor: ParsedDescriptor, position: number, hasSeparator: boolean];
+type ParsedCandidateUrl = readonly [position: number, hasSeparator: boolean];
 
 const BIGINT_ZERO = BI.BigInt(0);
 const BIGINT_NEGATIVE_ONE = BI.BigInt(-1);
@@ -37,47 +39,23 @@ const characterAtIs = (input: string, index: number, expected: string): boolean 
     O.exists((character) => Str.Equivalence(character, expected))
   );
 
-const skipAsciiWhitespace = (input: string, start: number): number => {
+const scanWhile = (input: string, start: number, predicate: (character: string) => boolean): number => {
   let position = start;
 
-  while (position < Str.length(input) && pipe(characterAt(input, position), O.exists(isAsciiWhitespace))) {
+  while (position < Str.length(input) && pipe(characterAt(input, position), O.exists(predicate))) {
     position += 1;
   }
 
   return position;
 };
 
-const scanUrl = (input: string, start: number): number => {
-  let position = start;
+const skipAsciiWhitespace = (input: string, start: number): number => scanWhile(input, start, isAsciiWhitespace);
 
-  while (
-    position < Str.length(input) &&
-    pipe(
-      characterAt(input, position),
-      O.exists((character) => !isAsciiWhitespace(character))
-    )
-  ) {
-    position += 1;
-  }
+const scanUrl = (input: string, start: number): number =>
+  scanWhile(input, start, (character) => !isAsciiWhitespace(character));
 
-  return position;
-};
-
-const scanDescriptor = (input: string, start: number): number => {
-  let position = start;
-
-  while (
-    position < Str.length(input) &&
-    pipe(
-      characterAt(input, position),
-      O.exists((character) => !isAsciiWhitespace(character) && !Str.Equivalence(character, ","))
-    )
-  ) {
-    position += 1;
-  }
-
-  return position;
-};
+const scanDescriptor = (input: string, start: number): number =>
+  scanWhile(input, start, (character) => !isAsciiWhitespace(character) && !Str.Equivalence(character, ","));
 
 const normalizeWidth = flow(Str.replace(LEADING_ZEROS_PATTERN, ""), O.liftPredicate(Str.isNonEmpty));
 
@@ -123,6 +101,95 @@ const parseDescriptor = (descriptor: string): O.Option<ParsedDescriptor> =>
     }),
     O.orElse(() => pipe(descriptor, densityKey, O.map(makeDensityDescriptor)))
   );
+
+const trimTrailingCommas = (input: string, start: number, end: number): readonly [number, number] => {
+  let urlEnd = end;
+  let trailingCommas = 0;
+
+  while (urlEnd > start && characterAtIs(input, urlEnd - 1, ",")) {
+    urlEnd -= 1;
+    trailingCommas += 1;
+  }
+
+  return [urlEnd, trailingCommas];
+};
+
+const parseCandidateUrl = (
+  input: string,
+  start: number,
+  isValidUrl: (url: string) => boolean
+): O.Option<ParsedCandidateUrl> => {
+  const position = scanUrl(input, start);
+  const [urlEnd, trailingCommas] = trimTrailingCommas(input, start, position);
+  const url = pipe(input, Str.slice(start, urlEnd));
+
+  return trailingCommas > 1 ||
+    Str.isEmpty(url) ||
+    pipe(url, Str.startsWith(",")) ||
+    pipe(url, Str.endsWith(",")) ||
+    !isValidUrl(url)
+    ? O.none()
+    : O.some([position, trailingCommas === 1]);
+};
+
+const finishDescriptorCandidate = (
+  input: string,
+  descriptor: ParsedDescriptor,
+  start: number
+): O.Option<ParsedCandidate> => {
+  const position = skipAsciiWhitespace(input, start);
+  if (position >= Str.length(input)) return O.some([descriptor, position, false]);
+  return characterAtIs(input, position, ",") ? O.some([descriptor, position + 1, true]) : O.none();
+};
+
+const parseCandidateDescriptor = (input: string, start: number, hasSeparator: boolean): O.Option<ParsedCandidate> => {
+  const descriptorless = makeDensityDescriptor(defaultDensityKey);
+  if (hasSeparator) return O.some([descriptorless, start, true]);
+
+  const position = skipAsciiWhitespace(input, start);
+  if (position >= Str.length(input)) return O.some([descriptorless, position, false]);
+  if (characterAtIs(input, position, ",")) return O.some([descriptorless, position + 1, true]);
+
+  const descriptorEnd = scanDescriptor(input, position);
+  return pipe(
+    input,
+    Str.slice(position, descriptorEnd),
+    parseDescriptor,
+    O.flatMap((descriptor) => finishDescriptorCandidate(input, descriptor, descriptorEnd))
+  );
+};
+
+const parseCandidate = (
+  input: string,
+  start: number,
+  isValidUrl: (url: string) => boolean
+): O.Option<ParsedCandidate> =>
+  pipe(
+    parseCandidateUrl(input, start, isValidUrl),
+    O.flatMap(([position, hasSeparator]) => parseCandidateDescriptor(input, position, hasSeparator))
+  );
+
+const registerDescriptor = (
+  descriptor: ParsedDescriptor,
+  profile: O.Option<SrcsetProfile>,
+  widthValues: MutableHashSet.MutableHashSet<string>,
+  densityValues: MutableHashSet.MutableHashSet<DensityKey>
+): O.Option<SrcsetProfile> => {
+  const nextProfile = descriptor[0];
+  const values = nextProfile === "width" ? widthValues : densityValues;
+  if (
+    pipe(
+      profile,
+      O.exists((current) => !Str.Equivalence(current, nextProfile))
+    ) ||
+    MutableHashSet.has(values, descriptor[1])
+  ) {
+    return O.none();
+  }
+
+  MutableHashSet.add(values, descriptor[1]);
+  return O.some(nextProfile);
+};
 
 /**
  * Descriptor profile represented by a conforming `srcset` value.
@@ -188,106 +255,18 @@ export const inspectSrcset: {
   const widthValues = MutableHashSet.empty<string>();
   const densityValues = MutableHashSet.empty<DensityKey>();
 
-  const register = (descriptor: ParsedDescriptor): boolean => {
-    if (descriptor[0] === "width") {
-      if (
-        pipe(
-          profile,
-          O.exists((current) => Str.Equivalence(current, "density"))
-        ) ||
-        MutableHashSet.has(widthValues, descriptor[1])
-      ) {
-        return false;
-      }
-
-      profile = O.some("width");
-      MutableHashSet.add(widthValues, descriptor[1]);
-      return true;
-    }
-
-    if (
-      pipe(
-        profile,
-        O.exists((current) => Str.Equivalence(current, "width"))
-      ) ||
-      MutableHashSet.has(densityValues, descriptor[1])
-    ) {
-      return false;
-    }
-
-    profile = O.some("density");
-    MutableHashSet.add(densityValues, descriptor[1]);
-    return true;
-  };
-
   while (position < Str.length(input)) {
     position = skipAsciiWhitespace(input, position);
+    const candidate = parseCandidate(input, position, isValidUrl);
+    if (O.isNone(candidate)) return O.none();
 
-    if (position >= Str.length(input) || characterAtIs(input, position, ",")) {
-      return O.none();
-    }
+    const [descriptor, nextPosition, hasSeparator] = candidate.value;
+    const registered = registerDescriptor(descriptor, profile, widthValues, densityValues);
+    if (O.isNone(registered)) return O.none();
 
-    const urlStart = position;
-    position = scanUrl(input, position);
-
-    let urlEnd = position;
-    let trailingCommas = 0;
-
-    while (urlEnd > urlStart && characterAtIs(input, urlEnd - 1, ",")) {
-      urlEnd -= 1;
-      trailingCommas += 1;
-    }
-
-    if (trailingCommas > 1) {
-      return O.none();
-    }
-
-    const url = pipe(input, Str.slice(urlStart, urlEnd));
-
-    if (Str.isEmpty(url) || pipe(url, Str.startsWith(",")) || pipe(url, Str.endsWith(",")) || !isValidUrl(url)) {
-      return O.none();
-    }
-
-    let descriptor = makeDensityDescriptor(defaultDensityKey);
-    let hasSeparator = trailingCommas === 1;
-
-    if (!hasSeparator) {
-      position = skipAsciiWhitespace(input, position);
-
-      if (position < Str.length(input) && characterAtIs(input, position, ",")) {
-        position += 1;
-        hasSeparator = true;
-      } else if (position < Str.length(input)) {
-        const descriptorStart = position;
-        position = scanDescriptor(input, position);
-
-        const parsedDescriptor = pipe(input, Str.slice(descriptorStart, position), parseDescriptor);
-
-        if (O.isNone(parsedDescriptor)) {
-          return O.none();
-        }
-
-        descriptor = parsedDescriptor.value;
-        position = skipAsciiWhitespace(input, position);
-
-        if (position < Str.length(input)) {
-          if (!characterAtIs(input, position, ",")) {
-            return O.none();
-          }
-
-          position += 1;
-          hasSeparator = true;
-        }
-      }
-    }
-
-    if (!register(descriptor)) {
-      return O.none();
-    }
-
-    if (!hasSeparator) {
-      return profile;
-    }
+    profile = registered;
+    position = nextPosition;
+    if (!hasSeparator) return profile;
   }
 
   return O.none();

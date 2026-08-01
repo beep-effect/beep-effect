@@ -27,9 +27,9 @@ import {
   SVG_ELEMENT_NAME_ADJUSTMENTS,
   XML_FOREIGN_ATTRIBUTE_NAMES,
 } from "./Html.meta.ts";
+import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 import type { ForeignNamespace } from "./Html.model.ts";
 
-const asciiUppercaseCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const isForeignElementName = S.is(ForeignElementName);
 const isForeignBreakoutElementName = S.is(
   LiteralKit([
@@ -93,25 +93,7 @@ type ForeignBoundaryElement = {
   readonly namespace: ForeignNamespace;
 };
 
-/**
- * Lowercases only the ASCII uppercase characters handled by the HTML tokenizer.
- *
- * @example Internal call site
- * ```ts
- * import { toAsciiLowerCase } from "./Html.foreign.ts"
- *
- * toAsciiLowerCase("customÉ") // "customÉ"
- * ```
- *
- * @internal
- * @category validation
- * @since 0.0.0
- */
-export const toAsciiLowerCase: (value: string) => string = flow(
-  Str.split(""),
-  A.map((character) => (Str.includes(character)(asciiUppercaseCharacters) ? Str.toLowerCase(character) : character)),
-  A.join("")
-);
+export { toAsciiLowerCase };
 
 const hasForeignAttribute = (entries: ForeignAttributeEntries, predicate: (name: string) => boolean): boolean =>
   A.some(entries, ([name]) => predicate(name));

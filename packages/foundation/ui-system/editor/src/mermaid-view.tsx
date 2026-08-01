@@ -473,26 +473,43 @@ const rewriteMermaidAttributeReferences = (
   if (cssUrl.test(normalizedValue)) attribute.value = rewriteLocalFragmentUrls(ids, normalizedValue);
 };
 
-const namespaceMermaidIds = (root: Element, renderId: string): boolean => {
-  if (globalThis.document.getElementById(renderId) !== null) return false;
-
+const namespaceMermaidElementIds = (
+  root: Element,
+  renderId: string
+): MutableHashMap.MutableHashMap<string, string> | undefined => {
   const ids = MutableHashMap.empty<string, string>();
   let index = 0;
   for (const element of root.querySelectorAll("[id]")) {
     const id = Str.trim(element.getAttribute("id") ?? "");
-    if (Str.isEmpty(id) || id === renderId || MutableHashMap.has(ids, id)) return false;
+    if (Str.isEmpty(id) || id === renderId || MutableHashMap.has(ids, id)) return undefined;
 
     const scopedId = `${renderId}-fragment-${index}`;
-    if (globalThis.document.getElementById(scopedId) !== null) return false;
+    if (globalThis.document.getElementById(scopedId) !== null) return undefined;
     MutableHashMap.set(ids, id, scopedId);
     element.setAttribute("id", scopedId);
     index += 1;
   }
 
+  return ids;
+};
+
+const rewriteMermaidTreeAttributeReferences = (
+  root: Element,
+  ids: MutableHashMap.MutableHashMap<string, string>
+): void => {
   for (const attribute of root.attributes) rewriteMermaidAttributeReferences(attribute, ids);
   for (const element of root.querySelectorAll("*")) {
     for (const attribute of element.attributes) rewriteMermaidAttributeReferences(attribute, ids);
   }
+};
+
+const namespaceMermaidIds = (root: Element, renderId: string): boolean => {
+  if (globalThis.document.getElementById(renderId) !== null) return false;
+
+  const ids = namespaceMermaidElementIds(root, renderId);
+  if (ids === undefined) return false;
+
+  rewriteMermaidTreeAttributeReferences(root, ids);
   return true;
 };
 

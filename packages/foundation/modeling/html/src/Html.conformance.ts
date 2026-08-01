@@ -51,6 +51,7 @@ import { HtmlRoot } from "./Html.model.ts";
 import { inspectSourceSizeList } from "./Html.source-size.ts";
 import { inspectSrcset } from "./Html.srcset.ts";
 import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
+import type { HtmlAttributeRequirement } from "./Html.meta.ts";
 import type { Doctype } from "./Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
@@ -709,19 +710,40 @@ type AutocompleteDetail = {
   readonly webauthn: boolean;
 };
 
+const isAutocompleteToggle = (tokens: ReadonlyArray<string>): boolean =>
+  pipe(
+    A.head(tokens),
+    O.filter(() => tokens.length === 1),
+    O.exists((token) => A.contains(["on", "off"], token))
+  );
+
+const advanceAutocompleteIndex = (
+  tokens: ReadonlyArray<string>,
+  index: number,
+  matches: (token: string) => boolean
+): number => pipe(A.get(tokens, index), O.filter(matches), O.match({ onNone: () => index, onSome: () => index + 1 }));
+
+const autocompleteFieldStart = (tokens: ReadonlyArray<string>): number => {
+  const afterSection = advanceAutocompleteIndex(tokens, 0, Str.startsWith("section-"));
+  return advanceAutocompleteIndex(tokens, afterSection, (token) => A.contains(["shipping", "billing"], token));
+};
+
+const autocompleteContactHint = (tokens: ReadonlyArray<string>, index: number): O.Option<string> =>
+  pipe(
+    A.get(tokens, index),
+    O.filter((token) => A.contains(["home", "work", "mobile", "fax", "pager"], token))
+  );
+
 const autocompleteDetail = (value: string): O.Option<AutocompleteDetail> => {
   const tokens = tokenizeHtmlSpaceSeparated(value);
-  if (tokens.length === 1 && (tokens[0] === "on" || tokens[0] === "off")) return O.none();
-  let index = 0;
-  if (Str.startsWith("section-")(tokens[index] ?? "")) index += 1;
-  if (tokens[index] === "shipping" || tokens[index] === "billing") index += 1;
-  const contactHint = A.contains(["home", "work", "mobile", "fax", "pager"], tokens[index] ?? "")
-    ? O.some(tokens[index] ?? "")
-    : O.none<string>();
-  if (O.isSome(contactHint)) index += 1;
-  const field = tokens[index];
-  if (field === undefined) return O.none();
-  return O.some({ contactHint, field, webauthn: tokens[index + 1] === "webauthn" });
+  if (isAutocompleteToggle(tokens)) return O.none();
+  const detailStart = autocompleteFieldStart(tokens);
+  const contactHint = autocompleteContactHint(tokens, detailStart);
+  const fieldIndex = detailStart + (O.isSome(contactHint) ? 1 : 0);
+  return pipe(
+    A.get(tokens, fieldIndex),
+    O.map((field) => ({ contactHint, field, webauthn: tokens[fieldIndex + 1] === "webauthn" }))
+  );
 };
 
 const autocompleteFieldGroup = (field: string): O.Option<string> =>
@@ -730,6 +752,70 @@ const autocompleteFieldGroup = (field: string): O.Option<string> =>
     A.findFirst(([, fields]) => A.contains(fields, field)),
     O.map(([group]) => group)
   );
+
+const autocompleteFieldGroupIsCompatible = (detail: AutocompleteDetail, tag: HtmlTag, state: string): boolean => {
+  const fieldGroup = autocompleteFieldGroup(detail.field);
+  const allowedGroups =
+    tag === "input" ? (HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS[state] ?? A.emptyReadonly()) : undefined;
+  return O.isSome(fieldGroup) && (allowedGroups === undefined || A.contains(allowedGroups, fieldGroup.value));
+};
+
+const autocompleteDetailIsCompatible = (detail: AutocompleteDetail, tag: HtmlTag, state: string): boolean =>
+  A.every(
+    [
+      autocompleteFieldGroupIsCompatible(detail, tag, state),
+      !detail.webauthn || tag !== "select",
+      O.isNone(detail.contactHint) || A.contains(HTML_AUTOCOMPLETE_CONTACT_FIELDS, detail.field),
+    ],
+    P.isTruthy
+  );
+
+const autocompleteToggleIssues = (
+  tag: HtmlTag,
+  state: string,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> =>
+  tag === "input" && state === "hidden"
+    ? [
+        makeIssue(
+          A.append(path, "attributes.autocomplete"),
+          "attributeRelationship",
+          "<input type=hidden autocomplete> requires autofill detail tokens rather than on or off"
+        ),
+      ]
+    : A.emptyReadonly();
+
+const autocompleteDetailIssues = (
+  detail: AutocompleteDetail,
+  tag: HtmlTag,
+  state: string,
+  path: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> =>
+  autocompleteDetailIsCompatible(detail, tag, state)
+    ? A.emptyReadonly()
+    : [
+        makeIssue(
+          A.append(path, "attributes.autocomplete"),
+          "attributeRelationship",
+          `<${tag} autocomplete> field tokens are not compatible with the ${state} control`
+        ),
+      ];
+
+const inspectAutocompleteValue = (
+  node: HtmlChildView,
+  tag: HtmlTag,
+  path: ReadonlyArray<string>,
+  autocomplete: string
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const state = tag === "input" ? inputTypeState(node) : tag;
+  return pipe(
+    autocompleteDetail(autocomplete),
+    O.match({
+      onNone: () => autocompleteToggleIssues(tag, state, path),
+      onSome: (detail) => autocompleteDetailIssues(detail, tag, state, path),
+    })
+  );
+};
 
 const inspectAutocompleteCompatibility = (
   node: HtmlChildView,
@@ -743,38 +829,7 @@ const inspectAutocompleteCompatibility = (
     value,
     O.match({
       onNone: A.emptyReadonly,
-      onSome: (autocomplete): ReadonlyArray<HtmlConformanceIssue> => {
-        const detail = autocompleteDetail(autocomplete);
-        const state = tag === "input" ? inputTypeState(node) : tag;
-        if (O.isNone(detail)) {
-          return tag === "input" && state === "hidden"
-            ? [
-                makeIssue(
-                  A.append(path, "attributes.autocomplete"),
-                  "attributeRelationship",
-                  "<input type=hidden autocomplete> requires autofill detail tokens rather than on or off"
-                ),
-              ]
-            : A.emptyReadonly();
-        }
-        const fieldGroup = autocompleteFieldGroup(detail.value.field);
-        const allowedGroups =
-          tag === "input" ? (HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS[state] ?? A.emptyReadonly()) : undefined;
-        const invalidGroup =
-          O.isNone(fieldGroup) || (allowedGroups !== undefined && !A.contains(allowedGroups, fieldGroup.value));
-        const invalidWebauthn = detail.value.webauthn && tag === "select";
-        const invalidContactHint =
-          O.isSome(detail.value.contactHint) && !A.contains(HTML_AUTOCOMPLETE_CONTACT_FIELDS, detail.value.field);
-        return invalidGroup || invalidWebauthn || invalidContactHint
-          ? [
-              makeIssue(
-                A.append(path, "attributes.autocomplete"),
-                "attributeRelationship",
-                `<${tag} autocomplete> field tokens are not compatible with the ${state} control`
-              ),
-            ]
-          : A.emptyReadonly();
-      },
+      onSome: (autocomplete) => inspectAutocompleteValue(node, tag, path, autocomplete),
     })
   );
 };
@@ -1051,56 +1106,73 @@ const inspectPictureSourceResponsiveRelationships = (
   ];
 };
 
+const isResponsivePictureCandidate = (candidate: HtmlChildView): boolean =>
+  (candidate._tag === "source" || candidate._tag === "img") &&
+  hasAttribute((candidate as unknown as Record<string, unknown>).srcset);
+
+const isMissingPictureSourceDifferentiator = (media: O.Option<string>, type: O.Option<string>): boolean =>
+  O.isNone(media) && O.isNone(type);
+
+const isNonDifferentiatingPictureSourceMedia = (media: O.Option<string>, type: O.Option<string>): boolean =>
+  O.isSome(media) &&
+  isValidMediaQueryList(media.value) &&
+  !isDifferentiatingMediaQueryList(media.value) &&
+  O.isNone(type);
+
+const pictureSourceDifferentiationIssues = (
+  path: ReadonlyArray<string>,
+  laterResponsiveCandidate: boolean,
+  media: O.Option<string>,
+  type: O.Option<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  if (!laterResponsiveCandidate) return A.emptyReadonly();
+  if (isMissingPictureSourceDifferentiator(media, type)) {
+    return [
+      makeIssue(
+        A.append(path, "attributes"),
+        "attributeRelationship",
+        "A <picture> source before a later responsive candidate requires differentiating media or type"
+      ),
+    ];
+  }
+  return isNonDifferentiatingPictureSourceMedia(media, type)
+    ? [
+        makeIssue(
+          A.append(path, "attributes.media"),
+          "attributeRelationship",
+          "A <picture> source media differentiator must be nonempty and not all"
+        ),
+      ]
+    : A.emptyReadonly();
+};
+
+const inspectPictureResponsiveChild = (
+  children: ReadonlyArray<HtmlChildView>,
+  path: ReadonlyArray<string>,
+  child: HtmlChildView,
+  index: number
+): ReadonlyArray<HtmlConformanceIssue> => {
+  if (child._tag !== "source") return A.emptyReadonly();
+  const attributes = child as unknown as Record<string, unknown>;
+  const laterChildren = A.drop(children, index + 1);
+  const followingImage = A.findFirst(laterChildren, (candidate) => candidate._tag === "img");
+  const childIssuePath = childPath(path, index);
+  return [
+    ...inspectPictureSourceResponsiveRelationships(child, childIssuePath, followingImage),
+    ...pictureSourceDifferentiationIssues(
+      childIssuePath,
+      A.some(laterChildren, isResponsivePictureCandidate),
+      stringAttributeValue(attributes.media),
+      stringAttributeValue(attributes.type)
+    ),
+  ];
+};
+
 const inspectPictureResponsiveRelationships = (
   children: ReadonlyArray<HtmlChildView>,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> =>
-  A.flatMap(children, (child, index) => {
-    if (child._tag !== "source") return A.emptyReadonly();
-    const attributes = child as unknown as Record<string, unknown>;
-    const laterChildren = A.drop(children, index + 1);
-    const followingImage = pipe(
-      laterChildren,
-      A.findFirst((candidate) => candidate._tag === "img")
-    );
-    const laterResponsiveCandidate = A.some(
-      laterChildren,
-      (candidate) =>
-        (candidate._tag === "source" || candidate._tag === "img") &&
-        hasAttribute((candidate as unknown as Record<string, unknown>).srcset)
-    );
-    const media = stringAttributeValue(attributes.media);
-    const type = stringAttributeValue(attributes.type);
-    const mediaDifferentiates = O.exists(media, isDifferentiatingMediaQueryList);
-    const missingDifferentiator = laterResponsiveCandidate && O.isNone(media) && O.isNone(type);
-    const nonDifferentiatingMedia =
-      laterResponsiveCandidate &&
-      O.isSome(media) &&
-      isValidMediaQueryList(media.value) &&
-      !mediaDifferentiates &&
-      O.isNone(type);
-    const differentiationIssues = missingDifferentiator
-      ? [
-          makeIssue(
-            A.append(childPath(path, index), "attributes"),
-            "attributeRelationship",
-            "A <picture> source before a later responsive candidate requires differentiating media or type"
-          ),
-        ]
-      : nonDifferentiatingMedia
-        ? [
-            makeIssue(
-              A.append(childPath(path, index), "attributes.media"),
-              "attributeRelationship",
-              "A <picture> source media differentiator must be nonempty and not all"
-            ),
-          ]
-        : A.emptyReadonly();
-    return [
-      ...inspectPictureSourceResponsiveRelationships(child, childPath(path, index), followingImage),
-      ...differentiationIssues,
-    ];
-  });
+  A.flatMap(children, (child, index) => inspectPictureResponsiveChild(children, path, child, index));
 
 const inspectResponsiveImageRelationships = (
   node: HtmlChildView,
@@ -1114,6 +1186,180 @@ const inspectResponsiveImageRelationships = (
     Match.orElse((): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly())
   );
 
+type AttributeValueConstraint = NonNullable<HtmlAttributeRequirement["constraints"]>[number];
+
+const attributeRequirementAppliesToParent = (
+  requirement: HtmlAttributeRequirement,
+  ancestors: ReadonlyArray<string>
+): boolean =>
+  pipe(
+    requirement.whenParents,
+    O.fromUndefinedOr,
+    O.match({
+      onNone: () => true,
+      onSome: (whenParents) =>
+        pipe(
+          A.last(ancestors),
+          O.filter(isHtmlTag),
+          O.exists((parent) => A.contains(whenParents, parent))
+        ),
+    })
+  );
+
+const attributeRequirementAppliesToAttributes = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): boolean =>
+  pipe(
+    requirement.when,
+    O.fromUndefinedOr,
+    O.match({
+      onNone: () => true,
+      onSome: (predicate) =>
+        Match.value(predicate).pipe(
+          Match.tags({
+            attributeContainsToken: ({ attribute, value }) => attributeTokensContainAll(attributes[attribute], [value]),
+            attributeEquals: ({ attribute, value }) => attributeEquals(attributes[attribute], value),
+            attributeEqualsOrMissing: ({ attribute, value }) =>
+              !hasAttribute(attributes[attribute]) || attributeEquals(attributes[attribute], value),
+            attributePresent: ({ attribute }) => hasAttribute(attributes[attribute]),
+          }),
+          Match.exhaustive
+        ),
+    })
+  );
+
+const missingRequiredAttributeGroups = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): ReadonlyArray<ReadonlyArray<string>> =>
+  A.filter(
+    requirement.required,
+    (alternatives) => !A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
+  );
+
+const singleMissingRequiredAttribute = (missingRequired: ReadonlyArray<ReadonlyArray<string>>): O.Option<string> =>
+  pipe(
+    missingRequired,
+    A.get(0),
+    O.filter((alternatives) => A.length(missingRequired) === 1 && A.length(alternatives) === 1),
+    O.flatMap(A.get(0))
+  );
+
+const attributeRequirementHasForbiddenAttribute = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): boolean =>
+  pipe(
+    requirement.forbidden,
+    O.fromUndefinedOr,
+    O.exists((forbidden) => A.some(forbidden, (attribute) => hasAttribute(attributes[attribute])))
+  );
+
+const attributeRequirementHasBlankAttribute = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): boolean =>
+  pipe(
+    requirement.nonBlank,
+    O.fromUndefinedOr,
+    O.exists((nonBlank) =>
+      A.some(
+        nonBlank,
+        (attribute) => hasAttribute(attributes[attribute]) && !hasNonBlankStringAttribute(attributes[attribute])
+      )
+    )
+  );
+
+const attributeValueConstraintIsSatisfied = (
+  constraint: AttributeValueConstraint,
+  attributes: Record<string, unknown>
+): boolean =>
+  Match.value(constraint).pipe(
+    Match.tags({
+      allowedValues: ({ attribute, values }) => attributeHasAllowedValue(attributes[attribute], values),
+      containsAllTokens: ({ attribute, values }) => attributeTokensContainAll(attributes[attribute], values),
+      containsAnyToken: ({ attribute, values }) => attributeTokensContainAny(attributes[attribute], values),
+      equals: ({ asciiCaseInsensitive, attribute, value }) =>
+        attributeHasRequiredValue(attributes[attribute], value, asciiCaseInsensitive === true),
+    }),
+    Match.exhaustive
+  );
+
+const attributeRequirementHasConstraintViolation = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): boolean =>
+  pipe(
+    requirement.constraints,
+    O.fromUndefinedOr,
+    O.exists((constraints) =>
+      A.some(constraints, (constraint) => !attributeValueConstraintIsSatisfied(constraint, attributes))
+    )
+  );
+
+const attributeRequirementHasInvalidUrl = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>
+): boolean =>
+  pipe(
+    requirement.validNonEmptyUrl,
+    O.fromUndefinedOr,
+    O.exists((attributesToValidate) =>
+      A.some(
+        attributesToValidate,
+        (attribute) => hasAttribute(attributes[attribute]) && !isValidNonEmptyHtmlUrl(attributes[attribute])
+      )
+    )
+  );
+
+const attributeRequirementIssuePath = (
+  path: ReadonlyArray<string>,
+  missingAttribute: O.Option<string>
+): ReadonlyArray<string> =>
+  pipe(
+    missingAttribute,
+    O.match({
+      onNone: () => A.append(path, "attributes"),
+      onSome: (attribute) => A.append(path, `attributes.${attribute}`),
+    })
+  );
+
+const inspectAttributeRequirement = (
+  requirement: HtmlAttributeRequirement,
+  attributes: Record<string, unknown>,
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const missingRequired = missingRequiredAttributeGroups(requirement, attributes);
+  const applies = A.every(
+    [
+      attributeRequirementAppliesToParent(requirement, ancestors),
+      attributeRequirementAppliesToAttributes(requirement, attributes),
+    ],
+    P.isTruthy
+  );
+  const hasViolation = A.some(
+    [
+      A.isReadonlyArrayNonEmpty(missingRequired),
+      attributeRequirementHasForbiddenAttribute(requirement, attributes),
+      attributeRequirementHasBlankAttribute(requirement, attributes),
+      attributeRequirementHasConstraintViolation(requirement, attributes),
+      attributeRequirementHasInvalidUrl(requirement, attributes),
+    ],
+    P.isTruthy
+  );
+  return applies && hasViolation
+    ? [
+        makeIssue(
+          attributeRequirementIssuePath(path, singleMissingRequiredAttribute(missingRequired)),
+          "attributeRelationship",
+          requirement.message
+        ),
+      ]
+    : A.emptyReadonly();
+};
+
 const inspectAttributeRelationships = (
   node: HtmlChildView,
   tag: HtmlTag,
@@ -1122,102 +1368,9 @@ const inspectAttributeRelationships = (
 ): ReadonlyArray<HtmlConformanceIssue> => {
   const attributes = node as unknown as Record<string, unknown>;
   const meta = ELEMENT_META[tag];
-  const requiredIssues = A.flatMap(meta.attributeRequirements, (requirement) => {
-    const whenParents = requirement.whenParents;
-    const appliesToParent =
-      whenParents === undefined ||
-      pipe(
-        A.last(ancestors),
-        O.filter(isHtmlTag),
-        O.exists((parent) => A.contains(whenParents, parent))
-      );
-    const appliesToAttributes =
-      requirement.when === undefined
-        ? true
-        : Match.value(requirement.when).pipe(
-            Match.tags({
-              attributeContainsToken: ({ attribute, value }) =>
-                attributeTokensContainAll(attributes[attribute], [value]),
-              attributeEquals: ({ attribute, value }) => attributeEquals(attributes[attribute], value),
-              attributeEqualsOrMissing: ({ attribute, value }) =>
-                !hasAttribute(attributes[attribute]) || attributeEquals(attributes[attribute], value),
-              attributePresent: ({ attribute }) => hasAttribute(attributes[attribute]),
-            }),
-            Match.exhaustive
-          );
-    const applies = appliesToParent && appliesToAttributes;
-    const missingRequired = A.filter(
-      requirement.required,
-      (alternatives) => !A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
-    );
-    const missesRequired = A.isReadonlyArrayNonEmpty(missingRequired);
-    const missingAttribute = pipe(
-      missingRequired,
-      A.get(0),
-      O.filter((alternatives) => A.length(missingRequired) === 1 && A.length(alternatives) === 1),
-      O.flatMap(A.get(0))
-    );
-    const hasForbidden = pipe(
-      requirement.forbidden,
-      O.fromUndefinedOr,
-      O.exists((forbidden) => A.some(forbidden, (attribute) => hasAttribute(attributes[attribute])))
-    );
-    const hasBlank = pipe(
-      requirement.nonBlank,
-      O.fromUndefinedOr,
-      O.exists((nonBlank) =>
-        A.some(
-          nonBlank,
-          (attribute) => hasAttribute(attributes[attribute]) && !hasNonBlankStringAttribute(attributes[attribute])
-        )
-      )
-    );
-    const hasConstraintViolation = pipe(
-      requirement.constraints,
-      O.fromUndefinedOr,
-      O.exists((constraints) =>
-        A.some(
-          constraints,
-          (constraint) =>
-            !Match.value(constraint).pipe(
-              Match.tags({
-                allowedValues: ({ attribute, values }) => attributeHasAllowedValue(attributes[attribute], values),
-                containsAllTokens: ({ attribute, values }) => attributeTokensContainAll(attributes[attribute], values),
-                containsAnyToken: ({ attribute, values }) => attributeTokensContainAny(attributes[attribute], values),
-                equals: ({ asciiCaseInsensitive, attribute, value }) =>
-                  attributeHasRequiredValue(attributes[attribute], value, asciiCaseInsensitive === true),
-              }),
-              Match.exhaustive
-            )
-        )
-      )
-    );
-    const hasInvalidUrl = pipe(
-      requirement.validNonEmptyUrl,
-      O.fromUndefinedOr,
-      O.exists((attributesToValidate) =>
-        A.some(
-          attributesToValidate,
-          (attribute) => hasAttribute(attributes[attribute]) && !isValidNonEmptyHtmlUrl(attributes[attribute])
-        )
-      )
-    );
-    return applies && (missesRequired || hasForbidden || hasBlank || hasConstraintViolation || hasInvalidUrl)
-      ? [
-          makeIssue(
-            pipe(
-              missingAttribute,
-              O.match({
-                onNone: () => A.append(path, "attributes"),
-                onSome: (attribute) => A.append(path, `attributes.${attribute}`),
-              })
-            ),
-            "attributeRelationship",
-            requirement.message
-          ),
-        ]
-      : A.emptyReadonly();
-  });
+  const requiredIssues = A.flatMap(meta.attributeRequirements, (requirement) =>
+    inspectAttributeRequirement(requirement, attributes, path, ancestors)
+  );
   const equalityIssues = A.flatMap(meta.attributeEqualities, (equality) =>
     pipe(
       O.all([attributeValue(attributes[equality.left]), attributeValue(attributes[equality.right])]),

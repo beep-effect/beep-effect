@@ -12,12 +12,38 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertReviewedCurrentAttributeGap } from "../scripts/generate.ts";
 
 const encodedMeta = (tag: keyof typeof ELEMENT_META): S.Codec.Encoded<typeof HtmlElementMeta> =>
   Result.getOrThrow(S.encodeResult(HtmlElementMeta)(ELEMENT_META[tag]));
+
+const expectDeepFrozen = (value: unknown): void => {
+  if (A.isArray(value)) {
+    expect(Object.isFrozen(value)).toBe(true);
+    for (const nested of value) expectDeepFrozen(nested);
+    return;
+  }
+  if (!P.isObject(value)) return;
+  expect(Object.isFrozen(value)).toBe(true);
+  for (const nested of R.values(value)) expectDeepFrozen(nested);
+};
+
+const expectPublicConformanceRegistriesFrozen = (): void => {
+  for (const registry of [
+    SVG_ELEMENT_NAME_ADJUSTMENTS,
+    SVG_ATTRIBUTE_NAME_ADJUSTMENTS,
+    MATHML_ATTRIBUTE_NAME_ADJUSTMENTS,
+    XML_FOREIGN_ATTRIBUTE_NAMES,
+    HTML_GLOBAL_ATTRIBUTE_NAMES,
+    HTML_CONTENT_TOKEN_EXPANSIONS,
+    ELEMENT_META,
+  ]) {
+    expectDeepFrozen(registry);
+  }
+};
 
 describe("@beep/html generator invariants", () => {
   it("requires an exact reviewed explanation for every pinned/webref gap", () => {
@@ -49,89 +75,7 @@ describe("@beep/html generator invariants", () => {
     ).toThrow(/requires an exact reviewed override/u);
   });
 
-  it("freezes every public conformance registry recursively", () => {
-    expect(Object.isFrozen(SVG_ELEMENT_NAME_ADJUSTMENTS)).toBe(true);
-    expect(Object.isFrozen(SVG_ATTRIBUTE_NAME_ADJUSTMENTS)).toBe(true);
-    expect(Object.isFrozen(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS)).toBe(true);
-    expect(Object.isFrozen(XML_FOREIGN_ATTRIBUTE_NAMES)).toBe(true);
-    expect(Object.isFrozen(HTML_GLOBAL_ATTRIBUTE_NAMES)).toBe(true);
-    expect(Object.isFrozen(HTML_CONTENT_TOKEN_EXPANSIONS)).toBe(true);
-
-    for (const expansion of R.values(HTML_CONTENT_TOKEN_EXPANSIONS)) {
-      expect(Object.isFrozen(expansion)).toBe(true);
-    }
-
-    expect(Object.isFrozen(ELEMENT_META)).toBe(true);
-    for (const meta of R.values(ELEMENT_META)) {
-      expect(Object.isFrozen(meta)).toBe(true);
-      expect(Object.isFrozen(meta.categories)).toBe(true);
-      expect(Object.isFrozen(meta.children)).toBe(true);
-      expect(Object.isFrozen(meta.currentAttributes)).toBe(true);
-      expect(Object.isFrozen(meta.obsoleteAttributes)).toBe(true);
-      expect(Object.isFrozen(meta.conditionalCategories)).toBe(true);
-      expect(Object.isFrozen(meta.attributeEqualities)).toBe(true);
-      expect(Object.isFrozen(meta.attributeRequirements)).toBe(true);
-      expect(Object.isFrozen(meta.numericAttributeRelationships)).toBe(true);
-      expect(Object.isFrozen(meta.rules)).toBe(true);
-      expect(Object.isFrozen(meta.uniqueAttributes)).toBe(true);
-      for (const rule of meta.conditionalCategories) {
-        expect(Object.isFrozen(rule)).toBe(true);
-      }
-      for (const equality of meta.attributeEqualities) {
-        expect(Object.isFrozen(equality)).toBe(true);
-      }
-      for (const requirement of meta.attributeRequirements) {
-        expect(Object.isFrozen(requirement)).toBe(true);
-        expect(Object.isFrozen(requirement.required)).toBe(true);
-        for (const alternatives of requirement.required) {
-          expect(Object.isFrozen(alternatives)).toBe(true);
-        }
-        if (requirement.nonBlank !== undefined) {
-          expect(Object.isFrozen(requirement.nonBlank)).toBe(true);
-        }
-        if (requirement.constraints !== undefined) {
-          expect(Object.isFrozen(requirement.constraints)).toBe(true);
-          for (const constraint of requirement.constraints) {
-            expect(Object.isFrozen(constraint)).toBe(true);
-            if ("values" in constraint) {
-              expect(Object.isFrozen(constraint.values)).toBe(true);
-            }
-          }
-        }
-        if (requirement.forbidden !== undefined) {
-          expect(Object.isFrozen(requirement.forbidden)).toBe(true);
-        }
-        if (requirement.validNonEmptyUrl !== undefined) {
-          expect(Object.isFrozen(requirement.validNonEmptyUrl)).toBe(true);
-        }
-        if (requirement.when !== undefined) {
-          expect(Object.isFrozen(requirement.when)).toBe(true);
-        }
-      }
-      for (const relationship of meta.numericAttributeRelationships) {
-        expect(Object.isFrozen(relationship)).toBe(true);
-      }
-      if (meta.rules.forbiddenDescendants !== undefined) {
-        expect(Object.isFrozen(meta.rules.forbiddenDescendants)).toBe(true);
-        expect(Object.isFrozen(meta.rules.forbiddenDescendants.attributes)).toBe(true);
-        expect(Object.isFrozen(meta.rules.forbiddenDescendants.categories)).toBe(true);
-        expect(Object.isFrozen(meta.rules.forbiddenDescendants.tags)).toBe(true);
-      }
-      if (meta.rules.forbiddenNamedAncestors !== undefined) {
-        expect(Object.isFrozen(meta.rules.forbiddenNamedAncestors)).toBe(true);
-        for (const condition of meta.rules.forbiddenNamedAncestors) {
-          expect(Object.isFrozen(condition)).toBe(true);
-          expect(Object.isFrozen(condition.attributes)).toBe(true);
-        }
-      }
-      if (meta.rules.permittedAncestors !== undefined) {
-        expect(Object.isFrozen(meta.rules.permittedAncestors)).toBe(true);
-      }
-      if (meta.rules.documentVisibilityLimit !== undefined) {
-        expect(Object.isFrozen(meta.rules.documentVisibilityLimit)).toBe(true);
-      }
-    }
-  });
+  it("freezes every public conformance registry recursively", expectPublicConformanceRegistriesFrozen);
 
   it("publishes the exact reviewed tree-conformance profiles", () => {
     const main = encodedMeta("main");

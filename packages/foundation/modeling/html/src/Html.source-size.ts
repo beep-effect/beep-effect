@@ -271,7 +271,7 @@ const issueMessage = (code: SourceSizeIssueCode): string =>
 const failure = (
   code: SourceSizeIssueCode,
   entryIndex?: number
-): Result.Result<SourceSizeAnalysis, A.NonEmptyReadonlyArray<SourceSizeIssue>> =>
+): Result.Result<never, A.NonEmptyReadonlyArray<SourceSizeIssue>> =>
   Result.fail([
     SourceSizeIssue.make({
       code,
@@ -401,71 +401,81 @@ const parseExactCalculations = (
   return O.some(parsed);
 };
 
+const consistentNumericType = (types: ReadonlyArray<NumericType>): O.Option<NumericType> =>
+  pipe(
+    A.head(types),
+    O.filter((type) => A.every(types, (candidate) => numericTypeEquivalent(type, candidate)))
+  );
+
+const parseClampArgument = (
+  argument: ReadonlyArray<ComponentValue>,
+  index: number
+): O.Option<O.Option<NumericType>> => {
+  const keyword = keywordArgument(argument);
+  if (O.isSome(keyword)) {
+    const allowsNone = A.contains([0, 2], index) && Str.Equivalence(keyword.value, "none");
+    return allowsNone ? O.some(O.none()) : O.none();
+  }
+
+  return pipe(parseCalculation(argument), O.filter(isBaseNumericType), O.map(O.some));
+};
+
+const parseClampFunction = (arguments_: ReadonlyArray<ReadonlyArray<ComponentValue>>): O.Option<NumericType> => {
+  if (arguments_.length !== 3) return O.none();
+
+  return pipe(A.map(arguments_, parseClampArgument), O.all, O.map(A.getSomes), O.flatMap(consistentNumericType));
+};
+
 const parseComparisonFunction = (
   name: string,
   arguments_: ReadonlyArray<ReadonlyArray<ComponentValue>>
 ): O.Option<NumericType> => {
-  if (Str.Equivalence(name, "clamp")) {
-    if (arguments_.length !== 3) return O.none();
-
-    const types: Array<NumericType> = [];
-    for (let index = 0; index < arguments_.length; index += 1) {
-      const argument = arguments_[index];
-      if (argument === undefined) return O.none();
-      const keyword = keywordArgument(argument);
-      const allowsNone = index === 0 || index === 2;
-      if (
-        allowsNone &&
-        pipe(
-          keyword,
-          O.exists((value) => Str.Equivalence(value, "none"))
-        )
-      )
-        continue;
-      if (O.isSome(keyword)) return O.none();
-
-      const parsed = parseCalculation(argument);
-      if (O.isNone(parsed) || !isBaseNumericType(parsed.value)) return O.none();
-      types.push(parsed.value);
-    }
-
-    const first = A.head(types);
-    return pipe(
-      first,
-      O.filter((type) => A.every(types, (candidate) => numericTypeEquivalent(type, candidate)))
-    );
-  }
+  if (Str.Equivalence(name, "clamp")) return parseClampFunction(arguments_);
 
   if (arguments_.length === 0) return O.none();
   return parseConsistentCalculations(arguments_);
 };
 
-const parseRoundFunction = (arguments_: ReadonlyArray<ReadonlyArray<ComponentValue>>): O.Option<NumericType> => {
-  if (arguments_.length === 0) return O.none();
-
-  const firstKeyword = pipe(A.head(arguments_), O.flatMap(keywordArgument));
-  const hasStrategy = pipe(
-    firstKeyword,
-    O.exists((value) => A.contains(ROUNDING_STRATEGIES, value))
-  );
-  const strategy = hasStrategy ? firstKeyword : O.some("nearest");
-  const calculations = hasStrategy ? A.drop(arguments_, 1) : arguments_;
+const parseRoundCalculations = (
+  calculations: ReadonlyArray<ReadonlyArray<ComponentValue>>
+): O.Option<ReadonlyArray<NumericType>> => {
   if (calculations.length < 1 || calculations.length > 2) return O.none();
+  return parseExactCalculations(calculations, calculations.length);
+};
 
-  const parsed = parseExactCalculations(calculations, calculations.length);
-  if (O.isNone(parsed)) return O.none();
-
-  const first = A.head(parsed.value);
-  if (O.isNone(first)) return O.none();
-  if (parsed.value.length === 2 && !numericTypeEquivalent(first.value, parsed.value[1] ?? NUMBER_TYPE)) return O.none();
-
-  const isLineWidth = pipe(
-    strategy,
-    O.exists((value) => Str.Equivalence(value, "line-width"))
+const consistentRoundNumericType = (types: ReadonlyArray<NumericType>): O.Option<NumericType> => {
+  const second = A.get(types, 1);
+  return pipe(
+    A.head(types),
+    O.filter((first) => O.isNone(second) || numericTypeEquivalent(first, second.value))
   );
-  if (isLineWidth) return isLengthType(first.value) ? first : O.none();
-  if (parsed.value.length === 1) return isNumberType(first.value) ? first : O.none();
+};
+
+const roundNumericType = (strategy: string, types: ReadonlyArray<NumericType>): O.Option<NumericType> => {
+  const first = consistentRoundNumericType(types);
+  if (O.isNone(first)) return O.none();
+
+  if (Str.Equivalence(strategy, "line-width")) return pipe(first, O.filter(isLengthType));
+  if (types.length === 1) return pipe(first, O.filter(isNumberType));
   return first;
+};
+
+const parseRoundFunction = (arguments_: ReadonlyArray<ReadonlyArray<ComponentValue>>): O.Option<NumericType> => {
+  const strategy = pipe(
+    A.head(arguments_),
+    O.flatMap(keywordArgument),
+    O.filter((value) => A.contains(ROUNDING_STRATEGIES, value))
+  );
+  const calculations = O.isSome(strategy) ? A.drop(arguments_, 1) : arguments_;
+  const resolvedStrategy = pipe(
+    strategy,
+    O.getOrElse(() => "nearest")
+  );
+
+  return pipe(
+    parseRoundCalculations(calculations),
+    O.flatMap((types) => roundNumericType(resolvedStrategy, types))
+  );
 };
 
 const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
@@ -630,6 +640,18 @@ const parseProduct = (cursor: CalculationCursor): O.Option<NumericType> => {
   return O.some(current);
 };
 
+const hasSumOperator = (node: ComponentValue | undefined): boolean =>
+  pipe(
+    delimiter(node),
+    O.exists((value) => A.contains(["+", "-"], value))
+  );
+
+const parseSpacedProduct = (cursor: CalculationCursor, hasLeadingSpace: boolean): O.Option<NumericType> => {
+  cursor.position += 1;
+  const hasTrailingSpace = skipIgnorable(cursor);
+  return hasLeadingSpace && hasTrailingSpace ? parseProduct(cursor) : O.none();
+};
+
 const parseSum = (cursor: CalculationCursor): O.Option<NumericType> => {
   const initial = parseProduct(cursor);
   if (O.isNone(initial)) return O.none();
@@ -638,22 +660,16 @@ const parseSum = (cursor: CalculationCursor): O.Option<NumericType> => {
   while (cursor.position < cursor.nodes.length) {
     const checkpoint = cursor.position;
     const hasLeadingSpace = skipIgnorable(cursor);
-    const operator = delimiter(cursor.nodes[cursor.position]);
-    const isSumOperator = pipe(
-      operator,
-      O.exists((value) => Str.Equivalence(value, "+") || Str.Equivalence(value, "-"))
-    );
-    if (!isSumOperator) {
+    if (!hasSumOperator(cursor.nodes[cursor.position])) {
       cursor.position = checkpoint;
       return O.some(current);
     }
 
-    cursor.position += 1;
-    const hasTrailingSpace = skipIgnorable(cursor);
-    if (!hasLeadingSpace || !hasTrailingSpace) return O.none();
-
-    const right = parseProduct(cursor);
-    if (O.isNone(right) || !numericTypeEquivalent(current, right.value)) return O.none();
+    const right = pipe(
+      parseSpacedProduct(cursor, hasLeadingSpace),
+      O.filter((type) => numericTypeEquivalent(current, type))
+    );
+    if (O.isNone(right)) return O.none();
     current = right.value;
   }
 
@@ -662,21 +678,21 @@ const parseSum = (cursor: CalculationCursor): O.Option<NumericType> => {
 
 type SourceSizeValue = "auto" | "length";
 
+const tokenSourceSizeValue = (token: CSSToken): O.Option<SourceSizeValue> => {
+  if (isTokenIdent(token) && Str.Equivalence(toAsciiLowerCase(token[4].value), "auto")) return O.some("auto");
+  if (isTokenNumber(token) && N.Equivalence(token[4].value, 0)) return O.some("length");
+  if (!isTokenDimension(token)) return O.none();
+
+  return pipe(
+    unitNumericType(token[4].unit),
+    O.filter(isLengthType),
+    O.filter(() => !N.isLessThan(token[4].value, 0)),
+    O.map((): SourceSizeValue => "length")
+  );
+};
+
 const sourceSizeValue = (node: ComponentValue): O.Option<SourceSizeValue> => {
-  if (isTokenNode(node)) {
-    const token = node.value;
-    if (isTokenIdent(token) && Str.Equivalence(toAsciiLowerCase(token[4].value), "auto")) return O.some("auto");
-    if (isTokenNumber(token) && N.Equivalence(token[4].value, 0)) return O.some("length");
-    if (isTokenDimension(token)) {
-      return pipe(
-        unitNumericType(token[4].unit),
-        O.filter(isLengthType),
-        O.filter(() => !N.isLessThan(token[4].value, 0)),
-        O.map((): SourceSizeValue => "length")
-      );
-    }
-    return O.none();
-  }
+  if (isTokenNode(node)) return tokenSourceSizeValue(node.value);
 
   if (!isFunctionNode(node)) return O.none();
   return pipe(
@@ -720,6 +736,91 @@ const hasExactAutoPrefix = (input: string): boolean => {
 const isAutoComponent = (node: ComponentValue): boolean =>
   isTokenNode(node) && isTokenIdent(node.value) && Str.Equivalence(toAsciiLowerCase(node.value[4].value), "auto");
 
+const parseSourceSizeEntries = (
+  input: string
+): Result.Result<ReadonlyArray<ReadonlyArray<ComponentValue>>, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
+  let hasParseError = false;
+  const tokens = tokenize(
+    { css: input },
+    {
+      onParseError: () => {
+        hasParseError = true;
+      },
+    }
+  );
+  const entries = parseCommaSeparatedListOfComponentValues(tokens, {
+    onParseError: () => {
+      hasParseError = true;
+    },
+  });
+  if (hasParseError) return failure("invalidCss");
+  if (entries.length === 0) return failure("invalidList");
+
+  const meaningfulTokens = A.filter(tokens, (token) => !isTokenEOF(token) && !isTokenWhiteSpaceOrComment(token));
+  if (pipe(A.last(meaningfulTokens), O.exists(isTokenComma))) return failure("invalidList", entries.length - 1);
+
+  const autoEntryIndex = A.findFirstIndex(entries, (entry) => A.some(entry, isAutoComponent));
+  if (O.isSome(autoEntryIndex) && !hasExactAutoPrefix(input)) return failure("invalidAuto", autoEntryIndex.value);
+
+  return Result.succeed(entries);
+};
+
+const inspectAutoEntry = (
+  entry: ReadonlyArray<ComponentValue>,
+  entryIndex: number
+): Result.Result<boolean, A.NonEmptyReadonlyArray<SourceSizeIssue>> =>
+  entryIndex === 0 && entry.length === 1 ? Result.succeed(true) : failure("invalidAuto", entryIndex);
+
+const inspectLengthEntry = (
+  entry: ReadonlyArray<ComponentValue>,
+  entryIndex: number,
+  entryCount: number
+): Result.Result<boolean, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
+  if (entryIndex === entryCount - 1) {
+    return entry.length === 1 ? Result.succeed(false) : failure("invalidList", entryIndex);
+  }
+
+  const mediaCondition = trimIgnorable(A.take(entry, entry.length - 1));
+  if (mediaCondition.length === 0) return failure("invalidList", entryIndex);
+  return isAuthorMediaCondition(mediaCondition) ? Result.succeed(false) : failure("invalidMediaCondition", entryIndex);
+};
+
+const inspectSourceSizeEntry = (
+  rawEntry: ReadonlyArray<ComponentValue>,
+  entryIndex: number,
+  entryCount: number
+): Result.Result<boolean, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
+  const entry = trimIgnorable(rawEntry);
+  if (entry.length === 0) return failure("invalidList", entryIndex);
+
+  const valueNode = A.last(entry);
+  if (O.isNone(valueNode)) return failure("invalidList", entryIndex);
+
+  const value = sourceSizeValue(valueNode.value);
+  if (O.isNone(value)) return failure("invalidSourceSize", entryIndex);
+
+  return Str.Equivalence(value.value, "auto")
+    ? inspectAutoEntry(entry, entryIndex)
+    : inspectLengthEntry(entry, entryIndex, entryCount);
+};
+
+const inspectSourceSizeEntries = (
+  entries: ReadonlyArray<ReadonlyArray<ComponentValue>>
+): Result.Result<SourceSizeAnalysis, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
+  let usesAuto = false;
+
+  for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+    const rawEntry = entries[entryIndex];
+    if (rawEntry === undefined) return failure("invalidList", entryIndex);
+
+    const inspected = inspectSourceSizeEntry(rawEntry, entryIndex, entries.length);
+    if (Result.isFailure(inspected)) return Result.fail(inspected.failure);
+    if (inspected.success) usesAuto = true;
+  }
+
+  return Result.succeed(SourceSizeAnalysis.make({ entryCount: entries.length, usesAuto }));
+};
+
 /**
  * Validates a WHATWG responsive-image source-size list and returns the
  * context-free facts needed by element-level conformance rules.
@@ -744,61 +845,5 @@ const isAutoComponent = (node: ComponentValue): boolean =>
  */
 export const inspectSourceSizeList = (
   input: string
-): Result.Result<SourceSizeAnalysis, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
-  let hasParseError = false;
-  const tokens = tokenize(
-    { css: input },
-    {
-      onParseError: () => {
-        hasParseError = true;
-      },
-    }
-  );
-  const entries = parseCommaSeparatedListOfComponentValues(tokens, {
-    onParseError: () => {
-      hasParseError = true;
-    },
-  });
-  if (hasParseError) return failure("invalidCss");
-  if (entries.length === 0) return failure("invalidList");
-
-  const meaningfulTokens = A.filter(tokens, (token) => !isTokenEOF(token) && !isTokenWhiteSpaceOrComment(token));
-  if (pipe(A.last(meaningfulTokens), O.exists(isTokenComma))) return failure("invalidList", entries.length - 1);
-
-  const autoEntryIndex = A.findFirstIndex(entries, (entry) => A.some(entry, isAutoComponent));
-  if (O.isSome(autoEntryIndex) && !hasExactAutoPrefix(input)) return failure("invalidAuto", autoEntryIndex.value);
-
-  let usesAuto = false;
-  for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
-    const rawEntry = entries[entryIndex];
-    if (rawEntry === undefined) return failure("invalidList", entryIndex);
-    const entry = trimIgnorable(rawEntry);
-    if (entry.length === 0) return failure("invalidList", entryIndex);
-
-    const valueNode = A.last(entry);
-    if (O.isNone(valueNode)) return failure("invalidList", entryIndex);
-
-    const value = sourceSizeValue(valueNode.value);
-    if (O.isNone(value)) return failure("invalidSourceSize", entryIndex);
-
-    const isLastEntry = entryIndex === entries.length - 1;
-    if (Str.Equivalence(value.value, "auto")) {
-      if (entryIndex !== 0 || entry.length !== 1) return failure("invalidAuto", entryIndex);
-      usesAuto = true;
-      continue;
-    }
-
-    if (isLastEntry) {
-      if (entry.length !== 1) return failure("invalidList", entryIndex);
-      continue;
-    }
-
-    const mediaCondition = trimIgnorable(A.take(entry, entry.length - 1));
-    if (mediaCondition.length === 0) return failure("invalidList", entryIndex);
-    if (!isAuthorMediaCondition(mediaCondition)) return failure("invalidMediaCondition", entryIndex);
-  }
-
-  if (usesAuto && !hasExactAutoPrefix(input)) return failure("invalidAuto", 0);
-
-  return Result.succeed(SourceSizeAnalysis.make({ entryCount: entries.length, usesAuto }));
-};
+): Result.Result<SourceSizeAnalysis, A.NonEmptyReadonlyArray<SourceSizeIssue>> =>
+  pipe(parseSourceSizeEntries(input), Result.flatMap(inspectSourceSizeEntries));

@@ -25,16 +25,9 @@ import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 
 const $I = $HtmlId.create("Html.attributes");
-
-const asciiUppercaseCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-const toHtmlAsciiLowerCase: (value: string) => string = flow(
-  Str.split(""),
-  A.map((character) => (Str.includes(character)(asciiUppercaseCharacters) ? Str.toLowerCase(character) : character)),
-  A.join("")
-);
 
 class HtmlAttributeDomainError extends TaggedErrorClass<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
   "HtmlAttributeDomainError",
@@ -45,7 +38,7 @@ class HtmlAttributeDomainError extends TaggedErrorClass<HtmlAttributeDomainError
 ) {}
 
 const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, allowEmpty: boolean): void => {
-  const folded = A.map(values, toHtmlAsciiLowerCase);
+  const folded = A.map(values, toAsciiLowerCase);
   if ((!allowEmpty && A.some(values, Str.isEmpty)) || A.dedupe(folded).length !== values.length) {
     throw HtmlAttributeDomainError.make({
       message: `${label} requires unique ASCII-case-folded${allowEmpty ? "" : " non-empty"} values`,
@@ -82,7 +75,7 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
   assertAsciiFoldUnique(values, "ASCII-case-insensitive enumerated attribute", true);
   const Canonical = LiteralKit(values);
   const findCanonical = (value: string) =>
-    A.findFirst(values, (candidate) => toHtmlAsciiLowerCase(candidate) === toHtmlAsciiLowerCase(value));
+    A.findFirst(values, (candidate) => toAsciiLowerCase(candidate) === toAsciiLowerCase(value));
   const Input = S.String.check(
     S.makeFilter(flow(findCanonical, O.isSome), {
       identifier: $I`AsciiCaseInsensitiveEnumeratedCheck`,
@@ -1225,11 +1218,8 @@ export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [strin
   allowed: Tokens
 ) => {
   assertAsciiFoldUnique(allowed, "Space-separated HTML token registry", false);
-  const allowedTokens = A.map(allowed, toHtmlAsciiLowerCase);
-  const tokenize: (value: string) => ReadonlyArray<string> = flow(
-    tokenizeHtmlSpaceSeparated,
-    A.map(toHtmlAsciiLowerCase)
-  );
+  const allowedTokens = A.map(allowed, toAsciiLowerCase);
+  const tokenize: (value: string) => ReadonlyArray<string> = flow(tokenizeHtmlSpaceSeparated, A.map(toAsciiLowerCase));
   const normalize = (value: string): string => {
     const inputTokens = tokenize(value);
     return pipe(
@@ -1280,7 +1270,7 @@ const makeOpenSpaceSeparatedTokenList = (
   const normalizeTokens = (value: string): ReadonlyArray<string> =>
     pipe(
       tokenizeHtmlSpaceSeparated(value),
-      asciiCaseInsensitive ? A.map(toHtmlAsciiLowerCase) : identity,
+      asciiCaseInsensitive ? A.map(toAsciiLowerCase) : identity,
       canonicalizeTokens
     );
   const normalize = flow(normalizeTokens, A.join(" "));
@@ -1380,7 +1370,7 @@ export type HtmlRelationList = typeof HtmlRelationList.Type;
 export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
   true,
   (value) => {
-    const folded = toHtmlAsciiLowerCase(value);
+    const folded = toAsciiLowerCase(value);
     const tokens = tokenizeHtmlSpaceSeparated(folded);
     return !A.contains(tokens, "shortcut") || folded === "shortcut icon";
   },
@@ -1454,7 +1444,7 @@ const MetadataNameInput = S.String.check(
   })
 );
 const CanonicalMetadataName = MetadataNameInput.check(
-  S.makeFilter((value) => value === toHtmlAsciiLowerCase(value), {
+  S.makeFilter((value) => value === toAsciiLowerCase(value), {
     identifier: $I`CanonicalMetadataNameCheck`,
     title: "Canonical HTML Metadata Name",
     description: "Checks the ASCII-lowercase fixed point of a metadata name.",
@@ -1485,7 +1475,7 @@ export const MetadataName = MetadataNameInput.pipe(
   S.decodeTo(
     CanonicalMetadataName,
     SchemaTransformation.transform({
-      decode: toHtmlAsciiLowerCase,
+      decode: toAsciiLowerCase,
       encode: identity,
     })
   ),
@@ -1513,7 +1503,7 @@ const autocompleteAttributePattern =
 
 const normalizeAutocompleteAttribute: (value: string) => string = flow(
   tokenizeHtmlSpaceSeparated,
-  A.map(toHtmlAsciiLowerCase),
+  A.map(toAsciiLowerCase),
   A.join(" ")
 );
 
