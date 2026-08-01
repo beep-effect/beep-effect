@@ -78,11 +78,18 @@ const ghostAxis = (
   pointer: number,
   extent: number,
   offset: number,
-  span: number
-): { readonly flipped: boolean; readonly position: number } =>
-  pointer + offset + span > extent
-    ? { flipped: true, position: Math.max(pointer - offset, span) }
+  maxSpan: number
+): { readonly flipped: boolean; readonly position: number } => {
+  // The label can never occupy more than the container, so the flip
+  // threshold and the flipped-side clamp both bound the span by the extent.
+  // Without that bound a container narrower than the cap flips every time and
+  // then anchors past its own far edge — the clipping this exists to prevent,
+  // mirrored.
+  const span = Math.min(maxSpan, extent);
+  return pointer + offset + span > extent
+    ? { flipped: true, position: Math.min(Math.max(pointer - offset, span), extent) }
     : { flipped: false, position: pointer + offset };
+};
 
 const ghostPlacement = (pointer: PointerPosition, container: DockBox): GhostPlacement => {
   const horizontal = ghostAxis(pointer.left, container.width, GHOST_OFFSET_X_PX, GHOST_MAX_WIDTH_PX);
@@ -116,7 +123,7 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
             left: 0,
             top: 0,
             transform: `translate3d(${placement.x}px, ${placement.y}px, 0)${placement.anchor}`,
-            maxWidth: GHOST_MAX_WIDTH_PX,
+            maxWidth: Math.min(GHOST_MAX_WIDTH_PX, container.width),
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",

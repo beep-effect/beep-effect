@@ -16,7 +16,7 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { Match, MutableHashMap, Number as N, pipe } from "effect";
+import { Match, MutableHashMap, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -28,7 +28,7 @@ import type { Dual2, Dual3 } from "@beep/dock/internal/Dual";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
-import type { DropPreview, PointerPosition, TabDrag } from "./Gesture.models.ts";
+import type { DropPreview, PointerPosition, TabDrag, TabRect } from "./Gesture.models.ts";
 
 export const boxStyle = (box: DockBox): React.CSSProperties => ({
   position: "absolute",
@@ -134,23 +134,44 @@ const splitPreviewBox = (box: DockBox, side: DockSide, ratio: SplitRatio): DockB
   });
 };
 
-// Measured per-tab widths for a group, present only once EVERY tab has
-// reported a real width (the strip records them for overflow math).
-const measuredTabWidths = (
+// The tabs actually rendered in a group's strip, paired with their logical
+// index and ordered left to right. Overflowed panels have no rect, so they
+// are absent here — targeting must never resolve to a tab the user cannot
+// see, and the strip's padding/gaps live in these measurements rather than
+// in group-box arithmetic.
+type RenderedTab = {
+  readonly logicalIndex: number;
+  readonly rect: TabRect;
+};
+
+const renderedTabs = (
   state: AdapterState,
   groupId: GroupId,
   panels: ReadonlyArray<Panel>
-): O.Option<ReadonlyArray<number>> =>
+): ReadonlyArray<RenderedTab> =>
   pipe(
-    MutableHashMap.get(state.tabWidths, groupId),
-    O.flatMap((widths) => O.all(A.map(panels, (panel) => MutableHashMap.get(widths, panel.id)))),
-    O.filter(() => A.length(panels) > 0)
+    MutableHashMap.get(state.tabRects, groupId),
+    O.match({
+      onNone: A.empty<RenderedTab>,
+      onSome: (rects) =>
+        pipe(
+          A.reduce(panels, A.empty<RenderedTab>(), (acc, panel: Panel, logicalIndex) =>
+            O.match(MutableHashMap.get(rects, panel.id), {
+              onNone: () => acc,
+              onSome: (rect) => A.append(acc, { logicalIndex, rect }),
+            })
+          ),
+          A.sort(Order.mapInput(Order.Number, (tab: RenderedTab) => tab.rect.left))
+        ),
+    })
   );
 
-// Chrome's tab-strip rule: the insertion index advances when the pointer
-// crosses a tab's horizontal MIDPOINT, so hovering past the last tab reads
-// as append. Falls back to even fractions of the group width before the
-// strip has measured.
+// Chrome's tab-strip rule: the insertion index advances once the pointer
+// crosses a tab's horizontal MIDPOINT, so hovering past the last tab reads as
+// append. The answer is a LOGICAL index — the position in the group's panel
+// list — derived from rendered geometry, so an overflowed strip cannot insert
+// before a hidden tab. Falls back to even fractions of the group box before
+// the strip has measured anything.
 const stripInsertionIndex = (
   state: AdapterState,
   groupId: GroupId,
@@ -158,16 +179,29 @@ const stripInsertionIndex = (
   box: DockBox,
   pointerLeft: number
 ): number => {
-  const stripPoint = pointerLeft - box.left;
-  const count = A.length(panels);
-  return O.match(measuredTabWidths(state, groupId, panels), {
-    onNone: () => (box.width <= 0 ? 0 : Math.floor((stripPoint / box.width) * count)),
-    onSome: (widths) =>
-      A.reduce(widths, { index: 0, edge: 0 }, (acc, width) => ({
-        index: stripPoint > acc.edge + width / 2 ? acc.index + 1 : acc.index,
-        edge: acc.edge + width,
-      })).index,
-  });
+  const rendered = renderedTabs(state, groupId, panels);
+  if (A.length(rendered) === 0) {
+    const count = A.length(panels);
+    return box.width <= 0 ? 0 : Math.floor(((pointerLeft - box.left) / box.width) * count);
+  }
+  return pipe(
+    rendered,
+    A.findFirst((tab) => pointerLeft <= tab.rect.left + tab.rect.width / 2),
+    O.match({
+      // Past every rendered midpoint: append after the last rendered tab,
+      // which is one past ITS logical position, not the list length — a
+      // hidden tail must stay behind the visible one.
+      onNone: () =>
+        pipe(
+          A.last(rendered),
+          O.match({
+            onNone: () => A.length(panels),
+            onSome: (tab) => tab.logicalIndex + 1,
+          })
+        ),
+      onSome: (tab) => tab.logicalIndex,
+    })
+  );
 };
 
 export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<MovePanelCommand>> = dual(
@@ -310,15 +344,31 @@ const tabInsertionPreview = (
     onNone: () => count,
     onSome: (position) => Math.min(position, count),
   });
-  const offset = O.match(measuredTabWidths(state, groupId, panels), {
-    onNone: () => (count <= 0 ? 0 : (box.width * insertAt) / count),
-    onSome: (widths) => A.reduce(A.take(widths, insertAt), 0, N.sum),
-  });
+  // The caret sits on the rendered boundary it would insert at: the leading
+  // edge of the tab now occupying that logical position, or trailing the last
+  // rendered tab when appending. Falls back to even fractions of the group box
+  // before the strip has measured.
+  const rendered = renderedTabs(state, groupId, panels);
+  const caretLeft = pipe(
+    rendered,
+    A.findFirst((tab) => tab.logicalIndex >= insertAt),
+    O.match({
+      onNone: () =>
+        pipe(
+          A.last(rendered),
+          O.match({
+            onNone: () => box.left + (count <= 0 ? 0 : (box.width * insertAt) / count),
+            onSome: (tab) => tab.rect.left + tab.rect.width,
+          })
+        ),
+      onSome: (tab) => tab.rect.left,
+    })
+  );
   return TabInsertionPreview.make({
     groupId,
     index,
     caretBox: DockBox.make({
-      left: Math.min(box.left + offset, box.left + box.width - TAB_CARET_WIDTH_PX),
+      left: Math.min(Math.max(caretLeft, box.left), box.left + box.width - TAB_CARET_WIDTH_PX),
       top: box.top,
       width: TAB_CARET_WIDTH_PX,
       height: headerHeight,

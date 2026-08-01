@@ -64,6 +64,17 @@ export class SashDragVertical extends SashDragBase.extend<SashDragVertical>($I`S
   })
 ) {}
 
+export class TabRect extends S.Class<TabRect>($I`TabRect`)(
+  {
+    left: S.Finite,
+    width: S.Finite,
+  },
+  $I.annote("TabRect", {
+    description:
+      "Root-relative horizontal geometry of one rendered tab, measured from the DOM. Drop targeting uses these instead of group-box arithmetic: the strip's padding and gaps are invisible to the box, and overflowed tabs have no rect at all.",
+  })
+) {}
+
 export class TabInsertionPreview extends S.Class<TabInsertionPreview>($I`TabInsertionPreview`)(
   {
     kind: S.tag("tab-insertion"),

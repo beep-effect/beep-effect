@@ -29,7 +29,7 @@ import {
   pressStartsOnButton,
   relativePositionOf,
 } from "./DropCompiler.ts";
-import { TabDrag } from "./Gesture.models.ts";
+import { TabDrag, TabRect } from "./Gesture.models.ts";
 import { FloatIcon, MaximizeIcon, RestoreIcon } from "./Icons.tsx";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
@@ -39,11 +39,25 @@ import type { AdapterState } from "./AdapterState.ts";
 
 const panelIdsEqual = A.makeEquivalence(PanelId.equals);
 
+// A native cancellation has already released capture, and releasing a pointer
+// the element no longer captures throws NotFoundError straight out of the
+// handler — so ownership is checked first.
+export const releaseCapture = (node: HTMLElement, pointerId: number): void => {
+  if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
+};
+
 const tabWidthsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, number> =>
   O.getOrElse(MutableHashMap.get(state.tabWidths, groupId), () => {
     const widths = MutableHashMap.empty<PanelId, number>();
     MutableHashMap.set(state.tabWidths, groupId, widths);
     return widths;
+  });
+
+const tabRectsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, TabRect> =>
+  O.getOrElse(MutableHashMap.get(state.tabRects, groupId), () => {
+    const rects = MutableHashMap.empty<PanelId, TabRect>();
+    MutableHashMap.set(state.tabRects, groupId, rects);
+    return rects;
   });
 
 const Tab = (props: {
@@ -77,7 +91,7 @@ const Tab = (props: {
       O.match(current, {
         onNone: () => undefined,
         onSome: (drag) => {
-          node.releasePointerCapture?.(drag.pointerId);
+          releaseCapture(node, drag.pointerId);
           return undefined;
         },
       });
@@ -88,7 +102,18 @@ const Tab = (props: {
     // release still reads as a plain activation click. pointercancel also
     // clears outright: no click ever follows a pointercancel.
     const cancelWithEscape = (): void => {
-      const current = props.graph.registry.get(props.state.dragAtom);
+      // Every tab registers this document listener, so only the DRAGGED tab's
+      // own listener acts — otherwise a sibling concludes the record first and
+      // the owner then finds nothing left to restore focus from. A record that
+      // already concluded is waiting for its trailing click, not for Escape:
+      // after a cross-group drop unmounts the source tab that click may never
+      // arrive, and an unrelated Escape (dismissing a menu) must not re-enter
+      // cancellation or steal focus on its behalf.
+      const current = O.filter(
+        props.graph.registry.get(props.state.dragAtom),
+        (drag) => !drag.concluded && PanelId.equals(drag.panelId, props.panel.id)
+      );
+      if (O.isNone(current)) return;
       props.graph.registry.set(
         props.state.dragAtom,
         O.flatMap(current, (drag) => (drag.moved ? O.some(TabDrag.make({ ...drag, concluded: true })) : O.none()))
@@ -99,7 +124,7 @@ const Tab = (props: {
       // listener restores — sibling keydown listeners may already have
       // concluded the drag by the time this one runs, and focusing the
       // active tab is idempotent.
-      if (O.exists(current, (drag) => drag.moved && PanelId.equals(drag.panelId, props.panel.id))) {
+      if (O.exists(current, (drag) => drag.moved)) {
         const active = node
           .closest("[data-group-id]")
           ?.querySelector<HTMLElement>("[data-panel-id][data-active='true']");
@@ -138,7 +163,7 @@ const Tab = (props: {
       if (O.isNone(current) || !PanelId.equals(current.value.panelId, props.panel.id)) return;
       if (current.value.concluded) {
         // The concluded record stays for the trailing click to consume.
-        node.releasePointerCapture?.(event.pointerId);
+        releaseCapture(node, event.pointerId);
         event.preventDefault();
         return;
       }
@@ -158,7 +183,7 @@ const Tab = (props: {
         props.state.dragAtom,
         finalDrag.moved ? O.some(TabDrag.make({ ...finalDrag, concluded: true })) : O.none()
       );
-      node.releasePointerCapture?.(event.pointerId);
+      releaseCapture(node, event.pointerId);
       if (finalDrag.moved)
         O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
       event.preventDefault();
@@ -294,12 +319,28 @@ const TabStrip = (
   };
   const measureStrip = (node: HTMLDivElement, width: number): void => {
     const tabWidths = tabWidthsFor(props.state, props.groupId);
+    const tabRects = tabRectsFor(props.state, props.groupId);
+    // Rects are recorded root-relative so drop targeting shares the pointer's
+    // coordinate space; panels absent from the DOM (overflowed) are cleared so
+    // a stale rect can never make a hidden tab look droppable.
+    const rootLeft = pipe(
+      O.fromNullOr(props.state.rootNode.current),
+      O.match({
+        onNone: () => 0,
+        onSome: (root) => root.getBoundingClientRect().left,
+      })
+    );
     A.forEach(panels, (panel) => {
       const tab = node.querySelector<HTMLElement>(`[data-panel-id='${panel.id}']`);
       if (P.isNotNull(tab)) {
-        const measured = tab.getBoundingClientRect().width;
-        if (N.isGreaterThan(measured, 0)) MutableHashMap.set(tabWidths, panel.id, measured);
+        const rect = tab.getBoundingClientRect();
+        if (N.isGreaterThan(rect.width, 0)) {
+          MutableHashMap.set(tabWidths, panel.id, rect.width);
+          MutableHashMap.set(tabRects, panel.id, TabRect.make({ left: rect.left - rootLeft, width: rect.width }));
+        }
+        return;
       }
+      MutableHashMap.remove(tabRects, panel.id);
     });
     const actionsWidth = O.match(O.fromNullOr(node.querySelector<HTMLElement>("[data-dock-actions]")), {
       onNone: () => 0,

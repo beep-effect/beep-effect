@@ -7,6 +7,7 @@ import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, clampRatio, positionOf, splitExtent } from "./DropCompiler.ts";
 import { SashDrag } from "./Gesture.models.ts";
+import { releaseCapture } from "./GroupPane.tsx";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 
@@ -32,7 +33,7 @@ export const Sash = (props: {
       O.match(current, {
         onNone: () => undefined,
         onSome: (drag) => {
-          node.releasePointerCapture?.(drag.pointerId);
+          releaseCapture(node, drag.pointerId);
           return undefined;
         },
       });
@@ -64,7 +65,7 @@ export const Sash = (props: {
       const override = props.graph.registry.get(props.state.ratioOverrideAtom);
       props.graph.registry.set(props.state.resizeAtom, O.none());
       props.graph.registry.set(props.state.ratioOverrideAtom, O.none());
-      node.releasePointerCapture?.(event.pointerId);
+      releaseCapture(node, event.pointerId);
       if (current.value.moved && O.isSome(override)) {
         props.graph.registry.set(
           props.graph.operationAtom,

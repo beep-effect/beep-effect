@@ -254,13 +254,15 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // real tab widths and the measured branch of the insertion-index rule
       // stays unreachable. Stub the two tabs at 100px and 60px, then drive a
       // resize so measureStrip records them.
-      const widths = new Map([
-        [panel1.id, 100],
-        [panel2.id, 60],
+      // Rects must carry real lefts: targeting reads rendered geometry, so
+      // laying both tabs at x=0 would describe a strip that cannot exist.
+      const rects = new Map([
+        [panel1.id, { left: 0, width: 100 }],
+        [panel2.id, { left: 100, width: 60 }],
       ]);
-      for (const [panelId, width] of widths) {
+      for (const [panelId, rect] of rects) {
         const node = tab(panelId);
-        node.getBoundingClientRect = () => new DOMRect(0, 0, width, 24);
+        node.getBoundingClientRect = () => new DOMRect(rect.left, 0, rect.width, 24);
       }
       resize(strip, { width: 400, height: 24 });
 
@@ -280,6 +282,40 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // Past the second midpoint: append at index 2, caret after both tabs.
       pointer(source, "pointerMove", 150, 16);
       expect(caretLeft()).toBe("160px");
+      fireEvent.keyDown(document, { key: "Escape" });
+      mounted.graph.dispose();
+    })
+  );
+
+  it.effect("targets rendered tabs when the strip has padding and hidden overflow", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const root = screen.getByTestId("dockview-react");
+      const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
+      if (strip === null) throw new Error("Missing tab strip");
+      // A themed strip pads its content (the desktop shell uses 4px 6px with a
+      // 2px gap), so tabs do NOT start at the group box's left edge. Only
+      // panel2 is rendered here — panel1 stands in for an overflowed tab with
+      // no rect at all.
+      const node = tab(panel2.id);
+      node.getBoundingClientRect = () => new DOMRect(56, 0, 60, 24);
+      tab(panel1.id).getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
+      resize(strip, { width: 400, height: 24 });
+
+      const source = tab(panel3.id);
+      const caret = (): HTMLElement => {
+        const found = root.querySelector<HTMLElement>("[data-drop-caret]");
+        if (found === null) throw new Error("Missing drop caret");
+        return found;
+      };
+      pointer(source, "pointerDown", 600, 16);
+      // Before the rendered tab's midpoint (56 + 30 = 86): the caret sits on
+      // that tab's real left edge, inside the padding — not at the box edge.
+      pointer(source, "pointerMove", 70, 16);
+      expect(caret().style.left).toBe("56px");
+      // Past it: append trailing the rendered tab, never before a hidden one.
+      pointer(source, "pointerMove", 100, 16);
+      expect(caret().style.left).toBe("116px");
       fireEvent.keyDown(document, { key: "Escape" });
       mounted.graph.dispose();
     })
