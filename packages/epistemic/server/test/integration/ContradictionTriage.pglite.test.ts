@@ -374,12 +374,16 @@ const asOf = (identity: typeof LogicalEdgeIdentity.Encoded, validAt: number, kno
     validAt,
   });
 
-const recordHistoricalBeliefA = Effect.fnUntraced(function* (seeded: SeededScenario, recordedAt: number) {
+const recordHistoricalBelief = Effect.fnUntraced(function* (
+  seeded: SeededScenario,
+  identity: typeof LogicalEdgeIdentity.Encoded,
+  recordedAt: number
+) {
   const edges = yield* EdgeAuthorityRepository;
   return yield* edges.record(
     decodeRecord({
       fact: { amount: "90" },
-      identity: seeded.identityA,
+      identity,
       orgId: seeded.beliefA.orgId,
       recordedAt,
       recordedBy: systemPrincipalEncoded,
@@ -737,7 +741,7 @@ if (!shouldRunPgliteIntegration) {
           const seeded = yield* seedScenario(113);
           const repository = yield* ContradictionTriageRepository;
           const db = yield* makeDrizzle();
-          yield* recordHistoricalBeliefA(seeded, 1_150);
+          yield* recordHistoricalBelief(seeded, seeded.identityA, 1_150);
           const before = yield* db.select().from(DbSchema.contradictionCandidate);
 
           const conflict = yield* Effect.flip(
@@ -746,6 +750,40 @@ if (!shouldRunPgliteIntegration) {
                 proposalValidFrom: 500,
                 receipt: "receipt-113-overlapping-proposal",
               })
+            )
+          );
+
+          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("candidate-payload-mismatch");
+          expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
+        }),
+        120_000
+      );
+
+      it.effect(
+        "rejects proposals that target an out-of-order historical row instead of the supersession head",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(115);
+          const repository = yield* ContradictionTriageRepository;
+          const db = yield* makeDrizzle();
+          const historicalA = yield* recordHistoricalBelief(seeded, seeded.identityA, 1_150);
+          const historicalB = yield* recordHistoricalBelief(seeded, seeded.identityB, 1_200);
+          const before = yield* db.select().from(DbSchema.contradictionCandidate);
+
+          const conflict = yield* Effect.flip(
+            repository.submit(
+              makeSubmission(
+                115,
+                { ...seeded, beliefA: historicalA, beliefB: historicalB },
+                {
+                  candidateValidFrom: 500,
+                  candidateValidTo: 800,
+                  proposalValidFrom: 500,
+                  proposalValidTo: 800,
+                  receipt: "receipt-115-historical-target",
+                  recordedAt: 1_300,
+                }
+              )
             )
           );
 
@@ -1178,7 +1216,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const proposal = submitted.candidate.assessment.proposals[0];
-          yield* recordHistoricalBeliefA(seeded, 1_300);
+          yield* recordHistoricalBelief(seeded, seeded.identityA, 1_300);
           yield* TestClock.setTime(2_000);
 
           const conflict = yield* Effect.flip(

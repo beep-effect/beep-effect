@@ -61,7 +61,7 @@ import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } f
 import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import { supersedeEdgeFactInTransaction } from "../EdgeAuthority/EdgeAuthority.repo.ts";
+import { supersedeEdgeFactInTransaction, supersessionHeadOf } from "../EdgeAuthority/EdgeAuthority.repo.ts";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type {
   ContradictionCandidateKey,
@@ -115,18 +115,36 @@ const validIntervalContains = (outer: ValidInterval, inner: ValidInterval): bool
     onSome: (outerEnd) => O.exists(inner.validTo, (innerEnd) => notLaterThan(innerEnd, outerEnd)),
   });
 
-const proposalIntervalsAreAvailable = (
+const proposalTargetsSupersessionHead = (
+  proposal: ContradictionResolutionProposal,
+  survivingVersions: ReadonlyArray<EdgeVersion>
+): boolean =>
+  pipe(
+    survivingVersions,
+    A.filter((version) => Eq.equals(version.logicalKey, proposal.losingBelief.logicalKey)),
+    supersessionHeadOf,
+    O.exists(
+      (head) =>
+        edgeVersionIdEquivalent(head.id, proposal.losingBelief.edgeVersionId) &&
+        Eq.equals(head.version, proposal.losingBelief.version)
+    )
+  );
+
+const proposalsAreApplicable = (
   proposals: ReadonlyArray<ContradictionResolutionProposal>,
   survivingVersions: ReadonlyArray<EdgeVersion>
 ): boolean =>
-  A.every(proposals, (proposal) =>
-    A.every(
-      survivingVersions,
-      (version) =>
-        !Eq.equals(version.logicalKey, proposal.losingBelief.logicalKey) ||
-        edgeVersionIdEquivalent(version.id, proposal.losingBelief.edgeVersionId) ||
-        !validIntervalsOverlap(proposal, version)
-    )
+  A.every(
+    proposals,
+    (proposal) =>
+      proposalTargetsSupersessionHead(proposal, survivingVersions) &&
+      A.every(
+        survivingVersions,
+        (version) =>
+          !Eq.equals(version.logicalKey, proposal.losingBelief.logicalKey) ||
+          edgeVersionIdEquivalent(version.id, proposal.losingBelief.edgeVersionId) ||
+          !validIntervalsOverlap(proposal, version)
+      )
   );
 
 const projectEdgeVersionAtKnownAt = (edge: EdgeVersion, knownAt: DateTime.Utc): EdgeVersion =>
@@ -227,12 +245,12 @@ const validateBeliefPair = (
       );
 };
 
-const validateProposalIntervals = (
+const validateProposals = (
   proposals: ReadonlyArray<ContradictionResolutionProposal>,
   survivingVersions: ReadonlyArray<EdgeVersion>,
   candidateKey: ContradictionCandidateKey
 ): Effect.Effect<void, ContradictionSubmissionConflict> =>
-  proposalIntervalsAreAvailable(proposals, survivingVersions)
+  proposalsAreApplicable(proposals, survivingVersions)
     ? Effect.void
     : Effect.fail(
         ContradictionSubmissionConflict.make({
@@ -836,7 +854,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                       (row) => Effect.try(() => fromEdgeVersionRow(row)),
                       { concurrency: 1 }
                     ).pipe(repositoryUnavailable("review"));
-                    if (!proposalIntervalsAreAvailable([proposal.value], survivingVersions)) {
+                    if (!proposalsAreApplicable([proposal.value], survivingVersions)) {
                       return yield* ContradictionReviewConflict.make({
                         candidateId: command.candidateId,
                         reason: "stale-candidate",
@@ -942,11 +960,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 (row) => Effect.try(() => fromEdgeVersionRow(row)),
                 { concurrency: 1 }
               ).pipe(repositoryUnavailable("submit"));
-              yield* validateProposalIntervals(
-                normalized.assessment.proposals,
-                survivingVersions,
-                normalized.candidateKey
-              );
+              yield* validateProposals(normalized.assessment.proposals, survivingVersions, normalized.candidateKey);
               const evidenceIds = pipe(
                 normalized.matchBasis.leftEvidenceIds,
                 A.appendAll(normalized.matchBasis.rightEvidenceIds),

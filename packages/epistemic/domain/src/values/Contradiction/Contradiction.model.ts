@@ -1345,21 +1345,20 @@ export const contradictionProposalDigest = (
   );
 
 /**
- * Immutable candidate content covered by the payload digest.
+ * Structural candidate content before its validity interval is checked.
  *
  * @example
  * ```ts
  * import { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction"
  *
- * console.log(ContradictionCandidateContent.fields.assessment !== undefined) // true
- * console.log(ContradictionCandidateContent.fields.matchBasis !== undefined) // true
+ * console.log(ContradictionCandidateContent.fields.validFrom !== undefined) // true
  * ```
  *
  * @category value-objects
  * @since 0.0.0
  */
-export class ContradictionCandidateContent extends S.Class<ContradictionCandidateContent>(
-  $I`ContradictionCandidateContent`
+class ContradictionCandidateContentStruct extends S.Class<ContradictionCandidateContentStruct>(
+  $I`ContradictionCandidateContentStruct`
 )(
   {
     assessment: ContradictionAssessment.annotateKey({
@@ -1378,6 +1377,55 @@ export class ContradictionCandidateContent extends S.Class<ContradictionCandidat
       description: "Exclusive valid-time upper bound covered by the candidate digest, when known.",
     }),
   },
+  $I.annote("ContradictionCandidateContentStruct", {
+    description: "Structural candidate payload before its half-open valid interval is checked.",
+  })
+) {}
+
+const contradictionCandidateContentStructArbitrary = S.toArbitraryLazy(ContradictionCandidateContentStruct);
+const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.mapFields(identity)
+  .check(
+    S.makeFilter(
+      ({ validFrom, validTo }) =>
+        O.match(validTo, {
+          onNone: () => true,
+          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+        }),
+      {
+        identifier: $I`ContradictionCandidateContentValidIntervalCheck`,
+        title: "Contradiction Candidate Valid Interval",
+        description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+        message: "Expected validFrom to be earlier than validTo when validTo is present.",
+      }
+    )
+  )
+  .annotate({
+    toArbitrary: () => (fc) =>
+      contradictionCandidateContentStructArbitrary(fc).map((candidate) =>
+        ContradictionCandidateContentStruct.make({
+          ...candidate,
+          validTo: O.filter(candidate.validTo, (upperBound) => validIntervalIsOrdered(candidate.validFrom, upperBound)),
+        })
+      ),
+  });
+
+/**
+ * Immutable candidate payload with a validated half-open validity interval.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * console.log(ContradictionCandidateContent.fields.validFrom !== undefined)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class ContradictionCandidateContent extends S.Class<ContradictionCandidateContent>(
+  $I`ContradictionCandidateContent`
+)(
+  ContradictionCandidateContentSchema,
   $I.annote("ContradictionCandidateContent", {
     description: "Complete immutable candidate payload covered by its collision-guard digest.",
   })

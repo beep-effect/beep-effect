@@ -163,8 +163,19 @@ const openHeadOf = (versions: ReadonlyArray<EdgeVersion>): O.Option<EdgeVersion>
  * instead of the standing head would rewrite history at the wrong end. When no
  * row is valid-open (the fact was closed by a fact-became-false correction) the
  * highest version stands in, so a closed head can still be corrected.
+ *
+ * @example
+ * ```ts
+ * import { supersessionHeadOf } from "./EdgeAuthority.repo.ts"
+ *
+ * console.log(typeof supersessionHeadOf) // "function"
+ * ```
+ *
+ * @internal
+ * @category repositories
+ * @since 0.0.0
  */
-const supersessionHeadOf = (current: ReadonlyArray<EdgeVersion>): O.Option<EdgeVersion> =>
+export const supersessionHeadOf = (current: ReadonlyArray<EdgeVersion>): O.Option<EdgeVersion> =>
   pipe(
     openHeadOf(current),
     O.orElse(() => pipe(current, A.sort(byVersion), A.last))

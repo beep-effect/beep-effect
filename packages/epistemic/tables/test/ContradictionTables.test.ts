@@ -222,6 +222,25 @@ describe("Contradiction candidate row converters", () => {
     }
   });
 
+  it("rejects an unordered candidate validity interval before writing", () => {
+    const unorderedValidTo = O.some(validFrom);
+    const unorderedCandidate = ContradictionCandidate.make({
+      ...candidate,
+      validTo: unorderedValidTo,
+    });
+
+    expect(() =>
+      ContradictionCandidateContent.make({
+        assessment,
+        matchBasis,
+        pair,
+        validFrom,
+        validTo: unorderedValidTo,
+      })
+    ).toThrow("Expected validFrom to be earlier than validTo when validTo is present.");
+    expect(Result.isFailure(toContradictionCandidateInsert(unorderedCandidate))).toBe(true);
+  });
+
   it("rejects each tampered seal and a non-canonical pair after reading", () => {
     const insert = Result.getOrThrow(toContradictionCandidateInsert(candidate));
     const row = { ...insert, id: 1 };

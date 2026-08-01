@@ -9,7 +9,6 @@ import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
   ContradictionAssessment,
-  ContradictionCandidateContent,
   ContradictionCandidateDigest,
   ContradictionCandidateKey,
   ContradictionDispositionDecision,
@@ -30,6 +29,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Epistemic from "../../identity/Epistemic.ts";
+import type { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction";
 
 const $I = $EpistemicDomainId.create("entities/Contradiction/Contradiction.model");
 const beliefVersionRefEquivalence = S.toEquivalence(BeliefVersionRef);
@@ -156,31 +156,29 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
       Result.all
     );
 
+    const candidateContent = {
+      assessment: this.assessment,
+      matchBasis: this.matchBasis,
+      pair: this.pair,
+      validFrom: this.validFrom,
+      validTo: this.validTo,
+    } satisfies ContradictionCandidateContent;
+
     return Result.flatMap(proposalSeals, (validProposalSeals) =>
-      Result.map(
-        contradictionCandidateDigest(
-          ContradictionCandidateContent.make({
-            assessment: this.assessment,
-            matchBasis: this.matchBasis,
-            pair: this.pair,
-            validFrom: this.validFrom,
-            validTo: this.validTo,
-          })
-        ),
-        (candidateDigest) =>
-          A.every(
-            [
-              Eq.equals(
-                contradictionEvidenceDigest(this.matchBasis.leftEvidenceIds, this.matchBasis.rightEvidenceIds),
-                this.matchBasis.evidenceDigest
-              ),
-              Eq.equals(contradictionCandidateKey(this.pair, this.matchBasis), this.candidateKey),
-              A.every(this.assessment.proposals, (proposal) => proposalTargetsPair(this.pair, proposal)),
-              ...validProposalSeals,
-              Eq.equals(candidateDigest, this.candidateDigest),
-            ],
-            identity
-          )
+      Result.map(contradictionCandidateDigest(candidateContent), (candidateDigest) =>
+        A.every(
+          [
+            Eq.equals(
+              contradictionEvidenceDigest(this.matchBasis.leftEvidenceIds, this.matchBasis.rightEvidenceIds),
+              this.matchBasis.evidenceDigest
+            ),
+            Eq.equals(contradictionCandidateKey(this.pair, this.matchBasis), this.candidateKey),
+            A.every(this.assessment.proposals, (proposal) => proposalTargetsPair(this.pair, proposal)),
+            ...validProposalSeals,
+            Eq.equals(candidateDigest, this.candidateDigest),
+          ],
+          identity
+        )
       )
     );
   };
