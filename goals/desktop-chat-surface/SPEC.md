@@ -91,19 +91,19 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] E2E on a dev machine: create thread → send rich-block message →
+- [x] E2E on a dev machine: create thread → send rich-block message →
       streamed assistant turn renders block-by-block → edit creates a branch
       with version-selector UX → cancel-in-flight leaves no partial row →
       relaunch app, thread history intact (PGlite).
-- [ ] Fixture agent runs behind the same kernel interface and powers the
+- [x] Fixture agent runs behind the same kernel interface and powers the
       app-level contract tests (no real-LLM dependency in CI).
-- [ ] `UsageRecord` rows appear at turn finalization with provider, model,
+- [x] `UsageRecord` rows appear at turn finalization with provider, model,
       tokens, latency, approximate cost, Activity link.
-- [ ] ThreadTimeline (single-branch degenerate view) renders history +
+- [x] ThreadTimeline (single-branch degenerate view) renders history +
       tool-call placeholders + cost rollup.
-- [ ] Webview and sidecar spans join into one trace; perceived-latency and
+- [x] Webview and sidecar spans join into one trace; perceived-latency and
       decode-failure metrics emit.
-- [ ] Repo quality gates pass; no unrelated refactors or formatting churn.
+- [x] Repo quality gates pass; no unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

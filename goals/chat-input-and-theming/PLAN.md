@@ -2,7 +2,8 @@
 
 ## Status
 
-Status: `in_progress` (P0–P2 complete → P3 Close in progress)
+Status: `complete` — merged to `main` via PR #272 (2026-06-21); closeout
+paperwork reconciled 2026-07-11 (see README), this status line 2026-07-31.
 
 ## Phases
 
@@ -11,7 +12,7 @@ Status: `in_progress` (P0–P2 complete → P3 Close in progress)
 | P0 Research | completed | Build the research corpus and confirm scope: reference reports, deep-research, Chrome feature-map, green-workbench palette. | `research/` populated; SPEC decisions confirmed; blockers recorded. |
 | P1 Implement | completed | Smallest changes satisfying `SPEC.md` across the two lanes. | Acceptance criteria met. |
 | P2 Verify | completed | Storybook + app run + claude-in-chrome QA (both modes) + affected checks. | Verification green or blockers documented. |
-| P3 Close | in_progress | PR, review response, closeout reflection, readiness. | Status/evidence updated; reflection exists. |
+| P3 Close | completed | PR, review response, closeout reflection, readiness. | Status/evidence updated; reflection exists. |
 
 ## P0 Research — deliverables (`research/`)
 

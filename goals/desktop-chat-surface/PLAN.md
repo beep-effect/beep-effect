@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending` (blocked by `rich-text-foundation` and
-`workspace-thread-domain`)
+Status: `complete` — all phases shipped and merged to `main` via PR #243
+(2026-06-14). This status line lagged the closeout; reconciled 2026-07-31.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm dependency packets closed; inspect proof kernel/atoms/packaging. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence (E2E flow, fixture-agent contract tests). | Verification is green or blockers are documented. |
-| P3 Close | pending | Prepare PR, review response, write the closeout reflection, and final readiness if requested. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Confirm dependency packets closed; inspect proof kernel/atoms/packaging. | Required facts and blockers are recorded. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence (E2E flow, fixture-agent contract tests). | Verification is green or blockers are documented. |
+| P3 Close | complete | Prepare PR, review response, write the closeout reflection, and final readiness if requested. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P3 Closeout Checklist
 
