@@ -6,7 +6,7 @@
  */
 
 import { editTargetAtom, unreconciledTurnAtoms } from "@beep/agents-client/Chat.atoms";
-import { A, O } from "@beep/utils";
+import { A, O, P } from "@beep/utils";
 import { Effect } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -110,7 +110,15 @@ export const scrollThreadAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
       if (readerMovedAway) return;
       yield* O.match(ctx(threadBottomAtoms(threadId)), {
         onNone: () => Effect.void,
-        onSome: (element) => Effect.sync(() => element.scrollIntoView({ behavior: "smooth" })),
+        onSome: (element) =>
+          Effect.sync(() => {
+            const scrollToBottom = () => element.scrollIntoView({ behavior: "smooth", block: "end" });
+            if (P.isFunction(globalThis.requestAnimationFrame)) {
+              globalThis.requestAnimationFrame(scrollToBottom);
+            } else {
+              scrollToBottom();
+            }
+          }),
       });
     })
   )

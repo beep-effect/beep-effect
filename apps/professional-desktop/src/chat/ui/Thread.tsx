@@ -5,14 +5,14 @@
  * {@link threadTimelineAtoms} and renders each {@link TimelineTurn}: message
  * items through {@link MessageView}, tool-call items as a placeholder chip, and
  * a cost-rollup line derived from `costMicros`. User turns carry an Edit control
- * that seeds {@link editTargetAtom}; edited turns (those with sibling branches)
+ * that seeds {@link editTargetAtom}; turns participating in an edit branch point
  * expose a degenerate version-selector affordance.
  *
  * The in-flight {@link streamingTurnAtom} renders optimistically: a "Thinking…"
- * indicator until the first block arrives, then {@link StreamingBlocks}, with a
- * Stop control that cancels the turn fiber via an `Atom.Interrupt` write. During
- * an edit turn the rewritten-away tail is hidden optimistically. The turn fiber
- * is kept subscribed with `useAtomMount(runTurnAtom)`. Transcript DOM refs,
+ * indicator until the first block arrives, then {@link StreamingBlocks}. The
+ * composer owns the canonical Stop control. During an edit turn the
+ * rewritten-away tail is hidden optimistically. The turn fiber is kept
+ * subscribed with `useAtomMount(runTurnAtom)`. Transcript DOM refs,
  * reconciliation, and scroll effects are owned by runtime atom actions.
  *
  * @packageDocumentation
@@ -29,10 +29,10 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, N, O, thunkFalse, thunkNull } from "@beep/utils";
+import { A, Eq, N, O, thunkNull } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/unstable/reactivity";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import {
@@ -109,9 +109,8 @@ const TurnRow = ({
                 </Button>
               ) : null,
           })}
-          {/* version selector affordance — only when this turn has sibling
-              branches (an earlier edit forked the thread). v1 renders nothing
-              for single-branch turns. */}
+          {/* version selector affordance — only when this turn participates in
+              a branch point created by an edit. */}
           {hasSiblings ? (
             <span className="text-xs text-muted-foreground" data-testid="turn-versions">
               versions
@@ -123,13 +122,28 @@ const TurnRow = ({
   );
 };
 
-// a turn has sibling branches when another turn shares its parent — the marker
-// that an edit forked this point in the thread.
+// Only an existing, earlier parent describes an edit edge. Self, forward,
+// equal-index, and missing parents are corrupt and mirror activeBranchTurns by
+// leaving the linear conversation untouched.
+const resolvableParentTurnId = (
+  allTurns: ReadonlyArray<TimelineTurn>,
+  turn: TimelineTurn
+): O.Option<WorkspaceIdentity.TurnId> =>
+  turn.parentTurnId.pipe(
+    O.filter((parentTurnId) => !Eq.equals(parentTurnId, turn.turnId)),
+    O.filter((parentTurnId) =>
+      A.some(
+        allTurns,
+        (candidate) => Eq.equals(candidate.turnId, parentTurnId) && N.isLessThan(candidate.turnIndex, turn.turnIndex)
+      )
+    )
+  );
+
+// A resolvable parent covers both replacements and same-parent siblings.
+// Looking for a turn that validly points here also marks the turn it replaced.
 const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTurn): boolean =>
-  O.match(turn.parentTurnId, {
-    onNone: thunkFalse,
-    onSome: (parentId) => A.filter(allTurns, (t) => O.exists(t.parentTurnId, (p) => p === parentId)).length > 1,
-  });
+  O.isSome(resolvableParentTurnId(allTurns, turn)) ||
+  A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId));
 
 const ThreadLoadState = ({ failed, loading }: { readonly failed: boolean; readonly loading: boolean }): JSX.Element => (
   <>
@@ -183,9 +197,8 @@ const StreamingTurnView = ({
 }: {
   readonly streaming: O.Option<StreamingTurn>;
   readonly turnActive: boolean;
-}): JSX.Element | null => {
-  const runTurn = useAtomSet(runTurnAtom);
-  return O.match(streaming, {
+}): JSX.Element | null =>
+  O.match(streaming, {
     onNone: thunkNull,
     onSome: (turn) => (
       <>
@@ -204,25 +217,11 @@ const StreamingTurnView = ({
             ) : (
               <StreamingBlocks blocks={turn.blocks} />
             )}
-            {turnActive ? (
-              <div className="mt-2">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  title="Stop generating"
-                  onClick={() => runTurn(Atom.Interrupt)}
-                  data-testid="turn-stop"
-                >
-                  Stop
-                </Button>
-              </div>
-            ) : null}
           </div>
         </div>
       </>
     ),
   });
-};
 
 /**
  * Renders the selected thread's timeline and in-flight streaming turn.
@@ -268,10 +267,11 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   // produced are gone for good, not merely hidden while the replacement streams.
   // (The transcript used to fall back to every turn once streaming finished, so
   // the tail the rewrite banner promised to discard came straight back.)
-  const allTurns = O.match(AsyncResult.value(timeline), {
+  const timelineTurns = O.match(AsyncResult.value(timeline), {
     onNone: () => [],
-    onSome: (value) => ThreadProjections.activeBranchTurns(value.turns),
+    onSome: (value) => value.turns,
   });
+  const allTurns = ThreadProjections.activeBranchTurns(timelineTurns);
   // While the replacement streams, its predecessor is already on its way out.
   const localTurns = A.appendAll(displayedUnreconciled, O.toArray(streamingHere));
   const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
@@ -312,7 +312,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
       />
 
       {A.map(turns, (turn) => (
-        <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(allTurns, turn)} />
+        <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(timelineTurns, turn)} />
       ))}
 
       <UnreconciledTurns turns={displayedUnreconciled} />

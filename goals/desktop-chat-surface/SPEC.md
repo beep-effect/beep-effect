@@ -91,15 +91,14 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] E2E on a dev machine: create thread → send rich-block message →
+- [x] E2E on a dev machine: create thread → send rich-block message →
       streamed assistant turn renders block-by-block → edit creates a branch
       with version-selector UX → cancel-in-flight leaves no partial row →
       relaunch app, thread history intact (PGlite).
-      *(2026-07-31 audit: evidenced piecewise, not as one recorded UI run —
-      the browser E2E covered render/stream/persist-across-reload, the
-      finalize fix was proven over a standalone rpc client, and
-      edit-as-branch/cancel are contract-test-proven. A single full-UI pass
-      was never recorded; see the Exception Ledger.)*
+      *(2026-07-31: one recorded full-UI pass against the live Anthropic
+      kernel — real input, CAPTURE-GREEN, vision-judged — landed in
+      `history/e2e-2026-07-31/`. The loop also surfaced and fixed the
+      unreachable version-selector affordance.)*
 - [x] Fixture agent runs behind the same kernel interface and powers the
       app-level contract tests (no real-LLM dependency in CI).
 - [ ] `UsageRecord` rows appear at turn finalization with provider, model,
@@ -153,6 +152,6 @@ candidate gating; v1 block scope; convergence target professional-desktop.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| Full dev-machine UI E2E evidenced piecewise only | E2E acceptance criterion | packet owner | Browser E2E + rpc-client finalize proof + contract tests cover the flow's pieces; no single recorded full-UI pass (edit-as-branch, version selector, UI cancel in one run) exists | A recorded full-UI E2E pass (e.g. via the browser-qa-loop skill) lands in `history/` |
+| Full dev-machine UI E2E evidenced piecewise only | E2E acceptance criterion | packet owner | Browser E2E + rpc-client finalize proof + contract tests cover the flow's pieces; no single recorded full-UI pass (edit-as-branch, version selector, UI cancel in one run) exists | Satisfied 2026-07-31 — recorded full-UI pass (browser-qa-loop, live Anthropic kernel) landed in `history/e2e-2026-07-31/`; row retained as the waiver record |
 | UsageRecord provider fields unpopulated | UsageRecord acceptance criterion | packet owner | `fixtureUsageRecord` (null tokens/latency/cost, synthesized Activity id) is appended on every path including live Anthropic; kernel carries no provider usage metadata | Kernel surfaces provider usage metadata and the orchestrator appends real token/latency/cost + Activity link |
 | PR #243 admin-merged with two hosted lanes red | Quality-gates acceptance criterion | packet owner | GitHub outage at merge time; `Check` passed locally identically to CI, `Lint Policy` hit the outage timeout (recorded in README) | Satisfied in substance — both lanes green on subsequent `main`-parity runs (e.g. PR #524, 2026-07-31); row retained as the waiver record |
