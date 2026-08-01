@@ -81,3 +81,18 @@ Date: 2026-08-01. Executor: Claude (Fable). Branch: `feat/identity-iri-fold`
   114,523 instantiations (+73% / +75% relative, absolute check time
   0.060s → 0.091s, memory 239MB → 262MB). The growth is the fold's own schema
   surface; no downstream blow-up observed.
+
+## P3 verify attribution (2026-08-01)
+
+- `@beep/box:build` TS2589 in the full forced verify: load-flake at the
+  instantiation edge — three consecutive forced standalone builds pass with
+  zero errors after the composer `key` overload was de-genericized
+  (`fix(ontology): satisfy repo proof lanes for the fold`). `@beep/ui` and
+  `@beep/xai` checks confirmed clean the same way.
+- `@beep/repo-cli` `architecture-operation-plan.test.ts` ENOENT on
+  `20260801021411_usage_record_optional_activity/migration.sql`: **inherited**
+  from origin/main PR #527 (merged 2026-08-01 by a concurrent session), which
+  added the db-admin migration without syncing the architecture proof
+  fixture. Reproduces on a clean checkout of main; nothing in this branch's
+  diff touches db-admin or the Architecture command. Reported as a separate
+  task; hosted required checks gate this PR per repo law.
