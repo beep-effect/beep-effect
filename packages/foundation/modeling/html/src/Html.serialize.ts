@@ -400,12 +400,8 @@ const serializeForeignChildren = Effect.fn("Html.serializeForeignChildren")(func
     }
     if (isRuntimeForeignNode(child)) {
       return isForeignChildAtForeignBoundary(
-        parent.namespace,
-        parent.name,
-        parentAttributes,
-        child.namespace,
-        child.name,
-        runtimeForeignAttributeEntries(child)
+        { attributes: parentAttributes, name: parent.name, namespace: parent.namespace },
+        { attributes: runtimeForeignAttributeEntries(child), name: child.name, namespace: child.namespace }
       )
         ? serializeRuntimeNode(child, childPath)
         : Effect.fail(
@@ -416,7 +412,8 @@ const serializeForeignChildren = Effect.fn("Html.serializeForeignChildren")(func
             )
           );
     }
-    return isHtmlTag(child._tag) && isHtmlChildAtForeignBoundary(parent.namespace, parent.name, parentAttributes)
+    return isHtmlTag(child._tag) &&
+      isHtmlChildAtForeignBoundary({ attributes: parentAttributes, name: parent.name, namespace: parent.namespace })
       ? serializeRuntimeNode(child, childPath)
       : Effect.fail(
           makeError(

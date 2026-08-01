@@ -15,7 +15,7 @@
  */
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -80,44 +80,18 @@ const isForeignBreakoutElementName = S.is(
   ])
 );
 const isFontBreakoutAttributeName = S.is(LiteralKit(["color", "face", "size"]));
+// cspell:words mglyph mtext
 const isMathMlTextIntegrationPointName = S.is(LiteralKit(["mi", "mo", "mn", "ms", "mtext"]));
 const isMathMlTextForeignChildName = S.is(LiteralKit(["malignmark", "mglyph"]));
 const isSvgHtmlIntegrationPointName = S.is(LiteralKit(["desc", "foreignObject", "title"]));
 const isHtmlIntegrationEncoding = S.is(LiteralKit(["application/xhtml+xml", "text/html"]));
 
 type ForeignAttributeEntries = ReadonlyArray<readonly [string, unknown]>;
-
-const hasForeignAttribute = (entries: ForeignAttributeEntries, predicate: (name: string) => boolean): boolean =>
-  A.some(entries, ([name]) => predicate(name));
-
-const hasHtmlIntegrationEncoding = (entries: ForeignAttributeEntries): boolean =>
-  pipe(
-    entries,
-    A.findFirst(([name]) => name === "encoding"),
-    O.map(([, value]) => value),
-    O.filter(P.isString),
-    O.map(toAsciiLowerCase),
-    O.exists(isHtmlIntegrationEncoding)
-  );
-
-const isHtmlIntegrationPoint = (
-  namespace: ForeignNamespace,
-  name: string,
-  attributes: ForeignAttributeEntries
-): boolean =>
-  namespace === "svg"
-    ? isSvgHtmlIntegrationPointName(name)
-    : name === "annotation-xml" && hasHtmlIntegrationEncoding(attributes);
-
-const isMathMlTextIntegrationPoint = (namespace: ForeignNamespace, name: string): boolean =>
-  namespace === "mathml" && isMathMlTextIntegrationPointName(name);
-
-const entersForeignNamespaceFromHtml = (namespace: ForeignNamespace, name: string): boolean =>
-  (namespace === "svg" && name === "svg") || (namespace === "mathml" && name === "math");
-
-const isForeignBreakoutStartTag = (name: string, attributes: ForeignAttributeEntries): boolean =>
-  isForeignBreakoutElementName(name) ||
-  (name === "font" && hasForeignAttribute(attributes, isFontBreakoutAttributeName));
+type ForeignBoundaryElement = {
+  readonly attributes: ForeignAttributeEntries;
+  readonly name: string;
+  readonly namespace: ForeignNamespace;
+};
 
 /**
  * Lowercases only the ASCII uppercase characters handled by the HTML tokenizer.
@@ -138,6 +112,36 @@ export const toAsciiLowerCase: (value: string) => string = flow(
   A.map((character) => (Str.includes(character)(asciiUppercaseCharacters) ? Str.toLowerCase(character) : character)),
   A.join("")
 );
+
+const hasForeignAttribute = (entries: ForeignAttributeEntries, predicate: (name: string) => boolean): boolean =>
+  A.some(entries, ([name]) => predicate(name));
+
+const hasHtmlIntegrationEncoding: (entries: ForeignAttributeEntries) => boolean = flow(
+  A.findFirst(([name]) => name === "encoding"),
+  O.map(([, value]) => value),
+  O.filter(P.isString),
+  O.map(toAsciiLowerCase),
+  O.exists(isHtmlIntegrationEncoding)
+);
+
+const isHtmlIntegrationPoint = (
+  namespace: ForeignNamespace,
+  name: string,
+  attributes: ForeignAttributeEntries
+): boolean =>
+  namespace === "svg"
+    ? isSvgHtmlIntegrationPointName(name)
+    : name === "annotation-xml" && hasHtmlIntegrationEncoding(attributes);
+
+const isMathMlTextIntegrationPoint = (namespace: ForeignNamespace, name: string): boolean =>
+  namespace === "mathml" && isMathMlTextIntegrationPointName(name);
+
+const entersForeignNamespaceFromHtml = (namespace: ForeignNamespace, name: string): boolean =>
+  (namespace === "svg" && name === "svg") || (namespace === "mathml" && name === "math");
+
+const isForeignBreakoutStartTag = (name: string, attributes: ForeignAttributeEntries): boolean =>
+  isForeignBreakoutElementName(name) ||
+  (name === "font" && hasForeignAttribute(attributes, isFontBreakoutAttributeName));
 
 const browserAdjustedName = (name: string, adjustments: Readonly<Record<string, string>>): string => {
   const lowercase = toAsciiLowerCase(name);
@@ -214,21 +218,17 @@ export const isForeignAttributeNameFixedPoint: {
  * ```ts
  * import { isHtmlChildAtForeignBoundary } from "./Html.foreign.ts"
  *
- * isHtmlChildAtForeignBoundary("svg", "foreignObject", []) // true
- * isHtmlChildAtForeignBoundary("svg", "g", []) // false
+ * isHtmlChildAtForeignBoundary({ namespace: "svg", name: "foreignObject", attributes: [] }) // true
+ * isHtmlChildAtForeignBoundary({ namespace: "svg", name: "g", attributes: [] }) // false
  * ```
  *
  * @internal
  * @category validation
  * @since 0.0.0
  */
-export const isHtmlChildAtForeignBoundary = (
-  parentNamespace: ForeignNamespace,
-  parentName: string,
-  parentAttributes: ForeignAttributeEntries
-): boolean =>
-  isHtmlIntegrationPoint(parentNamespace, parentName, parentAttributes) ||
-  isMathMlTextIntegrationPoint(parentNamespace, parentName);
+export const isHtmlChildAtForeignBoundary = (parent: ForeignBoundaryElement): boolean =>
+  isHtmlIntegrationPoint(parent.namespace, parent.name, parent.attributes) ||
+  isMathMlTextIntegrationPoint(parent.namespace, parent.name);
 
 /**
  * Tests whether a modeled foreign child keeps its namespace and parent after
@@ -238,33 +238,30 @@ export const isHtmlChildAtForeignBoundary = (
  * ```ts
  * import { isForeignChildAtForeignBoundary } from "./Html.foreign.ts"
  *
- * isForeignChildAtForeignBoundary("svg", "g", [], "svg", "path", []) // true
- * isForeignChildAtForeignBoundary("svg", "g", [], "svg", "p", []) // false
+ * const parent = { namespace: "svg", name: "g", attributes: [] } as const
+ * isForeignChildAtForeignBoundary(parent, { namespace: "svg", name: "path", attributes: [] }) // true
+ * isForeignChildAtForeignBoundary(parent, { namespace: "svg", name: "p", attributes: [] }) // false
  * ```
  *
  * @internal
  * @category validation
  * @since 0.0.0
  */
-export const isForeignChildAtForeignBoundary = (
-  parentNamespace: ForeignNamespace,
-  parentName: string,
-  parentAttributes: ForeignAttributeEntries,
-  childNamespace: ForeignNamespace,
-  childName: string,
-  childAttributes: ForeignAttributeEntries
-): boolean => {
-  if (isMathMlTextIntegrationPoint(parentNamespace, parentName) && isMathMlTextForeignChildName(childName)) {
-    return childNamespace === "mathml";
+export const isForeignChildAtForeignBoundary: {
+  (child: ForeignBoundaryElement): (parent: ForeignBoundaryElement) => boolean;
+  (parent: ForeignBoundaryElement, child: ForeignBoundaryElement): boolean;
+} = dual(2, (parent: ForeignBoundaryElement, child: ForeignBoundaryElement): boolean => {
+  if (isMathMlTextIntegrationPoint(parent.namespace, parent.name) && isMathMlTextForeignChildName(child.name)) {
+    return child.namespace === "mathml";
   }
-  if (isHtmlIntegrationPoint(parentNamespace, parentName, parentAttributes)) {
-    return entersForeignNamespaceFromHtml(childNamespace, childName);
+  if (isHtmlIntegrationPoint(parent.namespace, parent.name, parent.attributes)) {
+    return entersForeignNamespaceFromHtml(child.namespace, child.name);
   }
-  if (isMathMlTextIntegrationPoint(parentNamespace, parentName)) {
-    return entersForeignNamespaceFromHtml(childNamespace, childName);
+  if (isMathMlTextIntegrationPoint(parent.namespace, parent.name)) {
+    return entersForeignNamespaceFromHtml(child.namespace, child.name);
   }
-  if (parentNamespace === "mathml" && parentName === "annotation-xml" && childName === "svg") {
-    return childNamespace === "svg";
+  if (parent.namespace === "mathml" && parent.name === "annotation-xml" && child.name === "svg") {
+    return child.namespace === "svg";
   }
-  return childNamespace === parentNamespace && !isForeignBreakoutStartTag(childName, childAttributes);
-};
+  return child.namespace === parent.namespace && !isForeignBreakoutStartTag(child.name, child.attributes);
+});

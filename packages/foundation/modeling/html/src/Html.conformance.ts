@@ -913,12 +913,8 @@ const inspectForeignChildBoundary = (
         (childNamespace === "svg" || childNamespace === "mathml") &&
         isString(childName) &&
         isForeignChildAtForeignBoundary(
-          parentNamespace,
-          parentName,
-          parentAttributes,
-          childNamespace,
-          childName,
-          childAttributes
+          { attributes: parentAttributes, name: parentName, namespace: parentNamespace },
+          { attributes: childAttributes, name: childName, namespace: childNamespace }
         )
         ? A.emptyReadonly()
         : issue("The foreign child would change namespace or escape its opaque parent during HTML parsing");
@@ -928,7 +924,7 @@ const inspectForeignChildBoundary = (
         isHtmlTag(tag) &&
         (parentNamespace === "svg" || parentNamespace === "mathml") &&
         isString(parentName) &&
-        isHtmlChildAtForeignBoundary(parentNamespace, parentName, parentAttributes)
+        isHtmlChildAtForeignBoundary({ attributes: parentAttributes, name: parentName, namespace: parentNamespace })
           ? A.emptyReadonly()
           : issue("HTML elements can occur inside opaque foreign content only at a modeled integration point")
     )
