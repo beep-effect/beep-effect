@@ -5,13 +5,13 @@
     "title": "Identity IRI Fold",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-08-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/identity-iri-fold",
   "lifecycle": "active",
-  "mission": "Join the identity composer to a schema-validated ontology fold with deterministic projections and idempotent FOLIO migrations.",
-  "statusNote": "identity-iri-core is completed-retained (5/5); the dependency edge is satisfied. identity-iri-fibered remains held until this fold lands.",
+  "mission": "Join the identity composer to a schema-validated ontology fold (split surface: $I.key/$I.class in identity, Ontology.fold in @beep/ontology) with deterministic predicate-open projections and idempotent FOLIO migrations.",
+  "statusNote": "identity-iri-core is completed-retained (5/5); the dependency edge is satisfied. identity-iri-fibered remains held until this fold lands. 2026-07-31 grill superseded packaging to the split surface, collapsed SKOS into the fact channel, closed inline is: sugar as not planned, and adopted compile-budget/rebase/negative-fixture/vocab-codegen hardening; donor provenance pinned to commit 61160e1baf.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

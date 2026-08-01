@@ -38,6 +38,14 @@ until the fold/projection surface and FOLIO migration contracts land.
 
 ## Trail
 
+- 2026-07-31: pre-execution grill closed three branches ahead of the fold
+  build — fold packaging superseded to a split surface (`$I.key`/`$I.class`
+  composer methods in `@beep/identity`; `Ontology.fold` + projections in
+  `@beep/ontology`), SKOS collapsed into the fact channel (classification
+  marker + integrity gate), inline `is:` sugar closed as not-planned; all in
+  [`DECISIONS.md`](./DECISIONS.md). Donor provenance pinned: the effect-only
+  fold prototype lives at commit `61160e1baf` only (absent from working
+  trees). Duplicated trailing rationale block removed from `DECISIONS.md`.
 - 2026-07-14: sibling-closure review graduated `identity-iri-fold`; recorded
   `identity-iri-core` as a satisfied completed-retained dependency and kept
   `identity-iri-fibered` on HOLD behind the fold.
