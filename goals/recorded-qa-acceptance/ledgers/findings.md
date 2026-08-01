@@ -5,9 +5,22 @@ falsification-round ids never count as product findings).
 
 | ID | Severity | Lens | Title | Found | Resolved | Notes |
 |---|---|---|---|---|---|---|
-| R1-01 | P1 | floating-chrome | Floating resize grip translates the pane without resizing it | R1 | open | Judge diagnosis sharper than the harness assertion: the grip gesture falls through to the MOVE path. Suspect: gesture-mode discrimination in the in-flight `Gesture.models.ts`/`FloatingPane.tsx` refactor (header `move` works; `resize` does not). jsdom suite (26 tests) green — real-input-only defect. Owner: Benjamin (dock-react WIP). |
-| R1-02 | P1 | cancel-reset | Escape cancellation leaves the dragged Brief tab activated | R1 | open | Layout membership restores but the dragged tab's ACTIVATION leaks — harness compared panel→group mapping only; the judge saw the active-tab state change in post-Escape frames. Owner: Benjamin (dock-react WIP). |
-| R1-03 | P2 | overflow | Drag label is clipped at the right and bottom viewport edges | R1 | open | Pointer-adjacent drag label overflows the viewport near edges; judge suggests clamping/flipping the overlay placement. |
+| R1-01 | P1 | floating-chrome | Floating resize grip translates the pane without resizing it | R1 | **resolved (FU-R5)** | ROOT CAUSE: harness selector, not product. `"[data-floating-resize], [data-floating-grip]"` resolved `.first()` in DOM order to the header's grip glyph — the recorded "resize" dragged the header in move mode. Product resize path verified working under real input (follow-up rounds; harness asserts +140/+100 growth). Fixture-realism class. |
+| R1-02 | P1 | cancel-reset | Escape cancellation leaves the dragged Brief tab activated | R1 | **resolved (FU-R5)** | Real: jsdom repro red on merged main (the release's trailing click activates via the capture target). Fixed via `TabDrag.concluded` — promoted drags conclude and keep their record until the trailing click is swallowed or the next press heals it; unpromoted presses keep plain-click semantics. Successor focus-leak (FU-R2-02) fixed by Escape handing focus to the group's active tab. |
+| R1-03 | P2 | overflow | Drag label is clipped at the right and bottom viewport edges | R1 | **resolved (FU-R5)** | Ghost label ellipsis-capped at 240px; edge flip triggers exactly when the far edge would cross the container and the flipped side clamps against left/top. |
+
+## Follow-up findings (post-merge worktree rounds; see `history/rounds/followup-notes.md`)
+
+| ID | Severity | Lens | Title | Found | Resolved | Notes |
+|---|---|---|---|---|---|---|
+| FU-R1-02 | P1 | drop-preview | Bottom drop preview spans both panels instead of the target group | FU-R1 | resolved (FU-R5) | 32px root-split band shadowed edge-adjacent groups' quadrants; `ROOT_EDGE_BAND_PX = 8`. Design tradeoff ledgered: 8px root target has no Fitts pinning when the dock edge is not a screen edge — proper fix is dedicated root drop overlay targets (user decision). |
+| FU-R2-01 | P1 | cancel-reset | Pointer cancellation leaves the sash in its active drag state | FU-R2 | resolved (FU-R5) | Synthetic pointercancel skips the implicit capture release AND carries a default pointerId. Cancellation now releases the pointerId recorded at the press (`SashDragBase.pointerId`, `TabDrag.pointerId`). Re-observed as FU-R4-01 until the stored-id half landed. |
+| FU-R2-02 | P1 | cancel-reset | Escape leaves focus on the cancelled dragged tab | FU-R2 | resolved (FU-R5) | The press's `node.focus()` had no cancel counterpart; Escape now restores focus to the group's active tab (roving-tabindex invariant). |
+
+Adversarial code-review wave (3 lenses over the fix diff) contributed: stale
+concluded-record healing on next press (touch/pen releases produce no click),
+unpromoted-press Escape keeping plain-click semantics, commit-path trailing
+click conclusion, and the exact-geometry ghost flip. All folded into FU-R5.
 
 ## Falsification record (rounds 99, 98, 97 — 2026-07-30)
 
