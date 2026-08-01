@@ -47,11 +47,15 @@ import {
   Tr,
 } from "@beep/html/Html.model";
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
+const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute);
+const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute);
 const text = (value: string): Text => Text.make({ value });
 const fragment = (...children: HtmlFragment["children"]): HtmlFragment => HtmlFragment.make({ children });
 
@@ -155,6 +159,15 @@ describe("@beep/html conformance", () => {
 });
 
 describe("@beep/html safe policy", () => {
+  it("keeps schema-derived safe URL attributes at their codec fixed points", () =>
+    fc.assert(
+      fc.property(SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary, (href, src) => {
+        expect(S.decodeUnknownSync(SafeUrlAttribute)(S.encodeSync(SafeUrlAttribute)(href))).toBe(href);
+        expect(S.decodeUnknownSync(SafeImageUrlAttribute)(S.encodeSync(SafeImageUrlAttribute)(src))).toBe(src);
+      }),
+      fcRuns(100)
+    ));
+
   it("applies element-aware URL policies", () => {
     for (const href of ["/docs", "#section", "https://example.com", "mailto:user@example.com", "tel:+15551212"]) {
       expect(
@@ -192,7 +205,7 @@ describe("@beep/html safe policy", () => {
     expect(S.is(SafeImageUrlAttribute)("mailto:user@example.com")).toBe(false);
   });
 
-  it('requires noopener and noreferrer for target="_blank"', () => {
+  it("admits only self targets or protected blank targets", () => {
     for (const target of ["_blank", "_BLANK", "_Blank", "_bLaNk"]) {
       const unsafe = fragment(
         Anchor.make({
@@ -202,6 +215,28 @@ describe("@beep/html safe policy", () => {
         })
       );
       expect(Exit.isFailure(safeExit(unsafe))).toBe(true);
+    }
+
+    for (const target of ["report-window", "_parent", "_top", "_unfencedTop", "", " _self"]) {
+      const unsafe = fragment(
+        Anchor.make({
+          href: O.some("https://example.com"),
+          target: O.some(target),
+          children: [text("link")],
+        })
+      );
+      expect(Exit.isFailure(safeExit(unsafe))).toBe(true);
+    }
+
+    for (const target of ["_self", "_SELF"]) {
+      const safeSelf = fragment(
+        Anchor.make({
+          href: O.some("https://example.com"),
+          target: O.some(target),
+          children: [text("link")],
+        })
+      );
+      expect(Exit.isSuccess(safeExit(safeSelf))).toBe(true);
     }
 
     const safe = fragment(
@@ -216,6 +251,27 @@ describe("@beep/html safe policy", () => {
     expect(
       safeHtmlValue(Effect.runSync(conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe))))
     ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
+
+    for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
+      const decoded = S.decodeUnknownSync(Anchor)({
+        _tag: "a",
+        children: [{ _tag: "#text", value: "link" }],
+        href: "https://example.com",
+        rel: `noopener${separator}noreferrer`,
+        target: "_blank",
+      });
+      expect(Exit.isSuccess(safeExit(fragment(decoded)))).toBe(true);
+    }
+    for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
+      const decoded = S.decodeUnknownSync(Anchor)({
+        _tag: "a",
+        children: [{ _tag: "#text", value: "link" }],
+        href: "https://example.com",
+        rel: `noopener${separator}noreferrer`,
+        target: "_blank",
+      });
+      expect(Exit.isFailure(safeExit(fragment(decoded)))).toBe(true);
+    }
   });
 
   it("denies active, foreign, form, data, event, style, and broad global attributes", () => {

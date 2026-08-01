@@ -12,7 +12,7 @@ import { TaggedErrorClass } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
-import { Cause, Effect, HashSet, Layer, Match } from "effect";
+import { Cause, Effect, HashSet, Layer, Match, MutableHashMap } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
@@ -134,6 +134,8 @@ const unsafeCss =
 
 const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
+const cssUrl = /url\s*\(/iu;
+const localFragmentUrl = /url\s*\(\s*(?:#([^"'()\s]+)|(["'])#([^"'()\s]+)\2)\s*\)/giu;
 const unsafeStylesheetToken =
   /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(/iu;
 const layoutOffsetProperties = HashSet.make(
@@ -356,6 +358,7 @@ const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
   if (hasUnsafeStyleRule(rule)) return false;
   const selectors = splitSelectorList(rule.selectorText);
   if (selectors === undefined) return false;
+  if (A.some(selectors, (selector) => Str.includes("#")(Str.slice(Str.length(rootSelector))(selector)))) return false;
   const targetsRoot = selectorsTargetRoot(selectors, rootSelector);
   if (targetsRoot === undefined) return false;
   return !targetsRoot || isSafeMermaidRootStyle(rule.style);
@@ -395,6 +398,104 @@ const findElementById = (root: Element, id: string): Element | undefined => {
   return undefined;
 };
 
+const hasUniqueInternalFragmentTarget = (root: Element, id: string): boolean => {
+  let internalMatches = root.getAttribute("id") === id ? 1 : 0;
+  for (const element of root.querySelectorAll("[id]")) {
+    if (element.getAttribute("id") !== id) continue;
+    internalMatches += 1;
+    if (internalMatches > 1) return false;
+  }
+  return internalMatches === 1;
+};
+
+const hasSafeLocalFragmentUrls = (root: Element, value: string): boolean => {
+  let targetsAreSafe = true;
+  const withoutLocalFragments = value.replace(
+    localFragmentUrl,
+    (
+      _match: string,
+      unquotedId: string | undefined,
+      _quote: string | undefined,
+      quotedId: string | undefined
+    ): string => {
+      const id = unquotedId ?? quotedId;
+      targetsAreSafe = targetsAreSafe && id !== undefined && hasUniqueInternalFragmentTarget(root, id);
+      return "";
+    }
+  );
+  return targetsAreSafe && !cssUrl.test(withoutLocalFragments);
+};
+
+const scopedMermaidId = (ids: MutableHashMap.MutableHashMap<string, string>, id: string): string =>
+  O.getOrElse(MutableHashMap.get(ids, id), () => id);
+
+const rewriteLocalFragmentUrls = (ids: MutableHashMap.MutableHashMap<string, string>, value: string): string =>
+  value.replace(
+    localFragmentUrl,
+    (
+      _match: string,
+      unquotedId: string | undefined,
+      _quote: string | undefined,
+      quotedId: string | undefined
+    ): string => `url(#${scopedMermaidId(ids, unquotedId ?? quotedId ?? "")})`
+  );
+
+const idReferenceAttributes = HashSet.make(
+  "aria-activedescendant",
+  "aria-controls",
+  "aria-describedby",
+  "aria-details",
+  "aria-errormessage",
+  "aria-flowto",
+  "aria-labelledby",
+  "aria-owns"
+);
+
+const rewriteMermaidAttributeReferences = (
+  attribute: Attr,
+  ids: MutableHashMap.MutableHashMap<string, string>
+): void => {
+  const name = Str.toLowerCase(attribute.name);
+  const value = Str.trim(attribute.value);
+  if (HashSet.has(urlAttributes, name) && Str.startsWith("#")(value)) {
+    attribute.value = `#${scopedMermaidId(ids, Str.slice(1)(value))}`;
+    return;
+  }
+  if (HashSet.has(idReferenceAttributes, name)) {
+    attribute.value = A.join(
+      A.map(Str.split(value, /\s+/u), (id) => scopedMermaidId(ids, id)),
+      " "
+    );
+    return;
+  }
+
+  const normalizedValue = normalizeCssTokens(value);
+  if (cssUrl.test(normalizedValue)) attribute.value = rewriteLocalFragmentUrls(ids, normalizedValue);
+};
+
+const namespaceMermaidIds = (root: Element, renderId: string): boolean => {
+  if (globalThis.document.getElementById(renderId) !== null) return false;
+
+  const ids = MutableHashMap.empty<string, string>();
+  let index = 0;
+  for (const element of root.querySelectorAll("[id]")) {
+    const id = Str.trim(element.getAttribute("id") ?? "");
+    if (Str.isEmpty(id) || id === renderId || MutableHashMap.has(ids, id)) return false;
+
+    const scopedId = `${renderId}-fragment-${index}`;
+    if (globalThis.document.getElementById(scopedId) !== null) return false;
+    MutableHashMap.set(ids, id, scopedId);
+    element.setAttribute("id", scopedId);
+    index += 1;
+  }
+
+  for (const attribute of root.attributes) rewriteMermaidAttributeReferences(attribute, ids);
+  for (const element of root.querySelectorAll("*")) {
+    for (const attribute of element.attributes) rewriteMermaidAttributeReferences(attribute, ids);
+  }
+  return true;
+};
+
 const hasAssociatedText = (root: Element, attribute: "aria-describedby" | "aria-labelledby"): boolean => {
   const references = root.getAttribute(attribute)?.trim().split(/\s+/u) ?? [];
   return A.some(references, (id) => {
@@ -416,7 +517,7 @@ const directTextChild = (root: Element, name: "desc" | "title"): Element | undef
 const uniqueElementId = (root: Element, preferred: string): string => {
   let candidate = preferred;
   let suffix = 1;
-  while (findElementById(root, candidate) !== undefined) {
+  while (findElementById(root, candidate) !== undefined || globalThis.document.getElementById(candidate) !== null) {
     candidate = `${preferred}-${suffix}`;
     suffix += 1;
   }
@@ -467,10 +568,11 @@ const prepareMermaidSvg = (svg: string, renderId: string, source: string): undef
 
   for (const style of root.querySelectorAll("style")) {
     style.textContent = mermaidBuiltInKeyframes.reduce(
-      (styles, keyframes) => styles.replaceAll(keyframes, ""),
+      (styles, keyframes) => Str.replaceAll(keyframes, "")(styles),
       style.textContent ?? ""
     );
   }
+  if (!namespaceMermaidIds(root, renderId)) return undefined;
   ensureMermaidAccessibility(root, renderId, source);
   return root.outerHTML;
 };
@@ -492,16 +594,21 @@ const isSafeMermaidInlineStyle = (element: Element, isRoot: boolean, normalizedV
   return !isRoot || isSafeMermaidRootStyle(element.style);
 };
 
-const isSafeMermaidAttribute = (element: Element, attribute: Attr, isRoot: boolean): boolean => {
+const isSafeMermaidAttribute = (element: Element, root: Element, attribute: Attr, isRoot: boolean): boolean => {
   const name = attribute.name.toLowerCase();
   const value = attribute.value.trim();
   if (name.startsWith("on")) return false;
   if (name === "role") return isRoot && value === mermaidRootRole;
-  if (HashSet.has(urlAttributes, name)) return value.startsWith("#");
+  if (HashSet.has(idReferenceAttributes, name)) {
+    return A.every(Str.split(value, /\s+/u), (id) => hasUniqueInternalFragmentTarget(root, id));
+  }
+  if (HashSet.has(urlAttributes, name)) {
+    return Str.startsWith("#")(value) && hasUniqueInternalFragmentTarget(root, Str.slice(1)(value));
+  }
   const normalizedValue = normalizeCssTokens(value);
-  return name === "style"
-    ? isSafeMermaidInlineStyle(element, isRoot, normalizedValue)
-    : !unsafeCss.test(normalizedValue);
+  const safeValue =
+    name === "style" ? isSafeMermaidInlineStyle(element, isRoot, normalizedValue) : !unsafeCss.test(normalizedValue);
+  return safeValue && hasSafeLocalFragmentUrls(root, normalizedValue);
 };
 
 const isSafeMermaidElement = (element: Element, root: Element, renderId: string): boolean => {
@@ -510,7 +617,7 @@ const isSafeMermaidElement = (element: Element, root: Element, renderId: string)
   if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId)) return false;
 
   for (const attribute of element.attributes) {
-    if (!isSafeMermaidAttribute(element, attribute, element === root)) return false;
+    if (!isSafeMermaidAttribute(element, root, attribute, element === root)) return false;
   }
   return true;
 };

@@ -21,12 +21,13 @@ import { TaggedErrorClass } from "@beep/schema";
  */
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, FileSystem, Layer, Logger, MutableHashMap, MutableHashSet, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Logger, Match, MutableHashMap, MutableHashSet, Path, pipe } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GlobalAttributes } from "../src/Html.attributes.ts";
+import { EnumeratedGlobalAttributes, GlobalAttributes, tokenizeHtmlSpaceSeparated } from "../src/Html.attributes.ts";
 
 const $I = $HtmlId.create("scripts/generate");
 
@@ -43,8 +44,27 @@ class HtmlGenerationError extends TaggedErrorClass<HtmlGenerationError>($I`HtmlG
 
 const isHtmlGenerationError = S.is(HtmlGenerationError);
 
+const htmlAsciiUppercaseCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const toHtmlAsciiLowerCase: (value: string) => string = flow(
+  Str.split(""),
+  A.map((character) =>
+    Str.includes(character)(htmlAsciiUppercaseCharacters) ? Str.toLowerCase(character) : character
+  ),
+  A.join("")
+);
+
 const failGeneration = (message: string): never => {
   throw HtmlGenerationError.make({ message });
+};
+
+const assertExactInventory = (label: string, actual: ReadonlyArray<string>, expected: ReadonlyArray<string>): void => {
+  const normalizedActual = [...actual].sort();
+  const normalizedExpected = [...expected].sort();
+  if (JSON.stringify(normalizedActual) !== JSON.stringify(normalizedExpected)) {
+    failGeneration(
+      `HTML generator requires the exact ${label}; expected ${JSON.stringify(normalizedExpected)}, received ${JSON.stringify(normalizedActual)}`
+    );
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -109,6 +129,16 @@ const RESERVED = MutableHashSet.fromIterable([
   "Hidden",
   "Popover",
   "PopoverTargetAction",
+  "ButtonCommand",
+  "CrossOrigin",
+  "FormAutocomplete",
+  "HtmlIdReferenceList",
+  "HtmlRelationList",
+  "HtmlStep",
+  "LinkRelationList",
+  "MetadataName",
+  "ReferrerPolicy",
+  "Utf8Charset",
   "Metadata",
   "Flow",
   "Sectioning",
@@ -173,9 +203,16 @@ interface El {
 /** A single webref definition entry from `ed/dfns/html.json`. */
 class Dfn extends S.Class<Dfn>($I`Dfn`)(
   {
+    access: S.Unknown.pipe(S.optionalKey),
+    definedIn: S.Unknown.pipe(S.optionalKey),
     for: S.Array(S.String).pipe(S.optionalKey),
+    heading: S.Unknown.pipe(S.optionalKey),
     href: S.String,
+    id: S.Unknown.pipe(S.optionalKey),
+    informative: S.Unknown.pipe(S.optionalKey),
+    links: S.Unknown.pipe(S.optionalKey),
     linkingText: S.Array(S.String),
+    localLinkingText: S.Unknown.pipe(S.optionalKey),
     type: S.String,
   },
   $I.annote("Dfn", { description: "A single webref definition entry from ed/dfns/html.json." })
@@ -183,6 +220,7 @@ class Dfn extends S.Class<Dfn>($I`Dfn`)(
 
 class WebrefElement extends S.Class<WebrefElement>($I`WebrefElement`)(
   {
+    href: S.String,
     interface: S.String,
     name: S.String,
   },
@@ -194,6 +232,7 @@ class ContentModelEntry extends S.Class<ContentModelEntry>($I`ContentModelEntry`
     attributes: S.Array(S.String).pipe(S.optionalKey),
     categories: S.Array(S.String).pipe(S.optionalKey),
     children: S.Array(S.String).pipe(S.optionalKey),
+    void: S.Boolean.pipe(S.optionalKey),
   },
   $I.annote("ContentModelEntry", { description: "WHATWG content-model metadata for one element." })
 ) {}
@@ -202,7 +241,7 @@ class ConditionalCategoryRule extends S.Class<ConditionalCategoryRule>($I`Condit
   {
     attribute: S.String,
     category: S.String,
-    condition: S.Literals(["present", "not-equals"]),
+    condition: S.Literals(["present", "not-equals", "tokens-subset"]),
     value: S.String.pipe(S.optionalKey),
   },
   $I.annote("ConditionalCategoryRule", {
@@ -251,19 +290,56 @@ class ReviewedConformanceRules extends S.Class<ReviewedConformanceRules>($I`Revi
     forbiddenDescendants: ReviewedForbiddenDescendants.pipe(S.optionalKey),
     forbiddenNamedAncestors: ReviewedForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
     permittedAncestors: S.String.pipe(S.NonEmptyArray, S.optionalKey),
+    requiredAncestor: S.String.pipe(S.optionalKey),
   },
   $I.annote("ReviewedConformanceRules", {
     description: "Reviewed element-specific rules omitted from the tabular WHATWG element index.",
   })
 ) {}
 
+const AttributeValueConstraint = S.Union([
+  S.TaggedStruct("allowedValues", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAllTokens", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAnyToken", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("equals", {
+    asciiCaseInsensitive: S.Boolean.pipe(S.optionalKey),
+    attribute: S.String,
+    value: S.String,
+  }),
+]).pipe(
+  $I.annoteSchema("AttributeValueConstraint", {
+    description: "Generated relationship constraint over an HTML attribute value.",
+  })
+);
+
+const AttributeRequirementPredicate = S.Union([
+  S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributePresent", { attribute: S.String }),
+]).pipe(
+  $I.annoteSchema("AttributeRequirementPredicate", {
+    description: "Generated predicate controlling when an HTML attribute requirement applies.",
+  })
+);
+
 class AttributeRequirement extends S.Class<AttributeRequirement>($I`AttributeRequirement`)(
   {
+    constraints: AttributeValueConstraint.pipe(S.NonEmptyArray, S.optionalKey),
     forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
+    nonBlank: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
-    whenAttribute: S.String.pipe(S.optionalKey),
-    whenEquals: S.String.pipe(S.optionalKey),
+    validNonEmptyUrl: S.String.pipe(S.NonEmptyArray, S.optionalKey),
+    when: AttributeRequirementPredicate.pipe(S.optionalKey),
     whenParents: S.String.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("AttributeRequirement", {
@@ -295,24 +371,42 @@ class NumericAttributeRelationship extends S.Class<NumericAttributeRelationship>
   })
 ) {}
 
+const AttributeSyntax = S.Literals(["icon-sizes", "source-size-list", "srcset"]).pipe(
+  $I.annoteSchema("AttributeSyntax", {
+    description: "Reviewed HTML attribute microsyntax requiring conformance inspection beyond its wire schema.",
+  })
+);
+
 class Classification extends S.Class<Classification>($I`Classification`)(
   {
     autocompleteAttributes: S.Array(S.String),
+    autocompleteContactFields: S.Array(S.String),
+    autocompleteFieldGroups: S.Record(S.String, S.Array(S.String)),
+    autocompleteInputStateGroups: S.Record(S.String, S.Array(S.String)),
     attributeEqualities: S.Record(S.String, S.Array(AttributeEquality)),
     attributeRequirements: S.Record(S.String, S.Array(AttributeRequirement)),
+    attributeSyntaxes: S.Record(S.String, AttributeSyntax),
     booleanAttributes: S.Array(S.String),
+    buttonSubmitOnlyAttributes: S.Array(S.String),
     boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
+    caseSensitiveKeywordAttributes: S.Array(S.String),
     childSequencePatterns: S.Record(S.String, S.String),
     conditionalCategories: S.Record(S.String, S.Array(ConditionalCategoryRule)),
     conformanceRules: S.Record(S.String, ReviewedConformanceRules),
     contentTokenExpansions: S.Record(S.String, S.Array(S.String)),
     currentAttributeOverrides: S.Record(S.String, S.Array(S.String)),
+    enumeratedAttributeValueOverrides: S.Record(S.String, S.String.pipe(S.NonEmptyArray)),
     finiteNumberAttributes: S.Array(S.String),
     htmlIdValueAttributes: S.Array(S.String),
+    iconLinkRelations: S.Array(S.String),
+    idReferenceAttributes: S.Array(S.String),
+    idReferenceListAttributes: S.Array(S.String),
+    inputAttributeApplicability: S.Record(S.String, S.Array(S.String)),
     integerAttributes: S.Array(S.String),
     mathMlAttributeNameAdjustments: S.Record(S.String, S.String),
     nonNegativeIntegerAttributes: S.Array(S.String),
     nonNegativeNumberAttributes: S.Array(S.String),
+    note: S.String,
     normal: S.Array(S.String),
     emptyContentModelElements: S.Array(S.String),
     plaintext: S.Array(S.String),
@@ -334,22 +428,28 @@ class Classification extends S.Class<Classification>($I`Classification`)(
 ) {}
 
 class DfnsDoc extends S.Class<DfnsDoc>($I`DfnsDoc`)(
-  { dfns: S.Array(Dfn) },
+  { dfns: S.Array(Dfn), spec: S.Unknown },
   $I.annote("DfnsDoc", { description: "webref dfns-html.json document." })
 ) {}
 
 class ElementsDoc extends S.Class<ElementsDoc>($I`ElementsDoc`)(
-  { elements: S.Array(WebrefElement) },
+  { elements: S.Array(WebrefElement), spec: S.Unknown },
   $I.annote("ElementsDoc", { description: "webref elements-html.json document." })
 ) {}
 
 class ContentModelDoc extends S.Class<ContentModelDoc>($I`ContentModelDoc`)(
-  { elements: S.Record(S.String, ContentModelEntry) },
+  {
+    elementCount: S.Int,
+    elements: S.Record(S.String, ContentModelEntry),
+    fetched: S.String,
+    note: S.String,
+    source: S.String,
+  },
   $I.annote("ContentModelDoc", { description: "WHATWG content-model.json document." })
 ) {}
 
 class ObsoleteInterfacesDoc extends S.Class<ObsoleteInterfacesDoc>($I`ObsoleteInterfacesDoc`)(
-  { interfaces: S.Record(S.String, S.String) },
+  { interfaces: S.Record(S.String, S.String), note: S.String },
   $I.annote("ObsoleteInterfacesDoc", { description: "Local obsolete interface override document." })
 ) {}
 
@@ -427,6 +527,30 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       MutableHashMap.set(enumValues, f, arr);
     }
   }
+  for (const [key, values] of R.toEntries(classification.enumeratedAttributeValueOverrides)) {
+    if (A.dedupe(values).length !== values.length) {
+      failGeneration(`HTML generator enumerated-value override for ${key} contains duplicate keywords`);
+    }
+    MutableHashMap.set(enumValues, key, [...values]);
+  }
+  for (const [tag, requirements] of R.toEntries(classification.attributeRequirements)) {
+    for (const requirement of requirements) {
+      for (const constraint of requirement.constraints ?? []) {
+        if (constraint._tag !== "allowedValues") {
+          continue;
+        }
+        const key = `${tag}/${constraint.attribute}`;
+        const values = pipe(
+          MutableHashMap.get(enumValues, key),
+          O.getOrElse((): Array<string> => []),
+          A.appendAll(constraint.values),
+          A.dedupe,
+          A.sort(Str.Order)
+        );
+        MutableHashMap.set(enumValues, key, values);
+      }
+    }
+  }
 
   const interfaceByName = MutableHashMap.empty<string, string>();
   for (const e of elementsData) MutableHashMap.set(interfaceByName, e.name, e.interface);
@@ -480,8 +604,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   const autocompleteAttrs = MutableHashSet.fromIterable(classification.autocompleteAttributes);
   const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
+  const caseSensitiveKeywordAttrs = MutableHashSet.fromIterable(classification.caseSensitiveKeywordAttributes);
   const finiteNumberAttrs = MutableHashSet.fromIterable(classification.finiteNumberAttributes);
   const htmlIdValueAttrs = MutableHashSet.fromIterable(classification.htmlIdValueAttributes);
+  const idReferenceAttrs = MutableHashSet.fromIterable(classification.idReferenceAttributes);
+  const idReferenceListAttrs = MutableHashSet.fromIterable(classification.idReferenceListAttributes);
   const integerAttrs = MutableHashSet.fromIterable(classification.integerAttributes);
   const nonNegativeIntegerAttrs = MutableHashSet.fromIterable(classification.nonNegativeIntegerAttributes);
   const nonNegativeNumberAttrs = MutableHashSet.fromIterable(classification.nonNegativeNumberAttributes);
@@ -501,6 +628,27 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       failGeneration(`HTML generator boolean registry omits global BooleanAttribute field ${name}`);
     }
   }
+  const requiredEnumeratedGlobalAttributes = [
+    "autocapitalize",
+    "autocorrect",
+    "contenteditable",
+    "dir",
+    "draggable",
+    "enterkeyhint",
+    "hidden",
+    "inputmode",
+    "popover",
+    "spellcheck",
+    "translate",
+    "writingsuggestions",
+  ];
+  if (
+    JSON.stringify(R.keys(EnumeratedGlobalAttributes).sort()) !== JSON.stringify(requiredEnumeratedGlobalAttributes)
+  ) {
+    failGeneration(
+      `HTML generator requires the exact hand-authored enumerated global-attribute inventory; expected ${JSON.stringify(requiredEnumeratedGlobalAttributes)}, received ${JSON.stringify(R.keys(EnumeratedGlobalAttributes).sort())}`
+    );
+  }
   const isClassifiedAs = (
     classificationSet: MutableHashSet.MutableHashSet<string>,
     element: string,
@@ -508,6 +656,308 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   ): boolean =>
     MutableHashSet.has(classificationSet, `${element}/${attribute}`) ||
     MutableHashSet.has(classificationSet, attribute);
+
+  const primitiveDomainOwners = MutableHashMap.empty<string, string>();
+  const primitiveDomainRegistries: ReadonlyArray<readonly [string, Iterable<string>]> = [
+    ["boolean", booleanAttrs],
+    ["bounded-integer", R.keys(classification.boundedIntegerAttributes)],
+    ["finite-number", finiteNumberAttrs],
+    ["html-id", htmlIdValueAttrs],
+    ["integer", integerAttrs],
+    ["nonnegative-integer", nonNegativeIntegerAttrs],
+    ["nonnegative-number", nonNegativeNumberAttrs],
+    ["positive-integer", positiveIntegerAttrs],
+    ["positive-number", positiveNumberAttrs],
+    ["space-separated-token", spaceSeparatedTokenAttrs],
+    ["string", stringAttrs],
+  ];
+  for (const [owner, attributes] of primitiveDomainRegistries) {
+    for (const attribute of attributes) {
+      const previous = MutableHashMap.get(primitiveDomainOwners, attribute);
+      if (O.isSome(previous)) {
+        failGeneration(
+          `HTML generator primitive attribute ${attribute} is classified by both ${previous.value} and ${owner}`
+        );
+      }
+      MutableHashMap.set(primitiveDomainOwners, attribute, owner);
+    }
+  }
+  MutableHashMap.forEach(enumValues, (values, key) => {
+    const [tag = "", attribute = ""] = Str.split("/")(key);
+    if (isClassifiedAs(caseSensitiveKeywordAttrs, tag, attribute)) return;
+    const folded = A.map(values, toHtmlAsciiLowerCase);
+    if (A.dedupe(folded).length !== values.length) {
+      failGeneration(`HTML generator ASCII-case-insensitive domain ${key} contains folded duplicate keywords`);
+    }
+    if (isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) && A.some(values, Str.isEmpty)) {
+      failGeneration(`HTML generator token-list domain ${key} contains an empty registered token`);
+    }
+  });
+
+  if (!MutableHashSet.has(booleanAttrs, "shadowrootcustomelementregistry")) {
+    failGeneration("HTML generator must classify template/shadowrootcustomelementregistry as a boolean attribute");
+  }
+  assertExactInventory(
+    "space-separated token attribute inventory",
+    [...spaceSeparatedTokenAttrs],
+    ["blocking", "rel", "sandbox"]
+  );
+  assertExactInventory("button submit-only attribute inventory", classification.buttonSubmitOnlyAttributes, [
+    "formaction",
+    "formenctype",
+    "formmethod",
+    "formnovalidate",
+    "formtarget",
+  ]);
+  assertExactInventory("icon link-relation inventory", classification.iconLinkRelations, ["apple-touch-icon", "icon"]);
+  assertExactInventory("id-reference-list attribute inventory", classification.idReferenceListAttributes, [
+    "output/for",
+    "td/headers",
+    "th/headers",
+  ]);
+  assertExactInventory("single id-reference attribute inventory", classification.idReferenceAttributes, [
+    "button/commandfor",
+  ]);
+
+  const inputStates = [
+    "hidden",
+    "text",
+    "search",
+    "tel",
+    "url",
+    "email",
+    "password",
+    "date",
+    "month",
+    "week",
+    "time",
+    "datetime-local",
+    "number",
+    "range",
+    "color",
+    "checkbox",
+    "radio",
+    "file",
+    "submit",
+    "image",
+    "reset",
+    "button",
+  ];
+  assertExactInventory(
+    "input-state applicability inventory",
+    R.keys(classification.inputAttributeApplicability),
+    inputStates
+  );
+  assertExactInventory(
+    "autocomplete input-state inventory",
+    R.keys(classification.autocompleteInputStateGroups),
+    inputStates
+  );
+  const conditionalInputAttributes = [
+    "accept",
+    "alpha",
+    "alt",
+    "autocomplete",
+    "checked",
+    "colorspace",
+    "dirname",
+    "formaction",
+    "formenctype",
+    "formmethod",
+    "formnovalidate",
+    "formtarget",
+    "height",
+    "list",
+    "max",
+    "maxlength",
+    "min",
+    "minlength",
+    "multiple",
+    "pattern",
+    "placeholder",
+    "popovertarget",
+    "popovertargetaction",
+    "readonly",
+    "required",
+    "size",
+    "src",
+    "step",
+    "width",
+  ];
+  const configuredConditionalInputAttributes = pipe(
+    R.values(classification.inputAttributeApplicability),
+    A.flatten,
+    A.dedupe
+  );
+  assertExactInventory(
+    "conditionally applicable input attribute inventory",
+    configuredConditionalInputAttributes,
+    conditionalInputAttributes
+  );
+  for (const [state, attributes] of R.toEntries(classification.inputAttributeApplicability)) {
+    if (A.dedupe(attributes).length !== attributes.length) {
+      failGeneration(`HTML generator input applicability for ${state} contains duplicate attributes`);
+    }
+    for (const attribute of attributes) {
+      if (!A.contains(conditionalInputAttributes, attribute)) {
+        failGeneration(`HTML generator input applicability for ${state} references unclassified ${attribute}`);
+      }
+    }
+  }
+
+  const autocompleteGroupNames = [
+    "date",
+    "month",
+    "multiline",
+    "numeric",
+    "password",
+    "tel",
+    "text",
+    "url",
+    "username",
+  ];
+  assertExactInventory(
+    "autocomplete field-group inventory",
+    R.keys(classification.autocompleteFieldGroups),
+    autocompleteGroupNames
+  );
+  const autocompleteFields = [
+    "additional-name",
+    "address-level1",
+    "address-level2",
+    "address-level3",
+    "address-level4",
+    "address-line1",
+    "address-line2",
+    "address-line3",
+    "bday",
+    "bday-day",
+    "bday-month",
+    "bday-year",
+    "cc-additional-name",
+    "cc-csc",
+    "cc-exp",
+    "cc-exp-month",
+    "cc-exp-year",
+    "cc-family-name",
+    "cc-given-name",
+    "cc-name",
+    "cc-number",
+    "cc-type",
+    "country",
+    "country-name",
+    "current-password",
+    "email",
+    "family-name",
+    "given-name",
+    "honorific-prefix",
+    "honorific-suffix",
+    "impp",
+    "language",
+    "name",
+    "new-password",
+    "nickname",
+    "one-time-code",
+    "organization",
+    "organization-title",
+    "photo",
+    "postal-code",
+    "sex",
+    "street-address",
+    "tel",
+    "tel-area-code",
+    "tel-country-code",
+    "tel-extension",
+    "tel-local",
+    "tel-local-prefix",
+    "tel-local-suffix",
+    "tel-national",
+    "transaction-amount",
+    "transaction-currency",
+    "url",
+    "username",
+  ];
+  assertExactInventory(
+    "autocomplete field-name inventory",
+    pipe(R.values(classification.autocompleteFieldGroups), A.flatten),
+    autocompleteFields
+  );
+  for (const [state, groups] of R.toEntries(classification.autocompleteInputStateGroups)) {
+    if (
+      A.dedupe(groups).length !== groups.length ||
+      A.some(groups, (group) => !A.contains(autocompleteGroupNames, group))
+    ) {
+      failGeneration(`HTML generator autocomplete groups for input state ${state} are duplicated or unclassified`);
+    }
+  }
+  if (
+    A.dedupe(classification.autocompleteContactFields).length !== classification.autocompleteContactFields.length ||
+    A.some(classification.autocompleteContactFields, (field) => !A.contains(autocompleteFields, field))
+  ) {
+    failGeneration("HTML generator autocomplete contact fields must be unique classified autocomplete fields");
+  }
+
+  const requiredCaseSensitiveKeywordAttributes = ["ol/type"];
+  if (
+    JSON.stringify([...caseSensitiveKeywordAttrs].sort()) !== JSON.stringify(requiredCaseSensitiveKeywordAttributes)
+  ) {
+    failGeneration(
+      `HTML generator requires the exact case-sensitive keyword-attribute inventory; expected ${JSON.stringify(requiredCaseSensitiveKeywordAttributes)}, received ${JSON.stringify([...caseSensitiveKeywordAttrs].sort())}`
+    );
+  }
+  const orderedListTypeValues = pipe(
+    MutableHashMap.get(enumValues, "ol/type"),
+    O.getOrElse((): Array<string> => [])
+  );
+  if (
+    orderedListTypeValues.length === 0 ||
+    A.dedupe(A.map(orderedListTypeValues, Str.toLowerCase)).length === orderedListTypeValues.length
+  ) {
+    failGeneration("HTML generator case-sensitive keyword exceptions must distinguish ASCII case semantically");
+  }
+  const requiredEnumeratedAttributeValueOverrides = [
+    "area/shape",
+    "button/formenctype",
+    "input/formenctype",
+    "link/blocking",
+    "meta/http-equiv",
+    "script/blocking",
+    "style/blocking",
+  ];
+  if (
+    JSON.stringify(R.keys(classification.enumeratedAttributeValueOverrides).sort()) !==
+    JSON.stringify(requiredEnumeratedAttributeValueOverrides)
+  ) {
+    failGeneration(
+      `HTML generator requires the exact enumerated-value override inventory; expected ${JSON.stringify(requiredEnumeratedAttributeValueOverrides)}, received ${JSON.stringify(R.keys(classification.enumeratedAttributeValueOverrides).sort())}`
+    );
+  }
+  if (
+    JSON.stringify(classification.enumeratedAttributeValueOverrides["area/shape"]) !==
+    JSON.stringify(["circle", "default", "poly", "rect"])
+  ) {
+    failGeneration("HTML generator requires the exact conforming <area shape> keyword domain");
+  }
+  const formEncodingKeywords = ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"];
+  for (const attribute of ["button/formenctype", "input/formenctype"]) {
+    if (
+      JSON.stringify(classification.enumeratedAttributeValueOverrides[attribute]) !==
+      JSON.stringify(formEncodingKeywords)
+    ) {
+      failGeneration(`HTML generator requires the exact conforming ${attribute} keyword domain`);
+    }
+  }
+  for (const attribute of ["link/blocking", "script/blocking", "style/blocking"]) {
+    if (JSON.stringify(classification.enumeratedAttributeValueOverrides[attribute]) !== JSON.stringify(["render"])) {
+      failGeneration(`HTML generator requires the exact conforming ${attribute} token domain`);
+    }
+  }
+  if (
+    JSON.stringify(classification.enumeratedAttributeValueOverrides["meta/http-equiv"]) !==
+    JSON.stringify(["content-type", "default-style", "refresh", "x-ua-compatible", "content-security-policy"])
+  ) {
+    failGeneration("HTML generator requires the exact current conforming meta/http-equiv keyword domain");
+  }
 
   const elementClassifications = [voidEls, rawTextEls, rcDataEls, plaintextEls, normalEls];
   for (const tag of elementNames) {
@@ -596,10 +1046,50 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
       ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
     ]);
+  for (const key of R.keys(classification.enumeratedAttributeValueOverrides)) {
+    const [tag, attribute, ...unexpected] = Str.split("/")(key);
+    if (
+      tag === undefined ||
+      attribute === undefined ||
+      unexpected.length > 0 ||
+      !MutableHashSet.has(elementNameSet, tag) ||
+      !MutableHashSet.has(modeledAttributesFor(tag), attribute)
+    ) {
+      failGeneration(`HTML generator enumerated-value override references unknown ${key}`);
+    }
+  }
+
+  const syntaxSensitiveAttributeNames = MutableHashSet.fromIterable(["imagesizes", "imagesrcset", "sizes", "srcset"]);
+  const requiredAttributeSyntaxKeys = elementNames
+    .flatMap((tag) =>
+      [...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>()))]
+        .filter((attribute) => MutableHashSet.has(syntaxSensitiveAttributeNames, attribute))
+        .map((attribute) => `${tag}/${attribute}`)
+    )
+    .sort();
+  const configuredAttributeSyntaxKeys = R.keys(classification.attributeSyntaxes).sort();
+  if (JSON.stringify(configuredAttributeSyntaxKeys) !== JSON.stringify(requiredAttributeSyntaxKeys)) {
+    failGeneration(
+      `HTML generator requires an exact special-attribute syntax inventory; expected ${JSON.stringify(requiredAttributeSyntaxKeys)}, received ${JSON.stringify(configuredAttributeSyntaxKeys)}`
+    );
+  }
+  for (const [key, syntax] of R.toEntries(classification.attributeSyntaxes)) {
+    const [tag, attribute, ...unexpected] = Str.split("/")(key);
+    const expectedSyntax =
+      attribute === "srcset" || attribute === "imagesrcset"
+        ? "srcset"
+        : tag === "link" && attribute === "sizes"
+          ? "icon-sizes"
+          : "source-size-list";
+    if (tag === undefined || attribute === undefined || unexpected.length > 0 || syntax !== expectedSyntax) {
+      failGeneration(`HTML generator special-attribute syntax for ${key} must be ${expectedSyntax}`);
+    }
+  }
 
   const requiredConformanceRuleTags = [
     "a",
     "address",
+    "area",
     "audio",
     "button",
     "dfn",
@@ -654,6 +1144,15 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       `HTML generator requires permitted-ancestor metadata exactly for <main>; received ${JSON.stringify(configuredPermittedAncestorTags)}`
     );
   }
+  const configuredRequiredAncestorTags = R.toEntries(classification.conformanceRules)
+    .filter(([, rules]) => rules.requiredAncestor !== undefined)
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(configuredRequiredAncestorTags) !== JSON.stringify(["area"])) {
+    failGeneration(
+      `HTML generator requires required-ancestor metadata exactly for <area>; received ${JSON.stringify(configuredRequiredAncestorTags)}`
+    );
+  }
   const configuredDocumentVisibilityTags = R.toEntries(classification.conformanceRules)
     .filter(([, rules]) => rules.documentVisibilityLimit !== undefined)
     .map(([tag]) => tag)
@@ -684,6 +1183,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       rules.forbiddenDescendants === undefined &&
       rules.forbiddenNamedAncestors === undefined &&
       rules.permittedAncestors === undefined &&
+      rules.requiredAncestor === undefined &&
       rules.documentVisibilityLimit === undefined
     ) {
       failGeneration(`HTML generator conformance rules for <${tag}> must not be empty`);
@@ -726,6 +1226,15 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         failGeneration(`HTML generator conformance rules for <${tag}> permit non-current <${ancestorTag}>`);
       }
     }
+    if (rules.requiredAncestor !== undefined) {
+      const ancestorTag = rules.requiredAncestor;
+      if (
+        !MutableHashSet.has(elementNameSet, ancestorTag) ||
+        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === ancestorTag))
+      ) {
+        failGeneration(`HTML generator conformance rules for <${tag}> require non-current <${ancestorTag}>`);
+      }
+    }
     for (const condition of rules.forbiddenNamedAncestors ?? []) {
       if (
         !MutableHashSet.has(elementNameSet, condition.tag) ||
@@ -753,6 +1262,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
 
+  const requiredConditionalCategoryTags = ["a", "audio", "img", "input", "link", "meta", "object", "video"];
+  const configuredConditionalCategoryTags = R.keys(classification.conditionalCategories).sort();
+  if (JSON.stringify(configuredConditionalCategoryTags) !== JSON.stringify(requiredConditionalCategoryTags)) {
+    failGeneration(
+      `HTML generator requires an exact conditional-category inventory; expected ${JSON.stringify(requiredConditionalCategoryTags)}, received ${JSON.stringify(configuredConditionalCategoryTags)}`
+    );
+  }
   for (const [tag, rules] of R.toEntries(classification.conditionalCategories)) {
     if (
       !MutableHashSet.has(elementNameSet, tag) ||
@@ -771,16 +1287,126 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
           `HTML generator conditional category ${tag}/${rule.category} references unknown ${rule.attribute}`
         );
       }
-      if ((rule.condition === "not-equals") !== (rule.value !== undefined)) {
+      if ((rule.condition !== "present") !== (rule.value !== undefined)) {
         failGeneration(`HTML generator conditional category ${tag}/${rule.category} has an invalid predicate value`);
+      }
+      if (rule.condition === "tokens-subset") {
+        const tokens = tokenizeHtmlSpaceSeparated(rule.value ?? "");
+        const attributeValues = pipe(
+          MutableHashMap.get(enumValues, `${tag}/${rule.attribute}`),
+          O.getOrElse((): Array<string> => [])
+        );
+        if (
+          tokens.length === 0 ||
+          A.dedupe(tokens).length !== tokens.length ||
+          A.some(tokens, (token) => Str.toLowerCase(token) !== token || !A.contains(attributeValues, token))
+        ) {
+          failGeneration(
+            `HTML generator conditional category ${tag}/${rule.category} has an invalid token-subset registry`
+          );
+        }
       }
     }
   }
   const attributeRequirementTags = R.keys(classification.attributeRequirements).sort();
-  const requiredAttributeRequirementTags = ["a", "area", "base", "img", "input", "map", "meter", "source", "track"];
+  const requiredAttributeRequirementTags = [
+    "a",
+    "area",
+    "base",
+    "img",
+    "input",
+    "link",
+    "map",
+    "meta",
+    "meter",
+    "source",
+    "track",
+  ];
   if (JSON.stringify(attributeRequirementTags) !== JSON.stringify(requiredAttributeRequirementTags)) {
     failGeneration(
       `HTML generator requires an exact attribute-requirement inventory; expected ${JSON.stringify(requiredAttributeRequirementTags)}, received ${JSON.stringify(attributeRequirementTags)}`
+    );
+  }
+  const nonBlankRequirementTags = R.toEntries(classification.attributeRequirements)
+    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.nonBlank !== undefined))
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(nonBlankRequirementTags) !== JSON.stringify(["link"])) {
+    failGeneration(
+      `HTML generator requires non-blank attribute requirements exactly for <link>; received ${JSON.stringify(nonBlankRequirementTags)}`
+    );
+  }
+  const linkNonBlankRequirements = A.filter(
+    classification.attributeRequirements.link ?? [],
+    (requirement) => requirement.nonBlank !== undefined
+  );
+  if (
+    linkNonBlankRequirements.length !== 1 ||
+    JSON.stringify(linkNonBlankRequirements[0]?.nonBlank) !== JSON.stringify(["imagesrcset"]) ||
+    JSON.stringify(linkNonBlankRequirements[0]?.required) !== JSON.stringify([["href", "imagesrcset"]]) ||
+    JSON.stringify(linkNonBlankRequirements[0]?.validNonEmptyUrl) !== JSON.stringify(["href"])
+  ) {
+    failGeneration("HTML generator requires <link> to have an address and validates href as a non-empty URL");
+  }
+  const validNonEmptyUrlRequirementTags = R.toEntries(classification.attributeRequirements)
+    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.validNonEmptyUrl !== undefined))
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(validNonEmptyUrlRequirementTags) !== JSON.stringify(["link"])) {
+    failGeneration(
+      `HTML generator requires valid non-empty URL requirements exactly for <link>; received ${JSON.stringify(validNonEmptyUrlRequirementTags)}`
+    );
+  }
+  const constrainedRequirementTags = R.toEntries(classification.attributeRequirements)
+    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.constraints !== undefined))
+    .map(([tag]) => tag)
+    .sort();
+  if (JSON.stringify(constrainedRequirementTags) !== JSON.stringify(["link", "meta"])) {
+    failGeneration(
+      `HTML generator requires value constraints exactly for <link> and <meta>; received ${JSON.stringify(constrainedRequirementTags)}`
+    );
+  }
+  const metaCharsetRequirements = A.filter(
+    classification.attributeRequirements.meta ?? [],
+    (requirement) => requirement.constraints !== undefined
+  );
+  const metaCharsetConstraint = metaCharsetRequirements[0]?.constraints?.[0];
+  if (
+    metaCharsetRequirements.length !== 1 ||
+    metaCharsetRequirements[0]?.when?._tag !== "attributePresent" ||
+    metaCharsetRequirements[0]?.when.attribute !== "charset" ||
+    metaCharsetConstraint?._tag !== "equals" ||
+    metaCharsetConstraint.attribute !== "charset" ||
+    metaCharsetConstraint.value !== "utf-8" ||
+    metaCharsetConstraint.asciiCaseInsensitive !== true ||
+    !A.contains(metaCharsetRequirements[0]?.forbidden ?? [], "content")
+  ) {
+    failGeneration("HTML generator requires <meta charset> to be utf-8 and omit content");
+  }
+  const linkAsValues = pipe(
+    MutableHashMap.get(enumValues, "link/as"),
+    O.getOrElse((): Array<string> => []),
+    A.dedupe,
+    A.sort(Str.Order)
+  );
+  const requiredLinkAsValues = [
+    "audioworklet",
+    "fetch",
+    "font",
+    "image",
+    "json",
+    "paintworklet",
+    "script",
+    "serviceworker",
+    "sharedworker",
+    "style",
+    "text",
+    "track",
+    "worker",
+  ];
+  if (JSON.stringify(linkAsValues) !== JSON.stringify(requiredLinkAsValues)) {
+    failGeneration(
+      `HTML generator requires the exact link/as preload destination domain; expected ${JSON.stringify(requiredLinkAsValues)}, received ${JSON.stringify(linkAsValues)}`
     );
   }
   for (const [tag, requirements] of R.toEntries(classification.attributeRequirements)) {
@@ -792,15 +1418,109 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
     const modeledAttributes = modeledAttributesFor(tag);
     for (const requirement of requirements) {
-      if (requirement.whenEquals !== undefined && requirement.whenAttribute === undefined) {
-        failGeneration(`HTML generator attribute requirement for <${tag}> has whenEquals without whenAttribute`);
-      }
-      if (
-        requirement.whenAttribute !== undefined &&
-        !MutableHashSet.has(modeledAttributes, requirement.whenAttribute)
-      ) {
+      if (requirement.when !== undefined && !MutableHashSet.has(modeledAttributes, requirement.when.attribute)) {
         failGeneration(
-          `HTML generator attribute requirement for <${tag}> references unknown ${requirement.whenAttribute}`
+          `HTML generator attribute requirement for <${tag}> references unknown ${requirement.when.attribute}`
+        );
+      }
+      if (requirement.when?._tag === "attributeContainsToken") {
+        const { attribute, value } = requirement.when;
+        if (!isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute)) {
+          failGeneration(
+            `HTML generator token predicate for <${tag}> references non-token-list attribute ${attribute}`
+          );
+        }
+        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse((): Array<string> => []));
+        if (Str.toLowerCase(value) !== value || !A.contains(values, value)) {
+          failGeneration(
+            `HTML generator token predicate for <${tag} ${attribute}> references unclassified token ${value}`
+          );
+        }
+      }
+      if (requirement.when?._tag === "attributeEquals") {
+        const { attribute, value } = requirement.when;
+        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse((): Array<string> => []));
+        if (values.length > 0 && !A.contains(values, value)) {
+          failGeneration(
+            `HTML generator equality predicate for <${tag} ${attribute}> references unclassified value ${value}`
+          );
+        }
+      }
+      const constraintAttributes = MutableHashSet.empty<string>();
+      for (const constraint of requirement.constraints ?? []) {
+        if (!MutableHashSet.has(modeledAttributes, constraint.attribute)) {
+          failGeneration(`HTML generator value constraint for <${tag}> references unknown ${constraint.attribute}`);
+        }
+        if (MutableHashSet.has(constraintAttributes, constraint.attribute)) {
+          failGeneration(
+            `HTML generator attribute requirement for <${tag}> constrains ${constraint.attribute} more than once`
+          );
+        }
+        MutableHashSet.add(constraintAttributes, constraint.attribute);
+        Match.value(constraint).pipe(
+          Match.tags({
+            allowedValues: ({ attribute, values }) => {
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
+                O.getOrElse((): Array<string> => [])
+              );
+              if (
+                A.dedupe(values).length !== values.length ||
+                A.some(
+                  values,
+                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+                )
+              ) {
+                failGeneration(
+                  `HTML generator allowed-value constraint for <${tag} ${attribute}> is not an exact classified lowercase subset`
+                );
+              }
+            },
+            containsAllTokens: ({ attribute, values }) => {
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
+                O.getOrElse((): Array<string> => [])
+              );
+              if (
+                !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
+                A.dedupe(values).length !== values.length ||
+                A.some(
+                  values,
+                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+                )
+              ) {
+                failGeneration(
+                  `HTML generator all-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
+                );
+              }
+            },
+            containsAnyToken: ({ attribute, values }) => {
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
+                O.getOrElse((): Array<string> => [])
+              );
+              if (
+                !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
+                A.dedupe(values).length !== values.length ||
+                A.some(
+                  values,
+                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+                )
+              ) {
+                failGeneration(
+                  `HTML generator any-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
+                );
+              }
+            },
+            equals: ({ attribute, value }) => {
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
+                O.getOrElse((): Array<string> => [])
+              );
+              if (Str.isEmpty(value) || (domain.length > 0 && !A.contains(domain, value))) {
+                failGeneration(
+                  `HTML generator equality constraint for <${tag} ${attribute}> references unclassified value ${value}`
+                );
+              }
+            },
+          }),
+          Match.exhaustive
         );
       }
       for (const parent of requirement.whenParents ?? []) {
@@ -814,6 +1534,16 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       for (const attribute of requirement.forbidden ?? []) {
         if (!MutableHashSet.has(modeledAttributes, attribute)) {
           failGeneration(`HTML generator attribute exclusion for <${tag}> references unknown ${attribute}`);
+        }
+      }
+      for (const attribute of requirement.nonBlank ?? []) {
+        if (!MutableHashSet.has(modeledAttributes, attribute)) {
+          failGeneration(`HTML generator non-blank requirement for <${tag}> references unknown ${attribute}`);
+        }
+      }
+      for (const attribute of requirement.validNonEmptyUrl ?? []) {
+        if (!MutableHashSet.has(modeledAttributes, attribute)) {
+          failGeneration(`HTML generator URL requirement for <${tag}> references unknown ${attribute}`);
         }
       }
       for (const alternatives of requirement.required) {
@@ -852,6 +1582,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       `HTML generator requires an exact HTML id-value attribute inventory; expected ${JSON.stringify(requiredHtmlIdValueAttributeInventory)}, received ${JSON.stringify(htmlIdValueAttributeInventory)}`
     );
   }
+  for (const key of A.appendAll(classification.idReferenceAttributes, classification.idReferenceListAttributes)) {
+    const [tag, attribute, ...unexpected] = Str.split("/")(key);
+    if (
+      tag === undefined ||
+      attribute === undefined ||
+      unexpected.length > 0 ||
+      !MutableHashSet.has(elementNameSet, tag) ||
+      !MutableHashSet.has(modeledAttributesFor(tag), attribute)
+    ) {
+      failGeneration(`HTML generator id-reference inventory references unknown ${key}`);
+    }
+  }
   const uniqueAttributeTags = R.keys(classification.uniqueAttributes).sort();
   const requiredUniqueAttributeTags = ["map"];
   if (JSON.stringify(uniqueAttributeTags) !== JSON.stringify(requiredUniqueAttributeTags)) {
@@ -871,7 +1613,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
   const numericRelationshipTags = R.keys(classification.numericAttributeRelationships).sort();
-  const requiredNumericRelationshipTags = ["meter", "progress"];
+  const requiredNumericRelationshipTags = ["input", "meter", "progress", "textarea"];
   if (JSON.stringify(numericRelationshipTags) !== JSON.stringify(requiredNumericRelationshipTags)) {
     failGeneration(
       `HTML generator requires an exact numeric-relationship inventory; expected ${JSON.stringify(requiredNumericRelationshipTags)}, received ${JSON.stringify(numericRelationshipTags)}`
@@ -929,7 +1671,77 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       return {
         runtime: optionalRuntime("PopoverTargetAction"),
         type: 'O.Option<"toggle" | "show" | "hide">',
-        encoded: '"toggle" | "show" | "hide"',
+        encoded: "string",
+      };
+    }
+    if (attr === "crossorigin") {
+      return {
+        runtime: optionalRuntime("CrossOrigin"),
+        type: 'O.Option<"anonymous" | "use-credentials">',
+        encoded: "string",
+      };
+    }
+    if (attr === "referrerpolicy") {
+      return {
+        runtime: optionalRuntime("ReferrerPolicy"),
+        type: 'O.Option<"" | "no-referrer" | "no-referrer-when-downgrade" | "same-origin" | "origin" | "strict-origin" | "origin-when-cross-origin" | "strict-origin-when-cross-origin" | "unsafe-url">',
+        encoded: "string",
+      };
+    }
+    if ((el === "form" && attr === "accept-charset") || (el === "meta" && attr === "charset")) {
+      return {
+        runtime: optionalRuntime("Utf8Charset"),
+        type: 'O.Option<"utf-8">',
+        encoded: "string",
+      };
+    }
+    if (el === "form" && attr === "autocomplete") {
+      return {
+        runtime: optionalRuntime("FormAutocomplete"),
+        type: 'O.Option<"on" | "off">',
+        encoded: "string",
+      };
+    }
+    if (el === "button" && attr === "command") {
+      return {
+        runtime: optionalRuntime("ButtonCommand"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    if (el === "input" && attr === "step") {
+      return {
+        runtime: optionalRuntime("HtmlStep"),
+        type: 'O.Option<"any" | number>',
+        encoded: "string | number",
+      };
+    }
+    if (attr === "rel") {
+      return {
+        runtime: optionalRuntime(el === "link" ? "LinkRelationList" : "HtmlRelationList"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    if (el === "meta" && attr === "name") {
+      return {
+        runtime: optionalRuntime("MetadataName"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    if (isClassifiedAs(idReferenceAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlIdValue"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    if (isClassifiedAs(idReferenceListAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlIdReferenceList"),
+        type: "O.Option<string>",
+        encoded: "string",
       };
     }
     if (isClassifiedAs(booleanAttrs, el, attr)) {
@@ -957,13 +1769,25 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
     if (O.isSome(valsOption) && valsOption.value.length > 0) {
       const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
-      const schema =
-        uniq.length === 1 ? `S.Literal(${JSON.stringify(uniq[0])})` : `S.Literals(${JSON.stringify(uniq)})`;
       const union = literalUnion(uniq);
+      if (isClassifiedAs(caseSensitiveKeywordAttrs, el, attr)) {
+        const schema =
+          uniq.length === 1 ? `S.Literal(${JSON.stringify(uniq[0])})` : `S.Literals(${JSON.stringify(uniq)})`;
+        return {
+          runtime: optionalRuntime(schema),
+          type: `O.Option<${union}>`,
+          encoded: union,
+        };
+      }
+      if (A.some(uniq, (value) => Str.toLowerCase(value) !== value)) {
+        return failGeneration(
+          `HTML generator ASCII-case-insensitive enumeration ${el}/${attr} has non-canonical keyword casing`
+        );
+      }
       return {
-        runtime: optionalRuntime(schema),
+        runtime: optionalRuntime(`makeAsciiCaseInsensitiveEnumerated(${JSON.stringify(uniq)})`),
         type: `O.Option<${union}>`,
-        encoded: union,
+        encoded: "string",
       };
     }
     const bounded = classification.boundedIntegerAttributes[attr];
@@ -1435,17 +2259,28 @@ import * as S from "effect/Schema";
 import {
   AutocompleteAttribute,
   BooleanAttribute,
+  ButtonCommand,
+  CrossOrigin,
   ForeignAttributeName,
   ForeignElementName,
+  FormAutocomplete,
   GlobalAttributes,
   HtmlFiniteNumber,
+  HtmlIdReferenceList,
   HtmlIdValue,
   HtmlNonNegativeInteger,
   HtmlNonNegativeNumber,
   HtmlPositiveInteger,
   HtmlPositiveNumber,
+  HtmlRelationList,
+  HtmlStep,
+  LinkRelationList,
+  makeAsciiCaseInsensitiveEnumerated,
   makeSpaceSeparatedTokenList,
+  MetadataName,
   PopoverTargetAction,
+  ReferrerPolicy,
+  Utf8Charset,
 } from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
@@ -1697,6 +2532,10 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
     [...MutableHashSet.fromIterable(els.flatMap((element) => element.children))].sort()
   );
   const booleanAttributeValues = JSON.stringify([...booleanAttrs].sort());
+  const attributeSyntaxValues = JSON.stringify(
+    [...MutableHashSet.fromIterable(R.values(classification.attributeSyntaxes))].sort()
+  );
+  const attributeSyntaxes = JSON.stringify(classification.attributeSyntaxes);
   const childGrammarValues = JSON.stringify(
     [...MutableHashSet.fromIterable(R.values(classification.specialChildGrammars))].sort()
   );
@@ -1705,6 +2544,20 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
   const mathMlAttributeNameAdjustments = JSON.stringify(classification.mathMlAttributeNameAdjustments);
   const xmlAttributeNames = JSON.stringify([...classification.xmlAttributeNames].sort());
   const globalAttributeNames = JSON.stringify([...globalKeys].sort());
+  const readonlyArrayRecord = (record: Readonly<Record<string, ReadonlyArray<string>>>): string => `{
+${R.toEntries(record)
+  .map(([key, values]) => `  ${JSON.stringify(key)}: Object.freeze(${JSON.stringify(values)}),`)
+  .join("\n")}
+}`;
+  const autocompleteFieldGroups = readonlyArrayRecord(classification.autocompleteFieldGroups);
+  const autocompleteInputStateGroups = readonlyArrayRecord(classification.autocompleteInputStateGroups);
+  const inputAttributeApplicability = readonlyArrayRecord(classification.inputAttributeApplicability);
+  const autocompleteContactFields = JSON.stringify(classification.autocompleteContactFields);
+  const buttonSubmitOnlyAttributes = JSON.stringify(classification.buttonSubmitOnlyAttributes);
+  const conditionalInputAttributeNames = JSON.stringify(conditionalInputAttributes);
+  const iconLinkRelations = JSON.stringify(classification.iconLinkRelations);
+  const idReferenceAttributes = JSON.stringify(classification.idReferenceAttributes);
+  const idReferenceListAttributes = JSON.stringify(classification.idReferenceListAttributes);
   const contentTokenExpansions = `{
 ${R.toEntries(classification.contentTokenExpansions)
   .map(([token, values]) => `  ${JSON.stringify(token)}: Object.freeze(${JSON.stringify(values)}),`)
@@ -1722,8 +2575,8 @@ ${R.toEntries(classification.contentTokenExpansions)
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
@@ -1889,7 +2742,7 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
   {
     attribute: S.String,
     category: HtmlCategory,
-    condition: S.Literals(["present", "not-equals"]),
+    condition: S.Literals(["present", "not-equals", "tokens-subset"]),
     value: S.String.pipe(S.optionalKey),
   },
   $I.annote("HtmlConditionalCategoryRule", {
@@ -2001,6 +2854,153 @@ export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArra
 );
 
 /**
+ * Generator-owned autocomplete field groups from the WHATWG control table.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_AUTOCOMPLETE_FIELD_GROUPS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_FIELD_GROUPS.password.includes("new-password")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_FIELD_GROUPS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
+  ${autocompleteFieldGroups}
+);
+
+/**
+ * Generator-owned input-state compatibility for autocomplete field groups.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS.email.includes("username")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
+  ${autocompleteInputStateGroups}
+);
+
+/**
+ * Autocomplete fields that may carry a contact-recipient hint.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_AUTOCOMPLETE_CONTACT_FIELDS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_CONTACT_FIELDS.includes("email")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.freeze(${autocompleteContactFields});
+
+/**
+ * Exact conditional attribute applicability for every input type state.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_INPUT_ATTRIBUTE_APPLICABILITY } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
+  ${inputAttributeApplicability}
+);
+
+/**
+ * Conditional input attributes covered by the applicability table.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES.includes("autocomplete")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
+  ${conditionalInputAttributeNames}
+);
+
+/**
+ * Button attributes permitted only for effective submit buttons.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES.includes("formaction")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES: ReadonlyArray<string> = Object.freeze(
+  ${buttonSubmitOnlyAttributes}
+);
+
+/**
+ * Reviewed icon relation tokens used by link-specific attributes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_ICON_LINK_RELATIONS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ICON_LINK_RELATIONS.includes("apple-touch-icon")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ICON_LINK_RELATIONS: ReadonlyArray<string> = Object.freeze(${iconLinkRelations});
+
+/**
+ * Element/attribute keys using the HTML ID-reference-list microsyntax.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_ID_REFERENCE_LIST_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ID_REFERENCE_LIST_ATTRIBUTES.includes("output/for")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ID_REFERENCE_LIST_ATTRIBUTES: ReadonlyArray<string> = Object.freeze(
+  ${idReferenceListAttributes}
+);
+
+/**
+ * Element/attribute keys containing one case-sensitive HTML ID reference.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_ID_REFERENCE_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ID_REFERENCE_ATTRIBUTES.includes("button/commandfor")) // true
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ID_REFERENCE_ATTRIBUTES: ReadonlyArray<string> = Object.freeze(${idReferenceAttributes});
+
+/**
  * Text parsing and serialization mode of an HTML element.
  *
  * @example
@@ -2074,6 +3074,60 @@ export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pi
 export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
 
 /**
+ * Reviewed HTML attribute microsyntaxes that require conformance inspection
+ * beyond their lossless wire schemas.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlAttributeSyntax } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlAttributeSyntax.is.srcset("srcset")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlAttributeSyntax = LiteralKit(${attributeSyntaxValues}).pipe(
+  $I.annoteSchema("HtmlAttributeSyntax", {
+    description: "Reviewed HTML attribute microsyntax requiring specialized conformance inspection.",
+  })
+);
+
+/**
+ * Decoded reviewed HTML attribute microsyntax.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlAttributeSyntax } from "@beep/html/Html.meta"
+ *
+ * const syntax: HtmlAttributeSyntax = "srcset"
+ * console.log(syntax)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlAttributeSyntax = typeof HtmlAttributeSyntax.Type;
+
+/**
+ * Exact generator-owned mapping from element/attribute pairs to specialized
+ * conformance microsyntaxes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HTML_ATTRIBUTE_SYNTAXES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ATTRIBUTE_SYNTAXES["link/sizes"]) // "icon-sizes"
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSyntax>> = Object.freeze(
+  ${attributeSyntaxes}
+);
+
+/**
  * Generated same-value relationship between two HTML attributes.
  *
  * @example
@@ -2102,6 +3156,40 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`Ht
   })
 ) {}
 
+const HtmlAttributeValueConstraint = S.Union([
+  S.TaggedStruct("allowedValues", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAllTokens", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAnyToken", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("equals", {
+    asciiCaseInsensitive: S.Boolean.pipe(S.optionalKey),
+    attribute: S.String,
+    value: S.String,
+  }),
+]).pipe(
+  $I.annoteSchema("HtmlAttributeValueConstraint", {
+    description: "Generated relationship constraint over an HTML attribute value.",
+  })
+);
+
+const HtmlAttributeRequirementPredicate = S.Union([
+  S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributePresent", { attribute: S.String }),
+]).pipe(
+  $I.annoteSchema("HtmlAttributeRequirementPredicate", {
+    description: "Generated predicate controlling when an HTML attribute requirement applies.",
+  })
+);
+
 /**
  * Generated conditional requirement or exclusion for HTML attributes.
  *
@@ -2112,7 +3200,7 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`Ht
  * const requirement = HtmlAttributeRequirement.make({
  *   message: "target requires href",
  *   required: [["href"]],
- *   whenAttribute: "target"
+ *   when: { _tag: "attributePresent", attribute: "target" }
  * })
  * console.log(requirement.required[0])
  * \`\`\`
@@ -2122,11 +3210,13 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`Ht
  */
 export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>($I\`HtmlAttributeRequirement\`)(
   {
+    constraints: HtmlAttributeValueConstraint.pipe(S.NonEmptyArray, S.optionalKey),
     forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
+    nonBlank: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
-    whenAttribute: S.String.pipe(S.optionalKey),
-    whenEquals: S.String.pipe(S.optionalKey),
+    validNonEmptyUrl: S.String.pipe(S.NonEmptyArray, S.optionalKey),
+    when: HtmlAttributeRequirementPredicate.pipe(S.optionalKey),
     whenParents: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("HtmlAttributeRequirement", {
@@ -2274,6 +3364,7 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
     forbiddenDescendants: HtmlForbiddenDescendants.pipe(S.optionalKey),
     forbiddenNamedAncestors: HtmlForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
     permittedAncestors: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
+    requiredAncestor: HtmlTag.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementConformanceRules", {
     description: "Generated element-specific rules absent from the tabular WHATWG element index.",
@@ -2285,27 +3376,10 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
  *
  * @example
  * \`\`\`ts
- * import { HtmlElementMeta } from "@beep/html/Html.meta"
+ * import { ELEMENT_META, HtmlElementMeta } from "@beep/html/Html.meta"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlElementMeta)({
- *   tag: "div",
- *   interface: "HTMLDivElement",
- *   conformance: "conforming",
- *   void: false,
- *   rawText: false,
- *   textMode: "normal",
- *   categories: ["flow"],
- *   children: ["flow"],
- *   currentAttributes: [],
- *   obsoleteAttributes: [],
- *   conditionalCategories: [],
- *   attributeEqualities: [],
- *   attributeRequirements: [],
- *   numericAttributeRelationships: [],
- *   rules: {},
- *   uniqueAttributes: []
- * })) // true
+ * console.log(S.is(HtmlElementMeta)(ELEMENT_META.div)) // true
  * \`\`\`
  *
  * @category models
@@ -2359,38 +3433,46 @@ const freezeElementConformanceRules = (value: HtmlElementConformanceRules): Html
 };
 
 const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
-  Object.freeze({
-    ...value,
-    categories: Object.freeze(value.categories),
-    children: Object.freeze(value.children),
-    conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
-    attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
-    attributeRequirements: Object.freeze(
-      A.map(value.attributeRequirements, (requirement) => {
-        if (requirement.forbidden !== undefined) {
-          Object.freeze(requirement.forbidden);
+  {
+    Object.freeze(value.categories);
+    Object.freeze(value.children);
+    for (const rule of value.conditionalCategories) Object.freeze(rule);
+    Object.freeze(value.conditionalCategories);
+    for (const equality of value.attributeEqualities) Object.freeze(equality);
+    Object.freeze(value.attributeEqualities);
+    for (const requirement of value.attributeRequirements) {
+      if (requirement.constraints !== undefined) {
+        for (const constraint of requirement.constraints) {
+          if ("values" in constraint) Object.freeze(constraint.values);
+          Object.freeze(constraint);
         }
-        if (requirement.whenParents !== undefined) {
-          Object.freeze(requirement.whenParents);
-        }
-        return Object.freeze({
-          ...requirement,
-          required: Object.freeze(A.map(requirement.required, (alternatives) => Object.freeze(alternatives))),
-        });
-      })
-    ),
-    currentAttributes: Object.freeze(value.currentAttributes),
-    numericAttributeRelationships: Object.freeze(
-      A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
-    ),
-    obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
-    rules: freezeElementConformanceRules(value.rules),
-    uniqueAttributes: Object.freeze(value.uniqueAttributes),
-  });
+        Object.freeze(requirement.constraints);
+      }
+      if (requirement.forbidden !== undefined) Object.freeze(requirement.forbidden);
+      if (requirement.when !== undefined) Object.freeze(requirement.when);
+      if (requirement.whenParents !== undefined) Object.freeze(requirement.whenParents);
+      if (requirement.nonBlank !== undefined) Object.freeze(requirement.nonBlank);
+      if (requirement.validNonEmptyUrl !== undefined) Object.freeze(requirement.validNonEmptyUrl);
+      for (const alternatives of requirement.required) Object.freeze(alternatives);
+      Object.freeze(requirement.required);
+      Object.freeze(requirement);
+    }
+    Object.freeze(value.attributeRequirements);
+    Object.freeze(value.currentAttributes);
+    for (const relationship of value.numericAttributeRelationships) Object.freeze(relationship);
+    Object.freeze(value.numericAttributeRelationships);
+    Object.freeze(value.obsoleteAttributes);
+    freezeElementConformanceRules(value.rules);
+    Object.freeze(value.uniqueAttributes);
+    return Object.freeze(value);
+  };
 
-const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
+const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlElementMeta>>> = {
 ${metaEntries}
 };
+
+const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
+  Result.getOrThrow(S.decodeUnknownResult(HtmlElementMeta)(value));
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
@@ -2406,7 +3488,7 @@ ${metaEntries}
  * @since 0.0.0
  */
 export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
-  R.map(elementMetaSource, freezeElementMeta)
+  R.map(elementMetaSource, (value) => freezeElementMeta(decodeElementMeta(value)))
 );
 `;
 
@@ -2426,7 +3508,11 @@ const program = Effect.gen(function* () {
   const srcDir = path.join(pkgRoot, "src");
 
   const readJson = <Schema extends S.Top>(schema: Schema, rel: string) =>
-    fs.readFileString(path.join(dataDir, rel)).pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(schema))));
+    fs
+      .readFileString(path.join(dataDir, rel))
+      .pipe(
+        Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(schema), { errors: "all", onExcessProperty: "error" }))
+      );
 
   const dfnsDoc = yield* readJson(DfnsDoc, "webref/dfns-html.json");
   const elementsDoc = yield* readJson(ElementsDoc, "webref/elements-html.json");

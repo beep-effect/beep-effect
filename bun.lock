@@ -1624,7 +1624,12 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@csstools/css-color-parser": "catalog:",
+        "@csstools/css-parser-algorithms": "catalog:",
+        "@csstools/css-tokenizer": "catalog:",
+        "@csstools/media-query-list-parser": "catalog:",
         "effect": "catalog:",
+        "whatwg-url": "catalog:",
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
@@ -2649,6 +2654,10 @@
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@cosmos.gl/graph": "3.4.0",
+    "@csstools/css-color-parser": "^4.1.10",
+    "@csstools/css-parser-algorithms": "^4.0.0",
+    "@csstools/css-tokenizer": "^4.0.0",
+    "@csstools/media-query-list-parser": "^5.0.0",
     "@duckdb/node-api": "1.5.5-r.2",
     "@effect/ai-anthropic": "4.0.0-beta.102",
     "@effect/ai-openai": "4.0.0-beta.102",
@@ -2687,6 +2696,7 @@
     "@lexical/code": "^0.48.0",
     "@lexical/extension": "^0.48.0",
     "@lexical/headless": "^0.48.0",
+    "@lexical/html": "^0.48.0",
     "@lexical/link": "^0.48.0",
     "@lexical/list": "^0.48.0",
     "@lexical/markdown": "^0.48.0",
@@ -2891,6 +2901,7 @@
     "vaul": "^1.1.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
+    "whatwg-url": "^17.1.0",
     "wink-eng-lite-web-model": "^1.8.1",
     "wink-nlp": "^2.4.0",
     "wink-nlp-utils": "^2.1.0",
@@ -4021,6 +4032,8 @@
     "@csstools/css-syntax-patches-for-csstree": ["@csstools/css-syntax-patches-for-csstree@1.1.7", "", { "peerDependencies": { "css-tree": "^3.2.1" }, "optionalPeers": ["css-tree"] }, "sha512-fQ+05118eQS1cofO3aJpB5efgpBZMvIzwr/sbC8kDLVA5XLG8q1kJV5yzrUAI1f7lvhPnm8fgIjzFB8/O/5Dig=="],
 
     "@csstools/css-tokenizer": ["@csstools/css-tokenizer@4.0.0", "", {}, "sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA=="],
+
+    "@csstools/media-query-list-parser": ["@csstools/media-query-list-parser@5.0.0", "", { "peerDependencies": { "@csstools/css-parser-algorithms": "^4.0.0", "@csstools/css-tokenizer": "^4.0.0" } }, "sha512-T9lXmZOfnam3eMERPsszjY5NK0jX8RmThmmm99FZ8b7z8yMaFZWKwLWGZuTwdO3ddRY5fy13GmmEYZXB4I98Eg=="],
 
     "@dabh/diagnostics": ["@dabh/diagnostics@2.0.8", "", { "dependencies": { "@so-ric/colorspace": "^1.1.6", "enabled": "2.0.x", "kuler": "^2.0.0" } }, "sha512-R4MSXTVnuMzGD7bzHdW2ZhhdPC/igELENcq5IjEverBvq5hn1SXCWcsi6eSsdWP0/Ur+SItRRjAktmdoX/8R/Q=="],
 

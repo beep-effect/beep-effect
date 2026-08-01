@@ -61,6 +61,17 @@ const foreignBreakoutTags: ReadonlyArray<string> = [
 ];
 
 describe("@beep/html browser conformance", () => {
+  it("matches browser relList token boundaries for opener protections", () => {
+    const anchor = document.createElement("a");
+    anchor.rel = "opener noopener noreferrer";
+    expect([...anchor.relList]).toStrictEqual(["opener", "noopener", "noreferrer"]);
+
+    anchor.rel = "opener noopener\u00a0noreferrer";
+    expect([...anchor.relList]).toStrictEqual(["opener", "noopener\u00a0noreferrer"]);
+    expect(anchor.relList.contains("noopener")).toBe(false);
+    expect(anchor.relList.contains("noreferrer")).toBe(false);
+  });
+
   it("keeps every admitted data-* suffix distinct after browser parsing", () => {
     const root = Div.make({
       children: [],

@@ -112,6 +112,7 @@ export {
   HtmlNonNegativeNumber,
   HtmlPositiveInteger,
   HtmlPositiveNumber,
+  makeAsciiCaseInsensitiveEnumerated,
   makeSpaceSeparatedTokenList,
   Popover,
 } from "./Html.attributes.ts";
@@ -172,6 +173,8 @@ export * as HtmlMeta from "./Html.meta.ts";
  */
 export {
   ELEMENT_META,
+  HTML_ATTRIBUTE_SYNTAXES,
+  HtmlAttributeSyntax,
   HtmlBooleanAttributeName,
   HtmlCategory,
   HtmlChildGrammar,

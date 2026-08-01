@@ -228,6 +228,42 @@
         "value": "hidden"
       }
     ],
+    "link": [
+      {
+        "attribute": "itemprop",
+        "category": "flow",
+        "condition": "present"
+      },
+      {
+        "attribute": "rel",
+        "category": "flow",
+        "condition": "tokens-subset",
+        "value": "dns-prefetch modulepreload pingback preconnect prefetch preload stylesheet"
+      },
+      {
+        "attribute": "itemprop",
+        "category": "phrasing",
+        "condition": "present"
+      },
+      {
+        "attribute": "rel",
+        "category": "phrasing",
+        "condition": "tokens-subset",
+        "value": "dns-prefetch modulepreload pingback preconnect prefetch preload stylesheet"
+      }
+    ],
+    "meta": [
+      {
+        "attribute": "itemprop",
+        "category": "flow",
+        "condition": "present"
+      },
+      {
+        "attribute": "itemprop",
+        "category": "phrasing",
+        "condition": "present"
+      }
+    ],
     "object": [
       {
         "attribute": "usemap",
@@ -250,6 +286,9 @@
         "categories": ["interactive"],
         "tags": ["a"]
       }
+    },
+    "area": {
+      "requiredAncestor": "map"
     },
     "address": {
       "forbiddenDescendants": {
@@ -361,14 +400,14 @@
       {
         "message": "<a target> requires href",
         "required": [["href"]],
-        "whenAttribute": "target"
+        "when": { "_tag": "attributePresent", "attribute": "target" }
       }
     ],
     "area": [
       {
         "message": "<area href> requires alt text",
         "required": [["alt"]],
-        "whenAttribute": "href"
+        "when": { "_tag": "attributePresent", "attribute": "href" }
       }
     ],
     "base": [
@@ -387,20 +426,139 @@
       {
         "message": "<input type=\"image\"> requires alt and src",
         "required": [["alt"], ["src"]],
-        "whenAttribute": "type",
-        "whenEquals": "image"
+        "when": { "_tag": "attributeEquals", "attribute": "type", "value": "image" }
       }
     ],
-    "meter": [
+    "link": [
       {
-        "message": "<meter> requires value",
-        "required": [["value"]]
+        "message": "<link> requires href or imagesrcset, and href must be a valid non-empty URL",
+        "nonBlank": ["imagesrcset"],
+        "required": [["href", "imagesrcset"]],
+        "validNonEmptyUrl": ["href"]
+      },
+      {
+        "message": "<link> requires exactly one of rel or itemprop",
+        "required": [["rel", "itemprop"]]
+      },
+      {
+        "forbidden": ["itemprop"],
+        "message": "<link rel> forbids itemprop",
+        "required": [["rel"]],
+        "when": { "_tag": "attributePresent", "attribute": "rel" }
+      },
+      {
+        "constraints": [
+          { "_tag": "allowedValues", "attribute": "as", "values": ["image"] },
+          { "_tag": "containsAllTokens", "attribute": "rel", "values": ["preload"] }
+        ],
+        "message": "<link imagesrcset> requires rel=preload and as=image",
+        "required": [["rel"], ["as"]],
+        "when": { "_tag": "attributePresent", "attribute": "imagesrcset" }
+      },
+      {
+        "constraints": [
+          { "_tag": "allowedValues", "attribute": "as", "values": ["image"] },
+          { "_tag": "containsAllTokens", "attribute": "rel", "values": ["preload"] }
+        ],
+        "message": "<link imagesizes> requires rel=preload and as=image",
+        "required": [["rel"], ["as"]],
+        "when": { "_tag": "attributePresent", "attribute": "imagesizes" }
+      },
+      {
+        "constraints": [
+          {
+            "_tag": "allowedValues",
+            "attribute": "as",
+            "values": ["fetch", "font", "image", "script", "style", "track"]
+          }
+        ],
+        "message": "<link rel=preload> requires as with a valid preload destination",
+        "required": [["as"]],
+        "when": { "_tag": "attributeContainsToken", "attribute": "rel", "value": "preload" }
+      },
+      {
+        "constraints": [
+          {
+            "_tag": "allowedValues",
+            "attribute": "as",
+            "values": [
+              "audioworklet",
+              "json",
+              "paintworklet",
+              "script",
+              "serviceworker",
+              "sharedworker",
+              "style",
+              "text",
+              "worker"
+            ]
+          }
+        ],
+        "message": "<link rel=modulepreload> as must be a valid module preload destination",
+        "required": [["rel"]],
+        "when": { "_tag": "attributeContainsToken", "attribute": "rel", "value": "modulepreload" }
+      },
+      {
+        "constraints": [
+          {
+            "_tag": "containsAnyToken",
+            "attribute": "rel",
+            "values": ["preload", "modulepreload"]
+          }
+        ],
+        "message": "<link as> requires rel=preload or rel=modulepreload",
+        "required": [["rel"]],
+        "when": { "_tag": "attributePresent", "attribute": "as" }
       }
     ],
     "map": [
       {
         "message": "<map> requires name",
         "required": [["name"]]
+      }
+    ],
+    "meta": [
+      {
+        "message": "<meta> requires exactly one of name, http-equiv, charset, or itemprop",
+        "required": [["name", "http-equiv", "charset", "itemprop"]]
+      },
+      {
+        "forbidden": ["http-equiv", "charset", "itemprop"],
+        "message": "<meta name> requires content and forbids http-equiv, charset, and itemprop",
+        "required": [["name"], ["content"]],
+        "when": { "_tag": "attributePresent", "attribute": "name" }
+      },
+      {
+        "forbidden": ["name", "charset", "itemprop"],
+        "message": "<meta http-equiv> requires content and forbids name, charset, and itemprop",
+        "required": [["http-equiv"], ["content"]],
+        "when": { "_tag": "attributePresent", "attribute": "http-equiv" }
+      },
+      {
+        "constraints": [
+          {
+            "_tag": "equals",
+            "asciiCaseInsensitive": true,
+            "attribute": "charset",
+            "value": "utf-8"
+          }
+        ],
+        "forbidden": ["name", "http-equiv", "itemprop", "content"],
+        "message": "<meta charset> must be utf-8 and forbids name, http-equiv, itemprop, and content",
+        "required": [["charset"]],
+        "when": { "_tag": "attributePresent", "attribute": "charset" }
+      },
+      {
+        "forbidden": ["name", "http-equiv", "charset"],
+        "message": "<meta itemprop> requires content and forbids name, http-equiv, and charset",
+        "required": [["itemprop"], ["content"]],
+        "when": { "_tag": "attributePresent", "attribute": "itemprop" }
+      }
+    ],
+    "meter": [
+      {
+        "message": "<meter> requires value",
+        "required": [["value"]]
       }
     ],
     "source": [
@@ -424,6 +582,15 @@
       }
     ]
   },
+  "attributeSyntaxes": {
+    "img/sizes": "source-size-list",
+    "img/srcset": "srcset",
+    "link/imagesizes": "source-size-list",
+    "link/imagesrcset": "srcset",
+    "link/sizes": "icon-sizes",
+    "source/sizes": "source-size-list",
+    "source/srcset": "srcset"
+  },
   "attributeEqualities": {
     "map": [
       {
@@ -437,6 +604,13 @@
     "map": ["name"]
   },
   "numericAttributeRelationships": {
+    "input": [
+      {
+        "left": "minlength",
+        "message": "<input minlength> must be less than or equal to maxlength",
+        "right": "maxlength"
+      }
+    ],
     "meter": [
       {
         "left": "min",
@@ -505,6 +679,13 @@
         "message": "<progress value> must be less than or equal to max",
         "right": "max",
         "rightDefault": 1
+      }
+    ],
+    "textarea": [
+      {
+        "left": "minlength",
+        "message": "<textarea minlength> must be less than or equal to maxlength",
+        "right": "maxlength"
       }
     ]
   },
@@ -710,6 +891,7 @@
     "selected",
     "alpha",
     "shadowrootclonable",
+    "shadowrootcustomelementregistry",
     "shadowrootdelegatesfocus",
     "shadowrootserializable",
     "compact",
@@ -722,8 +904,145 @@
     "seamless",
     "pubdate"
   ],
-  "spaceSeparatedTokenAttributes": ["rel", "sandbox"],
+  "caseSensitiveKeywordAttributes": ["ol/type"],
+  "enumeratedAttributeValueOverrides": {
+    "area/shape": ["circle", "default", "poly", "rect"],
+    "link/blocking": ["render"],
+    "button/formenctype": ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"],
+    "input/formenctype": ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"],
+    "meta/http-equiv": [
+      "content-type",
+      "default-style",
+      "refresh",
+      "x-ua-compatible",
+      "content-security-policy"
+    ],
+    "script/blocking": ["render"],
+    "style/blocking": ["render"]
+  },
+  "spaceSeparatedTokenAttributes": ["blocking", "rel", "sandbox"],
   "autocompleteAttributes": ["autocomplete"],
+  "autocompleteContactFields": [
+    "email",
+    "impp",
+    "tel",
+    "tel-area-code",
+    "tel-country-code",
+    "tel-extension",
+    "tel-local",
+    "tel-local-prefix",
+    "tel-local-suffix",
+    "tel-national"
+  ],
+  "autocompleteFieldGroups": {
+    "date": ["bday"],
+    "month": ["cc-exp"],
+    "multiline": ["street-address"],
+    "numeric": [
+      "bday-day",
+      "bday-month",
+      "bday-year",
+      "cc-exp-month",
+      "cc-exp-year",
+      "transaction-amount"
+    ],
+    "password": ["current-password", "new-password", "one-time-code"],
+    "tel": [
+      "tel",
+      "tel-area-code",
+      "tel-country-code",
+      "tel-extension",
+      "tel-local",
+      "tel-local-prefix",
+      "tel-local-suffix",
+      "tel-national"
+    ],
+    "text": [
+      "additional-name",
+      "address-level1",
+      "address-level2",
+      "address-level3",
+      "address-level4",
+      "address-line1",
+      "address-line2",
+      "address-line3",
+      "cc-additional-name",
+      "cc-csc",
+      "cc-family-name",
+      "cc-given-name",
+      "cc-name",
+      "cc-number",
+      "cc-type",
+      "country",
+      "country-name",
+      "family-name",
+      "given-name",
+      "honorific-prefix",
+      "honorific-suffix",
+      "language",
+      "name",
+      "nickname",
+      "organization",
+      "organization-title",
+      "postal-code",
+      "sex",
+      "transaction-currency"
+    ],
+    "url": ["impp", "photo", "url"],
+    "username": ["email", "username"]
+  },
+  "autocompleteInputStateGroups": {
+    "button": [],
+    "checkbox": [],
+    "color": [],
+    "date": ["date"],
+    "datetime-local": [],
+    "email": ["username"],
+    "file": [],
+    "hidden": ["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"],
+    "image": [],
+    "month": ["month"],
+    "number": ["numeric"],
+    "password": ["password"],
+    "radio": [],
+    "range": [],
+    "reset": [],
+    "search": ["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"],
+    "submit": [],
+    "tel": ["tel"],
+    "text": ["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"],
+    "time": [],
+    "url": ["url"],
+    "week": []
+  },
+  "buttonSubmitOnlyAttributes": ["formaction", "formenctype", "formmethod", "formnovalidate", "formtarget"],
+  "iconLinkRelations": ["icon", "apple-touch-icon"],
+  "idReferenceAttributes": ["button/commandfor"],
+  "idReferenceListAttributes": ["output/for", "td/headers", "th/headers"],
+  "inputAttributeApplicability": {
+    "button": ["popovertarget", "popovertargetaction"],
+    "checkbox": ["checked", "required"],
+    "color": ["alpha", "autocomplete", "colorspace", "list"],
+    "date": ["autocomplete", "list", "max", "min", "readonly", "required", "step"],
+    "datetime-local": ["autocomplete", "list", "max", "min", "readonly", "required", "step"],
+    "email": ["autocomplete", "dirname", "list", "maxlength", "minlength", "multiple", "pattern", "placeholder", "readonly", "required", "size"],
+    "file": ["accept", "multiple", "required"],
+    "hidden": ["autocomplete", "dirname"],
+    "image": ["alt", "formaction", "formenctype", "formmethod", "formnovalidate", "formtarget", "height", "popovertarget", "popovertargetaction", "src", "width"],
+    "month": ["autocomplete", "list", "max", "min", "readonly", "required", "step"],
+    "number": ["autocomplete", "list", "max", "min", "placeholder", "readonly", "required", "step"],
+    "password": ["autocomplete", "dirname", "maxlength", "minlength", "pattern", "placeholder", "readonly", "required", "size"],
+    "radio": ["checked", "required"],
+    "range": ["autocomplete", "list", "max", "min", "step"],
+    "reset": ["popovertarget", "popovertargetaction"],
+    "search": ["autocomplete", "dirname", "list", "maxlength", "minlength", "pattern", "placeholder", "readonly", "required", "size"],
+    "submit": ["dirname", "formaction", "formenctype", "formmethod", "formnovalidate", "formtarget", "popovertarget", "popovertargetaction"],
+    "tel": ["autocomplete", "dirname", "list", "maxlength", "minlength", "pattern", "placeholder", "readonly", "required", "size"],
+    "text": ["autocomplete", "dirname", "list", "maxlength", "minlength", "pattern", "placeholder", "readonly", "required", "size"],
+    "time": ["autocomplete", "list", "max", "min", "readonly", "required", "step"],
+    "url": ["autocomplete", "dirname", "list", "maxlength", "minlength", "pattern", "placeholder", "readonly", "required", "size"],
+    "week": ["autocomplete", "list", "max", "min", "readonly", "required", "step"]
+  },
   "positiveIntegerAttributes": ["cols", "rows", "size", "span"],
   "nonNegativeIntegerAttributes": ["height", "width", "maxlength", "minlength"],
   "integerAttributes": ["li/value", "start", "tabindex"],
@@ -753,11 +1072,9 @@
     "allowtransparency",
     "alt",
     "archive",
-    "as",
     "axis",
     "behavior",
     "bgcolor",
-    "blocking",
     "border",
     "bordercolor",
     "bottommargin",
@@ -833,7 +1150,6 @@
     "scheme",
     "scope",
     "scrolling",
-    "shadowrootcustomelementregistry",
     "shape",
     "sizes",
     "src",

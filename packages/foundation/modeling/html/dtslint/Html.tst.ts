@@ -2,6 +2,7 @@ import {
   conform,
   ELEMENT_META,
   enforceSafeHtml,
+  HTML_ATTRIBUTE_SYNTAXES,
   Html,
   HtmlDocument,
   HtmlFiniteNumber,
@@ -16,7 +17,7 @@ import { AutocompleteAttribute as SubpathAutocompleteAttribute } from "@beep/htm
 import { ConformantHtml as SubpathConformantHtml } from "@beep/html/Html.conformance";
 import { HtmlFragment as SubpathHtmlFragment } from "@beep/html/Html.contract";
 import { HtmlTag as SubpathHtmlTag } from "@beep/html/Html.meta";
-import { Button, Div, Html as HtmlElement, Input, Li, Meter, Progress } from "@beep/html/Html.model";
+import { Button, Div, Html as HtmlElement, Input, Li, Link, Meter, Ol, Progress } from "@beep/html/Html.model";
 import { Comment } from "@beep/html/Html.nodes";
 import { SafeHtmlAst as SubpathSafeHtmlAst } from "@beep/html/Html.policy";
 import { SafeHtml as SubpathSafeHtml } from "@beep/html/Html.serialize";
@@ -26,6 +27,7 @@ import { describe, expect, it } from "tstyche";
 import type {
   ConformantHtml,
   ConformantHtmlNode,
+  HtmlAttributeSyntax,
   HtmlChildNode,
   HtmlConformanceError,
   HtmlDocumentChild,
@@ -88,11 +90,40 @@ describe("@beep/html contract", () => {
 
   it("publishes metadata as the exact record contract", () => {
     expect(ELEMENT_META).type.toBe<Readonly<Record<HtmlTag, HtmlElementMeta>>>();
+    expect(HTML_ATTRIBUTE_SYNTAXES).type.toBe<Readonly<Record<string, HtmlAttributeSyntax>>>();
   });
 
   it("publishes the signed integer li value domain", () => {
     const item = Li.make({ children: [], value: O.some(-2) });
     expect(item.value).type.toBe<O.Option<number>>();
+  });
+
+  it("separates encoded enumerated keywords from canonical semantic values", () => {
+    const encodedLink: Link.Encoded = { _tag: "link", as: "IMAGE" };
+    const link = Link.make({ as: O.some("image") });
+    const encodedList: Ol.Encoded = { _tag: "ol", children: [], type: "A" };
+    const list = Ol.make({ children: [], type: O.some("A") });
+
+    expect(encodedLink.as).type.toBe<string | undefined>();
+    expect(link.as).type.toBe<
+      O.Option<
+        | "audioworklet"
+        | "fetch"
+        | "font"
+        | "image"
+        | "json"
+        | "paintworklet"
+        | "script"
+        | "serviceworker"
+        | "sharedworker"
+        | "style"
+        | "text"
+        | "track"
+        | "worker"
+      >
+    >();
+    expect(encodedList.type).type.toBe<"1" | "a" | "A" | "i" | "I" | undefined>();
+    expect(list.type).type.toBe<O.Option<"1" | "a" | "A" | "i" | "I">>();
   });
 
   it("publishes finite numeric meter and progress fields", () => {

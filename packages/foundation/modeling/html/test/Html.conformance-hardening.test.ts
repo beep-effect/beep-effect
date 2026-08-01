@@ -1,5 +1,13 @@
-import { conform, ELEMENT_META, inspectConformance, serialize } from "@beep/html";
+import { conform, ELEMENT_META, inspectConformance, inspectSafeHtml, serialize } from "@beep/html";
 import {
+  HtmlIdReferenceList,
+  HtmlRelationList,
+  LinkRelationList,
+  makeAsciiCaseInsensitiveEnumerated,
+  makeSpaceSeparatedTokenList,
+} from "@beep/html/Html.attributes";
+import {
+  HtmlElementMeta,
   MATHML_ATTRIBUTE_NAME_ADJUSTMENTS,
   SVG_ATTRIBUTE_NAME_ADJUSTMENTS,
   SVG_ELEMENT_NAME_ADJUSTMENTS,
@@ -39,37 +47,59 @@ import {
   Input,
   Label,
   Legend,
+  Link,
   Main,
   MapElement,
+  Meta,
   Meter,
   Optgroup,
   Option,
+  Output,
   P,
   Picture,
   Progress,
   Rp,
   Rt,
   Ruby,
+  Script,
   Select,
   Source,
   Span,
+  Style,
   Summary,
   Table,
+  Tbody,
+  Td,
   Template,
+  Textarea,
+  Th,
   Title,
+  Tr,
   Track,
   Video,
 } from "@beep/html/Html.model";
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
   inspectConformance(root).some((issue) => issue.rule === rule);
+const issuesAtPath = (
+  root: Parameters<typeof inspectConformance>[0],
+  path: ReadonlyArray<string>
+): ReadonlyArray<ReturnType<typeof inspectConformance>[number]> =>
+  A.filter(
+    inspectConformance(root),
+    (issue) => issue.path.length === path.length && A.every(issue.path, (segment, index) => path[index] === segment)
+  );
 
 describe("@beep/html generated attribute provenance", () => {
   it("reconciles reviewed current gaps and reports obsolete or misplaced attributes", () => {
@@ -330,7 +360,7 @@ describe("@beep/html generated special-child grammars", () => {
           }),
         ],
       }),
-      MapElement.make({ children: [Area.make({})], name: O.some("image-map") }),
+      MapElement.make({ children: [Area.make({ shape: O.some("default") })], name: O.some("image-map") }),
     ];
     for (const root of valid) {
       expect(inspectConformance(root)).toStrictEqual([]);
@@ -575,6 +605,157 @@ describe("@beep/html generated special-child grammars", () => {
     );
   });
 
+  it("evaluates contextual area, link, and meta placement from generated rules", () => {
+    const bodyOkLinkTypes = [
+      "dns-prefetch",
+      "modulepreload",
+      "pingback",
+      "preconnect",
+      "prefetch",
+      "preload",
+      "stylesheet",
+    ];
+    for (const rel of bodyOkLinkTypes) {
+      const root = P.make({
+        children: [
+          Link.make({
+            as: rel === "preload" ? O.some("image") : O.none(),
+            href: O.some("/resource"),
+            rel: O.some(rel),
+          }),
+        ],
+      });
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+    const allBodyOk = P.make({
+      children: [
+        Link.make({ as: O.some("script"), href: O.some("/resource"), rel: O.some(bodyOkLinkTypes.join(" ")) }),
+      ],
+    });
+    expect(inspectConformance(allBodyOk)).toStrictEqual([]);
+    expect(Exit.isSuccess(Effect.runSyncExit(conform(allBodyOk)))).toBe(true);
+
+    for (const rel of ["", "canonical", "canonical stylesheet", "expect"]) {
+      const root = P.make({ children: [Link.make({ href: O.some("/resource"), rel: O.some(rel) })] });
+      expect(inspectConformance(root)).toContainEqual(
+        expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
+      );
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    const valid = [
+      P.make({
+        children: [Link.make({ href: O.some("/item"), itemprop: O.some("url") })],
+      }),
+      P.make({ children: [Meta.make({ content: O.some("Beep"), itemprop: O.some("name") })] }),
+      P.make({
+        children: [
+          MapElement.make({ children: [Area.make({ shape: O.some("default") })], name: O.some("nested-map") }),
+        ],
+      }),
+    ];
+    for (const root of valid) {
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    const invalid = [
+      P.make({ children: [Area.make({ shape: O.some("default") })] }),
+      P.make({ children: [Meta.make({ content: O.some("Beep"), name: O.some("description") })] }),
+      P.make({
+        children: [Link.make({ href: O.some("/item"), itemprop: O.some("url"), rel: O.some("canonical") })],
+      }),
+      P.make({
+        children: [Meta.make({ content: O.some("Beep"), itemprop: O.some("name"), name: O.some("description") })],
+      }),
+    ];
+    for (const root of invalid) {
+      expect(inspectConformance(root).length).toBeGreaterThan(0);
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+  });
+
+  it("enforces link addresses and the meta charset mode", () => {
+    const valid = [
+      Link.make({ href: O.some("https://example.com/resource"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("resource"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("/resource"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("?resource=1"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("#resource"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("\t /resource \r\n"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("\u00a0"), rel: O.some("canonical") }),
+      Link.make({ as: O.some("image"), imagesrcset: O.some("/resource.png 1x"), rel: O.some("preload") }),
+      Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("preload") }),
+      Link.make({ href: O.some("/module.js"), rel: O.some("modulepreload") }),
+      Link.make({ as: O.some("json"), href: O.some("/module.json"), rel: O.some("modulepreload") }),
+      Link.make({
+        as: O.some("image"),
+        href: O.some("/resource"),
+        imagesizes: O.some("100vw"),
+        imagesrcset: O.some("/resource.png 400w"),
+        rel: O.some("preload"),
+      }),
+      Link.make({ href: O.some("/item"), itemprop: O.some("url") }),
+      Meta.make({ charset: O.some("utf-8") }),
+    ];
+    for (const root of valid) {
+      expect(inspectConformance(root)).toStrictEqual([]);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    const invalid = [
+      Link.make({ rel: O.some("canonical") }),
+      Link.make({ itemprop: O.some("url") }),
+      Link.make({ href: O.some(""), rel: O.some("canonical") }),
+      Link.make({ href: O.some(" "), rel: O.some("canonical") }),
+      Link.make({ href: O.some("not a url"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("bad%url"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("bad\turl"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("https:example.com"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("https://127.1/"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("https://exam%70le.org/"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("https://[::1"), rel: O.some("canonical") }),
+      Link.make({ href: O.some("https://example.com:70000/"), rel: O.some("canonical") }),
+      Link.make({ as: O.some("image"), imagesrcset: O.some(""), rel: O.some("preload") }),
+      Link.make({
+        as: O.some("image"),
+        href: O.some(""),
+        imagesrcset: O.some("/resource.png 1x"),
+        rel: O.some("preload"),
+      }),
+      Link.make({ imagesrcset: O.some("/resource.png 1x"), rel: O.some("preload") }),
+      Link.make({ as: O.some("script"), imagesrcset: O.some("/resource.png 1x"), rel: O.some("preload") }),
+      Link.make({ as: O.some("image"), imagesrcset: O.some("/resource.png 1x"), rel: O.some("stylesheet") }),
+      Link.make({ href: O.some("/resource"), rel: O.some("preload") }),
+      Link.make({ as: O.some("image"), href: O.some("/module.js"), rel: O.some("modulepreload") }),
+      Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("stylesheet") }),
+      Link.make({ href: O.some("/resource"), imagesizes: O.some("100vw"), rel: O.some("stylesheet") }),
+      Link.make({ href: O.some("/resource"), imagesizes: O.some("100vw"), rel: O.some("preload") }),
+      Link.make({
+        as: O.some("script"),
+        href: O.some("/resource"),
+        imagesizes: O.some("100vw"),
+        rel: O.some("preload"),
+      }),
+      Meta.make({ charset: O.some("utf-8"), content: O.some("must-be-omitted") }),
+    ];
+    for (const root of invalid) {
+      expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+    expect(() => S.decodeUnknownSync(Link)({ _tag: "link", as: "video", href: "/resource", rel: "preload" })).toThrow();
+    const uppercaseCharset = S.decodeUnknownResult(Meta)({ _tag: "meta", charset: "UTF-8" });
+    expect(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8")).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", charset: "iso-8859-1" }))).toBe(true);
+    expect(() => Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("PreLoad") })).toThrow();
+    expect(
+      inspectConformance(
+        Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("preload\u00a0stylesheet") })
+      )
+    ).toContainEqual(expect.objectContaining({ path: ["attributes"], rule: "attributeRelationship" }));
+  });
+
   it("enforces every generated descendant exclusion through nested fallback content", () => {
     const cases = [
       [
@@ -794,6 +975,334 @@ describe("@beep/html generated special-child grammars", () => {
       ),
       fcRuns(50)
     ));
+});
+
+describe("@beep/html exact attribute domains", () => {
+  it("keeps schema-derived open relation lists at their canonical fixed point", () =>
+    fc.assert(
+      fc.property(LinkRelationListArbitrary, (relation) => {
+        expect(S.encodeSync(LinkRelationList)(relation)).toBe(relation);
+        expect(S.decodeUnknownSync(LinkRelationList)(relation)).toBe(relation);
+      }),
+      fcRuns(100)
+    ));
+
+  it("rejects ambiguous factories and uses HTML ASCII case folding", () => {
+    expect(() => makeAsciiCaseInsensitiveEnumerated(["foo", "FOO"])).toThrow();
+    expect(() => makeSpaceSeparatedTokenList([""])).toThrow();
+    expect(() => makeSpaceSeparatedTokenList(["foo", "FOO"])).toThrow();
+
+    const AsciiK = makeAsciiCaseInsensitiveEnumerated(["k"]);
+    expect(Result.isSuccess(S.decodeUnknownResult(AsciiK)("K"))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(AsciiK)("K"))).toBe(true);
+  });
+
+  it("keeps link relations open while enforcing shortcut-icon and token-list laws", () => {
+    for (const relation of ["shortcut icon", "SHORTCUT ICON", "apple-touch-icon", "mask-icon", "x-beep"]) {
+      expect(Result.isSuccess(S.decodeUnknownResult(LinkRelationList)(relation))).toBe(true);
+    }
+    for (const relation of [
+      "shortcut\ticon",
+      "shortcut  icon",
+      "icon shortcut",
+      "shortcut icon preload",
+      "x-beep x-beep",
+    ]) {
+      expect(Result.isFailure(S.decodeUnknownResult(LinkRelationList)(relation))).toBe(true);
+    }
+
+    const idReferences = S.decodeUnknownResult(HtmlIdReferenceList)("First\tsecond");
+    expect(Result.isSuccess(idReferences) && idReferences.success === "First second").toBe(true);
+    expect(Result.isSuccess(S.decodeUnknownResult(HtmlIdReferenceList)("First first"))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(HtmlIdReferenceList)("First First"))).toBe(true);
+  });
+
+  it("keeps extension relations structural and conformant but narrows SafeHtml", () => {
+    const relations = S.decodeUnknownResult(HtmlRelationList)("X-BEEP me");
+    expect(Result.isSuccess(relations) && relations.success === "me x-beep").toBe(true);
+    const linkRelations = S.decodeUnknownResult(LinkRelationList)("noreferrer NOOPENER");
+    expect(Result.isSuccess(linkRelations) && linkRelations.success === "noopener noreferrer").toBe(true);
+    for (const [schema, encoded] of [
+      [Anchor, { _tag: "a", children: [], href: "/profile", rel: "me" }],
+      [Area, { _tag: "area", href: "/profile", rel: "me" }],
+      [Form, { _tag: "form", children: [], rel: "me" }],
+    ] as const) {
+      expect(Result.isSuccess(S.decodeUnknownResult(schema)(encoded))).toBe(true);
+    }
+
+    for (const relation of ["me", "opener", "x-beep"]) {
+      const root = Fragment.make({
+        children: [Anchor.make({ children: [], href: O.some("/profile"), rel: O.some(relation) })],
+      });
+      expect(inspectConformance(root)).toStrictEqual([]);
+      const issues = inspectSafeHtml(Effect.runSync(conform(root)));
+      expect(issues).toContainEqual(
+        expect.objectContaining({ path: ["children.0", "attributes.rel"], rule: "deniedAttribute" })
+      );
+    }
+
+    for (const relation of ["nofollow", "noopener", "noreferrer", "nofollow noopener noreferrer"]) {
+      const root = Fragment.make({
+        children: [Anchor.make({ children: [], href: O.some("/docs"), rel: O.some(relation) })],
+      });
+      expect(inspectSafeHtml(Effect.runSync(conform(root)))).toStrictEqual([]);
+    }
+    const protectedBlank = Fragment.make({
+      children: [
+        Anchor.make({
+          children: [],
+          href: O.some("/docs"),
+          rel: O.some("noopener noreferrer"),
+          target: O.some("_blank"),
+        }),
+      ],
+    });
+    expect(inspectSafeHtml(Effect.runSync(conform(protectedBlank)))).toStrictEqual([]);
+  });
+
+  it("decodes presence booleans, blocking tokens, and exact enumerations", () => {
+    for (const value of ["", true]) {
+      expect(
+        Result.isSuccess(
+          S.decodeUnknownResult(Template)({
+            _tag: "template",
+            children: [],
+            shadowrootcustomelementregistry: value,
+          })
+        )
+      ).toBe(true);
+    }
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(Template)({
+          _tag: "template",
+          children: [],
+          shadowrootcustomelementregistry: false,
+        })
+      )
+    ).toBe(true);
+
+    for (const [schema, encoded] of [
+      [Link, { _tag: "link", blocking: "RENDER", href: "/style.css", rel: "stylesheet" }],
+      [Script, { _tag: "script", blocking: "RENDER", content: "" }],
+      [Style, { _tag: "style", blocking: "RENDER", content: "" }],
+    ] as const) {
+      expect(Result.isSuccess(S.decodeUnknownResult(schema)(encoded))).toBe(true);
+      expect(Result.isFailure(S.decodeUnknownResult(schema)({ ...encoded, blocking: "render render" }))).toBe(true);
+      expect(Result.isFailure(S.decodeUnknownResult(schema)({ ...encoded, blocking: "paint" }))).toBe(true);
+    }
+
+    const link = S.decodeUnknownResult(Link)({
+      _tag: "link",
+      crossorigin: "",
+      href: "/style.css",
+      referrerpolicy: "STRICT-ORIGIN",
+      rel: "stylesheet",
+    });
+    expect(
+      Result.isSuccess(link) &&
+        O.contains(link.success.crossorigin, "anonymous") &&
+        O.contains(link.success.referrerpolicy, "strict-origin")
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(Link)({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" })
+      )
+    ).toBe(true);
+  });
+
+  it("normalizes current metadata and form-control microsyntaxes", () => {
+    const globals = S.decodeUnknownResult(Div)({
+      _tag: "div",
+      autocorrect: "",
+      children: [],
+      writingsuggestions: "",
+    });
+    expect(
+      Result.isSuccess(globals) &&
+        O.contains(globals.success.autocorrect, "on") &&
+        O.contains(globals.success.writingsuggestions, "true")
+    ).toBe(true);
+
+    expect(
+      Result.isSuccess(S.decodeUnknownResult(Form)({ _tag: "form", "accept-charset": "UTF-8", children: [] }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(S.decodeUnknownResult(Form)({ _tag: "form", "accept-charset": "iso-8859-1", children: [] }))
+    ).toBe(true);
+    expect(Result.isSuccess(S.decodeUnknownResult(Meta)({ _tag: "meta", name: "X-Beep" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", name: "x beep" }))).toBe(true);
+    expect(Result.isSuccess(S.decodeUnknownResult(Meta)({ _tag: "meta", "http-equiv": "REFRESH" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", "http-equiv": "expires" }))).toBe(true);
+
+    for (const command of ["toggle-popover", "TOGGLE-POPOVER", "--", "--Beep\nCommand"]) {
+      expect(
+        Result.isSuccess(S.decodeUnknownResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
+      ).toBe(true);
+    }
+    for (const command of ["", "rotate", "-beep"]) {
+      expect(
+        Result.isFailure(S.decodeUnknownResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
+      ).toBe(true);
+    }
+
+    for (const step of ["any", "ANY", 0.25]) {
+      expect(Result.isSuccess(S.decodeUnknownResult(Input)({ _tag: "input", step }))).toBe(true);
+    }
+    for (const step of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, "sometimes"]) {
+      expect(Result.isFailure(S.decodeUnknownResult(Input)({ _tag: "input", step }))).toBe(true);
+    }
+  });
+});
+
+describe("@beep/html exact attribute conformance", () => {
+  it("enforces autocomplete mantle and control compatibility", () => {
+    expect(
+      issuesAtPath(Input.make({ autocomplete: O.some("off"), type: O.some("hidden") }), ["attributes.autocomplete"])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Input.make({ autocomplete: O.some("email"), type: O.some("password") }), ["attributes.autocomplete"])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Select.make({ autocomplete: O.some("username webauthn"), children: [] }), [
+        "attributes.autocomplete",
+      ])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Input.make({ autocomplete: O.some("home name"), type: O.some("text") }), ["attributes.autocomplete"])
+    ).toHaveLength(1);
+    expect(inspectConformance(Input.make({ autocomplete: O.some("email"), type: O.some("email") }))).toStrictEqual([]);
+  });
+
+  it("enforces state-specific input and effective-submit button attributes", () => {
+    expect(
+      issuesAtPath(Input.make({ checked: O.some(true), type: O.some("color") }), ["attributes.checked"])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Input.make({ accept: O.some("image/*"), type: O.some("text") }), ["attributes.accept"])
+    ).toHaveLength(1);
+    expect(inspectConformance(Input.make({ alpha: O.some(true), type: O.some("color") }))).toStrictEqual([]);
+
+    expect(inspectConformance(Button.make({ children: [], formaction: O.some("/submit") }))).toStrictEqual([]);
+    expect(
+      issuesAtPath(Button.make({ children: [], formaction: O.some("/submit"), type: O.some("button") }), [
+        "attributes.formaction",
+      ])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(
+        Button.make({
+          children: [],
+          command: O.some("show-modal"),
+          commandfor: O.some("target"),
+          formaction: O.some("/submit"),
+        }),
+        ["attributes.formaction"]
+      )
+    ).toHaveLength(1);
+  });
+
+  it("uses exact integer area coordinates without IEEE-754 collapse", () => {
+    expect(
+      issuesAtPath(Area.make({ coords: O.some("0,0,1,1"), shape: O.some("default") }), ["attributes.coords"])
+    ).toHaveLength(1);
+    expect(inspectConformance(Area.make({ coords: O.some("0,0,0"), shape: O.some("circle") }))).toContainEqual(
+      expect.objectContaining({ rule: "contentModel" })
+    );
+
+    const hugeRect = Area.make({
+      coords: O.some("9007199254740992,0,9007199254740993,1"),
+      shape: O.some("rect"),
+    });
+    expect(issuesAtPath(hugeRect, ["attributes.coords"])).toStrictEqual([]);
+    expect(
+      issuesAtPath(Area.make({ coords: O.some("9007199254740993,0,9007199254740992,1"), shape: O.some("rect") }), [
+        "attributes.coords",
+      ])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Area.make({ coords: O.some("0,0,1,0,1,1"), shape: O.some("poly") }), ["attributes.coords"])
+    ).toStrictEqual([]);
+  });
+
+  it("validates media queries, MIME types, and mask-icon colors at exact paths", () => {
+    const link = (fields: Omit<Parameters<typeof Link.make>[0], "href" | "rel"> = {}) =>
+      Link.make({ href: O.some("/resource"), rel: O.some("stylesheet"), ...fields });
+    expect(issuesAtPath(link({ media: O.some("(") }), ["attributes.media"])).toHaveLength(1);
+    expect(issuesAtPath(link({ type: O.some("") }), ["attributes.type"])).toHaveLength(1);
+    expect(
+      inspectConformance(link({ media: O.some("screen and (min-width: 1px)"), type: O.some("text/css") }))
+    ).toStrictEqual([]);
+
+    for (const type of [" text/css", "text/css ", "text/\u0100", 'text/css; p="bad\nvalue"']) {
+      expect(issuesAtPath(link({ type: O.some(type) }), ["attributes.type"])).toHaveLength(1);
+    }
+    expect(
+      inspectConformance(
+        Link.make({ color: O.some("oklch(70% 0.15 30)"), href: O.some("/mask.svg"), rel: O.some("mask-icon") })
+      )
+    ).toStrictEqual([]);
+    expect(
+      issuesAtPath(Link.make({ color: O.some("not-a-color"), href: O.some("/mask.svg"), rel: O.some("mask-icon") }), [
+        "attributes.color",
+      ])
+    ).toHaveLength(1);
+  });
+
+  it("resolves case-sensitive id references in the same root and nearest table", () => {
+    const valid = Fragment.make({
+      children: [
+        Input.make({ id: O.some("First") }),
+        Output.make({ children: [], for: O.some("First") }),
+        Button.make({ children: [], command: O.some("--beep"), commandfor: O.some("First") }),
+      ],
+    });
+    expect(issuesAtPath(valid, ["children.1", "attributes.for"])).toStrictEqual([]);
+    expect(issuesAtPath(valid, ["children.2", "attributes.commandfor"])).toStrictEqual([]);
+
+    const invalid = Fragment.make({
+      children: [Input.make({ id: O.some("First") }), Output.make({ children: [], for: O.some("first Missing") })],
+    });
+    expect(issuesAtPath(invalid, ["children.1", "attributes.for"])).toHaveLength(1);
+
+    const table = Table.make({
+      children: [
+        Tbody.make({
+          children: [
+            Tr.make({
+              children: [
+                Th.make({ id: O.some("Heading"), children: [] }),
+                Td.make({ headers: O.some("Heading"), children: [] }),
+                Td.make({ id: O.some("Cell"), children: [] }),
+                Td.make({ headers: O.some("Cell"), children: [] }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(issuesAtPath(table, ["children.0", "children.0", "children.1", "attributes.headers"])).toStrictEqual([]);
+    expect(issuesAtPath(table, ["children.0", "children.0", "children.3", "attributes.headers"])).toHaveLength(1);
+  });
+
+  it("enforces generated minlength relationships and schema-backed metadata", () => {
+    expect(
+      issuesAtPath(Input.make({ maxlength: O.some(2), minlength: O.some(3), type: O.some("text") }), [
+        "attributes.minlength",
+      ])
+    ).toHaveLength(1);
+    expect(
+      issuesAtPath(Textarea.make({ content: "", maxlength: O.some(2), minlength: O.some(3) }), ["attributes.minlength"])
+    ).toHaveLength(1);
+
+    for (const meta of R.values(ELEMENT_META)) {
+      expect(S.is(HtmlElementMeta)(meta)).toBe(true);
+      const encoded = S.encodeResult(HtmlElementMeta)(meta);
+      expect(Result.isSuccess(encoded)).toBe(true);
+      if (Result.isFailure(encoded)) continue;
+      expect(Result.isSuccess(S.decodeUnknownResult(HtmlElementMeta)(encoded.success))).toBe(true);
+    }
+  });
 });
 
 describe("@beep/html foreign browser fixed points", () => {

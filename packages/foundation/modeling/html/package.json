@@ -47,6 +47,8 @@
     "./Html.nodes": "./src/Html.nodes.ts",
     "./Html.policy": "./src/Html.policy.ts",
     "./Html.serialize": "./src/Html.serialize.ts",
+    "./Html.source-size": "./src/Html.source-size.ts",
+    "./Html.srcset": "./src/Html.srcset.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -71,6 +73,8 @@
       "./Html.nodes": "./dist/Html.nodes.js",
       "./Html.policy": "./dist/Html.policy.js",
       "./Html.serialize": "./dist/Html.serialize.js",
+      "./Html.source-size": "./dist/Html.source-size.js",
+      "./Html.srcset": "./dist/Html.srcset.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
@@ -79,7 +83,12 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "effect": "catalog:"
+    "@csstools/css-color-parser": "catalog:",
+    "@csstools/css-parser-algorithms": "catalog:",
+    "@csstools/css-tokenizer": "catalog:",
+    "@csstools/media-query-list-parser": "catalog:",
+    "effect": "catalog:",
+    "whatwg-url": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
+import { A } from "@beep/utils";
 import { it } from "@effect/vitest";
 import { act, cleanup, render, waitFor, within } from "@testing-library/react";
 import { Effect } from "effect";
@@ -31,7 +32,7 @@ const mermaidStub = vi.hoisted(() => {
 const mermaidRootRole = "graphics-document document";
 
 const mermaidSvg = (id: string, contents = ""): string =>
-  `<svg xmlns="http://www.w3.org/2000/svg" id="${id}" role="${mermaidRootRole}">${contents}</svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="${id}" role="${mermaidRootRole}">${contents}</svg>`;
 
 const getPendingRender = (source: string): PendingRender => {
   const pending = mermaidStub.pending.get(source);
@@ -225,7 +226,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
   );
 
   it.effect(
-    "retains local-fragment CSS URLs in SVG presentation attributes",
+    "retains CSS and URL fragments with unique targets inside the exact SVG",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nLocal-->Fragment";
       const view = render(<MermaidView renderKey="local-fragment-presentation" source={source} />);
@@ -237,7 +238,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           pending.resolve({
             svg: mermaidSvg(
               pending.id,
-              `<path data-safe-fragments="yes" fill="u\\72 l(#paint)" filter="url(#shadow)" clip-path="url(&quot;#clip&quot;)" marker-start="url('#marker')" d="M0 0L1 1"></path>`
+              `<defs><linearGradient id="paint"></linearGradient><filter id="shadow"></filter><clipPath id="clip"></clipPath><marker id="marker"></marker><path id="shape" d="M0 0L1 1"></path></defs><path data-safe-fragments="yes" fill="u\\72 l(#paint)" filter="url(#shadow)" clip-path="url(&quot;#clip&quot;)" marker-start="url('#marker')" d="M0 0L1 1"></path><text><textPath data-safe-href="yes" href="#shape" xlink:href="#shape">Safe</textPath></text>`
             ),
           })
         );
@@ -249,12 +250,319 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       );
 
       const path = view.container.querySelector("[data-safe-fragments]");
+      const paintId = view.container.querySelector("linearGradient")?.getAttribute("id");
+      const shadowId = view.container.querySelector("filter")?.getAttribute("id");
+      const clipId = view.container.querySelector("clipPath")?.getAttribute("id");
+      const markerId = view.container.querySelector("marker")?.getAttribute("id");
+      const shapeId = view.container.querySelector("defs path")?.getAttribute("id");
       expect(path).toHaveAttribute("data-safe-fragments", "yes");
-      expect(path).toHaveAttribute("fill", "u\\72 l(#paint)");
-      expect(path).toHaveAttribute("filter", "url(#shadow)");
-      expect(path).toHaveAttribute("clip-path", 'url("#clip")');
-      expect(path).toHaveAttribute("marker-start", "url('#marker')");
+      expect(path).toHaveAttribute("fill", `url(#${paintId})`);
+      expect(path).toHaveAttribute("filter", `url(#${shadowId})`);
+      expect(path).toHaveAttribute("clip-path", `url(#${clipId})`);
+      expect(path).toHaveAttribute("marker-start", `url(#${markerId})`);
+      expect(view.container.querySelector("[data-safe-href]")).toHaveAttribute("href", `#${shapeId}`);
+      expect(view.container.querySelector("[data-safe-href]")).toHaveAttribute("xlink:href", `#${shapeId}`);
+      for (const id of [paintId, shadowId, clipId, markerId, shapeId]) expect(id).toContain("-fragment-");
       expect(view.container.querySelector("svg")).toHaveAccessibleName("Mermaid diagram");
+    })
+  );
+
+  it.effect(
+    "rewrites every admitted SVG ARIA IDREF to an internal scoped target",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nARIA-->Internal";
+      const view = render(<MermaidView renderKey="safe-aria-idrefs" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+      const attributes = [
+        "aria-activedescendant",
+        "aria-controls",
+        "aria-describedby",
+        "aria-details",
+        "aria-errormessage",
+        "aria-flowto",
+        "aria-labelledby",
+        "aria-owns",
+      ];
+
+      yield* Effect.sync(() => {
+        const idRefs = A.join(
+          A.map(attributes, (attribute) => `${attribute}="local-label"`),
+          " "
+        );
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<text id="local-label">Safe label</text><g data-safe-idrefs="yes" ${idRefs}></g>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() => expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-safe-idrefs]")))
+      );
+
+      const labelId = view.container.querySelector("text")?.getAttribute("id");
+      const controlled = view.container.querySelector("[data-safe-idrefs]");
+      expect(labelId).toContain("-fragment-");
+      for (const attribute of attributes) expect(controlled).toHaveAttribute(attribute, labelId);
+    })
+  );
+
+  it.effect(
+    "rejects missing and external same-document SVG ARIA IDREF targets",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        { attribute: "aria-controls", key: "missing", target: "missing-label" },
+        { attribute: "aria-labelledby", key: "external", target: "external-label" },
+      ];
+
+      for (const { attribute, key, target } of attacks) {
+        const source = `graph TD\nARIA-->${key}`;
+        const view = render(
+          <>
+            <span id="external-label">Outside diagram</span>
+            <MermaidView renderKey={`aria-${key}`} source={source} />
+          </>
+        );
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() =>
+            pending.resolve({
+              svg: mermaidSvg(pending.id, `<g ${attribute}="${target}"></g>`),
+            })
+          );
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(within(view.container).getByTestId("mermaid-diagram").querySelector("svg, g")).toBeNull();
+        expect(within(view.container).getByText("Outside diagram")).toBeVisible();
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "rejects missing fragment targets and unsafe links across every admitted URL surface",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        '<path fill="url(#missing)" d="M0 0L1 1"></path>',
+        '<path style="fill: url(&quot;#missing&quot;)" d="M0 0L1 1"></path>',
+        '<text><textPath href="#missing">Missing</textPath></text>',
+        '<text><textPath xlink:href="#missing">Missing</textPath></text>',
+        '<text><textPath href="https://attacker.invalid/path">External</textPath></text>',
+        '<text><textPath xlink:href="javascript:alert(1)">Script</textPath></text>',
+      ];
+
+      for (const [index, contents] of attacks.entries()) {
+        const source = `graph TD\nMissing-->Fragment${index}`;
+        const view = render(<MermaidView renderKey={`missing-fragment-${index}`} source={source} />);
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() => pending.resolve({ svg: mermaidSvg(pending.id, contents) }));
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, path, textPath")).toBeNull();
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
+    "rewrites prefix IDs independently without changing hex-color declarations",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nPrefix-->Hex";
+      const view = render(<MermaidView renderKey="prefix-and-hex" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<defs><linearGradient id="a"></linearGradient><linearGradient id="abc"></linearGradient></defs><style>#${pending.id} .hex { fill: #fff; stroke: #abcdef; }</style><path class="hex" data-prefix-id="a" fill="url(#a)" d="M0 0L1 1"></path><path data-prefix-id="abc" fill="url(#abc)" d="M0 0L1 1"></path>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() => expect(view.container.querySelectorAll("[data-prefix-id]")).toHaveLength(2))
+      );
+
+      const gradients = view.container.querySelectorAll("linearGradient");
+      const paths = view.container.querySelectorAll("[data-prefix-id]");
+      expect(paths[0]).toHaveAttribute("fill", `url(#${gradients[0]?.getAttribute("id")})`);
+      expect(paths[1]).toHaveAttribute("fill", `url(#${gradients[1]?.getAttribute("id")})`);
+      expect(paths[0]?.getAttribute("fill")).not.toBe(paths[1]?.getAttribute("fill"));
+      expect(view.container.querySelector("style")).toHaveTextContent("fill: #fff");
+      expect(view.container.querySelector("style")).toHaveTextContent("stroke: #abcdef");
+    })
+  );
+
+  it.effect(
+    "rejects unsupported descendant ID selectors instead of rewriting CSS text",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nSelector-->Id";
+      const view = render(<MermaidView renderKey="descendant-id-selector" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<style>#${pending.id} #a { fill: #fff; }</style><path id="a" d="M0 0L1 1"></path>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+        )
+      );
+
+      expect(view.container.querySelector("svg, style, path")).toBeNull();
+    })
+  );
+
+  it.effect(
+    "scopes internal fragment targets away from external same-document IDs",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nFragment-->ExternalCollision";
+      const view = render(
+        <>
+          <svg aria-hidden="true">
+            <defs>
+              <linearGradient id="shared-paint" />
+            </defs>
+          </svg>
+          <MermaidView renderKey="external-collision" source={source} />
+        </>
+      );
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              '<defs><linearGradient id="shared-paint"></linearGradient></defs><path data-external-collision="safe" fill="url(#shared-paint)" d="M0 0L1 1"></path>'
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-external-collision]"))
+        )
+      );
+
+      const diagram = within(view.container).getByTestId("mermaid-diagram");
+      const internalId = diagram.querySelector("linearGradient")?.getAttribute("id");
+      expect(internalId).toContain("-fragment-");
+      expect(internalId).not.toBe("shared-paint");
+      expect(diagram.querySelector("[data-external-collision]")).toHaveAttribute("fill", `url(#${internalId})`);
+      expect(view.container.querySelector('svg[aria-hidden="true"] #shared-paint')).toBeInTheDocument();
+    })
+  );
+
+  it.effect(
+    "rejects duplicate internal fragment targets before rewriting",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nFragment-->Duplicate";
+      const view = render(<MermaidView renderKey="duplicate-fragment" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              '<defs><linearGradient id="shared-paint"></linearGradient><linearGradient id="shared-paint"></linearGradient></defs><path fill="url(#shared-paint)" d="M0 0L1 1"></path>'
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+        )
+      );
+
+      expect(view.container.querySelector("svg, path")).toBeNull();
+    })
+  );
+
+  it.effect(
+    "keeps same-page diagrams with identical internal IDs isolated",
+    Effect.fnUntraced(function* () {
+      const first = "graph TD\nFirst-->Paint";
+      const second = "graph TD\nSecond-->Paint";
+      const view = render(<MermaidView renderKey="multi-first" source={first} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(first)).toBe(true)));
+      const firstRender = getPendingRender(first);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          firstRender.resolve({
+            svg: mermaidSvg(
+              firstRender.id,
+              '<defs><linearGradient id="paint"></linearGradient></defs><path data-multi-diagram="first" fill="url(#paint)" d="M0 0L1 1"></path>'
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() => waitFor(() => expect(view.container.querySelector("[data-multi-diagram='first']"))));
+
+      view.rerender(
+        <>
+          <MermaidView renderKey="multi-first" source={first} />
+          <MermaidView renderKey="multi-second" source={second} />
+        </>
+      );
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(second)).toBe(true)));
+      const secondRender = getPendingRender(second);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          secondRender.resolve({
+            svg: mermaidSvg(
+              secondRender.id,
+              '<defs><linearGradient id="paint"></linearGradient></defs><path data-multi-diagram="second" fill="url(#paint)" d="M0 0L1 1"></path>'
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() => expect(view.container.querySelectorAll("[data-multi-diagram]")).toHaveLength(2))
+      );
+
+      const paths = view.container.querySelectorAll("[data-multi-diagram]");
+      const firstTarget = paths[0]?.getAttribute("fill");
+      const secondTarget = paths[1]?.getAttribute("fill");
+      expect(firstTarget).toContain("-fragment-");
+      expect(secondTarget).toContain("-fragment-");
+      expect(firstTarget).not.toBe(secondTarget);
+      expect(view.container.querySelectorAll("[id='paint']")).toHaveLength(0);
     })
   );
 
@@ -370,7 +678,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           pending.resolve({
             svg: mermaidSvg(
               pending.id,
-              `<style>#${pending.id} .safe-paint { stroke: currentColor; }</style><path class="safe-paint" data-safe-css-control="yes" style='fill: url("#paint")' d="M0 0L1 1"></path>`
+              `<defs><linearGradient id="paint"></linearGradient></defs><style>#${pending.id} .safe-paint { stroke: currentColor; }</style><path class="safe-paint" data-safe-css-control="yes" style='fill: url("#paint")' d="M0 0L1 1"></path>`
             ),
           })
         );
@@ -382,7 +690,8 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       );
 
       const path = view.container.querySelector("[data-safe-css-control]");
-      expect(path).toHaveAttribute("style", 'fill: url("#paint")');
+      const paintId = view.container.querySelector("linearGradient")?.getAttribute("id");
+      expect(path).toHaveAttribute("style", `fill: url(#${paintId})`);
       expect(view.container.querySelector("style")).toHaveTextContent("stroke: currentColor");
       expect(view.container.querySelector("svg")).toHaveAccessibleName("Mermaid diagram");
     })

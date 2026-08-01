@@ -18,14 +18,103 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { flow, pipe, SchemaTransformation } from "effect";
+import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import { identity } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $HtmlId.create("Html.attributes");
+
+const asciiUppercaseCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const toHtmlAsciiLowerCase: (value: string) => string = flow(
+  Str.split(""),
+  A.map((character) => (Str.includes(character)(asciiUppercaseCharacters) ? Str.toLowerCase(character) : character)),
+  A.join("")
+);
+
+class HtmlAttributeDomainError extends TaggedErrorClass<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
+  "HtmlAttributeDomainError",
+  { message: S.String },
+  $I.annote("HtmlAttributeDomainError", {
+    description: "Invalid fixed registry supplied to an HTML attribute schema factory.",
+  })
+) {}
+
+const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, allowEmpty: boolean): void => {
+  const folded = A.map(values, toHtmlAsciiLowerCase);
+  if ((!allowEmpty && A.some(values, Str.isEmpty)) || A.dedupe(folded).length !== values.length) {
+    throw HtmlAttributeDomainError.make({
+      message: `${label} requires unique ASCII-case-folded${allowEmpty ? "" : " non-empty"} values`,
+    });
+  }
+};
+
+/**
+ * Builds a canonical codec for an HTML enumerated attribute.
+ *
+ * Encoded keywords are matched ASCII-case-insensitively, as required by the
+ * HTML enumerated-attribute microsyntax. Decoded values use the supplied
+ * canonical spelling, and direct construction accepts only that fixed point.
+ * Attributes whose case distinguishes meaning, such as `ol[type]`, must use a
+ * literal schema instead because they are not HTML enumerated attributes.
+ *
+ * @example
+ * ```ts
+ * import { makeAsciiCaseInsensitiveEnumerated } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const Loading = makeAsciiCaseInsensitiveEnumerated(["eager", "lazy"])
+ * const decoded = S.decodeUnknownResult(Loading)("LAZY")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "lazy"
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly [string, ...ReadonlyArray<string>]>(
+  values: Values
+) => {
+  assertAsciiFoldUnique(values, "ASCII-case-insensitive enumerated attribute", true);
+  const Canonical = LiteralKit(values);
+  const findCanonical = (value: string) =>
+    A.findFirst(values, (candidate) => toHtmlAsciiLowerCase(candidate) === toHtmlAsciiLowerCase(value));
+  const Input = S.String.check(
+    S.makeFilter(flow(findCanonical, O.isSome), {
+      identifier: $I`AsciiCaseInsensitiveEnumeratedCheck`,
+      title: "ASCII Case-Insensitive HTML Enumerated Attribute",
+      description: "Checks a keyword against an explicit HTML enumerated-attribute domain.",
+      message: "Expected a permitted HTML enumerated-attribute keyword",
+    })
+  );
+
+  return Input.pipe(
+    S.decodeTo(
+      Canonical,
+      SchemaTransformation.transformOrFail({
+        decode: (value) =>
+          pipe(
+            findCanonical(value),
+            O.match({
+              onNone: () =>
+                Effect.fail(
+                  new SchemaIssue.InvalidValue(O.some(value), {
+                    message: "Expected a permitted HTML enumerated-attribute keyword",
+                  })
+                ),
+              onSome: Effect.succeed,
+            })
+          ),
+        encode: Effect.succeed,
+      })
+    ),
+    SchemaUtils.withLiteralKitStatics(Canonical)
+  );
+};
 
 // -----------------------------------------------------------------------------
 // reusable enumerated value schemas (sourced from webref html-global attr-values)
@@ -44,7 +133,7 @@ const $I = $HtmlId.create("Html.attributes");
  * @category schemas
  * @since 0.0.0
  */
-export const Dir = LiteralKit(["ltr", "rtl", "auto"]).pipe(
+export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pipe(
   $I.annoteSchema("Dir", { description: "Text directionality." })
 );
 /**
@@ -62,6 +151,9 @@ export const Dir = LiteralKit(["ltr", "rtl", "auto"]).pipe(
  * @since 0.0.0
  */
 export type Dir = typeof Dir.Type;
+const TranslateBase = LiteralKit(["yes", "no"]);
+const TranslateInput = makeAsciiCaseInsensitiveEnumerated(["", ...TranslateBase.Options]);
+
 /**
  * `translate` global attribute value.
  *
@@ -75,7 +167,15 @@ export type Dir = typeof Dir.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const Translate = LiteralKit(["yes", "no"]).pipe(
+export const Translate = TranslateInput.pipe(
+  S.decodeTo(
+    TranslateBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "yes" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(TranslateBase),
   $I.annoteSchema("Translate", { description: "Whether to translate the element's contents." })
 );
 /**
@@ -93,6 +193,9 @@ export const Translate = LiteralKit(["yes", "no"]).pipe(
  * @since 0.0.0
  */
 export type Translate = typeof Translate.Type;
+const ContentEditableBase = LiteralKit(["true", "false", "plaintext-only"]);
+const ContentEditableInput = makeAsciiCaseInsensitiveEnumerated(["", ...ContentEditableBase.Options]);
+
 /**
  * `contenteditable` global attribute value.
  *
@@ -106,7 +209,15 @@ export type Translate = typeof Translate.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ContentEditable = LiteralKit(["", "true", "false", "plaintext-only"]).pipe(
+export const ContentEditable = ContentEditableInput.pipe(
+  S.decodeTo(
+    ContentEditableBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "true" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(ContentEditableBase),
   $I.annoteSchema("ContentEditable", { description: "Whether the element is editable." })
 );
 /**
@@ -137,7 +248,7 @@ export type ContentEditable = typeof ContentEditable.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const Draggable = LiteralKit(["true", "false"]).pipe(
+export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).pipe(
   $I.annoteSchema("Draggable", { description: "Whether the element is draggable." })
 );
 /**
@@ -155,6 +266,9 @@ export const Draggable = LiteralKit(["true", "false"]).pipe(
  * @since 0.0.0
  */
 export type Draggable = typeof Draggable.Type;
+const SpellCheckBase = LiteralKit(["true", "false"]);
+const SpellCheckInput = makeAsciiCaseInsensitiveEnumerated(["", ...SpellCheckBase.Options]);
+
 /**
  * `spellcheck` global attribute value.
  *
@@ -168,7 +282,15 @@ export type Draggable = typeof Draggable.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const SpellCheck = LiteralKit(["true", "false", ""]).pipe(
+export const SpellCheck = SpellCheckInput.pipe(
+  S.decodeTo(
+    SpellCheckBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "true" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(SpellCheckBase),
   $I.annoteSchema("SpellCheck", { description: "Whether spellchecking is enabled." })
 );
 /**
@@ -186,6 +308,9 @@ export const SpellCheck = LiteralKit(["true", "false", ""]).pipe(
  * @since 0.0.0
  */
 export type SpellCheck = typeof SpellCheck.Type;
+const WritingSuggestionsBase = LiteralKit(["true", "false"]);
+const WritingSuggestionsInput = makeAsciiCaseInsensitiveEnumerated(["", ...WritingSuggestionsBase.Options]);
+
 /**
  * `writingsuggestions` global attribute value.
  *
@@ -199,7 +324,15 @@ export type SpellCheck = typeof SpellCheck.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const WritingSuggestions = LiteralKit(["true", "false"]).pipe(
+export const WritingSuggestions = WritingSuggestionsInput.pipe(
+  S.decodeTo(
+    WritingSuggestionsBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "true" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(WritingSuggestionsBase),
   $I.annoteSchema("WritingSuggestions", { description: "Whether writing suggestions are enabled." })
 );
 /**
@@ -230,9 +363,14 @@ export type WritingSuggestions = typeof WritingSuggestions.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AutoCapitalize = LiteralKit(["off", "none", "on", "sentences", "words", "characters"]).pipe(
-  $I.annoteSchema("AutoCapitalize", { description: "Autocapitalization behavior." })
-);
+export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
+  "off",
+  "none",
+  "on",
+  "sentences",
+  "words",
+  "characters",
+]).pipe($I.annoteSchema("AutoCapitalize", { description: "Autocapitalization behavior." }));
 /**
  * Decoded type of {@link AutoCapitalize}.
  *
@@ -248,6 +386,9 @@ export const AutoCapitalize = LiteralKit(["off", "none", "on", "sentences", "wor
  * @since 0.0.0
  */
 export type AutoCapitalize = typeof AutoCapitalize.Type;
+const AutoCorrectBase = LiteralKit(["on", "off"]);
+const AutoCorrectInput = makeAsciiCaseInsensitiveEnumerated(["", ...AutoCorrectBase.Options]);
+
 /**
  * `autocorrect` global attribute value.
  *
@@ -261,7 +402,15 @@ export type AutoCapitalize = typeof AutoCapitalize.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AutoCorrect = LiteralKit(["on", "off"]).pipe(
+export const AutoCorrect = AutoCorrectInput.pipe(
+  S.decodeTo(
+    AutoCorrectBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "on" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(AutoCorrectBase),
   $I.annoteSchema("AutoCorrect", { description: "Autocorrection behavior." })
 );
 /**
@@ -292,9 +441,16 @@ export type AutoCorrect = typeof AutoCorrect.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const InputMode = LiteralKit(["none", "text", "tel", "url", "email", "numeric", "decimal", "search"]).pipe(
-  $I.annoteSchema("InputMode", { description: "Virtual keyboard input mode hint." })
-);
+export const InputMode = makeAsciiCaseInsensitiveEnumerated([
+  "none",
+  "text",
+  "tel",
+  "url",
+  "email",
+  "numeric",
+  "decimal",
+  "search",
+]).pipe($I.annoteSchema("InputMode", { description: "Virtual keyboard input mode hint." }));
 /**
  * Decoded type of {@link InputMode}.
  *
@@ -323,9 +479,15 @@ export type InputMode = typeof InputMode.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const EnterKeyHint = LiteralKit(["enter", "done", "go", "next", "previous", "search", "send"]).pipe(
-  $I.annoteSchema("EnterKeyHint", { description: "Enter-key action hint." })
-);
+export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
+  "enter",
+  "done",
+  "go",
+  "next",
+  "previous",
+  "search",
+  "send",
+]).pipe($I.annoteSchema("EnterKeyHint", { description: "Enter-key action hint." }));
 /**
  * Decoded type of {@link EnterKeyHint}.
  *
@@ -341,6 +503,9 @@ export const EnterKeyHint = LiteralKit(["enter", "done", "go", "next", "previous
  * @since 0.0.0
  */
 export type EnterKeyHint = typeof EnterKeyHint.Type;
+const HiddenBase = LiteralKit(["hidden", "until-found"]);
+const HiddenInput = makeAsciiCaseInsensitiveEnumerated(["", ...HiddenBase.Options]);
+
 /**
  * `hidden` global attribute value.
  *
@@ -354,7 +519,15 @@ export type EnterKeyHint = typeof EnterKeyHint.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const Hidden = LiteralKit(["", "hidden", "until-found"]).pipe(
+export const Hidden = HiddenInput.pipe(
+  S.decodeTo(
+    HiddenBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "hidden" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(HiddenBase),
   $I.annoteSchema("Hidden", { description: "Hidden state of the element." })
 );
 /**
@@ -373,7 +546,7 @@ export const Hidden = LiteralKit(["", "hidden", "until-found"]).pipe(
  */
 export type Hidden = typeof Hidden.Type;
 const PopoverBase = LiteralKit(["auto", "manual", "hint"]);
-const PopoverInput = S.Literals(["", ...PopoverBase.Options]);
+const PopoverInput = makeAsciiCaseInsensitiveEnumerated(["", ...PopoverBase.Options]);
 
 /**
  * `popover` global attribute value.
@@ -427,7 +600,7 @@ export type Popover = typeof Popover.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PopoverTargetAction = LiteralKit(["toggle", "show", "hide"]).pipe(
+export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle", "show", "hide"]).pipe(
   $I.annoteSchema("PopoverTargetAction", { description: "Action a popover invoker performs." })
 );
 /**
@@ -482,6 +655,183 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
  * @since 0.0.0
  */
 export type BooleanAttribute = typeof BooleanAttribute.Type;
+
+const CrossOriginBase = LiteralKit(["anonymous", "use-credentials"]);
+const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginBase.Options]);
+
+/**
+ * CORS settings attribute with the HTML missing-value spelling normalized.
+ *
+ * @example
+ * ```ts
+ * import { CrossOrigin } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(CrossOrigin)("")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "anonymous"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CrossOrigin = CrossOriginInput.pipe(
+  S.decodeTo(
+    CrossOriginBase,
+    SchemaTransformation.transform({
+      decode: (value) => (value === "" ? "anonymous" : value),
+      encode: identity,
+    })
+  ),
+  SchemaUtils.withLiteralKitStatics(CrossOriginBase),
+  $I.annoteSchema("CrossOrigin", { description: "Canonical HTML CORS settings attribute." })
+);
+
+/**
+ * Type for {@link CrossOrigin}. {@inheritDoc CrossOrigin}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CrossOrigin = typeof CrossOrigin.Type;
+
+/**
+ * Referrer-policy keyword accepted by HTML fetch attributes.
+ *
+ * @example
+ * ```ts
+ * import { ReferrerPolicy } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ReferrerPolicy)("strict-origin")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
+  "",
+  "no-referrer",
+  "no-referrer-when-downgrade",
+  "same-origin",
+  "origin",
+  "strict-origin",
+  "origin-when-cross-origin",
+  "strict-origin-when-cross-origin",
+  "unsafe-url",
+]).pipe($I.annoteSchema("ReferrerPolicy", { description: "Canonical HTML referrer-policy keyword." }));
+
+/**
+ * Type for {@link ReferrerPolicy}. {@inheritDoc ReferrerPolicy}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReferrerPolicy = typeof ReferrerPolicy.Type;
+
+/**
+ * The only conforming character encoding spelling accepted by HTML metadata
+ * and form submission.
+ *
+ * @example
+ * ```ts
+ * import { Utf8Charset } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(Utf8Charset)("UTF-8")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "utf-8"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
+  $I.annoteSchema("Utf8Charset", { description: "Canonical UTF-8 HTML character-encoding keyword." })
+);
+
+/**
+ * Type for {@link Utf8Charset}. {@inheritDoc Utf8Charset}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Utf8Charset = typeof Utf8Charset.Type;
+
+/**
+ * Form-level autocomplete policy. Form elements accept only `on` or `off`;
+ * detailed autofill tokens belong to form controls.
+ *
+ * @example
+ * ```ts
+ * import { FormAutocomplete } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(FormAutocomplete)("OFF")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "off"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]).pipe(
+  $I.annoteSchema("FormAutocomplete", { description: "Canonical form-level autocomplete policy." })
+);
+
+/**
+ * Type for {@link FormAutocomplete}. {@inheritDoc FormAutocomplete}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FormAutocomplete = typeof FormAutocomplete.Type;
+
+const BuiltInButtonCommand = makeAsciiCaseInsensitiveEnumerated([
+  "toggle-popover",
+  "show-popover",
+  "hide-popover",
+  "close",
+  "request-close",
+  "show-modal",
+]);
+const CustomButtonCommand = S.String.check(
+  S.makeFilter(Str.startsWith("--"), {
+    identifier: $I`CustomButtonCommandCheck`,
+    title: "Custom Button Command",
+    description: "Checks a case-preserving custom button command beginning with two hyphens.",
+    message: "Expected a custom command beginning with --",
+  })
+);
+
+/**
+ * Built-in or case-preserving custom `button[command]` keyword.
+ *
+ * @example
+ * ```ts
+ * import { ButtonCommand } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(ButtonCommand)("SHOW-MODAL")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "show-modal"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]).pipe(
+  $I.annoteSchema("ButtonCommand", { description: "Canonical built-in or custom HTML button command." }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link ButtonCommand}. {@inheritDoc ButtonCommand}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ButtonCommand = typeof ButtonCommand.Type;
 
 /**
  * Integer accepted by the `headingoffset` global attribute.
@@ -737,6 +1087,75 @@ export const HtmlPositiveNumber = HtmlFiniteNumber.check(
 export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
 
 /**
+ * `input[step]` value: the keyword `any` or a positive finite number.
+ *
+ * @example
+ * ```ts
+ * import { HtmlStep } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlStep)("ANY")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "any"
+ * console.log(S.is(HtmlStep)(0)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), HtmlPositiveNumber]).pipe(
+  $I.annoteSchema("HtmlStep", { description: "Canonical positive numeric or any HTML step value." }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link HtmlStep}. {@inheritDoc HtmlStep}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlStep = typeof HtmlStep.Type;
+
+/**
+ * Removes only the five ASCII whitespace code points recognized by HTML from
+ * both ends of a string.
+ *
+ * @example
+ * ```ts
+ * import { stripHtmlAsciiWhitespace } from "@beep/html/Html.attributes"
+ *
+ * console.log(stripHtmlAsciiWhitespace("\t value \n")) // "value"
+ * console.log(stripHtmlAsciiWhitespace("\u00a0")) // "\u00a0"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const stripHtmlAsciiWhitespace = Str.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/gu, "");
+
+/**
+ * Splits an HTML space-separated token list on ASCII whitespace only.
+ *
+ * Unicode spaces such as NBSP remain part of a token, matching the browser's
+ * DOMTokenList behavior.
+ *
+ * @example
+ * ```ts
+ * import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes"
+ *
+ * console.log(tokenizeHtmlSpaceSeparated("noopener\tnoreferrer"))
+ * console.log(tokenizeHtmlSpaceSeparated("noopener\u00a0noreferrer"))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const tokenizeHtmlSpaceSeparated: (value: string) => ReadonlyArray<string> = flow(
+  Str.split(/[\t\n\f\r ]+/u),
+  A.filter(Str.isNonEmpty)
+);
+
+/**
  * Builds a schema for a space-separated list of known HTML tokens.
  *
  * Empty text is accepted because attributes such as `sandbox=""` have
@@ -757,12 +1176,11 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
 export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [string, ...ReadonlyArray<string>]>(
   allowed: Tokens
 ) => {
-  const allowedTokens = A.map(allowed, Str.toLowerCase);
+  assertAsciiFoldUnique(allowed, "Space-separated HTML token registry", false);
+  const allowedTokens = A.map(allowed, toHtmlAsciiLowerCase);
   const tokenize: (value: string) => ReadonlyArray<string> = flow(
-    Str.trim,
-    Str.split(/\s+/u),
-    A.filter(Str.isNonEmpty),
-    A.map(Str.toLowerCase)
+    tokenizeHtmlSpaceSeparated,
+    A.map(toHtmlAsciiLowerCase)
   );
   const normalize = (value: string): string => {
     const inputTokens = tokenize(value);
@@ -806,13 +1224,216 @@ export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [strin
   );
 };
 
+const makeOpenSpaceSeparatedTokenList = (
+  asciiCaseInsensitive: boolean,
+  rawIsAllowed?: (value: string) => boolean,
+  canonicalizeTokens: (tokens: ReadonlyArray<string>) => ReadonlyArray<string> = identity
+) => {
+  const normalizeTokens = (value: string): ReadonlyArray<string> =>
+    pipe(
+      tokenizeHtmlSpaceSeparated(value),
+      asciiCaseInsensitive ? A.map(toHtmlAsciiLowerCase) : identity,
+      canonicalizeTokens
+    );
+  const normalize = flow(normalizeTokens, A.join(" "));
+  const hasUniqueTokens = (value: string): boolean => {
+    const tokens = normalizeTokens(value);
+    return A.dedupe(tokens).length === tokens.length && (rawIsAllowed === undefined || rawIsAllowed(value));
+  };
+  const Input = S.String.check(
+    S.makeFilter(hasUniqueTokens, {
+      identifier: $I`OpenSpaceSeparatedTokenListCheck`,
+      title: "Open Space-Separated HTML Token List",
+      description: "Checks an open HTML token list for duplicate tokens.",
+      message: "Expected a space-separated list of unique tokens",
+    })
+  );
+  const Canonical = S.String.check(
+    S.makeFilter((value) => value === normalize(value) && hasUniqueTokens(value), {
+      identifier: $I`CanonicalOpenSpaceSeparatedTokenListCheck`,
+      title: "Canonical Open Space-Separated HTML Token List",
+      description: "Checks an open HTML token list at its canonical whitespace and case fixed point.",
+      message: "Expected canonical token spelling and spacing",
+    })
+  );
+  return Input.pipe(
+    S.decodeTo(
+      Canonical,
+      SchemaTransformation.transform({
+        decode: normalize,
+        encode: identity,
+      })
+    )
+  );
+};
+
+/**
+ * Open, ASCII-case-insensitive HTML relation-token list.
+ *
+ * The structural AST accepts extension relation tokens because WHATWG delegates
+ * extension registration to a mutable external registry. Conformance applies
+ * semantic rules to known tokens, while SafeHtml owns a smaller finite policy.
+ *
+ * @example
+ * ```ts
+ * import { HtmlRelationList } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlRelationList)("ME x-beep")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "me x-beep"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined, A.sort(Str.Order)).pipe(
+  $I.annoteSchema("HtmlRelationList", {
+    description: "Canonical open relation-token list for HTML link-bearing elements.",
+  })
+);
+
+/**
+ * Type for {@link HtmlRelationList}. {@inheritDoc HtmlRelationList}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlRelationList = typeof HtmlRelationList.Type;
+
+/**
+ * Open, ASCII-case-insensitive relation-token list for `link[rel]`.
+ *
+ * Link relation extensions are registrable, so the structural AST retains
+ * unknown extension tokens. Placement and SafeHtml policy stay independently
+ * closed over their reviewed relation sets.
+ *
+ * @example
+ * ```ts
+ * import { LinkRelationList } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(LinkRelationList)("APPLE-TOUCH-ICON x-beep")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
+  true,
+  (value) => {
+    const folded = toHtmlAsciiLowerCase(value);
+    const tokens = tokenizeHtmlSpaceSeparated(folded);
+    return !A.contains(tokens, "shortcut") || folded === "shortcut icon";
+  },
+  (tokens) => (A.contains(tokens, "shortcut") ? tokens : pipe(tokens, A.sort(Str.Order)))
+).pipe(
+  $I.annoteSchema("LinkRelationList", {
+    description: "Canonical open relation-token list for link elements.",
+  })
+);
+
+/**
+ * Type for {@link LinkRelationList}. {@inheritDoc LinkRelationList}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LinkRelationList = typeof LinkRelationList.Type;
+
+/**
+ * Case-preserving unique HTML ID-reference token list.
+ *
+ * @example
+ * ```ts
+ * import { HtmlIdReferenceList } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlIdReferenceList)("First\tsecond")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "First second"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
+  $I.annoteSchema("HtmlIdReferenceList", {
+    description: "Canonical case-preserving list of unique HTML id-reference tokens.",
+  })
+);
+
+/**
+ * Type for {@link HtmlIdReferenceList}. {@inheritDoc HtmlIdReferenceList}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlIdReferenceList = typeof HtmlIdReferenceList.Type;
+
+const MetadataNameInput = S.String.check(
+  S.isPattern(/^[^\t\n\f\r ]+$/u, {
+    identifier: $I`MetadataNameInputCheck`,
+    title: "HTML Metadata Name",
+    description: "Checks a non-empty HTML metadata name token.",
+    message: "Expected a non-empty metadata name without ASCII whitespace",
+  })
+);
+const CanonicalMetadataName = MetadataNameInput.check(
+  S.makeFilter((value) => value === toHtmlAsciiLowerCase(value), {
+    identifier: $I`CanonicalMetadataNameCheck`,
+    title: "Canonical HTML Metadata Name",
+    description: "Checks the ASCII-lowercase fixed point of a metadata name.",
+    message: "Expected an ASCII-lowercase metadata name",
+  })
+);
+
+/**
+ * Open metadata name for `meta[name]`.
+ *
+ * HTML permits arbitrary extension metadata names; decoding normalizes their
+ * ASCII-insensitive spelling without requiring a central registry.
+ *
+ * @example
+ * ```ts
+ * import { MetadataName } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(MetadataName)("X-BEEP")
+ * if (Result.isSuccess(decoded)) console.log(decoded.success) // "x-beep"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataName = MetadataNameInput.pipe(
+  S.decodeTo(
+    CanonicalMetadataName,
+    SchemaTransformation.transform({
+      decode: toHtmlAsciiLowerCase,
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("MetadataName", { description: "Canonical open HTML metadata name." })
+);
+
+/**
+ * Type for {@link MetadataName}. {@inheritDoc MetadataName}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataName = typeof MetadataName.Type;
+
 const autocompleteAttributePattern =
-  /^(?:on|off|(?:(?:section-[^\s]+)\s+)?(?:(?:shipping|billing)\s+)?(?:(?:home|work|mobile|fax|pager)\s+)?(?:name|honorific-prefix|given-name|additional-name|family-name|honorific-suffix|nickname|username|new-password|current-password|one-time-code|organization-title|organization|street-address|address-line1|address-line2|address-line3|address-level4|address-level3|address-level2|address-level1|country|country-name|postal-code|cc-name|cc-given-name|cc-additional-name|cc-family-name|cc-number|cc-exp|cc-exp-month|cc-exp-year|cc-csc|cc-type|transaction-currency|transaction-amount|language|bday|bday-day|bday-month|bday-year|sex|url|photo|tel|tel-country-code|tel-national|tel-area-code|tel-local|tel-local-prefix|tel-local-suffix|tel-extension|email|impp)(?:\s+webauthn)?)$/u;
+  /^(?:on|off|(?:(?:section-[^\t\n\f\r ]+)[\t\n\f\r ]+)?(?:(?:shipping|billing)[\t\n\f\r ]+)?(?:(?:home|work|mobile|fax|pager)[\t\n\f\r ]+)?(?:name|honorific-prefix|given-name|additional-name|family-name|honorific-suffix|nickname|username|new-password|current-password|one-time-code|organization-title|organization|street-address|address-line1|address-line2|address-line3|address-level4|address-level3|address-level2|address-level1|country|country-name|postal-code|cc-name|cc-given-name|cc-additional-name|cc-family-name|cc-number|cc-exp|cc-exp-month|cc-exp-year|cc-csc|cc-type|transaction-currency|transaction-amount|language|bday|bday-day|bday-month|bday-year|sex|url|photo|tel|tel-country-code|tel-national|tel-area-code|tel-local|tel-local-prefix|tel-local-suffix|tel-extension|email|impp)(?:[\t\n\f\r ]+webauthn)?)$/u;
 
 const normalizeAutocompleteAttribute: (value: string) => string = flow(
-  Str.trim,
-  Str.split(/\s+/u),
-  A.map(Str.toLowerCase),
+  tokenizeHtmlSpaceSeparated,
+  A.map(toHtmlAsciiLowerCase),
   A.join(" ")
 );
 
@@ -1026,6 +1647,41 @@ const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNo
 type OptionalString = typeof OptionalString;
 
 /**
+ * Exact hand-authored registry of HTML enumerated global-attribute fields.
+ *
+ * The individual codecs canonicalize ASCII case and expose semantic fixed
+ * points. Keeping the field inventory in one record lets the generator fail
+ * when a global enumerated attribute is added or dropped without review.
+ *
+ * @example
+ * ```ts
+ * import { EnumeratedGlobalAttributes } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(S.Struct(EnumeratedGlobalAttributes))({ dir: "RTL" })
+ * if (Result.isSuccess(decoded)) console.log(decoded.success.dir)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EnumeratedGlobalAttributes = {
+  autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
+  autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
+  contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
+  dir: S.OptionFromOptionalKey(Dir).pipe(SchemaUtils.withNoneDefault),
+  draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
+  enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
+  hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
+  inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
+  popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
+  spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
+  translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
+  writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
+} as const;
+
+/**
  * The WHATWG global attributes (`dom.html#global-attributes`), value-typed.
  *
  * @example
@@ -1042,21 +1698,14 @@ type OptionalString = typeof OptionalString;
  */
 export const StandardGlobalAttributes = {
   accesskey: OptionalString,
-  autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
-  autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
+  ...EnumeratedGlobalAttributes,
   autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
   class: OptionalString,
-  contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
-  dir: S.OptionFromOptionalKey(Dir).pipe(SchemaUtils.withNoneDefault),
-  draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
-  enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
   exportparts: OptionalString,
   headingoffset: S.OptionFromOptionalKey(HeadingOffset).pipe(SchemaUtils.withNoneDefault),
   headingreset: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-  hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
   id: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
   inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-  inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
   is: OptionalString,
   itemid: OptionalString,
   itemprop: OptionalString,
@@ -1066,14 +1715,10 @@ export const StandardGlobalAttributes = {
   lang: OptionalString,
   nonce: OptionalString,
   part: OptionalString,
-  popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
   slot: OptionalString,
-  spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
   style: OptionalString,
   tabindex: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
   title: OptionalString,
-  translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
-  writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
 } as const;
 
 /**

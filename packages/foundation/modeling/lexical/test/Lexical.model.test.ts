@@ -8,6 +8,9 @@ import {
   hasTextFormat,
   LexicalNode,
   LinkNode,
+  ListNode,
+  ListTag,
+  ListType,
   nodeToPlainText,
   RootNode,
   SafeUrl,
@@ -21,13 +24,16 @@ import {
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
+const ListNodeArbitrary = S.toArbitrary(ListNode);
 const NodeArbitrary = S.toArbitrary(LexicalNode);
 const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
@@ -404,6 +410,124 @@ describe("Lexical.model", () => {
 
     expect(Effect.runSync(decodeEditorStateLossless(future))).toEqual(future);
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
+  });
+
+  it("rejects contradictory list metadata strictly while retaining the exact lossless wire", () => {
+    const mismatches: ReadonlyArray<readonly [ListType, ListTag]> = [
+      ["number", "ul"],
+      ["bullet", "ol"],
+      ["check", "ol"],
+    ];
+
+    A.forEach(mismatches, ([listType, tag]) => {
+      const node = {
+        ...element,
+        type: "list",
+        listType,
+        start: 1,
+        tag,
+        children: [
+          {
+            ...element,
+            type: "listitem",
+            value: 1,
+            children: [text("item")],
+          },
+        ],
+      };
+      const state = {
+        root: {
+          ...element,
+          type: "root",
+          children: [node],
+        },
+      };
+      const source = Effect.runSync(S.encodeEffect(S.UnknownFromJsonString)(state));
+      const canonicalTag = ListType.$match(listType, {
+        number: ListTag.thunk.ol,
+        bullet: ListTag.thunk.ul,
+        check: ListTag.thunk.ul,
+      });
+      const semanticNode = Effect.runSync(S.decodeUnknownEffect(ListNode)({ ...node, tag: canonicalTag }));
+      const semanticMismatch = { ...semanticNode, tag };
+
+      expect(() => ListNode.make(semanticMismatch)).toThrow();
+      expect(Effect.runSyncExit(ListNode.makeEffect(semanticMismatch))._tag).toBe("Failure");
+      expect(S.decodeUnknownResult(ListNode)(node)._tag).toBe("Failure");
+      expect(S.decodeUnknownResult(LexicalNode)(node)._tag).toBe("Failure");
+      expect(S.decodeUnknownResult(SerializedEditorState)(state)._tag).toBe("Failure");
+      expect(O.isNone(SerializedEditorState.decodeOption(state))).toBe(true);
+      expect(S.decodeUnknownResult(EditorStateFromJson)(source)._tag).toBe("Failure");
+      expect(Effect.runSyncExit(decodeEditorStateStrict(state))._tag).toBe("Failure");
+
+      const compatibility = Effect.runSync(analyzeEditorStateCompatibility(state));
+      expect(compatibility.isCompatible).toBe(false);
+      expect(O.isNone(compatibility.state)).toBe(true);
+      expect(compatibility.wire).toEqual(state);
+      expect(compatibility.issues).toHaveLength(1);
+
+      const wire = Effect.runSync(decodeEditorStateLossless(state));
+      expect(wire).toEqual(state);
+      expect(Effect.runSync(S.encodeEffect(SerializedEditorStateWire)(wire))).toEqual(state);
+      expect(Effect.runSync(S.decodeUnknownEffect(EditorStateWireFromJson)(source))).toEqual(state);
+    });
+  });
+
+  it("generates only runtime-canonical list metadata", () =>
+    fc.assert(
+      fc.property(ListNodeArbitrary, (node) => {
+        const expectedTag = ListType.$match(node.listType, {
+          number: ListTag.thunk.ol,
+          bullet: ListTag.thunk.ul,
+          check: ListTag.thunk.ul,
+        });
+
+        expect(node.tag).toBe(expectedTag);
+      }),
+      fcRuns(100)
+    ));
+
+  it("keeps canonical list metadata fixed through the real Lexical runtime", () => {
+    const editor = createEditor({
+      namespace: "lexical-schema-list-fixed-point",
+      nodes: [RuntimeListNode, RuntimeListItemNode],
+    });
+    const canonical: ReadonlyArray<readonly [ListType, ListTag]> = [
+      ["number", "ol"],
+      ["bullet", "ul"],
+      ["check", "ul"],
+    ];
+
+    A.forEach(canonical, ([listType, tag]) => {
+      const state = {
+        root: {
+          ...element,
+          type: "root",
+          children: [
+            {
+              ...element,
+              type: "list",
+              listType,
+              start: 1,
+              tag,
+              children: [
+                {
+                  ...element,
+                  type: "listitem",
+                  value: 1,
+                  children: [text("item")],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const strict = Effect.runSync(decodeEditorStateStrict(state));
+      const source = Effect.runSync(S.encodeEffect(EditorStateFromJson)(strict));
+
+      expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
+    });
   });
 
   it("enforces the strict v1 child grammar on the established semantic schema", () => {

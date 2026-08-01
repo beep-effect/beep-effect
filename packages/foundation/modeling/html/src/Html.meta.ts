@@ -9,8 +9,8 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
@@ -393,7 +393,7 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
   {
     attribute: S.String,
     category: HtmlCategory,
-    condition: S.Literals(["present", "not-equals"]),
+    condition: S.Literals(["present", "not-equals", "tokens-subset"]),
     value: S.String.pipe(S.optionalKey),
   },
   $I.annote("HtmlConditionalCategoryRule", {
@@ -785,6 +785,374 @@ export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArra
 });
 
 /**
+ * Generator-owned autocomplete field groups from the WHATWG control table.
+ *
+ * @example
+ * ```ts
+ * import { HTML_AUTOCOMPLETE_FIELD_GROUPS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_FIELD_GROUPS.password.includes("new-password")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_FIELD_GROUPS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
+  date: Object.freeze(["bday"]),
+  month: Object.freeze(["cc-exp"]),
+  multiline: Object.freeze(["street-address"]),
+  numeric: Object.freeze(["bday-day", "bday-month", "bday-year", "cc-exp-month", "cc-exp-year", "transaction-amount"]),
+  password: Object.freeze(["current-password", "new-password", "one-time-code"]),
+  tel: Object.freeze([
+    "tel",
+    "tel-area-code",
+    "tel-country-code",
+    "tel-extension",
+    "tel-local",
+    "tel-local-prefix",
+    "tel-local-suffix",
+    "tel-national",
+  ]),
+  text: Object.freeze([
+    "additional-name",
+    "address-level1",
+    "address-level2",
+    "address-level3",
+    "address-level4",
+    "address-line1",
+    "address-line2",
+    "address-line3",
+    "cc-additional-name",
+    "cc-csc",
+    "cc-family-name",
+    "cc-given-name",
+    "cc-name",
+    "cc-number",
+    "cc-type",
+    "country",
+    "country-name",
+    "family-name",
+    "given-name",
+    "honorific-prefix",
+    "honorific-suffix",
+    "language",
+    "name",
+    "nickname",
+    "organization",
+    "organization-title",
+    "postal-code",
+    "sex",
+    "transaction-currency",
+  ]),
+  url: Object.freeze(["impp", "photo", "url"]),
+  username: Object.freeze(["email", "username"]),
+});
+
+/**
+ * Generator-owned input-state compatibility for autocomplete field groups.
+ *
+ * @example
+ * ```ts
+ * import { HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS.email.includes("username")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
+  button: Object.freeze([]),
+  checkbox: Object.freeze([]),
+  color: Object.freeze([]),
+  date: Object.freeze(["date"]),
+  "datetime-local": Object.freeze([]),
+  email: Object.freeze(["username"]),
+  file: Object.freeze([]),
+  hidden: Object.freeze(["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"]),
+  image: Object.freeze([]),
+  month: Object.freeze(["month"]),
+  number: Object.freeze(["numeric"]),
+  password: Object.freeze(["password"]),
+  radio: Object.freeze([]),
+  range: Object.freeze([]),
+  reset: Object.freeze([]),
+  search: Object.freeze(["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"]),
+  submit: Object.freeze([]),
+  tel: Object.freeze(["tel"]),
+  text: Object.freeze(["date", "month", "multiline", "numeric", "password", "tel", "text", "url", "username"]),
+  time: Object.freeze([]),
+  url: Object.freeze(["url"]),
+  week: Object.freeze([]),
+});
+
+/**
+ * Autocomplete fields that may carry a contact-recipient hint.
+ *
+ * @example
+ * ```ts
+ * import { HTML_AUTOCOMPLETE_CONTACT_FIELDS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_AUTOCOMPLETE_CONTACT_FIELDS.includes("email")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.freeze([
+  "email",
+  "impp",
+  "tel",
+  "tel-area-code",
+  "tel-country-code",
+  "tel-extension",
+  "tel-local",
+  "tel-local-prefix",
+  "tel-local-suffix",
+  "tel-national",
+]);
+
+/**
+ * Exact conditional attribute applicability for every input type state.
+ *
+ * @example
+ * ```ts
+ * import { HTML_INPUT_ATTRIBUTE_APPLICABILITY } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
+  button: Object.freeze(["popovertarget", "popovertargetaction"]),
+  checkbox: Object.freeze(["checked", "required"]),
+  color: Object.freeze(["alpha", "autocomplete", "colorspace", "list"]),
+  date: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  "datetime-local": Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  email: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "list",
+    "maxlength",
+    "minlength",
+    "multiple",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  file: Object.freeze(["accept", "multiple", "required"]),
+  hidden: Object.freeze(["autocomplete", "dirname"]),
+  image: Object.freeze([
+    "alt",
+    "formaction",
+    "formenctype",
+    "formmethod",
+    "formnovalidate",
+    "formtarget",
+    "height",
+    "popovertarget",
+    "popovertargetaction",
+    "src",
+    "width",
+  ]),
+  month: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  number: Object.freeze(["autocomplete", "list", "max", "min", "placeholder", "readonly", "required", "step"]),
+  password: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "maxlength",
+    "minlength",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  radio: Object.freeze(["checked", "required"]),
+  range: Object.freeze(["autocomplete", "list", "max", "min", "step"]),
+  reset: Object.freeze(["popovertarget", "popovertargetaction"]),
+  search: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "list",
+    "maxlength",
+    "minlength",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  submit: Object.freeze([
+    "dirname",
+    "formaction",
+    "formenctype",
+    "formmethod",
+    "formnovalidate",
+    "formtarget",
+    "popovertarget",
+    "popovertargetaction",
+  ]),
+  tel: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "list",
+    "maxlength",
+    "minlength",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  text: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "list",
+    "maxlength",
+    "minlength",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  time: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  url: Object.freeze([
+    "autocomplete",
+    "dirname",
+    "list",
+    "maxlength",
+    "minlength",
+    "pattern",
+    "placeholder",
+    "readonly",
+    "required",
+    "size",
+  ]),
+  week: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+});
+
+/**
+ * Conditional input attributes covered by the applicability table.
+ *
+ * @example
+ * ```ts
+ * import { HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES.includes("autocomplete")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
+  "accept",
+  "alpha",
+  "alt",
+  "autocomplete",
+  "checked",
+  "colorspace",
+  "dirname",
+  "formaction",
+  "formenctype",
+  "formmethod",
+  "formnovalidate",
+  "formtarget",
+  "height",
+  "list",
+  "max",
+  "maxlength",
+  "min",
+  "minlength",
+  "multiple",
+  "pattern",
+  "placeholder",
+  "popovertarget",
+  "popovertargetaction",
+  "readonly",
+  "required",
+  "size",
+  "src",
+  "step",
+  "width",
+]);
+
+/**
+ * Button attributes permitted only for effective submit buttons.
+ *
+ * @example
+ * ```ts
+ * import { HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES.includes("formaction")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES: ReadonlyArray<string> = Object.freeze([
+  "formaction",
+  "formenctype",
+  "formmethod",
+  "formnovalidate",
+  "formtarget",
+]);
+
+/**
+ * Reviewed icon relation tokens used by link-specific attributes.
+ *
+ * @example
+ * ```ts
+ * import { HTML_ICON_LINK_RELATIONS } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ICON_LINK_RELATIONS.includes("apple-touch-icon")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ICON_LINK_RELATIONS: ReadonlyArray<string> = Object.freeze(["icon", "apple-touch-icon"]);
+
+/**
+ * Element/attribute keys using the HTML ID-reference-list microsyntax.
+ *
+ * @example
+ * ```ts
+ * import { HTML_ID_REFERENCE_LIST_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ID_REFERENCE_LIST_ATTRIBUTES.includes("output/for")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ID_REFERENCE_LIST_ATTRIBUTES: ReadonlyArray<string> = Object.freeze([
+  "output/for",
+  "td/headers",
+  "th/headers",
+]);
+
+/**
+ * Element/attribute keys containing one case-sensitive HTML ID reference.
+ *
+ * @example
+ * ```ts
+ * import { HTML_ID_REFERENCE_ATTRIBUTES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ID_REFERENCE_ATTRIBUTES.includes("button/commandfor")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ID_REFERENCE_ATTRIBUTES: ReadonlyArray<string> = Object.freeze(["button/commandfor"]);
+
+/**
  * Text parsing and serialization mode of an HTML element.
  *
  * @example
@@ -866,6 +1234,7 @@ export const HtmlBooleanAttributeName = LiteralKit([
   "seamless",
   "selected",
   "shadowrootclonable",
+  "shadowrootcustomelementregistry",
   "shadowrootdelegatesfocus",
   "shadowrootserializable",
   "truespeed",
@@ -897,6 +1266,66 @@ export const HtmlBooleanAttributeName = LiteralKit([
 export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
 
 /**
+ * Reviewed HTML attribute microsyntaxes that require conformance inspection
+ * beyond their lossless wire schemas.
+ *
+ * @example
+ * ```ts
+ * import { HtmlAttributeSyntax } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlAttributeSyntax.is.srcset("srcset")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "source-size-list", "srcset"]).pipe(
+  $I.annoteSchema("HtmlAttributeSyntax", {
+    description: "Reviewed HTML attribute microsyntax requiring specialized conformance inspection.",
+  })
+);
+
+/**
+ * Decoded reviewed HTML attribute microsyntax.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlAttributeSyntax } from "@beep/html/Html.meta"
+ *
+ * const syntax: HtmlAttributeSyntax = "srcset"
+ * console.log(syntax)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlAttributeSyntax = typeof HtmlAttributeSyntax.Type;
+
+/**
+ * Exact generator-owned mapping from element/attribute pairs to specialized
+ * conformance microsyntaxes.
+ *
+ * @example
+ * ```ts
+ * import { HTML_ATTRIBUTE_SYNTAXES } from "@beep/html/Html.meta"
+ *
+ * console.log(HTML_ATTRIBUTE_SYNTAXES["link/sizes"]) // "icon-sizes"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSyntax>> = Object.freeze({
+  "img/sizes": "source-size-list",
+  "img/srcset": "srcset",
+  "link/imagesizes": "source-size-list",
+  "link/imagesrcset": "srcset",
+  "link/sizes": "icon-sizes",
+  "source/sizes": "source-size-list",
+  "source/srcset": "srcset",
+});
+
+/**
  * Generated same-value relationship between two HTML attributes.
  *
  * @example
@@ -925,6 +1354,40 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`Htm
   })
 ) {}
 
+const HtmlAttributeValueConstraint = S.Union([
+  S.TaggedStruct("allowedValues", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAllTokens", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("containsAnyToken", {
+    attribute: S.String,
+    values: S.String.pipe(S.NonEmptyArray),
+  }),
+  S.TaggedStruct("equals", {
+    asciiCaseInsensitive: S.Boolean.pipe(S.optionalKey),
+    attribute: S.String,
+    value: S.String,
+  }),
+]).pipe(
+  $I.annoteSchema("HtmlAttributeValueConstraint", {
+    description: "Generated relationship constraint over an HTML attribute value.",
+  })
+);
+
+const HtmlAttributeRequirementPredicate = S.Union([
+  S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributePresent", { attribute: S.String }),
+]).pipe(
+  $I.annoteSchema("HtmlAttributeRequirementPredicate", {
+    description: "Generated predicate controlling when an HTML attribute requirement applies.",
+  })
+);
+
 /**
  * Generated conditional requirement or exclusion for HTML attributes.
  *
@@ -935,7 +1398,7 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`Htm
  * const requirement = HtmlAttributeRequirement.make({
  *   message: "target requires href",
  *   required: [["href"]],
- *   whenAttribute: "target"
+ *   when: { _tag: "attributePresent", attribute: "target" }
  * })
  * console.log(requirement.required[0])
  * ```
@@ -945,11 +1408,13 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`Htm
  */
 export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>($I`HtmlAttributeRequirement`)(
   {
+    constraints: HtmlAttributeValueConstraint.pipe(S.NonEmptyArray, S.optionalKey),
     forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
+    nonBlank: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
-    whenAttribute: S.String.pipe(S.optionalKey),
-    whenEquals: S.String.pipe(S.optionalKey),
+    validNonEmptyUrl: S.String.pipe(S.NonEmptyArray, S.optionalKey),
+    when: HtmlAttributeRequirementPredicate.pipe(S.optionalKey),
     whenParents: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("HtmlAttributeRequirement", {
@@ -1091,6 +1556,7 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
     forbiddenDescendants: HtmlForbiddenDescendants.pipe(S.optionalKey),
     forbiddenNamedAncestors: HtmlForbiddenNamedAncestor.pipe(S.NonEmptyArray, S.optionalKey),
     permittedAncestors: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
+    requiredAncestor: HtmlTag.pipe(S.optionalKey),
   },
   $I.annote("HtmlElementConformanceRules", {
     description: "Generated element-specific rules absent from the tabular WHATWG element index.",
@@ -1102,27 +1568,10 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
  *
  * @example
  * ```ts
- * import { HtmlElementMeta } from "@beep/html/Html.meta"
+ * import { ELEMENT_META, HtmlElementMeta } from "@beep/html/Html.meta"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlElementMeta)({
- *   tag: "div",
- *   interface: "HTMLDivElement",
- *   conformance: "conforming",
- *   void: false,
- *   rawText: false,
- *   textMode: "normal",
- *   categories: ["flow"],
- *   children: ["flow"],
- *   currentAttributes: [],
- *   obsoleteAttributes: [],
- *   conditionalCategories: [],
- *   attributeEqualities: [],
- *   attributeRequirements: [],
- *   numericAttributeRelationships: [],
- *   rules: {},
- *   uniqueAttributes: []
- * })) // true
+ * console.log(S.is(HtmlElementMeta)(ELEMENT_META.div)) // true
  * ```
  *
  * @category models
@@ -1175,37 +1624,41 @@ const freezeElementConformanceRules = (value: HtmlElementConformanceRules): Html
   return Object.freeze(value);
 };
 
-const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
-  Object.freeze({
-    ...value,
-    categories: Object.freeze(value.categories),
-    children: Object.freeze(value.children),
-    conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
-    attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
-    attributeRequirements: Object.freeze(
-      A.map(value.attributeRequirements, (requirement) => {
-        if (requirement.forbidden !== undefined) {
-          Object.freeze(requirement.forbidden);
-        }
-        if (requirement.whenParents !== undefined) {
-          Object.freeze(requirement.whenParents);
-        }
-        return Object.freeze({
-          ...requirement,
-          required: Object.freeze(A.map(requirement.required, (alternatives) => Object.freeze(alternatives))),
-        });
-      })
-    ),
-    currentAttributes: Object.freeze(value.currentAttributes),
-    numericAttributeRelationships: Object.freeze(
-      A.map(value.numericAttributeRelationships, (relationship) => Object.freeze(relationship))
-    ),
-    obsoleteAttributes: Object.freeze(value.obsoleteAttributes),
-    rules: freezeElementConformanceRules(value.rules),
-    uniqueAttributes: Object.freeze(value.uniqueAttributes),
-  });
+const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta => {
+  Object.freeze(value.categories);
+  Object.freeze(value.children);
+  for (const rule of value.conditionalCategories) Object.freeze(rule);
+  Object.freeze(value.conditionalCategories);
+  for (const equality of value.attributeEqualities) Object.freeze(equality);
+  Object.freeze(value.attributeEqualities);
+  for (const requirement of value.attributeRequirements) {
+    if (requirement.constraints !== undefined) {
+      for (const constraint of requirement.constraints) {
+        if ("values" in constraint) Object.freeze(constraint.values);
+        Object.freeze(constraint);
+      }
+      Object.freeze(requirement.constraints);
+    }
+    if (requirement.forbidden !== undefined) Object.freeze(requirement.forbidden);
+    if (requirement.when !== undefined) Object.freeze(requirement.when);
+    if (requirement.whenParents !== undefined) Object.freeze(requirement.whenParents);
+    if (requirement.nonBlank !== undefined) Object.freeze(requirement.nonBlank);
+    if (requirement.validNonEmptyUrl !== undefined) Object.freeze(requirement.validNonEmptyUrl);
+    for (const alternatives of requirement.required) Object.freeze(alternatives);
+    Object.freeze(requirement.required);
+    Object.freeze(requirement);
+  }
+  Object.freeze(value.attributeRequirements);
+  Object.freeze(value.currentAttributes);
+  for (const relationship of value.numericAttributeRelationships) Object.freeze(relationship);
+  Object.freeze(value.numericAttributeRelationships);
+  Object.freeze(value.obsoleteAttributes);
+  freezeElementConformanceRules(value.rules);
+  Object.freeze(value.uniqueAttributes);
+  return Object.freeze(value);
+};
 
-const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
+const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlElementMeta>>> = {
   a: {
     tag: "a",
     interface: "HTMLAnchorElement",
@@ -1222,7 +1675,13 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     obsoleteAttributes: ["charset", "coords", "methods", "name", "rev", "shape", "urn"],
     conditionalCategories: [{ attribute: "href", category: "interactive", condition: "present" }],
     attributeEqualities: [],
-    attributeRequirements: [{ message: "<a target> requires href", required: [["href"]], whenAttribute: "target" }],
+    attributeRequirements: [
+      {
+        message: "<a target> requires href",
+        required: [["href"]],
+        when: { _tag: "attributePresent", attribute: "target" },
+      },
+    ],
     numericAttributeRelationships: [],
     rules: { forbiddenDescendants: { attributes: ["tabindex"], categories: ["interactive"], tags: ["a"] } },
     uniqueAttributes: [],
@@ -1321,9 +1780,15 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     obsoleteAttributes: ["hreflang", "nohref", "type"],
     conditionalCategories: [],
     attributeEqualities: [],
-    attributeRequirements: [{ message: "<area href> requires alt text", required: [["alt"]], whenAttribute: "href" }],
+    attributeRequirements: [
+      {
+        message: "<area href> requires alt text",
+        required: [["alt"]],
+        when: { _tag: "attributePresent", attribute: "href" },
+      },
+    ],
     numericAttributeRelationships: [],
-    rules: {},
+    rules: { requiredAncestor: "map" },
     uniqueAttributes: [],
   },
   article: {
@@ -2549,11 +3014,12 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       {
         message: '<input type="image"> requires alt and src',
         required: [["alt"], ["src"]],
-        whenAttribute: "type",
-        whenEquals: "image",
+        when: { _tag: "attributeEquals", attribute: "type", value: "image" },
       },
     ],
-    numericAttributeRelationships: [],
+    numericAttributeRelationships: [
+      { left: "minlength", message: "<input minlength> must be less than or equal to maxlength", right: "maxlength" },
+    ],
     rules: {},
     uniqueAttributes: [],
   },
@@ -2715,9 +3181,92 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
       ],
     ],
     obsoleteAttributes: ["charset", "methods", "rev", "target", "urn"],
-    conditionalCategories: [],
+    conditionalCategories: [
+      { attribute: "itemprop", category: "flow", condition: "present" },
+      {
+        attribute: "rel",
+        category: "flow",
+        condition: "tokens-subset",
+        value: "dns-prefetch modulepreload pingback preconnect prefetch preload stylesheet",
+      },
+      { attribute: "itemprop", category: "phrasing", condition: "present" },
+      {
+        attribute: "rel",
+        category: "phrasing",
+        condition: "tokens-subset",
+        value: "dns-prefetch modulepreload pingback preconnect prefetch preload stylesheet",
+      },
+    ],
     attributeEqualities: [],
-    attributeRequirements: [],
+    attributeRequirements: [
+      {
+        message: "<link> requires href or imagesrcset, and href must be a valid non-empty URL",
+        nonBlank: ["imagesrcset"],
+        required: [["href", "imagesrcset"]],
+        validNonEmptyUrl: ["href"],
+      },
+      { message: "<link> requires exactly one of rel or itemprop", required: [["rel", "itemprop"]] },
+      {
+        forbidden: ["itemprop"],
+        message: "<link rel> forbids itemprop",
+        required: [["rel"]],
+        when: { _tag: "attributePresent", attribute: "rel" },
+      },
+      {
+        constraints: [
+          { _tag: "allowedValues", attribute: "as", values: ["image"] },
+          { _tag: "containsAllTokens", attribute: "rel", values: ["preload"] },
+        ],
+        message: "<link imagesrcset> requires rel=preload and as=image",
+        required: [["rel"], ["as"]],
+        when: { _tag: "attributePresent", attribute: "imagesrcset" },
+      },
+      {
+        constraints: [
+          { _tag: "allowedValues", attribute: "as", values: ["image"] },
+          { _tag: "containsAllTokens", attribute: "rel", values: ["preload"] },
+        ],
+        message: "<link imagesizes> requires rel=preload and as=image",
+        required: [["rel"], ["as"]],
+        when: { _tag: "attributePresent", attribute: "imagesizes" },
+      },
+      {
+        constraints: [
+          { _tag: "allowedValues", attribute: "as", values: ["fetch", "font", "image", "script", "style", "track"] },
+        ],
+        message: "<link rel=preload> requires as with a valid preload destination",
+        required: [["as"]],
+        when: { _tag: "attributeContainsToken", attribute: "rel", value: "preload" },
+      },
+      {
+        constraints: [
+          {
+            _tag: "allowedValues",
+            attribute: "as",
+            values: [
+              "audioworklet",
+              "json",
+              "paintworklet",
+              "script",
+              "serviceworker",
+              "sharedworker",
+              "style",
+              "text",
+              "worker",
+            ],
+          },
+        ],
+        message: "<link rel=modulepreload> as must be a valid module preload destination",
+        required: [["rel"]],
+        when: { _tag: "attributeContainsToken", attribute: "rel", value: "modulepreload" },
+      },
+      {
+        constraints: [{ _tag: "containsAnyToken", attribute: "rel", values: ["preload", "modulepreload"] }],
+        message: "<link as> requires rel=preload or rel=modulepreload",
+        required: [["rel"]],
+        when: { _tag: "attributePresent", attribute: "as" },
+      },
+    ],
     numericAttributeRelationships: [],
     rules: {},
     uniqueAttributes: [],
@@ -2863,9 +3412,42 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     children: ["empty"],
     currentAttributes: [...HTML_GLOBAL_ATTRIBUTE_NAMES, ...["charset", "content", "http-equiv", "media", "name"]],
     obsoleteAttributes: ["scheme"],
-    conditionalCategories: [],
+    conditionalCategories: [
+      { attribute: "itemprop", category: "flow", condition: "present" },
+      { attribute: "itemprop", category: "phrasing", condition: "present" },
+    ],
     attributeEqualities: [],
-    attributeRequirements: [],
+    attributeRequirements: [
+      {
+        message: "<meta> requires exactly one of name, http-equiv, charset, or itemprop",
+        required: [["name", "http-equiv", "charset", "itemprop"]],
+      },
+      {
+        forbidden: ["http-equiv", "charset", "itemprop"],
+        message: "<meta name> requires content and forbids http-equiv, charset, and itemprop",
+        required: [["name"], ["content"]],
+        when: { _tag: "attributePresent", attribute: "name" },
+      },
+      {
+        forbidden: ["name", "charset", "itemprop"],
+        message: "<meta http-equiv> requires content and forbids name, charset, and itemprop",
+        required: [["http-equiv"], ["content"]],
+        when: { _tag: "attributePresent", attribute: "http-equiv" },
+      },
+      {
+        constraints: [{ _tag: "equals", asciiCaseInsensitive: true, attribute: "charset", value: "utf-8" }],
+        forbidden: ["name", "http-equiv", "itemprop", "content"],
+        message: "<meta charset> must be utf-8 and forbids name, http-equiv, itemprop, and content",
+        required: [["charset"]],
+        when: { _tag: "attributePresent", attribute: "charset" },
+      },
+      {
+        forbidden: ["name", "http-equiv", "charset"],
+        message: "<meta itemprop> requires content and forbids name, http-equiv, and charset",
+        required: [["itemprop"], ["content"]],
+        when: { _tag: "attributePresent", attribute: "itemprop" },
+      },
+    ],
     numericAttributeRelationships: [],
     rules: {},
     uniqueAttributes: [],
@@ -3882,7 +4464,13 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     conditionalCategories: [],
     attributeEqualities: [],
     attributeRequirements: [],
-    numericAttributeRelationships: [],
+    numericAttributeRelationships: [
+      {
+        left: "minlength",
+        message: "<textarea minlength> must be less than or equal to maxlength",
+        right: "maxlength",
+      },
+    ],
     rules: {},
     uniqueAttributes: [],
   },
@@ -4159,6 +4747,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
   },
 };
 
+const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
+  Result.getOrThrow(S.decodeUnknownResult(HtmlElementMeta)(value));
+
 /**
  * Metadata for every generated HTML element, keyed by tag name.
  *
@@ -4173,5 +4764,5 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
  * @since 0.0.0
  */
 export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
-  R.map(elementMetaSource, freezeElementMeta)
+  R.map(elementMetaSource, (value) => freezeElementMeta(decodeElementMeta(value)))
 );

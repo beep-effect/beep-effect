@@ -21,17 +21,28 @@ import * as S from "effect/Schema";
 import {
   AutocompleteAttribute,
   BooleanAttribute,
+  ButtonCommand,
+  CrossOrigin,
   ForeignAttributeName,
   ForeignElementName,
+  FormAutocomplete,
   GlobalAttributes,
   HtmlFiniteNumber,
+  HtmlIdReferenceList,
   HtmlIdValue,
   HtmlNonNegativeInteger,
   HtmlNonNegativeNumber,
   HtmlPositiveInteger,
   HtmlPositiveNumber,
+  HtmlRelationList,
+  HtmlStep,
+  LinkRelationList,
+  MetadataName,
+  makeAsciiCaseInsensitiveEnumerated,
   makeSpaceSeparatedTokenList,
   PopoverTargetAction,
+  ReferrerPolicy,
+  Utf8Charset,
 } from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type * as O from "effect/Option";
@@ -333,27 +344,8 @@ export class A extends S.TaggedClass<A>($I`A`)(
     methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      makeSpaceSeparatedTokenList([
-        "alternate",
-        "author",
-        "bookmark",
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "privacy-policy",
-        "search",
-        "tag",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
     rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -389,7 +381,17 @@ export declare namespace A {
     readonly methods: O.Option<string>;
     readonly name: O.Option<string>;
     readonly ping: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly shape: O.Option<string>;
@@ -641,30 +643,11 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
     hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     nohref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      makeSpaceSeparatedTokenList([
-        "alternate",
-        "author",
-        "bookmark",
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "privacy-policy",
-        "search",
-        "tag",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    shape: S.OptionFromOptionalKey(
-      S.Literals(["circle state", "default state", "polygon state", "rectangle state"])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
+    shape: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["circle", "default", "poly", "rect"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
@@ -695,9 +678,19 @@ export declare namespace Area {
     readonly hreflang: O.Option<string>;
     readonly nohref: O.Option<string>;
     readonly ping: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly rel: O.Option<string>;
-    readonly shape: O.Option<"circle state" | "default state" | "polygon state" | "rectangle state">;
+    readonly shape: O.Option<"circle" | "default" | "poly" | "rect">;
     readonly target: O.Option<string>;
     readonly type: O.Option<string>;
   };
@@ -713,7 +706,7 @@ export declare namespace Area {
     readonly ping?: string;
     readonly referrerpolicy?: string;
     readonly rel?: string;
-    readonly shape?: "circle state" | "default state" | "polygon state" | "rectangle state";
+    readonly shape?: string;
     readonly target?: string;
     readonly type?: string;
   };
@@ -837,13 +830,15 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
     ...GlobalAttributes,
     autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
     loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
+    preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -882,11 +877,11 @@ export declare namespace Audio {
     readonly _tag: "audio";
     readonly autoplay?: true | "";
     readonly controls?: true | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly loading?: "lazy" | "eager";
+    readonly crossorigin?: string;
+    readonly loading?: string;
     readonly loop?: true | "";
     readonly muted?: true | "";
-    readonly preload?: "auto" | "none" | "metadata";
+    readonly preload?: string;
     readonly src?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -1538,16 +1533,20 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
     ...GlobalAttributes,
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    commandfor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    command: S.OptionFromOptionalKey(ButtonCommand).pipe(SchemaUtils.withNoneDefault),
+    commandfor: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
     disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
-      S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formmethod: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
+    formenctype: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+    ).pipe(SchemaUtils.withNoneDefault),
+    formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     method: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -1556,7 +1555,9 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
     popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.Literals(["submit", "reset", "button"])).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["submit", "reset", "button"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -1588,7 +1589,7 @@ export declare namespace Button {
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly form: O.Option<string>;
     readonly formaction: O.Option<string>;
-    readonly formenctype: O.Option<string>;
+    readonly formenctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formmethod: O.Option<"get" | "post" | "dialog">;
     readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
@@ -1610,20 +1611,20 @@ export declare namespace Button {
     readonly command?: string;
     readonly commandfor?: string;
     readonly disabled?: true | "";
-    readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+    readonly enctype?: string;
     readonly form?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
-    readonly formmethod?: "get" | "post" | "dialog";
+    readonly formmethod?: string;
     readonly formnovalidate?: true | "";
     readonly formtarget?: string;
     readonly method?: string;
     readonly name?: string;
     readonly novalidate?: true | "";
     readonly popovertarget?: string;
-    readonly popovertargetaction?: "toggle" | "show" | "hide";
+    readonly popovertargetaction?: string;
     readonly target?: string;
-    readonly type?: "submit" | "reset" | "button";
+    readonly type?: string;
     readonly value?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -2326,7 +2327,9 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
   "dialog",
   {
     ...GlobalAttributes,
-    closedby: S.OptionFromOptionalKey(S.Literals(["any", "closerequest", "none"])).pipe(SchemaUtils.withNoneDefault),
+    closedby: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["any", "closerequest", "none"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -2357,7 +2360,7 @@ export declare namespace Dialog {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "dialog";
-    readonly closedby?: "any" | "closerequest" | "none";
+    readonly closedby?: string;
     readonly open?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
@@ -2960,34 +2963,23 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
   {
     ...GlobalAttributes,
     accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    "accept-charset": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    "accept-charset": S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(FormAutocomplete).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
-      S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formmethod: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      makeSpaceSeparatedTokenList([
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "search",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -3012,9 +3004,9 @@ export declare namespace Form {
   export type Type = GlobalAttributesType & {
     readonly _tag: "form";
     readonly accept: O.Option<string>;
-    readonly "accept-charset": O.Option<string>;
+    readonly "accept-charset": O.Option<"utf-8">;
     readonly action: O.Option<string>;
-    readonly autocomplete: O.Option<string>;
+    readonly autocomplete: O.Option<"on" | "off">;
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formaction: O.Option<string>;
     readonly formenctype: O.Option<string>;
@@ -3035,13 +3027,13 @@ export declare namespace Form {
     readonly "accept-charset"?: string;
     readonly action?: string;
     readonly autocomplete?: string;
-    readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+    readonly enctype?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
     readonly formmethod?: string;
     readonly formnovalidate?: true | "";
     readonly formtarget?: string;
-    readonly method?: "get" | "post" | "dialog";
+    readonly method?: string;
     readonly name?: string;
     readonly novalidate?: true | "";
     readonly rel?: string;
@@ -3798,12 +3790,14 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     framespacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     sandbox: S.OptionFromOptionalKey(
       makeSpaceSeparatedTokenList([
         "allow-popups",
@@ -3861,7 +3855,17 @@ export declare namespace Iframe {
     readonly marginheight: O.Option<string>;
     readonly marginwidth: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly sandbox: O.Option<string>;
     readonly scrolling: O.Option<string>;
     readonly src: O.Option<string>;
@@ -3881,7 +3885,7 @@ export declare namespace Iframe {
     readonly framespacing?: string;
     readonly height?: number;
     readonly hspace?: string;
-    readonly loading?: "lazy" | "eager";
+    readonly loading?: string;
     readonly longdesc?: string;
     readonly marginheight?: string;
     readonly marginwidth?: string;
@@ -3919,19 +3923,23 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    decoding: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["sync", "async", "auto"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    decoding: S.OptionFromOptionalKey(S.Literals(["sync", "async", "auto"])).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     lowsrc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -3973,7 +3981,17 @@ export declare namespace Img {
     readonly longdesc: O.Option<string>;
     readonly lowsrc: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly sizes: O.Option<string>;
     readonly src: O.Option<string>;
     readonly srcset: O.Option<string>;
@@ -3988,13 +4006,13 @@ export declare namespace Img {
     readonly alt?: string;
     readonly border?: string;
     readonly controls?: true | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly decoding?: "sync" | "async" | "auto";
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly crossorigin?: string;
+    readonly decoding?: string;
+    readonly fetchpriority?: string;
     readonly height?: number;
     readonly hspace?: string;
     readonly ismap?: true | "";
-    readonly loading?: "lazy" | "eager";
+    readonly loading?: string;
     readonly longdesc?: string;
     readonly lowsrc?: string;
     readonly name?: string;
@@ -4033,13 +4051,19 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     checked: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    colorspace: S.OptionFromOptionalKey(S.Literals(["limited-srgb", "display-p3"])).pipe(SchemaUtils.withNoneDefault),
+    colorspace: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["limited-srgb", "display-p3"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formmethod: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
+    formenctype: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+    ).pipe(SchemaUtils.withNoneDefault),
+    formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
@@ -4060,9 +4084,9 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    step: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    step: S.OptionFromOptionalKey(HtmlStep).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(
-      S.Literals([
+      makeAsciiCaseInsensitiveEnumerated([
         "hidden",
         "text",
         "search",
@@ -4124,7 +4148,7 @@ export declare namespace Input {
     readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly formaction: O.Option<string>;
-    readonly formenctype: O.Option<string>;
+    readonly formenctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formmethod: O.Option<"get" | "post" | "dialog">;
     readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
@@ -4146,7 +4170,7 @@ export declare namespace Input {
     readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly src: O.Option<string>;
-    readonly step: O.Option<string>;
+    readonly step: O.Option<"any" | number>;
     readonly type: O.Option<
       | "hidden"
       | "text"
@@ -4186,13 +4210,13 @@ export declare namespace Input {
     readonly autocomplete?: string;
     readonly border?: string;
     readonly checked?: true | "";
-    readonly colorspace?: "limited-srgb" | "display-p3";
+    readonly colorspace?: string;
     readonly dirname?: string;
     readonly disabled?: true | "";
     readonly form?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
-    readonly formmethod?: "get" | "post" | "dialog";
+    readonly formmethod?: string;
     readonly formnovalidate?: true | "";
     readonly formtarget?: string;
     readonly height?: number;
@@ -4208,35 +4232,13 @@ export declare namespace Input {
     readonly pattern?: string;
     readonly placeholder?: string;
     readonly popovertarget?: string;
-    readonly popovertargetaction?: "toggle" | "show" | "hide";
+    readonly popovertargetaction?: string;
     readonly readonly?: true | "";
     readonly required?: true | "";
     readonly size?: number;
     readonly src?: string;
-    readonly step?: string;
-    readonly type?:
-      | "hidden"
-      | "text"
-      | "search"
-      | "tel"
-      | "url"
-      | "email"
-      | "password"
-      | "date"
-      | "month"
-      | "week"
-      | "time"
-      | "datetime-local"
-      | "number"
-      | "range"
-      | "color"
-      | "checkbox"
-      | "radio"
-      | "file"
-      | "submit"
-      | "image"
-      | "reset"
-      | "button";
+    readonly step?: string | number;
+    readonly type?: string;
     readonly usemap?: string;
     readonly value?: string;
     readonly vspace?: string;
@@ -4617,15 +4619,31 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
   "link",
   {
     ...GlobalAttributes,
-    as: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    as: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated([
+        "audioworklet",
+        "fetch",
+        "font",
+        "image",
+        "json",
+        "paintworklet",
+        "script",
+        "serviceworker",
+        "sharedworker",
+        "style",
+        "text",
+        "track",
+        "worker",
+      ])
+    ).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
     href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     imagesizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -4633,31 +4651,8 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
     integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      makeSpaceSeparatedTokenList([
-        "alternate",
-        "author",
-        "canonical",
-        "dns-prefetch",
-        "expect",
-        "help",
-        "icon",
-        "license",
-        "manifest",
-        "modulepreload",
-        "pingback",
-        "preconnect",
-        "prefetch",
-        "preload",
-        "privacy-policy",
-        "search",
-        "stylesheet",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(LinkRelationList).pipe(SchemaUtils.withNoneDefault),
     rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -4684,7 +4679,21 @@ export declare namespace Link {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "link";
-    readonly as: O.Option<string>;
+    readonly as: O.Option<
+      | "audioworklet"
+      | "fetch"
+      | "font"
+      | "image"
+      | "json"
+      | "paintworklet"
+      | "script"
+      | "serviceworker"
+      | "sharedworker"
+      | "style"
+      | "text"
+      | "track"
+      | "worker"
+    >;
     readonly blocking: O.Option<string>;
     readonly charset: O.Option<string>;
     readonly color: O.Option<string>;
@@ -4698,7 +4707,17 @@ export declare namespace Link {
     readonly integrity: O.Option<string>;
     readonly media: O.Option<string>;
     readonly methods: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly sizes: O.Option<string>;
@@ -4713,9 +4732,9 @@ export declare namespace Link {
     readonly blocking?: string;
     readonly charset?: string;
     readonly color?: string;
-    readonly crossorigin?: "anonymous" | "use-credentials";
+    readonly crossorigin?: string;
     readonly disabled?: true | "";
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly fetchpriority?: string;
     readonly href?: string;
     readonly hreflang?: string;
     readonly imagesizes?: string;
@@ -5118,32 +5137,19 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
   "meta",
   {
     ...GlobalAttributes,
-    charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
     content: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     "http-equiv": S.OptionFromOptionalKey(
-      S.Literals([
-        "content-language",
+      makeAsciiCaseInsensitiveEnumerated([
         "content-type",
         "default-style",
         "refresh",
-        "set-cookie",
         "x-ua-compatible",
         "content-security-policy",
       ])
     ).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(
-      S.Literals([
-        "application-name",
-        "author",
-        "description",
-        "generator",
-        "keywords",
-        "referrer",
-        "theme-color",
-        "color-scheme",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(MetadataName).pipe(SchemaUtils.withNoneDefault),
     scheme: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Meta", { description: "The <meta> element." })
@@ -5166,28 +5172,13 @@ export declare namespace Meta {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "meta";
-    readonly charset: O.Option<string>;
+    readonly charset: O.Option<"utf-8">;
     readonly content: O.Option<string>;
     readonly "http-equiv": O.Option<
-      | "content-language"
-      | "content-type"
-      | "default-style"
-      | "refresh"
-      | "set-cookie"
-      | "x-ua-compatible"
-      | "content-security-policy"
+      "content-type" | "default-style" | "refresh" | "x-ua-compatible" | "content-security-policy"
     >;
     readonly media: O.Option<string>;
-    readonly name: O.Option<
-      | "application-name"
-      | "author"
-      | "description"
-      | "generator"
-      | "keywords"
-      | "referrer"
-      | "theme-color"
-      | "color-scheme"
-    >;
+    readonly name: O.Option<string>;
     readonly scheme: O.Option<string>;
   };
   /** @since 0.0.0 */
@@ -5195,24 +5186,9 @@ export declare namespace Meta {
     readonly _tag: "meta";
     readonly charset?: string;
     readonly content?: string;
-    readonly "http-equiv"?:
-      | "content-language"
-      | "content-type"
-      | "default-style"
-      | "refresh"
-      | "set-cookie"
-      | "x-ua-compatible"
-      | "content-security-policy";
+    readonly "http-equiv"?: string;
     readonly media?: string;
-    readonly name?:
-      | "application-name"
-      | "author"
-      | "description"
-      | "generator"
-      | "keywords"
-      | "referrer"
-      | "theme-color"
-      | "color-scheme";
+    readonly name?: string;
     readonly scheme?: string;
   };
 }
@@ -5936,7 +5912,7 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
     ...GlobalAttributes,
     autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    for: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -6697,19 +6673,19 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
   {
     ...GlobalAttributes,
     async: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
     defer: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     language: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     nomodule: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     content: S.String,
@@ -6745,7 +6721,17 @@ export declare namespace Script {
     readonly integrity: O.Option<string>;
     readonly language: O.Option<string>;
     readonly nomodule: O.Option<true | "">;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly src: O.Option<string>;
     readonly type: O.Option<string>;
     readonly content: string;
@@ -6756,10 +6742,10 @@ export declare namespace Script {
     readonly async?: true | "";
     readonly blocking?: string;
     readonly charset?: string;
-    readonly crossorigin?: "anonymous" | "use-credentials";
+    readonly crossorigin?: string;
     readonly defer?: true | "";
     readonly event?: string;
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly fetchpriority?: string;
     readonly for?: string;
     readonly integrity?: string;
     readonly language?: string;
@@ -7367,7 +7353,7 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
   "style",
   {
     ...GlobalAttributes,
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     content: S.String,
@@ -7730,7 +7716,7 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
     colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
       SchemaUtils.withNoneDefault
     ),
-    headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
@@ -7817,11 +7803,13 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
   {
     ...GlobalAttributes,
     shadowrootclonable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootcustomelementregistry: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    shadowrootcustomelementregistry: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     shadowrootdelegatesfocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootmode: S.OptionFromOptionalKey(S.Literals(["open", "closed"])).pipe(SchemaUtils.withNoneDefault),
+    shadowrootmode: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["open", "closed"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     shadowrootserializable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootslotassignment: S.OptionFromOptionalKey(S.Literals(["named", "manual"])).pipe(
+    shadowrootslotassignment: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["named", "manual"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     children: HtmlChildren,
@@ -7847,7 +7835,7 @@ export declare namespace Template {
   export type Type = GlobalAttributesType & {
     readonly _tag: "template";
     readonly shadowrootclonable: O.Option<true | "">;
-    readonly shadowrootcustomelementregistry: O.Option<string>;
+    readonly shadowrootcustomelementregistry: O.Option<true | "">;
     readonly shadowrootdelegatesfocus: O.Option<true | "">;
     readonly shadowrootmode: O.Option<"open" | "closed">;
     readonly shadowrootserializable: O.Option<true | "">;
@@ -7858,11 +7846,11 @@ export declare namespace Template {
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "template";
     readonly shadowrootclonable?: true | "";
-    readonly shadowrootcustomelementregistry?: string;
+    readonly shadowrootcustomelementregistry?: true | "";
     readonly shadowrootdelegatesfocus?: true | "";
-    readonly shadowrootmode?: "open" | "closed";
+    readonly shadowrootmode?: string;
     readonly shadowrootserializable?: true | "";
-    readonly shadowrootslotassignment?: "named" | "manual";
+    readonly shadowrootslotassignment?: string;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -7897,7 +7885,9 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
     readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     rows: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
-    wrap: S.OptionFromOptionalKey(S.Literals(["soft", "hard"])).pipe(SchemaUtils.withNoneDefault),
+    wrap: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["soft", "hard"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     content: S.String,
   },
   $I.annote("Textarea", { description: "The <textarea> element." })
@@ -7950,7 +7940,7 @@ export declare namespace Textarea {
     readonly readonly?: true | "";
     readonly required?: true | "";
     readonly rows?: number;
-    readonly wrap?: "soft" | "hard";
+    readonly wrap?: string;
     readonly content: string;
   };
 }
@@ -8031,13 +8021,13 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
     colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
       SchemaUtils.withNoneDefault
     ),
-    headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
       SchemaUtils.withNoneDefault
     ),
-    scope: S.OptionFromOptionalKey(S.Literals(["row", "col", "rowgroup", "colgroup"])).pipe(
+    scope: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["row", "col", "rowgroup", "colgroup"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -8094,7 +8084,7 @@ export declare namespace Th {
     readonly height?: number;
     readonly nowrap?: true | "";
     readonly rowspan?: number;
-    readonly scope?: "row" | "col" | "rowgroup" | "colgroup";
+    readonly scope?: string;
     readonly valign?: string;
     readonly width?: number;
     readonly children: HtmlChildren.Encoded;
@@ -8337,9 +8327,9 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
   {
     ...GlobalAttributes,
     default: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    kind: S.OptionFromOptionalKey(S.Literals(["subtitles", "captions", "descriptions", "chapters", "metadata"])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    kind: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["subtitles", "captions", "descriptions", "chapters", "metadata"])
+    ).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srclang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -8374,7 +8364,7 @@ export declare namespace Track {
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "track";
     readonly default?: true | "";
-    readonly kind?: "subtitles" | "captions" | "descriptions" | "chapters" | "metadata";
+    readonly kind?: string;
     readonly label?: string;
     readonly src?: string;
     readonly srclang?: string;
@@ -8603,16 +8593,18 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
     ...GlobalAttributes,
     autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
     loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     playsinline: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     poster: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
+    preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -8656,14 +8648,14 @@ export declare namespace Video {
     readonly _tag: "video";
     readonly autoplay?: true | "";
     readonly controls?: true | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
+    readonly crossorigin?: string;
     readonly height?: number;
-    readonly loading?: "lazy" | "eager";
+    readonly loading?: string;
     readonly loop?: true | "";
     readonly muted?: true | "";
     readonly playsinline?: true | "";
     readonly poster?: string;
-    readonly preload?: "auto" | "none" | "metadata";
+    readonly preload?: string;
     readonly src?: string;
     readonly width?: number;
     readonly children: HtmlChildren.Encoded;

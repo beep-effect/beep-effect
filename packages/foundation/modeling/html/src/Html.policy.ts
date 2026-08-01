@@ -17,7 +17,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AriaAttributes, StandardGlobalAttributes } from "./Html.attributes.ts";
+import { AriaAttributes, StandardGlobalAttributes, tokenizeHtmlSpaceSeparated } from "./Html.attributes.ts";
 import { conformantRoot } from "./Html.conformance.ts";
 import { toAsciiLowerCase } from "./Html.foreign.ts";
 import { HtmlRoot } from "./Html.model.ts";
@@ -213,6 +213,8 @@ const isSafeUrlAttributeWith =
   (allowedScheme: RegExp) =>
   (value: string): boolean =>
     Str.isNonEmpty(value) &&
+    // The safe-output policy deliberately rejects surrounding Unicode
+    // whitespace; HTML microsyntax tokenization elsewhere remains ASCII-only.
     value === Str.trim(value) &&
     !hasForbiddenUrlCodePoint.test(value) &&
     !Str.startsWith("//")(value) &&
@@ -610,6 +612,8 @@ const safeElementAttributeNames = [
 ] as const;
 
 const structuralElementNames = ["_tag", "children"] as const;
+const SafeAnchorRelation = LiteralKit(["nofollow", "noopener", "noreferrer"]);
+const isSafeAnchorRelation = S.is(SafeAnchorRelation);
 
 const isAllowedAttributeName = (name: string): boolean =>
   A.contains(safeGlobalAttributeNames, name) ||
@@ -679,10 +683,21 @@ const inspectAttribute = (
   return A.emptyReadonly();
 };
 
-const inspectBlankTarget = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyArray<HtmlPolicyIssue> => {
-  if (!P.isString(node.target) || toAsciiLowerCase(node.target) !== "_blank") return A.emptyReadonly();
+const inspectTarget = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyArray<HtmlPolicyIssue> => {
+  if (!P.isString(node.target)) return A.emptyReadonly();
+  const target = toAsciiLowerCase(node.target);
+  if (target === "_self") return A.emptyReadonly();
+  if (target !== "_blank") {
+    return [
+      makeIssue(
+        A.append(path, "attributes.target"),
+        "unsafeTarget",
+        'target accepts only "_self" or "_blank" under the safe policy'
+      ),
+    ];
+  }
   const relTokens = P.isString(node.rel)
-    ? pipe(node.rel, Str.split(/\s+/u), A.map(Str.toLowerCase))
+    ? pipe(node.rel, tokenizeHtmlSpaceSeparated, A.map(toAsciiLowerCase))
     : A.emptyReadonly<string>();
   return A.contains(relTokens, "noopener") && A.contains(relTokens, "noreferrer")
     ? A.emptyReadonly()
@@ -693,6 +708,19 @@ const inspectBlankTarget = (node: RuntimeNode, path: ReadonlyArray<string>): Rea
           'target="_blank" requires rel containing both noopener and noreferrer'
         ),
       ];
+};
+
+const inspectAnchorRelation = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyArray<HtmlPolicyIssue> => {
+  if (node._tag !== "a" || !P.isString(node.rel)) return A.emptyReadonly();
+  return A.some(tokenizeHtmlSpaceSeparated(node.rel), (token) => !isSafeAnchorRelation(toAsciiLowerCase(token)))
+    ? [
+        makeIssue(
+          A.append(path, "attributes.rel"),
+          "deniedAttribute",
+          "Anchor rel accepts only nofollow, noopener, and noreferrer under the safe policy"
+        ),
+      ]
+    : A.emptyReadonly();
 };
 
 const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyArray<HtmlPolicyIssue> => {
@@ -709,7 +737,8 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
             Struct.entries(node),
             A.filter(([name]) => !A.contains(structuralElementNames, name)),
             A.flatMap(([name, value]) => inspectAttribute(node, name, value, A.append(path, "attributes"))),
-            A.appendAll(inspectBlankTarget(node, path))
+            A.appendAll(inspectTarget(node, path)),
+            A.appendAll(inspectAnchorRelation(node, path))
           )
         : [makeIssue(path, "deniedElement", `<${node._tag}> is not accepted by the safe policy`)];
 

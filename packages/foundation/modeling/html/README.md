@@ -40,7 +40,10 @@ All nullable/optional wire fields decode to `Option`; encoding restores optional
 wire keys. Boolean attributes accept only presence forms (`true` or `""`).
 Integer and token-list attributes use their HTML microsyntaxes rather than a
 broad string fallback; element-qualified overrides cover domains such as the
-signed integer `li/value` attribute.
+signed integer `li/value` attribute. Encoded enumerated keywords are matched
+ASCII-case-insensitively and decode to canonical semantic values; direct
+construction accepts only that fixed point. The case-distinguishing `ol/type`
+domain is explicitly modeled as a non-enumerated exception.
 
 ## Proof and serialization pipeline
 
@@ -114,7 +117,12 @@ The safe policy is deny-by-default:
 - links accept relative/fragment, `https`, `mailto`, and `tel` destinations;
 - image sources accept only relative/fragment and `https` destinations;
 - protocol-relative and backslash-containing destinations are rejected;
-- `target="_blank"` requires both `noopener` and `noreferrer`;
+- `target` is limited to `_self`, or `_blank` with both `noopener` and
+  `noreferrer`; named and parent/top browsing targets are rejected;
+- structural and conformant `rel` syntax remains open because WHATWG delegates
+  extension registration to a mutable external registry that this offline model
+  does not certify; SafeHtml intentionally permits only `nofollow`, `noopener`,
+  and `noreferrer` on anchors;
 - only a small structural global-attribute and ARIA subset is accepted.
 
 This is validation, not repair. `inspectSafeHtml` returns all policy issues;
@@ -137,6 +145,12 @@ accessible-name conditions, and document-visible cardinality limits live only
 in `data/overrides/classification.json`; generation validates their complete
 tag/category/attribute coverage and publishes them on each element's
 `ELEMENT_META[tag].rules` profile.
+
+Responsive-image conformance validates `srcset`, source-size lists, descriptor
+pairing, lazy `auto` eligibility, and the `<picture>` source/following-image
+relationship at exact attribute paths. `link[sizes]` remains the distinct icon
+sizes grammar; it is never interpreted as `imagesizes`. The exact specialized
+microsyntax inventory is generated as `HTML_ATTRIBUTE_SYNTAXES`.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text
@@ -166,8 +180,10 @@ classification, lacks an explicit content-model source, has an unexplained
 pinned/webref attribute gap, or an encountered non-global attribute has no
 explicit literal, token, numeric, boolean, or string classification. Exact
 current/obsolete inventories, special child grammars, conditional categories,
-and browser foreign-name adjustment profiles live in the same generator-owned
-classification data.
+browser foreign-name adjustment profiles, and specialized attribute
+microsyntaxes live in the same generator-owned classification data. Generation
+fails if a current `srcset`, source-size, or icon-size attribute is absent from
+that exact registry.
 
 ## Package entry points
 

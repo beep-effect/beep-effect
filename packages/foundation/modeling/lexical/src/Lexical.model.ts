@@ -1686,6 +1686,34 @@ export declare namespace QuoteNode {
   }
 }
 
+const ListNodeFields = S.Struct({
+  type: S.tag("list"),
+  listType: ListType.annotateKey({ description: "List semantics." }),
+  start: LexicalListStart.annotateKey({ description: "Starting number for ordered lists." }),
+  tag: ListTag.annotateKey({ description: "HTML list tag." }),
+})
+  .check(
+    S.makeFilter(
+      ({ listType, tag }) =>
+        ListType.$match(listType, {
+          number: () => ListTag.is.ol(tag),
+          bullet: () => ListTag.is.ul(tag),
+          check: () => ListTag.is.ul(tag),
+        }),
+      {
+        identifier: $I`ListNodeTagCheck`,
+        title: "Canonical List Node Tag",
+        description: "Checks that the serialized list tag is the canonical tag derived from its list semantics.",
+        message: "Expected number lists to use ol and bullet or check lists to use ul.",
+      }
+    )
+  )
+  .pipe(
+    $I.annoteSchema("ListNodeFields", {
+      description: "Serialized Lexical list fields whose tag agrees with the list semantics.",
+    })
+  );
+
 /**
  * Mirrors `SerializedListNode` from `@lexical/list`.
  *
@@ -1700,12 +1728,7 @@ export declare namespace QuoteNode {
  * @since 0.0.0
  */
 export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
-  {
-    type: S.tag("list"),
-    listType: ListType.annotateKey({ description: "List semantics." }),
-    start: LexicalListStart.annotateKey({ description: "Starting number for ordered lists." }),
-    tag: ListTag.annotateKey({ description: "HTML list tag." }),
-  },
+  ListNodeFields,
   $I.annote("ListNode", { description: "A serialized Lexical list element node." })
 ) {
   /**
