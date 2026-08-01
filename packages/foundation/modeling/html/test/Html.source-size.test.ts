@@ -185,9 +185,13 @@ describe("@beep/html source-size author conformance", () => {
       "calc(-5px)",
       "calc(1px * 1s / 1s)",
       "calc(1px / 1px * 2rem)",
+      "calc(1Hz / 1Hz * 1px)",
+      "calc(1dpi / 1dpi * 1px)",
+      "calc(1fr / 1fr * 1px)",
       "min(100vw, 60rem)",
       "max(20rem, 10vw)",
       "clamp(20rem, 50vw, 80rem)",
+      "clamp(1px + 1px, 3px, 5px)",
       "clamp(none, 50vw, 80rem)",
       "clamp(20rem, 50vw, none)",
       "round(10px, 3px)",
@@ -230,10 +234,15 @@ describe("@beep/html source-size author conformance", () => {
       "clamp(1px, 2px)",
       "clamp(none, none, 1px)",
       "round(1px)",
+      "round(1px, 1s)",
+      "round(1px, 2px, 3px)",
       "round(line-width, 1)",
+      "mod(1px)",
       "mod(1px, 1s)",
+      "sin()",
       "sin(1px)",
       "asin(1deg)",
+      "atan2(1px)",
       "atan2(1px, 1s)",
       "pow(1px, 2)",
       "sqrt(1px)",
@@ -242,10 +251,15 @@ describe("@beep/html source-size author conformance", () => {
       "exp(1px)",
       "abs()",
       "sign(1px, 2px)",
+      "calc([1px])",
+      "calc(1px *)",
       "future-math(1px)",
     ]) {
       expectInvalid(value, "invalidSourceSize");
     }
+
+    expectInvalid("calc(1px", "invalidCss");
+    expectInvalid("\\", "invalidCss");
   });
 
   it("matches Chromium's adversarial calc whitespace and ASCII-folding outcomes", () => {

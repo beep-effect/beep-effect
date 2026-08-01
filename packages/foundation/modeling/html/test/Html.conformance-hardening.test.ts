@@ -1409,6 +1409,7 @@ describe("@beep/html exact attribute conformance", () => {
     expect(
       issuesAtPath(Input.make({ autocomplete: O.some("home name"), type: O.some("text") }), ["attributes.autocomplete"])
     ).toHaveLength(1);
+    expect(inspectConformance(Input.make({ autocomplete: O.some("off"), type: O.some("text") }))).toStrictEqual([]);
     expect(inspectConformance(Input.make({ autocomplete: O.some("email"), type: O.some("email") }))).toStrictEqual([]);
   });
 
@@ -1442,6 +1443,9 @@ describe("@beep/html exact attribute conformance", () => {
 
   it("uses exact integer area coordinates without IEEE-754 collapse", () => {
     expect(
+      issuesAtPath(Area.make({ coords: O.some("nope"), shape: O.some("rect") }), ["attributes.coords"])
+    ).toHaveLength(1);
+    expect(
       issuesAtPath(Area.make({ coords: O.some("0,0,1,1"), shape: O.some("default") }), ["attributes.coords"])
     ).toHaveLength(1);
     expect(inspectConformance(Area.make({ coords: O.some("0,0,0"), shape: O.some("circle") }))).toContainEqual(
@@ -1453,6 +1457,13 @@ describe("@beep/html exact attribute conformance", () => {
       shape: O.some("rect"),
     });
     expect(issuesAtPath(hugeRect, ["attributes.coords"])).toStrictEqual([]);
+    expect(issuesAtPath(Area.make({ coords: O.some("0,0,1,1") }), ["attributes.coords"])).toStrictEqual([]);
+    expect(
+      issuesAtPath(Area.make({ coords: O.some("-10,0,-1,10"), shape: O.some("rect") }), ["attributes.coords"])
+    ).toStrictEqual([]);
+    expect(
+      issuesAtPath(Area.make({ coords: O.some("-1,-1,1,1"), shape: O.some("rect") }), ["attributes.coords"])
+    ).toStrictEqual([]);
     expect(
       issuesAtPath(Area.make({ coords: O.some("9007199254740993,0,9007199254740992,1"), shape: O.some("rect") }), [
         "attributes.coords",
@@ -1521,6 +1532,64 @@ describe("@beep/html exact attribute conformance", () => {
     });
     expect(issuesAtPath(table, ["children.0", "children.0", "children.1", "attributes.headers"])).toStrictEqual([]);
     expect(issuesAtPath(table, ["children.0", "children.0", "children.3", "attributes.headers"])).toHaveLength(1);
+
+    const nestedTable = Table.make({
+      children: [
+        Tbody.make({
+          children: [
+            Tr.make({
+              children: [
+                Th.make({ id: O.some("Outer"), children: [] }),
+                Td.make({
+                  headers: O.some("Outer"),
+                  children: [
+                    Table.make({
+                      children: [
+                        Tbody.make({
+                          children: [
+                            Tr.make({
+                              children: [
+                                Th.make({ id: O.some("Inner"), children: [] }),
+                                Td.make({ headers: O.some("Inner"), children: [] }),
+                                Td.make({ headers: O.some("Outer"), children: [] }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(
+      issuesAtPath(nestedTable, [
+        "children.0",
+        "children.0",
+        "children.1",
+        "children.0",
+        "children.0",
+        "children.0",
+        "children.1",
+        "attributes.headers",
+      ])
+    ).toStrictEqual([]);
+    expect(
+      issuesAtPath(nestedTable, [
+        "children.0",
+        "children.0",
+        "children.1",
+        "children.0",
+        "children.0",
+        "children.0",
+        "children.2",
+        "attributes.headers",
+      ])
+    ).toHaveLength(1);
   });
 
   it("enforces generated minlength relationships and schema-backed metadata", () => {

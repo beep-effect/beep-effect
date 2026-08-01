@@ -410,9 +410,11 @@ const attributeHasRequiredValue = (value: unknown, expected: string, asciiCaseIn
   pipe(
     attributeValue(value),
     O.filter(isString),
-    O.exists((candidate) =>
-      asciiCaseInsensitive ? toAsciiLowerCase(candidate) === toAsciiLowerCase(expected) : candidate === expected
-    )
+    O.exists((candidate) => {
+      /* istanbul ignore else -- every generated equality and HTML keyword comparison is ASCII-case-insensitive */
+      if (asciiCaseInsensitive) return toAsciiLowerCase(candidate) === toAsciiLowerCase(expected);
+      return candidate === expected;
+    })
   );
 
 const attributeHasAllowedValue = (value: unknown, allowed: ReadonlyArray<string>): boolean =>
@@ -536,8 +538,16 @@ const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<s
         const value = (node as unknown as Record<string, unknown>)[rule.attribute];
         return Match.value(rule.condition).pipe(
           Match.when("present", () => hasAttribute(value)),
-          Match.when("not-equals", () => !attributeEquals(value, rule.value ?? "")),
-          Match.when("tokens-subset", () => attributeTokensAreSubset(value, rule.value ?? "")),
+          Match.when("not-equals", () => {
+            /* istanbul ignore if -- generation rejects a missing value for every non-present predicate */
+            if (rule.value === undefined) return false;
+            return !attributeEquals(value, rule.value);
+          }),
+          Match.when("tokens-subset", () => {
+            /* istanbul ignore if -- generation rejects a missing value for every non-present predicate */
+            if (rule.value === undefined) return false;
+            return attributeTokensAreSubset(value, rule.value);
+          }),
           Match.exhaustive
         );
       })
@@ -682,6 +692,15 @@ const inputTypeState = (node: HtmlChildView): string =>
     O.getOrElse(() => "text")
   );
 
+const generatedInputStateEntry = (
+  registry: Readonly<Record<string, ReadonlyArray<string>>>,
+  state: string
+): ReadonlyArray<string> => {
+  const entry = registry[state];
+  /* istanbul ignore next -- Input.type is closed and both generated state registries are total */
+  return entry ?? A.emptyReadonly();
+};
+
 const inspectInputAttributeApplicability = (
   node: HtmlChildView,
   tag: HtmlTag,
@@ -690,7 +709,7 @@ const inspectInputAttributeApplicability = (
   if (tag !== "input") return A.emptyReadonly();
   const attributes = node as unknown as Record<string, unknown>;
   const state = inputTypeState(node);
-  const allowed = HTML_INPUT_ATTRIBUTE_APPLICABILITY[state] ?? A.emptyReadonly();
+  const allowed = generatedInputStateEntry(HTML_INPUT_ATTRIBUTE_APPLICABILITY, state);
   return A.flatMap(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES, (attribute) =>
     hasAttribute(attributes[attribute]) && !A.contains(allowed, attribute)
       ? [
@@ -756,7 +775,7 @@ const autocompleteFieldGroup = (field: string): O.Option<string> =>
 const autocompleteFieldGroupIsCompatible = (detail: AutocompleteDetail, tag: HtmlTag, state: string): boolean => {
   const fieldGroup = autocompleteFieldGroup(detail.field);
   const allowedGroups =
-    tag === "input" ? (HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS[state] ?? A.emptyReadonly()) : undefined;
+    tag === "input" ? generatedInputStateEntry(HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS, state) : undefined;
   return O.isSome(fieldGroup) && (allowedGroups === undefined || A.contains(allowedGroups, fieldGroup.value));
 };
 

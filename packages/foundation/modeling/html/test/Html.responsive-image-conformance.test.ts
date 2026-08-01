@@ -117,6 +117,23 @@ describe("@beep/html responsive-image conformance", () => {
     expect(issuesAt(densityWithSizes, ["children.0", "attributes.sizes"])).toHaveLength(1);
   });
 
+  it("requires each earlier responsive picture source to differentiate itself", () => {
+    const picture = Picture.make({
+      children: [
+        Source.make({ srcset: O.some("default.png 1x") }),
+        Source.make({ media: O.some(""), srcset: O.some("empty.png 1x") }),
+        Source.make({ media: O.some("all"), srcset: O.some("all.png 1x") }),
+        Source.make({ media: O.some("(width > 1px)"), srcset: O.some("wide.png 1x") }),
+        image({ srcset: O.some("fallback.png 1x") }),
+      ],
+    });
+
+    expect(issuesAt(picture, ["children.0", "attributes"])).toHaveLength(1);
+    expect(issuesAt(picture, ["children.1", "attributes.media"])).toHaveLength(1);
+    expect(issuesAt(picture, ["children.2", "attributes.media"])).toHaveLength(1);
+    expect(issuesAt(picture, ["children.3", "attributes.media"])).toStrictEqual([]);
+  });
+
   it("enforces link imagesrcset and imagesizes without conflating icon sizes", () => {
     expect(inspectConformance(preload({ imagesrcset: O.some("small.png 1x, big.png 2x") }))).toStrictEqual([]);
     expect(

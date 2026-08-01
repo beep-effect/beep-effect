@@ -293,10 +293,7 @@ const unitNumericType = (unit: string): O.Option<NumericType> => {
   return O.none();
 };
 
-const tokenNumericType = (node: ComponentValue): O.Option<NumericType> => {
-  if (!isTokenNode(node)) return O.none();
-
-  const token = node.value;
+const tokenNumericType = (token: CSSToken): O.Option<NumericType> => {
   if (isTokenNumber(token)) return O.some(NUMBER_TYPE);
   if (isTokenDimension(token)) return unitNumericType(token[4].unit);
   if (isTokenIdent(token) && A.contains(CALC_KEYWORDS, toAsciiLowerCase(token[4].value))) {
@@ -432,7 +429,6 @@ const parseComparisonFunction = (
 ): O.Option<NumericType> => {
   if (Str.Equivalence(name, "clamp")) return parseClampFunction(arguments_);
 
-  if (arguments_.length === 0) return O.none();
   return parseConsistentCalculations(arguments_);
 };
 
@@ -479,16 +475,13 @@ const parseRoundFunction = (arguments_: ReadonlyArray<ReadonlyArray<ComponentVal
 };
 
 const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
-  if (isTokenEOF(node.endToken)) return O.none();
-
   const arguments_ = splitArguments(node.value);
   const name = toAsciiLowerCase(node.getName());
 
   return Match.value(name).pipe(
-    Match.when("calc", () => {
-      if (arguments_.length !== 1) return O.none();
-      return pipe(parseCalculation(arguments_[0] ?? A.empty()), O.filter(isBaseNumericType));
-    }),
+    Match.when("calc", () =>
+      pipe(parseExactCalculations(arguments_, 1), O.flatMap(A.head), O.filter(isBaseNumericType))
+    ),
     Match.when(
       (value) => Str.Equivalence(value, "min") || Str.Equivalence(value, "max") || Str.Equivalence(value, "clamp"),
       () => parseComparisonFunction(name, arguments_)
@@ -555,10 +548,7 @@ const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
         O.map(() => NUMBER_TYPE)
       );
     }),
-    Match.when("hypot", () => {
-      if (arguments_.length === 0) return O.none();
-      return parseConsistentCalculations(arguments_);
-    }),
+    Match.when("hypot", () => parseConsistentCalculations(arguments_)),
     Match.when("log", () => {
       if (arguments_.length < 1 || arguments_.length > 2) return O.none();
       const parsed = parseExactCalculations(arguments_, arguments_.length);
@@ -594,7 +584,7 @@ const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
 };
 
 const parseParenthesizedCalculation = (node: SimpleBlockNode): O.Option<NumericType> =>
-  isTokenOpenParen(node.startToken) && !isTokenEOF(node.endToken) ? parseCalculation(node.value) : O.none();
+  isTokenOpenParen(node.startToken) ? parseCalculation(node.value) : O.none();
 
 const parseAtomic = (cursor: CalculationCursor): O.Option<NumericType> => {
   const node = cursor.nodes[cursor.position];
@@ -603,7 +593,7 @@ const parseAtomic = (cursor: CalculationCursor): O.Option<NumericType> => {
   cursor.position += 1;
   if (isFunctionNode(node)) return parseMathFunction(node);
   if (isSimpleBlockNode(node)) return parseParenthesizedCalculation(node);
-  return tokenNumericType(node);
+  return pipe(node.tokens(), A.head, O.flatMap(tokenNumericType));
 };
 
 const parseProduct = (cursor: CalculationCursor): O.Option<NumericType> => {
@@ -706,15 +696,9 @@ const componentTokens = (nodes: ReadonlyArray<ComponentValue>): Array<CSSToken> 
   A.flatMap(nodes, (node) => node.tokens());
 
 const isAuthorMediaCondition = (nodes: ReadonlyArray<ComponentValue>): boolean => {
-  let hasParseError = false;
   const queries = parseMediaQueryListFromTokens(componentTokens(nodes), {
-    onParseError: () => {
-      hasParseError = true;
-    },
     preserveInvalidMediaQueries: true,
   });
-  if (hasParseError || queries.length !== 1) return false;
-
   const query = queries[0];
   if (query === undefined || !isMediaQueryWithoutType(query)) return false;
 
@@ -791,12 +775,9 @@ const inspectSourceSizeEntry = (
   entryCount: number
 ): Result.Result<boolean, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
   const entry = trimIgnorable(rawEntry);
-  if (entry.length === 0) return failure("invalidList", entryIndex);
+  if (!A.isReadonlyArrayNonEmpty(entry)) return failure("invalidList", entryIndex);
 
-  const valueNode = A.last(entry);
-  if (O.isNone(valueNode)) return failure("invalidList", entryIndex);
-
-  const value = sourceSizeValue(valueNode.value);
+  const value = sourceSizeValue(A.lastNonEmpty(entry));
   if (O.isNone(value)) return failure("invalidSourceSize", entryIndex);
 
   return Str.Equivalence(value.value, "auto")
@@ -809,10 +790,7 @@ const inspectSourceSizeEntries = (
 ): Result.Result<SourceSizeAnalysis, A.NonEmptyReadonlyArray<SourceSizeIssue>> => {
   let usesAuto = false;
 
-  for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
-    const rawEntry = entries[entryIndex];
-    if (rawEntry === undefined) return failure("invalidList", entryIndex);
-
+  for (const [entryIndex, rawEntry] of entries.entries()) {
     const inspected = inspectSourceSizeEntry(rawEntry, entryIndex, entries.length);
     if (Result.isFailure(inspected)) return Result.fail(inspected.failure);
     if (inspected.success) usesAuto = true;
