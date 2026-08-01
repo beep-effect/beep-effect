@@ -16,7 +16,12 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
+import {
+  isForeignAttributeNameFixedPoint,
+  isForeignChildAtForeignBoundary,
+  isForeignElementNameFixedPoint,
+  isHtmlChildAtForeignBoundary,
+} from "./Html.foreign.ts";
 import { ELEMENT_META, HTML_CONTENT_TOKEN_EXPANSIONS, HtmlTag } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import type { Doctype } from "./Html.nodes.ts";
@@ -879,33 +884,56 @@ const inspectForeignChildBoundary = (
   parent: HtmlChildView,
   child: HtmlChildView,
   path: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> =>
-  Match.value(child._tag).pipe(
+): ReadonlyArray<HtmlConformanceIssue> => {
+  const parentNamespace = parent.namespace;
+  const parentName = parent.name;
+  const parentAttributes = pipe(
+    attributeValue(parent.attributes),
+    O.filter(P.isObject),
+    O.map(Struct.entries),
+    O.getOrElse(A.empty)
+  );
+  const issue = (message: string): ReadonlyArray<HtmlConformanceIssue> => [
+    makeIssue(path, "foreignIntegration", message),
+  ];
+  return Match.value(child._tag).pipe(
     Match.when("#text", (): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly()),
     Match.when("#comment", (): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly()),
-    Match.when(
-      "#foreign",
-      (): ReadonlyArray<HtmlConformanceIssue> =>
-        child.namespace === parent.namespace
-          ? A.emptyReadonly()
-          : [
-              makeIssue(
-                path,
-                "foreignIntegration",
-                "Opaque foreign content cannot switch namespaces without a modeled integration point"
-              ),
-            ]
-    ),
+    Match.when("#foreign", (): ReadonlyArray<HtmlConformanceIssue> => {
+      const childNamespace = child.namespace;
+      const childName = child.name;
+      const childAttributes = pipe(
+        attributeValue(child.attributes),
+        O.filter(P.isObject),
+        O.map(Struct.entries),
+        O.getOrElse(A.empty)
+      );
+      return (parentNamespace === "svg" || parentNamespace === "mathml") &&
+        isString(parentName) &&
+        (childNamespace === "svg" || childNamespace === "mathml") &&
+        isString(childName) &&
+        isForeignChildAtForeignBoundary(
+          parentNamespace,
+          parentName,
+          parentAttributes,
+          childNamespace,
+          childName,
+          childAttributes
+        )
+        ? A.emptyReadonly()
+        : issue("The foreign child would change namespace or escape its opaque parent during HTML parsing");
+    }),
     Match.orElse(
-      (): ReadonlyArray<HtmlConformanceIssue> => [
-        makeIssue(
-          path,
-          "foreignIntegration",
-          "HTML elements cannot occur directly inside opaque foreign content without a modeled integration point"
-        ),
-      ]
+      (tag): ReadonlyArray<HtmlConformanceIssue> =>
+        isHtmlTag(tag) &&
+        (parentNamespace === "svg" || parentNamespace === "mathml") &&
+        isString(parentName) &&
+        isHtmlChildAtForeignBoundary(parentNamespace, parentName, parentAttributes)
+          ? A.emptyReadonly()
+          : issue("HTML elements can occur inside opaque foreign content only at a modeled integration point")
     )
   );
+};
 
 const inspectForeignEntryPoint = (
   node: HtmlChildView,

@@ -2,9 +2,11 @@
  * Canonical serialization for the schema-first HTML AST.
  *
  * The serializer escapes text and attributes, expands the modeled `dataset`
- * bag, emits HTML void elements without XML syntax, and rejects AST states
- * whose browser parse would not preserve the modeled tree. Safe output is
- * issued only from a {@link SafeHtmlAst} proof.
+ * bag, emits HTML void elements without XML syntax, and rejects local
+ * serialization hazards. It does not enforce the general HTML content model
+ * or promise that every raw AST reparses identically; use {@link conform} and
+ * {@link serializeConformant} when structural conformance is required. Safe
+ * output is issued only from a {@link SafeHtmlAst} proof.
  *
  * @packageDocumentation \@beep/html/Html.serialize
  * @since 0.0.0
@@ -19,7 +21,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ForeignAttributeName } from "./Html.attributes.ts";
 import { conform, conformantRoot } from "./Html.conformance.ts";
-import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
+import {
+  isForeignAttributeNameFixedPoint,
+  isForeignChildAtForeignBoundary,
+  isForeignElementNameFixedPoint,
+  isHtmlChildAtForeignBoundary,
+} from "./Html.foreign.ts";
 import { ELEMENT_META, HtmlBooleanAttributeName, HtmlTag } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import { enforceSafeHtml, SafeHtmlAst, safeHtmlAstRoot } from "./Html.policy.ts";
@@ -259,6 +266,9 @@ const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> => {
   return A.emptyReadonly();
 };
 
+const runtimeForeignAttributeEntries = (node: RuntimeNode): ReadonlyArray<readonly [string, unknown]> =>
+  P.isObject(node.attributes) ? Struct.entries(node.attributes) : A.emptyReadonly();
+
 const isStructuralElementField = (tag: HtmlTag, name: string): boolean =>
   name === "_tag" || name === "children" || (name === "content" && ELEMENT_META[tag].textMode !== "normal");
 
@@ -378,6 +388,47 @@ const serializeChildren = Effect.fn("Html.serializeChildren")(function* (
   return pipe(output, A.join(""));
 });
 
+const serializeForeignChildren = Effect.fn("Html.serializeForeignChildren")(function* (
+  parent: RuntimeForeignNode,
+  path: ReadonlyArray<string>
+) {
+  const parentAttributes = runtimeForeignAttributeEntries(parent);
+  const output = yield* Effect.forEach(runtimeChildren(parent), (child, index) => {
+    const childPath = A.append(path, `children.${index}`);
+    if (child._tag === "#text" || child._tag === "#comment") {
+      return serializeRuntimeNode(child, childPath);
+    }
+    if (isRuntimeForeignNode(child)) {
+      return isForeignChildAtForeignBoundary(
+        parent.namespace,
+        parent.name,
+        parentAttributes,
+        child.namespace,
+        child.name,
+        runtimeForeignAttributeEntries(child)
+      )
+        ? serializeRuntimeNode(child, childPath)
+        : Effect.fail(
+            makeError(
+              childPath,
+              "invalidNode",
+              "The foreign child would change namespace or escape its opaque parent during HTML parsing"
+            )
+          );
+    }
+    return isHtmlTag(child._tag) && isHtmlChildAtForeignBoundary(parent.namespace, parent.name, parentAttributes)
+      ? serializeRuntimeNode(child, childPath)
+      : Effect.fail(
+          makeError(
+            childPath,
+            "invalidNode",
+            "HTML elements can occur inside opaque foreign content only at a modeled integration point"
+          )
+        );
+  });
+  return pipe(output, A.join(""));
+});
+
 const serializeCanonicalDoctype = (
   value: unknown,
   path: ReadonlyArray<string>
@@ -459,7 +510,7 @@ const serializeForeignNode = (
     Effect.succeed(`<${node.name}`),
     attributes,
     Effect.succeed(">"),
-    serializeChildren(runtimeChildren(node), path),
+    serializeForeignChildren(node, path),
     Effect.succeed(`</${node.name}>`),
   ]).pipe(Effect.map(A.join("")));
 };

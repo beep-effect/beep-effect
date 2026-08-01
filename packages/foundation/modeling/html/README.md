@@ -98,9 +98,11 @@ the final string, closing mutation and time-of-check/time-of-use gaps.
 does not imply a safe browser-insertion policy. In particular, ordinary
 serialization preserves browser-fixed foreign-element attributes, including
 active ones; names that the HTML parser would lowercase or adjust are rejected
-instead of silently changing the modeled tree. The safe policy rejects all
-foreign SVG/MathML. Element attributes named `content`, `name`, or `value`
-remain attributes; only node-kind-specific structural fields are excluded.
+instead of silently changing the modeled tree. Contextual foreign-content
+breakouts and the exact SVG/MathML HTML integration points are validated at
+each opaque child boundary. The safe policy rejects all foreign SVG/MathML.
+Element attributes named `content`, `name`, or `value` remain attributes; only
+node-kind-specific structural fields are excluded.
 
 ## Conservative safe-output policy
 
@@ -133,12 +135,12 @@ colgroups, media/picture, ruby, datalist/select, hgroup, and tables.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text
-would parse into the same tree. Opaque foreign roots may contain character
-data, comments, and same-namespace foreign children; HTML descendants and
-namespace switches are rejected until their exact integration points are
-modeled. Because `<noscript>` has a scripting-state- and document-context-
-dependent content model, the generic conformance API conservatively rejects it
-until that context is modeled explicitly.
+would parse into the same tree. Opaque foreign roots admit HTML descendants
+only at the modeled SVG/MathML integration points. Same-namespace children
+that trigger HTML breakout, and namespace changes outside exact `svg`/`math`
+re-entry, are rejected. Because `<noscript>` has a scripting-state- and
+document-context-dependent content model, the generic conformance API
+conservatively rejects it until that context is modeled explicitly.
 
 ## Generation
 
