@@ -220,3 +220,33 @@ confirmation via grilling). Additional standing constraint recorded at
 sign-off: Fable 5 plans/designs/reviews only — all token-heavy lanes run on
 codex `gpt-5.6-sol` at `--effort medium` (operator weekly-limit economy);
 encoded in both wave-1 GOAL.md/SPEC.md files.
+
+## 2026-07-31 — Wave-2 graduation: single evidence-loop packet (ADHD-amended)
+
+**Question:** Cut wave-2 as the ratified `yeet-verdict-instrumentation` +
+`repo-replay-evals` pair, or as one successor packet reflecting the 2026-07
+Codex (GPT-5.6 Sol) bottleneck audit and its grill session?
+
+**Answer:** One packet —
+[`goals/coding-agent-effectiveness-evidence-loop`](../../goals/coding-agent-effectiveness-evidence-loop/README.md)
+— absorbing both proposed splits plus the audit's storage/identity,
+telemetry-truth-model, and canary phases. Before packet creation the plan
+was amended via a five-frame `/adhd` divergent-ideation run and a two-round
+operator interview (all eight amendment groups adopted; five candidate
+directions rejected as traps with reasons). Full inventory:
+`goals/coding-agent-effectiveness-evidence-loop/research/2026-07-31-adhd-amendments.md`.
+
+**Rationale:** The audit found the split packets' concerns are causally
+coupled through one identity/attribution model (a Yeet verdict schema and a
+replay-eval corpus both consume the same lifecycle vocabulary and config
+fingerprints), so separate packets would re-create the cross-packet
+dependency the wave-1 boundary was designed to avoid. Key amendments: a
+sequence-break instrument phase (notification hooks measured with raw hook
+timestamps, off the telemetry-rebuild critical path), witness flight records
++ coverage attestation as the telemetry-v2 write contract, the Yeet
+mistrial/exhibit doctrine with durable per-lane proofs, replay-twice-diff
+replacing shadow-write, five evidence-integrity laws (incl. OIP taint
+chain-of-custody), and Goodhart guardrails on the canary gate. H8
+(browser-proof dimension) is now owned by that packet's portfolio phase.
+The wave-1 standing constraint carries forward: Fable plans/designs/reviews;
+token-heavy lanes run on codex `gpt-5.6-sol` at `--effort medium`.
