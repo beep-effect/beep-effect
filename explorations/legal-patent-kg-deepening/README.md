@@ -17,9 +17,9 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Launch mining wave 1: catalog + dedupe pass over the corpus, then codex
-distillation of the papers and `links.md` fetches (FOPNet thread first),
-per the locked campaign design in [`DECISIONS.md`](./DECISIONS.md).
+Mine the nine licensed repo survivors while evaluating FOPNet from its paper
+and reference-only R22 evidence; R22 code and data remain out of bounds unless
+separate license clearance appears.
 
 ## Read This First
 
@@ -39,3 +39,6 @@ per the locked campaign design in [`DECISIONS.md`](./DECISIONS.md).
   sequential deep-research tracks, post-synthesis /adhd, gold-intake artifact
   contracts, seed-PR-then-stop-at-routing-seed staging). Mining not yet
   launched.
+- 2026-08-01: completed the 24-repository shallow triage: 9 deep-mine, 11
+  reference-only, 4 skip; R16 is the sole wave-1 overlap, and FOPNet-priority
+  R22 is reference-only because no license evidence was found.
