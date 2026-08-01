@@ -9,7 +9,7 @@ description: >
   until zero required findings. Use for any milestone that changes pointer
   gestures, layout, animation, or user-facing UI — jsdom green is not
   click-works green, and a post-gesture screenshot is not a mid-gesture proof.
-version: 0.2.0
+version: 0.3.0
 status: active
 ---
 
@@ -21,7 +21,9 @@ before declaring any gesture-bearing UI milestone done.
 
 History — 0.2.0: recording-based evidence (video + witness events + extraction),
 structured `qa-inventory/v1` judgment, Lane B real-Chrome recipe, portless
-guidance corrected. 0.1.0: screenshots-only loop.
+guidance corrected. 0.3.0: Lane B deprecated (human-gated portal, silent
+black captures); Lane C (Xvfb + XTEST) named as its replacement. 0.1.0:
+screenshots-only loop.
 
 ## Why it exists
 
@@ -98,12 +100,27 @@ any round (use it in campaign exit checks). Findings carry evidence refs
 (artifact path + event sequence refs + frame ranges) and a `resolvedInRound`
 field maintained across rounds.
 
-## Lane B: real-Chrome OBS round
+## Lane B: real-Chrome OBS round — DEPRECATED 2026-08-01
 
-When: one final polish round for any milestone whose fixes involve native drag
-semantics, cursor affordances, or OS-level selection behavior — playwright's
-synthetic pointer stream cannot produce native selection-drag escalation or a
-real cursor. Recipe:
+**Do not start new rounds on this lane.** The PipeWire portal requires human
+consent by design, so an OBS round can never run unattended, and a capture
+whose restore token has gone stale records an entirely black video that every
+downstream step accepts (deleting the `beep-qa` scene does NOT delete the
+input, so `CreateInput` never re-runs and no picker appears — remove the INPUT
+to force a fresh pick). Both failure modes are recorded as SYS-01/SYS-02 in
+`goals/recorded-qa-acceptance/ledgers/findings.md`.
+
+**Replacement: Lane C (Xvfb + XTEST), not yet productionized.** `Xvfb` +
+headed Chrome (`--ozone-platform=x11`) + `xdotool` XTEST input + `ffmpeg
+x11grab` + CDP for assertions. XTEST enters through the X server's input
+pipeline, so Chrome cannot distinguish it from hardware — it anchors real
+native text selections, which CDP provably cannot — and it needs no human and
+no portal. Until the lane ships as `--lane x11`, treat native-input classes as
+UNPROVEN rather than reaching for OBS: see the campaign packet's lane-decision
+row for the evidence and the follow-up.
+
+The OBS recipe below is retained only for an existing session that already has
+a working scene:
 
 1. Start the app via its portless script (e.g. `bun run --cwd apps/storybook storybook`).
 2. `bun run beep qa record --lane obs --app <app> --round N` (`--url

@@ -1,5 +1,6 @@
 import {
   ChatClient,
+  runTurnAtom,
   StreamingTurn,
   streamingTurnAtom,
   threadTimelineAtoms,
@@ -11,6 +12,7 @@ import * as MdModel from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
+import { Composer } from "@/chat/ui/Composer";
 import { Thread } from "@/chat/ui/Thread";
 import "@testing-library/jest-dom/vitest";
 import { RegistryProvider, useAtomRefresh, useAtomSet } from "@effect/atom-react";
@@ -20,7 +22,7 @@ import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AsyncResult, Reactivity } from "effect/unstable/reactivity";
-import { afterEach, beforeAll, describe, expect } from "vitest";
+import { afterEach, beforeAll, describe, expect, vi } from "vitest";
 import type { JSX } from "react";
 
 const threadId = S.decodeUnknownSync(WorkspaceIdentity.ThreadId)(1);
@@ -36,6 +38,12 @@ const supersededContent = MdModel.Document.make({
 });
 const supersededMiddle = MdModel.Document.make({
   children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "earlier superseded interval" })] })],
+});
+const replacementContent = MdModel.Document.make({
+  children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "replacement branch" })] })],
+});
+const replacementReply = MdModel.Document.make({
+  children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "replacement reply" })] })],
 });
 const editedTurnId = WorkspaceIdentity.TurnId.make(11);
 const laterTurnId = WorkspaceIdentity.TurnId.make(12);
@@ -79,28 +87,94 @@ const retryTimeline = ThreadTimeline.make({
     }),
   ],
 });
+const branchedTimeline = ThreadTimeline.make({
+  threadId,
+  turns: [
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(30),
+      turnIndex: NonNegativeInt.make(0),
+      items: [TimelineMessageItem.make({ role: "user", content: userMessage })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(31),
+      turnIndex: NonNegativeInt.make(1),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(32),
+      turnIndex: NonNegativeInt.make(2),
+      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(30)),
+      items: [TimelineMessageItem.make({ role: "user", content: replacementContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(33),
+      turnIndex: NonNegativeInt.make(3),
+      items: [TimelineMessageItem.make({ role: "assistant", content: replacementReply })],
+      costMicros: 0,
+    }),
+  ],
+});
+const corruptBranchTimeline = ThreadTimeline.make({
+  threadId,
+  turns: [
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(40),
+      turnIndex: NonNegativeInt.make(0),
+      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(40)),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(41),
+      turnIndex: NonNegativeInt.make(1),
+      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(99)),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(42),
+      turnIndex: NonNegativeInt.make(2),
+      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(43)),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(43),
+      turnIndex: NonNegativeInt.make(3),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(44),
+      turnIndex: NonNegativeInt.make(4),
+      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(45)),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+    TimelineTurn.make({
+      turnId: WorkspaceIdentity.TurnId.make(45),
+      turnIndex: NonNegativeInt.make(4),
+      items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
+      costMicros: 0,
+    }),
+  ],
+});
+const activeStreamingTurn = StreamingTurn.make({
+  threadId,
+  userContent: userMessage,
+  truncateFrom: O.none(),
+  blocks: [],
+});
 
 // Seeds a turn that is mid-stream: the user's message is in flight, no answer yet.
 function StreamingThread(): JSX.Element {
   const setStreaming = useAtomSet(streamingTurnAtom);
   return (
     <>
-      <button
-        type="button"
-        data-testid="begin"
-        onClick={() =>
-          setStreaming(
-            O.some(
-              StreamingTurn.make({
-                threadId,
-                userContent: userMessage,
-                truncateFrom: O.none(),
-                blocks: [],
-              })
-            )
-          )
-        }
-      >
+      <button type="button" data-testid="begin" onClick={() => setStreaming(O.some(activeStreamingTurn))}>
         begin
       </button>
       <Thread threadId={threadId} />
@@ -190,7 +264,36 @@ describe("the message you just sent", { concurrent: false }, () => {
   beforeAll(() => {
     Element.prototype.scrollIntoView = () => undefined;
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it.effect(
+    "scrolls an initially successful timeline after its turns commit",
+    Effect.fnUntraced(function* () {
+      let scheduledFrame = O.none<FrameRequestCallback>();
+      const requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+        scheduledFrame = O.some(callback);
+        return 1;
+      });
+      const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+      vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+
+      render(
+        <RegistryProvider initialValues={[[threadTimelineAtoms(threadId), AsyncResult.success(editTimeline)]]}>
+          <Thread threadId={threadId} />
+        </RegistryProvider>
+      );
+
+      yield* Effect.promise(() => waitFor(() => expect(requestAnimationFrame).toHaveBeenCalledOnce()));
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      O.getOrThrow(scheduledFrame)(0);
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "end" });
+    })
+  );
 
   it.effect(
     "is on screen while the reply streams",
@@ -212,6 +315,70 @@ describe("the message you just sent", { concurrent: false }, () => {
       const sent = yield* Effect.promise(() => waitFor(() => screen.getByTestId("turn-streaming-user")));
 
       expect(sent).toHaveTextContent("what did I just ask?");
+    })
+  );
+
+  it.effect(
+    "renders exactly one canonical Stop control while the reply streams",
+    Effect.fnUntraced(function* () {
+      const { container } = render(
+        <RegistryProvider
+          initialValues={[
+            [streamingTurnAtom, O.some(activeStreamingTurn)],
+            [runTurnAtom, AsyncResult.initial(true)],
+          ]}
+        >
+          <Thread threadId={threadId} />
+          <Composer threadId={threadId} />
+        </RegistryProvider>
+      );
+      const screen = within(container);
+
+      const stop = yield* Effect.promise(() => screen.findByTestId("turn-stop"));
+
+      expect(stop).toHaveAccessibleName("Stop generating");
+      expect(screen.getAllByTestId("turn-stop")).toHaveLength(1);
+      expect(screen.getAllByRole("button", { name: "Stop generating" })).toHaveLength(1);
+    })
+  );
+
+  it.effect(
+    "renders the version selector on a single edit replacement while hiding the superseded branch",
+    Effect.fnUntraced(function* () {
+      const timelineAtom = threadTimelineAtoms(threadId);
+      const { container } = render(
+        <RegistryProvider initialValues={[[timelineAtom, AsyncResult.success(branchedTimeline)]]}>
+          <Thread threadId={threadId} />
+        </RegistryProvider>
+      );
+      const screen = within(container);
+
+      yield* Effect.promise(() => screen.findByTestId("turn-versions"));
+
+      const activeUserTurn = screen.getByTestId("turn-user");
+      const activeAssistantTurn = screen.getByTestId("turn-assistant");
+      expect(activeUserTurn).toHaveTextContent("replacement branch");
+      expect(within(activeUserTurn).getByTestId("turn-versions")).toBeInTheDocument();
+      expect(activeAssistantTurn).toHaveTextContent("replacement reply");
+      expect(within(activeAssistantTurn).queryByTestId("turn-versions")).not.toBeInTheDocument();
+      expect(screen.queryByText("what did I just ask?")).not.toBeInTheDocument();
+      expect(screen.queryByText("superseded durable tail")).not.toBeInTheDocument();
+    })
+  );
+
+  it.effect(
+    "does not render version selectors for corrupt parent links",
+    Effect.fnUntraced(function* () {
+      const timelineAtom = threadTimelineAtoms(threadId);
+      const { container } = render(
+        <RegistryProvider initialValues={[[timelineAtom, AsyncResult.success(corruptBranchTimeline)]]}>
+          <Thread threadId={threadId} />
+        </RegistryProvider>
+      );
+      const screen = within(container);
+
+      expect(yield* Effect.promise(() => screen.findAllByTestId("turn-assistant"))).toHaveLength(6);
+      expect(screen.queryAllByTestId("turn-versions")).toHaveLength(0);
     })
   );
 

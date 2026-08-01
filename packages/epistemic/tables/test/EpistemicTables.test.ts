@@ -134,6 +134,7 @@ describe("EpistemicTables", () => {
     expect(columns.publicId.columnType).toBe("PgText");
     expect(columns.activityId.name).toBe("activity_id");
     expect(columns.activityId.columnType).toBe("PgInteger");
+    expect(columns.activityId.notNull).toBe(false);
     expect(columns.actor.columnType).toBe("PgJsonb");
     expect(columns.metadata.columnType).toBe("PgJsonb");
     expect(columns.model.columnType).toBe("PgText");
@@ -310,6 +311,7 @@ describe("EpistemicTables", () => {
       // $inferInsert types the nullable columns as optional (number | null |
       // undefined); the select-row converter expects number | null, so resolve
       // each absent optional to its concrete null before round-tripping.
+      activityId: insert.activityId ?? null,
       costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
       credentialReference: insert.credentialReference ?? null,
       inputTokens: insert.inputTokens ?? null,
@@ -503,6 +505,7 @@ describe("EpistemicTables", () => {
         const decoded = UsageRecord.fromUsageRecordRow({
           ...insert,
           id: record.id,
+          activityId: insert.activityId ?? null,
           costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
           credentialReference: insert.credentialReference ?? null,
           inputTokens: insert.inputTokens ?? null,

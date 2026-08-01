@@ -19,7 +19,12 @@
  * @category fixtures
  * @since 0.0.0
  */
-export { FixtureTurnKernel, fixtureBlocksFor } from "./processes/AssistantTurn/AssistantTurn.fixture.ts";
+export {
+  FixtureTurnKernel,
+  fixtureBlocksFor,
+  fixtureEventsFor,
+  fixtureProviderUsage,
+} from "./processes/AssistantTurn/AssistantTurn.fixture.ts";
 /**
  * In-memory runtime SDK facade backed by deterministic proof fixtures.
  *
