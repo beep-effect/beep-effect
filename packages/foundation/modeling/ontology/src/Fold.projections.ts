@@ -168,6 +168,9 @@ const compactIri = (ontology: AssembledOntology, iri: string): string =>
     O.getOrElse(() => iri)
   );
 
+const isOwnedPredicate = (ontology: AssembledOntology, predicate: AssembledPredicate): boolean =>
+  O.isSome(localFromNamespace(withNamespaceSeparator(ontology.baseIri), predicate.termIri));
+
 const predicateContextTerm = (predicate: AssembledPredicate): JsonLdTerm => {
   if (predicate.reverse) {
     return predicate.kind === "object"
@@ -278,16 +281,61 @@ const classTypes = (assembled: AssembledClass): string | ReadonlyArray<string> =
 const classNode = (ontology: AssembledOntology, assembled: AssembledClass): JsonLdNode => {
   const facts = valuesFor(ontology, assembled.iri, false);
   const reverseFacts = valuesFor(ontology, assembled.iri, true);
+  const factProperties: R.ReadonlyRecord<string, ReadonlyArray<JsonLdNodeValue>> = R.fromEntries(facts);
+  const label = pipe(
+    R.get(factProperties, "rdfs:label"),
+    O.match({
+      onNone: () => assembled.name,
+      onSome: (values) => [assembled.name, ...values],
+    })
+  );
+  const comment = pipe(
+    assembled.description,
+    O.map((description) =>
+      pipe(
+        R.get(factProperties, "rdfs:comment"),
+        O.match({
+          onNone: () => description,
+          onSome: (values) => [description, ...values],
+        })
+      )
+    )
+  );
 
   return {
     "@id": assembled.iri,
     "@type": classTypes(assembled),
-    "rdfs:label": assembled.name,
-    ...OU.getSomesStruct({ "rdfs:comment": assembled.description }),
+    ...factProperties,
+    "rdfs:label": label,
+    ...OU.getSomesStruct({ "rdfs:comment": comment }),
     ...(A.isReadonlyArrayNonEmpty(reverseFacts) ? { "@reverse": R.fromEntries(reverseFacts) } : {}),
-    ...R.fromEntries(facts),
   };
 };
+
+const factSubjectNode = (ontology: AssembledOntology, subjectIri: string): JsonLdNode => {
+  const facts = valuesFor(ontology, subjectIri, false);
+  const reverseFacts = valuesFor(ontology, subjectIri, true);
+
+  return {
+    "@id": subjectIri,
+    ...R.fromEntries(facts),
+    ...(A.isReadonlyArrayNonEmpty(reverseFacts) ? { "@reverse": R.fromEntries(reverseFacts) } : {}),
+  };
+};
+
+const externalFactSubjects = (ontology: AssembledOntology): ReadonlyArray<string> =>
+  pipe(
+    ontology.facts,
+    A.map((fact) => fact.subjectIri),
+    A.dedupe,
+    A.filter(
+      (subjectIri) =>
+        !pipe(
+          ontology.classes,
+          A.some((assembled) => assembled.iri === subjectIri)
+        )
+    )
+  );
 
 const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate): JsonLdNode => ({
   "@id": predicate.termIri,
@@ -344,9 +392,14 @@ export const toJsonLd = (ontology: AssembledOntology): JsonLdDocument => ({
       A.flatMap((assembled) =>
         pipe(
           assembled.predicates,
+          A.filter((predicate) => isOwnedPredicate(ontology, predicate)),
           A.map((predicate) => predicateNode(assembled, predicate))
         )
       )
+    ),
+    ...pipe(
+      externalFactSubjects(ontology),
+      A.map((subjectIri) => factSubjectNode(ontology, subjectIri))
     ),
   ],
 });
@@ -581,6 +634,7 @@ export const toTurtle = (ontology: AssembledOntology): string => {
     A.flatMap((assembled) =>
       pipe(
         assembled.predicates,
+        A.filter((predicate) => isOwnedPredicate(ontology, predicate)),
         A.map((predicate) => predicateBlock(ontology, assembled, predicate))
       )
     )

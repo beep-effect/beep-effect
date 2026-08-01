@@ -240,6 +240,9 @@ describe("Identity", () => {
 
     // @ts-expect-error!
     $PatentId.key("nope:term");
+
+    // @ts-expect-error!
+    $PatentId.key({ identifier: "forged" });
   });
 
   it("types the class entrypoint with owned identity literals and the skos marker", () => {

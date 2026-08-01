@@ -96,3 +96,10 @@ Date: 2026-08-01. Executor: Claude (Fable). Branch: `feat/identity-iri-fold`
   fixture. Reproduces on a clean checkout of main; nothing in this branch's
   diff touches db-admin or the Architecture command. Reported as a separate
   task; hosted required checks gate this PR per repo law.
+
+Resolution: adopted the concurrent, single-file accepted-proof manifest sync
+onto this branch after confirming no equivalent fix had landed on `main`. A
+second full `bun run beep yeet repair` then passed all build, native-check,
+lint, focused unit, and type-test lanes. The focused proof included 74 identity
+tests, 48 ontology tests, 29 RDF tests, 854 repo-cli tests, and 138 passing
+type-test files.

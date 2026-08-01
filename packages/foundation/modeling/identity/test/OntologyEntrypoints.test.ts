@@ -40,6 +40,26 @@ describe("composer ontology entrypoints", () => {
 
       expect(S.resolveAnnotationsKey(field)?.identifier).toBeUndefined();
     });
+
+    it("strips reserved identity channels from runtime options", () => {
+      const unsafeOptions = {
+        term: "skos:prefLabel",
+        title: "Preferred label",
+        identifier: "forged",
+        schemaId: Symbol.for("forged"),
+        iri: "https://example.test/forged",
+        curie: "forged:value",
+      } as unknown as Parameters<typeof $I.key>[0];
+      const field = S.String.pipe($I.key(unsafeOptions));
+      const annotations = S.resolveAnnotationsKey(field);
+
+      expect(annotations?.ontologyTerm).toBe("skos:prefLabel");
+      expect(annotations?.title).toBe("Preferred label");
+      expect(annotations?.identifier).toBeUndefined();
+      expect(annotations?.schemaId).toBeUndefined();
+      expect(annotations?.iri).toBeUndefined();
+      expect(annotations?.curie).toBeUndefined();
+    });
   });
 
   describe("class", () => {

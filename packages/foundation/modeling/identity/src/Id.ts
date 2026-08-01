@@ -636,8 +636,15 @@ export type SkosClassification = "concept" | "conceptScheme";
  * @since 0.0.0
  * @category models
  */
-export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = KeyAnnotationExtras<unknown> & {
+export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
+  KeyAnnotationExtras<unknown>,
+  "identifier" | "schemaId" | "iri" | "curie"
+> & {
   readonly term?: Predicate<Vocab> | undefined;
+  readonly identifier?: never;
+  readonly schemaId?: never;
+  readonly iri?: never;
+  readonly curie?: never;
 };
 
 /**
@@ -1282,6 +1289,24 @@ export interface IdentityComposer<
   readonly value: IdentityString<Value>;
 
   /**
+   * The vocabulary registry supplied at binding time, or `undefined` when the
+   * composer is unbound or bound without a vocabulary extension (consumers
+   * default to the core registry).
+   *
+   * @example
+   * ```ts
+   * import { CoreVocab, make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep", vocab: CoreVocab })
+   * console.log($BeepId.vocabRegistry === CoreVocab) // true
+   * ```
+   *
+   * @since 0.0.0
+   * @category getters
+   */
+  readonly vocabRegistry: Vocab | undefined;
+
+  /**
    * Template tag call signature for creating child identity strings.
    *
    * Must be called with a single static string literal and no interpolations.
@@ -1707,11 +1732,17 @@ const createComposer = <
     return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
   };
 
-  type LooseOntologyKeyOptions = KeyAnnotationExtras<unknown> & { readonly term?: string | undefined };
+  type LooseOntologyKeyOptions = KeyAnnotationExtras<unknown> & {
+    readonly term?: string | undefined;
+    readonly identifier?: unknown;
+    readonly schemaId?: unknown;
+    readonly iri?: unknown;
+    readonly curie?: unknown;
+  };
 
   const ontologyKey = (input: string | LooseOntologyKeyOptions) => {
     const options: LooseOntologyKeyOptions = P.isString(input) ? { term: input } : input;
-    const { term, ...extras } = options;
+    const { curie: _curie, identifier: _identifier, iri: _iri, schemaId: _schemaId, term, ...extras } = options;
     const annotation = term === undefined ? extras : { ...extras, ontologyTerm: term };
 
     return <Schema extends S.Top>(self: Schema): Schema["Rebuild"] => self.annotateKey(annotation);
@@ -1753,6 +1784,12 @@ const createComposer = <
     },
     slug: {
       value: slug,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    vocabRegistry: {
+      value: binding?.vocab,
       enumerable: true,
       writable: true,
       configurable: true,

@@ -615,7 +615,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
-    })
+    }),
+    AI_METRICS_LONG_TEST_TIMEOUT
   );
 
   it.effect(

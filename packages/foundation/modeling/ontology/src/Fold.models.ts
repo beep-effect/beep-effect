@@ -15,11 +15,10 @@ import { $OntologyId } from "@beep/identity/packages";
 import { IRI } from "@beep/rdf/Iri";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
-import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { registryPrefix } from "./internal/Fold.ts";
 import type { Curie, Predicate } from "@beep/identity";
 
 const $I = $OntologyId.create("Fold");
@@ -38,7 +37,13 @@ const $I = $OntologyId.create("Fold");
  * @category models
  * @since 0.0.0
  */
-export type AbsoluteIri = `${"http" | "https"}://${string}`;
+export type AbsoluteIri =
+  | `${"http" | "https"}://${string}`
+  | `urn:${string}`
+  | `mailto:${string}`
+  | `did:${string}`
+  | `tag:${string}`
+  | IRI;
 
 /**
  * Effect schema handle accepted at tuple endpoints.
@@ -169,12 +174,13 @@ export type OntologyFoldInput = {
   readonly triples: ReadonlyArray<Triple>;
 };
 
-const isAbsoluteIri = (value: string): value is AbsoluteIri =>
-  pipe(value, Str.startsWith("http://")) || pipe(value, Str.startsWith("https://"));
+const isIriValue = S.is(IRI);
+
+const isAbsoluteIri = (value: string): boolean => O.isNone(registryPrefix(CoreVocab, value)) && isIriValue(value);
 
 const isKnownCurie = (value: string): boolean => O.isSome(expandOption(value, CoreVocab));
 
-const isTermString = (value: string): boolean => isAbsoluteIri(value) || isKnownCurie(value);
+const isTermString = (value: string): boolean => isKnownCurie(value) || isAbsoluteIri(value);
 
 const isKnownPredicate = (value: string): boolean => expandPredicate(value) !== undefined;
 
@@ -231,11 +237,20 @@ const TypedLiteralValue = S.Struct({
   value: S.Union([S.String, S.Finite, S.Boolean]),
   datatype: S.optionalKey(TermString),
   language: S.optionalKey(S.String),
-}).pipe(
-  $I.annoteSchema("TypedLiteralValue", {
-    description: "Typed literal wrapper accepted at tuple object positions.",
-  })
-);
+})
+  .check(
+    S.makeFilter((literal) => literal.datatype === undefined || literal.language === undefined, {
+      identifier: $I`TypedLiteralExclusivityCheck`,
+      title: "Typed Literal Exclusivity",
+      description: "RDF literals carry a language tag or an explicit datatype, never both.",
+      message: "Typed literals cannot carry both language and datatype.",
+    })
+  )
+  .pipe(
+    $I.annoteSchema("TypedLiteralValue", {
+      description: "Typed literal wrapper accepted at tuple object positions.",
+    })
+  );
 
 const SubjectValue = S.Union([SchemaHandleValue, TermString]);
 const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
@@ -652,6 +667,8 @@ export const OntologyAssemblyErrorReason = LiteralKit([
   "unknownTerm",
   "unsupportedFieldAst",
   "invalidTriple",
+  "invalidLabel",
+  "reservedPrefix",
   "skosIntegrity",
 ]).pipe(
   $I.annoteSchema("OntologyAssemblyErrorReason", {

@@ -34,8 +34,9 @@ FOLIO annotation migrations, and the vocab term-inventory codegen.
 ## Current Phase
 
 P3 Close: P0-P2 landed on `feat/identity-iri-fold` — evidence in
-[`history/p0-p2-evidence.md`](./history/p0-p2-evidence.md). Remaining:
-reflection, yeet publish, hosted checks to mergeable.
+[`history/p0-p2-evidence.md`](./history/p0-p2-evidence.md). The reflection and
+full local Yeet repair are green. Remaining: publish, hosted checks, and review
+closure to mergeable.
 
 ## Latest Evidence
 

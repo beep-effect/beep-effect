@@ -12,7 +12,7 @@
 
 import { CoreVocab, expand, expandOption, expandPredicate } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
-import { Effect, flow, pipe, SchemaAST } from "effect";
+import { Effect, flow, MutableHashMap, MutableHashSet, pipe, SchemaAST } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -30,7 +30,8 @@ import {
   OntologyValidationWarning,
   TripleValue,
 } from "./Fold.models.ts";
-import type { IdentityComposer, SkosClassification as SkosClassificationMarker } from "@beep/identity";
+import { registryPrefix } from "./internal/Fold.ts";
+import type { IdentityComposer, SkosClassification as SkosClassificationMarker, VocabShape } from "@beep/identity";
 import type {
   FactObject,
   OntologyFoldInput,
@@ -62,7 +63,7 @@ import type {
  * @category models
  * @since 0.0.0
  */
-export type BoundComposer = IdentityComposer<string, string, string>;
+export type BoundComposer = IdentityComposer<string, string, string, VocabShape>;
 
 type ClassIdentity = {
   readonly schema: SchemaHandle;
@@ -104,6 +105,7 @@ const fail = (
 ): Effect.Effect<never, OntologyAssemblyError> => Effect.fail(assemblyError(reason, message, extras));
 
 const decodeIriEffect = S.decodeUnknownEffect(IRI);
+const decodeLabelEffect = S.decodeUnknownEffect(S.NonEmptyString);
 
 const requireIri = (value: string, term: string): Effect.Effect<IRI, OntologyAssemblyError> =>
   pipe(
@@ -174,37 +176,25 @@ const classIdentityFromAst = (ast: SchemaAST.AST): O.Option<ClassIdentity> => {
   );
 };
 
-const findClassIdentityInAst = (ast: SchemaAST.AST): O.Option<ClassIdentity> => {
+const classIdentitiesInAst = (ast: SchemaAST.AST): ReadonlyArray<ClassIdentity> => {
   const direct = classIdentityFromAst(ast);
   if (O.isSome(direct)) {
-    return direct;
+    return [direct.value];
   }
 
-  if (SchemaAST.isArrays(ast)) {
-    return pipe(
-      [...ast.elements, ...ast.rest],
-      A.findFirst((item) => O.isSome(findClassIdentityInAst(item))),
-      O.flatMap(findClassIdentityInAst)
-    );
-  }
+  const children: ReadonlyArray<SchemaAST.AST> = SchemaAST.isArrays(ast)
+    ? [...ast.elements, ...ast.rest]
+    : SchemaAST.isDeclaration(ast)
+      ? ast.typeParameters
+      : SchemaAST.isUnion(ast)
+        ? ast.types
+        : [];
 
-  if (SchemaAST.isDeclaration(ast)) {
-    return pipe(
-      ast.typeParameters,
-      A.findFirst((item) => O.isSome(findClassIdentityInAst(item))),
-      O.flatMap(findClassIdentityInAst)
-    );
-  }
-
-  if (SchemaAST.isUnion(ast)) {
-    return pipe(
-      ast.types,
-      A.findFirst((item) => O.isSome(findClassIdentityInAst(item))),
-      O.flatMap(findClassIdentityInAst)
-    );
-  }
-
-  return O.none();
+  return pipe(
+    children,
+    A.flatMap(classIdentitiesInAst),
+    A.dedupeWith((left, right) => left.identifier === right.identifier)
+  );
 };
 
 const scalarLeafGuards: ReadonlyArray<(ast: SchemaAST.AST) => boolean> = [
@@ -278,14 +268,17 @@ const requireIncludedClass = (
 const appendLocal = (base: string, name: string): string =>
   pipe(base, Str.endsWith("/")) || pipe(base, Str.endsWith("#")) ? `${base}${name}` : `${base}/${name}`;
 
-const isAbsoluteIri = (value: string): boolean =>
-  pipe(value, Str.startsWith("http://")) || pipe(value, Str.startsWith("https://"));
+const isIriValue = S.is(IRI);
+
+const isAbsoluteIri = (vocab: VocabShape, value: string): boolean =>
+  O.isNone(registryPrefix(vocab, value)) && isIriValue(value);
 
 const resolvePredicate = (
+  vocab: VocabShape,
   term: string
 ): Effect.Effect<{ readonly term: string; readonly iri: IRI; readonly reverse: boolean }, OntologyAssemblyError> =>
   pipe(
-    O.fromUndefinedOr(expandPredicate(term)),
+    O.fromUndefinedOr(expandPredicate(term, vocab)),
     O.match({
       onNone: () => fail("unknownTerm", `Unknown predicate CURIE: ${term}`, { term }),
       onSome: ({ inverse, iri }) =>
@@ -296,13 +289,13 @@ const resolvePredicate = (
     })
   );
 
-const resolveStringTerm = (term: string): Effect.Effect<IRI, OntologyAssemblyError> => {
-  if (isAbsoluteIri(term)) {
+const resolveStringTerm = (vocab: VocabShape, term: string): Effect.Effect<IRI, OntologyAssemblyError> => {
+  if (isAbsoluteIri(vocab, term)) {
     return requireIri(term, term);
   }
 
   return pipe(
-    expandOption(term, CoreVocab),
+    expandOption(term, vocab),
     O.match({
       onNone: () => fail("unknownTerm", `Unknown term: ${term}`, { term }),
       onSome: (iri) => requireIri(iri, term),
@@ -322,9 +315,9 @@ const isLiteralScalar = (value: unknown): value is string | number | boolean =>
 const isTypedLiteral = (value: unknown): value is TypedLiteral =>
   P.isObject(value) && P.hasProperty(value, "value") && isLiteralScalar(value.value);
 
-const resolveTypedLiteral = Effect.fnUntraced(function* (literal: TypedLiteral) {
+const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, literal: TypedLiteral) {
   const datatypeIri =
-    literal.datatype === undefined ? O.none<IRI>() : O.some(yield* resolveStringTerm(literal.datatype));
+    literal.datatype === undefined ? O.none<IRI>() : O.some(yield* resolveStringTerm(vocab, literal.datatype));
 
   return FactLiteral.make({
     value: literal.value,
@@ -334,6 +327,7 @@ const resolveTypedLiteral = Effect.fnUntraced(function* (literal: TypedLiteral) 
 });
 
 const resolveObject = (
+  vocab: VocabShape,
   classes: ReadonlyArray<ClassIdentity>,
   value: TupleObject
 ): Effect.Effect<FactObject, OntologyAssemblyError> => {
@@ -342,17 +336,18 @@ const resolveObject = (
   }
 
   if (P.isString(value)) {
-    return resolveStringTerm(value);
+    return resolveStringTerm(vocab, value);
   }
 
   if (isTypedLiteral(value)) {
-    return resolveTypedLiteral(value);
+    return resolveTypedLiteral(vocab, value);
   }
 
   return fail("invalidTriple", "Object is not a schema handle, term, or typed literal.");
 };
 
 const resolveSubject = (
+  vocab: VocabShape,
   classes: ReadonlyArray<ClassIdentity>,
   value: Subject
 ): Effect.Effect<IRI, OntologyAssemblyError> => {
@@ -360,7 +355,7 @@ const resolveSubject = (
     return resolveHandle(classes, value);
   }
 
-  return resolveStringTerm(value);
+  return resolveStringTerm(vocab, value);
 };
 
 const inferPredicateKind = (
@@ -371,9 +366,19 @@ const inferPredicateKind = (
   | { readonly kind: "datatype"; readonly rangeIri: O.Option<IRI> }
   | { readonly kind: "object"; readonly rangeIri: O.Option<IRI> },
   OntologyAssemblyError
-> =>
-  pipe(
-    findClassIdentityInAst(ast),
+> => {
+  const identities = classIdentitiesInAst(ast);
+
+  if (identities.length > 1) {
+    return fail(
+      "unsupportedFieldAst",
+      `Field references a union of multiple class ranges; model one range or reject explicitly: ${field}`,
+      { field }
+    );
+  }
+
+  return pipe(
+    A.head(identities),
     O.match({
       onSome: (identity) =>
         pipe(
@@ -388,6 +393,7 @@ const inferPredicateKind = (
             }),
     })
   );
+};
 
 const requireStringFieldName = (property: SchemaAST.PropertySignature): Effect.Effect<string, OntologyAssemblyError> =>
   P.isString(property.name) && Str.isNonEmpty(property.name)
@@ -396,6 +402,7 @@ const requireStringFieldName = (property: SchemaAST.PropertySignature): Effect.E
 
 const fieldPredicate = Effect.fnUntraced(function* (
   composer: BoundComposer,
+  vocab: VocabShape,
   classes: ReadonlyArray<ClassIdentity>,
   property: SchemaAST.PropertySignature
 ) {
@@ -407,7 +414,7 @@ const fieldPredicate = Effect.fnUntraced(function* (
   const borrowed = annotationString(annotations, "ontologyTerm");
 
   if (O.isSome(borrowed)) {
-    const resolved = yield* resolvePredicate(borrowed.value);
+    const resolved = yield* resolvePredicate(vocab, borrowed.value);
     return AssembledPredicate.make({
       key: field,
       term: borrowed.value,
@@ -434,6 +441,7 @@ const fieldPredicate = Effect.fnUntraced(function* (
 
 const assembleClass = Effect.fnUntraced(function* (
   composer: BoundComposer,
+  vocab: VocabShape,
   classes: ReadonlyArray<ClassIdentity>,
   identity: ClassIdentity
 ) {
@@ -449,7 +457,7 @@ const assembleClass = Effect.fnUntraced(function* (
   );
   const predicates = yield* Effect.forEach(
     objectAst.propertySignatures,
-    (property) => fieldPredicate(composer, classes, property),
+    (property) => fieldPredicate(composer, vocab, classes, property),
     { concurrency: 1 }
   );
 
@@ -463,32 +471,37 @@ const assembleClass = Effect.fnUntraced(function* (
   });
 });
 
-const unknownEndpointTerm = (value: unknown): O.Option<string> =>
+const unknownEndpointTerm = (vocab: VocabShape, value: unknown): O.Option<string> =>
   pipe(
     O.liftPredicate(value, P.isString),
-    O.filter((term) => O.isNone(expandOption(term, CoreVocab)) && !isAbsoluteIri(term))
+    O.filter((term) => O.isNone(expandOption(term, vocab)) && !isAbsoluteIri(vocab, term))
   );
 
-const invalidTripleTerm = (triple: Triple): O.Option<string> => {
+const invalidTripleTerm = (vocab: VocabShape, triple: Triple): O.Option<string> => {
   const [subject, predicate, object] = triple;
   const unknownPredicate = pipe(
     O.liftPredicate(predicate, P.isString),
-    O.filter((term) => expandPredicate(term) === undefined)
+    O.filter((term) => expandPredicate(term, vocab) === undefined)
   );
-  const unknownDatatype = isTypedLiteral(object) ? unknownEndpointTerm(object.datatype) : O.none<string>();
+  const unknownDatatype = isTypedLiteral(object) ? unknownEndpointTerm(vocab, object.datatype) : O.none<string>();
 
-  return O.firstSomeOf([unknownEndpointTerm(subject), unknownPredicate, unknownEndpointTerm(object), unknownDatatype]);
+  return O.firstSomeOf([
+    unknownEndpointTerm(vocab, subject),
+    unknownPredicate,
+    unknownEndpointTerm(vocab, object),
+    unknownDatatype,
+  ]);
 };
 
 const decodeTripleEffect = S.decodeUnknownEffect(TripleValue);
 
-const validateTriple = (triple: Triple): Effect.Effect<Triple, OntologyAssemblyError> =>
+const validateTriple = (vocab: VocabShape, triple: Triple): Effect.Effect<Triple, OntologyAssemblyError> =>
   pipe(
     decodeTripleEffect(triple),
     Effect.as(triple),
     Effect.mapError(() =>
       pipe(
-        invalidTripleTerm(triple),
+        invalidTripleTerm(vocab, triple),
         O.match({
           onNone: () => assemblyError("invalidTriple", "Invalid ontology triple tuple."),
           onSome: (term) => assemblyError("unknownTerm", `Unknown term in ontology triple: ${term}`, { term }),
@@ -497,11 +510,23 @@ const validateTriple = (triple: Triple): Effect.Effect<Triple, OntologyAssemblyE
     )
   );
 
-const assembleFact = Effect.fnUntraced(function* (classes: ReadonlyArray<ClassIdentity>, triple: Triple) {
-  const [subject, predicate, object] = yield* validateTriple(triple);
-  const subjectIri = yield* resolveSubject(classes, subject);
-  const resolvedPredicate = yield* resolvePredicate(predicate);
-  const resolvedObject = yield* resolveObject(classes, object);
+const assembleFact = Effect.fnUntraced(function* (
+  vocab: VocabShape,
+  classes: ReadonlyArray<ClassIdentity>,
+  triple: Triple
+) {
+  const [subject, predicate, object] = yield* validateTriple(vocab, triple);
+  const subjectIri = yield* resolveSubject(vocab, classes, subject);
+  const resolvedPredicate = yield* resolvePredicate(vocab, predicate);
+  const resolvedObject = yield* resolveObject(vocab, classes, object);
+
+  if (resolvedPredicate.reverse && isFactLiteral(resolvedObject)) {
+    return yield* fail(
+      "invalidTriple",
+      `Reverse predicate ${resolvedPredicate.term} cannot take a literal object: literals are not RDF subjects.`,
+      { term: resolvedPredicate.term, subjectIri }
+    );
+  }
 
   return AssembledFact.make({
     subjectIri,
@@ -510,6 +535,16 @@ const assembleFact = Effect.fnUntraced(function* (classes: ReadonlyArray<ClassId
     reverse: resolvedPredicate.reverse,
   });
 });
+
+const semanticFact = (fact: AssembledFact): AssembledFact =>
+  fact.reverse && P.isString(fact.object)
+    ? AssembledFact.make({
+        subjectIri: fact.object,
+        predicateIri: fact.predicateIri,
+        object: fact.subjectIri,
+        reverse: false,
+      })
+    : fact;
 
 const SKOS_PREF_LABEL = expand("skos:prefLabel");
 const SKOS_ALT_LABEL = expand("skos:altLabel");
@@ -566,9 +601,62 @@ const labelFacts: (facts: ReadonlyArray<AssembledFact>) => ReadonlyArray<LabelFa
 );
 
 type HierarchyEdge = {
-  readonly predicateIri: IRI;
   readonly subjectIri: IRI;
   readonly objectIri: IRI;
+};
+
+const hierarchyCycleEdge = (edges: ReadonlyArray<HierarchyEdge>): O.Option<HierarchyEdge> => {
+  const successors = MutableHashMap.empty<IRI, ReadonlyArray<HierarchyEdge>>();
+  for (const edge of edges) {
+    MutableHashMap.set(
+      successors,
+      edge.subjectIri,
+      pipe(
+        MutableHashMap.get(successors, edge.subjectIri),
+        O.getOrElse((): ReadonlyArray<HierarchyEdge> => []),
+        A.append(edge)
+      )
+    );
+  }
+
+  const settled = MutableHashSet.empty<IRI>();
+  const walking = MutableHashSet.empty<IRI>();
+
+  const walk = (node: IRI): O.Option<HierarchyEdge> => {
+    if (MutableHashSet.has(settled, node)) {
+      return O.none();
+    }
+
+    MutableHashSet.add(walking, node);
+    const outgoing = pipe(
+      MutableHashMap.get(successors, node),
+      O.getOrElse((): ReadonlyArray<HierarchyEdge> => [])
+    );
+
+    for (const edge of outgoing) {
+      if (MutableHashSet.has(walking, edge.objectIri)) {
+        return O.some(edge);
+      }
+
+      const nested = walk(edge.objectIri);
+      if (O.isSome(nested)) {
+        return nested;
+      }
+    }
+
+    MutableHashSet.remove(walking, node);
+    MutableHashSet.add(settled, node);
+    return O.none();
+  };
+
+  for (const edge of edges) {
+    const found = walk(edge.subjectIri);
+    if (O.isSome(found)) {
+      return found;
+    }
+  }
+
+  return O.none();
 };
 
 const skosHardIssue = (facts: ReadonlyArray<AssembledFact>): O.Option<OntologyAssemblyError> => {
@@ -634,41 +722,25 @@ const skosHardIssue = (facts: ReadonlyArray<AssembledFact>): O.Option<OntologyAs
 
   const hierarchy: ReadonlyArray<HierarchyEdge> = pipe(
     facts,
-    A.filter((fact) => fact.predicateIri === SKOS_BROADER || fact.predicateIri === SKOS_NARROWER),
-    A.map(
-      (fact): O.Option<HierarchyEdge> =>
-        P.isString(fact.object)
-          ? O.some({ predicateIri: fact.predicateIri, subjectIri: fact.subjectIri, objectIri: fact.object })
-          : O.none()
-    ),
+    A.map((fact): O.Option<HierarchyEdge> => {
+      if (!P.isString(fact.object)) {
+        return O.none();
+      }
+
+      if (fact.predicateIri === SKOS_BROADER) {
+        return O.some({ subjectIri: fact.subjectIri, objectIri: fact.object });
+      }
+
+      if (fact.predicateIri === SKOS_NARROWER) {
+        return O.some({ subjectIri: fact.object, objectIri: fact.subjectIri });
+      }
+
+      return O.none();
+    }),
     A.getSomes
   );
 
-  const hierarchyViolation = pipe(
-    hierarchy,
-    A.findFirst(
-      (edge) =>
-        edge.subjectIri === edge.objectIri ||
-        pipe(
-          hierarchy,
-          A.some(
-            (candidate) =>
-              candidate.predicateIri === edge.predicateIri &&
-              candidate.subjectIri === edge.objectIri &&
-              candidate.objectIri === edge.subjectIri
-          )
-        ) ||
-        pipe(
-          hierarchy,
-          A.some(
-            (candidate) =>
-              candidate.predicateIri !== edge.predicateIri &&
-              candidate.subjectIri === edge.subjectIri &&
-              candidate.objectIri === edge.objectIri
-          )
-        )
-    )
-  );
+  const hierarchyViolation = hierarchyCycleEdge(hierarchy);
 
   if (O.isSome(hierarchyViolation)) {
     return O.some(
@@ -810,26 +882,44 @@ const composerPrefix = (composer: BoundComposer): string =>
  * @since 0.0.0
  */
 export const fold = Effect.fn("Ontology.fold")(function* (composer: BoundComposer, input: OntologyFoldInput) {
+  const vocab = pipe(
+    O.fromUndefinedOr(composer.vocabRegistry),
+    O.getOrElse((): VocabShape => CoreVocab)
+  );
+  const prefix = composerPrefix(composer);
+  if (P.hasProperty(vocab, prefix)) {
+    return yield* fail("reservedPrefix", `Owned prefix collides with a registered vocabulary prefix: ${prefix}`, {
+      term: prefix,
+    });
+  }
+
+  const label = yield* pipe(
+    decodeLabelEffect(input.label),
+    Effect.mapError(() => assemblyError("invalidLabel", "Ontology label must be non-empty."))
+  );
   const baseIri = yield* requireIri(composer.iri, composer.identifier);
   const classes = yield* Effect.forEach(input.schemas, requireClassIdentity, { concurrency: 1 });
-  const assembledClasses = yield* Effect.forEach(classes, (identity) => assembleClass(composer, classes, identity), {
+  const assembledClasses = yield* Effect.forEach(
+    classes,
+    (identity) => assembleClass(composer, vocab, classes, identity),
+    { concurrency: 1 }
+  );
+  const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(vocab, classes, triple), {
     concurrency: 1,
   });
-  const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(classes, triple), {
-    concurrency: 1,
-  });
+  const semanticFacts = pipe(facts, A.map(semanticFact));
 
-  const hardIssue = skosHardIssue(facts);
+  const hardIssue = skosHardIssue(semanticFacts);
   if (O.isSome(hardIssue)) {
     return yield* hardIssue.value;
   }
 
   return AssembledOntology.make({
-    label: input.label,
+    label,
     baseIri,
-    prefix: composerPrefix(composer),
+    prefix,
     classes: assembledClasses,
     facts,
-    warnings: skosWarnings(assembledClasses, facts),
+    warnings: skosWarnings(assembledClasses, semanticFacts),
   });
 });

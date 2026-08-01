@@ -1,9 +1,9 @@
-import { make } from "@beep/identity";
+import { CoreVocab, make, mergeVocab } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
 import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
 import { OWLClass } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -192,6 +192,59 @@ describe("Ontology.fold projections", () => {
     })
   );
 
+  it.effect("preserves fact subjects that are not assembled classes in JSON-LD", () =>
+    Effect.gen(function* () {
+      const externalSubject = "https://example.test/resources/external";
+      const assembled = yield* fold($I, {
+        label: "External Subject",
+        schemas: [Claim],
+        triples: [[externalSubject, "rdfs:seeAlso", Claim]],
+      });
+      const externalNode = toJsonLd(assembled)["@graph"].find((node) => node["@id"] === externalSubject);
+
+      expect(externalNode).toMatchObject({
+        "@id": externalSubject,
+        "rdfs:seeAlso": [{ "@id": "https://ns.beep.sh/patent/Claim" }],
+      });
+    })
+  );
+
+  it.effect("does not redefine borrowed predicates as owned properties", () =>
+    Effect.gen(function* () {
+      const assembled = yield* assemble;
+      const jsonLd = toJsonLd(assembled);
+      const turtle = toTurtle(assembled);
+
+      expect(
+        jsonLd["@graph"].some(
+          (node) => node["@id"] === "http://www.w3.org/2004/02/skos/core#prefLabel" && node["@type"] !== undefined
+        )
+      ).toBe(false);
+      expect(turtle).not.toContain("skos:prefLabel a owl:DatatypeProperty");
+      expect(turtle).not.toContain("rdfs:subClassOf a owl:DatatypeProperty");
+    })
+  );
+
+  it.effect("merges explicit label and comment facts with class metadata", () =>
+    Effect.gen(function* () {
+      const assembled = yield* fold($I, {
+        label: "Metadata Merge",
+        schemas: [Claim],
+        triples: [
+          [Claim, "rdfs:label", { value: "Authored claim", language: "en" }],
+          [Claim, "rdfs:comment", { value: "Authored comment" }],
+        ],
+      });
+      const claimNode = toJsonLd(assembled)["@graph"].find((node) => node["@id"] === "https://ns.beep.sh/patent/Claim");
+
+      expect(claimNode?.["rdfs:label"]).toEqual(["Claim", { "@value": "Authored claim", "@language": "en" }]);
+      expect(claimNode?.["rdfs:comment"]).toEqual([
+        "Patent claim\nwith escaped text.",
+        { "@value": "Authored comment" },
+      ]);
+    })
+  );
+
   it.effect("projects deterministic Turtle with safe prefix fallback and escaped literals", () =>
     Effect.gen(function* () {
       const first = yield* assemble;
@@ -291,8 +344,69 @@ describe("Ontology.fold SKOS gate", () => {
       );
 
       expect(error.reason).toBe("skosIntegrity");
-      expect(O.getOrThrow(error.subjectIri)).toBe("https://ns.beep.sh/vocab/Concept");
-      expect(O.getOrThrow(error.objectIri)).toBe("https://ns.beep.sh/vocab/Scheme");
+      expect(pipe([O.getOrThrow(error.subjectIri), O.getOrThrow(error.objectIri)], A.sort(Order.String))).toEqual([
+        "https://ns.beep.sh/vocab/Concept",
+        "https://ns.beep.sh/vocab/Scheme",
+      ]);
+    })
+  );
+
+  it.effect("rejects a transitive broader cycle spanning three concepts", () =>
+    Effect.gen(function* () {
+      class Third extends S.Class<Third>($Skos`Third`)(
+        {
+          label: S.String,
+        },
+        $Skos.class("Third", { description: "A third concept.", skos: "concept" })
+      ) {}
+
+      const error = yield* Effect.flip(
+        fold($Skos, {
+          label: "Broken",
+          schemas: [Concept, Scheme, Third],
+          triples: [
+            [Concept, "skos:broader", Scheme],
+            [Scheme, "skos:broader", Third],
+            [Third, "skos:broader", Concept],
+          ],
+        })
+      );
+
+      expect(error.reason).toBe("skosIntegrity");
+      expect(O.isSome(error.subjectIri)).toBe(true);
+      expect(O.isSome(error.objectIri)).toBe(true);
+    })
+  );
+
+  it.effect("normalizes narrower edges into the broader digraph for cycle detection", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        fold($Skos, {
+          label: "Broken",
+          schemas: [Concept, Scheme],
+          triples: [
+            [Concept, "skos:broader", Scheme],
+            [Concept, "skos:narrower", Scheme],
+          ],
+        })
+      );
+
+      expect(error.reason).toBe("skosIntegrity");
+    })
+  );
+
+  it.effect("rejects reverse predicates with literal objects at the gate", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        fold($Skos, {
+          label: "Broken",
+          schemas: [Concept],
+          triples: [[Concept, "^rdfs:subClassOf", { value: "not a subject" }]],
+        })
+      );
+
+      expect(error.reason).toBe("invalidTriple");
+      expect(O.getOrThrow(error.term)).toBe("^rdfs:subClassOf");
     })
   );
 
@@ -305,6 +419,21 @@ describe("Ontology.fold SKOS gate", () => {
       });
 
       expect(assembled.warnings.map((warning) => warning.code)).toEqual(["missingConceptScheme"]);
+    })
+  );
+
+  it.effect("applies SKOS gates to the semantic direction of reverse facts", () =>
+    Effect.gen(function* () {
+      const assembled = yield* fold($Skos, {
+        label: "Vocab",
+        schemas: [Concept, Scheme],
+        triples: [
+          [Scheme, "^skos:inScheme", Concept],
+          [Concept, "skos:prefLabel", { value: "Concept", language: "en" }],
+        ],
+      });
+
+      expect(assembled.warnings).toEqual([]);
     })
   );
 });
@@ -358,6 +487,89 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
+  it.effect("accepts non-HTTP absolute IRI schemes at tuple endpoints", () =>
+    Effect.gen(function* () {
+      const assembled = yield* fold($Neg, {
+        label: "URN Endpoint",
+        schemas: [LeftDocument],
+        triples: [[LeftDocument, "rdfs:seeAlso", "urn:isbn:9780140328721"]],
+      });
+
+      expect(assembled.facts[0]?.object).toBe("urn:isbn:9780140328721");
+    })
+  );
+
+  it.effect("rejects a field union with multiple class ranges", () =>
+    Effect.gen(function* () {
+      class AmbiguousRange extends S.Class<AmbiguousRange>($Neg`AmbiguousRange`)(
+        {
+          document: S.Union([LeftDocument, RightDocument]),
+        },
+        $Neg.class("AmbiguousRange")
+      ) {}
+
+      const error = yield* Effect.flip(
+        fold($Neg, {
+          label: "Ambiguous Range",
+          schemas: [LeftDocument, RightDocument, AmbiguousRange],
+          triples: [],
+        })
+      );
+
+      expect(error.reason).toBe("unsupportedFieldAst");
+      expect(O.getOrThrow(error.field)).toBe("document");
+    })
+  );
+
+  it.effect("rejects typed literals carrying both a datatype and a language", () =>
+    Effect.gen(function* () {
+      const invalid = [
+        LeftDocument,
+        "rdfs:label",
+        { value: "Document", datatype: "rdf:langString", language: "en" },
+      ] as unknown as Triple;
+      const error = yield* Effect.flip(
+        fold($Neg, {
+          label: "Invalid Literal",
+          schemas: [LeftDocument],
+          triples: [invalid],
+        })
+      );
+
+      expect(error.reason).toBe("invalidTriple");
+    })
+  );
+
+  it.effect("rejects empty ontology labels with a typed error", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        fold($Neg, {
+          label: "",
+          schemas: [LeftDocument],
+          triples: [],
+        })
+      );
+
+      expect(error.reason).toBe("invalidLabel");
+    })
+  );
+
+  it.effect("rejects owned prefixes that collide with registered vocabularies", () =>
+    Effect.gen(function* () {
+      const $Reserved = make("reserved", { authority: "https://example.test/", prefix: "skos" }).$ReservedId;
+      const error = yield* Effect.flip(
+        fold($Reserved, {
+          label: "Reserved",
+          schemas: [],
+          triples: [],
+        })
+      );
+
+      expect(error.reason).toBe("reservedPrefix");
+      expect(O.getOrThrow(error.term)).toBe("skos");
+    })
+  );
+
   it.effect("is byte-identical across repeated assembly and every projection", () =>
     Effect.gen(function* () {
       const first = yield* assemble;
@@ -399,7 +611,44 @@ describe("Ontology.fold rebase", () => {
       expect(turtle).toContain("@prefix patent: <https://opip.law/ns/patent#");
       expect(turtle).toContain("patent:");
       expect(context.patent).toMatchObject({ "@prefix": true });
+      expect(toMarkdown(assembled)).toContain("[patent:PublishedClaim](");
       expect(toTurtle(assembled)).toBe(toTurtle(assembled));
+    })
+  );
+});
+
+describe("Ontology.fold extended vocabulary", () => {
+  it.effect("resolves borrowed field terms from the composer's registry", () =>
+    Effect.gen(function* () {
+      const vocab = mergeVocab(CoreVocab, {
+        ex: {
+          iri: "https://example.test/ns#",
+          terms: ["relation"],
+        },
+      });
+      const $Custom = make("custom", {
+        authority: "https://example.test/ontology/",
+        prefix: "custom",
+        vocab,
+      }).$CustomId;
+
+      class CustomClass extends S.Class<CustomClass>($Custom`CustomClass`)(
+        {
+          relation: S.String.pipe($Custom.key("ex:relation")),
+        },
+        $Custom.class("CustomClass")
+      ) {}
+
+      const assembled = yield* fold($Custom, {
+        label: "Custom Vocabulary",
+        schemas: [CustomClass],
+        triples: [],
+      });
+      const assembledClass = pipe(findClass(assembled.classes, "CustomClass"), O.getOrThrow);
+
+      expect(pipe(findPredicate(assembledClass, "relation"), O.getOrThrow).termIri).toBe(
+        "https://example.test/ns#relation"
+      );
     })
   );
 });

@@ -106,16 +106,23 @@ const iriSlug: (iri: string) => string = flow(
 const markdownLink = (label: string, iri: string, linkMode: MarkdownLinkMode): string =>
   linkMode === "obsidian" ? `[[${iri}|${obsidianAlias(label)}]]` : `[${markdownText(label)}](#${iriSlug(iri)})`;
 
+const withNamespaceSeparator = (iri: string): string =>
+  pipe(iri, Str.endsWith("/")) || pipe(iri, Str.endsWith("#")) ? iri : `${iri}/`;
+
+const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<string> => {
+  const namespace = withNamespaceSeparator(ontology.baseIri);
+
+  return pipe(
+    O.liftPredicate(iri, Str.startsWith(namespace)),
+    O.map(Str.slice(Str.length(namespace))),
+    O.map((local) => `${ontology.prefix}:${local}`)
+  );
+};
+
 const compactLabel = (ontology: AssembledOntology, iri: string): string =>
   pipe(
     contractOption(iri, CoreVocab),
-    O.orElse(() =>
-      pipe(
-        O.liftPredicate(iri, Str.startsWith(`${ontology.baseIri}/`)),
-        O.map(Str.slice(Str.length(ontology.baseIri) + 1)),
-        O.map((local) => `${ontology.prefix}:${local}`)
-      )
-    ),
+    O.orElse(() => compactOwnedLabel(ontology, iri)),
     O.getOrElse(() => iri)
   );
 
