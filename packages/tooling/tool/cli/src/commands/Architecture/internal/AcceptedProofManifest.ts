@@ -882,18 +882,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260801021411_usage_record_optional_activity/migration.sql",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "db-admin",
-    stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260801021411_usage_record_optional_activity/snapshot.json",
-    writer: "json",
-  }),
-  AcceptedProofFile.make({
-    role: "db-admin",
-    stage: "persistence",
     path: "packages/_internal/db-admin/drizzle/20260725222615_baseline/migration.sql",
     writer: "template",
   }),
