@@ -85,10 +85,14 @@ Corrections this forces:
    `permission_suggestions` — while `PreToolUse` and `PostToolUse` both
    carry `tool_use_id`. A wait bracket therefore cannot be paired directly
    from its start event: pairing must join `PermissionRequest` to the
-   adjacent `PreToolUse` (same session, same `tool_name`, same second),
-   whose `tool_use_id` then pairs with `PostToolUse`. P4's span
-   reconstruction must implement that two-hop join rather than assuming a
-   shared id.
+   nearest preceding **unpaired** `PreToolUse` (same session, same
+   `tool_name`), whose `tool_use_id` then pairs with `PostToolUse`. P4's
+   span reconstruction must implement that two-hop join rather than
+   assuming a shared id, and must treat it as a strict one-to-one matching:
+   the same tool can be requested repeatedly and a denied request stays
+   open forever, so a looser join lets a later attempt's `PostToolUse`
+   close an earlier open bracket — fabricating a long wait and swallowing
+   the real one. PLAN.md P1 amendment 4 carries the binding rule.
    (`permission_suggestions` is deliberately excluded from `HookPulseV1`: it
    can carry tool-argument-shaped content, so law 3 keeps it
    unrepresentable.)
