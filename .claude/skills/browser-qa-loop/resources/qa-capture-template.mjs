@@ -15,6 +15,8 @@ const URL = process.env.QA_URL ?? "http://storybook.beep.localhost:1355/";
 const COLLECTOR = process.env.QA_COLLECTOR_URL; // e.g. http://127.0.0.1:43117
 const SESSION_ID = process.env.QA_SESSION_ID;
 const VIDEO_DIR = process.env.QA_VIDEO_DIR; // .beep/qa/round-N/video
+const CURSOR = process.env.QA_CURSOR !== "0"; // --no-cursor exports QA_CURSOR=0
+const BEACON = process.env.QA_BEACON !== "0"; // --no-beacon exports QA_BEACON=0
 const OUT = new globalThis.URL(`./qa/round-${ROUND}/`, import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
@@ -44,10 +46,13 @@ const page = await context.newPage();
 // ---- witness injection (event log + fake cursor; survives navigations) -----
 if (COLLECTOR) {
   const witnessSource = await (await fetch(`${COLLECTOR}/witness.js`)).text();
+  // Witness reads TOP-LEVEL keys off window.__BEEP_QA__ (WitnessConfigInput).
+  // Config beacon stays false — the beacon fires explicitly once below.
   const config = {
     collectorUrl: COLLECTOR,
     sessionId: SESSION_ID ?? `round-${ROUND}`,
-    features: { cursor: true, beacon: false }, // beacon fired explicitly once below
+    cursor: CURSOR,
+    beacon: false,
   };
   await page.addInitScript({
     content: `window.__BEEP_QA__ = ${JSON.stringify(config)};\n${witnessSource}`,
@@ -106,7 +111,7 @@ await page.addInitScript(() => {
 });
 await page.goto(URL, { waitUntil: "networkidle" });
 await settle(3000);
-if (COLLECTOR) {
+if (COLLECTOR && BEACON) {
   // Fire the clock beacon exactly once, on a settled first page — the
   // correlator derives its probe window from these flip events.
   await page.evaluate(() => window.__beepQa?.runSyncBeacon());
@@ -398,3 +403,6 @@ writeFileSync(`${OUT}manifest.json`, JSON.stringify(manifest, null, 2));
 const failures = manifest.scenarios.flatMap((s) => s.assertions.filter((a) => !a.ok).map((a) => `${s.name}: ${a.name} (${a.detail})`));
 console.log(JSON.stringify({ scenarios: manifest.scenarios.length, failures }, null, 2));
 console.log(failures.length === 0 ? "CAPTURE-GREEN" : `CAPTURE-FAILURES: ${failures.length}`);
+// `qa record` mirrors the harness exit (RecordOutcome.exitCode); exitCode (not
+// process.exit) so stdout flushes after the teardown above.
+process.exitCode = failures.length === 0 ? 0 : 1;

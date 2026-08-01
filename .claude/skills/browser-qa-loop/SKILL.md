@@ -106,7 +106,9 @@ synthetic pointer stream cannot produce native selection-drag escalation or a
 real cursor. Recipe:
 
 1. Start the app via its portless script (e.g. `bun run --cwd apps/storybook storybook`).
-2. `bun run beep qa record --lane obs --round N` — provisions the `beep-qa`
+2. `bun run beep qa record --lane obs --app <app> --round N` (`--url
+   <absolute-url>` is the alternative; the target also supplies the
+   collector's allowed origin) — provisions the `beep-qa`
    OBS scene (one-time PipeWire portal window pick; the restore token
    persists) and starts recording.
 3. Launch codex against real Chrome with the routing wording from the
