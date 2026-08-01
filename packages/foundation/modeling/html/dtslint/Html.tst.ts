@@ -17,7 +17,18 @@ import { AutocompleteAttribute as SubpathAutocompleteAttribute } from "@beep/htm
 import { ConformantHtml as SubpathConformantHtml } from "@beep/html/Html.conformance";
 import { HtmlFragment as SubpathHtmlFragment } from "@beep/html/Html.contract";
 import { HtmlTag as SubpathHtmlTag } from "@beep/html/Html.meta";
-import { Button, Div, Html as HtmlElement, Input, Li, Link, Meter, Ol, Progress } from "@beep/html/Html.model";
+import {
+  Button,
+  Div,
+  Html as HtmlElement,
+  Input,
+  Li,
+  Link,
+  Document as LosslessDocument,
+  Meter,
+  Ol,
+  Progress,
+} from "@beep/html/Html.model";
 import { Comment } from "@beep/html/Html.nodes";
 import { SafeHtmlAst as SubpathSafeHtmlAst } from "@beep/html/Html.policy";
 import { SafeHtml as SubpathSafeHtml } from "@beep/html/Html.serialize";
@@ -59,15 +70,25 @@ describe("@beep/html contract", () => {
 
   it("exposes canonical child and root role names", () => {
     const fragment = HtmlFragment.make({ children: [] });
-    const document = HtmlDocument.make({ children: [] });
     const documentElement = HtmlElement.make({ children: [] });
     const comment = Comment.make({ value: "note" });
+    const document = HtmlDocument.make({ children: [comment, documentElement] });
+    const diagnosticDocument = LosslessDocument.make({ children: [Div.make({ children: [] })] });
 
     expect(fragment).type.toBe<HtmlFragment>();
     expect(document).type.toBe<HtmlDocument>();
+    expect(document.children).type.toBe<ReadonlyArray<HtmlDocumentChild>>();
+    expect(diagnosticDocument).type.toBe<LosslessDocument>();
     expect(documentElement).type.toBeAssignableTo<HtmlDocumentChild>();
     expect(comment).type.toBeAssignableTo<HtmlDocumentChild>();
     expect(comment).type.toBeAssignableTo<HtmlChildNode>();
+
+    HtmlDocument.make({
+      children: [
+        // @ts-expect-error!
+        Div.make({ children: [] }),
+      ],
+    });
   });
 
   it("keeps proof and serializer error channels explicit", () => {

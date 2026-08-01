@@ -1383,6 +1383,19 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   ) {
     failGeneration("HTML generator requires <meta charset> to be utf-8 and omit content");
   }
+  const trackSubtitleRequirements = A.filter(
+    classification.attributeRequirements.track ?? [],
+    (requirement) =>
+      requirement.when?._tag === "attributeEquals" &&
+      requirement.when.attribute === "kind" &&
+      requirement.when.value === "subtitles"
+  );
+  if (
+    trackSubtitleRequirements.length !== 1 ||
+    JSON.stringify(trackSubtitleRequirements[0]?.required) !== JSON.stringify([["srclang"]])
+  ) {
+    failGeneration("HTML generator requires <track kind=subtitles> to have srclang");
+  }
   const linkAsValues = pipe(
     MutableHashMap.get(enumValues, "link/as"),
     O.getOrElse((): Array<string> => []),

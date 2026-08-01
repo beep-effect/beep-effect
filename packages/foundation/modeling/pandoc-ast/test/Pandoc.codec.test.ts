@@ -288,6 +288,47 @@ describe("Pandoc.codec", () => {
     expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
   });
 
+  it("rejects malformed caption, head, and foot slots with exact lossless diagnostics", () => {
+    const attr = ["", [], []];
+    const malformed = [
+      {
+        constructor: "Table",
+        payload: [attr, [{ c: [], t: "Plain" }], [], [attr, []], [], [attr, []]],
+        pointer: "/blocks/0/c/1",
+      },
+      {
+        constructor: "TableCaption",
+        payload: [attr, { c: [null, []], t: "TableCaption" }, [], [attr, []], [], [attr, []]],
+        pointer: "/blocks/0/c/1",
+      },
+      {
+        constructor: "Table",
+        payload: [attr, [null, []], [], [], [], [attr, []]],
+        pointer: "/blocks/0/c/3",
+      },
+      {
+        constructor: "Table",
+        payload: [attr, [null, []], [], [attr, []], [], []],
+        pointer: "/blocks/0/c/5",
+      },
+    ];
+
+    for (const { constructor, payload, pointer } of malformed) {
+      const wire = {
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [{ c: payload, t: "Table" }],
+        meta: {},
+      };
+
+      expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+      const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        [constructor, "block", pointer],
+      ]);
+      expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+    }
+  });
+
   it("uses the semantic table schema at the strict decoder boundary", () =>
     fc.assert(
       fc.property(PandocTablePayloadArbitrary, (payload) => {
@@ -921,7 +962,7 @@ describe("Pandoc.codec", () => {
       })
     ));
 
-  it("decodes table attributes and captions from Pandoc table payloads", () =>
+  it("decodes authentic Pandoc 1.23.1 table attributes, captions, heads, and feet", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const document = yield* decodePandocJson({
@@ -930,11 +971,11 @@ describe("Pandoc.codec", () => {
             {
               c: [
                 ["table-id", ["wide"], [["custom-style", "EvidenceTable"]]],
-                [{ c: [{ c: "Evidence", t: "Str" }], t: "Plain" }],
+                [[{ c: "Evidence", t: "Str" }], [{ c: [{ c: "Long caption", t: "Str" }], t: "Plain" }]],
                 [],
+                [["", [], []], []],
                 [],
-                [],
-                [],
+                [["", [], []], []],
               ],
               t: "Table",
             },
@@ -960,50 +1001,6 @@ describe("Pandoc.codec", () => {
         expect(table.caption[0]?._tag).toBe("str");
         if (table.caption[0]?._tag === "str") {
           expect(table.caption[0].text).toBe("Evidence");
-        }
-      })
-    ));
-
-  it("decodes Pandoc TableCaption constructor payloads", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const document = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                ["", [], []],
-                {
-                  c: [
-                    null,
-                    [
-                      {
-                        c: [{ c: "Constructor caption", t: "Str" }],
-                        t: "Plain",
-                      },
-                    ],
-                  ],
-                  t: "TableCaption",
-                },
-                [],
-                [],
-                [],
-                [],
-              ],
-              t: "Table",
-            },
-          ],
-          meta: {},
-        });
-        const table = document.blocks[0];
-
-        expect(table?._tag).toBe("table");
-        if (table?._tag !== "table") {
-          return;
-        }
-        expect(table.caption[0]?._tag).toBe("str");
-        if (table.caption[0]?._tag === "str") {
-          expect(table.caption[0].text).toBe("Constructor caption");
         }
       })
     ));

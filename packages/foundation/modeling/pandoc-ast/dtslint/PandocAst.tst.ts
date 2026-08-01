@@ -111,7 +111,7 @@ describe("@beep/pandoc-ast public types", () => {
     expect<keyof Table.Encoded>().type.toBe<"_tag" | "payload">();
     expect(
       Table.make({
-        payload: [["", [], []], [], [], [], [], []],
+        payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
       })
     ).type.toBe<Table>();
   });

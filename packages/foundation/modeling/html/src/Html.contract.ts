@@ -8,11 +8,18 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { Document, Fragment, HtmlChild, Html as HtmlElement } from "./Html.model.ts";
-import { Comment } from "./Html.nodes.ts";
+import { Fragment, HtmlChild, Html as HtmlElement } from "./Html.model.ts";
+import { Comment, Doctype } from "./Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.contract");
+const DocumentChild = S.Union([HtmlElement, Comment]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("HtmlDocumentChild", {
+    description: "Comment or html document-element node.",
+  })
+);
 
 /**
  * Any node permitted as an element or fragment child.
@@ -65,13 +72,7 @@ export type HtmlChildNode = HtmlChild.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const HtmlDocumentChild = S.Union([HtmlElement, Comment]).pipe(
-  S.toTaggedUnion("_tag"),
-  $I.annoteSchema("HtmlDocumentChild", {
-    description: "Comment or html document-element node.",
-  }),
-  S.revealCodec
-);
+export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
 
 /**
  * Decoded type of {@link HtmlDocumentChild}.
@@ -96,36 +97,35 @@ export const HtmlDocumentChild = S.Union([HtmlElement, Comment]).pipe(
 export type HtmlDocumentChild = typeof HtmlDocumentChild.Type;
 
 /**
- * Canonical public name for the HTML document root schema.
+ * Canonical HTML document root schema.
+ *
+ * Unlike the broad generated `Document` model used for lossless decoding and
+ * diagnostics, this boundary admits only comments and the `html` document
+ * element as direct children. Cardinality and ordering remain the responsibility
+ * of `conform`.
  *
  * @example
  * ```ts
  * import { HtmlDocument } from "@beep/html/Html.contract"
+ * import { Html } from "@beep/html/Html.model"
  *
- * const document = HtmlDocument.make({ children: [] })
+ * const document = HtmlDocument.make({ children: [Html.make({ children: [] })] })
  * console.log(document._tag) // "#document"
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const HtmlDocument = Document;
-
-/**
- * Decoded type of {@link HtmlDocument}.
- *
- * @example
- * ```ts
- * import type { HtmlDocument } from "@beep/html/Html.contract"
- *
- * const childCount = (document: HtmlDocument) => document.children.length
- * console.log(typeof childCount) // "function"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type HtmlDocument = Document.Type;
+export class HtmlDocument extends S.TaggedClass<HtmlDocument>($I`HtmlDocument`)(
+  "#document",
+  {
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    children: S.Array(DocumentChild),
+  },
+  $I.annote("HtmlDocument", {
+    description: "Canonical HTML document root with document-only direct children.",
+  })
+) {}
 
 /**
  * Canonical public name for the HTML fragment root schema.

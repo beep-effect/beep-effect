@@ -17,7 +17,9 @@ content metadata, and exact tag unions.
 
 - `HtmlChildNode` is any element/fragment child.
 - `HtmlDocumentChild` is a comment or the `html` document element.
-- `HtmlDocument` and `HtmlFragment` are the canonical root names.
+- `HtmlDocument` directly enforces `HtmlDocumentChild`; the generated
+  `Document` remains broad for lossless decoding and diagnostics.
+- `HtmlFragment` is the canonical fragment root name.
 - `HtmlRoot` covers document, fragment, element, text, comment, and foreign
   roots.
 - `HtmlNode` additionally includes standalone doctype nodes.
@@ -151,6 +153,10 @@ pairing, lazy `auto` eligibility, and the `<picture>` source/following-image
 relationship at exact attribute paths. `link[sizes]` remains the distinct icon
 sizes grammar; it is never interpreted as `imagesizes`. The exact specialized
 microsyntax inventory is generated as `HTML_ATTRIBUTE_SYNTAXES`.
+
+Generated cross-attribute rules also require `srclang` when a `track` uses
+`kind="subtitles"`; missing singleton attributes are reported at their exact
+attribute path.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text

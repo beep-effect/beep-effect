@@ -744,11 +744,11 @@ describe("Pandoc.mapping", () => {
             {
               c: [
                 ["", [], []],
-                [{ c: [{ c: "wide", t: "Str" }, { t: "SoftBreak" }, { c: "caption", t: "Str" }], t: "Plain" }],
+                [null, [{ c: [{ c: "wide", t: "Str" }, { t: "SoftBreak" }, { c: "caption", t: "Str" }], t: "Plain" }]],
                 [],
+                [["", [], []], []],
                 [],
-                [],
-                [],
+                [["", [], []], []],
               ],
               t: "Table",
             },

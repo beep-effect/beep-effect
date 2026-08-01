@@ -167,6 +167,21 @@ describe("@beep/html numeric and id conformance", () => {
       expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
     }
 
+    const subtitlesWithoutLanguage = Video.make({
+      children: [Track.make({ kind: O.some("subtitles"), src: O.some("/captions.vtt") })],
+    });
+    expect(issuesAtPath(subtitlesWithoutLanguage, ["children.0", "attributes.srclang"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+    expect(Exit.isFailure(Effect.runSyncExit(conform(subtitlesWithoutLanguage)))).toBe(true);
+    expect(
+      inspectConformance(
+        Video.make({
+          children: [Track.make({ kind: O.some("subtitles"), src: O.some("/captions.vtt"), srclang: O.some("en") })],
+        })
+      )
+    ).toStrictEqual([]);
+
     const duplicateMaps = Fragment.make({
       children: [
         MapElement.make({ children: [], name: O.some("duplicate") }),
@@ -530,7 +545,7 @@ describe("@beep/html generated special-child grammars", () => {
   });
 
   it("enforces generated parent-context requirements for source attributes", () => {
-    for (const root of [
+    const invalid = [
       Audio.make({ children: [Source.make({})] }),
       Video.make({ children: [Source.make({})] }),
       Audio.make({
@@ -554,10 +569,19 @@ describe("@beep/html generated special-child grammars", () => {
           Img.make({ alt: O.some("image"), src: O.some("/image.png") }),
         ],
       }),
-    ]) {
-      expect(inspectConformance(root)).toContainEqual(
-        expect.objectContaining({ path: ["children.0", "attributes"], rule: "attributeRelationship" })
-      );
+    ];
+    const paths = [
+      ["children.0", "attributes.src"],
+      ["children.0", "attributes.src"],
+      ["children.0", "attributes"],
+      ["children.0", "attributes"],
+      ["children.0", "attributes"],
+      ["children.0", "attributes"],
+      ["children.0", "attributes.srcset"],
+      ["children.0", "attributes"],
+    ];
+    for (const [root, path] of A.zip(invalid, paths)) {
+      expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "attributeRelationship" }));
       expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
     }
 

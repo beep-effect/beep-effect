@@ -857,6 +857,63 @@ describe("editor contract hardening", { concurrent: false }, () => {
     })
   );
 
+  it.effect.each([
+    ["modern", { code: "Enter", isComposing: true, key: "Enter", keyCode: 13 }],
+    ["legacy", { code: "Enter", isComposing: false, key: "Enter", keyCode: 229 }],
+  ] as const)(
+    "keeps %s IME Enter from selecting a visible mention option",
+    Effect.fnUntraced(function* (signal, event) {
+      const onSend = vi.fn(() => true);
+      render(
+        <ChatComposer
+          namespace={`ime-open-mention-${signal}`}
+          mentionSource={() => [{ id: "first", label: "First" }]}
+          mountConfig={{ onSend }}
+        >
+          <SeedEditor label={`Seed ${signal} composed mention`} text="@f" />
+        </ChatComposer>
+      );
+      fireEvent.click(screen.getByRole("button", { name: `Seed ${signal} composed mention` }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /First/u }));
+      const editor = screen.getByRole("combobox", { name: "Message composer" });
+
+      fireEvent.keyDown(editor, event);
+
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(screen.getByRole("option", { name: /First/u })).toBeInTheDocument();
+          expect(editor).toHaveTextContent("@f");
+        })
+      );
+      expect(onSend).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "still selects a visible mention option on ordinary Enter",
+    Effect.fnUntraced(function* () {
+      const onSend = vi.fn(() => true);
+      render(
+        <ChatComposer
+          namespace="ordinary-enter-open-mention"
+          mentionSource={() => [{ id: "first", label: "First" }]}
+          mountConfig={{ onSend }}
+        >
+          <SeedEditor label="Seed ordinary mention" text="@f" />
+        </ChatComposer>
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Seed ordinary mention" }));
+      yield* Effect.promise(() => screen.findByRole("option", { name: /First/u }));
+      const editor = screen.getByRole("combobox", { name: "Message composer" });
+
+      fireEvent.keyDown(editor, { code: "Enter", key: "Enter", keyCode: 13 });
+
+      yield* Effect.promise(() => waitFor(() => expect(editor).toHaveTextContent("@First")));
+      expect(screen.queryByRole("option", { name: /First/u })).not.toBeInTheDocument();
+      expect(onSend).not.toHaveBeenCalled();
+    })
+  );
+
   it("suppresses both modern and legacy IME Enter paths through the mounted composer", () => {
     const onSend = vi.fn(() => true);
     render(

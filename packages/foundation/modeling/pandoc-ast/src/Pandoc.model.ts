@@ -2183,12 +2183,7 @@ const PandocTableCaptionPairWire = S.Tuple([
   PandocInlineWire.pipe(S.Array, S.NullOr),
   S.Array(DeferredPandocBlockWire),
 ]);
-const PandocTableCaptionWire = S.Union([
-  pandocConstructorWithPayload("TableCaption", PandocTableCaptionPairWire),
-  PandocTableCaptionPairWire,
-  S.Array(DeferredPandocBlockWire),
-  PandocFutureConstructorWire,
-]);
+const PandocTableCaptionWire = S.Union([PandocTableCaptionPairWire, PandocFutureConstructorWire]);
 const PandocTableColumnSpecWire = S.Union([
   S.Tuple([PandocTableAlignmentWire, PandocTableColumnWidthWire]),
   PandocFutureConstructorWire,
@@ -2203,7 +2198,6 @@ const PandocTableRowWire = S.Union([
 ]);
 const PandocTableHeadOrFootWire = S.Union([
   S.Tuple([PandocAttrPayload, S.Array(PandocTableRowWire)]),
-  S.Tuple([]),
   PandocFutureConstructorWire,
 ]);
 const PandocTableBodyWire = S.Union([
@@ -2257,12 +2251,7 @@ const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
     futureConstructor
   );
   const captionPair = fc.tuple(fc.option(fc.array(inline), { nil: null }), fc.array(block));
-  const caption = fc.oneof(
-    fc.array(block),
-    captionPair,
-    captionPair.map((c) => S.Json.make({ c, t: "TableCaption" })),
-    futureConstructor
-  );
+  const caption = fc.oneof(captionPair, futureConstructor);
   const alignment = fc.oneof(
     fc.constantFrom("AlignLeft", "AlignRight", "AlignCenter", "AlignDefault").map((t) => S.Json.make({ t })),
     futureConstructor
@@ -2275,7 +2264,7 @@ const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
   const columnSpec = fc.oneof(fc.tuple(alignment, columnWidth), futureConstructor);
   const cell = fc.oneof(fc.tuple(attr, alignment, fc.integer(), fc.integer(), fc.array(block)), futureConstructor);
   const row = fc.oneof(fc.tuple(attr, fc.array(cell)), futureConstructor);
-  const headOrFoot = fc.oneof(fc.constant([]), fc.tuple(attr, fc.array(row)), futureConstructor);
+  const headOrFoot = fc.oneof(fc.tuple(attr, fc.array(row)), futureConstructor);
   const body = fc.oneof(fc.tuple(attr, fc.integer(), fc.array(row), fc.array(row)), futureConstructor);
 
   return fc
@@ -2310,7 +2299,14 @@ const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCapt
  * ```ts
  * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const payload = PandocTablePayload.make([["", [], []], [], [], [], [], []])
+ * const payload = PandocTablePayload.make([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
  * console.log(payload.length) // 6
  * ```
  *
@@ -2347,7 +2343,14 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const decoded = S.decodeUnknownResult(PandocTablePayload)([["", [], []], [], [], [], [], []])
+ * const decoded = S.decodeUnknownResult(PandocTablePayload)([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
  * if (Result.isSuccess(decoded)) {
  *   const payload: PandocTablePayload = decoded.success
  *   console.log(payload.length) // 6
@@ -2388,25 +2391,14 @@ const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocIn
     A.emptyReadonly
   );
 
-const tableCaptionInlinesFromBlocksWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.match(decodePandocJsonArrayOption(input), {
+const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
+  O.match(decodePandocTableCaptionPairOption(input), {
     onNone: A.emptyReadonly,
-    onSome: (blocks) => A.flatMap(blocks, tableCaptionInlinesFromBlockWire),
-  });
-
-const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> => {
-  const unwrapped = O.match(decodePandocConstructorOption(input), {
-    onNone: () => input,
-    onSome: (wire) => (wire.t === "TableCaption" ? (wire.c ?? null) : input),
-  });
-  return O.match(decodePandocTableCaptionPairOption(unwrapped), {
-    onNone: () => tableCaptionInlinesFromBlocksWire(unwrapped),
     onSome: ([shortCaption, longCaption]) => {
       const short = shortCaption === null ? [] : A.getSomes(A.map(shortCaption, tableCaptionInlineFromWire));
       return A.isReadonlyArrayNonEmpty(short) ? short : A.flatMap(longCaption, tableCaptionInlinesFromBlockWire);
     },
   });
-};
 
 /**
  * Pandoc table block captured as an explicit gap node.
@@ -2415,7 +2407,9 @@ const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type
  * ```ts
  * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = Table.make({ payload: [["", [], []], [], [], [], [], []] })
+ * const node = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
  * console.log(node._tag) // "table"
  * ```
  *
@@ -2462,7 +2456,9 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
  * ```ts
  * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: Table.Type = Table.make({ payload: [["", [], []], [], [], [], [], []] })
+ * const node: Table.Type = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
  * console.log(node._tag) // "table"
  * ```
  *

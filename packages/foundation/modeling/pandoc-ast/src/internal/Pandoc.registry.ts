@@ -228,7 +228,7 @@ const PandocKnownConstructorName = S.Union([
   S.Literal("TableCaption"),
 ]).pipe(
   $I.annoteSchema("PandocKnownConstructorName", {
-    description: "Exhaustive Pandoc 1.23.1 constructor-name registry plus the supported TableCaption wire alias.",
+    description: "Exhaustive Pandoc 1.23.1 constructor-name registry plus the reserved legacy TableCaption alias.",
   })
 );
 
@@ -241,7 +241,6 @@ const PandocSupportedConstructorName = S.Union([
   PandocMathType,
   PandocListNumberStyle,
   PandocListNumberDelimiter,
-  S.Literal("TableCaption"),
 ]).pipe(
   $I.annoteSchema("PandocSupportedConstructorName", {
     description: "Pandoc constructor names represented by the strict semantic model or its structural slots.",

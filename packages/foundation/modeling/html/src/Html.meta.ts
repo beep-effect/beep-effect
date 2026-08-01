@@ -4597,7 +4597,14 @@ const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlEle
     obsoleteAttributes: [],
     conditionalCategories: [],
     attributeEqualities: [],
-    attributeRequirements: [{ message: "<track> requires src", required: [["src"]] }],
+    attributeRequirements: [
+      { message: "<track> requires src", required: [["src"]] },
+      {
+        message: '<track kind="subtitles"> requires srclang',
+        required: [["srclang"]],
+        when: { _tag: "attributeEquals", attribute: "kind", value: "subtitles" },
+      },
+    ],
     numericAttributeRelationships: [],
     rules: {},
     uniqueAttributes: [],

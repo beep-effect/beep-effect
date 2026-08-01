@@ -1139,8 +1139,17 @@ const inspectAttributeRelationships = (
             Match.exhaustive
           );
     const applies = appliesToParent && appliesToAttributes;
-    const missesRequired = !A.every(requirement.required, (alternatives) =>
-      A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
+    const missingRequired = A.filter(
+      requirement.required,
+      (alternatives) => !A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
+    );
+    const missesRequired = A.isReadonlyArrayNonEmpty(missingRequired);
+    const missingAttribute = pipe(
+      requirement.required,
+      A.get(0),
+      O.filter((alternatives) => A.length(requirement.required) === 1 && A.length(alternatives) === 1),
+      O.flatMap(A.get(0)),
+      O.filter((attribute) => !hasAttribute(attributes[attribute]))
     );
     const hasForbidden = pipe(
       requirement.forbidden,
@@ -1188,7 +1197,19 @@ const inspectAttributeRelationships = (
       )
     );
     return applies && (missesRequired || hasForbidden || hasBlank || hasConstraintViolation || hasInvalidUrl)
-      ? [makeIssue(A.append(path, "attributes"), "attributeRelationship", requirement.message)]
+      ? [
+          makeIssue(
+            pipe(
+              missingAttribute,
+              O.match({
+                onNone: () => A.append(path, "attributes"),
+                onSome: (attribute) => A.append(path, `attributes.${attribute}`),
+              })
+            ),
+            "attributeRelationship",
+            requirement.message
+          ),
+        ]
       : A.emptyReadonly();
   });
   const equalityIssues = A.flatMap(meta.attributeEqualities, (equality) =>

@@ -37,6 +37,12 @@ slots. `Cite`, `Figure`, and `Row` therefore fail strict decoding until modeled,
 while lossless decoding reports them and preserves their exact wire. Only names
 absent from the pinned registry become `Unknown*` nodes.
 
+The historical tagged `TableCaption` alias is reserved but unsupported. Pandoc
+1.23.1 encodes `Caption`, `TableHead`, and `TableFoot` structurally as
+`[Maybe [Inline], [Block]]` and `[Attr, [Row]]`; the strict profile rejects the
+tagged alias and malformed shorthand arrays while the lossless profile retains
+and reports them.
+
 The shorter `decodePandocJson` and `decodePandocJsonString` names remain aliases
 of their strict counterparts.
 

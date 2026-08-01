@@ -5,12 +5,21 @@ import {
   ELEMENT_META,
   GlobalAttributesStruct,
   Html,
+  HtmlDocument,
   HtmlElementMeta,
   HtmlFragment,
   HtmlNode,
   Text,
 } from "@beep/html";
-import { Div, Input, Marquee, Script, Span } from "@beep/html/Html.model";
+import {
+  Div,
+  Html as HtmlElement,
+  Input,
+  Document as LosslessDocument,
+  Marquee,
+  Script,
+  Span,
+} from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
@@ -47,6 +56,42 @@ describe("HtmlNode AST — structure & nodes", () => {
     const conformant = Effect.runSync(Html.Conformant.decode(root));
     expect(Html.Safe.issues(conformant)).toStrictEqual([]);
     expect(() => Effect.runSync(Html.Safe.decode(conformant))).not.toThrow();
+  });
+
+  it("narrows canonical document children without weakening the lossless document", () => {
+    const comment = Comment.make({ value: "before root" });
+    const documentElement = HtmlElement.make({ children: [] });
+    const canonical = {
+      _tag: "#document",
+      children: [
+        { _tag: "#comment", value: "before root" },
+        { _tag: "html", children: [] },
+      ],
+    };
+    const diagnostic = { _tag: "#document", children: [{ _tag: "div", children: [] }] };
+    const excludedChildren = [
+      { encoded: { _tag: "div", children: [] }, type: Div.make({ children: [] }) },
+      { encoded: { _tag: "#fragment", children: [] }, type: HtmlFragment.make({ children: [] }) },
+      { encoded: { _tag: "#document", children: [] }, type: LosslessDocument.make({ children: [] }) },
+      { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
+    ];
+
+    expect(Result.isSuccess(S.decodeUnknownResult(HtmlDocument)(canonical))).toBe(true);
+    expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
+    for (const { encoded, type } of excludedChildren) {
+      expect(Result.isFailure(S.decodeUnknownResult(HtmlDocument)({ _tag: "#document", children: [encoded] }))).toBe(
+        true
+      );
+      expect(() =>
+        HtmlDocument.make({
+          // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
+          children: [type],
+        })
+      ).toThrow();
+    }
+
+    expect(Result.isSuccess(S.decodeUnknownResult(LosslessDocument)(diagnostic))).toBe(true);
+    expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
   it("decodes and re-encodes a nested tree (JSON identity)", () => {

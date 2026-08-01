@@ -534,7 +534,6 @@ const decodeBlockItemsWire = S.decodeUnknownEffect(BlockItemsWire);
 const decodeTablePayloadWire = S.decodeUnknownEffect(PandocTablePayload);
 const decodeLosslessTablePayloadWire = S.decodeUnknownEffect(LosslessTablePayloadWire);
 const decodeTableCaptionPairWire = S.decodeUnknownEffect(TableCaptionPairWire);
-const decodeTableCaptionPairOption = S.decodeUnknownOption(TableCaptionPairWire);
 const decodeTableColumnSpecWire = S.decodeUnknownEffect(TableColumnSpecWire);
 const decodeTableCellWire = S.decodeUnknownEffect(TableCellWire);
 const decodeTableRowWire = S.decodeUnknownEffect(TableRowWire);
@@ -1341,21 +1340,13 @@ const inspectTableCaptionPair = (
     (shortIssues, longIssues) => [...shortIssues, ...longIssues]
   );
 
-const inspectTableCaptionPayload = (input: unknown, path: JsonPathType): LosslessInspection =>
-  O.match(decodeTableCaptionPairOption(input), {
-    onNone: () => inspectBlockArray(input, path, "block", "Table", path),
-    onSome: (caption) => inspectTableCaptionPair(caption, path),
-  });
-
 const inspectTableCaption = (input: unknown, path: JsonPathType): LosslessInspection =>
   O.match(decodeConstructorOption(input), {
-    onNone: () => inspectTableCaptionPayload(input, path),
-    onSome: (wire) =>
-      wire.t === "TableCaption"
-        ? inspectDecoded(decodeTableCaptionPairWire(wire.c), "block", wire.t, path, (caption) =>
-            inspectTableCaptionPair(caption, appendPath(path, "c"))
-          )
-        : inspectUnmatchedConstructor(wire, "block", path),
+    onNone: () =>
+      inspectDecoded(decodeTableCaptionPairWire(input), "block", "Table", path, (caption) =>
+        inspectTableCaptionPair(caption, path)
+      ),
+    onSome: (wire) => inspectUnmatchedConstructor(wire, "block", path),
   });
 
 const inspectTableColumnSpec = (input: unknown, path: JsonPathType): LosslessInspection =>
@@ -1391,13 +1382,11 @@ const inspectTableRows = (rows: ReadonlyArray<unknown>, path: JsonPathType): Los
   inspectChildren(rows, path, inspectTableRow);
 
 const inspectTableHeadOrFoot = (input: unknown, path: JsonPathType): LosslessInspection =>
-  A.isArray(input) && A.isReadonlyArrayEmpty(input)
-    ? Effect.succeed([])
-    : inspectTableComponent(input, path, (value, sectionPath) =>
-        inspectDecoded(decodeTableHeadWire(value), "block", "Table", sectionPath, ([, rows]) =>
-          inspectTableRows(rows, appendPath(sectionPath, 1))
-        )
-      );
+  inspectTableComponent(input, path, (value, sectionPath) =>
+    inspectDecoded(decodeTableHeadWire(value), "block", "Table", sectionPath, ([, rows]) =>
+      inspectTableRows(rows, appendPath(sectionPath, 1))
+    )
+  );
 
 const inspectTableBody = (input: unknown, path: JsonPathType): LosslessInspection =>
   inspectTableComponent(input, path, (value, bodyPath) =>

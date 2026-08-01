@@ -701,8 +701,10 @@ const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sen
  * `KEY_ENTER_COMMAND` at `COMMAND_PRIORITY_HIGH` (torn down via the atom
  * finalizer) and applies the configured send policy:
  *
- * - bail when a typeahead menu is open (the lower-priority menu takes Enter),
- * - bail during IME composition (`isComposing` / keyCode 229),
+ * - during IME composition (`isComposing` / keyCode 229), consume the Lexical
+ *   command only when a visible menu would otherwise select an option; with no
+ *   visible menu, yield to the ordinary composition path,
+ * - yield non-IME Enter to a visible typeahead menu for option selection,
  * - `sendOn="enter"` ⇒ plain Enter sends (any modifier inserts a newline),
  * - `sendOn="modifierEnter"` ⇒ Cmd/Ctrl+Enter sends (plain Enter newlines).
  *
@@ -732,19 +734,21 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
       editor.registerCommand(
         KEY_ENTER_COMMAND,
         // Enter handling is a single priority-ordered interaction state machine:
-        // menu ownership, IME composition, newline policy, then send dispatch.
+        // visible-menu/IME ownership, newline policy, then send dispatch.
         // Keeping that ordering together makes Lexical command consumption
         // auditable and avoids splitting event ownership across callbacks.
-        // fallow-ignore-next-line complexity -- Enter orders menu, IME, code-block, newline, and send ownership
+        // fallow-ignore-next-line complexity -- Enter orders visible-menu/IME, code-block, newline, and send ownership
         (event) => {
           if (event === null) return false;
-          // Yield Enter to a typeahead only when one is *actually* on screen.
-          // The open flags are plugin-reported and can go stale (a menu whose
-          // trigger vanished may never fire `onClose`); trusting the flag alone
-          // let a stale `true` silently swallow every Enter, with no visible
-          // menu and no way to send.
-          if (isTypeaheadMenuVisible(editor)) return false;
-          if (isImeComposing(event)) return false;
+          // Confirm menu ownership against the DOM: plugin-reported open flags
+          // can go stale after a trigger vanishes. An IME Enter with a visible
+          // menu must consume this Lexical command (without preventing the
+          // browser's composition default), or Lexical's lower-priority menu
+          // handler selects the highlighted option. With no visible menu, keep
+          // yielding so the ordinary composition path remains unchanged.
+          const visibleTypeahead = isTypeaheadMenuVisible(editor);
+          if (isImeComposing(event)) return visibleTypeahead;
+          if (visibleTypeahead) return false;
           // A code block owns Enter: inside one the keystroke is a newline, or the
           // block the fence just opened could only ever hold a single line. That
           // spends the send gesture, so Cmd/Ctrl+Enter becomes an explicit send here
