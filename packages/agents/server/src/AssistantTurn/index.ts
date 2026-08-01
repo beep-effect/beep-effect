@@ -53,12 +53,15 @@ export * from "./AnthropicTurnKernel.ts";
  * @example
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
+ * import { Response } from "effect/unstable/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>
- *   Effect.succeed(
- *     '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}'
- *   )
+ *   Effect.succeed(AnthropicToolJsonResponse.make({
+ *     paramsJson: '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}',
+ *     usage: Response.Usage.make({ inputTokens: { total: 4 }, outputTokens: { total: 2 } }),
+ *   }))
  * )
  * const issue = IssueReport.make({
  *   index: 0,
@@ -66,7 +69,7 @@ export * from "./AnthropicTurnKernel.ts";
  *   report: "/children/0/text Expected string",
  * })
  *
- * Effect.runPromise(repair([issue])).then((blocks) => console.log(blocks.length)) // 1
+ * Effect.runPromise(repair([issue])).then((result) => console.log(result.blocks.length)) // 1
  * ```
  *
  * @category combinators

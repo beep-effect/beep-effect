@@ -10,12 +10,19 @@
  */
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
+import { NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import {
+  AssistantTurnBlockEvent,
+  AssistantTurnFinalization,
+  IndexedBlock,
+  ProviderUsageMetadata,
+} from "./AssistantTurn.contracts.ts";
 import { AgentTurnKernel } from "./AssistantTurn.kernel.ts";
-import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
+import type { AssistantTurnEvent, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
 
 const decodeBlock = S.decodeUnknownSync(AssistantBlock);
 
@@ -84,12 +91,53 @@ export const fixtureBlocksFor = (history: ReadonlyArray<TurnHistoryItem>): Reado
   );
 
 const toIndexedBlocks = (history: ReadonlyArray<TurnHistoryItem>): ReadonlyArray<IndexedBlock> =>
-  A.map(fixtureBlocksFor(history), (block, index) => ({ index, block }));
+  A.map(fixtureBlocksFor(history), (block, index) => IndexedBlock.make({ index, block }));
+
+/**
+ * Exact provider usage emitted by every deterministic fixture turn.
+ *
+ * @example
+ * ```ts
+ * import { fixtureProviderUsage } from "@beep/agents-use-cases/proof"
+ *
+ * console.log(fixtureProviderUsage.inputTokens) // 12
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureProviderUsage = ProviderUsageMetadata.make({
+  inputTokens: NonNegativeInt.make(12),
+  model: "fixture",
+  outputTokens: NonNegativeInt.make(8),
+  provider: "fixture",
+  stopReason: O.some("stop"),
+});
+
+/**
+ * Build the fixture kernel's completed block events and terminal usage signal.
+ *
+ * @example
+ * ```ts
+ * import { fixtureEventsFor } from "@beep/agents-use-cases/proof"
+ *
+ * console.log(fixtureEventsFor([{ role: "user", text: "hi" }])[4]?.type) // "finalization"
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureEventsFor = (history: ReadonlyArray<TurnHistoryItem>): ReadonlyArray<AssistantTurnEvent> =>
+  A.append(
+    A.map(toIndexedBlocks(history), (block) => AssistantTurnBlockEvent.make({ block })),
+    AssistantTurnFinalization.make({ usage: fixtureProviderUsage })
+  );
 
 /**
  * Deterministic, total fixture {@link AgentTurnKernel} Layer with no
  * requirements and no real LLM. Its `streamTurn` emits the
- * {@link fixtureBlocksFor} sequence as an indexed stream.
+ * {@link fixtureBlocksFor} sequence as indexed block events followed by the
+ * deterministic {@link fixtureProviderUsage} finalization signal.
  *
  * @example
  * ```ts
@@ -103,15 +151,15 @@ const toIndexedBlocks = (history: ReadonlyArray<TurnHistoryItem>): ReadonlyArray
  *     kernel.streamTurn([{ role: "user", text: "hello" }])
  *   )
  *
- *   return blocks.map((block) => block.index)
+ *   return blocks.map((event) => event.type)
  * }).pipe(Effect.provide(FixtureTurnKernel))
  *
- * Effect.runPromise(program).then(console.log) // [0, 1, 2, 3]
+ * Effect.runPromise(program).then(console.log) // ["block", "block", "block", "block", "finalization"]
  * ```
  *
  * @category fixtures
  * @since 0.0.0
  */
 export const FixtureTurnKernel: Layer.Layer<AgentTurnKernel> = Layer.succeed(AgentTurnKernel)({
-  streamTurn: (history) => Stream.fromIterable(toIndexedBlocks(history)),
+  streamTurn: (history) => Stream.fromIterable(fixtureEventsFor(history)),
 });

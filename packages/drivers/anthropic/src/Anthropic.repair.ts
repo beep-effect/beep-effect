@@ -5,16 +5,22 @@
  * @since 0.0.0
  */
 
+import { $AnthropicId } from "@beep/identity";
 import { PosInt } from "@beep/schema";
-import { Duration, Effect, ExecutionPlan, Schedule, Stream } from "effect";
+import { Duration, Effect, ExecutionPlan, pipe, Schedule, Stream } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AiError, LanguageModel } from "effect/unstable/ai";
+import { AiError, LanguageModel, Response } from "effect/unstable/ai";
 import { AnthropicLanguageModelOptions } from "./Anthropic.config.ts";
 import { RepairError } from "./Anthropic.errors.ts";
 import { makeAnthropicLanguageModelLayer } from "./Anthropic.service.ts";
 import type { Config } from "effect";
-import type { Response, Tool, Toolkit } from "effect/unstable/ai";
+import type { Tool, Toolkit } from "effect/unstable/ai";
 import type { GenerateTextOptions } from "effect/unstable/ai/LanguageModel";
+
+const $I = $AnthropicId.create("Anthropic.repair");
 
 /**
  * Small Claude model used for forced-tool repair calls.
@@ -182,7 +188,95 @@ export const collectToolParamsJson = <Tools extends Record<string, Tool.Any>, E,
   );
 
 /**
- * Run a forced-tool Anthropic call and return the streamed tool-params JSON.
+ * Tool-parameter JSON plus provider-reported usage from one Anthropic repair call.
+ *
+ * @example
+ * ```ts
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
+ * import { Response } from "effect/unstable/ai"
+ *
+ * const result = AnthropicToolJsonResponse.make({
+ *   paramsJson: '{"repairs":[]}',
+ *   usage: Response.Usage.make({
+ *     inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 4, uncached: 4 },
+ *     outputTokens: { reasoning: undefined, text: 2, total: 2 },
+ *   }),
+ * })
+ * console.log(result.paramsJson)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AnthropicToolJsonResponse extends S.Class<AnthropicToolJsonResponse>($I`AnthropicToolJsonResponse`)(
+  {
+    paramsJson: S.String.annotateKey({ description: "Collected forced-tool parameter JSON." }),
+    usage: Response.Usage.annotateKey({ description: "Provider-reported token usage for the repair call." }),
+  },
+  $I.annote("AnthropicToolJsonResponse", {
+    description: "Collected forced-tool parameter JSON and provider usage for one Anthropic repair call.",
+  })
+) {}
+
+const isFinishPart = <Tools extends Record<string, Tool.Any>>(
+  part: Response.StreamPart<Tools>
+): part is Response.FinishPart => part.type === "finish";
+
+const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>>(
+  part: Response.StreamPart<Tools>
+): part is Response.ToolParamsDeltaPart => part.type === "tool-params-delta";
+
+/**
+ * Collect forced-tool params and the terminal provider usage from a streamed repair response.
+ *
+ * @remarks
+ * Tool-parameter collection stops at the first `tool-params-end`, while the
+ * stream itself is consumed through its terminal `finish` part so usage is not
+ * discarded.
+ *
+ * @example
+ * ```ts
+ * import { collectToolParamsJsonWithUsage } from "@beep/anthropic"
+ * import { Effect, Stream } from "effect"
+ * import { Response } from "effect/unstable/ai"
+ *
+ * const parts: Stream.Stream<Response.StreamPart<{}>> = Stream.fromIterable([])
+ *
+ * const program = Effect.gen(function* () {
+ *   const collected = yield* collectToolParamsJsonWithUsage(parts)
+ *   return collected.paramsJson
+ * })
+ * console.log(typeof program)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWithUsage")(function* <
+  Tools extends Record<string, Tool.Any>,
+  E,
+  R,
+>(parts: Stream.Stream<Response.StreamPart<Tools>, E, R>) {
+  const streamParts = A.fromIterable(yield* Stream.runCollect(parts));
+  const paramsJson = pipe(
+    streamParts,
+    A.takeWhile((part) => part.type !== "tool-params-end"),
+    A.filter(isToolParamsDeltaPart),
+    A.map((part) => part.delta),
+    A.join("")
+  );
+  const finish = A.findLast(streamParts, isFinishPart);
+  if (O.isNone(finish)) {
+    return yield* RepairError.make({
+      message: "Anthropic repair call completed without provider usage metadata",
+      operation: "generate_tool_json",
+    });
+  }
+  return AnthropicToolJsonResponse.make({ paramsJson, usage: finish.value.usage });
+});
+
+/**
+ * Run a forced-tool Anthropic call and return its tool-params JSON and usage.
  *
  * @remarks
  * This uses `streamText` and consumes the tool params whole because the
@@ -216,19 +310,20 @@ export const collectToolParamsJson = <Tools extends Record<string, Tool.Any>, E,
  *
  * @effects
  * - Runs a streamed Anthropic language-model request when the returned Effect is executed.
- * - Consumes tool-parameter deltas until the provider emits `tool-params-end`.
+ * - Collects tool-parameter deltas until the provider emits `tool-params-end`.
+ * - Consumes the terminal `finish` part so provider usage remains attributable.
  *
  * @category combinators
  * @since 0.0.0
  */
 export const generateAnthropicToolJson = <Tools extends Record<string, Tool.Any>>(
   options: GenerateTextOptions<Tools> & { readonly toolkit: Toolkit.Toolkit<Tools> }
-): Effect.Effect<string, RepairError> =>
+): Effect.Effect<AnthropicToolJsonResponse, RepairError> =>
   LanguageModel.streamText({
     ...options,
     disableToolCallResolution: true,
   }).pipe(
     Stream.withExecutionPlan(makeAnthropicRepairPlan(), { preventFallbackOnPartialStream: true }),
-    collectToolParamsJson,
-    Effect.mapError(toRepairError("generate_tool_json"))
+    Stream.mapError(toRepairError("generate_tool_json")),
+    collectToolParamsJsonWithUsage
   );
