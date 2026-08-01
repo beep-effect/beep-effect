@@ -1197,7 +1197,7 @@ export interface IdentityComposer<
    * @since 0.0.0
    * @category combinators
    */
-  key<const Term extends Predicate<Vocab>>(term: Term): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
+  key(term: Predicate<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
   key(options: OntologyKeyOptions<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
 
   /**

@@ -265,6 +265,22 @@ export const TripleValue = S.Tuple([SubjectValue, PredicateString, ObjectValue])
 );
 
 /**
+ * Runtime type for {@link TripleValue}.
+ *
+ * @example
+ * ```ts
+ * import type { TripleValue } from "@beep/ontology"
+ *
+ * const decoded: TripleValue = ["skos:Concept", "rdfs:seeAlso", "http://www.w3.org/2002/07/owl#Thing"]
+ * console.log(decoded[1])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TripleValue = typeof TripleValue.Type;
+
+/**
  * SKOS classification marker recorded on assembled classes.
  *
  * @example
