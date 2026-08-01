@@ -40,25 +40,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
-  data-driven pulse on repo agent friendliness/effectiveness (stage
-  `graduate`, opened 2026-07-14, still active for wave 2): which skills are
-  used or dead, where agent time goes, what blocks mergeable, what eats
-  token spend. Same-day arc: pipeline revived (backfill + 1.0M spans to
-  Phoenix + systemd timer — the feed had been dead since Jun 8/Jul 1), five
-  mining lanes + synthesis in
-  [`research/pulse-report.md`](./agent-effectiveness-pulse/research/pulse-report.md),
-  two grilling rounds closed eleven decisions
-  ([`DECISIONS.md`](./agent-effectiveness-pulse/DECISIONS.md)). **Wave-1
-  graduated 2026-07-14** →
-  [`goals/harness-otel-adoption`](../goals/harness-otel-adoption/README.md)
-  (native harness OTel into dankserver's monitoring collector hub;
-  attribution attributes) +
-  [`goals/harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md)
-  (4 dead skills, cache-prefix eviction, 3 requested laws); forwarder
-  durability landed as `ai-metrics-stack` P7f (v1-blocking, gates P7e).
-  Wave-2 candidates (`yeet-verdict-instrumentation`, `repo-replay-evals`)
-  gate on wave-1 OTel attributes flowing.
 - [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
@@ -297,6 +278,25 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — fully
+  graduated 2026-07-31 (opened 2026-07-14). A data-driven pulse on repo agent
+  friendliness/effectiveness: pipeline revived same-day (backfill + 1.0M spans
+  to Phoenix + systemd timer), five mining lanes + synthesis in
+  [`research/pulse-report.md`](./agent-effectiveness-pulse/research/pulse-report.md),
+  grilling rounds closed twelve decisions
+  ([`DECISIONS.md`](./agent-effectiveness-pulse/DECISIONS.md)). **Wave-1
+  graduated 2026-07-14** →
+  [`goals/harness-otel-adoption`](../goals/harness-otel-adoption/README.md) +
+  [`goals/harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md);
+  forwarder durability landed as `ai-metrics-stack` P7f. **Wave-2 graduated
+  2026-07-31** → one packet,
+  [`goals/coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md),
+  absorbing the ratified `yeet-verdict-instrumentation` + `repo-replay-evals`
+  splits after the 2026-07 Codex bottleneck audit; plan amended via a
+  five-frame `/adhd` run + operator interview (flight-record truth model,
+  Yeet mistrial doctrine, sequence-break notification instrument, five
+  evidence-integrity laws — inventory in the packet's
+  `research/2026-07-31-adhd-amendments.md`).
 - [`effect-jsdoc-quality`](./effect-jsdoc-quality/README.md) — graduated
   2026-07-30 (capture→graduate in one day) into
   [`effect-jsdoc-quality`](../goals/effect-jsdoc-quality/README.md): port
