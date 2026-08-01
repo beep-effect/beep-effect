@@ -154,6 +154,23 @@ const validateDispositionCandidate = (
         )
       );
 
+const validateReceiptCandidate = (
+  receipt: ContradictionReceipt,
+  candidate: ContradictionCandidate
+): Result.Result<ContradictionReceipt, S.SchemaError> =>
+  Eq.equals(receipt.candidateId, candidate.id) &&
+  Eq.equals(receipt.orgId, candidate.orgId) &&
+  !DateTime.isLessThan(receipt.receivedAt, candidate.recordedAt)
+    ? Result.succeed(receipt)
+    : Result.fail(
+        new S.SchemaError(
+          new SchemaIssue.InvalidValue(O.some(receipt.candidateId), {
+            message:
+              "Contradiction receipt must reference the supplied candidate in the same organization and be received at or after candidate.recordedAt.",
+          })
+        )
+      );
+
 /**
  * Convert a contradiction candidate to a database insert.
  *
@@ -214,6 +231,10 @@ export const fromContradictionCandidateRow = (row: unknown): Result.Result<Contr
 /**
  * Convert a contradiction receipt to a database insert.
  *
+ * @remarks
+ * The referenced candidate is required so identity, organization, and
+ * transaction-time ordering are checked before the append-only write.
+ *
  * @example
  * ```ts
  * import { toContradictionReceiptInsert } from "@beep/epistemic-tables/entities/Contradiction"
@@ -224,13 +245,23 @@ export const fromContradictionCandidateRow = (row: unknown): Result.Result<Contr
  * @category mappers
  * @since 0.0.0
  */
-export const toContradictionReceiptInsert = (
-  receipt: ContradictionReceipt
-): Result.Result<ContradictionReceiptInsert, S.SchemaError> =>
-  Result.map(encodeReceipt(receipt), (encoded): ContradictionReceiptInsert => {
-    const { id: _id, ...insert } = encoded;
-    return insert;
-  });
+export const toContradictionReceiptInsert: {
+  (
+    receipt: ContradictionReceipt,
+    candidate: ContradictionCandidate
+  ): Result.Result<ContradictionReceiptInsert, S.SchemaError>;
+  (
+    candidate: ContradictionCandidate
+  ): (receipt: ContradictionReceipt) => Result.Result<ContradictionReceiptInsert, S.SchemaError>;
+} = dual(2, (receipt: ContradictionReceipt, candidate: ContradictionCandidate) =>
+  Result.map(
+    Result.flatMap(validateReceiptCandidate(receipt, candidate), encodeReceipt),
+    (encoded): ContradictionReceiptInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }
+  )
+);
 
 /**
  * Decode a selected contradiction receipt row.

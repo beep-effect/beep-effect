@@ -1043,7 +1043,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 updatedAt: command.recordedAt,
                 updatedByPrincipal: command.receivedBy,
               });
-              const receiptInsert = yield* Effect.fromResult(toContradictionReceiptInsert(receiptSeed));
+              const receiptInsert = yield* Effect.fromResult(toContradictionReceiptInsert(receiptSeed, candidate));
               yield* tx
                 .insert(receiptTable)
                 .values(receiptInsert)

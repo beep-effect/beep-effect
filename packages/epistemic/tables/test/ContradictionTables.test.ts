@@ -34,6 +34,7 @@ import {
 } from "@beep/epistemic-tables/entities/Contradiction";
 import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
@@ -190,7 +191,7 @@ describe("Contradiction candidate row converters", () => {
   });
 
   it("round-trips receipt and disposition rows without generated identifiers", () => {
-    const receiptInsert = Result.getOrThrow(toContradictionReceiptInsert(receipt));
+    const receiptInsert = Result.getOrThrow(toContradictionReceiptInsert(receipt, candidate));
     const dispositionInsert = Result.getOrThrow(toContradictionDispositionInsert(disposition, candidate));
     const decodedReceipt = Result.getOrThrow(fromContradictionReceiptRow({ ...receiptInsert, id: receipt.id }));
     const decodedDisposition = Result.getOrThrow(
@@ -201,6 +202,25 @@ describe("Contradiction candidate row converters", () => {
     expect("id" in dispositionInsert).toBe(false);
     expect(decodedReceipt.receiptKey).toBe(receipt.receiptKey);
     expect(decodedDisposition.decision).toEqual(disposition.decision);
+  });
+
+  it("rejects a receipt that predates or does not reference its supplied candidate", () => {
+    const futureCandidate = ContradictionCandidate.make({
+      ...candidate,
+      recordedAt: DateTime.makeUnsafe(1),
+    });
+    const differentCandidate = ContradictionCandidate.make({
+      ...candidate,
+      id: EpistemicIdentity.ContradictionCandidateId.make(99),
+    });
+    const differentOrganizationReceipt = ContradictionReceipt.make({
+      ...receipt,
+      orgId: SharedIdentity.OrganizationId.make(2),
+    });
+
+    expect(Result.isFailure(toContradictionReceiptInsert(receipt, futureCandidate))).toBe(true);
+    expect(Result.isFailure(toContradictionReceiptInsert(receipt, differentCandidate))).toBe(true);
+    expect(Result.isFailure(toContradictionReceiptInsert(differentOrganizationReceipt, candidate))).toBe(true);
   });
 
   it("rejects a disposition that predates or does not reference its supplied candidate", () => {

@@ -138,11 +138,15 @@ describe("Contradiction domain invariants", () => {
     expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: evidenceIds }))).toBe(true);
   });
 
-  it("bounds detector identities before candidate-key construction", () => {
+  it("normalizes and bounds detector identities before candidate-key construction", () => {
     const maximumDetector = Str.repeat(CONTRADICTION_DETECTOR_MAX_LENGTH)("d");
     const oversizedDetector = Str.concat(maximumDetector, "d");
     const decode = S.decodeUnknownResult(ContradictionMatchBasis);
+    const decodedPadded = Result.getOrThrow(decode({ ...matchBasis, detector: "  fixture-detector  " }));
 
+    expect(decodedPadded.detector).toBe("fixture-detector");
+    expect(contradictionCandidateKey(pair, decodedPadded)).toBe(contradictionCandidateKey(pair, matchBasis));
+    expect(Result.isFailure(decode({ ...matchBasis, detector: " \n\t " }))).toBe(true);
     expect(Result.isSuccess(decode({ ...matchBasis, detector: maximumDetector }))).toBe(true);
     expect(Result.isFailure(decode({ ...matchBasis, detector: oversizedDetector }))).toBe(true);
   });

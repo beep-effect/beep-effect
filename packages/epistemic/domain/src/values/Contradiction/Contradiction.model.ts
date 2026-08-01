@@ -510,18 +510,23 @@ export const CONTRADICTION_EVIDENCE_SET_MAX_COUNT = 32;
  */
 export const CONTRADICTION_DETECTOR_MAX_LENGTH = 256;
 
-const ContradictionDetectorIdentity = S.NonEmptyString.check(
+const ContradictionDetectorIdentity = TrimmedNonEmptyText.check(
   S.isMaxLength(CONTRADICTION_DETECTOR_MAX_LENGTH, {
     identifier: $I`ContradictionDetectorIdentityMaximumLengthCheck`,
     title: "Contradiction Detector Identity Maximum Length",
     description: "Checks that a contradiction detector identity contains at most 256 UTF-16 code units.",
     message: "Expected contradiction detector identity to contain at most 256 UTF-16 code units.",
   })
-).pipe(
-  $I.annoteSchema("ContradictionDetectorIdentity", {
-    description: "Non-empty stable detector identity containing at most 256 UTF-16 code units.",
+)
+  .annotate({
+    toArbitrary: () => (fc) =>
+      fc.string({ minLength: 1, maxLength: CONTRADICTION_DETECTOR_MAX_LENGTH }).map(Str.trim).filter(Str.isNonEmpty),
   })
-);
+  .pipe(
+    $I.annoteSchema("ContradictionDetectorIdentity", {
+      description: "Trimmed non-empty stable detector identity containing at most 256 UTF-16 code units.",
+    })
+  );
 
 const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
   .check(
