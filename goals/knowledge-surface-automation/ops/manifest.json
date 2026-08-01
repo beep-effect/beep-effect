@@ -43,7 +43,8 @@
     "research/cli-ground-truth.md",
     "research/p1-skill-upstream-resolution.md",
     "research/p1-knowledge-finding-schema-design.md",
-    "research/p1-manifest-capability-extension-design.md"
+    "research/p1-manifest-capability-extension-design.md",
+    "research/p2-grill-decisions.md"
   ],
   "agentLaunchers": [
     {
@@ -68,7 +69,7 @@
     {
       "id": "P2",
       "name": "Grill remaining decisions (docs-only PR)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",

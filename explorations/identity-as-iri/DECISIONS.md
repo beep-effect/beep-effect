@@ -157,13 +157,69 @@ immediately, or bundle with graduation?
 SPEC mandating the dead `Ontology.create` design remains
 authoritative-looking to future agents.
 
-**Rationale (original prototype-home entry, continued):** elpresidank: the old `@beep/identity` / `@beep/ontology` code
-had a chicken-and-egg dependency problem; the rebuild starts from first
-principles (official RFC/W3C specs) under the working assumption of a full
-rewrite of those packages. Options rejected: prototyping inside the
-exploration packet (no type-check gates); prototyping in the session
-scratchpad (outside the repo's quality gates); importing `@beep/identity` for
-comparison (would re-import the coupling the exercise is designed to break —
-comparison happens in research audits instead). `@beep/types` was floated as a
-possibly-acceptable dependency but the prototype starts stricter (effect-only)
-and can relax later if a concrete need appears.
+## 2026-07-31 — fold packaging supersession: split surface
+
+**Question:** The 2026-07-02 packaging-seam entry placed the
+`$I.key`/`$I.class`/`$I.ontology` fold and pure projections inside
+`@beep/identity` (effect-only), while `MAP.md` and the graduated
+`goals/identity-iri-fold` SPEC assign the fold to `@beep/ontology`. Which
+packaging stands, and what is the authoring surface?
+
+**Answer:** Split surface. `$I.key` and `$I.class` become composer methods in
+`@beep/identity` — effect-only annotation writers over the in-package
+`Predicate` literal type, preserving D3's zero-import ergonomics at every
+field site. The fold, assembly walk, schema-first error taxonomy, and all
+projections live in `@beep/ontology` behind one entrypoint,
+`Ontology.fold($I, { label, schemas, triples })` — one import per ontology
+module. The fold clause of the 2026-07-02 packaging entry is superseded; its
+composer-binding/vocab/codec clauses stand (shipped by `identity-iri-core`).
+
+**Rationale:** `@beep/identity` depends only on `effect` and is imported by
+`@beep/schema` and `@beep/rdf`; it can never import
+`TaggedErrorClass`/`LiteralKit` (`@beep/schema`) or `IRI` (`@beep/rdf`)
+without inverting foundation dependency order, so a schema-first fold
+physically cannot live there. The scratchpad prototype itself shipped
+`ontology()` and `key()` as free functions — the composer-method fold was
+never validated. The fold is called once per module; zero-import ergonomics
+are load-bearing only for the per-field writers. Rejected: proposal-split
+(`$I.ontology` returns inert validated data, ontology assembles — a two-step
+API with grammar and gate split across packages); all-in-identity
+(`Data.TaggedError` + hand-rolled unions violate schema-first law inside the
+repo's most-imported package).
+
+## 2026-07-31 — SKOS collapses into the fact channel
+
+**Question:** How do the old package's opt-in SKOS profiles (17-bucket
+concept/conceptScheme payloads) survive under the predicate-open assembled
+model?
+
+**Answer:** They don't. SKOS relations and labels ride the one tuple grammar
+(`[Cls, "skos:broader", Other]`; `[Cls, "skos:prefLabel", { value, language }]`).
+The opt-in payload on `$I.class` shrinks to a classification marker
+(`skos: "concept" | "conceptScheme"`) that drives `@type` emission. The
+assembly gate enforces SKOS integrity (S9, S13, S14, S27 hard-fail;
+scheme-membership and hierarchy warnings) by filtering assembled facts by
+predicate. The old profile model classes stay dead with the rest of the
+authoring API.
+
+**Rationale:** `skos:*` predicates are already in the CURIE registry and
+`TypedLiteral` carries language tags, so an enumerated profile would be a
+second authoring channel for edges the grammar covers — the exact ontorite
+second-model trap D7 ruled against. Rejected: enumerated-profile port (two
+channels for the same edges); literals-only profile (two sources for the same
+label plus a guard rule to police them).
+
+## 2026-07-31 — inline `is:` sugar: not planned
+
+**Question:** D7 resolved fold-first with inline `is:` allowed later as
+strict sugar. Does the sugar remain on the roadmap?
+
+**Answer:** No. Inline `is:` is not planned — not merely deferred. It returns
+only if a real authored module's diff demonstrates concrete authoring pain
+that tuples referencing schema handles cannot absorb, and even then only
+under D7's original bar: same tuple grammar, same assembly walk, same
+diagnostics ledger.
+
+**Rationale:** Tuples referencing schema handles directly are already terse;
+the inline channel is where the old API's synonym ghosts would re-enter.
+YAGNI until proven by evidence, not anticipation.
