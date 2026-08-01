@@ -9,10 +9,10 @@
  * expose a degenerate version-selector affordance.
  *
  * The in-flight {@link streamingTurnAtom} renders optimistically: a "Thinking…"
- * indicator until the first block arrives, then {@link StreamingBlocks}, with a
- * Stop control that cancels the turn fiber via an `Atom.Interrupt` write. During
- * an edit turn the rewritten-away tail is hidden optimistically. The turn fiber
- * is kept subscribed with `useAtomMount(runTurnAtom)`. Transcript DOM refs,
+ * indicator until the first block arrives, then {@link StreamingBlocks}. The
+ * composer owns the canonical Stop control. During an edit turn the
+ * rewritten-away tail is hidden optimistically. The turn fiber is kept
+ * subscribed with `useAtomMount(runTurnAtom)`. Transcript DOM refs,
  * reconciliation, and scroll effects are owned by runtime atom actions.
  *
  * @packageDocumentation
@@ -29,10 +29,10 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, N, O, thunkNull } from "@beep/utils";
+import { A, Eq, N, O, thunkNull } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/unstable/reactivity";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import {
@@ -122,10 +122,28 @@ const TurnRow = ({
   );
 };
 
-// A present parent covers both replacements and same-parent siblings. Looking
-// for a turn that points here also marks the turn that an edit replaced.
+// Only an existing, earlier parent describes an edit edge. Self, forward,
+// equal-index, and missing parents are corrupt and mirror activeBranchTurns by
+// leaving the linear conversation untouched.
+const resolvableParentTurnId = (
+  allTurns: ReadonlyArray<TimelineTurn>,
+  turn: TimelineTurn
+): O.Option<WorkspaceIdentity.TurnId> =>
+  turn.parentTurnId.pipe(
+    O.filter((parentTurnId) => !Eq.equals(parentTurnId, turn.turnId)),
+    O.filter((parentTurnId) =>
+      A.some(
+        allTurns,
+        (candidate) => Eq.equals(candidate.turnId, parentTurnId) && N.isLessThan(candidate.turnIndex, turn.turnIndex)
+      )
+    )
+  );
+
+// A resolvable parent covers both replacements and same-parent siblings.
+// Looking for a turn that validly points here also marks the turn it replaced.
 const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTurn): boolean =>
-  O.isSome(turn.parentTurnId) || A.some(allTurns, (candidate) => O.contains(candidate.parentTurnId, turn.turnId));
+  O.isSome(resolvableParentTurnId(allTurns, turn)) ||
+  A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId));
 
 const ThreadLoadState = ({ failed, loading }: { readonly failed: boolean; readonly loading: boolean }): JSX.Element => (
   <>
@@ -179,9 +197,8 @@ const StreamingTurnView = ({
 }: {
   readonly streaming: O.Option<StreamingTurn>;
   readonly turnActive: boolean;
-}): JSX.Element | null => {
-  const runTurn = useAtomSet(runTurnAtom);
-  return O.match(streaming, {
+}): JSX.Element | null =>
+  O.match(streaming, {
     onNone: thunkNull,
     onSome: (turn) => (
       <>
@@ -200,25 +217,11 @@ const StreamingTurnView = ({
             ) : (
               <StreamingBlocks blocks={turn.blocks} />
             )}
-            {turnActive ? (
-              <div className="mt-2">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  title="Stop generating"
-                  onClick={() => runTurn(Atom.Interrupt)}
-                  data-testid="turn-stop"
-                >
-                  Stop
-                </Button>
-              </div>
-            ) : null}
           </div>
         </div>
       </>
     ),
   });
-};
 
 /**
  * Renders the selected thread's timeline and in-flight streaming turn.
