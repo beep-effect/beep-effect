@@ -238,9 +238,10 @@ export const isHtmlChildAtForeignBoundary = (parent: ForeignBoundaryElement): bo
  * ```ts
  * import { isForeignChildAtForeignBoundary } from "./Html.foreign.ts"
  *
- * const parent = { namespace: "svg", name: "g", attributes: [] } as const
- * isForeignChildAtForeignBoundary(parent, { namespace: "svg", name: "path", attributes: [] }) // true
- * isForeignChildAtForeignBoundary(parent, { namespace: "svg", name: "p", attributes: [] }) // false
+ * isForeignChildAtForeignBoundary(
+ *   { namespace: "svg", name: "g", attributes: [] },
+ *   { namespace: "svg", name: "path", attributes: [] }
+ * ) // true
  * ```
  *
  * @internal
