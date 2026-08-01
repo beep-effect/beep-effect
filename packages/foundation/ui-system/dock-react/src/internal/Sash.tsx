@@ -5,9 +5,8 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, clampRatio, positionOf, splitExtent } from "./DropCompiler.ts";
+import { boxStyle, clampRatio, positionOf, releaseCapture, splitExtent } from "./DropCompiler.ts";
 import { SashDrag } from "./Gesture.models.ts";
-import { releaseCapture } from "./GroupPane.tsx";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 

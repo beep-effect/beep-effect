@@ -63,6 +63,13 @@ export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPositi
 export const pressStartsOnButton = (event: PointerEvent): boolean =>
   event.target instanceof Element && P.isNotNull(event.target.closest("button"));
 
+// A native cancellation has already released capture, and releasing a pointer
+// the element no longer captures throws NotFoundError straight out of the
+// handler — so ownership is checked first.
+export const releaseCapture: Dual2<HTMLElement, number, void> = dual(2, (node: HTMLElement, pointerId: number) => {
+  if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
+});
+
 // A press only promotes to a drag once the pointer travels past this radius
 // (dockview's PointerDragSource threshold): taps and plain clicks never show
 // drag chrome (ghost, drop indicator) or compile a drop.
@@ -156,10 +163,11 @@ const renderedTabs = (
       onSome: (rects) =>
         pipe(
           A.reduce(panels, A.empty<RenderedTab>(), (acc, panel: Panel, logicalIndex) =>
-            O.match(MutableHashMap.get(rects, panel.id), {
-              onNone: () => acc,
-              onSome: (rect) => A.append(acc, { logicalIndex, rect }),
-            })
+            pipe(
+              MutableHashMap.get(rects, panel.id),
+              O.map((rect) => A.append(acc, { logicalIndex, rect })),
+              O.getOrElse(() => acc)
+            )
           ),
           A.sort(Order.mapInput(Order.Number, (tab: RenderedTab) => tab.rect.left))
         ),
@@ -184,23 +192,19 @@ const stripInsertionIndex = (
     const count = A.length(panels);
     return box.width <= 0 ? 0 : Math.floor(((pointerLeft - box.left) / box.width) * count);
   }
+  // Past every rendered midpoint the drop appends after the last rendered
+  // tab, which is one past ITS logical position rather than the list length —
+  // a hidden tail must stay behind the visible one.
+  const appendIndex = pipe(
+    A.last(rendered),
+    O.map((tab) => tab.logicalIndex + 1),
+    O.getOrElse(() => A.length(panels))
+  );
   return pipe(
     rendered,
     A.findFirst((tab) => pointerLeft <= tab.rect.left + tab.rect.width / 2),
-    O.match({
-      // Past every rendered midpoint: append after the last rendered tab,
-      // which is one past ITS logical position, not the list length — a
-      // hidden tail must stay behind the visible one.
-      onNone: () =>
-        pipe(
-          A.last(rendered),
-          O.match({
-            onNone: () => A.length(panels),
-            onSome: (tab) => tab.logicalIndex + 1,
-          })
-        ),
-      onSome: (tab) => tab.logicalIndex,
-    })
+    O.map((tab) => tab.logicalIndex),
+    O.getOrElse(() => appendIndex)
   );
 };
 
@@ -349,20 +353,16 @@ const tabInsertionPreview = (
   // rendered tab when appending. Falls back to even fractions of the group box
   // before the strip has measured.
   const rendered = renderedTabs(state, groupId, panels);
+  const trailingEdge = pipe(
+    A.last(rendered),
+    O.map((tab) => tab.rect.left + tab.rect.width),
+    O.getOrElse(() => box.left + (count <= 0 ? 0 : (box.width * insertAt) / count))
+  );
   const caretLeft = pipe(
     rendered,
     A.findFirst((tab) => tab.logicalIndex >= insertAt),
-    O.match({
-      onNone: () =>
-        pipe(
-          A.last(rendered),
-          O.match({
-            onNone: () => box.left + (count <= 0 ? 0 : (box.width * insertAt) / count),
-            onSome: (tab) => tab.rect.left + tab.rect.width,
-          })
-        ),
-      onSome: (tab) => tab.rect.left,
-    })
+    O.map((tab) => tab.rect.left),
+    O.getOrElse(() => trailingEdge)
   );
   return TabInsertionPreview.make({
     groupId,

@@ -28,6 +28,7 @@ import {
   preFloatContextFor,
   pressStartsOnButton,
   relativePositionOf,
+  releaseCapture,
 } from "./DropCompiler.ts";
 import { TabDrag, TabRect } from "./Gesture.models.ts";
 import { FloatIcon, MaximizeIcon, RestoreIcon } from "./Icons.tsx";
@@ -38,13 +39,6 @@ import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../Dock
 import type { AdapterState } from "./AdapterState.ts";
 
 const panelIdsEqual = A.makeEquivalence(PanelId.equals);
-
-// A native cancellation has already released capture, and releasing a pointer
-// the element no longer captures throws NotFoundError straight out of the
-// handler — so ownership is checked first.
-export const releaseCapture = (node: HTMLElement, pointerId: number): void => {
-  if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
-};
 
 const tabWidthsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, number> =>
   O.getOrElse(MutableHashMap.get(state.tabWidths, groupId), () => {
