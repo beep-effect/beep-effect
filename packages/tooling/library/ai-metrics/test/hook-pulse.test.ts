@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   HookPulseAgentKind,
   HookPulseEvent,
@@ -7,12 +8,14 @@ import {
   HookPulseRawEvent,
   HookPulseV1,
   HookPulseV1FromRawEvent,
+  HookPulseWaitReason,
 } from "@beep/repo-ai-metrics";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const baseRawEventFixture = {
   session_id: "ccd-session-raw-1",
@@ -179,8 +182,46 @@ const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
 const decodeHookPulse = S.decodeUnknownEffect(HookPulseV1);
 const encodeHookPulse = S.encodeUnknownEffect(HookPulseV1);
+const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
+const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
+  it("round-trips schema-derived arbitrary values", () => {
+    const encode = S.encodeResult(HookPulseV1);
+    const decode = S.decodeUnknownResult(HookPulseV1);
+
+    fc.assert(
+      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+        const encoded = Result.getOrThrow(encode(value));
+        const decoded = Result.getOrThrow(decode(encoded));
+
+        expect(hookPulseEquivalent(decoded, value)).toBe(true);
+      }),
+      fcRuns(50)
+    );
+  });
+
+  it("derives a total wait reason for arbitrary raw events", () => {
+    const encodeRawEvent = S.encodeResult(HookPulseRawEvent);
+    const decodeFromRaw = S.decodeUnknownResult(HookPulseV1FromRawEvent);
+
+    fc.assert(
+      fc.property(S.toArbitrary(HookPulseRawEvent), (event) => {
+        const decoded = Result.getOrThrow(
+          decodeFromRaw({
+            ...baseRawInputFixture,
+            ts: "2026-08-01T08:00:00.000Z",
+            event: Result.getOrThrow(encodeRawEvent(event)),
+          })
+        );
+
+        expect(decoded.waitReason).toBeDefined();
+        expect(isHookPulseWaitReason(decoded.waitReason)).toBe(true);
+      }),
+      fcRuns(50)
+    );
+  });
+
   it.effect(
     "derives the auto-approved control as none, never tool-permission",
     Effect.fn("HookPulseTest.derivesAutoApprovedControl")(function* () {
