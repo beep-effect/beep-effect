@@ -93,6 +93,12 @@ type ForeignBoundaryElement = {
   readonly namespace: ForeignNamespace;
 };
 
+/**
+ * Lowercases only the ASCII uppercase characters handled by the HTML tokenizer.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export { toAsciiLowerCase };
 
 const hasForeignAttribute = (entries: ForeignAttributeEntries, predicate: (name: string) => boolean): boolean =>
