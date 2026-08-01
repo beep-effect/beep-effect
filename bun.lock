@@ -764,6 +764,23 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/exiftool": {
+      "name": "@beep/exiftool",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/face-detection": {
       "name": "@beep/face-detection",
       "version": "0.0.2",
@@ -970,6 +987,22 @@
         "@beep/utils": "workspace:^",
         "@beep/wink": "workspace:^",
         "@effect/platform-node": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/drivers/obs": {
+      "name": "@beep/obs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -2246,6 +2279,25 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/qa-capture": {
+      "name": "@beep/qa-capture",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/ffmpeg": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/repo-utils": {
       "name": "@beep/repo-utils",
       "version": "0.0.0",
@@ -2361,6 +2413,7 @@
         "@beep/chalk": "workspace:^",
         "@beep/colors": "workspace:^",
         "@beep/duckdb": "workspace:^",
+        "@beep/exiftool": "workspace:^",
         "@beep/face-detection": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
@@ -2368,8 +2421,10 @@
         "@beep/identity": "workspace:^",
         "@beep/libpff": "workspace:^",
         "@beep/md": "workspace:^",
+        "@beep/obs": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/phoenix": "workspace:^",
+        "@beep/qa-capture": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
         "@beep/repo-configs": "workspace:^",
         "@beep/repo-docgen": "workspace:^",
@@ -3024,6 +3079,8 @@
 
     "@beep/epistemic-use-cases": ["@beep/epistemic-use-cases@workspace:packages/epistemic/use-cases"],
 
+    "@beep/exiftool": ["@beep/exiftool@workspace:packages/drivers/exiftool"],
+
     "@beep/face-detection": ["@beep/face-detection@workspace:packages/drivers/face-detection"],
 
     "@beep/fc-runs": ["@beep/fc-runs@workspace:packages/tooling/test-kit/fc-runs"],
@@ -3082,6 +3139,8 @@
 
     "@beep/nlp-processing": ["@beep/nlp-processing@workspace:packages/foundation/capability/nlp-processing"],
 
+    "@beep/obs": ["@beep/obs@workspace:packages/drivers/obs"],
+
     "@beep/observability": ["@beep/observability@workspace:packages/foundation/capability/observability"],
 
     "@beep/oip-web": ["@beep/oip-web@workspace:apps/oip-web"],
@@ -3127,6 +3186,8 @@
     "@beep/protobuf": ["@beep/protobuf@workspace:packages/drivers/protobuf"],
 
     "@beep/provenance": ["@beep/provenance@workspace:packages/foundation/modeling/provenance"],
+
+    "@beep/qa-capture": ["@beep/qa-capture@workspace:packages/tooling/library/qa-capture"],
 
     "@beep/rdf": ["@beep/rdf@workspace:packages/foundation/modeling/rdf"],
 

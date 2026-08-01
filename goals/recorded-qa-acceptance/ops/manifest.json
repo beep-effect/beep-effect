@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "recorded-qa-acceptance",
+    "title": "Recorded QA Acceptance — dock-react gesture verification",
+    "status": "active",
+    "created": "2026-07-30",
+    "updated": "2026-07-30",
+    "packetAnchorDocument": "README.md"
+  },
+  "packetPath": "goals/recorded-qa-acceptance",
+  "lifecycle": "active",
+  "mission": "Prove the beep qa recording/extraction/judging system end-to-end on the dock-react pointer fixes, including a falsification round demonstrating true-positive detection.",
+  "executionCapable": false,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "",
+    "graduated": "2026-07-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the falsification round is a true positive, two consecutive clean structured rounds pass (one per lane), judge-lint is green on every round, and the campaign ships through Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/recorded-qa-acceptance/README.md",
+    ".claude/skills/browser-qa-loop/SKILL.md"
+  ]
+}

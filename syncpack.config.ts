@@ -102,6 +102,8 @@ const config = {
     "packages/drivers/pretext/package.json",
     "packages/drivers/graph-3d/package.json",
     "packages/drivers/openclaw/package.json",
+    "packages/drivers/obs/package.json",
+    "packages/drivers/exiftool/package.json",
   ],
   customTypes: {
     catalog: {
