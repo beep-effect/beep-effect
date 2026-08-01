@@ -33,23 +33,26 @@ Use this command for execution-capable sessions:
    `provides: [knowledge/doctor, skills/warehouse, goals/graph, goals/bootstrap]`
    (Workstream D's additive capability extension, declared ahead of schema support on
    purpose - decode-compatibility is a P1 test).
-5. [`research/`](./research/) - P0 deliverables: `prior-ritual-lessons.md`,
-   `surface-inventory.md`, `cli-ground-truth.md`, `SOURCES.md`.
+5. [`research/`](./research/) - P0 deliverables (`prior-ritual-lessons.md`,
+   `surface-inventory.md`, `cli-ground-truth.md`, `SOURCES.md`) and the ratified
+   [`p2-grill-decisions.md`](./research/p2-grill-decisions.md).
 6. [`history/`](./history/) - evidence and closeouts, if present.
 
 ## Current Phase
 
-P1 - Phase-0 read-only reports (in progress). P0 seed is complete: packet, research
-trio, and P1 design/provenance drafts are landed. Next concrete action: finish and review
-the Phase-0 report commands (`KnowledgeFinding` golden tests, `beep skills provenance`,
-`beep knowledge refs --tree HEAD`, manifest graph inventory, and Workstream E's pure
-bootstrap/adoption plans), then run the P2 grill over the open questions collected in
-the three `research/p1-*.md` documents.
+P2 complete — all 24 open decisions ratified in
+[`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md) (2026-08-01 grill
+session); do not relitigate them in implementation PRs. P1 Phase-0 report commands
+remain in progress and are now unblocked with full doctrine: `KnowledgeFinding` golden
+tests, `beep skills provenance` (pilot: shadcn), `beep knowledge refs --tree HEAD`,
+manifest capability decode-retention tests, and Workstream E's pure bootstrap/adoption
+plans.
 
 ## Latest Evidence
 
 [PR #529](https://github.com/beep-effect/beep-effect/pull/529) — packet opening + P0/P1
-research corpus, published via yeet full local proof.
+research corpus, published via yeet full local proof. P2 grill decisions landed as their
+own docs-only PR per the ratified process.
 
 ## Notes
 
