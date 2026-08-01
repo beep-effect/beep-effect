@@ -90,6 +90,9 @@ none of md/lexical/editor). Mermaid avoids this (reuses `Pre`).
   youtube blocks through the live Anthropic kernel and PgLite integration path.
 - Closeout reflection:
   [`history/reflections/2026-06-15-codex.md`](./history/reflections/2026-06-15-codex.md).
+- Real-Anthropic E2E re-validated green against `main` on 2026-07-31 during the
+  packet-state audit:
+  [`history/2026-07-31-real-anthropic-e2e-revalidation.md`](./history/2026-07-31-real-anthropic-e2e-revalidation.md).
 
 ## Outcome
 
