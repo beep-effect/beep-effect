@@ -1,11 +1,10 @@
-import {
-  appendTurnFinalizationUsageRecord,
-  CandidateClaim,
-  TurnFinalizationUsageAppend,
-  UsageRecord,
-} from "@beep/epistemic-domain";
+import { appendTurnFinalizationUsageRecord, CandidateClaim, UsageRecord } from "@beep/epistemic-domain";
 import { describe, expect, it } from "tstyche";
-import type { ClaimLifecycle, ClaimLifecycle as ClaimLifecycleType } from "@beep/epistemic-domain";
+import type {
+  ClaimLifecycle,
+  ClaimLifecycle as ClaimLifecycleType,
+  TurnFinalizationUsageAppend,
+} from "@beep/epistemic-domain";
 import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import type { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import type * as O from "effect/Option";
@@ -35,7 +34,8 @@ describe("@beep/epistemic-domain", () => {
   });
 
   it("preserves UsageRecord append path types", () => {
-    expect(TurnFinalizationUsageAppend.fields.activityId).type.toBe<typeof Epistemic.ActivityId>();
+    expect<TurnFinalizationUsageAppend["activityId"]>().type.toBe<O.Option<Epistemic.ActivityId>>();
+    expect<UsageRecord["activityId"]>().type.toBe<O.Option<Epistemic.ActivityId>>();
     expect(UsageRecord.definition.entityId).type.toBe<typeof Epistemic.UsageRecordId>();
     expect<typeof UsageRecord.definition.persisted.activityId.columnName>().type.toBe<"activity_id">();
     expect<UsageRecord["credentialReference"]>().type.toBe<O.Option<OnePasswordReference>>();

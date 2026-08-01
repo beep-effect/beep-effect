@@ -18,7 +18,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
-import type { RepairError } from "@beep/anthropic";
+import type { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
 
 const $I = $AgentsServerId.create("AssistantTurn/BlockRepair");
 
@@ -34,6 +34,12 @@ const BlockIndex = S.Int.check(isNonNegative).pipe(
 const PatchOperationCount = S.Int.check(isNonNegative).pipe(
   $I.annoteSchema("PatchOperationCount", {
     description: "Non-negative integer count of structural JSON Patch operations.",
+  })
+);
+
+const RepairTokenCount = S.Int.check(isNonNegative).pipe(
+  $I.annoteSchema("RepairTokenCount", {
+    description: "Non-negative provider token count accumulated across assistant-block repair calls.",
   })
 );
 
@@ -123,6 +129,12 @@ class RepairEnvelope extends S.Class<RepairEnvelope>($I`RepairEnvelope`)(
 
 class RepairAttemptState extends S.Class<RepairAttemptState>($I`RepairAttemptState`)(
   {
+    inputTokens: RepairTokenCount.annotateKey({
+      description: "Provider input tokens accumulated across completed repair attempts.",
+    }),
+    outputTokens: RepairTokenCount.annotateKey({
+      description: "Provider output tokens accumulated across completed repair attempts.",
+    }),
     pending: S.Array(IssueReport).annotateKey({
       description: "Failure reports still pending after the current repair attempt.",
     }),
@@ -135,21 +147,48 @@ class RepairAttemptState extends S.Class<RepairAttemptState>($I`RepairAttemptSta
   })
 ) {}
 
+class RepairUsage extends S.Class<RepairUsage>($I`RepairUsage`)(
+  {
+    inputTokens: RepairTokenCount.annotateKey({ description: "Provider input tokens for one repair call." }),
+    outputTokens: RepairTokenCount.annotateKey({ description: "Provider output tokens for one repair call." }),
+  },
+  $I.annote("RepairUsage", {
+    description: "Validated provider token usage for one assistant-block repair call.",
+  })
+) {}
+
+class RepairInvalidBlocksResult extends S.Class<RepairInvalidBlocksResult>($I`RepairInvalidBlocksResult`)(
+  {
+    blocks: S.Array(IndexedBlock).annotateKey({ description: "Accepted repaired blocks." }),
+    inputTokens: RepairTokenCount.annotateKey({
+      description: "Provider input tokens accumulated across all repair calls.",
+    }),
+    outputTokens: RepairTokenCount.annotateKey({
+      description: "Provider output tokens accumulated across all repair calls.",
+    }),
+  },
+  $I.annote("RepairInvalidBlocksResult", {
+    description: "Accepted repaired blocks and aggregate provider usage for the repair tail.",
+  })
+) {}
+
 /**
  * Provider call used by {@link makeRepairInvalidBlocks} to obtain repair tool
  * parameters for a batch of invalid block slices.
  *
  * @remarks
  * `attempt` is one-based and never exceeds the adapter retry limit. The call
- * returns the raw repair-tool parameters JSON; envelope validation, per-block
- * decoding, unexpected indices, and dropped repairs remain the adapter's
- * responsibility.
+ * returns the raw repair-tool parameters JSON together with terminal provider
+ * usage; envelope validation, per-block decoding, unexpected indices, and
+ * dropped repairs remain the adapter's responsibility.
  *
  * @example
  * ```ts
  * import { IssueReport } from "@beep/agents-server/AssistantTurn"
  * import type { BlockRepairCall } from "@beep/agents-server/AssistantTurn"
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
+ * import { Response } from "effect/unstable/ai"
  *
  * const issue = IssueReport.make({
  *   index: 0,
@@ -157,12 +196,16 @@ class RepairAttemptState extends S.Class<RepairAttemptState>($I`RepairAttemptSta
  *   report: "/children/0/text Expected string",
  * })
  * const callRepair: BlockRepairCall = (pending, attempt) =>
- *   Effect.succeed(
- *     `{"repairs":[{"index":${pending[0]?.index ?? 0},"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed on attempt ${attempt}"}]}}]}`
- *   )
+ *   Effect.succeed(AnthropicToolJsonResponse.make({
+ *     paramsJson: `{"repairs":[{"index":${pending[0]?.index ?? 0},"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed on attempt ${attempt}"}]}}]}`,
+ *     usage: Response.Usage.make({
+ *       inputTokens: { total: 4 },
+ *       outputTokens: { total: 2 },
+ *     }),
+ *   }))
  *
- * Effect.runPromise(callRepair([issue], 1)).then((paramsJson) =>
- *   console.log(paramsJson.includes("Fixed")) // true
+ * Effect.runPromise(callRepair([issue], 1)).then((response) =>
+ *   console.log(response.paramsJson.includes("Fixed")) // true
  * )
  * ```
  *
@@ -172,28 +215,31 @@ class RepairAttemptState extends S.Class<RepairAttemptState>($I`RepairAttemptSta
 export type BlockRepairCall = (
   pending: ReadonlyArray<IssueReport>,
   attempt: number
-) => Effect.Effect<string, RepairError>;
+) => Effect.Effect<AnthropicToolJsonResponse, RepairError>;
 
 /**
  * Repair function shape used by the Anthropic turn kernel after streamed block
  * validation has collected one or more failures.
  *
  * @remarks
- * The returned effect succeeds with repaired indexed blocks only. Missing,
- * duplicated, unexpected, or still-invalid tool results are handled by the
- * adapter and do not escape as successful blocks; repair-call failures are
- * represented by `BlockRepairFailed`.
+ * The returned effect succeeds with repaired indexed blocks and aggregate
+ * repair-call token usage. Missing, duplicated, unexpected, or still-invalid
+ * tool results are handled by the adapter and do not escape as successful
+ * blocks; repair-call failures are represented by `BlockRepairFailed`.
  *
  * @example
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import type { RepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
  * import { Effect } from "effect"
+ * import { Response } from "effect/unstable/ai"
  *
  * const repair: RepairInvalidBlocks = makeRepairInvalidBlocks(() =>
- *   Effect.succeed(
- *     '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}'
- *   )
+ *   Effect.succeed(AnthropicToolJsonResponse.make({
+ *     paramsJson: '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}',
+ *     usage: Response.Usage.make({ inputTokens: { total: 4 }, outputTokens: { total: 2 } }),
+ *   }))
  * )
  * const issue = IssueReport.make({
  *   index: 0,
@@ -201,7 +247,7 @@ export type BlockRepairCall = (
  *   report: "/children/0/text Expected string",
  * })
  *
- * Effect.runPromise(repair([issue])).then((blocks) => console.log(blocks[0]?.block.type)) // "paragraph"
+ * Effect.runPromise(repair([issue])).then((result) => console.log(result.blocks[0]?.block.type)) // "paragraph"
  * ```
  *
  * @category combinators
@@ -209,7 +255,7 @@ export type BlockRepairCall = (
  */
 export type RepairInvalidBlocks = (
   failures: ReadonlyArray<IssueReport>
-) => Effect.Effect<ReadonlyArray<IndexedBlock>, BlockRepairFailed>;
+) => Effect.Effect<RepairInvalidBlocksResult, BlockRepairFailed>;
 
 const repairOutput = AnthropicStructuredOutput.toCodecAnthropic(RepairEnvelope);
 
@@ -224,6 +270,7 @@ const decodeEnvelopeJson = S.decodeUnknownEffect(S.fromJsonString(repairOutput.c
 const decodeJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Json));
 const decodeJsonValue = S.decodeUnknownEffect(S.Json);
 const decodeRepairedBlock = S.decodeUnknownEffect(assistantBlockOutput.codec);
+const decodeRepairUsage = S.decodeUnknownEffect(RepairUsage);
 const encodeBlock = S.encodeUnknownEffect(AssistantBlock);
 
 const failureSection = (failure: IssueReport): string =>
@@ -424,7 +471,7 @@ const requestRepairEnvelope = (
   callRepair: BlockRepairCall,
   pending: ReadonlyArray<IssueReport>,
   attempt: number
-): Effect.Effect<RepairEnvelope, BlockRepairFailed> =>
+): Effect.Effect<readonly [RepairEnvelope, RepairUsage], BlockRepairFailed> =>
   callRepair(pending, attempt).pipe(
     Effect.tapError((error) =>
       Effect.logWarning("assistant-turn block repair call failed", {
@@ -433,10 +480,20 @@ const requestRepairEnvelope = (
       })
     ),
     Effect.mapError((error) => toBlockRepairFailed(`Block repair call failed: ${error.message}`)),
-    Effect.flatMap((paramsJson) =>
-      decodeEnvelopeJson(paramsJson).pipe(
-        Effect.mapError((error) => toBlockRepairFailed(`Block repair envelope failed validation: ${error.message}`))
-      )
+    Effect.flatMap((response) =>
+      Effect.all([
+        decodeEnvelopeJson(response.paramsJson).pipe(
+          Effect.mapError((error) => toBlockRepairFailed(`Block repair envelope failed validation: ${error.message}`))
+        ),
+        decodeRepairUsage({
+          inputTokens: response.usage.inputTokens.total,
+          outputTokens: response.usage.outputTokens.total,
+        }).pipe(
+          Effect.mapError((error) =>
+            toBlockRepairFailed(`Block repair call returned invalid usage metadata: ${error.message}`)
+          )
+        ),
+      ])
     )
   );
 
@@ -519,26 +576,30 @@ const attemptRepairs = (
   callRepair: BlockRepairCall,
   pending: ReadonlyArray<IssueReport>,
   attempt: number
-): Effect.Effect<ReadonlyArray<IndexedBlock>, BlockRepairFailed> =>
+): Effect.Effect<readonly [ReadonlyArray<IndexedBlock>, RepairUsage], BlockRepairFailed> =>
   requestRepairEnvelope(callRepair, pending, attempt).pipe(
-    Effect.flatMap((envelope) =>
-      Effect.forEach(envelope.repairs, (item) => repairItemToIndexed(pending, item), { concurrency: 1 })
-    ),
-    Effect.map(A.getSomes),
-    Effect.map(deduplicateIndexedBlocks)
+    Effect.flatMap(([envelope, usage]) =>
+      Effect.forEach(envelope.repairs, (item) => repairItemToIndexed(pending, item), { concurrency: 1 }).pipe(
+        Effect.map(A.getSomes),
+        Effect.map(deduplicateIndexedBlocks),
+        Effect.map((blocks): readonly [ReadonlyArray<IndexedBlock>, RepairUsage] => [blocks, usage])
+      )
+    )
   );
 
 const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
   callRepair: BlockRepairCall,
   pending: ReadonlyArray<IssueReport>,
   repaired: ReadonlyArray<IndexedBlock>,
+  inputTokens: number,
+  outputTokens: number,
   attempt: number
 ): Effect.fn.Return<RepairAttemptState, BlockRepairFailed> {
   if (attempt > REPAIR_ATTEMPTS || A.isReadonlyArrayEmpty(pending)) {
-    return { pending, repaired };
+    return RepairAttemptState.make({ inputTokens, outputTokens, pending, repaired });
   }
 
-  const fixed = yield* attemptRepairs(callRepair, pending, attempt).pipe(
+  const [fixed, usage] = yield* attemptRepairs(callRepair, pending, attempt).pipe(
     Effect.tapError(() =>
       Effect.all(
         [trackRepairOutcome("repaired", A.length(repaired)), trackRepairOutcome("call_failed", A.length(pending))],
@@ -548,7 +609,14 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
   );
   const fixedIndices = A.map(fixed, (item) => item.index);
   const remaining = A.filter(pending, (failure) => !A.contains(fixedIndices, failure.index));
-  return yield* runRepairAttempts(callRepair, remaining, A.appendAll(repaired, fixed), attempt + 1);
+  return yield* runRepairAttempts(
+    callRepair,
+    remaining,
+    A.appendAll(repaired, fixed),
+    inputTokens + usage.inputTokens,
+    outputTokens + usage.outputTokens,
+    attempt + 1
+  );
 });
 
 /**
@@ -564,12 +632,15 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
  * @example
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
+ * import { Response } from "effect/unstable/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>
- *   Effect.succeed(
- *     '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}'
- *   )
+ *   Effect.succeed(AnthropicToolJsonResponse.make({
+ *     paramsJson: '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}',
+ *     usage: Response.Usage.make({ inputTokens: { total: 4 }, outputTokens: { total: 2 } }),
+ *   }))
  * )
  * const issue = IssueReport.make({
  *   index: 0,
@@ -577,7 +648,7 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
  *   report: "/children/0/text Expected string",
  * })
  *
- * Effect.runPromise(repair([issue])).then((blocks) => console.log(blocks.length)) // 1
+ * Effect.runPromise(repair([issue])).then((result) => console.log(result.blocks.length)) // 1
  * ```
  *
  * @category combinators
@@ -586,10 +657,10 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
 export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRepairCall): RepairInvalidBlocks =>
   Effect.fn("agents.assistant_turn.block_repair")(function* (failures) {
     if (A.isReadonlyArrayEmpty(failures)) {
-      return A.empty<IndexedBlock>();
+      return RepairInvalidBlocksResult.make({ blocks: A.empty<IndexedBlock>(), inputTokens: 0, outputTokens: 0 });
     }
 
-    const result = yield* runRepairAttempts(callRepair, failures, A.empty<IndexedBlock>(), 1);
+    const result = yield* runRepairAttempts(callRepair, failures, A.empty<IndexedBlock>(), 0, 0, 1);
 
     yield* trackRepairOutcome("repaired", A.length(result.repaired));
     if (!A.isReadonlyArrayEmpty(result.pending)) {
@@ -599,7 +670,11 @@ export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRep
       });
     }
 
-    return result.repaired;
+    return RepairInvalidBlocksResult.make({
+      blocks: result.repaired,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+    });
   });
 
 /**
@@ -615,7 +690,7 @@ export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRep
  * import { repairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
  * import { Effect } from "effect"
  *
- * Effect.runPromise(repairInvalidBlocks([])).then((blocks) => console.log(blocks.length)) // 0
+ * Effect.runPromise(repairInvalidBlocks([])).then((result) => console.log(result.blocks.length)) // 0
  * ```
  *
  * @category combinators
