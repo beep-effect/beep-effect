@@ -5,7 +5,7 @@
     "title": "Knowledge-Surface Audit & Automation",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-07-31",
+    "updated": "2026-08-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-surface-automation",
@@ -40,7 +40,10 @@
     "research/SOURCES.md",
     "research/prior-ritual-lessons.md",
     "research/surface-inventory.md",
-    "research/cli-ground-truth.md"
+    "research/cli-ground-truth.md",
+    "research/p1-skill-upstream-resolution.md",
+    "research/p1-knowledge-finding-schema-design.md",
+    "research/p1-manifest-capability-extension-design.md"
   ],
   "agentLaunchers": [
     {
@@ -55,12 +58,12 @@
     {
       "id": "P0",
       "name": "Seed: packet + prior-ritual lessons",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Phase-0 read-only reports",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

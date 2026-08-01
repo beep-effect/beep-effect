@@ -19,6 +19,25 @@ Provenance: all three produced 2026-07-31 by delegated Codex (gpt-5.6-sol, xhigh
 read-only exploration jobs; outputs reviewed by the orchestrating session before
 commit.
 
+## P1 deliverables (phase-0 inputs)
+
+- `research/p1-skill-upstream-resolution.md` — upstream repo + immutable commit +
+  license resolved for every externally-derived skill (Workstream B's ratified early
+  task); includes the recommended v2 lock-entry schema. Only `oracle`'s exact base
+  revision is `inferred` (repo identity certain, no byte-exact commit match).
+- `research/p1-knowledge-finding-schema-design.md` — `KnowledgeFinding` schema +
+  Stage-1 semantic-delta scanner design: identity normalization algorithm,
+  paired-archive semantics, golden fixture matrix, CLI/service placement, policy-step
+  wiring, and grill questions.
+- `research/p1-manifest-capability-extension-design.md` — additive `provides`/`requires`
+  manifest extension: exact schema addition with decoding defaults, capability-slug
+  constraint options (grill decides), decode-retention test plan, normalized projection
+  rows, and the pure-TS differential fixtures.
+
+Provenance: produced 2026-08-01 by delegated Codex (gpt-5.6-sol, xhigh) — one
+network-enabled provenance job (GitHub API resolution), one repo-grounded design job;
+outputs reviewed by the orchestrating session before commit.
+
 ## Repo prior art
 
 - `goals/agent-effectiveness-loop/`, `goals/agent-pipeline-velocity/`,

@@ -39,12 +39,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 - Seed: packet + prior-ritual lessons. Next concrete action: land the research trio
-(`research/`), then start P1 Phase-0 read-only reports.
+P1 - Phase-0 read-only reports (in progress). P0 seed is complete: packet, research
+trio, and P1 design/provenance drafts are landed. Next concrete action: the P2 grill
+session over the open questions collected in the three `research/p1-*.md` documents,
+then the Phase-0 report commands (`KnowledgeFinding` golden tests, `beep skills
+provenance`, `beep knowledge refs --tree HEAD`).
 
 ## Latest Evidence
 
-Not started.
+[PR #529](https://github.com/beep-effect/beep-effect/pull/529) — packet opening + P0/P1
+research corpus, published via yeet full local proof.
 
 ## Notes
 
