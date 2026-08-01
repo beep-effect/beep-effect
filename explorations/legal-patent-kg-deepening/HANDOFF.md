@@ -59,7 +59,20 @@ owner or approved proposed slug, and its eventual packet evidence.
 
 ## Next phase — reconciliation gate, then per-wedge `/explore`
 
-### Phase 1 — re-ground and approve
+### Phase 1 — re-ground and approve — ✅ COMPLETE (2026-08-01)
+
+The reconciliation grill ran 2026-08-01 and Benjamin SIGNED OFF the matrix as
+amended: all three `grill[...]` branches resolved without supersession,
+promotion-gates cluster merged into `patent-drafting-episode-ledger` (four
+proposed slugs remain), first wedge = `patent-citation-candor-gate`. Full
+Q/A/rationale: [`DECISIONS.md`](./DECISIONS.md) (five 2026-08-01
+reconciliation entries); amendments:
+[`ROUTING-SEED.md`](./ROUTING-SEED.md) § Reconciliation amendments;
+clarifying memory entry:
+`standards/memory-architecture/04-decision-log.md`. Proceed to Phase 2
+starting with `patent-citation-candor-gate`.
+
+Original Phase 1 steps (retained for provenance):
 
 1. Read the ledger and both routing seeds; confirm all 46 IDs occur exactly once.
 2. Re-run cited live-tree searches; attribute drift before changing a route.
