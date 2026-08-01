@@ -40,3 +40,24 @@ therefore amended (see README): Lane A true-positive capability is proven by
 live fire — the judge caught R1-01 and R1-02, two real P1 defects invisible
 to harness assertions — and the selection-smear falsification moves to the
 Lane B round. Sash restored byte-identical after every attempt (md5-verified).
+
+## System findings (tooling defects the campaign surfaced in the QA system itself)
+
+| ID | Severity | Area | Title | Status |
+|---|---|---|---|---|
+| SYS-01 | P0 | capture | An all-black capture passes record, extract, and judge-pack undetected — discovered only by the vision judge after a full paid run (OBS rounds 7 and 12, 601 events over black video) | open — fix: luminance preflight via the existing `FFmpeg.probeRegionLuminance` op |
+| SYS-02 | P1 | @beep/obs | Deleting the QA scene does not delete the capture INPUT, so `CreateInput` never re-runs, no portal prompt appears, and a stale PipeWire RestoreToken yields black captures forever | open — fix: treat an unresolvable RestoreToken as stale and recreate the input |
+| SYS-03 | P1 | @beep/obs | An authentication rejection reports the connection-refused message ("enable the obs-websocket server"), sending the operator to a setting that is already correct | open — fix: split the two error cases |
+| SYS-04 | P1 | qa-capture | The collector's fixed default port (43117) is machine-global, so a concurrent session in another checkout kills the round ("Failed to start server") | open — fix: per-checkout default port |
+| SYS-05 | P2 | fixtures | Neither the constrained-sash nor the workspace story can express the selection-smear class even with all defenses stripped (sash sits in a text-free gap; tabs carry an independent `user-select: none`) — verified under real XTEST input | open — fix: author a smear-capable fixture |
+
+## Lane decision (2026-08-01)
+
+Lane B (OBS + real Chrome) is **retired**: the PipeWire portal requires human
+consent by design, so the lane can never run unattended, and it produced two
+silently-black rounds (SYS-01/SYS-02). **Lane C** replaces it: `Xvfb` + headed
+Chrome (`--ozone-platform=x11`) + `xdotool` XTEST + `ffmpeg x11grab` + CDP for
+assertions. Prototype proven this session — XTEST **anchors real native text
+selections** (screenshot evidence), the capability CDP provably lacks, with
+zero human input and CI-capable. Productionization graduates to a follow-up
+packet.
