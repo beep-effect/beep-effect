@@ -327,6 +327,7 @@ const deriveWaitReason = (event: HookPulseRawEvent): HookPulseWaitReason =>
   });
 
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
+const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
 
 /**
  * Privacy-safe, schema-versioned record emitted once per coding-agent hook event.
@@ -431,7 +432,9 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
             permissionMode: input.event.permission_mode,
             notificationType: O.filter(input.event.notification_type, isHookPulseNotificationType),
             durationMs: input.event.duration_ms,
-            sessionEndReason: input.event.reason,
+            sessionEndReason: O.filter(input.event.reason, () =>
+              HookPulseEvent.is.SessionEnd(input.event.hook_event_name)
+            ),
           }),
         }),
       encode: (input) =>
@@ -442,29 +445,41 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 message: "Expected transcriptPath when encoding a canonical hook pulse as a raw hook event",
               })
             ),
-          onSome: (transcriptPath) =>
-            Effect.succeed(
-              HookPulseRawEventInput.make({
-                event: HookPulseRawEvent.make({
-                  session_id: input.sessionId,
-                  hook_event_name: input.hookEvent,
-                  cwd: input.cwd,
-                  tool_name: O.fromUndefinedOr(input.toolName),
-                  tool_use_id: O.fromUndefinedOr(input.toolUseId),
-                  prompt_id: O.fromUndefinedOr(input.promptId),
-                  transcript_path: transcriptPath,
-                  permission_mode: O.fromUndefinedOr(input.permissionMode),
-                  notification_type: O.fromUndefinedOr(input.notificationType),
-                  duration_ms: O.fromUndefinedOr(input.durationMs),
-                  reason: O.fromUndefinedOr(input.sessionEndReason),
-                }),
-                notifierRev: input.notifierRev,
-                instrumentClass: input.instrumentClass,
-                agentKind: input.agentKind,
-                evidenceTier: input.evidenceTier,
-                ts: input.ts,
-              })
-            ),
+          onSome: (transcriptPath) => {
+            const event = HookPulseRawEvent.make({
+              session_id: input.sessionId,
+              hook_event_name: input.hookEvent,
+              cwd: input.cwd,
+              tool_name: O.fromUndefinedOr(input.toolName),
+              tool_use_id: O.fromUndefinedOr(input.toolUseId),
+              prompt_id: O.fromUndefinedOr(input.promptId),
+              transcript_path: transcriptPath,
+              permission_mode: O.fromUndefinedOr(input.permissionMode),
+              notification_type: O.fromUndefinedOr(input.notificationType),
+              duration_ms: O.fromUndefinedOr(input.durationMs),
+              reason: O.fromUndefinedOr(input.sessionEndReason),
+            });
+
+            return Bool.match(areHookPulseWaitReasonsEquivalent(input.waitReason, deriveWaitReason(event)), {
+              onFalse: () =>
+                Effect.fail(
+                  new SchemaIssue.InvalidValue(O.some(input), {
+                    message: "Expected waitReason to match the value derived from the encoded raw hook event",
+                  })
+                ),
+              onTrue: () =>
+                Effect.succeed(
+                  HookPulseRawEventInput.make({
+                    event,
+                    notifierRev: input.notifierRev,
+                    instrumentClass: input.instrumentClass,
+                    agentKind: input.agentKind,
+                    evidenceTier: input.evidenceTier,
+                    ts: input.ts,
+                  })
+                ),
+            });
+          },
         }),
     })
   ),

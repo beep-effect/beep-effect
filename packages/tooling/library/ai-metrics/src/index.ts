@@ -89,17 +89,6 @@ export * from "./duckdb.ts";
  * @since 0.0.0
  */
 export * from "./forwarder.ts";
-/**
- * Schema-versioned hook-pulse ledger contract.
- *
- * @example
- * ```ts
- * import { HookPulseV1 } from "@beep/repo-ai-metrics"
- * console.log(HookPulseV1)
- * ```
- * @category models
- * @since 0.0.0
- */
 export * from "./hook-pulse.ts";
 /**
  * Transcript ingest helpers.

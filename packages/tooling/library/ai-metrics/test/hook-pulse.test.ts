@@ -176,12 +176,14 @@ const sessionEnd = rawInput("2026-08-01T06:29:09.000Z", {
 const permissionDenied = rawInput("2026-08-01T08:46:00.000Z", {
   hook_event_name: HookPulseEvent.Enum.PermissionDenied,
   tool_name: "Bash",
+  reason: "User denied permission",
 });
 
 const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
 const decodeHookPulse = S.decodeUnknownEffect(HookPulseV1);
 const encodeHookPulse = S.encodeUnknownEffect(HookPulseV1);
+const encodeHookPulseToRaw = S.encodeUnknownEffect(HookPulseV1FromRawEvent);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
@@ -315,6 +317,40 @@ describe("HookPulseV1", () => {
         "none",
         "none",
       ]);
+    })
+  );
+
+  it.effect(
+    "attributes reasons only to SessionEnd events",
+    Effect.fn("HookPulseTest.attributesOnlySessionEndReasons")(function* () {
+      const decoded = yield* Effect.all(
+        {
+          permissionDenied: decodeHookPulseFromRaw(permissionDenied),
+          sessionEnd: decodeHookPulseFromRaw(sessionEnd),
+        },
+        { concurrency: 1 }
+      );
+
+      expect(decoded.permissionDenied.sessionEndReason).toEqual(O.none());
+      expect(decoded.sessionEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
+    })
+  );
+
+  it.effect(
+    "rejects inconsistent wait reasons and round-trips consistent ones",
+    Effect.fn("HookPulseTest.rejectsInconsistentWaitReasons")(function* () {
+      const consistent = yield* decodeHookPulseFromRaw(approvedToolPermissionRequest);
+      const inconsistent = HookPulseV1.make({
+        ...consistent,
+        waitReason: HookPulseWaitReason.Enum["idle-input"],
+      });
+
+      const failure = yield* Effect.flip(encodeHookPulseToRaw(inconsistent));
+      const encoded = yield* encodeHookPulseToRaw(consistent);
+      const roundTripped = yield* decodeHookPulseFromRaw(encoded);
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(hookPulseEquivalent(roundTripped, consistent)).toBe(true);
     })
   );
 
