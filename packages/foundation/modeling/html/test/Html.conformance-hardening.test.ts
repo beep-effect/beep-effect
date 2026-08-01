@@ -493,6 +493,53 @@ describe("@beep/html generated special-child grammars", () => {
     }
   });
 
+  it("enforces generated parent-context requirements for source attributes", () => {
+    for (const root of [
+      Audio.make({ children: [Source.make({})] }),
+      Video.make({ children: [Source.make({})] }),
+      Audio.make({
+        children: [Source.make({ src: O.some("/sound.mp3"), srcset: O.some("/sound-2x.mp3 2x") })],
+      }),
+      Video.make({
+        children: [Source.make({ sizes: O.some("100vw"), src: O.some("/movie.mp4") })],
+      }),
+      Audio.make({
+        children: [Source.make({ height: O.some(320), src: O.some("/sound.mp3") })],
+      }),
+      Video.make({
+        children: [Source.make({ src: O.some("/movie.mp4"), width: O.some(640) })],
+      }),
+      Picture.make({
+        children: [Source.make({}), Img.make({ alt: O.some("image"), src: O.some("/image.png") })],
+      }),
+      Picture.make({
+        children: [
+          Source.make({ src: O.some("/image.webp"), srcset: O.some("/image.webp") }),
+          Img.make({ alt: O.some("image"), src: O.some("/image.png") }),
+        ],
+      }),
+    ]) {
+      expect(inspectConformance(root)).toContainEqual(
+        expect.objectContaining({ path: ["children.0", "attributes"], rule: "attributeRelationship" })
+      );
+      expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+
+    for (const root of [
+      Audio.make({ children: [Source.make({ src: O.some("/sound.mp3") })] }),
+      Video.make({ children: [Source.make({ src: O.some("/movie.mp4") })] }),
+      Picture.make({
+        children: [
+          Source.make({ srcset: O.some("/image.webp") }),
+          Img.make({ alt: O.some("image"), src: O.some("/image.png") }),
+        ],
+      }),
+    ]) {
+      expect(hasRule(root, "attributeRelationship")).toBe(false);
+      expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
+    }
+  });
+
   it("evaluates conditional interactive categories from attributes", () => {
     expect(
       hasRule(
@@ -663,8 +710,17 @@ describe("@beep/html foreign browser fixed points", () => {
       expect(hasRule(svgRoot("path", { [name]: "value" }), "foreignIntegration")).toBe(false);
     }
     expect(hasRule(svgRoot("custom-element", { "custom-attr": "value" }), "foreignIntegration")).toBe(false);
+    expect(hasRule(svgRoot("customÉ"), "foreignIntegration")).toBe(false);
     expect(hasRule(svgRoot("customElement"), "foreignIntegration")).toBe(true);
     expect(hasRule(svgRoot("path", { customAttr: "value" }), "foreignIntegration")).toBe(true);
     expect(Exit.isFailure(Effect.runSyncExit(serialize(svgRoot("lineargradient"))))).toBe(true);
+
+    const mismatchedPrefix = ForeignElement.make({
+      namespace: "mathml",
+      name: "math",
+      children: [ForeignElement.make({ namespace: "mathml", name: "svg:path", children: [] })],
+    });
+    expect(hasRule(mismatchedPrefix, "foreignIntegration")).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(serialize(mismatchedPrefix)))).toBe(true);
   });
 });

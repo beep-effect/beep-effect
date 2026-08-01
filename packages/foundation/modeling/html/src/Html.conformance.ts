@@ -398,21 +398,36 @@ const inspectElementAttributes = (
 const inspectAttributeRelationships = (
   node: HtmlChildView,
   tag: HtmlTag,
-  path: ReadonlyArray<string>
+  path: ReadonlyArray<string>,
+  ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   const attributes = node as unknown as Record<string, unknown>;
   const meta = ELEMENT_META[tag];
   const requiredIssues = A.flatMap(meta.attributeRequirements, (requirement) => {
+    const whenParents = requirement.whenParents;
+    const appliesToParent =
+      whenParents === undefined ||
+      pipe(
+        A.last(ancestors),
+        O.filter(isHtmlTag),
+        O.exists((parent) => A.contains(whenParents, parent))
+      );
     const applies =
-      requirement.whenAttribute === undefined
+      appliesToParent &&
+      (requirement.whenAttribute === undefined
         ? true
         : requirement.whenEquals === undefined
           ? hasAttribute(attributes[requirement.whenAttribute])
-          : attributeEquals(attributes[requirement.whenAttribute], requirement.whenEquals);
-    return applies &&
-      !A.every(requirement.required, (alternatives) =>
-        A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
-      )
+          : attributeEquals(attributes[requirement.whenAttribute], requirement.whenEquals));
+    const missesRequired = !A.every(requirement.required, (alternatives) =>
+      A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
+    );
+    const hasForbidden = pipe(
+      requirement.forbidden,
+      O.fromUndefinedOr,
+      O.exists((forbidden) => A.some(forbidden, (attribute) => hasAttribute(attributes[attribute])))
+    );
+    return applies && (missesRequired || hasForbidden)
       ? [makeIssue(A.append(path, "attributes"), "attributeRelationship", requirement.message)]
       : A.emptyReadonly();
   });
@@ -1027,7 +1042,7 @@ const inspectChild = (
         ...inspectForbiddenDescendants(node, tag, path, ancestors),
         ...inspectLabelableDescendants(node, tag, path),
         ...inspectElementAttributes(node, tag, path),
-        ...inspectAttributeRelationships(node, tag, path),
+        ...inspectAttributeRelationships(node, tag, path, ancestors),
         ...inspectChildModel(node, children, path, ancestorContentTokens),
         ...inspectElementOrder(node, children, path),
       ];

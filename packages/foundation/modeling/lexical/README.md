@@ -53,12 +53,12 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 | `TaskList`/`TaskItem` | `list` (`check`) + `listitem.checked` |
 | Nested lists | nested `list` children inside `listitem` |
 | `BlockQuote` with a single `P` | `quote` |
-| `Table` / `TableRow` / `TableCell` with default alignment | `table` / `tablerow` / `tablecell` |
+| `Table` / `TableRow` / `TableCell` with default alignment; `headerRow` false or a nonempty first row | `table` / `tablerow` / `tablecell` |
 | `YouTube` | `youtube` |
 | `Strong` / `Em` / `Del` / `Code` (inline) | text format bits 1 / 2 / 4 / 16 |
 | `A` | `link` |
 | `Br` | `linebreak` |
-| `P` wrapping one `A` with an `artifact://<id>` href | `artifact-ref` |
+| `P` wrapping one untitled `A` with an `artifact://<id>` href and one nonempty plain-text label | `artifact-ref` |
 
 ### Normalizations (Md → Lexical → Md converges; the second pass is identity)
 
@@ -66,8 +66,15 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
   the bitmask is orderless, so `Em(Strong(x))` round-trips as `Strong(Em(x))`.
 - `BlockQuote` with multiple blocks flattens to one linebreak-separated
   paragraph inside the quote.
+- Nested links retain the outer link and unwrap inner link wrappers. An image
+  inside a link becomes its alt-text run so the strict Lexical tree never
+  contains a link beneath another link.
 - Markdown table column alignment is dropped because the Lexical v1 table wire
   has no column-alignment field; the structural table then round-trips.
+- `headerRow: true` normalizes to `false` when the table has no first-row cell;
+  the Lexical v1 wire carries that flag only on first-row cells.
+- Artifact links with rich, segmented, empty, or titled labels stay ordinary
+  `link` nodes so their complete Markdown label and title remain reversible.
 
 ### Dropped on Lexical → Md (no markdown equivalent)
 

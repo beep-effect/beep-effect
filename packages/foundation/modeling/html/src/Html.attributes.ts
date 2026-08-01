@@ -900,15 +900,15 @@ export type AutocompleteAttribute = typeof AutocompleteAttribute.Type;
  * @since 0.0.0
  */
 export const ForeignElementName = S.String.check(
-  S.isPattern(/^(?:(?:svg|mathml):)?[_\p{L}][\p{L}\p{N}_.-]*$/u, {
+  S.isPattern(/^(?:(?:svg|mathml):[_\p{L}]|[A-Za-z])[\p{L}\p{N}_.-]*$/u, {
     identifier: $I`ForeignElementNameCheck`,
     title: "Foreign Element Name",
-    description: "Checks a serializable SVG or MathML element name.",
+    description: "Checks an SVG or MathML element name that the HTML tokenizer can open as a tag.",
     message: "Expected a valid foreign element name",
   })
 ).pipe(
   $I.annoteSchema("ForeignElementName", {
-    description: "Serializable SVG or MathML element name.",
+    description: "SVG or MathML element name with an ASCII start accepted by HTML tag tokenization.",
   })
 );
 

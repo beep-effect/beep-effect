@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AriaAttributes, StandardGlobalAttributes } from "./Html.attributes.ts";
 import { conformantRoot } from "./Html.conformance.ts";
+import { toAsciiLowerCase } from "./Html.foreign.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
@@ -679,7 +680,7 @@ const inspectAttribute = (
 };
 
 const inspectBlankTarget = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyArray<HtmlPolicyIssue> => {
-  if (node.target !== "_blank") return A.emptyReadonly();
+  if (!P.isString(node.target) || toAsciiLowerCase(node.target) !== "_blank") return A.emptyReadonly();
   const relTokens = P.isString(node.rel)
     ? pipe(node.rel, Str.split(/\s+/u), A.map(Str.toLowerCase))
     : A.emptyReadonly<string>();

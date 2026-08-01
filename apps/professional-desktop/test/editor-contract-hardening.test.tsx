@@ -35,8 +35,11 @@ import { afterEach, beforeEach, describe, expect, vi } from "vitest";
 import { Composer, ComposerSafetyWarning } from "@/chat/ui/Composer";
 import {
   composerConfirmedNormalizationAtoms,
+  composerConfirmNormalizationHandlerAtoms,
   composerDocumentForSend,
   composerDocumentFromEditorState,
+  composerDocumentSafetyGateAtoms,
+  composerSerializedChangeHandlerAtoms,
   normalizeLegacyRawDocument,
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
@@ -1051,6 +1054,39 @@ describe("editor contract hardening", { concurrent: false }, () => {
   });
 
   it.effect(
+    "admits a safe nested-link document as an editable composer seed",
+    Effect.fnUntraced(function* () {
+      const content = Md.Document.make({
+        children: [
+          Md.P.make({
+            children: [
+              Md.A.make({
+                href: "https://outer.example",
+                children: [
+                  Md.A.make({
+                    href: "https://inner.example",
+                    children: [Md.Strong.make({ children: [Md.Text.make({ value: "inner " })] })],
+                  }),
+                  Md.Img.make({ src: "https://example.com/diagram.png", alt: "diagram" }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      expect(Result.isSuccess(refineSafeDocument(content))).toBe(true);
+      const initialState = yield* documentToEditorState(content);
+      const view = render(<ChatComposer namespace="safe-nested-link-seed" initialState={initialState} />);
+      const editor = yield* Effect.promise(() => view.findByRole("combobox", { name: "Message composer" }));
+
+      expect(editor).toHaveTextContent("inner diagram");
+      expect(view.queryByTestId("editor-compatibility-fallback")).not.toBeInTheDocument();
+      view.unmount();
+    })
+  );
+
+  it.effect(
     "remounts a compatible wire composer when its canonical input changes",
     Effect.fnUntraced(function* () {
       const document = (value: string) =>
@@ -1127,8 +1163,117 @@ describe("editor contract hardening", { concurrent: false }, () => {
 
     expect(normalized.children[0]).toHaveProperty("children.0.children.0.children.0._tag", "text");
     expect(documentSafetyIssues(normalized).map((issue) => issue._tag)).toEqual(["UnsafeUrl"]);
-    expect(O.getOrThrow(prepareComposerDocumentSafetyGate(legacy))._tag).toBe("UnsafeDocument");
+    const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(legacy));
+    expect(gate._tag).toBe("UnsafeDocument");
+    if (gate._tag === "UnsafeDocument") expect(gate.rawNormalizationPending).toBe(true);
   });
+
+  it.effect(
+    "preserves mixed raw provenance until the corrected safe document is explicitly confirmed",
+    Effect.fnUntraced(function* () {
+      const duplicateIdentifier = Md.FootnoteIdentifier.make("duplicate");
+      const duplicateFootnote = (value: string) =>
+        Md.FootnoteDefinition.make({
+          identifier: duplicateIdentifier,
+          children: [Md.P.make({ children: [Md.Text.make({ value })] })],
+        });
+      const rawText = () => Md.RawHtml.make({ value: "<strong>legacy literal</strong>" });
+      const legacyDocuments = [
+        Md.Document.make({
+          children: [
+            Md.P.make({
+              children: [
+                rawText(),
+                Md.A.make({ href: "javascript:alert(1)", children: [Md.Text.make({ value: "unsafe link" })] }),
+              ],
+            }),
+          ],
+        }),
+        Md.Document.make({
+          children: [Md.P.make({ children: [rawText(), Md.Text.make({ value: "invalid\u0000scalar" })] })],
+        }),
+        Md.Document.make({
+          children: [Md.P.make({ children: [rawText()] }), duplicateFootnote("first"), duplicateFootnote("second")],
+        }),
+      ];
+      const corrected = Md.Document.make({
+        children: [Md.P.make({ children: [Md.Text.make({ value: "current edited literal" })] })],
+      });
+      const expected = Result.getOrThrow(refineSafeDocument(corrected));
+      const correctedState = yield* documentToEditorState(corrected);
+
+      for (const [index, legacy] of legacyDocuments.entries()) {
+        const threadId = WorkspaceIdentity.ThreadId.make(8_100 + index);
+        const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
+        const gateAtom = composerDocumentSafetyGateAtoms(threadId)(legacy);
+        const confirmedAtom = composerConfirmedNormalizationAtoms(threadId)(legacy);
+        const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(legacy);
+        const confirmHandlerAtom = composerConfirmNormalizationHandlerAtoms(threadId)(legacy);
+        registry.mount(gateAtom);
+        registry.mount(confirmedAtom);
+        registry.mount(changeHandlerAtom);
+        registry.mount(confirmHandlerAtom);
+
+        const initialGate = O.getOrThrow(registry.get(gateAtom));
+        expect(initialGate._tag).toBe("UnsafeDocument");
+        if (initialGate._tag === "UnsafeDocument") expect(initialGate.rawNormalizationPending).toBe(true);
+
+        registry.get(changeHandlerAtom)(correctedState);
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            const gate = O.getOrThrow(registry.get(gateAtom));
+            expect(gate._tag).toBe("RawNormalization");
+            if (gate._tag === "RawNormalization") {
+              expect(gate.normalized).toEqual(expected);
+              expect(gate.preview).toContain("current edited literal");
+            }
+          })
+        );
+        expect(O.isNone(registry.get(confirmedAtom))).toBe(true);
+
+        expect(registry.get(confirmHandlerAtom)()).toBe(true);
+        expect(registry.get(confirmedAtom)).toEqual(O.some(expected));
+        registry.dispose();
+      }
+    })
+  );
+
+  it.effect(
+    "clears a corrected non-raw safety refusal without adding a normalization confirmation",
+    Effect.fnUntraced(function* () {
+      const threadId = WorkspaceIdentity.ThreadId.make(8_104);
+      const unsafe = Md.Document.make({
+        children: [
+          Md.P.make({
+            children: [Md.A.make({ href: "javascript:alert(1)", children: [Md.Text.make({ value: "unsafe link" })] })],
+          }),
+        ],
+      });
+      const corrected = Md.Document.make({
+        children: [
+          Md.P.make({
+            children: [Md.A.make({ href: "https://example.com", children: [Md.Text.make({ value: "safe link" })] })],
+          }),
+        ],
+      });
+      const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
+      const gateAtom = composerDocumentSafetyGateAtoms(threadId)(unsafe);
+      const confirmedAtom = composerConfirmedNormalizationAtoms(threadId)(unsafe);
+      const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(unsafe);
+      registry.mount(gateAtom);
+      registry.mount(confirmedAtom);
+      registry.mount(changeHandlerAtom);
+
+      const initialGate = O.getOrThrow(registry.get(gateAtom));
+      expect(initialGate._tag).toBe("UnsafeDocument");
+      if (initialGate._tag === "UnsafeDocument") expect(initialGate.rawNormalizationPending).toBe(false);
+
+      registry.get(changeHandlerAtom)(yield* documentToEditorState(corrected));
+      yield* Effect.promise(() => waitFor(() => expect(O.isNone(registry.get(gateAtom))).toBe(true)));
+      expect(O.isNone(registry.get(confirmedAtom))).toBe(true);
+      registry.dispose();
+    })
+  );
 
   it("describes invalid scalar text without misleading URL guidance or exposing draft content", () => {
     const privateScalarText = "private\u0000payload";

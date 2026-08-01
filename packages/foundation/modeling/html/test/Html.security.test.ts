@@ -193,24 +193,29 @@ describe("@beep/html safe policy", () => {
   });
 
   it('requires noopener and noreferrer for target="_blank"', () => {
-    const unsafe = fragment(
-      Anchor.make({
-        href: O.some("https://example.com"),
-        target: O.some("_blank"),
-        children: [text("link")],
-      })
-    );
-    expect(Exit.isFailure(safeExit(unsafe))).toBe(true);
+    for (const target of ["_blank", "_BLANK", "_Blank", "_bLaNk"]) {
+      const unsafe = fragment(
+        Anchor.make({
+          href: O.some("https://example.com"),
+          target: O.some(target),
+          children: [text("link")],
+        })
+      );
+      expect(Exit.isFailure(safeExit(unsafe))).toBe(true);
+    }
 
     const safe = fragment(
       Anchor.make({
         href: O.some("https://example.com"),
         rel: O.some("noopener noreferrer"),
-        target: O.some("_blank"),
+        target: O.some("_BLANK"),
         children: [text("link")],
       })
     );
     expect(Exit.isSuccess(safeExit(safe))).toBe(true);
+    expect(
+      safeHtmlValue(Effect.runSync(conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe))))
+    ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
   });
 
   it("denies active, foreign, form, data, event, style, and broad global attributes", () => {

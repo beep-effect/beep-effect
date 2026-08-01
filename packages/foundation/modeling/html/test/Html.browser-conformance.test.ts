@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 
 import { conform, inspectConformance, serialize, untrustedHtmlValue } from "@beep/html";
+import { ForeignElementName } from "@beep/html/Html.attributes";
 import { Div, ForeignElement, P } from "@beep/html/Html.model";
 import { Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 describe("@beep/html browser conformance", () => {
   it("keeps every admitted data-* suffix distinct after browser parsing", () => {
@@ -107,5 +109,32 @@ describe("@beep/html browser conformance", () => {
       ],
     });
     expect(Exit.isFailure(Effect.runSyncExit(serialize(drifting)))).toBe(true);
+  });
+
+  it("admits exactly the foreign-name representatives preserved by HTML parsing", () => {
+    expect(S.is(ForeignElementName)("_x")).toBe(false);
+    expect(S.is(ForeignElementName)("é")).toBe(false);
+    expect(S.is(ForeignElementName)("svg:é")).toBe(true);
+
+    const root = ForeignElement.make({
+      namespace: "svg",
+      name: "svg",
+      children: [
+        ForeignElement.make({
+          namespace: "svg",
+          name: "customÉ",
+          children: [],
+        }),
+      ],
+    });
+    const serialized = pipe(root, serialize, Effect.runSync, untrustedHtmlValue);
+    const container = document.createElement("div");
+    container.innerHTML = serialized;
+    const custom = container.firstElementChild?.firstElementChild;
+
+    expect(inspectConformance(root)).toStrictEqual([]);
+    expect(serialized).toBe("<svg><customÉ></customÉ></svg>");
+    expect(custom?.localName).toBe("customÉ");
+    expect(custom?.namespaceURI).toBe("http://www.w3.org/2000/svg");
   });
 });

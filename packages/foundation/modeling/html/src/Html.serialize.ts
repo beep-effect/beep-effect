@@ -17,19 +17,19 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ForeignAttributeName, ForeignElementName } from "./Html.attributes.ts";
+import { ForeignAttributeName } from "./Html.attributes.ts";
 import { conform, conformantRoot } from "./Html.conformance.ts";
 import { isForeignAttributeNameFixedPoint, isForeignElementNameFixedPoint } from "./Html.foreign.ts";
 import { ELEMENT_META, HtmlBooleanAttributeName, HtmlTag } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
 import { enforceSafeHtml, SafeHtmlAst, safeHtmlAstRoot } from "./Html.policy.ts";
+import type { ForeignElementName } from "./Html.attributes.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
 const $I = $HtmlId.create("Html.serialize");
 const isHtmlTag = S.is(HtmlTag);
 const isBooleanAttributeName = S.is(HtmlBooleanAttributeName);
 const isForeignAttributeName = S.is(ForeignAttributeName);
-const isForeignElementName = S.is(ForeignElementName);
 const isSafeHtmlAst = S.is(SafeHtmlAst);
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
 const byEntryName = Order.mapInput(Str.Order, ([name]: readonly [string, unknown]) => name);
@@ -250,7 +250,6 @@ const isRuntimeStringNode = (node: RuntimeNode, tag: "#comment" | "#text"): node
 const isRuntimeForeignNode = (node: RuntimeNode): node is RuntimeForeignNode =>
   node._tag === "#foreign" &&
   P.isString(node.name) &&
-  isForeignElementName(node.name) &&
   (node.namespace === "svg" || node.namespace === "mathml") &&
   isForeignElementNameFixedPoint(node.namespace, node.name);
 
@@ -452,15 +451,6 @@ const serializeForeignNode = (
   node: RuntimeForeignNode,
   path: ReadonlyArray<string>
 ): Effect.Effect<string, HtmlSerializeError> => {
-  const [prefix] = Str.split(":")(node.name);
-  if (
-    Str.includes(":")(node.name) &&
-    !((node.namespace === "svg" && prefix === "svg") || (node.namespace === "mathml" && prefix === "mathml"))
-  ) {
-    return Effect.fail(
-      makeError(path, "invalidNode", `Foreign name ${node.name} does not match namespace ${node.namespace}`)
-    );
-  }
   const attributes =
     node.attributes === undefined
       ? Effect.succeed("")

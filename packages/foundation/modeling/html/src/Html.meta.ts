@@ -925,7 +925,7 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`Htm
 ) {}
 
 /**
- * Generated conditional requirement for one or more HTML attributes.
+ * Generated conditional requirement or exclusion for HTML attributes.
  *
  * @example
  * ```ts
@@ -944,13 +944,15 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I`Htm
  */
 export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>($I`HtmlAttributeRequirement`)(
   {
+    forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
     whenAttribute: S.String.pipe(S.optionalKey),
     whenEquals: S.String.pipe(S.optionalKey),
+    whenParents: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("HtmlAttributeRequirement", {
-    description: "Generated conditional requirement for one or more HTML attributes.",
+    description: "Generated conditional requirement or exclusion for HTML attributes.",
   })
 ) {}
 
@@ -1049,12 +1051,18 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
     attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
     attributeRequirements: Object.freeze(
-      A.map(value.attributeRequirements, (requirement) =>
-        Object.freeze({
+      A.map(value.attributeRequirements, (requirement) => {
+        if (requirement.forbidden !== undefined) {
+          Object.freeze(requirement.forbidden);
+        }
+        if (requirement.whenParents !== undefined) {
+          Object.freeze(requirement.whenParents);
+        }
+        return Object.freeze({
           ...requirement,
           required: Object.freeze(A.map(requirement.required, (alternatives) => Object.freeze(alternatives))),
-        })
-      )
+        });
+      })
     ),
     currentAttributes: Object.freeze(value.currentAttributes),
     numericAttributeRelationships: Object.freeze(
@@ -3301,7 +3309,20 @@ const elementMetaSource: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
     obsoleteAttributes: [],
     conditionalCategories: [],
     attributeEqualities: [],
-    attributeRequirements: [],
+    attributeRequirements: [
+      {
+        forbidden: ["height", "sizes", "srcset", "width"],
+        message: "<source> under <audio> or <video> requires src and forbids height, sizes, srcset, and width",
+        required: [["src"]],
+        whenParents: ["audio", "video"],
+      },
+      {
+        forbidden: ["src"],
+        message: "<source> under <picture> requires srcset and forbids src",
+        required: [["srcset"]],
+        whenParents: ["picture"],
+      },
+    ],
     numericAttributeRelationships: [],
     uniqueAttributes: [],
   },

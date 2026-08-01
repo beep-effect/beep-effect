@@ -12,11 +12,13 @@ import {
   TableRowNode,
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
+import { refineSafeDocument } from "@beep/md/Md.safe";
 import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
@@ -138,6 +140,50 @@ describe("Lexical.codec", () => {
     expect(roundTrip(converged)).toEqual(converged);
   });
 
+  it("keeps safe nested-link content inside the strict Lexical grammar", () => {
+    const document = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [
+            MdModel.A.make({
+              href: "https://outer.example",
+              children: [
+                MdModel.Strong.make({
+                  children: [
+                    MdModel.A.make({
+                      href: "https://inner.example",
+                      children: [MdModel.Em.make({ children: [mdText("inner ")] })],
+                    }),
+                  ],
+                }),
+                MdModel.Img.make({ src: "https://example.com/diagram.png", alt: "diagram" }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    const converged = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [
+            MdModel.A.make({
+              href: "https://outer.example",
+              children: [
+                MdModel.Strong.make({ children: [MdModel.Em.make({ children: [mdText("inner ")] })] }),
+                mdText("diagram"),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    expect(Result.isSuccess(refineSafeDocument(document))).toBe(true);
+    expect(roundTrip(document)).toEqual(converged);
+    expect(roundTrip(converged)).toEqual(converged);
+  });
+
   it("converges Markdown table alignment to the structural Lexical table profile", () => {
     const row = MdModel.TableRow.make({
       children: [
@@ -154,6 +200,26 @@ describe("Lexical.codec", () => {
 
     expect(roundTrip(aligned)).toEqual(structural);
     expect(roundTrip(structural)).toEqual(structural);
+  });
+
+  it("normalizes an unrepresentable empty Markdown header row", () => {
+    const emptyHeaderTable = MdModel.Document.make({
+      children: [MdModel.Table.make({ headerRow: true, children: [] })],
+    });
+    const emptyHeaderRow = MdModel.Document.make({
+      children: [
+        MdModel.Table.make({
+          headerRow: true,
+          children: [MdModel.TableRow.make({ children: [] })],
+        }),
+      ],
+    });
+
+    for (const document of [emptyHeaderTable, emptyHeaderRow]) {
+      const converged = roundTrip(document);
+      expect(converged.children[0]).toMatchObject({ _tag: "table", headerRow: false });
+      expect(roundTrip(converged)).toEqual(converged);
+    }
   });
 
   it.each([
@@ -199,6 +265,26 @@ describe("Lexical.codec", () => {
 
     const document = MdModel.Document.make({ children: [labeled, unlabeled] });
     expect(roundTrip(document)).toEqual(document);
+  });
+
+  it("keeps non-canonical artifact links reversible as ordinary links", () => {
+    const href = `${ARTIFACT_URI_PREFIX}artifact-123`;
+    const links = [
+      MdModel.A.make({ href, children: [MdModel.Strong.make({ children: [mdText("Quarterly report")] })] }),
+      MdModel.A.make({ href, children: [mdText("Quarterly "), mdText("report")] }),
+      MdModel.A.make({ href, children: [mdText("Quarterly report")], title: O.some("Artifact title") }),
+      MdModel.A.make({ href, children: [mdText("")] }),
+    ];
+
+    for (const link of links) {
+      const paragraph = MdModel.P.make({ children: [link] });
+      const node = Effect.runSync(blockToLexical(paragraph));
+      expect(node.type).toBe("paragraph");
+      if (node.type === "paragraph") expect(node.children[0]?.type).toBe("link");
+
+      const document = MdModel.Document.make({ children: [paragraph] });
+      expect(roundTrip(document)).toEqual(document);
+    }
   });
 
   it("round-trips schema-derived artifact URIs without grammar drift", () => {

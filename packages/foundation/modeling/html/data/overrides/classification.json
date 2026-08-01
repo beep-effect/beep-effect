@@ -289,6 +289,20 @@
         "required": [["name"]]
       }
     ],
+    "source": [
+      {
+        "forbidden": ["height", "sizes", "srcset", "width"],
+        "message": "<source> under <audio> or <video> requires src and forbids height, sizes, srcset, and width",
+        "required": [["src"]],
+        "whenParents": ["audio", "video"]
+      },
+      {
+        "forbidden": ["src"],
+        "message": "<source> under <picture> requires srcset and forbids src",
+        "required": [["srcset"]],
+        "whenParents": ["picture"]
+      }
+    ],
     "track": [
       {
         "message": "<track> requires src",

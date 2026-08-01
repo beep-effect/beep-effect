@@ -219,6 +219,7 @@ class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocumentGat
   {
     issueCount: S.Int.check(S.isGreaterThan(0)),
     message: S.NonEmptyString,
+    rawNormalizationPending: S.Boolean,
   },
   $I.annote("ComposerUnsafeDocumentGate", {
     description: "A document refusal that must be corrected by editing rather than normalization.",
@@ -236,6 +237,7 @@ class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocumentGat
  * const gate = ComposerDocumentSafetyGate.cases.UnsafeDocument.make({
  *   issueCount: 1,
  *   message: "Replace the unsafe link before sending.",
+ *   rawNormalizationPending: false,
  * })
  * console.log(S.is(ComposerDocumentSafetyGate)(gate)) // true
  * ```
@@ -260,6 +262,7 @@ export const ComposerDocumentSafetyGate = S.Union([ComposerRawNormalizationGate,
  * const gate: ComposerDocumentSafetyGate = ComposerDocumentSafetyGate.cases.UnsafeDocument.make({
  *   issueCount: 1,
  *   message: "Replace the unsafe link before sending.",
+ *   rawNormalizationPending: false,
  * })
  * console.log(gate._tag) // "UnsafeDocument"
  * ```
@@ -339,10 +342,27 @@ const rawNormalizationGate = (safeDocument: SafeDocument, issueCount: number): C
     preview: Str.takeLeft(renderPlainTextUnsafe(safeDocument), 2_000),
   });
 
+const preparePendingRawNormalizationGate = (
+  document: Md.Document,
+  issueCount: number
+): O.Option<ComposerDocumentSafetyGate> =>
+  Result.match(refineSafeDocument(normalizeLegacyRawDocument(document)), {
+    onFailure: (remainingIssues) =>
+      O.some(
+        ComposerUnsafeDocumentGate.make({
+          issueCount,
+          message: unsafeDocumentMessage(remainingIssues),
+          rawNormalizationPending: true,
+        })
+      ),
+    onSuccess: (normalized) => O.some(rawNormalizationGate(normalized, issueCount)),
+  });
+
 /**
  * Classifies a persisted general document before it is projected into Lexical.
- * Raw-only legacy content gets a confirmable escaped copy; any unsafe URL keeps
- * a non-convertible refusal.
+ * Raw-only legacy content gets a confirmable escaped copy. A co-occurring
+ * non-convertible violation keeps the refusal while retaining the pending raw
+ * provenance for confirmation after that violation is corrected.
  *
  * @example
  * ```ts
@@ -368,6 +388,7 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
         ComposerUnsafeDocumentGate.make({
           issueCount: A.length(issues),
           message: unsafeDocumentMessage(remainingIssues),
+          rawNormalizationPending: documentViolationFlags(issues).raw,
         })
       ),
     onSuccess: (normalized) => O.some(rawNormalizationGate(normalized, A.length(issues))),
@@ -489,12 +510,11 @@ const updateComposerDraftAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
           onNone: O.none<ComposerDocumentSafetyGate>,
           onSome: (gate) =>
             ComposerDocumentSafetyGate.match(gate, {
-              RawNormalization: () =>
-                Result.match(refineSafeDocument(document), {
-                  onFailure: () => prepareComposerDocumentSafetyGate(document),
-                  onSuccess: (safeDocument) => O.some(rawNormalizationGate(safeDocument, gate.issueCount)),
-                }),
-              UnsafeDocument: () => prepareComposerDocumentSafetyGate(document),
+              RawNormalization: () => preparePendingRawNormalizationGate(document, gate.issueCount),
+              UnsafeDocument: ({ issueCount, rawNormalizationPending }) =>
+                rawNormalizationPending
+                  ? preparePendingRawNormalizationGate(document, issueCount)
+                  : prepareComposerDocumentSafetyGate(document),
             }),
         });
 
@@ -502,8 +522,9 @@ const updateComposerDraftAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
         ctx.set(gateAtom, nextGate);
 
         // A pending raw conversion preserves the original general document in
-        // draft storage. Once a user edits a non-convertible refusal into a
-        // safe document, normal persistence resumes.
+        // draft storage, including while another violation blocks conversion.
+        // Only a corrected refusal with no raw provenance resumes normal
+        // persistence; corrected raw content remains gated for confirmation.
         if (O.isSome(nextGate)) return;
         const editingThisThread = O.filter(ctx(editTargetAtom), (target) => target.threadId === threadId);
         if (O.isSome(editingThisThread)) return;

@@ -211,13 +211,15 @@ class ConditionalCategoryRule extends S.Class<ConditionalCategoryRule>($I`Condit
 
 class AttributeRequirement extends S.Class<AttributeRequirement>($I`AttributeRequirement`)(
   {
+    forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
     whenAttribute: S.String.pipe(S.optionalKey),
     whenEquals: S.String.pipe(S.optionalKey),
+    whenParents: S.String.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("AttributeRequirement", {
-    description: "A generated conditional requirement for one or more HTML attributes.",
+    description: "A generated conditional requirement or exclusion for HTML attributes.",
   })
 ) {}
 
@@ -569,7 +571,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
   const attributeRequirementTags = R.keys(classification.attributeRequirements).sort();
-  const requiredAttributeRequirementTags = ["a", "area", "base", "img", "input", "map", "meter", "track"];
+  const requiredAttributeRequirementTags = ["a", "area", "base", "img", "input", "map", "meter", "source", "track"];
   if (JSON.stringify(attributeRequirementTags) !== JSON.stringify(requiredAttributeRequirementTags)) {
     failGeneration(
       `HTML generator requires an exact attribute-requirement inventory; expected ${JSON.stringify(requiredAttributeRequirementTags)}, received ${JSON.stringify(attributeRequirementTags)}`
@@ -594,6 +596,19 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         failGeneration(
           `HTML generator attribute requirement for <${tag}> references unknown ${requirement.whenAttribute}`
         );
+      }
+      for (const parent of requirement.whenParents ?? []) {
+        if (
+          !MutableHashSet.has(elementNameSet, parent) ||
+          isObsolete(elementDfns.find((entry) => entry.linkingText[0] === parent))
+        ) {
+          failGeneration(`HTML generator attribute requirement for <${tag}> references non-current parent <${parent}>`);
+        }
+      }
+      for (const attribute of requirement.forbidden ?? []) {
+        if (!MutableHashSet.has(modeledAttributes, attribute)) {
+          failGeneration(`HTML generator attribute exclusion for <${tag}> references unknown ${attribute}`);
+        }
       }
       for (const alternatives of requirement.required) {
         for (const attribute of alternatives) {
@@ -1881,7 +1896,7 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`Ht
 ) {}
 
 /**
- * Generated conditional requirement for one or more HTML attributes.
+ * Generated conditional requirement or exclusion for HTML attributes.
  *
  * @example
  * \`\`\`ts
@@ -1900,13 +1915,15 @@ export class HtmlAttributeEquality extends S.Class<HtmlAttributeEquality>($I\`Ht
  */
 export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>($I\`HtmlAttributeRequirement\`)(
   {
+    forbidden: S.String.pipe(S.NonEmptyArray, S.optionalKey),
     message: S.String,
     required: S.String.pipe(S.NonEmptyArray, S.NonEmptyArray),
     whenAttribute: S.String.pipe(S.optionalKey),
     whenEquals: S.String.pipe(S.optionalKey),
+    whenParents: HtmlTag.pipe(S.NonEmptyArray, S.optionalKey),
   },
   $I.annote("HtmlAttributeRequirement", {
-    description: "Generated conditional requirement for one or more HTML attributes.",
+    description: "Generated conditional requirement or exclusion for HTML attributes.",
   })
 ) {}
 
@@ -2005,12 +2022,18 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     conditionalCategories: Object.freeze(A.map(value.conditionalCategories, (rule) => Object.freeze(rule))),
     attributeEqualities: Object.freeze(A.map(value.attributeEqualities, (equality) => Object.freeze(equality))),
     attributeRequirements: Object.freeze(
-      A.map(value.attributeRequirements, (requirement) =>
-        Object.freeze({
+      A.map(value.attributeRequirements, (requirement) => {
+        if (requirement.forbidden !== undefined) {
+          Object.freeze(requirement.forbidden);
+        }
+        if (requirement.whenParents !== undefined) {
+          Object.freeze(requirement.whenParents);
+        }
+        return Object.freeze({
           ...requirement,
           required: Object.freeze(A.map(requirement.required, (alternatives) => Object.freeze(alternatives))),
-        })
-      )
+        });
+      })
     ),
     currentAttributes: Object.freeze(value.currentAttributes),
     numericAttributeRelationships: Object.freeze(

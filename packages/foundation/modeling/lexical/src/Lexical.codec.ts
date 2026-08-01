@@ -210,16 +210,18 @@ const mdBlockText = (block: Md.Block): string =>
 
 const inlinesToLexical = (
   inlines: ReadonlyArray<Md.Inline>,
-  format: TextFormatMask
+  format: TextFormatMask,
+  insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.map(
-    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format)),
+    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format, insideLink)),
     A.flatten
   );
 
 const inlineToLexical = (
   inline: Md.Inline,
-  format: TextFormatMask
+  format: TextFormatMask,
+  insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Match.value(inline).pipe(
     Match.tagsExhaustive({
@@ -228,23 +230,28 @@ const inlineToLexical = (
       text: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       rawMarkdown: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       rawHtml: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      strong: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold)),
-      em: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic)),
-      del: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough)),
+      strong: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold), insideLink),
+      em: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic), insideLink),
+      del: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough), insideLink),
       code: (node) => Effect.map(textLeaf(node.value, withTextFormat(format, TextFormatBits.code)), A.of<LexicalNode>),
       a: (node) =>
-        Effect.flatMap(inlinesToLexical(node.children, format), (children) =>
-          Effect.flatMap(decodeSafeUrl(node.href), (url) =>
-            Effect.map(LinkNode.makeEffect({ url, children, title: node.title }), A.of<LexicalNode>)
-          )
-        ),
-      // Images degrade to links so the destination survives (README).
+        insideLink
+          ? inlinesToLexical(node.children, format, true)
+          : Effect.flatMap(inlinesToLexical(node.children, format, true), (children) =>
+              Effect.flatMap(decodeSafeUrl(node.href), (url) =>
+                Effect.map(LinkNode.makeEffect({ url, children, title: node.title }), A.of<LexicalNode>)
+              )
+            ),
+      // Images normally degrade to links so the destination survives. Inside
+      // an outer link, only the alt-text run is representable (README).
       img: (node) =>
-        Effect.flatMap(textLeaf(node.alt, format), (alt) =>
-          Effect.flatMap(decodeSafeUrl(node.src), (url) =>
-            Effect.map(LinkNode.makeEffect({ url, children: [alt], title: node.title }), A.of<LexicalNode>)
-          )
-        ),
+        insideLink
+          ? Effect.map(textLeaf(node.alt, format), A.of<LexicalNode>)
+          : Effect.flatMap(textLeaf(node.alt, format), (alt) =>
+              Effect.flatMap(decodeSafeUrl(node.src), (url) =>
+                Effect.map(LinkNode.makeEffect({ url, children: [alt], title: node.title }), A.of<LexicalNode>)
+              )
+            ),
       br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
       inlineMath: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       footnoteReference: (node) => Effect.map(textLeaf(`[^${node.identifier}]`, format), A.of<LexicalNode>),
@@ -299,14 +306,18 @@ type ArtifactRef = {
 
 const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
   pipe(
-    ArtifactUriParts.decodeOption(child.href),
-    O.map(([, artifactId]) => {
-      const label = mdInlinesText(child.children);
-      return {
-        artifactId,
-        label: label === artifactId || Str.isEmpty(label) ? O.none<string>() : O.some(label),
-      };
-    })
+    A.length(child.children) === 1 ? A.head(child.children) : O.none<Md.Inline>(),
+    O.filter(S.is(Md.Text)),
+    O.filter(({ value }) => Str.isNonEmpty(value) && O.isNone(child.title)),
+    O.flatMap(({ value: label }) =>
+      pipe(
+        ArtifactUriParts.decodeOption(child.href),
+        O.map(([, artifactId]) => ({
+          artifactId,
+          label: label === artifactId ? O.none<string>() : O.some(label),
+        }))
+      )
+    )
   );
 
 // A single inline child that is an `a` node whose href is an artifact:// URI.
