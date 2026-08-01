@@ -581,9 +581,9 @@
         "required": [["src"]]
       },
       {
-        "message": "<track kind=\"subtitles\"> requires srclang",
+        "message": "<track> with omitted kind or kind=\"subtitles\" requires srclang",
         "required": [["srclang"]],
-        "when": { "_tag": "attributeEquals", "attribute": "kind", "value": "subtitles" }
+        "when": { "_tag": "attributeEqualsOrMissing", "attribute": "kind", "value": "subtitles" }
       }
     ]
   },
@@ -594,7 +594,8 @@
     "link/imagesrcset": "srcset",
     "link/sizes": "icon-sizes",
     "source/sizes": "source-size-list",
-    "source/srcset": "srcset"
+    "source/srcset": "srcset",
+    "track/srclang": "language-tag"
   },
   "attributeEqualities": {
     "map": [

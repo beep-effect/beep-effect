@@ -2,6 +2,7 @@ import { decodeEditorStateForRuntime, decodeEditorStateForRuntimeResult } from "
 import { TextDetailMask, TextFormatMask, TextNode } from "@beep/lexical-schema/Lexical.model";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as O from "effect/Option";
 import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 
 const validWire = {
@@ -84,6 +85,23 @@ describe("@beep/editor runtime admission", () => {
       })
     );
 
+    expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
+  });
+
+  it("rejects non-JSON NodeState before runtime or persistence", () => {
+    const raw = {
+      root: {
+        ...validWire.root,
+        children: [{ ...validWire.root.children[0], $: { plugin: () => true } }],
+      },
+    };
+    const decoded = decodedValidState();
+    const paragraph = decoded.root.children[0];
+    Reflect.set(paragraph, "$", O.some({ plugin: 1n }));
+
+    expect(Result.isFailure(decodeEditorStateForRuntimeResult(raw))).toBe(true);
+    expect(Effect.runSyncExit(decodeEditorStateForRuntime(raw))._tag).toBe("Failure");
     expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
   });

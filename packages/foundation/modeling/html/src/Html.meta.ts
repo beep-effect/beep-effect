@@ -1279,7 +1279,7 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  * @category models
  * @since 0.0.0
  */
-export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "source-size-list", "srcset"]).pipe(
+export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "language-tag", "source-size-list", "srcset"]).pipe(
   $I.annoteSchema("HtmlAttributeSyntax", {
     description: "Reviewed HTML attribute microsyntax requiring specialized conformance inspection.",
   })
@@ -1323,6 +1323,7 @@ export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSynta
   "link/sizes": "icon-sizes",
   "source/sizes": "source-size-list",
   "source/srcset": "srcset",
+  "track/srclang": "language-tag",
 });
 
 /**
@@ -1381,6 +1382,7 @@ const HtmlAttributeValueConstraint = S.Union([
 const HtmlAttributeRequirementPredicate = S.Union([
   S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
   $I.annoteSchema("HtmlAttributeRequirementPredicate", {
@@ -4600,9 +4602,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlEle
     attributeRequirements: [
       { message: "<track> requires src", required: [["src"]] },
       {
-        message: '<track kind="subtitles"> requires srclang',
+        message: '<track> with omitted kind or kind="subtitles" requires srclang',
         required: [["srclang"]],
-        when: { _tag: "attributeEquals", attribute: "kind", value: "subtitles" },
+        when: { _tag: "attributeEqualsOrMissing", attribute: "kind", value: "subtitles" },
       },
     ],
     numericAttributeRelationships: [],

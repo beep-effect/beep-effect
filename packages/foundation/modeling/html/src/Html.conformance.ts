@@ -47,6 +47,7 @@ import {
 import { HtmlRoot } from "./Html.model.ts";
 import { inspectSourceSizeList } from "./Html.source-size.ts";
 import { inspectSrcset } from "./Html.srcset.ts";
+import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
 import type { Doctype } from "./Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
@@ -647,6 +648,7 @@ const inspectSpecialAttributeSyntaxes = (
                 O.exists((input) =>
                   Match.value(syntax).pipe(
                     Match.when("icon-sizes", () => isValidIconSizes(input)),
+                    Match.when("language-tag", () => isValidBcp47LanguageTag(input)),
                     Match.when("source-size-list", () => Result.isSuccess(inspectSourceSizeList(input))),
                     Match.when("srcset", () => O.isSome(inspectSrcset(input, isValidHtmlUrlString))),
                     Match.exhaustive
@@ -1134,6 +1136,8 @@ const inspectAttributeRelationships = (
               attributeContainsToken: ({ attribute, value }) =>
                 attributeTokensContainAll(attributes[attribute], [value]),
               attributeEquals: ({ attribute, value }) => attributeEquals(attributes[attribute], value),
+              attributeEqualsOrMissing: ({ attribute, value }) =>
+                !hasAttribute(attributes[attribute]) || attributeEquals(attributes[attribute], value),
               attributePresent: ({ attribute }) => hasAttribute(attributes[attribute]),
             }),
             Match.exhaustive
@@ -1145,11 +1149,10 @@ const inspectAttributeRelationships = (
     );
     const missesRequired = A.isReadonlyArrayNonEmpty(missingRequired);
     const missingAttribute = pipe(
-      requirement.required,
+      missingRequired,
       A.get(0),
-      O.filter((alternatives) => A.length(requirement.required) === 1 && A.length(alternatives) === 1),
-      O.flatMap(A.get(0)),
-      O.filter((attribute) => !hasAttribute(attributes[attribute]))
+      O.filter((alternatives) => A.length(missingRequired) === 1 && A.length(alternatives) === 1),
+      O.flatMap(A.get(0))
     );
     const hasForbidden = pipe(
       requirement.forbidden,

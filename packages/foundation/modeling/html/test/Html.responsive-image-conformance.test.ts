@@ -28,6 +28,7 @@ describe("@beep/html responsive-image conformance", () => {
       "link/sizes": "icon-sizes",
       "source/sizes": "source-size-list",
       "source/srcset": "srcset",
+      "track/srclang": "language-tag",
     });
   });
 

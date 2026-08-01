@@ -7,13 +7,16 @@
  * recursion as mutable `Array<SerializedLexicalNode>` (the open base type)
  * while the schema closes it over the v1 tagged union as a `ReadonlyArray`.
  * The `type` key is omitted on the lexical → schema direction because lexical
- * widens most discriminants to `string`.
+ * widens most discriminants to `string`. NodeState (`$`) is also omitted in
+ * that direction because Lexical exposes `unknown`, while the persisted schema
+ * deliberately accepts JSON values only.
  */
 
 import { analyzeEditorStateCompatibility } from "@beep/lexical-schema";
 import { describe, expect, it } from "tstyche";
 import type {
   ArtifactRefNode,
+  BaseNode,
   CodeNode,
   Direction,
   ElementFormat,
@@ -63,7 +66,7 @@ import type {
 } from "lexical";
 
 type SansChildren<T> = Omit<T, "children">;
-type SansChildrenAndType<T> = Omit<T, "children" | "type">;
+type SansChildrenTypeAndNodeState<T> = Omit<T, "$" | "children" | "type">;
 
 describe("@beep/lexical-schema ↔ lexical 0.48", () => {
   it("pins the shared token vocabularies", () => {
@@ -78,46 +81,58 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
 
   it("pins leaf nodes", () => {
     expect<TextNode.Encoded>().type.toBeAssignableTo<SerializedTextNode>();
-    expect<Omit<SerializedTextNode, "type">>().type.toBeAssignableTo<Omit<TextNode.Encoded, "type">>();
+    expect<Omit<SerializedTextNode, "$" | "type">>().type.toBeAssignableTo<Omit<TextNode.Encoded, "$" | "type">>();
 
     expect<TabNode.Encoded>().type.toBeAssignableTo<SerializedTabNode>();
-    expect<Omit<SerializedTabNode, "type">>().type.toBeAssignableTo<Omit<TabNode.Encoded, "type">>();
+    expect<Omit<SerializedTabNode, "$" | "type">>().type.toBeAssignableTo<Omit<TabNode.Encoded, "$" | "type">>();
 
     expect<LineBreakNode.Encoded>().type.toBeAssignableTo<SerializedLineBreakNode>();
-    expect<Omit<SerializedLineBreakNode, "type">>().type.toBeAssignableTo<Omit<LineBreakNode.Encoded, "type">>();
+    expect<Omit<SerializedLineBreakNode, "$" | "type">>().type.toBeAssignableTo<
+      Omit<LineBreakNode.Encoded, "$" | "type">
+    >();
 
     expect<ArtifactRefNode.Encoded>().type.toBeAssignableTo<SerializedLexicalNode>();
   });
 
   it("pins element nodes", () => {
     expect<SansChildren<RootNode.Encoded>>().type.toBeAssignableTo<SansChildren<SerializedRootNode>>();
-    expect<SansChildrenAndType<SerializedRootNode>>().type.toBeAssignableTo<SansChildrenAndType<RootNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedRootNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<RootNode.Encoded>
+    >();
 
     expect<SansChildren<HeadingNode.Encoded>>().type.toBeAssignableTo<SansChildren<SerializedHeadingNode>>();
-    expect<SansChildrenAndType<SerializedHeadingNode>>().type.toBeAssignableTo<
-      SansChildrenAndType<HeadingNode.Encoded>
+    expect<SansChildrenTypeAndNodeState<SerializedHeadingNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<HeadingNode.Encoded>
     >();
 
     expect<SansChildren<QuoteNode.Encoded>>().type.toBeAssignableTo<SansChildren<SerializedQuoteNode>>();
-    expect<SansChildrenAndType<SerializedQuoteNode>>().type.toBeAssignableTo<SansChildrenAndType<QuoteNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedQuoteNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<QuoteNode.Encoded>
+    >();
 
     expect<SansChildren<ListNode.Encoded>>().type.toBeAssignableTo<SansChildren<SerializedListNode>>();
-    expect<SansChildrenAndType<SerializedListNode>>().type.toBeAssignableTo<SansChildrenAndType<ListNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedListNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<ListNode.Encoded>
+    >();
 
-    expect<SansChildrenAndType<SerializedLinkNode>>().type.toBeAssignableTo<SansChildrenAndType<LinkNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedLinkNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<LinkNode.Encoded>
+    >();
 
     expect<
       Omit<TableNode.Encoded, "children" | "colWidths" | "frozenColumnCount" | "frozenRowCount" | "rowStriping">
     >().type.toBeAssignableTo<
       Omit<SerializedTableNode, "children" | "colWidths" | "frozenColumnCount" | "frozenRowCount" | "rowStriping">
     >();
-    expect<SansChildrenAndType<SerializedTableNode>>().type.toBeAssignableTo<SansChildrenAndType<TableNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedTableNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<TableNode.Encoded>
+    >();
 
     expect<Omit<TableRowNode.Encoded, "children" | "height">>().type.toBeAssignableTo<
       Omit<SerializedTableRowNode, "children" | "height">
     >();
-    expect<SansChildrenAndType<SerializedTableRowNode>>().type.toBeAssignableTo<
-      SansChildrenAndType<TableRowNode.Encoded>
+    expect<SansChildrenTypeAndNodeState<SerializedTableRowNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<TableRowNode.Encoded>
     >();
 
     expect<
@@ -128,12 +143,28 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
     expect<
       Omit<
         SerializedTableCellNode,
-        "backgroundColor" | "children" | "colSpan" | "headerState" | "rowSpan" | "type" | "verticalAlign" | "width"
+        | "$"
+        | "backgroundColor"
+        | "children"
+        | "colSpan"
+        | "headerState"
+        | "rowSpan"
+        | "type"
+        | "verticalAlign"
+        | "width"
       >
     >().type.toBeAssignableTo<
       Omit<
         TableCellNode.Encoded,
-        "backgroundColor" | "children" | "colSpan" | "headerState" | "rowSpan" | "type" | "verticalAlign" | "width"
+        | "$"
+        | "backgroundColor"
+        | "children"
+        | "colSpan"
+        | "headerState"
+        | "rowSpan"
+        | "type"
+        | "verticalAlign"
+        | "width"
       >
     >();
   });
@@ -145,8 +176,8 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
     expect<Omit<ParagraphNode.Encoded, "children" | "textFormat" | "textStyle">>().type.toBeAssignableTo<
       Omit<SerializedParagraphNode, "children" | "textFormat" | "textStyle">
     >();
-    expect<SansChildrenAndType<SerializedParagraphNode>>().type.toBeAssignableTo<
-      SansChildrenAndType<ParagraphNode.Encoded>
+    expect<SansChildrenTypeAndNodeState<SerializedParagraphNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<ParagraphNode.Encoded>
     >();
 
     // `checked` is a required-but-maybe-undefined key on the lexical side;
@@ -155,15 +186,17 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
     expect<Omit<ListItemNode.Encoded, "children" | "checked">>().type.toBeAssignableTo<
       Omit<SerializedListItemNode, "children" | "checked">
     >();
-    expect<SansChildrenAndType<SerializedListItemNode>>().type.toBeAssignableTo<
-      SansChildrenAndType<ListItemNode.Encoded>
+    expect<SansChildrenTypeAndNodeState<SerializedListItemNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<ListItemNode.Encoded>
     >();
 
     // Same shape for `language` on code blocks.
     expect<Omit<CodeNode.Encoded, "children" | "language">>().type.toBeAssignableTo<
       Omit<SerializedCodeNode, "children" | "language">
     >();
-    expect<SansChildrenAndType<SerializedCodeNode>>().type.toBeAssignableTo<SansChildrenAndType<CodeNode.Encoded>>();
+    expect<SansChildrenTypeAndNodeState<SerializedCodeNode>>().type.toBeAssignableTo<
+      SansChildrenTypeAndNodeState<CodeNode.Encoded>
+    >();
 
     // Link attributes: the schema's encoded optionals admit a present
     // `undefined` (identical after JSON serialization) where lexical's
@@ -176,6 +209,7 @@ describe("@beep/lexical-schema ↔ lexical 0.48", () => {
 
   it("pins the editor state envelope", () => {
     expect(analyzeEditorStateCompatibility).type.toBeAssignableTo<(input: unknown) => unknown>();
+    expect<NonNullable<BaseNode.Encoded["$"]>[string]>().type.toBe<import("effect/Schema").Json>();
     expect<LexicalNodeWire["children"]>().type.toBe<import("effect/Schema").Json | undefined>();
     expect<LexicalNodeWire.Type["pluginData"]>().type.toBe<import("effect/Schema").Json>();
     expect<LexicalNodeWire.Encoded["pluginData"]>().type.toBe<import("effect/Schema").Json>();

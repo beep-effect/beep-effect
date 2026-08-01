@@ -1,5 +1,6 @@
 import {
   ELEMENT_META,
+  HTML_ATTRIBUTE_SYNTAXES,
   HTML_CONTENT_TOKEN_EXPANSIONS,
   HTML_GLOBAL_ATTRIBUTE_NAMES,
   HtmlElementMeta,
@@ -226,10 +227,11 @@ describe("@beep/html generator invariants", () => {
     expect(ELEMENT_META.map.uniqueAttributes).toStrictEqual(["name"]);
     expect(ELEMENT_META.track.attributeRequirements).toContainEqual(expect.objectContaining({ required: [["src"]] }));
     expect(ELEMENT_META.track.attributeRequirements).toContainEqual({
-      message: '<track kind="subtitles"> requires srclang',
+      message: '<track> with omitted kind or kind="subtitles" requires srclang',
       required: [["srclang"]],
-      when: { _tag: "attributeEquals", attribute: "kind", value: "subtitles" },
+      when: { _tag: "attributeEqualsOrMissing", attribute: "kind", value: "subtitles" },
     });
+    expect(HTML_ATTRIBUTE_SYNTAXES["track/srclang"]).toBe("language-tag");
   });
 
   it("publishes the exact link-address and meta-charset requirements", () => {

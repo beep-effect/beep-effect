@@ -154,9 +154,14 @@ relationship at exact attribute paths. `link[sizes]` remains the distinct icon
 sizes grammar; it is never interpreted as `imagesizes`. The exact specialized
 microsyntax inventory is generated as `HTML_ATTRIBUTE_SYNTAXES`.
 
-Generated cross-attribute rules also require `srclang` when a `track` uses
-`kind="subtitles"`; missing singleton attributes are reported at their exact
-attribute path.
+Generated cross-attribute rules require `srclang` when a `track` omits `kind`
+(whose missing-value default is `subtitles`) or explicitly uses
+`kind="subtitles"`. Every present `srclang` must be a valid BCP 47 language tag
+against the package's pinned IANA Language Subtag Registry. Grandfathered,
+deprecated, registered private-range, extension, and private-use-only tags
+remain valid; duplicate variants or extension singletons and unregistered
+subtags do not. Failures and missing singleton attributes are reported at the
+exact attribute path.
 
 The model still cannot replace the WHATWG tree-construction algorithm. It
 validates an already-built AST and does not imply that arbitrary source text
@@ -173,6 +178,7 @@ The generated files are committed:
 
 - `src/Html.model.ts`
 - `src/Html.meta.ts`
+- `src/internal/Html.language-tag-registry.generated.ts`
 
 Run:
 
@@ -188,8 +194,10 @@ explicit literal, token, numeric, boolean, or string classification. Exact
 current/obsolete inventories, special child grammars, conditional categories,
 browser foreign-name adjustment profiles, and specialized attribute
 microsyntaxes live in the same generator-owned classification data. Generation
-fails if a current `srcset`, source-size, or icon-size attribute is absent from
-that exact registry.
+fails if a current `srcset`, source-size, icon-size, or `track[srclang]`
+attribute is absent from that exact registry. The BCP 47 registry projection
+is generated only from the hash-pinned local IANA snapshot documented in
+`data/SOURCES.md`; generation never reads the network.
 
 ## Package entry points
 

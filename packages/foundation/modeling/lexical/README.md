@@ -25,6 +25,10 @@ codecs over the canonical `@beep/md` AST.
   discard arbitrary envelope, root, node, version, and `"$"` NodeState data.
   Exact unknown-field identity takes precedence over class-shaped semantics at
   this persistence boundary.
+- **Serialized NodeState is JSON-valued on both surfaces.** Strict runtime
+  admission rejects functions, symbols, bigints, and other values that JSON
+  persistence would silently discard, while nested JSON NodeState remains
+  lossless.
 - **URLs and inline styles are safe fixed points.** Decode normalizes untrusted
   input through the canonical `@beep/md` browser URL policy and the package CSS
   allowlist; semantic node constructors reject values that bypass normalization.

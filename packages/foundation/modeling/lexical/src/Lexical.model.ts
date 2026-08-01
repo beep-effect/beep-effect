@@ -1002,12 +1002,12 @@ export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
         description: "Serialized Lexical node schema version; Lexical currently writes version 1 for built-in nodes.",
       })
     ),
-    $: S.Record(S.String, S.Unknown).pipe(
+    $: S.Record(S.String, S.Json).pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description:
-          "Optional NODE_STATE_KEY payload containing arbitrary persisted Lexical NodeState values keyed by state name.",
+          "Optional NODE_STATE_KEY payload containing JSON-valued persisted Lexical NodeState keyed by state name.",
       })
     ),
   },
@@ -1040,7 +1040,7 @@ export declare namespace BaseNode {
    * @since 0.0.0
    */
   export interface Type {
-    readonly $: O.Option<R.ReadonlyRecord<string, unknown>>;
+    readonly $: O.Option<R.ReadonlyRecord<string, S.Json>>;
     readonly version: LexicalNodeVersion;
   }
 
@@ -1051,7 +1051,7 @@ export declare namespace BaseNode {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly $?: R.ReadonlyRecord<string, unknown>;
+    readonly $?: R.ReadonlyRecord<string, S.Json>;
     readonly version: number;
   }
 }

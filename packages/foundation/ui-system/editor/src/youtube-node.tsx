@@ -10,6 +10,7 @@ import { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
 import { O } from "@beep/utils";
 import { BlockWithAlignableContents } from "@lexical/react/LexicalBlockWithAlignableContents";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
+import { Result } from "effect";
 import * as S from "effect/Schema";
 import { YOUTUBE_EMBED_SANDBOX, YouTubeEmbed, youtubeEmbedUrl, youtubeWatchUrl } from "./youtube-embed.tsx";
 import type {
@@ -48,6 +49,10 @@ import type { JSX } from "react";
 export type SerializedYouTubeNode = YouTubeNodeSchema.Encoded;
 
 const decodeYouTubeNode = S.decodeUnknownOption(YouTubeNodeSchema);
+const decodeYouTubeNodeResult = S.decodeUnknownResult(YouTubeNodeSchema);
+const encodeYouTubeNodeResult = S.encodeUnknownResult(YouTubeNodeSchema);
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 const decodedYouTubeNode = (videoID: unknown, format: unknown = "") =>
   decodeYouTubeNode({ type: "youtube", version: 1, videoID, format });
@@ -123,11 +128,11 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   override exportJSON(): SerializedYouTubeNode {
-    return {
-      ...super.exportJSON(),
-      type: "youtube",
-      videoID: this.__id,
-    };
+    const decoded = Result.getOrThrowWith(
+      decodeYouTubeNodeResult({ ...super.exportJSON(), type: "youtube", videoID: this.__id }),
+      schemaIssueToError
+    );
+    return Result.getOrThrowWith(encodeYouTubeNodeResult(decoded), schemaIssueToError);
   }
 
   override exportDOM(): DOMExportOutput {

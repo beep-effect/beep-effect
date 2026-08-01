@@ -28,6 +28,7 @@ import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { createEditor } from "lexical";
@@ -342,6 +343,53 @@ describe("Lexical.model", () => {
     expect(O.isNone(compatibility.state)).toBe(true);
     expect(compatibility.issues).toHaveLength(1);
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
+  });
+
+  it("requires strict NodeState values to be lossless JSON", () => {
+    const nodeState = {
+      enabled: true,
+      nested: { count: 2, nullable: null, values: ["one", false] },
+    };
+    const valid = {
+      root: {
+        ...element,
+        type: "root",
+        children: [{ ...element, type: "paragraph", $: { plugin: nodeState }, children: [] }],
+      },
+    };
+
+    const decoded = Result.getOrThrow(S.decodeUnknownResult(SerializedEditorState)(valid));
+    expect(Result.getOrThrow(S.encodeResult(SerializedEditorState)(decoded))).toEqual(valid);
+    expect(
+      Result.isSuccess(
+        S.decodeUnknownResult(EditorStateFromJson)(Result.getOrThrow(S.encodeResult(EditorStateFromJson)(decoded)))
+      )
+    ).toBe(true);
+
+    const nonJsonValues: ReadonlyArray<unknown> = [
+      () => true,
+      Symbol("node-state"),
+      1n,
+      undefined,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ];
+    A.forEach(nonJsonValues, (plugin) => {
+      const invalid = {
+        root: {
+          ...element,
+          type: "root",
+          children: [{ ...element, type: "paragraph", $: { plugin }, children: [] }],
+        },
+      };
+
+      expect(S.decodeUnknownResult(SerializedEditorState)(invalid)._tag).toBe("Failure");
+      expect(Effect.runSyncExit(decodeEditorStateStrict(invalid))._tag).toBe("Failure");
+      expect(S.encodeUnknownResult(SerializedEditorState)(invalid)._tag).toBe("Failure");
+      expect(S.encodeUnknownResult(EditorStateFromJson)(invalid)._tag).toBe("Failure");
+      expect(Effect.runSyncExit(decodeEditorStateLossless(invalid))._tag).toBe("Failure");
+    });
   });
 
   it("rejects excess fields through every strict surface while retaining their lossless wire", () => {

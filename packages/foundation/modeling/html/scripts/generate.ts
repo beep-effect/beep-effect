@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
 /**
@@ -11,6 +12,8 @@ import { TaggedErrorClass } from "@beep/schema";
  *     `S.toTaggedUnion("_tag")`), and advisory content-category sub-unions.
  *   - `src/Html.meta.ts`  — the `ELEMENT_META` table (interface, conformance,
  *     content categories, void/raw-text flags).
+ *   - `src/internal/Html.language-tag-registry.generated.ts` — the compact
+ *     RFC 5646 membership data projected from the pinned IANA registry.
  *
  * Per-element attribute field bodies and decoded/encoded TypeScript types are
  * emitted from one attribute spec so decoded absence can be `Option` while the
@@ -66,6 +69,185 @@ const assertExactInventory = (label: string, actual: ReadonlyArray<string>, expe
     );
   }
 };
+
+const IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256 = "be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a";
+const IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE = "2026-06-14";
+const LanguageSubtagRegistryKind = S.Literals([
+  "extlang",
+  "grandfathered",
+  "language",
+  "redundant",
+  "region",
+  "script",
+  "variant",
+]);
+type LanguageSubtagRegistryKind = typeof LanguageSubtagRegistryKind.Type;
+const isLanguageSubtagRegistryKind = S.is(LanguageSubtagRegistryKind);
+const IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS: Readonly<Record<LanguageSubtagRegistryKind, number>> = {
+  extlang: 258,
+  grandfathered: 26,
+  language: 8276,
+  redundant: 67,
+  region: 305,
+  script: 225,
+  variant: 139,
+};
+const IANA_LANGUAGE_SUBTAG_REGISTRY_RANGES = ["qaa..qtz", "Qaaa..Qabx", "QM..QZ", "XA..XZ"];
+
+interface LanguageSubtagRegistryRecord {
+  readonly subtagOrTag: string;
+  readonly type: LanguageSubtagRegistryKind;
+}
+
+interface LanguageTagRegistryData {
+  readonly extlangs: ReadonlyArray<string>;
+  readonly fileDate: string;
+  readonly grandfathered: ReadonlyArray<string>;
+  readonly languages: ReadonlyArray<string>;
+  readonly regions: ReadonlyArray<string>;
+  readonly scripts: ReadonlyArray<string>;
+  readonly variants: ReadonlyArray<string>;
+}
+
+const asciiAlphaOrdinal = (value: string): number => {
+  let ordinal = 0;
+  for (const character of value.toLowerCase()) {
+    const digit = character.charCodeAt(0) - 97;
+    if (digit < 0 || digit > 25) failGeneration(`IANA registry range ${value} is not ASCII alphabetic`);
+    ordinal = ordinal * 26 + digit;
+  }
+  return ordinal;
+};
+
+const asciiAlphaFromOrdinal = (ordinal: number, length: number): string => {
+  const characters = new Array<string>(length);
+  let remainder = ordinal;
+  for (let index = length - 1; index >= 0; index -= 1) {
+    characters[index] = String.fromCharCode(97 + (remainder % 26));
+    remainder = Math.floor(remainder / 26);
+  }
+  if (remainder !== 0) failGeneration(`IANA registry range ordinal ${ordinal} exceeds width ${length}`);
+  return characters.join("");
+};
+
+const expandLanguageSubtag = (value: string): ReadonlyArray<string> => {
+  const [start, end, ...unexpected] = value.split("..");
+  if (end === undefined) return [value.toLowerCase()];
+  if (start === undefined || unexpected.length > 0 || start.length !== end.length) {
+    return failGeneration(`IANA registry range ${value} is malformed`);
+  }
+  const startOrdinal = asciiAlphaOrdinal(start);
+  const endOrdinal = asciiAlphaOrdinal(end);
+  if (endOrdinal < startOrdinal) return failGeneration(`IANA registry range ${value} is descending`);
+  return Array.from({ length: endOrdinal - startOrdinal + 1 }, (_, index) =>
+    asciiAlphaFromOrdinal(startOrdinal + index, start.length)
+  );
+};
+
+const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData => {
+  const [header, ...blocks] = source.replace(/\r\n?/gu, "\n").split("\n%%\n");
+  const fileDate = header?.match(/^File-Date: ([0-9]{4}-[0-9]{2}-[0-9]{2})$/u)?.[1];
+  if (fileDate !== IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE) {
+    return failGeneration(
+      `IANA registry requires File-Date ${IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE}; received ${fileDate ?? "missing"}`
+    );
+  }
+
+  const records = blocks.map((block): LanguageSubtagRegistryRecord => {
+    const fields = new Map<string, Array<string>>();
+    for (const line of block.trim().split("\n")) {
+      const separator = line.indexOf(":");
+      if (separator <= 0) continue;
+      const name = line.slice(0, separator);
+      const values = fields.get(name) ?? [];
+      values.push(line.slice(separator + 1).trim());
+      fields.set(name, values);
+    }
+    const type = fields.get("Type")?.[0];
+    const subtagOrTag = fields.get("Subtag")?.[0] ?? fields.get("Tag")?.[0];
+    if (type === undefined || !isLanguageSubtagRegistryKind(type)) {
+      return failGeneration(`IANA registry record has unknown Type ${type ?? "missing"}`);
+    }
+    if (subtagOrTag === undefined) return failGeneration(`IANA registry ${type} record has no Subtag or Tag`);
+    return { subtagOrTag, type };
+  });
+
+  for (const [type, expected] of R.toEntries(IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS)) {
+    const actual = records.filter((record) => record.type === type).length;
+    if (actual !== expected) {
+      return failGeneration(`IANA registry requires ${expected} ${type} records; received ${actual}`);
+    }
+  }
+  assertExactInventory(
+    "IANA registry range inventory",
+    records.map((record) => record.subtagOrTag).filter((value) => value.includes("..")),
+    IANA_LANGUAGE_SUBTAG_REGISTRY_RANGES
+  );
+
+  const valuesFor = (type: LanguageSubtagRegistryKind): ReadonlyArray<string> => {
+    const values = records
+      .filter((record) => record.type === type)
+      .flatMap((record) => expandLanguageSubtag(record.subtagOrTag))
+      .sort();
+    if (A.dedupe(values).length !== values.length) {
+      return failGeneration(`IANA registry contains a duplicate expanded ${type} value`);
+    }
+    return values;
+  };
+
+  return {
+    extlangs: valuesFor("extlang"),
+    fileDate,
+    grandfathered: valuesFor("grandfathered"),
+    languages: valuesFor("language"),
+    regions: valuesFor("region"),
+    scripts: valuesFor("script"),
+    variants: valuesFor("variant"),
+  };
+};
+
+const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): string => `/**
+ * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
+ *
+ * Compact RFC 5646 validity data derived from the pinned IANA Language
+ * Subtag Registry documented in \`data/SOURCES.md\`.
+ *
+ * @since 0.0.0
+ */
+
+type GeneratedLanguageTagRegistry = Readonly<{
+  fileDate: string;
+  languages: ReadonlyArray<string>;
+  extlangs: ReadonlyArray<string>;
+  scripts: ReadonlyArray<string>;
+  regions: ReadonlyArray<string>;
+  variants: ReadonlyArray<string>;
+  grandfathered: ReadonlyArray<string>;
+}>;
+
+/**
+ * Compact registered-subtag membership data for BCP 47 validation.
+ *
+ * @example
+ * \`\`\`ts
+ * import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated"
+ *
+ * console.log(IANA_LANGUAGE_TAG_REGISTRY.fileDate) // ${registry.fileDate}
+ * \`\`\`
+ *
+ * @category generated
+ * @since 0.0.0
+ */
+export const IANA_LANGUAGE_TAG_REGISTRY: GeneratedLanguageTagRegistry = Object.freeze({
+  fileDate: ${JSON.stringify(registry.fileDate)},
+  languages: Object.freeze(${JSON.stringify(registry.languages)}),
+  extlangs: Object.freeze(${JSON.stringify(registry.extlangs)}),
+  scripts: Object.freeze(${JSON.stringify(registry.scripts)}),
+  regions: Object.freeze(${JSON.stringify(registry.regions)}),
+  variants: Object.freeze(${JSON.stringify(registry.variants)}),
+  grandfathered: Object.freeze(${JSON.stringify(registry.grandfathered)}),
+});
+`;
 
 // ---------------------------------------------------------------------------
 // reserved identifiers / naming
@@ -324,6 +506,7 @@ const AttributeValueConstraint = S.Union([
 const AttributeRequirementPredicate = S.Union([
   S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
   $I.annoteSchema("AttributeRequirementPredicate", {
@@ -371,7 +554,7 @@ class NumericAttributeRelationship extends S.Class<NumericAttributeRelationship>
   })
 ) {}
 
-const AttributeSyntax = S.Literals(["icon-sizes", "source-size-list", "srcset"]).pipe(
+const AttributeSyntax = S.Literals(["icon-sizes", "language-tag", "source-size-list", "srcset"]).pipe(
   $I.annoteSchema("AttributeSyntax", {
     description: "Reviewed HTML attribute microsyntax requiring conformance inspection beyond its wire schema.",
   })
@@ -1059,7 +1242,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
 
-  const syntaxSensitiveAttributeNames = MutableHashSet.fromIterable(["imagesizes", "imagesrcset", "sizes", "srcset"]);
+  const syntaxSensitiveAttributeNames = MutableHashSet.fromIterable([
+    "imagesizes",
+    "imagesrcset",
+    "sizes",
+    "srcset",
+    "srclang",
+  ]);
   const requiredAttributeSyntaxKeys = elementNames
     .flatMap((tag) =>
       [...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>()))]
@@ -1076,11 +1265,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   for (const [key, syntax] of R.toEntries(classification.attributeSyntaxes)) {
     const [tag, attribute, ...unexpected] = Str.split("/")(key);
     const expectedSyntax =
-      attribute === "srcset" || attribute === "imagesrcset"
-        ? "srcset"
-        : tag === "link" && attribute === "sizes"
-          ? "icon-sizes"
-          : "source-size-list";
+      tag === "track" && attribute === "srclang"
+        ? "language-tag"
+        : attribute === "srcset" || attribute === "imagesrcset"
+          ? "srcset"
+          : tag === "link" && attribute === "sizes"
+            ? "icon-sizes"
+            : "source-size-list";
     if (tag === undefined || attribute === undefined || unexpected.length > 0 || syntax !== expectedSyntax) {
       failGeneration(`HTML generator special-attribute syntax for ${key} must be ${expectedSyntax}`);
     }
@@ -1386,7 +1577,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const trackSubtitleRequirements = A.filter(
     classification.attributeRequirements.track ?? [],
     (requirement) =>
-      requirement.when?._tag === "attributeEquals" &&
+      requirement.when?._tag === "attributeEqualsOrMissing" &&
       requirement.when.attribute === "kind" &&
       requirement.when.value === "subtitles"
   );
@@ -1394,7 +1585,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     trackSubtitleRequirements.length !== 1 ||
     JSON.stringify(trackSubtitleRequirements[0]?.required) !== JSON.stringify([["srclang"]])
   ) {
-    failGeneration("HTML generator requires <track kind=subtitles> to have srclang");
+    failGeneration("HTML generator requires <track> with omitted kind or kind=subtitles to have srclang");
   }
   const linkAsValues = pipe(
     MutableHashMap.get(enumValues, "link/as"),
@@ -1450,7 +1641,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
           );
         }
       }
-      if (requirement.when?._tag === "attributeEquals") {
+      if (requirement.when?._tag === "attributeEquals" || requirement.when?._tag === "attributeEqualsOrMissing") {
         const { attribute, value } = requirement.when;
         const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse((): Array<string> => []));
         if (values.length > 0 && !A.contains(values, value)) {
@@ -3196,6 +3387,7 @@ const HtmlAttributeValueConstraint = S.Union([
 const HtmlAttributeRequirementPredicate = S.Union([
   S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
   $I.annoteSchema("HtmlAttributeRequirementPredicate", {
@@ -3532,16 +3724,30 @@ const program = Effect.gen(function* () {
   const cmDoc = yield* readJson(ContentModelDoc, "whatwg/content-model.json");
   const classification = yield* readJson(Classification, "overrides/classification.json");
   const obsDoc = yield* readJson(ObsoleteInterfacesDoc, "overrides/obsolete-interfaces.json");
+  const languageSubtagRegistrySource = yield* fs.readFileString(
+    path.join(dataDir, "iana/language-subtag-registry.txt")
+  );
 
-  const { conforming, meta, model, total } = yield* Effect.try({
-    try: () =>
-      buildModel({
-        dfns: dfnsDoc.dfns,
-        elements: elementsDoc.elements,
-        contentModel: cmDoc.elements,
-        classification,
-        obsoleteInterfaces: obsDoc.interfaces,
-      }),
+  const { conforming, languageTagRegistry, meta, model, total } = yield* Effect.try({
+    try: () => {
+      const registryHash = createHash("sha256").update(languageSubtagRegistrySource).digest("hex");
+      if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
+        failGeneration(
+          `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`
+        );
+      }
+      const registry = parseLanguageSubtagRegistry(languageSubtagRegistrySource);
+      return {
+        ...buildModel({
+          dfns: dfnsDoc.dfns,
+          elements: elementsDoc.elements,
+          contentModel: cmDoc.elements,
+          classification,
+          obsoleteInterfaces: obsDoc.interfaces,
+        }),
+        languageTagRegistry: buildLanguageTagRegistryModule(registry),
+      };
+    },
     catch: (cause) =>
       isHtmlGenerationError(cause)
         ? cause
@@ -3553,9 +3759,11 @@ const program = Effect.gen(function* () {
 
   yield* fs.writeFileString(path.join(srcDir, "Html.model.ts"), model);
   yield* fs.writeFileString(path.join(srcDir, "Html.meta.ts"), meta);
+  yield* fs.makeDirectory(path.join(srcDir, "internal"), { recursive: true });
+  yield* fs.writeFileString(path.join(srcDir, "internal/Html.language-tag-registry.generated.ts"), languageTagRegistry);
 
   yield* Effect.log(
-    `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 6 node kinds -> src/Html.model.ts, src/Html.meta.ts`
+    `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 6 node kinds and IANA language-tag registry`
   );
 });
 

@@ -9,6 +9,7 @@
 
 import { ArtifactRefNode as ArtifactRefNodeSchema } from "@beep/lexical-schema";
 import { O } from "@beep/utils";
+import { Result } from "effect";
 import * as S from "effect/Schema";
 import { DecoratorNode } from "lexical";
 import type { EditorConfig, LexicalNode, NodeKey } from "lexical";
@@ -57,6 +58,10 @@ export type SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded;
 export type ArtifactRefNodeCreateInput = Pick<SerializedArtifactRefNode, "artifactId" | "label">;
 
 const decodeArtifactRefNode = S.decodeUnknownOption(ArtifactRefNodeSchema);
+const decodeArtifactRefNodeResult = S.decodeUnknownResult(ArtifactRefNodeSchema);
+const encodeArtifactRefNodeResult = S.encodeUnknownResult(ArtifactRefNodeSchema);
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 const artifactRefInput = (props: ArtifactRefNodeCreateInput) => ({
   type: "artifact-ref",
@@ -109,12 +114,16 @@ export class ArtifactRefNode extends DecoratorNode<JSX.Element> {
   }
 
   override exportJSON(): SerializedArtifactRefNode {
-    return {
-      ...super.exportJSON(),
-      type: "artifact-ref",
-      artifactId: this.__artifactId,
-      ...O.getSomesStruct({ label: O.fromUndefinedOr(this.__label) }),
-    };
+    const decoded = Result.getOrThrowWith(
+      decodeArtifactRefNodeResult({
+        ...super.exportJSON(),
+        type: "artifact-ref",
+        artifactId: this.__artifactId,
+        ...O.getSomesStruct({ label: O.fromUndefinedOr(this.__label) }),
+      }),
+      schemaIssueToError
+    );
+    return Result.getOrThrowWith(encodeArtifactRefNodeResult(decoded), schemaIssueToError);
   }
 
   override createDOM(_config: EditorConfig): HTMLElement {

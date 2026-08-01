@@ -28,6 +28,7 @@ import {
   Meter,
   Ol,
   Progress,
+  Track,
 } from "@beep/html/Html.model";
 import { Comment } from "@beep/html/Html.nodes";
 import { SafeHtmlAst as SubpathSafeHtmlAst } from "@beep/html/Html.policy";
@@ -157,6 +158,15 @@ describe("@beep/html contract", () => {
     expect(progress.max).type.toBe<O.Option<number>>();
     expect(encodedMeter.value).type.toBe<number | undefined>();
     expect(encodedProgress.max).type.toBe<number | undefined>();
+  });
+
+  it("keeps track srclang lossless while publishing its conformance syntax", () => {
+    const encoded: Track.Encoded = { _tag: "track", src: "/captions.vtt", srclang: "i-klingon" };
+    const decoded = Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en-US") });
+
+    expect(encoded.srclang).type.toBe<string | undefined>();
+    expect(decoded.srclang).type.toBe<O.Option<string>>();
+    expect(HTML_ATTRIBUTE_SYNTAXES["track/srclang"]).type.toBe<HtmlAttributeSyntax | undefined>();
   });
 
   it("scopes popover invoker attributes to button and input elements", () => {

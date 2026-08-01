@@ -161,7 +161,7 @@ describe("@beep/html numeric and id conformance", () => {
       Base.make({ href: O.some("/docs") }),
       Base.make({ target: O.some("_self") }),
       MapElement.make({ children: [], id: O.some("map-one"), name: O.some("map-one") }),
-      Track.make({ src: O.some("/captions.vtt") }),
+      Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
     ]) {
       expect(inspectConformance(root)).toStrictEqual([]);
       expect(Exit.isSuccess(Effect.runSyncExit(conform(root)))).toBe(true);
@@ -174,6 +174,11 @@ describe("@beep/html numeric and id conformance", () => {
       expect.objectContaining({ rule: "attributeRelationship" })
     );
     expect(Exit.isFailure(Effect.runSyncExit(conform(subtitlesWithoutLanguage)))).toBe(true);
+    const omittedKindWithoutLanguage = Track.make({ src: O.some("/captions.vtt") });
+    expect(issuesAtPath(omittedKindWithoutLanguage, ["attributes.srclang"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+    expect(Exit.isFailure(Effect.runSyncExit(conform(omittedKindWithoutLanguage)))).toBe(true);
     expect(
       inspectConformance(
         Video.make({
@@ -321,6 +326,144 @@ describe("@beep/html numeric and id conformance", () => {
   });
 });
 
+describe("@beep/html track language conformance", () => {
+  const grandfathered = [
+    "art-lojban",
+    "cel-gaulish",
+    "en-GB-oed",
+    "i-ami",
+    "i-bnn",
+    "i-default",
+    "i-enochian",
+    "i-hak",
+    "i-klingon",
+    "i-lux",
+    "i-mingo",
+    "i-navajo",
+    "i-pwn",
+    "i-tao",
+    "i-tay",
+    "i-tsu",
+    "no-bok",
+    "no-nyn",
+    "sgn-BE-FR",
+    "sgn-BE-NL",
+    "sgn-CH-DE",
+    "zh-guoyu",
+    "zh-hakka",
+    "zh-min",
+    "zh-min-nan",
+    "zh-xiang",
+  ];
+
+  const languageIssues = (language: string, kind: Track["kind"]) =>
+    issuesAtPath(Track.make({ kind, src: O.some("/captions.vtt"), srclang: O.some(language) }), ["attributes.srclang"]);
+
+  it("accepts registered, grandfathered, private-use, extension, and deprecated tags", () => {
+    for (const language of [
+      "en",
+      "EN-us",
+      "zh-Hant-TW",
+      "zh-cmn",
+      "en-cmn",
+      "sl-rozaj-biske-1994",
+      "en-a-myext-b-another",
+      "en-x-private",
+      "x-private",
+      "x-a-b",
+      "qaa-Qaaa-QM",
+      "qtz-Qabx-XZ",
+      "iw",
+      "en-Latn",
+      ...grandfathered,
+    ]) {
+      expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
+    }
+  });
+
+  it("rejects malformed, unregistered, repeated, and incomplete tags at srclang", () => {
+    const invalid = [
+      "",
+      " en",
+      "en ",
+      "en_US",
+      "en--US",
+      "a",
+      "123",
+      "abcdefghi",
+      "zz",
+      "abcde",
+      "en-foobar",
+      "zh-cmn-yue",
+      "de-1901-1901",
+      "en-a-foo-A-bar",
+      "en-a",
+      "en-a-b",
+      "en-x",
+      "x-abcdefghi",
+      "i-madeup",
+    ];
+    const kinds = [undefined, "subtitles", "captions", "descriptions", "chapters", "metadata"] as const;
+    for (const language of invalid) {
+      for (const kind of kinds) {
+        const issues = kind === undefined ? languageIssues(language, O.none()) : languageIssues(language, O.some(kind));
+        expect(issues).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
+      }
+    }
+  });
+
+  it("keeps non-subtitle kinds exempt from the conditional srclang requirement", () => {
+    for (const kind of ["captions", "descriptions", "chapters", "metadata"] as const) {
+      expect(inspectConformance(Track.make({ kind: O.some(kind), src: O.some("/captions.vtt") }))).toStrictEqual([]);
+    }
+  });
+
+  it("accepts generated registered language/script/region combinations and rejects separator corruption", () => {
+    const registeredTag = fc
+      .tuple(
+        fc.constantFrom("en", "fr", "zh", "qaa", "qtz", "iw"),
+        fc.constantFrom("Latn", "Cyrl", "Hant", "Qaaa", "Qabx"),
+        fc.constantFrom("US", "FR", "TW", "QM", "XZ")
+      )
+      .map(([language, script, region]) => `${language}-${script}-${region}`);
+    fc.assert(
+      fc.property(registeredTag, (language) => {
+        expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
+        expect(languageIssues(language.replaceAll("-", "_"), O.some("captions"))).toContainEqual(
+          expect.objectContaining({ rule: "attributeRelationship" })
+        );
+      }),
+      fcRuns(100)
+    );
+  });
+});
+
+describe("@beep/html missing-attribute issue paths", () => {
+  it("reports the one actually missing singleton from a multi-group requirement", () => {
+    expect(issuesAtPath(Img.make({ src: O.some("/image.png") }), ["attributes.alt"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+    expect(
+      issuesAtPath(Input.make({ src: O.some("/submit.png"), type: O.some("image") }), ["attributes.alt"])
+    ).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
+    expect(
+      issuesAtPath(Input.make({ alt: O.some("Submit"), type: O.some("image") }), ["attributes.src"])
+    ).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
+    expect(issuesAtPath(Meta.make({ name: O.some("description") }), ["attributes.content"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+  });
+
+  it("keeps ambiguous alternative and multiple-group misses at the attribute bag", () => {
+    expect(issuesAtPath(Img.make({}), ["attributes"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+    expect(issuesAtPath(Meta.make({}), ["attributes"])).toContainEqual(
+      expect.objectContaining({ rule: "attributeRelationship" })
+    );
+  });
+});
+
 describe("@beep/html generated special-child grammars", () => {
   it("enforces description-list and head cardinality", () => {
     expect(hasRule(Dl.make({ children: [Dd.make({ children: [] })] }), "elementOrder")).toBe(true);
@@ -358,7 +501,7 @@ describe("@beep/html generated special-child grammars", () => {
           Audio.make({
             children: [
               Source.make({ src: O.some("/sound.mp3") }),
-              Track.make({ src: O.some("/captions.vtt") }),
+              Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
               Anchor.make({ children: [text("fallback")] }),
             ],
           }),
@@ -369,7 +512,7 @@ describe("@beep/html generated special-child grammars", () => {
           Video.make({
             children: [
               Source.make({ src: O.some("/movie.mp4") }),
-              Track.make({ src: O.some("/captions.vtt") }),
+              Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
               Anchor.make({ children: [text("fallback")] }),
             ],
           }),
@@ -460,10 +603,16 @@ describe("@beep/html generated special-child grammars", () => {
         children: [text("fallback"), Source.make({ src: O.some("/late.mp3") })],
       }),
       Video.make({
-        children: [Track.make({ src: O.some("/captions.vtt") }), Source.make({ src: O.some("/movie.mp4") })],
+        children: [
+          Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
+          Source.make({ src: O.some("/movie.mp4") }),
+        ],
       }),
       Video.make({
-        children: [Anchor.make({ children: [text("fallback")] }), Track.make({ src: O.some("/captions.vtt") })],
+        children: [
+          Anchor.make({ children: [text("fallback")] }),
+          Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
+        ],
       }),
       Datalist.make({
         children: [Option.make({ children: [text("one")] }), text("mixed")],
@@ -518,7 +667,7 @@ describe("@beep/html generated special-child grammars", () => {
       Audio.make({
         children: [
           Source.make({ src: O.some("/sound.mp3") }),
-          Track.make({ src: O.some("/captions.vtt") }),
+          Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
           Anchor.make({ children: [text("fallback")] }),
         ],
       }),

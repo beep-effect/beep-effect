@@ -19,7 +19,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { $getRoot } from "lexical";
+import { $getRoot, $setState, createState } from "lexical";
 
 const text = (value: string) => MdModel.Text.make({ value });
 const syntheticYouTubeVideoId = "AbCdEfGhI12";
@@ -117,6 +117,96 @@ describe("@beep/editor node registration", () => {
         (node) => node.type === "code" && O.isSome(node.language) && node.language.value === "mermaid"
       )
     ).toBe(true);
+  });
+
+  it("preserves JSON-compatible NodeState when exporting decorator nodes", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-valid-node-state-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    const nodeState = createState("beep-valid-export", {
+      parse: () => 0,
+      unparse: () => ({ enabled: true, nested: [1, null] }),
+    });
+
+    editor.update(
+      () => {
+        const artifact = $setState(
+          ArtifactRefNode.importJSON({
+            type: "artifact-ref",
+            version: 1,
+            artifactId: "artifact-123",
+          }),
+          nodeState,
+          1
+        );
+        const youtube = $setState(
+          YouTubeNode.importJSON({
+            type: "youtube",
+            version: 1,
+            format: "",
+            videoID: syntheticYouTubeVideoId,
+          }),
+          nodeState,
+          1
+        );
+        $getRoot().clear().append(artifact, youtube);
+
+        expect(artifact.exportJSON().$).toEqual({
+          "beep-valid-export": { enabled: true, nested: [1, null] },
+        });
+        expect(youtube.exportJSON().$).toEqual({
+          "beep-valid-export": { enabled: true, nested: [1, null] },
+        });
+      },
+      { discrete: true }
+    );
+  });
+
+  it("rejects non-JSON NodeState when exporting decorator nodes", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-invalid-node-state-export-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+    const nodeState = createState("beep-invalid-export", {
+      parse: () => 0,
+      unparse: () => 1n,
+    });
+
+    editor.update(
+      () => {
+        const artifact = $setState(
+          ArtifactRefNode.importJSON({
+            type: "artifact-ref",
+            version: 1,
+            artifactId: "artifact-123",
+          }),
+          nodeState,
+          1
+        );
+        const youtube = $setState(
+          YouTubeNode.importJSON({
+            type: "youtube",
+            version: 1,
+            format: "",
+            videoID: syntheticYouTubeVideoId,
+          }),
+          nodeState,
+          1
+        );
+        $getRoot().clear().append(artifact, youtube);
+
+        expect(() => artifact.exportJSON()).toThrow(S.SchemaError);
+        expect(() => youtube.exportJSON()).toThrow(S.SchemaError);
+      },
+      { discrete: true }
+    );
   });
 
   it("keeps malformed serialized decorator payloads inert at runtime import", () => {
