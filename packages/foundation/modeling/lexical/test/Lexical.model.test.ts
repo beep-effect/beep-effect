@@ -39,6 +39,9 @@ const NodeArbitrary = S.toArbitrary(LexicalNode);
 const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
 const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire);
+const decodeEditorState = S.decodeUnknownSync(SerializedEditorState);
+const encodeEditorState = S.encodeSync(SerializedEditorState);
+const encodeLexicalNode = S.encodeSync(LexicalNode);
 
 const matchedNodeType: (node: LexicalNode) => LexicalNode["type"] = LexicalNode.match({
   "artifact-ref": (node) => node.type,
@@ -280,13 +283,22 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(JSON.parse(S.encodeSync(EditorStateFromJson)(state))).toEqual(fixture);
   });
 
-  it("round-trips schema-derived arbitrary nodes and states through encode/decode", () => {
+  it("round-trips schema-derived arbitrary nodes through encode/decode", () => {
     fc.assert(
-      fc.property(NodeArbitrary, StateArbitrary, (node, state) => {
+      fc.property(NodeArbitrary, (node) => {
         expect(matchedNodeType(node)).toBe(node.type);
-        expect(LexicalNode.fromUnknown(S.encodeSync(LexicalNode)(node))).toEqual(node);
-        expect(S.decodeUnknownSync(SerializedEditorState)(S.encodeSync(SerializedEditorState)(state))).toEqual(state);
-        expect(SerializedEditorState.decodeOption(S.encodeSync(SerializedEditorState)(state))).toEqual(O.some(state));
+        expect(LexicalNode.fromUnknown(encodeLexicalNode(node))).toEqual(node);
+      }),
+      fcRuns(50)
+    );
+  });
+
+  it("round-trips schema-derived arbitrary editor states through encode/decode", () => {
+    fc.assert(
+      fc.property(StateArbitrary, (state) => {
+        const encodedState = encodeEditorState(state);
+        expect(decodeEditorState(encodedState)).toEqual(state);
+        expect(SerializedEditorState.decodeOption(encodedState)).toEqual(O.some(state));
       }),
       fcRuns(50)
     );
