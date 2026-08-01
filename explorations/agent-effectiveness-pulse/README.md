@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` (wave-2 candidates remain)
+Status: `graduated` (wave 2 cut 2026-07-31)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -16,12 +16,15 @@ and what eats token spend. Get a data-driven pulse, then decide improvements.
 
 ## Next Open Question
 
-Wave-2 graduation gate: cut `yeet-verdict-instrumentation` +
-`repo-replay-evals` (named in [`MAP.md`](./MAP.md)) once wave-1 OTel
-attributes are flowing. Wave-1 graduated 2026-07-14 →
+None — fully graduated. Wave 1 (2026-07-14) →
 [`goals/harness-otel-adoption`](../../goals/harness-otel-adoption/README.md),
-[`goals/harness-hygiene-mechanical`](../../goals/harness-hygiene-mechanical/README.md);
-forwarder durability rides `ai-metrics-stack` P7f.
+[`goals/harness-hygiene-mechanical`](../../goals/harness-hygiene-mechanical/README.md).
+Wave 2 (2026-07-31) → one packet,
+[`goals/coding-agent-effectiveness-evidence-loop`](../../goals/coding-agent-effectiveness-evidence-loop/README.md),
+absorbing the `yeet-verdict-instrumentation` + `repo-replay-evals` splits
+named in [`MAP.md`](./MAP.md) (see the 2026-07-31 entry in
+[`DECISIONS.md`](./DECISIONS.md)); H8 browser-proof is owned there.
+Forwarder durability still rides `ai-metrics-stack` P7f.
 
 ## Read This First
 
@@ -35,6 +38,13 @@ forwarder durability rides `ai-metrics-stack` P7f.
 
 ## Trail
 
+- 2026-07-31 (wave-2 graduation): the 2026-07 Codex bottleneck audit plan
+  was amended via a five-frame `/adhd` run + two-round operator interview,
+  then graduated as one packet
+  `goals/coding-agent-effectiveness-evidence-loop` (absorbing the ratified
+  `yeet-verdict-instrumentation` + `repo-replay-evals` splits). Decision +
+  amendment inventory: `DECISIONS.md` 2026-07-31 entry and the packet's
+  `research/2026-07-31-adhd-amendments.md`. Status → `graduated`.
 - 2026-07-14 (graduation): shape sign-off after second grilling round (four
   decisions incl. the OTel routing amendment — dankserver
   `monitoring_otel_collector` hub; the originally cited "local collector"
