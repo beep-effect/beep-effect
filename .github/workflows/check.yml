@@ -45,7 +45,7 @@ jobs:
             await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
   verify:
     name: ${{ matrix.name }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     strategy:
       fail-fast: false
@@ -53,46 +53,55 @@ jobs:
         include:
           - id: lint
             name: Lint
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 30
             uses_turbo: "true"
             install_typos: "true"
           - id: lint-policy
             name: Lint Policy
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 25
             uses_turbo: "false"
             install_typos: "true"
           - id: repo-sanity
             name: Repo Sanity
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 15
             uses_turbo: "false"
             install_typos: "false"
           - id: check
             name: Check
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
             name: Test Unit
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 30
             uses_turbo: "true"
             install_typos: "false"
           - id: test-integration
             name: Test Integration
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
             name: Docgen
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 20
             uses_turbo: "false"
             install_typos: "false"
           - id: codegen
             name: Codegen Drift
+            runner: blacksmith-4vcpu-ubuntu-2404
             timeout_minutes: 15
             uses_turbo: "false"
             install_typos: "false"
