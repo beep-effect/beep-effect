@@ -14,6 +14,47 @@ bun add @beep/box
 import { VERSION } from "@beep/box"
 ```
 
+## Generated Surface
+
+`@beep/box` wraps a **demand-scoped** slice of the Box SDK, not the full
+85-manager `BoxClient` surface. The wrapped managers are listed in
+[`scripts/box.surface.ts`](./scripts/box.surface.ts), and
+`src/_generated/` holds only the operations for those managers plus the model
+schemas transitively reachable from them.
+
+This is deliberate. Generating the full SDK surface cost ~4.8M TypeScript type
+instantiations in `Box.models.gen.ts` alone (~7.5M package-wide) for a repo that
+calls 9 managers — mass that kept exposing the no-location TS2589
+native-compiler flake in full proofs. Scoping to demand cut the package to
+~2.5M and the file's own contribution by 89%. See
+`goals/box-typecheck-cost/` for the decision record and measurements.
+
+A manager outside the list has no generated operations, so calling it is a
+**compile error**, never a runtime failure.
+
+### Adding a manager
+
+1. Add its `BoxClient` property name to `GENERATED_MANAGERS` in
+   `scripts/box.surface.ts`, keeping the list sorted and noting the demand.
+2. Regenerate:
+
+   ```bash
+   bun run generate
+   ```
+
+3. **Re-measure and record the numbers in the PR.** Budget is ≤750K *marginal*
+   instantiations for any single generated file (total minus the schema-import
+   floor, currently ~1.65M) and ≤3M absolute package-wide. The exact recipe,
+   the floor probe, and every prior measurement live in
+   `goals/box-typecheck-cost/research/measurements.md`.
+
+Re-measurement is a review obligation on manifest edits rather than a CI gate:
+the manifest is the only file through which generated mass can grow.
+
+The generator also skips `@deprecated` SDK methods and byte/event operations —
+the latter are hand-written in `Box.streaming.ts` — and logs every dropped
+manager, model, and method, so nothing is silently capped.
+
 ## Streaming Payload Schemas
 
 Hand-written byte and event stream adapters export their payload contracts as
