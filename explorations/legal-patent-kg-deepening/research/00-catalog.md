@@ -2,14 +2,14 @@
 
 Generated: 2026-08-01
 
-Cataloged 137 source rows: 99 papers, 14 links, and 24 repos. Exact duplicate paper files remain represented but are marked `skip-duplicate`.
+Cataloged 140 source rows: 101 papers, 14 links, and 25 repos. Exact duplicate paper files remain represented but are marked `skip-duplicate`.
 
 ## Counts by track and kind
 
 | Track | Theme | Papers | Links | Repos | Total |
 | ---: | --- | ---: | ---: | ---: | ---: |
 | 0 | Cross-cutting / foundational | 23 | 9 | 11 | 43 |
-| 1 | Legal core ontology + Hohfeldian formalization | 30 | 2 | 5 | 37 |
+| 1 | Legal core ontology + Hohfeldian formalization | 32 | 2 | 6 | 40 |
 | 2 | Patent KGs + functional patent knowledge | 14 | 2 | 4 | 20 |
 | 3 | Legal GraphRAG + temporal/diachronic norm reasoning | 20 | 1 | 3 | 24 |
 | 4 | Patent LLM authoring + multi-agent IP workflows | 12 | 0 | 1 | 13 |
@@ -126,6 +126,8 @@ Exact-hash duplicates skipped during mining: P020 → P018, P029 → P028, P098 
 - P093 — Understanding Hohfeld and Formalizing Legal Rights: The Hohfeldian Conceptions and Their Conditional Consequences
 - P094 — Units of Analysis for the Legal Domain: A Legal Document Ontology
 - P095 — Using the interest theory of rights and Hohfeldian taxonomy to address a gap in machine learning methods for legal document analysis
+- P100 — The FLINT Ontology: An Actor-Based Model of Legal Relations
+- P101 — Towards a High-level Controlled Language for Legal Sources on the Semantic Web
 - L01 — FIBO Legal Core Ontology
 - L02 — UFO-L Project
 - R04 — CJEU Ontology Mappings
@@ -133,6 +135,7 @@ Exact-hash duplicates skipped during mining: P020 → P018, P029 → P028, P098 
 - R09 — Legal Ontologies
 - R16 — LKIF Core
 - R23 — Semantic Law
+- R25 — FLINT Ontology
 
 ### Track 2: Patent KGs + functional patent knowledge
 

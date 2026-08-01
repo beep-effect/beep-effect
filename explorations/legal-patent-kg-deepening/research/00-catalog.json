@@ -1974,6 +1974,63 @@
       "nearDupeOf": null,
       "wave1Overlap": false,
       "mineStatus": "pending"
+    },
+    {
+      "id": "P100",
+      "kind": "paper",
+      "file": "The_FLINT_Ontology_An_Actor_Based_Model.pdf",
+      "url": null,
+      "title": "The FLINT Ontology: An Actor-Based Model of Legal Relations",
+      "track": 1,
+      "themes": [
+        "legal core ontology",
+        "Hohfeldian relations",
+        "normative state transitions",
+        "FLINT"
+      ],
+      "priority": "high",
+      "dupeOf": null,
+      "nearDupeOf": null,
+      "wave1Overlap": false,
+      "mineStatus": "pending"
+    },
+    {
+      "id": "P101",
+      "kind": "paper",
+      "file": "Towards_a_High_Level_Controlled_Language.pdf",
+      "url": null,
+      "title": "Towards a High-level Controlled Language for Legal Sources on the Semantic Web",
+      "track": 1,
+      "themes": [
+        "legal core ontology",
+        "controlled natural language",
+        "legal rule annotation",
+        "semantic web"
+      ],
+      "priority": "high",
+      "dupeOf": null,
+      "nearDupeOf": null,
+      "wave1Overlap": false,
+      "mineStatus": "pending"
+    },
+    {
+      "id": "R25",
+      "kind": "repo",
+      "file": "flint-ontology",
+      "url": null,
+      "title": "FLINT Ontology",
+      "track": 1,
+      "themes": [
+        "legal core ontology",
+        "Hohfeldian relations",
+        "SHACL",
+        "normative state transitions"
+      ],
+      "priority": "high",
+      "dupeOf": null,
+      "nearDupeOf": null,
+      "wave1Overlap": false,
+      "mineStatus": "pending"
     }
   ]
 }
