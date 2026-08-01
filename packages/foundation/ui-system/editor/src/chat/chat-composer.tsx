@@ -293,6 +293,7 @@ function ComposerFooter({
             variant="secondary"
             size="sm"
             aria-label="Stop generating"
+            data-testid="turn-stop"
             onClick={() => {
               onStop?.();
               editor.dispatchCommand(STOP_MESSAGE_COMMAND, undefined);

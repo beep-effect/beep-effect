@@ -1816,7 +1816,9 @@
       ],
       "@beep/html/Html.srcset": [
         "./packages/foundation/modeling/html/src/Html.srcset.ts"
-      ]
+      ],
+      "@beep/gov-legal-mcp": ["./packages/drivers/gov-legal-mcp/src/index.ts"],
+      "@beep/gov-legal-mcp/*": ["./packages/drivers/gov-legal-mcp/src/*"]
     }
   }
 }

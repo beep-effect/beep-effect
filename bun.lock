@@ -843,6 +843,25 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/gov-legal-mcp": {
+      "name": "@beep/gov-legal-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/ecfr": "workspace:^",
+        "@beep/govinfo": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/govinfo": {
       "name": "@beep/govinfo",
       "version": "0.0.0",
@@ -3120,6 +3139,8 @@
     "@beep/firecrawl": ["@beep/firecrawl@workspace:packages/drivers/firecrawl"],
 
     "@beep/form": ["@beep/form@workspace:packages/foundation/ui-system/form"],
+
+    "@beep/gov-legal-mcp": ["@beep/gov-legal-mcp@workspace:packages/drivers/gov-legal-mcp"],
 
     "@beep/govinfo": ["@beep/govinfo@workspace:packages/drivers/govinfo"],
 

@@ -3,15 +3,15 @@
   "initiative": {
     "id": "gov-legal-mcp",
     "title": "Gov Legal MCP",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gov-legal-mcp",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship a thin collision-safe Effect MCP host over the proven GovInfo and eCFR drivers without absorbing remaining delivery breadth.",
-  "statusNote": "The >=2-proven-driver gate is cleared by @beep/govinfo and @beep/ecfr; remaining driver breadth stays paused in gov-legal-data-driver-delivery.",
+  "statusNote": "Shipped: packages/drivers/gov-legal-mcp exposes govinfo_search (hard gate) plus ecfr_list_titles/ecfr_search_results/ecfr_get_structure (none gate) through one stdio server with the deterministic collision report; remaining driver breadth stays paused in gov-legal-data-driver-delivery.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -57,10 +57,10 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Contract and naming audit", "status": "pending" },
-    { "id": "P1", "name": "Implement thin host", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+    { "id": "P0", "name": "Contract and naming audit", "status": "complete" },
+    { "id": "P1", "name": "Implement thin host", "status": "complete" },
+    { "id": "P2", "name": "Verify", "status": "complete" },
+    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "complete" }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/gov-legal-mcp/GOAL.md)\" -le 4000",

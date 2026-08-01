@@ -104,6 +104,7 @@ const config = {
     "packages/drivers/openclaw/package.json",
     "packages/drivers/obs/package.json",
     "packages/drivers/exiftool/package.json",
+    "packages/drivers/gov-legal-mcp/package.json",
   ],
   customTypes: {
     catalog: {
