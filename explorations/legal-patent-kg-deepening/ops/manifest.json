@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "legal-patent-kg-deepening",
+    "title": "Legal & Patent KG Deepening",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Which of the ~24 corpus repos survive triage for xhigh deep-mines (several overlap wave-1 holdings, e.g. lkif-core)?",
+      "FOPNet: is the functional-semantic patent KG pattern portable to the epistemic slice and patent tooling, and what would a schema-first port look like?",
+      "Do the Hohfeldian formalization papers change semantic-foundation's SKOS-first stance, or route to a new epistemic capability?",
+      "Endpoint gate: BRIEF/MAP shaping is blocked on Benjamin's sign-off over the syntheses + ROUTING-SEED (locked 2026-08-01)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/semantic-foundation",
+        "goals/agentic-cad-patent-tooling",
+        "goals/epistemic-bitemporal-edge-core"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-01",
+    "updated": "2026-08-01"
+  }
+}
