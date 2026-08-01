@@ -529,6 +529,8 @@
     "packages/drivers/tailscale",
     "packages/drivers/pretext",
     "packages/drivers/graph-3d",
-    "packages/drivers/openclaw"
+    "packages/drivers/openclaw",
+    "packages/drivers/obs",
+    "packages/drivers/exiftool"
   ]
 }

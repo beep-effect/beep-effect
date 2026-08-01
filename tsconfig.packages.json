@@ -112,6 +112,9 @@
       "path": "packages/drivers/ecfr"
     },
     {
+      "path": "packages/drivers/exiftool"
+    },
+    {
       "path": "packages/drivers/face-detection"
     },
     {
@@ -146,6 +149,9 @@
     },
     {
       "path": "packages/drivers/nlp-mcp"
+    },
+    {
+      "path": "packages/drivers/obs"
     },
     {
       "path": "packages/drivers/onepassword-cli"
@@ -347,6 +353,9 @@
     },
     {
       "path": "packages/tooling/library/ai-sync"
+    },
+    {
+      "path": "packages/tooling/library/qa-capture"
     },
     {
       "path": "packages/tooling/library/repo-utils"

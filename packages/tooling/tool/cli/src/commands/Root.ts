@@ -24,6 +24,7 @@ import { imageCommand } from "./Image/index.ts";
 import { lawsCommand } from "./Laws/index.ts";
 import { lintCommand } from "./Lint/index.ts";
 import { purgeCommand } from "./Purge/index.ts";
+import { qaCommand } from "./Qa/index.ts";
 import { qualityCommand } from "./Quality/index.ts";
 import { researchCommand } from "./Research/index.ts";
 import { skillsCommand } from "./Skills/index.ts";
@@ -70,6 +71,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     createPackageCommand,
     codegenCommand,
     purgeCommand,
+    qaCommand,
     skillsCommand,
     syncDataToTsCommand,
     tsconfigSyncCommand,

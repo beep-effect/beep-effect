@@ -6,6 +6,13 @@
  */
 
 /**
+ * Public capture-oriented FFmpeg driver model exports.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export * from "./FFmpeg.capture.models.ts";
+/**
  * Public native FFmpeg driver error exports.
  *
  * @since 0.0.0

@@ -79,6 +79,8 @@
     "packages/drivers/tailscale/dtslint/**/*.tst.*",
     "packages/drivers/pretext/dtslint/**/*.tst.*",
     "packages/drivers/openclaw/dtslint/**/*.tst.*",
+    "packages/drivers/obs/dtslint/**/*.tst.*",
+    "packages/drivers/exiftool/dtslint/**/*.tst.*",
     "packages/foundation/modeling/html/dtslint/**/*.tst.*",
     "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
     "packages/foundation/modeling/lexical/dtslint/**/*.tst.*",
@@ -90,6 +92,7 @@
     "packages/foundation/modeling/schema/dtslint/**/*.tst.*",
     "packages/foundation/modeling/utils/dtslint/**/*.tst.*",
     "packages/tooling/library/ai-sync/dtslint/**/*.tst.*",
+    "packages/tooling/library/qa-capture/dtslint/**/*.tst.*",
     "packages/tooling/library/repo-utils/dtslint/**/*.tst.*",
     "packages/tooling/policy-pack/repo-configs/dtslint/**/*.tst.*"
   ],
