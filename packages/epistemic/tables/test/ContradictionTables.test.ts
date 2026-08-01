@@ -3,6 +3,7 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
+import * as EpistemicIdentity from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
@@ -190,7 +191,7 @@ describe("Contradiction candidate row converters", () => {
 
   it("round-trips receipt and disposition rows without generated identifiers", () => {
     const receiptInsert = Result.getOrThrow(toContradictionReceiptInsert(receipt));
-    const dispositionInsert = Result.getOrThrow(toContradictionDispositionInsert(disposition));
+    const dispositionInsert = Result.getOrThrow(toContradictionDispositionInsert(disposition, candidate));
     const decodedReceipt = Result.getOrThrow(fromContradictionReceiptRow({ ...receiptInsert, id: receipt.id }));
     const decodedDisposition = Result.getOrThrow(
       fromContradictionDispositionRow({ ...dispositionInsert, id: disposition.id })
@@ -200,6 +201,20 @@ describe("Contradiction candidate row converters", () => {
     expect("id" in dispositionInsert).toBe(false);
     expect(decodedReceipt.receiptKey).toBe(receipt.receiptKey);
     expect(decodedDisposition.decision).toEqual(disposition.decision);
+  });
+
+  it("rejects a disposition that predates or does not reference its supplied candidate", () => {
+    const futureCandidate = ContradictionCandidate.make({
+      ...candidate,
+      recordedAt: DateTime.makeUnsafe(1),
+    });
+    const differentCandidate = ContradictionCandidate.make({
+      ...candidate,
+      id: EpistemicIdentity.ContradictionCandidateId.make(99),
+    });
+
+    expect(Result.isFailure(toContradictionDispositionInsert(disposition, futureCandidate))).toBe(true);
+    expect(Result.isFailure(toContradictionDispositionInsert(disposition, differentCandidate))).toBe(true);
   });
 
   it("rejects each tampered seal before writing", () => {

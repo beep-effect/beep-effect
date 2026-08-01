@@ -11,7 +11,9 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
-import { Result, SchemaIssue } from "effect";
+import { DateTime, Result, SchemaIssue } from "effect";
+import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { candidateTable, dispositionTable, receiptTable } from "./Contradiction.table.ts";
@@ -135,6 +137,23 @@ const validateCandidateSeals = (
         )
   );
 
+const validateDispositionCandidate = (
+  disposition: ContradictionDisposition,
+  candidate: ContradictionCandidate
+): Result.Result<ContradictionDisposition, S.SchemaError> =>
+  Eq.equals(disposition.candidateId, candidate.id) &&
+  Eq.equals(disposition.orgId, candidate.orgId) &&
+  !DateTime.isLessThan(disposition.resolvedAt, candidate.recordedAt)
+    ? Result.succeed(disposition)
+    : Result.fail(
+        new S.SchemaError(
+          new SchemaIssue.InvalidValue(O.some(disposition.candidateId), {
+            message:
+              "Contradiction disposition must reference the supplied candidate in the same organization and resolve at or after candidate.recordedAt.",
+          })
+        )
+      );
+
 /**
  * Convert a contradiction candidate to a database insert.
  *
@@ -232,6 +251,10 @@ export const fromContradictionReceiptRow = (row: unknown): Result.Result<Contrad
 /**
  * Convert a contradiction disposition to a database insert.
  *
+ * @remarks
+ * The referenced candidate is required so identity, organization, and
+ * transaction-time ordering are checked before the append-only write.
+ *
  * @example
  * ```ts
  * import { toContradictionDispositionInsert } from "@beep/epistemic-tables/entities/Contradiction"
@@ -242,13 +265,23 @@ export const fromContradictionReceiptRow = (row: unknown): Result.Result<Contrad
  * @category mappers
  * @since 0.0.0
  */
-export const toContradictionDispositionInsert = (
-  disposition: ContradictionDisposition
-): Result.Result<ContradictionDispositionInsert, S.SchemaError> =>
-  Result.map(encodeDisposition(disposition), (encoded): ContradictionDispositionInsert => {
-    const { id: _id, ...insert } = encoded;
-    return insert;
-  });
+export const toContradictionDispositionInsert: {
+  (
+    disposition: ContradictionDisposition,
+    candidate: ContradictionCandidate
+  ): Result.Result<ContradictionDispositionInsert, S.SchemaError>;
+  (
+    candidate: ContradictionCandidate
+  ): (disposition: ContradictionDisposition) => Result.Result<ContradictionDispositionInsert, S.SchemaError>;
+} = dual(2, (disposition: ContradictionDisposition, candidate: ContradictionCandidate) =>
+  Result.map(
+    Result.flatMap(validateDispositionCandidate(disposition, candidate), encodeDisposition),
+    (encoded): ContradictionDispositionInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }
+  )
+);
 
 /**
  * Decode a selected contradiction disposition row.

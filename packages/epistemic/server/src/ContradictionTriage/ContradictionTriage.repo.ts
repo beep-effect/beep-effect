@@ -905,7 +905,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 updatedAt: resolvedAt,
                 updatedByPrincipal: reviewer,
               });
-              const insert = yield* Effect.fromResult(toContradictionDispositionInsert(seed));
+              const insert = yield* Effect.fromResult(toContradictionDispositionInsert(seed, candidate));
               const inserted = yield* tx.insert(dispositionTable).values(insert).returning();
               const insertedRow = yield* Effect.fromOption(A.head(inserted), () =>
                 ContradictionRepositoryUnavailable.during(

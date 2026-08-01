@@ -739,18 +739,26 @@ const ContradictionProposalFact = JsonObject.check(
   })
 );
 
-const ContradictionProposalRationale = S.NonEmptyString.check(
+const ContradictionProposalRationale = TrimmedNonEmptyText.check(
   S.isMaxLength(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH, {
     identifier: $I`ContradictionProposalRationaleMaximumLengthCheck`,
     title: "Contradiction Proposal Rationale Maximum Length",
     description: "Checks that a detector-supplied proposal rationale contains at most 2,000 characters.",
     message: "Expected contradiction proposal rationale to contain at most 2,000 characters.",
   })
-).pipe(
-  $I.annoteSchema("ContradictionProposalRationale", {
-    description: "Non-empty detector-supplied proposal rationale containing at most 2,000 characters.",
+)
+  .annotate({
+    toArbitrary: () => (fc) =>
+      fc
+        .string({ minLength: 1, maxLength: CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH })
+        .map(Str.trim)
+        .filter(Str.isNonEmpty),
   })
-);
+  .pipe(
+    $I.annoteSchema("ContradictionProposalRationale", {
+      description: "Trimmed non-empty detector-supplied proposal rationale containing at most 2,000 characters.",
+    })
+  );
 
 class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolutionProposalStruct>(
   $I`ContradictionResolutionProposalStruct`
