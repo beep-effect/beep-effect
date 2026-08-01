@@ -531,6 +531,7 @@
     "packages/drivers/graph-3d",
     "packages/drivers/openclaw",
     "packages/drivers/obs",
-    "packages/drivers/exiftool"
+    "packages/drivers/exiftool",
+    "packages/drivers/gov-legal-mcp"
   ]
 }

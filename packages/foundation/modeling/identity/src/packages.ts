@@ -182,7 +182,8 @@ const generatedComposers = $I.compose(
   "openclaw",
   "obs",
   "exiftool",
-  "qa-capture"
+  "qa-capture",
+  "gov-legal-mcp"
 );
 
 const composers = {
@@ -2292,3 +2293,19 @@ export const $ExiftoolId: Identity.IdentityComposer<"@beep/exiftool"> = composer
  * @category configuration
  */
 export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = composers.$QaCaptureId;
+
+/**
+ * Identity composer for `@beep/gov-legal-mcp`.
+ *
+ * @example
+ * ```typescript
+ * import { $GovLegalMcpId } from "@beep/identity"
+ *
+ * const id = $GovLegalMcpId.make("GovLegalMcp")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = composers.$GovLegalMcpId;

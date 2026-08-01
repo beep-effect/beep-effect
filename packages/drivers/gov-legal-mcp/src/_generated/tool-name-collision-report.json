@@ -1,0 +1,46 @@
+{
+  "candidates": [
+    {
+      "candidate": "ecfr_getStructure",
+      "digest": null,
+      "duplicateVerdict": "unique",
+      "finalWireName": "ecfr_get_structure",
+      "normalized": "ecfr_get_structure",
+      "originalOperationId": "getStructure",
+      "source": "ecfr",
+      "truncated": false
+    },
+    {
+      "candidate": "ecfr_listTitles",
+      "digest": null,
+      "duplicateVerdict": "unique",
+      "finalWireName": "ecfr_list_titles",
+      "normalized": "ecfr_list_titles",
+      "originalOperationId": "listTitles",
+      "source": "ecfr",
+      "truncated": false
+    },
+    {
+      "candidate": "ecfr_searchResults",
+      "digest": null,
+      "duplicateVerdict": "unique",
+      "finalWireName": "ecfr_search_results",
+      "normalized": "ecfr_search_results",
+      "originalOperationId": "searchResults",
+      "source": "ecfr",
+      "truncated": false
+    },
+    {
+      "candidate": "govinfo_search",
+      "digest": null,
+      "duplicateVerdict": "unique",
+      "finalWireName": "govinfo_search",
+      "normalized": "govinfo_search",
+      "originalOperationId": "search",
+      "source": "govinfo",
+      "truncated": false
+    }
+  ],
+  "duplicateVerdict": "clean",
+  "schemaVersion": "gov-legal-mcp/tool-name-collision-report/v1"
+}

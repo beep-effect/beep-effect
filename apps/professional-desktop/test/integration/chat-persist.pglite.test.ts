@@ -25,7 +25,8 @@
  */
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AgentTurnKernel } from "@beep/agents-use-cases/public";
-import { makeDrizzleLayer } from "@beep/postgres";
+import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
+import { makeDrizzle, makeDrizzleLayer } from "@beep/postgres";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
@@ -110,6 +111,20 @@ if (!shouldRunPgliteIntegration) {
               expect(O.getOrNull(codeBlock.language)).toBe("text");
             }
           }
+
+          const db = yield* makeDrizzle();
+          const usageRows = yield* db.select().from(UsageRecordTable.Table);
+          expect(usageRows).toHaveLength(1);
+          expect(usageRows[0]).toMatchObject({
+            activityId: null,
+            costUsdApproxMicros: 0,
+            inputTokens: 12,
+            model: "fixture",
+            outputTokens: 8,
+            provider: "fixture",
+            totalTokens: 20,
+          });
+          expect(usageRows[0]?.latencyMillis).not.toBeNull();
         }),
         pgliteIntegrationTimeoutMillis
       );

@@ -7,6 +7,8 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contracts");
@@ -143,3 +145,142 @@ export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
     description: "Generated assistant block paired with the block's position in the turn stream.",
   })
 ) {}
+
+/**
+ * Provider-reported token usage attached to a successfully finalized assistant
+ * turn. The optional stop reason encodes as JSON `null`, keeping the contract
+ * safe across RPC and jsonb boundaries.
+ *
+ * @example
+ * ```ts
+ * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const usage = ProviderUsageMetadata.make({
+ *   inputTokens: NonNegativeInt.make(12),
+ *   model: "fixture",
+ *   outputTokens: NonNegativeInt.make(8),
+ *   provider: "fixture",
+ *   stopReason: O.some("stop")
+ * })
+ * console.log(usage.model)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProviderUsageMetadata extends S.Class<ProviderUsageMetadata>($I`ProviderUsageMetadata`)(
+  {
+    inputTokens: NonNegativeInt.annotateKey({
+      description: "Total provider-reported input tokens, including cached input when the provider counts it.",
+    }),
+    model: S.NonEmptyString.annotateKey({
+      description: "Provider-returned model identifier for the finalized request.",
+    }),
+    outputTokens: NonNegativeInt.annotateKey({
+      description: "Total provider-reported output tokens for the finalized request.",
+    }),
+    provider: S.NonEmptyString.annotateKey({
+      description: "Provider identifier for the finalized request.",
+    }),
+    stopReason: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional normalized provider stop reason; encoded absence is JSON null.",
+    }),
+  },
+  $I.annote("ProviderUsageMetadata", {
+    description: "Provider-reported model and token usage for a successfully finalized assistant turn.",
+  })
+) {}
+
+/**
+ * Stream event carrying one completed assistant block.
+ *
+ * @example
+ * ```ts
+ * import { AssistantTurnBlockEvent, IndexedBlock } from "@beep/agents-use-cases/public"
+ *
+ * console.log(AssistantTurnBlockEvent.make)
+ * console.log(IndexedBlock.make)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssistantTurnBlockEvent extends S.Class<AssistantTurnBlockEvent>($I`AssistantTurnBlockEvent`)(
+  {
+    block: IndexedBlock.annotateKey({ description: "Completed indexed assistant block." }),
+    type: S.tag("block").annotateKey({ description: "Assistant block event discriminator." }),
+  },
+  $I.annote("AssistantTurnBlockEvent", {
+    description: "Assistant-turn stream event carrying one completed indexed block.",
+  })
+) {}
+
+/**
+ * Terminal stream signal carrying provider usage for a successfully finalized
+ * assistant turn.
+ *
+ * @example
+ * ```ts
+ * import { AssistantTurnFinalization, ProviderUsageMetadata } from "@beep/agents-use-cases/public"
+ *
+ * console.log(AssistantTurnFinalization.make)
+ * console.log(ProviderUsageMetadata.make)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssistantTurnFinalization extends S.Class<AssistantTurnFinalization>($I`AssistantTurnFinalization`)(
+  {
+    type: S.tag("finalization").annotateKey({ description: "Assistant turn finalization discriminator." }),
+    usage: ProviderUsageMetadata.annotateKey({
+      description: "Provider-reported usage for the successfully finalized turn.",
+    }),
+  },
+  $I.annote("AssistantTurnFinalization", {
+    description: "Terminal assistant-turn stream signal carrying provider usage metadata.",
+  })
+) {}
+
+const AssistantTurnEventTag = LiteralKit(["block", "finalization"]);
+
+/**
+ * Tagged assistant-turn kernel stream event.
+ *
+ * @example
+ * ```ts
+ * import { AssistantTurnEvent } from "@beep/agents-use-cases/public"
+ *
+ * console.log(AssistantTurnEvent.cases.finalization.make)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AssistantTurnEvent = AssistantTurnEventTag.mapMembers(
+  Tuple.evolve([() => AssistantTurnBlockEvent, () => AssistantTurnFinalization])
+).pipe(
+  S.toTaggedUnion("type"),
+  $I.annoteSchema("AssistantTurnEvent", {
+    description: "Completed assistant blocks followed by one provider-usage finalization signal.",
+  })
+);
+
+/**
+ * Runtime type for {@link AssistantTurnEvent}.
+ *
+ * @example
+ * ```ts
+ * import type { AssistantTurnEvent } from "@beep/agents-use-cases/public"
+ *
+ * type AssistantTurnEventType = AssistantTurnEvent["type"]
+ * const eventType: AssistantTurnEventType = "finalization"
+ * console.log(eventType)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AssistantTurnEvent = typeof AssistantTurnEvent.Type;
