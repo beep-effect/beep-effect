@@ -81,7 +81,10 @@ Exact-hash duplicates skipped during mining: P020 → P018, P029 → P028, P098 
 - L09 — IEEE document 11291769
 - L11 — ScienceDirect article S1751157723000925
 - L12 — ScienceDirect article S0172219026000025 (purchase page)
-- L13 — ScienceDirect article S0172219026000025
+- L13 — FOPNet: A Comprehensive Functional Semantic Knowledge Graph for Deep
+  Technical Analysis in Patents *(retitled + moved to track 2 after mining
+  recovered its metadata; row was a bare ScienceDirect identifier at catalog
+  time — see `mined/L13.md`)*
 - R02 — Awesome Legal Data
 - R05 — Common Core Ontologies
 - R06 — DAOnt
@@ -206,6 +209,6 @@ Exact-hash duplicates skipped during mining: P020 → P018, P029 → P028, P098 
 ## Open classification questions
 
 1. The inventory and campaign prose say 15 seed URLs, but the current `links.md` contains 14 URL lines. No L15 row was invented.
-2. L03–L06, L08–L09, and L11–L13 expose only publisher identifiers in the URL. They remain track 0 until fetched metadata supplies titles; L12/L13 are linked as the same PII through different endpoints.
+2. L03–L06, L08–L09, and L11–L12 expose only publisher identifiers in the URL. They remain track 0 until fetched metadata supplies titles; L12/L13 are linked as the same PII through different endpoints. RESOLVED for L13 (2026-08-01): mining recovered its metadata — it is the FOPNet paper (the campaign's priority thread) and now carries track 2 / priority `fopnet` in the catalog and its distillate frontmatter.
 3. Several paper filenames are source-truncated (notably P009–P014, P021–P022, P026, P034, P038–P039, P49–P51, P57, P59–P65, P72, P76, P80–P83, P86, P92, and P96). Their tracks use only visible filename cues; track-0 placements should be revisited during mining.
 4. DAOnt, LegalPP, O3POntology, and knowledge_graph do not expose enough scope in their repo names to assign a thematic track confidently, so R06, R15, R18, and R08 remain track 0 pending repo triage. P054/P055 are provisionally treated as versions of one diachronic-norm work.

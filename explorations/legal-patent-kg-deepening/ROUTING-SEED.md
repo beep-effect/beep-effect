@@ -23,15 +23,19 @@ dup-skip`.
 | Legal positions, relators, and authorized transitions (`T1-F1,T1-F2,T1-F7,T1-F9,T4-F6,P100,R25`) | **mixed** | `legal-position-relator-runtime` *(proposed slug, not a path yet)* | P1 | `legal-position-relator-runtime` |
 | Legal rule, time, source identity, and controlled transformation (`T1-F4,T1-F5,T1-F6,T3-F1,T3-F2,T3-F3,T3-F6,T4-F5,P101`) | **new-exploration** | `legal-rule-time-identity` *(proposed slug, not a path yet)* | P2 | `legal-rule-time-identity` |
 | Legal contradiction scope, priority, and correction deltas (`T1-F3,T3-F9,T4-F8`) | **extend-goal** | `goals/epistemic-contradiction-triage` | P1 | — |
-| Semantic registry, qualified mappings, and extraction admission (`T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8`) | **extend-goal** + **grill[remo1]** | `goals/semantic-foundation` | P2 | — |
+| Semantic registry, qualified mappings, and extraction admission (`T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8`) | **extend-goal** *(grill resolved: schema-first now, M4 SHACL later)* | `goals/semantic-foundation` | P2 | — |
 | Functional patent profiles and drift-safe ingestion (`T2-F1,T2-F8,T2-F9`) | **mixed** | `explorations/uspto-patent-driver-depth` | P1 | — |
 | Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** | `patent-citation-candor-gate` *(proposed slug, not a path yet)* | P1 | `patent-citation-candor-gate` |
-| Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** | `patent-drafting-promotion-gates` *(proposed slug, not a path yet)* | P1 | `patent-drafting-promotion-gates` |
-| Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3`) | **mixed** + **grill[remo2,remo3]** | `patent-drafting-episode-ledger` *(proposed slug, not a path yet)* | P1 | `patent-drafting-episode-ledger` |
+| Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **merged 2026-08-01** → first rung of `patent-drafting-episode-ledger` | `patent-drafting-episode-ledger` | P1 | — |
+| Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3` + merged `T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** *(grill resolved: remo2 rows-first + in-memory RDF lane; remo3 product-records + Cognee projection)* | `patent-drafting-episode-ledger` *(proposed slug, not a path yet)* | P1 | `patent-drafting-episode-ledger` |
 | Rejected admission and ODRL profile claims (`T4-R1,T4-R2`) | **dup-skip** | `explorations/legal-patent-kg-deepening` | P3 | — |
 
-Route mix: mixed×5, extend-goal×2, new-exploration×1, dup-skip×1. Proposed
-slug count: five. Grill annotations: `remo1`, `remo2`, `remo3`.
+Route mix (as amended 2026-08-01): mixed×4, extend-goal×2, new-exploration×1,
+dup-skip×1, merged×1. Proposed slug count: **four** after the reconciliation
+grill (`legal-position-relator-runtime`, `legal-rule-time-identity`,
+`patent-citation-candor-gate`, `patent-drafting-episode-ledger`). All three
+grill annotations (`remo1`, `remo2`, `remo3`) are resolved — see
+Reconciliation amendments at the end of this file.
 
 ## Per-cluster detail
 
@@ -159,9 +163,15 @@ slug count: five. Grill annotations: `remo1`, `remo2`, `remo3`.
 
 ### Claim-limitation support and governed patent drafting
 
-- **Route / Wave:** mixed · P1
+> **MERGED 2026-08-01 (reconciliation grill):** this cluster is now the first
+> rung of `patent-drafting-episode-ledger` — ClaimLimitationSupport is a
+> submachine of the DraftingEpisode state machine sharing the same
+> `RuntimeApprovalGate`. The detail below is retained for provenance; route
+> its nuggets via the drafting-episodes cluster.
+
+- **Route / Wave:** merged → first rung of `patent-drafting-episode-ledger` · P1
 - **Nuggets:** `T4-F1`, `T4-F2`, `T4-F3`, `T4-F4`, `ADHD-2`
-- **Primary target:** `patent-drafting-promotion-gates` *(proposed slug; no repo path is asserted)*
+- **Primary target:** `patent-drafting-episode-ledger` *(proposed slug; no repo path is asserted; was `patent-drafting-promotion-gates` before the merge)*
 - **Coordinate with:** `goals/agentic-professional-runtime`, `goals/citation-verified-span-substrate`, `goals/law-docketing-patent-spine`
 - **Net-new (no existing home):**
   - `[T4-F1,ADHD-2]` `ClaimLimitationSupportSet`, ordered limitations, dependency closure, unresolved support states, and attorney disposition; source-only `rg` returned zero `ClaimLimitationSupport` symbols.
@@ -216,3 +226,31 @@ slug count: five. Grill annotations: `remo1`, `remo2`, `remo3`.
 - **⚠ Cautions:**
   - `[T4-R1]` ODRL caller-domain work may still be studied, but not under the rejected combined-profile claim.
   - `[T4-R2]` New domain consumers compose the existing admission contract; they do not widen the completed kernel.
+
+## Reconciliation amendments (2026-08-01 grill — SIGNED OFF)
+
+Benjamin signed off the matrix as amended in the 2026-08-01 reconciliation
+grill (full Q/A/rationale in [`DECISIONS.md`](./DECISIONS.md)):
+
+1. **remo1 resolved — no supersession.** Correlativity/FLINT invariants land
+   as Effect Schema constructs now (LiteralKit + correlative bimap in the
+   consuming domain package); registry-carried executable shapes route into
+   semantic-foundation's existing gated **M4 Intake ClaimGate Shapes** lane
+   (bounded `ShaclValidationService`; SPARQL unsupported). Cluster 4 stays
+   `extend-goal`.
+2. **remo2 resolved — no persistent graph store.** MatterProjection contract
+   is `PracticeKgQuery`: typed queries over materialized rows rebuilt from
+   accepted claims; lineage queries may use disposable in-memory `@beep/rdf`
+   dataset sessions via the existing bounded `SparqlQueryService`
+   (ontology-workbench Session pattern).
+3. **remo3 resolved — clarification, not supersession.** DraftingEpisode
+   ledgers are law-practice product records; Cognee's dev-memory role is
+   unchanged and may carry a lossy rebuildable projection with
+   recent-raw-episode fallback. Clarifying entry:
+   `standards/memory-architecture/04-decision-log.md` (2026-08-01).
+4. **Slug merge.** `patent-drafting-promotion-gates` folds into
+   `patent-drafting-episode-ledger` as its first rung (ClaimLimitationSupport
+   is a submachine of the DraftingEpisode state machine; same
+   `RuntimeApprovalGate`). Four proposed slugs remain.
+5. **First wedge.** `patent-citation-candor-gate` shapes first; the other P1
+   wedges queue behind it. BRIEF/MAP work may now begin, starting there.

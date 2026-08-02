@@ -28,6 +28,7 @@ export {
 export * from "@beep/repo-cli/commands/Quality/Tasks";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
+export * from "../commands/Quality/internal/FlakeQuarantine.ts";
 export { githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";

@@ -87,6 +87,27 @@ const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string
   bunRunLane(repoRoot, label, ["beep", "quality", ...args]);
 
 /**
+ * Opt a Turbo-backed lane into no-location TS2589 flake quarantine.
+ *
+ * @param step - Planned lane step running a full Turbo build or check sweep.
+ * @returns The same step carrying the `ts2589-no-location` quarantine policy.
+ * @example
+ * ```ts
+ * import { githubCheckLanePlan } from "@beep/repo-cli/test/Quality"
+ *
+ * const lane = githubCheckLanePlan.bunRunLane("/repo", "quality:build", ["build"])
+ * console.log(githubCheckLanePlan.ts2589QuarantineLane(lane).flakeQuarantine)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const ts2589QuarantineLane = (step: QualityTaskStep): QualityTaskStep =>
+  QualityTaskStep.make({
+    ...step,
+    flakeQuarantine: "ts2589-no-location",
+  });
+
+/**
  * Attach metadata to a GitHub check lane step.
  *
  * @param id - Stable lane id.
@@ -150,6 +171,7 @@ export const githubCheckLanePlan = {
   githubCheckLane,
   githubCheckLaneSteps,
   repoCliLane,
+  ts2589QuarantineLane,
 } as const;
 
 /**
@@ -167,8 +189,16 @@ export const githubCheckLanePlan = {
  * @since 0.0.0
  */
 export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane("quality:build", "repo-quality", bunRunLane(repoRoot, "quality:build", ["build"])),
-  githubCheckLane("quality:check", "repo-quality", bunRunLane(repoRoot, "quality:check", ["check"])),
+  githubCheckLane(
+    "quality:build",
+    "repo-quality",
+    ts2589QuarantineLane(bunRunLane(repoRoot, "quality:build", ["build"]))
+  ),
+  githubCheckLane(
+    "quality:check",
+    "repo-quality",
+    ts2589QuarantineLane(bunRunLane(repoRoot, "quality:check", ["check"]))
+  ),
   githubCheckLane("quality:knip", "repo-quality", repoCliLane(repoRoot, "quality:knip", ["knip"])),
   githubCheckLane(
     "quality:jsdoc-ratchet",

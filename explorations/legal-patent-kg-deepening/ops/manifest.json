@@ -4,11 +4,9 @@
     "slug": "legal-patent-kg-deepening",
     "title": "Legal & Patent KG Deepening",
     "status": "active",
-    "stage": "research",
+    "stage": "align",
     "openQuestions": [
-      "Routing-seed reconciliation: review ROUTING-SEED.md's 9 clusters and 5 proposed slugs with Benjamin and gate them into the explorations/ -> goals/ pipeline (reconciliation-first).",
-      "Grill-gated challenges to standing decisions: remo1 (executable ConstraintProfile vs wave-1 SKOS-only), remo2 (derived MatterProjection vs no-graph-store), remo3 (Cognee as lossy projection vs 2026-07-25 memory doctrine) - each needs /grill-with-docs, never silent routing.",
-      "Endpoint gate: BRIEF/MAP shaping is blocked on Benjamin's sign-off over the syntheses + ROUTING-SEED (locked 2026-08-01)."
+      "Shape the first wedge: open patent-citation-candor-gate and draft its BRIEF (routing signed off 2026-08-01; remaining P1 wedges queue behind it)."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

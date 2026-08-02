@@ -23,6 +23,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Stream } from "effect";
@@ -154,6 +155,37 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
 ) {}
 
 /**
+ * Flake-quarantine policy a quality step may opt into.
+ *
+ * A policy names one established environment-only failure signature. When a
+ * policy-carrying step fails and its captured output matches the signature,
+ * the runner may rerun the failing scope standalone once and record the
+ * incident as an environment flake instead of failing the group.
+ *
+ * @example
+ * ```ts
+ * import { StepFlakeQuarantinePolicy } from "@beep/repo-cli/internal/process"
+ *
+ * console.log(StepFlakeQuarantinePolicy.is["ts2589-no-location"]("ts2589-no-location"))
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const StepFlakeQuarantinePolicy = LiteralKit(["ts2589-no-location"]).pipe(
+  $I.annoteSchema("StepFlakeQuarantinePolicy", {
+    description: "Named environment-only failure signature a quality step may quarantine on.",
+  })
+);
+
+/**
+ * Flake-quarantine policy a quality step may opt into.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StepFlakeQuarantinePolicy = typeof StepFlakeQuarantinePolicy.Type;
+
+/**
  * Planned subprocess invocation shared by repo-quality command families.
  *
  * @remarks
@@ -185,6 +217,7 @@ export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep
     cwd: S.String,
     env: S.optionalKey(S.Record(S.String, S.Union([S.String, S.Undefined]))),
     useLocalEnv: S.optionalKey(S.Boolean),
+    flakeQuarantine: S.optionalKey(StepFlakeQuarantinePolicy),
   },
   $I.annote("QualityTaskStep", {
     description: "Planned subprocess invocation shared by repo-quality command families.",

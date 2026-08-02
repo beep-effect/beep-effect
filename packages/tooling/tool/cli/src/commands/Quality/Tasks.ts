@@ -8,7 +8,20 @@
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe } from "effect";
+import {
+  Console,
+  DateTime,
+  Duration,
+  Effect,
+  FileSystem,
+  flow,
+  Inspectable,
+  Match,
+  Order,
+  Path,
+  pipe,
+  Ref,
+} from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -31,6 +44,16 @@ import {
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
+import {
+  detectNoLocationTs2589Flake,
+  FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
+  FlakeQuarantineArtifact,
+  FlakeQuarantineArtifactJson,
+  FlakeQuarantineIncident,
+  flakeQuarantineOutputBound,
+  laneQuarantineRerunStep,
+  standaloneQuarantineRerunStep,
+} from "./internal/FlakeQuarantine.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
@@ -670,6 +693,199 @@ const failQualityTaskFailures = Effect.fn("QualityTasks.failQualityTaskFailures"
   yield* failQualityTaskGroup(label, failures);
 });
 
+type QuarantineStepAttempt = {
+  readonly exitCode: number;
+  readonly output: string;
+  readonly truncated: boolean;
+  readonly label: string;
+  readonly command: string;
+};
+
+// Quarantine-eligible lanes capture while teeing so a failure's output can be
+// matched against the no-location TS2589 signature; everything else keeps the
+// inherited-stdio path unchanged.
+const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQuarantine")(function* (
+  step: QualityTaskStep
+): Effect.fn.Return<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const resolved = yield* withLocalEnv(step);
+  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args);
+  const command = commandText(resolved.command, resolved.args);
+  yield* Console.log(`[beep-cli] ${resolved.label}: ${command}`);
+  const result = yield* runCaptured({
+    command: resolved.command,
+    args: resolved.args,
+    cwd: resolved.cwd,
+    env: {
+      ...envOverrides,
+      ...(resolved.env ?? {}),
+    },
+    extendEnv: true,
+    source: "all",
+    bound: flakeQuarantineOutputBound,
+    tee: true,
+  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`));
+
+  return {
+    exitCode: result.exitCode,
+    output: result.output,
+    truncated: result.truncated,
+    label: resolved.label,
+    command,
+  };
+});
+
+// One quarantine attempt per lane failure: every flake-attributed package
+// reruns standalone once, then the whole lane reruns once (cache-resumed) so
+// tasks Turbo skipped after the flake still execute. Any rerun failure keeps
+// the original failure hard. Returns the incidents when quarantine succeeded.
+const attemptFlakeQuarantine = Effect.fn("QualityTasks.attemptFlakeQuarantine")(function* (
+  step: QualityTaskStep,
+  attempt: QuarantineStepAttempt
+): Effect.fn.Return<ReadonlyArray<FlakeQuarantineIncident>, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const policy = step.flakeQuarantine;
+  if (policy === undefined) {
+    return A.empty();
+  }
+  if (attempt.truncated) {
+    yield* Console.log(`[flake-quarantine] ${step.label}: captured output truncated; keeping failure hard`);
+    return A.empty();
+  }
+
+  const detected = detectNoLocationTs2589Flake(attempt.output);
+  if (O.isNone(detected)) {
+    yield* Console.log(
+      `[flake-quarantine] ${step.label}: failure does not match the no-location TS2589 flake signature; keeping failure hard`
+    );
+    return A.empty();
+  }
+
+  const tasks = detected.value;
+  const detectedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  yield* Console.log(
+    `[flake-quarantine] ${step.label}: no-location TS2589 flake signature detected for ${A.join(
+      A.map(tasks, (task) => task.taskId),
+      ", "
+    )}; rerunning standalone once`
+  );
+
+  const standaloneRuns: Array<{
+    readonly taskId: string;
+    readonly packageName: string;
+    readonly task: string;
+    readonly standaloneCommand: string;
+    readonly standaloneDurationMs: number;
+  }> = [];
+  for (const task of tasks) {
+    const [elapsed, rerun] = yield* runStepCapturedForQuarantine(standaloneQuarantineRerunStep(step, task)).pipe(
+      Effect.timed
+    );
+    if (rerun.exitCode !== 0) {
+      yield* Console.log(
+        `[flake-quarantine] ${step.label}: standalone rerun for ${task.taskId} failed with exit ${rerun.exitCode}; keeping failure hard`
+      );
+      return A.empty();
+    }
+    standaloneRuns.push({
+      taskId: task.taskId,
+      packageName: task.packageName,
+      task: task.task,
+      standaloneCommand: rerun.command,
+      standaloneDurationMs: Duration.toMillis(elapsed),
+    });
+  }
+
+  const [laneElapsed, laneRerun] = yield* runStepCapturedForQuarantine(laneQuarantineRerunStep(step)).pipe(
+    Effect.timed
+  );
+  if (laneRerun.exitCode !== 0) {
+    yield* Console.log(
+      `[flake-quarantine] ${step.label}: lane rerun failed with exit ${laneRerun.exitCode}; keeping failure hard`
+    );
+    return A.empty();
+  }
+
+  const laneRerunDurationMs = Duration.toMillis(laneElapsed);
+  yield* Console.log(
+    `[flake-quarantine] ${step.label}: quarantined ${A.length(standaloneRuns)} environment-only TS2589 flake incident(s); lane rerun green`
+  );
+  return A.map(standaloneRuns, (run) =>
+    FlakeQuarantineIncident.make({
+      policy,
+      laneLabel: step.label,
+      taskId: run.taskId,
+      packageName: run.packageName,
+      task: run.task,
+      standaloneCommand: run.standaloneCommand,
+      detectedAt,
+      standaloneDurationMs: run.standaloneDurationMs,
+      laneRerunDurationMs,
+    })
+  );
+});
+
+const quarantineArtifactCwd = (steps: ReadonlyArray<QualityTaskStep>): O.Option<string> =>
+  pipe(
+    A.findFirst(steps, (step) => step.flakeQuarantine !== undefined),
+    O.filter(() => !isCi()),
+    O.map((step) => step.cwd)
+  );
+
+const removeStaleFlakeQuarantineArtifact = Effect.fn("QualityTasks.removeStaleFlakeQuarantineArtifact")(function* (
+  cwd: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.remove(path.join(cwd, FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH)).pipe(Effect.ignore);
+});
+
+// A failed artifact write must not turn an already re-proven lane red; it is
+// reported loudly and the run continues with console evidence only.
+const writeFlakeQuarantineArtifact = Effect.fn("QualityTasks.writeFlakeQuarantineArtifact")(function* (
+  cwd: string,
+  incidents: ReadonlyArray<FlakeQuarantineIncident>
+) {
+  if (A.isReadonlyArrayEmpty(incidents)) {
+    return;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const artifactPath = path.join(cwd, FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH);
+  yield* fs.makeDirectory(path.dirname(artifactPath), { recursive: true }).pipe(Effect.ignore);
+  yield* FlakeQuarantineArtifactJson.encode(
+    FlakeQuarantineArtifact.make({ schemaVersion: "yeet-flake-quarantine/v1", incidents })
+  ).pipe(
+    Effect.flatMap((text) => fs.writeFileString(artifactPath, `${text}\n`)),
+    Effect.tap(() => Console.log(`[flake-quarantine] recorded ${A.length(incidents)} incident(s) at ${artifactPath}`)),
+    Effect.catch((error) =>
+      Console.error(`[flake-quarantine] failed to write ${artifactPath}: ${Inspectable.toStringUnknown(error)}`)
+    )
+  );
+});
+
+const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(function* (
+  step: QualityTaskStep,
+  incidents: Ref.Ref<ReadonlyArray<FlakeQuarantineIncident>>
+): Effect.fn.Return<O.Option<QualityTaskFailed>, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  if (step.flakeQuarantine === undefined || isCi()) {
+    return yield* runStep(step).pipe(
+      Effect.as(O.none<QualityTaskFailed>()),
+      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure)))
+    );
+  }
+
+  const attempt = yield* runStepCapturedForQuarantine(step);
+  if (attempt.exitCode === 0) {
+    return O.none();
+  }
+
+  const quarantined = yield* attemptFlakeQuarantine(step, attempt);
+  if (A.isReadonlyArrayEmpty(quarantined)) {
+    return O.some(QualityTaskFailed.new(attempt.exitCode, attempt.label, attempt.command));
+  }
+  yield* Ref.update(incidents, A.appendAll(quarantined));
+  return O.none();
+});
+
 const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingStepFailures")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>
@@ -679,12 +895,16 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
   }
 
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} streaming step(s)`);
+  const incidents = yield* Ref.make<ReadonlyArray<FlakeQuarantineIncident>>(A.empty());
+  const artifactCwd = quarantineArtifactCwd(steps);
+  yield* O.match(artifactCwd, {
+    onNone: () => Effect.void,
+    onSome: removeStaleFlakeQuarantineArtifact,
+  });
   const failures = yield* Effect.forEach(
     steps,
     (step) =>
-      runStep(step).pipe(
-        Effect.as(O.none<QualityTaskFailed>()),
-        Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure))),
+      runStepWithQuarantine(step, incidents).pipe(
         Effect.timed,
         Effect.tap(([elapsed, outcome]) =>
           Console.log(
@@ -695,6 +915,10 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
       ),
     { concurrency: 1 }
   );
+  yield* O.match(artifactCwd, {
+    onNone: () => Effect.void,
+    onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
+  });
 
   return A.getSomes(failures);
 });

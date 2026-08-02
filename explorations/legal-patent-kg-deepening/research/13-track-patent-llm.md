@@ -215,8 +215,8 @@ not a challenge to `goals/semantic-foundation` or wave-1 conclusions (P058, P037
 
 ## Rejected in verification
 
-- **ODRL translation as one combined SKOS-guided/SHACL-repaired winning profile** — killed by source-fidelity, beep-fit, and novelty-vs-wave-1: P037 and P016 test different guidance/repair stacks, the proposed owner was wrong, and the core structural-conformance boundary already stood (P037, P016).
-- **LLM-extracted patent KGs require a new admission contract in the completed kernel** — killed by beep-fit and novelty-vs-wave-1: its provenance warning is real, but stable IDs, spans, confidence, model provenance, validation, and gated admission already belong to the epistemic owner rather than a new kernel rule (P045, P068, P084).
+- **(T4-R1) ODRL translation as one combined SKOS-guided/SHACL-repaired winning profile** — killed by source-fidelity, beep-fit, and novelty-vs-wave-1: P037 and P016 test different guidance/repair stacks, the proposed owner was wrong, and the core structural-conformance boundary already stood (P037, P016).
+- **(T4-R2) LLM-extracted patent KGs require a new admission contract in the completed kernel** — killed by beep-fit and novelty-vs-wave-1: its provenance warning is real, but stable IDs, spans, confidence, model provenance, validation, and gated admission already belong to the epistemic owner rather than a new kernel rule (P045, P068, P084).
 
 ## Open questions for the /adhd integration pass
 

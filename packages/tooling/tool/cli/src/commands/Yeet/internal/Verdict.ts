@@ -15,6 +15,7 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
@@ -192,6 +193,7 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     indexPath: S.optionalKey(S.String),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
     stash: S.optionalKey(YeetStashState),
+    flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optionalKey),
   },
   $I.annote("YeetVerdict", {
     description: "Machine-readable verdict for one yeet run, including per-lane repair commands.",
@@ -262,6 +264,7 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
     branch: S.String,
     createdAt: S.String,
     executed: S.Array(YeetExecutedStep),
+    flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optional),
     head: S.String,
     indexPath: S.optional(S.String),
     message: S.String,
@@ -347,6 +350,7 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
       indexPath: O.fromUndefinedOr(input.indexPath),
       baseFreshness: O.fromUndefinedOr(input.baseFreshness),
       stash: O.fromUndefinedOr(input.stash),
+      flakeQuarantine: pipe(O.fromUndefinedOr(input.flakeQuarantine), O.filter(A.isReadonlyArrayNonEmpty)),
     }),
   });
 };

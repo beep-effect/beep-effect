@@ -830,7 +830,7 @@
       "kind": "rejected-claim",
       "source": {
         "track": "13-track-patent-llm",
-        "findingId": "R1",
+        "findingId": "T4-R1",
         "distillates": ["P037", "P016"]
       },
       "claim": "Rejected: ODRL translation does not have one combined SKOS-guided and SHACL-repaired winning profile; the sources tested different stacks and the proposed owner was wrong.",
@@ -849,7 +849,7 @@
       "kind": "rejected-claim",
       "source": {
         "track": "13-track-patent-llm",
-        "findingId": "R2",
+        "findingId": "T4-R2",
         "distillates": ["P045", "P068", "P084"]
       },
       "claim": "Rejected: LLM-extracted patent graphs do not require a new kernel admission contract because stable IDs, spans, provenance, validation, and gated admission already have epistemic owners.",
