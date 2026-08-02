@@ -72,7 +72,7 @@ jobs:
           - id: check
             name: Check
             runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 30
+            timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
