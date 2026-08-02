@@ -8,6 +8,7 @@
 import { cast, dual, flow } from "effect/Function";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
+import type { LazyArg } from "effect/Function";
 import type * as Order from "effect/Order";
 import type * as TF from "type-fest";
 
@@ -846,3 +847,91 @@ export const truncate: {
  * @since 0.0.0
  */
 export const orEmpty = (str: string | null | undefined): string => str ?? "";
+
+/**
+ * Result type of {@link matchEmpty}.
+ *
+ * Resolves to the `onEmpty` result when the input is the literal `""`, the
+ * `onNonEmpty` result when the input is statically non-empty, and the union of
+ * both when emptiness is unknown at the type level (plain `string`).
+ *
+ * @example
+ * ```ts
+ * import type { MatchEmptyResult } from "@beep/utils/Str"
+ *
+ * const empty: MatchEmptyResult<"", "fallback", number> = "fallback"
+ * const nonEmpty: MatchEmptyResult<"beep", "fallback", number> = 4
+ * const unknown: MatchEmptyResult<string, "fallback", number> = 4
+ * console.log(empty, nonEmpty, unknown)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MatchEmptyResult<S extends string, OnEmpty, OnNonEmpty> = S extends ""
+  ? OnEmpty
+  : string extends S
+    ? OnEmpty | OnNonEmpty
+    : OnNonEmpty;
+
+/**
+ * Pattern-matches on a string, handling the empty and non-empty cases
+ * separately — the string analogue of `effect/Array`'s `match`.
+ *
+ * The result type collapses to the `onEmpty` result for the literal `""` and
+ * to the `onNonEmpty` result for statically non-empty strings (see
+ * {@link MatchEmptyResult}); literal handler returns such as `() => ""` stay
+ * literal instead of widening. In data-first calls `onNonEmpty` receives the
+ * string with the empty literal excluded. Supports both data-first and
+ * data-last calling conventions.
+ *
+ * @example
+ * ```ts
+ * import { Str } from "@beep/utils"
+ *
+ * // Data-last (pipeable)
+ * const summarize = Str.matchEmpty({
+ *   onEmpty: () => "<empty>",
+ *   onNonEmpty: (s) => `${s.length} chars`
+ * })
+ * console.log(summarize("")) // "<empty>"
+ * console.log(summarize("beep")) // "4 chars"
+ *
+ * // Data-first
+ * const direct = Str.matchEmpty("beep", {
+ *   onEmpty: () => 0,
+ *   onNonEmpty: (s) => s.length
+ * })
+ * console.log(direct) // 4
+ * ```
+ *
+ * @see {@link MatchEmptyResult} — the conditional return type
+ *
+ * @category folding
+ * @since 0.0.0
+ */
+export const matchEmpty: {
+  <const B, C = B>(options: {
+    readonly onEmpty: LazyArg<B>;
+    readonly onNonEmpty: (self: string) => C;
+  }): <const S extends string>(self: S) => MatchEmptyResult<S, B, C>;
+  <const S extends string, const B, C = B>(
+    self: S,
+    options: {
+      readonly onEmpty: LazyArg<B>;
+      readonly onNonEmpty: (self: Exclude<S, "">) => C;
+    }
+  ): MatchEmptyResult<S, B, C>;
+} = dual(
+  2,
+  <const S extends string, const B, C = B>(
+    self: S,
+    {
+      onEmpty,
+      onNonEmpty,
+    }: {
+      readonly onEmpty: LazyArg<B>;
+      readonly onNonEmpty: (self: Exclude<S, "">) => C;
+    }
+  ): MatchEmptyResult<S, B, C> => cast(Str.isEmpty(self) ? onEmpty() : onNonEmpty(cast(self)))
+);

@@ -48,11 +48,11 @@ import {
   HtmlTag,
 } from "./Html.meta.ts";
 import { HtmlRoot } from "./Html.model.ts";
+import { Doctype } from "./Html.nodes.ts";
 import { inspectSourceSizeList } from "./Html.source-size.ts";
 import { inspectSrcset } from "./Html.srcset.ts";
 import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
 import type { HtmlAttributeRequirement } from "./Html.meta.ts";
-import type { Doctype } from "./Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
 const isHtmlTag = S.is(HtmlTag);
@@ -86,9 +86,14 @@ class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
   })
 ) {}
 
-type HtmlRootView = HtmlChildView & {
-  readonly doctype?: O.Option<Doctype.Type>;
-};
+class HtmlRootView extends HtmlChildView.extend<HtmlRootView>($I`HtmlRootView`)(
+  {
+    doctype: Doctype.pipe(S.Option, S.optionalKey),
+  },
+  $I.annote("HtmlRootview", {
+    description: "",
+  })
+) {}
 
 /**
  * Rules reported by the HTML conformance validator.
@@ -318,7 +323,7 @@ const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlCon
     onSuccess: (encoded) =>
       Result.match(S.decodeUnknownResult(HtmlRoot)(encoded), {
         onFailure: () => Effect.fail(snapshotFailure()),
-        onSuccess: (decoded) => Effect.succeed(freezeTree(decoded)),
+        onSuccess: flow(freezeTree, Effect.succeed),
       }),
   });
 

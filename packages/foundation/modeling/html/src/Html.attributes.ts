@@ -19,12 +19,10 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { A, Struct } from "@beep/utils";
-import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
+import { A, flow, O, pipe, Str, Struct } from "@beep/utils";
+import { Effect, SchemaIssue, SchemaTransformation } from "effect";
 import { identity } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 
 const $I = $HtmlId.create("Html.attributes");

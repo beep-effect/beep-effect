@@ -3,10 +3,8 @@
  *
  * @since 0.0.0
  */
-import { A } from "@beep/utils";
-import { HashSet, MutableHashSet, pipe } from "effect";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import { A, O, P, pipe, Str } from "@beep/utils";
+import { HashSet, MutableHashSet } from "effect";
 import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated.ts";
 
 const languages = HashSet.fromIterable(IANA_LANGUAGE_TAG_REGISTRY.languages);
@@ -58,7 +56,7 @@ const consumeExtlang = (subtags: ReadonlyArray<string>, primary: string, index: 
 
 const consumeScript = (subtags: ReadonlyArray<string>, index: number): number => {
   const possible = subtags[index];
-  return possible !== undefined &&
+  return P.isNotUndefined(possible) &&
     possible.length === 4 &&
     ALPHA_PATTERN.test(possible) &&
     HashSet.has(scripts, possible)
@@ -68,7 +66,9 @@ const consumeScript = (subtags: ReadonlyArray<string>, index: number): number =>
 
 const consumeRegion = (subtags: ReadonlyArray<string>, index: number): number => {
   const possible = subtags[index];
-  return possible !== undefined && REGION_PATTERN.test(possible) && HashSet.has(regions, possible) ? index + 1 : index;
+  return P.isNotUndefined(possible) && REGION_PATTERN.test(possible) && HashSet.has(regions, possible)
+    ? index + 1
+    : index;
 };
 
 const scanVariants = (subtags: ReadonlyArray<string>, start: number): O.Option<number> => {
@@ -76,7 +76,7 @@ const scanVariants = (subtags: ReadonlyArray<string>, start: number): O.Option<n
   let index = start;
   let possible = subtags[index];
 
-  while (possible !== undefined && VARIANT_PATTERN.test(possible)) {
+  while (P.isNotUndefined(possible) && VARIANT_PATTERN.test(possible)) {
     if (!HashSet.has(variants, possible) || MutableHashSet.has(seen, possible)) return O.none();
     MutableHashSet.add(seen, possible);
     index += 1;
@@ -97,7 +97,7 @@ const scanExtensions = (subtags: ReadonlyArray<string>, start: number): O.Option
   let index = start;
   let possible = subtags[index];
 
-  while (possible !== undefined && EXTENSION_SINGLETON_PATTERN.test(possible)) {
+  while (P.isNotUndefined(possible) && EXTENSION_SINGLETON_PATTERN.test(possible)) {
     if (MutableHashSet.has(seen, possible)) return O.none();
     MutableHashSet.add(seen, possible);
     const payloadEnd = scanExtensionPayload(subtags, index + 1);
