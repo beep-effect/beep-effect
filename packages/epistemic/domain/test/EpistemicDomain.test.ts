@@ -10,6 +10,7 @@ import {
   ClaimProjectionView,
   Confidence,
   EpistemicFixtureKey,
+  EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
   Evidence,
   EvidenceSpan,
   TurnFinalizationUsageAppend,
@@ -22,6 +23,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, encoded: Schema["Encoded"]): void => {
@@ -94,6 +96,32 @@ describe("@beep/epistemic-domain", () => {
       fc.property(S.toArbitrary(EvidenceSpan), (span) => EvidenceSpan.isInternallyConsistent(span)),
       fcRuns(25)
     );
+  });
+
+  it("bounds evidence quotes to one source-text page", () => {
+    const maximumQuote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH)("a");
+    const overLimitQuote = `${maximumQuote}a`;
+
+    expect(
+      Result.isSuccess(
+        S.decodeUnknownResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
+          quote: maximumQuote,
+          startChar: 0,
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
+          quote: overLimitQuote,
+          startChar: 0,
+        })
+      )
+    ).toBe(true);
   });
 
   it("matches an evidence span only to its exact provenance anchor", () => {

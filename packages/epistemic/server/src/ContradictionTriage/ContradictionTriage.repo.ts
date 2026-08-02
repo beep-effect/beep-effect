@@ -594,7 +594,6 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
             lte(evidenceVerificationTable.createdAt, knownAt),
             sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'source' ->> 'scopeRef' = ${query.sourceScopeRef}`,
             sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'startChar' = ${evidenceTable.span} ->> 'startChar'`,
-            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'endChar' = ${evidenceTable.span} ->> 'endChar'`,
             sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'quote' = ${evidenceTable.span} ->> 'quote'`
           )
         )
@@ -782,9 +781,12 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 });
               }
 
-              const decision = yield* Match.value(command.decision).pipe(
+              const reviewOutcome = yield* Match.value(command.decision).pipe(
                 Match.when({ decision: "reject" }, ({ reason }) =>
-                  Effect.succeed(ContradictionDispositionDecision.cases.rejected.make({ reason }))
+                  Effect.succeed({
+                    decision: ContradictionDispositionDecision.cases.rejected.make({ reason }),
+                    edgeVersions: A.empty<EdgeVersion>(),
+                  })
                 ),
                 Match.when(
                   { decision: "supersedeProposal" },
@@ -876,13 +878,16 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                         validTo: proposal.value.validTo,
                       })
                     );
-                    return ContradictionDispositionDecision.cases.superseded.make({
-                      formerEdgeVersionId: edge.id,
-                      proposalDigest: proposal.value.proposalDigest,
-                      proposalId: proposal.value.proposalId,
-                      reason: selection.reason,
-                      replacementEdgeVersionId: replacement.id,
-                    });
+                    return {
+                      decision: ContradictionDispositionDecision.cases.superseded.make({
+                        formerEdgeVersionId: edge.id,
+                        proposalDigest: proposal.value.proposalDigest,
+                        proposalId: proposal.value.proposalId,
+                        reason: selection.reason,
+                        replacementEdgeVersionId: replacement.id,
+                      }),
+                      edgeVersions: [edge, replacement],
+                    };
                   })
                 ),
                 Match.exhaustive
@@ -892,7 +897,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 candidateId: candidate.id,
                 createdAt: resolvedAt,
                 createdByPrincipal: reviewer,
-                decision,
+                decision: reviewOutcome.decision,
                 entityType: Epistemic.ContradictionDispositionId.entityType,
                 id: pendingDispositionId,
                 orgId: candidate.orgId,
@@ -905,7 +910,12 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 updatedAt: resolvedAt,
                 updatedByPrincipal: reviewer,
               });
-              const insert = yield* Effect.fromResult(toContradictionDispositionInsert(seed, candidate));
+              const insert = yield* Effect.fromResult(
+                toContradictionDispositionInsert(seed, {
+                  candidate,
+                  edgeVersions: reviewOutcome.edgeVersions,
+                })
+              );
               const inserted = yield* tx.insert(dispositionTable).values(insert).returning();
               const insertedRow = yield* Effect.fromOption(A.head(inserted), () =>
                 ContradictionRepositoryUnavailable.during(

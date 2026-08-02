@@ -3,6 +3,7 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
+import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import * as EpistemicIdentity from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
@@ -11,6 +12,7 @@ import {
   ContradictionCandidateContent,
   ContradictionCandidateDigest,
   ContradictionCandidateKey,
+  ContradictionDispositionDecision,
   ContradictionEvidenceDigest,
   ContradictionMatchBasis,
   ContradictionProposalContent,
@@ -143,6 +145,75 @@ const disposition = Result.getOrThrow(
     resolvedBy: systemPrincipal,
   })
 );
+const formerEdge = Result.getOrThrow(
+  S.decodeUnknownResult(EdgeVersion)({
+    ...baseEntityFixtureInput("EpistemicEdgeVersion", left.edgeVersionId),
+    createdAt: 0,
+    evidenceScope: null,
+    expiredAt: null,
+    fact: { amount: "100" },
+    logicalKey: left.logicalKey,
+    matterScope: null,
+    qualifiers: {},
+    recordedAt: 0,
+    relation: "supports",
+    sourceClaimId: 1,
+    sourceEntityRef: null,
+    sourceEvidenceId: null,
+    sourceKind: "claim",
+    sourceObservationRef: null,
+    supersedesId: null,
+    targetClaimId: null,
+    targetEntityRef: null,
+    targetEvidenceId: 2,
+    targetKind: "evidence",
+    targetObservationRef: null,
+    updatedAt: 0,
+    validFrom: 0,
+    validTo: null,
+    version: left.version,
+  })
+);
+const replacementEdge = Result.getOrThrow(
+  S.decodeUnknownResult(EdgeVersion)({
+    ...baseEntityFixtureInput("EpistemicEdgeVersion", 3),
+    createdAt: 0,
+    evidenceScope: null,
+    expiredAt: null,
+    fact: firstProposal.fact,
+    logicalKey: left.logicalKey,
+    matterScope: null,
+    qualifiers: {},
+    recordedAt: 0,
+    relation: "supports",
+    sourceClaimId: 1,
+    sourceEntityRef: null,
+    sourceEvidenceId: null,
+    sourceKind: "claim",
+    sourceObservationRef: null,
+    supersedesId: left.edgeVersionId,
+    targetClaimId: null,
+    targetEntityRef: null,
+    targetEvidenceId: 2,
+    targetKind: "evidence",
+    targetObservationRef: null,
+    updatedAt: 0,
+    validFrom: 0,
+    validTo: null,
+    version: 2,
+  })
+);
+const supersededDecision = ContradictionDispositionDecision.cases.superseded.make({
+  formerEdgeVersionId: formerEdge.id,
+  proposalDigest: firstProposal.proposalDigest,
+  proposalId: firstProposal.proposalId,
+  reason: "The signed amendment controls.",
+  replacementEdgeVersionId: replacementEdge.id,
+});
+const supersededDisposition = ContradictionDisposition.make({
+  ...disposition,
+  decision: supersededDecision,
+});
 
 const otherCandidateKey = ContradictionCandidateKey.make(Str.repeat(64)("e"));
 const otherCandidateDigest = ContradictionCandidateDigest.make(Str.repeat(64)("f"));
@@ -192,7 +263,9 @@ describe("Contradiction candidate row converters", () => {
 
   it("round-trips receipt and disposition rows without generated identifiers", () => {
     const receiptInsert = Result.getOrThrow(toContradictionReceiptInsert(receipt, candidate));
-    const dispositionInsert = Result.getOrThrow(toContradictionDispositionInsert(disposition, candidate));
+    const dispositionInsert = Result.getOrThrow(
+      toContradictionDispositionInsert(disposition, { candidate, edgeVersions: [] })
+    );
     const decodedReceipt = Result.getOrThrow(fromContradictionReceiptRow({ ...receiptInsert, id: receipt.id }));
     const decodedDisposition = Result.getOrThrow(
       fromContradictionDispositionRow({ ...dispositionInsert, id: disposition.id })
@@ -233,8 +306,59 @@ describe("Contradiction candidate row converters", () => {
       id: EpistemicIdentity.ContradictionCandidateId.make(99),
     });
 
-    expect(Result.isFailure(toContradictionDispositionInsert(disposition, futureCandidate))).toBe(true);
-    expect(Result.isFailure(toContradictionDispositionInsert(disposition, differentCandidate))).toBe(true);
+    expect(
+      Result.isFailure(toContradictionDispositionInsert(disposition, { candidate: futureCandidate, edgeVersions: [] }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        toContradictionDispositionInsert(disposition, { candidate: differentCandidate, edgeVersions: [] })
+      )
+    ).toBe(true);
+  });
+
+  it("binds a superseded disposition to the candidate proposal and replacement edge chain", () => {
+    const edges = [formerEdge, replacementEdge];
+    const mismatchedProposal = ContradictionDisposition.make({
+      ...supersededDisposition,
+      decision: ContradictionDispositionDecision.cases.superseded.make({
+        ...supersededDecision,
+        proposalId: secondProposal.proposalId,
+      }),
+    });
+    const mismatchedFormer = ContradictionDisposition.make({
+      ...supersededDisposition,
+      decision: ContradictionDispositionDecision.cases.superseded.make({
+        ...supersededDecision,
+        formerEdgeVersionId: right.edgeVersionId,
+      }),
+    });
+    const brokenReplacement = EdgeVersion.make({
+      ...replacementEdge,
+      supersedesId: O.none(),
+    });
+
+    expect(
+      Result.isSuccess(toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: edges }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(toContradictionDispositionInsert(mismatchedProposal, { candidate, edgeVersions: edges }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(toContradictionDispositionInsert(mismatchedFormer, { candidate, edgeVersions: edges }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: [formerEdge] })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        toContradictionDispositionInsert(supersededDisposition, {
+          candidate,
+          edgeVersions: [formerEdge, brokenReplacement],
+        })
+      )
+    ).toBe(true);
   });
 
   it("rejects each tampered seal before writing", () => {

@@ -11,12 +11,19 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
-import { DateTime, Result, SchemaIssue } from "effect";
+import { DateTime, Match, pipe, Result, SchemaIssue } from "effect";
+import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { candidateTable, dispositionTable, receiptTable } from "./Contradiction.table.ts";
+
+type ContradictionDispositionInsertContext = {
+  readonly candidate: ContradictionCandidate;
+  readonly edgeVersions: ReadonlyArray<EdgeVersion>;
+};
 
 /**
  * Selected contradiction-candidate row.
@@ -139,20 +146,62 @@ const validateCandidateSeals = (
 
 const validateDispositionCandidate = (
   disposition: ContradictionDisposition,
-  candidate: ContradictionCandidate
+  candidate: ContradictionCandidate,
+  edgeVersions: ReadonlyArray<EdgeVersion>
 ): Result.Result<ContradictionDisposition, S.SchemaError> =>
-  Eq.equals(disposition.candidateId, candidate.id) &&
-  Eq.equals(disposition.orgId, candidate.orgId) &&
-  !DateTime.isLessThan(disposition.resolvedAt, candidate.recordedAt)
-    ? Result.succeed(disposition)
-    : Result.fail(
-        new S.SchemaError(
-          new SchemaIssue.InvalidValue(O.some(disposition.candidateId), {
-            message:
-              "Contradiction disposition must reference the supplied candidate in the same organization and resolve at or after candidate.recordedAt.",
-          })
+  Result.flatMap(validateCandidateSeals(candidate), () => {
+    const decisionMatchesCandidate = Match.value(disposition.decision).pipe(
+      Match.when({ status: "rejected" }, () => true),
+      Match.when({ status: "superseded" }, (decision) =>
+        pipe(
+          O.all({
+            former: A.findFirst(edgeVersions, (edge) => Eq.equals(edge.id, decision.formerEdgeVersionId)),
+            proposal: A.findFirst(candidate.assessment.proposals, (proposal) =>
+              Eq.equals(proposal.proposalId, decision.proposalId)
+            ),
+            replacement: A.findFirst(edgeVersions, (edge) => Eq.equals(edge.id, decision.replacementEdgeVersionId)),
+          }),
+          O.exists(({ former, proposal, replacement }) =>
+            A.every(
+              [
+                Eq.equals(proposal.proposalDigest, decision.proposalDigest),
+                Eq.equals(former.id, proposal.losingBelief.edgeVersionId),
+                Eq.equals(former.orgId, candidate.orgId),
+                Eq.equals(former.logicalKey, proposal.losingBelief.logicalKey),
+                Eq.equals(former.version, proposal.losingBelief.version),
+                !DateTime.isLessThan(disposition.resolvedAt, former.recordedAt),
+                Eq.equals(replacement.orgId, candidate.orgId),
+                Eq.equals(replacement.logicalKey, former.logicalKey),
+                Eq.equals(replacement.supersedesId, O.some(former.id)),
+                Eq.equals(replacement.version, former.version + 1),
+                Eq.equals(replacement.fact, proposal.fact),
+                Eq.equals(replacement.validFrom, proposal.validFrom),
+                Eq.equals(replacement.validTo, proposal.validTo),
+                Eq.equals(replacement.createdAt, disposition.resolvedAt),
+                Eq.equals(replacement.recordedAt, disposition.resolvedAt),
+              ],
+              identity
+            )
+          )
         )
-      );
+      ),
+      Match.exhaustive
+    );
+
+    return Eq.equals(disposition.candidateId, candidate.id) &&
+      Eq.equals(disposition.orgId, candidate.orgId) &&
+      !DateTime.isLessThan(disposition.resolvedAt, candidate.recordedAt) &&
+      decisionMatchesCandidate
+      ? Result.succeed(disposition)
+      : Result.fail(
+          new S.SchemaError(
+            new SchemaIssue.InvalidValue(O.some(disposition.candidateId), {
+              message:
+                "Contradiction disposition must reference the supplied sealed candidate in the same organization, resolve at or after candidate.recordedAt, and bind any supersession to its selected proposal and former/replacement edge chain.",
+            })
+          )
+        );
+  });
 
 const validateReceiptCandidate = (
   receipt: ContradictionReceipt,
@@ -283,8 +332,9 @@ export const fromContradictionReceiptRow = (row: unknown): Result.Result<Contrad
  * Convert a contradiction disposition to a database insert.
  *
  * @remarks
- * The referenced candidate is required so identity, organization, and
- * transaction-time ordering are checked before the append-only write.
+ * The referenced candidate and edge context are required so identity,
+ * organization, transaction-time ordering, and any selected supersession
+ * proposal and edge chain are checked before the append-only write.
  *
  * @example
  * ```ts
@@ -299,14 +349,17 @@ export const fromContradictionReceiptRow = (row: unknown): Result.Result<Contrad
 export const toContradictionDispositionInsert: {
   (
     disposition: ContradictionDisposition,
-    candidate: ContradictionCandidate
+    context: ContradictionDispositionInsertContext
   ): Result.Result<ContradictionDispositionInsert, S.SchemaError>;
   (
-    candidate: ContradictionCandidate
+    context: ContradictionDispositionInsertContext
   ): (disposition: ContradictionDisposition) => Result.Result<ContradictionDispositionInsert, S.SchemaError>;
-} = dual(2, (disposition: ContradictionDisposition, candidate: ContradictionCandidate) =>
+} = dual(2, (disposition: ContradictionDisposition, context: ContradictionDispositionInsertContext) =>
   Result.map(
-    Result.flatMap(validateDispositionCandidate(disposition, candidate), encodeDisposition),
+    Result.flatMap(
+      validateDispositionCandidate(disposition, context.candidate, context.edgeVersions),
+      encodeDisposition
+    ),
     (encoded): ContradictionDispositionInsert => {
       const { id: _id, ...insert } = encoded;
       return insert;

@@ -59,6 +59,7 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { eq } from "drizzle-orm";
 import { Effect, flow, Layer, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -934,6 +935,51 @@ if (!shouldRunPgliteIntegration) {
           );
           expect(wrongOrganization).toStrictEqual(O.none());
           expect(wrongOrganizationReceiptDetail).toStrictEqual(O.none());
+        }),
+        120_000
+      );
+
+      it.effect(
+        "matches verifications against normalized legacy evidence spans",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(116);
+          const repository = yield* ContradictionTriageRepository;
+          const db = yield* makeDrizzle();
+          const submitted = yield* repository.submit(makeSubmission(116, seeded));
+          const selected = yield* insertVerification(116, 1, seeded.evidenceA, 1_300);
+
+          yield* db
+            .update(DbSchema.evidence)
+            .set({
+              span: {
+                ...seeded.evidenceA.span,
+                endChar: seeded.evidenceA.span.endChar + 1,
+              },
+            })
+            .where(eq(DbSchema.evidence.id, seeded.evidenceA.id));
+
+          const expanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: submitted.candidate.id,
+              knownAt: instant(1_500),
+              orgId: submitted.candidate.orgId,
+              sourceScopeRef: "workspace:1",
+              validAt: instant(1_500),
+            })
+          );
+          const latestVerification = pipe(
+            expanded,
+            O.flatMap((detail) =>
+              A.findFirst(A.appendAll(detail.left.evidence, detail.right.evidence), (evidence) =>
+                Eq.equals(evidence.evidence.id, seeded.evidenceA.id)
+              )
+            ),
+            O.flatMap((evidence) => evidence.latestVerification)
+          );
+
+          expect(O.map(latestVerification, (verification) => verification.manifestationKey)).toStrictEqual(
+            O.some(selected.manifestationKey)
+          );
         }),
         120_000
       );

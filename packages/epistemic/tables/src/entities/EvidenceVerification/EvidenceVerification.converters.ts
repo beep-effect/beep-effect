@@ -6,7 +6,7 @@
  */
 import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
-import { Result, SchemaIssue } from "effect";
+import { DateTime, Result, SchemaIssue } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -70,20 +70,22 @@ const validateEvidenceAssociation = (
 ): Result.Result<EvidenceVerification, S.SchemaError> =>
   Eq.equals(verification.orgId, evidence.orgId) &&
   Eq.equals(verification.evidenceId, evidence.id) &&
+  !DateTime.isLessThan(verification.createdAt, evidence.createdAt) &&
   EvidenceSpan.matchesAnchor(evidence.span, verification.verifiedAnchor.anchor)
     ? Result.succeed(verification)
     : Result.fail(
         new S.SchemaError(
           new SchemaIssue.InvalidValue(O.some(verification.verifiedAnchor.anchor), {
             message:
-              "Evidence-verification association does not match the referenced organization, evidence id, and span.",
+              "Evidence-verification association must match the referenced organization, evidence id, and span, and cannot predate the evidence.",
           })
         )
       );
 
 /**
  * Convert an EvidenceVerification entity into an insert row after proving its
- * organization, evidence id, and verified anchor match the referenced evidence.
+ * organization, evidence id, transaction time, and verified anchor match the
+ * referenced evidence.
  *
  * The database-managed serial id is omitted so inserts use the table sequence.
  *

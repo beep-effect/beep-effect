@@ -69,10 +69,41 @@ export const Confidence = UnitInterval.pipe(
  */
 export type Confidence = typeof Confidence.Type;
 
+/**
+ * Maximum UTF-16 code-unit length retained by one evidence quote.
+ *
+ * @example
+ * ```ts
+ * import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH } from "@beep/epistemic-domain/values/EvidenceSpan"
+ *
+ * console.log(EVIDENCE_SPAN_QUOTE_MAX_LENGTH) // 65536
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EVIDENCE_SPAN_QUOTE_MAX_LENGTH = 65_536;
+
+const EvidenceSpanQuote = TextAnchorFields.quote
+  .check(
+    S.isMaxLength(EVIDENCE_SPAN_QUOTE_MAX_LENGTH, {
+      identifier: $I`EvidenceSpanQuoteMaximumLengthCheck`,
+      title: "Evidence Span Quote Maximum Length",
+      description: "Checks that an evidence quote fits within one bounded 65,536-code-unit source-text page.",
+      message: "Expected evidence quote to contain at most 65,536 UTF-16 code units.",
+    })
+  )
+  .pipe(
+    $I.annoteSchema("EvidenceSpanQuote", {
+      description: "Non-empty exact evidence quote bounded to one 65,536-code-unit source-text page.",
+    })
+  );
+
 class EvidenceSpanStruct extends S.Class<EvidenceSpanStruct>($I`EvidenceSpanStruct`)(
   {
     ...TextAnchorFields,
     confidence: Confidence.annotateKey({ description: "Extraction confidence in the unit interval [0, 1]." }),
+    quote: EvidenceSpanQuote,
   },
   $I.annote("EvidenceSpanStruct", {
     description: "Internal structural base for a text anchor and its extraction confidence.",
@@ -84,7 +115,11 @@ const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity)
   .annotate({
     toArbitrary: () => (fc) =>
       fc
-        .tuple(fc.nat(10_000), fc.string({ minLength: 1, maxLength: 256 }), fc.integer({ min: 0, max: 1_000 }))
+        .tuple(
+          fc.nat(10_000),
+          fc.string({ minLength: 1, maxLength: EVIDENCE_SPAN_QUOTE_MAX_LENGTH }),
+          fc.integer({ min: 0, max: 1_000 })
+        )
         .map(([startChar, quote, confidence]) =>
           EvidenceSpanStruct.make({
             startChar: NonNegativeInt.make(startChar),

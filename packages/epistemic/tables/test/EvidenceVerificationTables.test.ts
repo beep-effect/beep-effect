@@ -14,7 +14,7 @@ import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { Result } from "effect";
+import { DateTime, Result } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -64,12 +64,14 @@ const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
     S.decodeUnknownResult(Evidence)({
       ...baseEntityFixtureInput("EpistemicEvidence", id),
       artifactFixtureKey: `artifact:evidence-verification-${id}`,
+      createdAt: 0,
       id,
       span: {
         ...anchor,
         confidence: 0.95,
       },
       spanFixtureKey: `span:evidence-verification-${id}`,
+      updatedAt: 0,
     })
   );
 const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
@@ -249,6 +251,18 @@ describe("EvidenceVerificationTable", () => {
     expect(manifestation.evidenceId).toBe(4);
     expect(Result.getOrThrow(EvidenceVerificationModel.manifestationKeyFor(evidenceId, verifiedAnchor))).toBe(
       manifestationKey
+    );
+  });
+
+  it("rejects a verification created before its referenced evidence", () => {
+    const verification = Result.getOrThrow(S.decodeUnknownResult(EvidenceVerificationModel)(input));
+    const futureEvidence = Evidence.make({
+      ...evidence,
+      createdAt: DateTime.makeUnsafe(DateTime.toEpochMillis(verification.createdAt) + 1),
+    });
+
+    expect(Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(verification, futureEvidence))).toBe(
+      true
     );
   });
 });
