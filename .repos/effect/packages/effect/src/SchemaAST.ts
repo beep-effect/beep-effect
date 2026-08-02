@@ -1248,11 +1248,11 @@ export type LiteralValue = string | number | boolean | bigint
  *
  * **Example** (Creating a literal AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { SchemaAST } from "effect"
  *
  * const ast = new SchemaAST.Literal("active")
- * console.log(ast.literal) // "active"
+ * ast.literal // => "active"
  * ```
  *
  * @see {@link LiteralValue}
@@ -1626,15 +1626,14 @@ export const bigInt = new BigInt()
  *
  * **Example** (Inspecting a tuple AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.Tuple([Schema.String, Schema.Number])
  * const ast = schema.ast
  *
  * if (SchemaAST.isArrays(ast)) {
- *   console.log(ast.elements.length) // 2
- *   console.log(ast.rest.length)     // 0
+ *   [ast.elements.length, ast.rest.length] // => [2, 0]
  * }
  * ```
  *
@@ -2034,17 +2033,14 @@ export class IndexSignature {
  *
  * **Example** (Inspecting a struct AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.Struct({ name: Schema.String })
  * const ast = schema.ast
  *
  * if (SchemaAST.isObjects(ast)) {
- *   for (const ps of ast.propertySignatures) {
- *     console.log(ps.name, ps.type._tag)
- *   }
- *   // "name" "String"
+ *   ast.propertySignatures.map((ps) => [ps.name, ps.type._tag]) // => [["name", "String"]]
  * }
  * ```
  *
@@ -2713,15 +2709,14 @@ export function getCandidates(input: any, types: ReadonlyArray<AST>): ReadonlyAr
  *
  * **Example** (Inspecting a union AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.Union([Schema.String, Schema.Number])
  * const ast = schema.ast
  *
  * if (SchemaAST.isUnion(ast)) {
- *   console.log(ast.types.length) // 2
- *   console.log(ast.mode)         // "anyOf"
+ *   [ast.types.length, ast.mode] // => [2, "anyOf"]
  * }
  * ```
  *
@@ -2936,7 +2931,7 @@ export function memoizeThunk<A>(f: () => A): () => A {
  *
  * **Example** (Defining recursive schema ASTs)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * interface Category {
@@ -2949,7 +2944,7 @@ export function memoizeThunk<A>(f: () => A): () => A {
  *   children: Schema.Array(Schema.suspend((): Schema.Codec<Category> => Category))
  * })
  *
- * // The recursive branch is a Suspend node
+ * SchemaAST.isObjects(Category.ast) // => true
  * ```
  *
  * @see {@link isSuspend}
@@ -3179,10 +3174,12 @@ export const finite = appendChecks(number, [isFinite()])
  *
  * **Example** (Validating an email pattern)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { SchemaAST } from "effect"
  *
  * const emailFilter = SchemaAST.isPattern(/^[^@]+@[^@]+$/)
+ * emailFilter.run("alice@example.com", SchemaAST.string, {}) // => undefined
+ * emailFilter.run("invalid", SchemaAST.string, {})?._tag // => "InvalidValue"
  * ```
  *
  * @see {@link Filter}
@@ -3548,12 +3545,12 @@ function extractStructuralChecks(checks: Checks): Checks | undefined {
  *
  * **Example** (Getting the type AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.NumberFromString
  * const typeAst = SchemaAST.toType(schema.ast)
- * console.log(typeAst._tag) // "Number"
+ * typeAst._tag // => "Number"
  * ```
  *
  * @see {@link toEncoded}
@@ -3595,12 +3592,12 @@ export const toType = memoize(<A extends AST>(ast: A): A => {
  *
  * **Example** (Getting the encoded AST)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.NumberFromString
  * const encodedAst = SchemaAST.toEncoded(schema.ast)
- * console.log(encodedAst._tag) // "String"
+ * encodedAst._tag // => "String"
  * ```
  *
  * @see {@link toType}
@@ -3968,12 +3965,12 @@ export const ClassTypeId = "~effect/Schema/Class"
  *
  * **Example** (Reading annotations)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema, SchemaAST } from "effect"
  *
  * const schema = Schema.String.annotate({ title: "Name" })
  * const annotations = SchemaAST.resolve(schema.ast)
- * console.log(annotations?.title) // "Name"
+ * annotations?.title // => "Name"
  * ```
  *
  * @see {@link resolveAt}

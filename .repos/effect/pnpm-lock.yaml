@@ -9,7 +9,7 @@ patchedDependencies:
     hash: 29cf7a343aefd3c59ad238a4cb067f0a1a0adbeed07b6d57d6f31d6c80a5e25e
     path: patches/@changesets__assemble-release-plan.patch
   '@changesets/get-github-info':
-    hash: 314478eeae7ab2776d847d3b2b7ea1cd4231c65907e85597dacd0bea56355bc9
+    hash: b115194683c42c3551e1f0977acf715c8903aaf832147bd626d8f079a517a85b
     path: patches/@changesets__get-github-info.patch
 
 importers:
@@ -43,6 +43,9 @@ importers:
       '@effect/docgen':
         specifier: workspace:^
         version: link:packages/tools/docgen
+      '@effect/doctest':
+        specifier: workspace:^
+        version: link:packages/tools/doctest
       '@effect/jsdocs':
         specifier: workspace:^
         version: link:packages/tools/jsdocs
@@ -859,6 +862,28 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.1)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
 
+  packages/tools/doctest:
+    dependencies:
+      rolldown:
+        specifier: ^1.1.5
+        version: 1.1.5
+    devDependencies:
+      '@effect/vitest':
+        specifier: workspace:^
+        version: link:../../vitest
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      effect:
+        specifier: workspace:^
+        version: link:../../effect
+      vite:
+        specifier: ^8.1.5
+        version: 8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.1)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
+
   packages/tools/jsdocs:
     dependencies:
       effect:
@@ -908,9 +933,6 @@ importers:
 
   packages/tools/oxc:
     dependencies:
-      '@effect/jsdocs':
-        specifier: workspace:^
-        version: link:../jsdocs
       '@oxlint/plugins':
         specifier: ^1.76.0
         version: 1.76.0
@@ -7556,7 +7578,7 @@ snapshots:
 
   '@changesets/changelog-github@0.7.0':
     dependencies:
-      '@changesets/get-github-info': 0.8.0(patch_hash=314478eeae7ab2776d847d3b2b7ea1cd4231c65907e85597dacd0bea56355bc9)
+      '@changesets/get-github-info': 0.8.0(patch_hash=b115194683c42c3551e1f0977acf715c8903aaf832147bd626d8f079a517a85b)
       '@changesets/types': 6.1.0
       dotenv: 8.6.0
     transitivePeerDependencies:
@@ -7615,7 +7637,7 @@ snapshots:
       picocolors: 1.1.1
       semver: 7.8.5
 
-  '@changesets/get-github-info@0.8.0(patch_hash=314478eeae7ab2776d847d3b2b7ea1cd4231c65907e85597dacd0bea56355bc9)':
+  '@changesets/get-github-info@0.8.0(patch_hash=b115194683c42c3551e1f0977acf715c8903aaf832147bd626d8f079a517a85b)':
     dependencies:
       dataloader: 1.4.0
       node-fetch: 2.7.0

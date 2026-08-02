@@ -1,15 +1,6 @@
 /**
  * Deno helper for running a root Effect program.
  *
- * **Example** (Running an Effect program)
- *
- * ```ts
- * import { DenoRuntime } from "@effect/platform-deno";
- * import { Console } from "effect";
- *
- * DenoRuntime.runMain(Console.log("Hello, World"));
- * ```
- *
  * @since 4.0.0
  */
 
@@ -19,7 +10,7 @@ import * as Runtime from "effect/Runtime"
 /**
  * Run an Effect as the entrypoint to a Deno application.
  *
- * @category Runtime
+ * @category running
  * @since 4.0.0
  */
 

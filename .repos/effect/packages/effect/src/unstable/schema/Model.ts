@@ -74,7 +74,7 @@ export {
    *
    * **Example** (Defining a variant model class)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Schema } from "effect"
    * import { Model } from "effect/unstable/schema"
    *
@@ -107,6 +107,8 @@ export {
    *     return this.name.toUpperCase()
    *   }
    * }
+   *
+   * [Schema.isSchema(Group), Schema.isSchema(Group.insert), Schema.isSchema(Group.json)] // => [true, true, true]
    * ```
    *
    * @category constructors

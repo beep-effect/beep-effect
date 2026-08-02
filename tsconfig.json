@@ -1720,6 +1720,15 @@
       ],
       "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
       "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"],
+      "@beep/ontology-ui/aggregates/Session/metrics": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.metrics.tsx"
+      ],
+      "@beep/ontology-ui/aggregates/Session/sparql": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
+      ],
+      "@beep/ontology-ui/aggregates/Session/validation": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.validation.tsx"
+      ],
       "@beep/editor/chat/atoms": [
         "./packages/foundation/ui-system/editor/src/chat/atoms.ts"
       ],
