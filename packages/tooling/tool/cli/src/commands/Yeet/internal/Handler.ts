@@ -13,7 +13,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
-import { RepoRunContext, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
+import { RepoRunContext, repoProofStepDefinition, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
+import {
+  FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
+  FlakeQuarantineArtifactJson,
+} from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
@@ -81,6 +85,7 @@ import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { buildYeetVerdict, YeetExecutedStep } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunPlan, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 
@@ -617,6 +622,26 @@ type YeetVerdictExtras = {
   readonly stash: O.Option<YeetStashState>;
 };
 
+// Only the pre-push proof runs the quality lane group that deletes this
+// artifact at group start and rewrites it on quarantine. Other full-phase
+// steps (review-fix proof, head-install preflight) never touch it, so a
+// verdict may read it only after a successful pre-push proof step in the same
+// run — anything else could attach a previous run's incidents.
+const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
+
+const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncidents")(function* (
+  repoRoot: string
+): Effect.fn.Return<ReadonlyArray<FlakeQuarantineIncident>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const artifactPath = path.join(repoRoot, FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH);
+  return yield* fs.readFileString(artifactPath).pipe(
+    Effect.flatMap(FlakeQuarantineArtifactJson.decode),
+    Effect.map((artifact) => artifact.incidents),
+    Effect.orElseSucceed(A.empty<FlakeQuarantineIncident>)
+  );
+});
+
 const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
@@ -646,12 +671,26 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     })
   );
 
+  const ranPrePushProof = A.some(
+    executed,
+    (entry) => entry.step.id === PRE_PUSH_PROOF_STEP_ID && entry.result.exitCode === 0
+  );
+  const flakeQuarantine = ranPrePushProof
+    ? yield* readFlakeQuarantineIncidents(plan.context.repoRoot)
+    : A.empty<FlakeQuarantineIncident>();
+  if (!A.isReadonlyArrayEmpty(flakeQuarantine)) {
+    yield* Console.log(
+      `[yeet] recorded ${A.length(flakeQuarantine)} environment-only flake quarantine incident(s) in the verdict`
+    );
+  }
+
   const verdict = buildYeetVerdict({
     base: plan.context.base,
     baseFreshness: O.getOrUndefined(extraState.baseFreshness),
     branch: plan.context.branch,
     createdAt,
     executed,
+    flakeQuarantine,
     head: plan.context.head,
     indexPath: O.getOrUndefined(indexPath),
     message,
