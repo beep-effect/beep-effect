@@ -9,8 +9,8 @@
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $EpistemicTablesId } from "@beep/identity/packages";
-import { identity, pipe, Result } from "effect";
-import * as O from "effect/Option";
+import { TextAnchorFields } from "@beep/provenance/TextAnchor";
+import { pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Table } from "./Evidence.table.ts";
@@ -96,30 +96,44 @@ class LegacyEvidenceSpan extends S.Class<LegacyEvidenceSpan>($I`LegacyEvidenceSp
   {
     confidence: EvidenceSpan.fields.confidence,
     endChar: EvidenceSpan.fields.endChar,
-    quote: EvidenceSpan.fields.quote,
+    quote: TextAnchorFields.quote,
     startChar: EvidenceSpan.fields.startChar,
   },
   $I.annote("LegacyEvidenceSpan", {
     description:
-      "Persistence-read compatibility shape for evidence spans written before endChar became a derived strict width.",
+      "Persistence-read compatibility shape for evidence spans written before strict width and quote bounds.",
   })
 ) {}
-const isLegacyEvidenceSpan = S.is(LegacyEvidenceSpan.mapFields(identity));
+const LegacyEvidence = Evidence.mapFields((fields) => ({
+  ...fields,
+  span: LegacyEvidenceSpan,
+})).pipe(
+  $I.annoteSchema("LegacyEvidence", {
+    description: "Persistence-read compatibility schema for evidence rows written before strict span checks.",
+  })
+);
+const decodeLegacyEvidenceRow = S.decodeUnknownResult(LegacyEvidence);
 
-const normalizeLegacyEvidenceSpan = (row: EvidenceRow): EvidenceRow =>
+const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.SchemaError> =>
   pipe(
-    row.span,
-    O.liftPredicate(isLegacyEvidenceSpan),
-    O.match({
-      onNone: () => row,
-      onSome: (span) => ({
-        ...row,
-        span: {
-          ...span,
-          endChar: span.startChar + Str.length(span.quote),
-        },
-      }),
-    })
+    decodeEvidenceRow(row),
+    Result.orElse(() =>
+      Result.map(decodeLegacyEvidenceRow(row), (legacy) =>
+        Evidence.make(
+          {
+            ...legacy,
+            span: EvidenceSpan.make(
+              {
+                ...legacy.span,
+                endChar: legacy.span.startChar + Str.length(legacy.span.quote),
+              },
+              { disableChecks: true }
+            ),
+          },
+          { disableChecks: true }
+        )
+      )
+    )
   );
 
 /**
@@ -205,5 +219,4 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  * @category tables
  * @since 0.0.0
  */
-export const fromEvidenceRow = (row: EvidenceRow): Evidence =>
-  Result.getOrThrow(decodeEvidenceRow(normalizeLegacyEvidenceSpan(row)));
+export const fromEvidenceRow = (row: EvidenceRow): Evidence => Result.getOrThrow(decodePersistedEvidence(row));

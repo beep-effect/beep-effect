@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
+import { ContradictionCandidate, ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
+import {
+  ContradictionAssessment,
+  ContradictionProposalDigest,
+  ContradictionProposalId,
+  ContradictionResolutionProposal,
+} from "@beep/epistemic-domain/values/Contradiction";
 import { ContradictionTriageView } from "@beep/epistemic-ui";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
 import { fcRuns } from "@beep/test-utils";
@@ -279,6 +285,25 @@ const supersededDisposition = Result.getOrThrow(
     resolvedBy: systemPrincipal,
   })
 );
+
+const alternateProposal = ContradictionResolutionProposal.make({
+  ...detail.candidate.assessment.proposals[0],
+  fact: { amount: "150", currency: "USD" },
+  losingBelief: detail.candidate.pair.right,
+  proposalDigest: ContradictionProposalDigest.make(Str.repeat(64)("e")),
+  proposalId: ContradictionProposalId.make(Str.repeat(64)("f")),
+  rationale: "The unsigned draft remains authoritative.",
+});
+const multiProposalDetail = ContradictionTriage.ContradictionCandidateDetailView.make({
+  ...detail,
+  candidate: ContradictionCandidate.make({
+    ...detail.candidate,
+    assessment: ContradictionAssessment.make({
+      ...detail.candidate.assessment,
+      proposals: [detail.candidate.assessment.proposals[0], alternateProposal],
+    }),
+  }),
+});
 
 const foreignDisposition = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionDisposition)({
@@ -662,6 +687,25 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       expect(container.querySelector('[data-testid="contradiction-actions-resolved"]')).toBeNull();
       expect(requireButton(container, "Reject candidate").disabled).toBe(false);
       expect(requireButton(container, "Review this proposal").disabled).toBe(false);
+    }));
+
+  it("marks only the proposal selected by a completed supersession as applied", () =>
+    renderView(
+      root,
+      makeProps({
+        detailResult: AsyncResult.success(multiProposalDetail),
+        query: queryAfterReview,
+        reviewResult: AsyncResult.success(supersededDisposition),
+      })
+    ).then(() => {
+      expect(container.querySelectorAll('[data-testid="contradiction-proposal"]')).toHaveLength(2);
+      const applied = requireElement(container, '[data-applied="true"]', HTMLElement);
+      const notApplied = requireElement(container, '[data-applied="false"]', HTMLElement);
+
+      expect(applied.textContent).toContain("Applied proposal");
+      expect(applied.textContent).toContain("The signed amendment controls over the earlier draft.");
+      expect(notApplied.textContent).not.toContain("Applied proposal");
+      expect(notApplied.textContent).toContain("The unsigned draft remains authoritative.");
     }));
 
   it("keeps a historical detail open when a successful review resolved after knownAt", () =>

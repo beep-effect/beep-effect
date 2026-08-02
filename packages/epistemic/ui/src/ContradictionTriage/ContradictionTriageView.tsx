@@ -717,12 +717,25 @@ function ProposalCard({
   readonly resolution: O.Option<ContradictionDisposition>;
   readonly selected: boolean;
 }): JSX.Element {
+  const applied = O.exists(resolution, (disposition) =>
+    Match.value(disposition.decision).pipe(
+      Match.when({ status: "rejected" }, () => false),
+      Match.when({ status: "superseded" }, (decision) => Eq.equals(decision.proposalId, proposal.proposalId)),
+      Match.exhaustive
+    )
+  );
+
   return (
-    <Card data-testid="contradiction-proposal" size="sm">
+    <Card data-applied={applied} data-testid="contradiction-proposal" size="sm">
       <CardHeader className="border-b">
         <div className="flex min-w-0 items-center justify-between gap-2">
           <CardTitle>Persisted replacement</CardTitle>
-          <Badge variant="outline">Explicit proposal</Badge>
+          <Badge
+            data-testid={applied ? "contradiction-proposal-applied" : undefined}
+            variant={applied ? "default" : "outline"}
+          >
+            {applied ? "Applied proposal" : "Explicit proposal"}
+          </Badge>
         </div>
         <CardDescription>{proposal.rationale}</CardDescription>
       </CardHeader>

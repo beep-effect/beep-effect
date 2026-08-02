@@ -286,9 +286,19 @@ const persistedOrSeed = (rows: ReadonlyArray<EdgeVersionRow>, seed: EdgeVersion)
 
 type EdgeAuthorityTransaction = PgEffectTransaction<EffectPgQueryEffectHKT, EffectPgQueryResultHKT, EmptyRelations>;
 
+type SupersedeEdgeFactResult = {
+  readonly former: EdgeVersion;
+  readonly replacement: EdgeVersion;
+};
+
 type SupersedeEdgeFactInTransaction = {
-  (command: SupersedeEdgeFact): (tx: EdgeAuthorityTransaction) => Effect.Effect<EdgeVersion, EdgeAuthorityError>;
-  (tx: EdgeAuthorityTransaction, command: SupersedeEdgeFact): Effect.Effect<EdgeVersion, EdgeAuthorityError>;
+  (
+    command: SupersedeEdgeFact
+  ): (tx: EdgeAuthorityTransaction) => Effect.Effect<SupersedeEdgeFactResult, EdgeAuthorityError>;
+  (
+    tx: EdgeAuthorityTransaction,
+    command: SupersedeEdgeFact
+  ): Effect.Effect<SupersedeEdgeFactResult, EdgeAuthorityError>;
 };
 
 /**
@@ -320,7 +330,10 @@ type SupersedeEdgeFactInTransaction = {
  */
 export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = dual(
   2,
-  (tx: EdgeAuthorityTransaction, command: SupersedeEdgeFact): Effect.Effect<EdgeVersion, EdgeAuthorityError> => {
+  (
+    tx: EdgeAuthorityTransaction,
+    command: SupersedeEdgeFact
+  ): Effect.Effect<SupersedeEdgeFactResult, EdgeAuthorityError> => {
     const logicalKey = logicalEdgeKey(command.identity);
     return Effect.gen(function* () {
       const currentRows = yield* tx
@@ -344,6 +357,10 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
       if (A.length(closed) === 0) {
         return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
       }
+      const former = persistedOrSeed(
+        closed,
+        EdgeVersion.make({ ...head.value, expiredAt: O.some(command.recordedAt) })
+      );
 
       const seed = buildEdgeVersion(command, {
         logicalKey,
@@ -352,7 +369,7 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
         version: PosInt.make(head.value.version + 1),
       });
       const inserted = yield* tx.insert(edgeTable).values(toEdgeVersionInsert(seed)).returning();
-      return persistedOrSeed(inserted, seed);
+      return { former, replacement: persistedOrSeed(inserted, seed) };
     }).pipe(writeFailure("supersede", logicalKey, command.expectedVersion));
   }
 );
@@ -451,11 +468,12 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
     }),
     supersede: Effect.fn("Epistemic.EdgeAuthority.supersede")(function* (command) {
       const logicalKey = logicalEdgeKey(command.identity);
-      return yield* writeSemaphore.withPermit(
+      const result = yield* writeSemaphore.withPermit(
         db
           .transaction((tx) => supersedeEdgeFactInTransaction(tx, command))
           .pipe(writeFailure("supersede", logicalKey, command.expectedVersion))
       );
+      return result.replacement;
     }),
   });
 });

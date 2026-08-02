@@ -150,7 +150,7 @@ const formerEdge = Result.getOrThrow(
     ...baseEntityFixtureInput("EpistemicEdgeVersion", left.edgeVersionId),
     createdAt: 0,
     evidenceScope: null,
-    expiredAt: null,
+    expiredAt: 0,
     fact: { amount: "100" },
     logicalKey: left.logicalKey,
     matterScope: null,
@@ -336,6 +336,10 @@ describe("Contradiction candidate row converters", () => {
       ...replacementEdge,
       supersedesId: O.none(),
     });
+    const openFormer = EdgeVersion.make({
+      ...formerEdge,
+      expiredAt: O.none(),
+    });
 
     expect(
       Result.isSuccess(toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: edges }))
@@ -356,6 +360,14 @@ describe("Contradiction candidate row converters", () => {
         toContradictionDispositionInsert(supersededDisposition, {
           candidate,
           edgeVersions: [formerEdge, brokenReplacement],
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        toContradictionDispositionInsert(supersededDisposition, {
+          candidate,
+          edgeVersions: [openFormer, replacementEdge],
         })
       )
     ).toBe(true);

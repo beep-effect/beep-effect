@@ -3,6 +3,7 @@ import { ClaimDisposition as ClaimDispositionModel } from "@beep/epistemic-domai
 import { EdgeVersion as EdgeVersionModel } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence as EvidenceModel } from "@beep/epistemic-domain/entities/Evidence";
 import { UsageRecord as UsageRecordModel } from "@beep/epistemic-domain/entities/UsageRecord";
+import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { DbSchema, Entities } from "@beep/epistemic-tables";
 import * as CandidateClaim from "@beep/epistemic-tables/entities/CandidateClaim";
 import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition";
@@ -19,6 +20,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel);
@@ -401,6 +403,29 @@ describe("EpistemicTables", () => {
     expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
     expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
     expect(canonicalInsert.span.endChar).toBe(57);
+  });
+
+  it("preserves reads of legacy Evidence quotes above the current write bound", () => {
+    const evidence = Result.getOrThrow(S.decodeUnknownResult(EvidenceModel)(evidenceInput(10)));
+    const insert = Evidence.toEvidenceInsert(evidence);
+    const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
+    const legacyRow = {
+      ...insert,
+      id: 10,
+      span: {
+        ...insert.span,
+        endChar: 12 + Str.length(quote),
+        quote,
+      },
+    };
+
+    expect(Result.isFailure(S.decodeUnknownResult(EvidenceModel)(legacyRow))).toBe(true);
+
+    const decoded = Evidence.fromEvidenceRow(legacyRow);
+
+    expect(decoded.span.quote).toBe(quote);
+    expect(decoded.span.endChar).toBe(12 + Str.length(quote));
+    expect(() => Evidence.toEvidenceInsert(decoded)).toThrow(S.SchemaError);
   });
 
   it("rejects malformed Evidence rows with a schema error", () => {

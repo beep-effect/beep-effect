@@ -170,6 +170,7 @@ const validateDispositionCandidate = (
                 Eq.equals(former.logicalKey, proposal.losingBelief.logicalKey),
                 Eq.equals(former.version, proposal.losingBelief.version),
                 !DateTime.isLessThan(disposition.resolvedAt, former.recordedAt),
+                Eq.equals(former.expiredAt, O.some(disposition.resolvedAt)),
                 Eq.equals(replacement.orgId, candidate.orgId),
                 Eq.equals(replacement.logicalKey, former.logicalKey),
                 Eq.equals(replacement.supersedesId, O.some(former.id)),
@@ -197,7 +198,7 @@ const validateDispositionCandidate = (
           new S.SchemaError(
             new SchemaIssue.InvalidValue(O.some(disposition.candidateId), {
               message:
-                "Contradiction disposition must reference the supplied sealed candidate in the same organization, resolve at or after candidate.recordedAt, and bind any supersession to its selected proposal and former/replacement edge chain.",
+                "Contradiction disposition must reference the supplied sealed candidate in the same organization, resolve at or after candidate.recordedAt, and bind any supersession to its selected proposal and closed former/replacement edge chain.",
             })
           )
         );

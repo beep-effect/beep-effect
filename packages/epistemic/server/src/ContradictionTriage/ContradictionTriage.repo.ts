@@ -863,7 +863,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                       });
                     }
                     const identity = yield* identityOf(candidate.id, edge);
-                    const replacement = yield* supersedeEdgeFactInTransaction(
+                    const supersession = yield* supersedeEdgeFactInTransaction(
                       tx,
                       SupersedeEdgeFact.make({
                         expectedVersion: proposal.value.losingBelief.version,
@@ -884,9 +884,9 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                         proposalDigest: proposal.value.proposalDigest,
                         proposalId: proposal.value.proposalId,
                         reason: selection.reason,
-                        replacementEdgeVersionId: replacement.id,
+                        replacementEdgeVersionId: supersession.replacement.id,
                       }),
-                      edgeVersions: [edge, replacement],
+                      edgeVersions: [supersession.former, supersession.replacement],
                     };
                   })
                 ),
