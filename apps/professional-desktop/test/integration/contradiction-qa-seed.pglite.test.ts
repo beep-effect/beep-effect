@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { DbSchema } from "@beep/epistemic-tables";
 import {
@@ -10,17 +12,20 @@ import {
   ResolvedSourceText,
   SOURCE_TEXT_PAGE_CODE_UNITS,
 } from "@beep/file-processing/SourceText";
-import { PostgresDrizzle } from "@beep/postgres";
+import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { provideScopedLayer } from "@beep/test-utils";
+import { makePgliteSqlTestLayer, provideScopedLayer } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { WorkspaceVaultStoreDrizzleLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { Workspace } from "@beep/workspace-use-cases/server";
-import { BunServices } from "@effect/platform-bun";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { ConfigProvider, Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -33,15 +38,23 @@ import {
   ContradictionQaSeedError,
   seedContradictionQaFixtures,
 } from "@/contradiction/ContradictionQaSeed";
-import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { migrateOnBoot } from "@/runtime/Migrations";
+import type { Context } from "effect";
 
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
 const instant = flow(S.decodeUnknownResult(EntitySchema.DateTimeFromMillis), Result.getOrThrow);
 const decodeVaultRoot = S.decodeUnknownEffect(WorkspaceVaultRootPath);
 
-const SeedServicesLive = Layer.mergeAll(EpistemicServerDrizzleLive, WorkspaceVaultStoreDrizzleLayer).pipe(
-  Layer.provideMerge(PgliteDrizzleLive)
+const makeInProcessPgliteLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
+const PgliteDrizzleTestLive = makeDrizzleLayer().pipe(
+  Layer.tap((context: Context.Context<PostgresDrizzle>) => Effect.provide(migrateOnBoot, context)),
+  Layer.provide(makeInProcessPgliteLayer())
 );
+const SeedServicesLive = Layer.mergeAll(EpistemicServerDrizzleLive, WorkspaceVaultStoreDrizzleLayer).pipe(
+  Layer.provideMerge(PgliteDrizzleTestLive)
+);
+const TestPlatformLive = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const databaseSnapshot = Effect.fn("ContradictionQaSeedTest.databaseSnapshot")(function* () {
   const db = yield* PostgresDrizzle;
@@ -111,7 +124,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         provideScopedLayer(SeedServicesLive),
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
       );
-    }, provideScopedLayer(BunServices.layer))
+    }, provideScopedLayer(TestPlatformLive))
   );
 
   it.effect(
@@ -204,7 +217,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         provideScopedLayer(SeedServicesLive),
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
       );
-    }, provideScopedLayer(BunServices.layer))
+    }, provideScopedLayer(TestPlatformLive))
   );
 
   it.effect(
@@ -246,7 +259,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         provideScopedLayer(SeedServicesLive),
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
       );
-    }, provideScopedLayer(BunServices.layer))
+    }, provideScopedLayer(TestPlatformLive))
   );
 
   it.effect(
@@ -279,6 +292,6 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         provideScopedLayer(SeedServicesLive),
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
       );
-    }, provideScopedLayer(BunServices.layer))
+    }, provideScopedLayer(TestPlatformLive))
   );
 });

@@ -247,6 +247,75 @@ describe("verified-span hostile-text contract", () => {
     })
   );
 
+  it.effect(
+    "fails closed at empty and oversized locator boundaries",
+    Effect.fnUntraced(function* () {
+      const emptySource = yield* locateRawText("", "missing").pipe(Effect.flip);
+      const emptyLocator = yield* locateRawText("source", " \n\t ").pipe(Effect.flip);
+      const oversizedLocator = yield* locateRawText("source", Str.repeat(4_097)("x")).pipe(Effect.flip);
+
+      expect(emptySource.reason).toBe("absent-text");
+      expect(emptyLocator.reason).toBe("absent-text");
+      expect(oversizedLocator.reason).toBe("limit-exceeded");
+    })
+  );
+
+  it.effect(
+    "validates both declared offset units against source boundaries",
+    Effect.fnUntraced(function* () {
+      const emptySource = yield* convertTextOffsetRange(
+        "",
+        TextOffsetRange.make({ end: NonNegativeInt.make(1), start: NonNegativeInt.make(0), unit: "utf16-code-unit" })
+      ).pipe(Effect.flip);
+      const utf16Range = yield* convertTextOffsetRange(
+        "A😀B",
+        TextOffsetRange.make({ end: NonNegativeInt.make(3), start: NonNegativeInt.make(1), unit: "utf16-code-unit" })
+      );
+      const splitSurrogate = yield* convertTextOffsetRange(
+        "A😀B",
+        TextOffsetRange.make({ end: NonNegativeInt.make(2), start: NonNegativeInt.make(1), unit: "utf16-code-unit" })
+      ).pipe(Effect.flip);
+      const missingCodePoint = yield* convertTextOffsetRange(
+        "A😀B",
+        TextOffsetRange.make({
+          end: NonNegativeInt.make(4),
+          start: NonNegativeInt.make(1),
+          unit: "unicode-code-point",
+        })
+      ).pipe(Effect.flip);
+
+      expect(emptySource.reason).toBe("absent-text");
+      expect(utf16Range).toEqual({ endChar: 3, startChar: 1 });
+      expect(splitSurrogate.reason).toBe("invalid-offset");
+      expect(missingCodePoint.reason).toBe("invalid-offset");
+    })
+  );
+
+  it.effect(
+    "fails closed at reconstruction and extraction source limits",
+    Effect.fnUntraced(function* () {
+      const oversizedSource = Str.repeat(1_000_001)("x");
+      const extraction = GroundedExtraction.make({
+        alignmentStatus: "unaligned",
+        label: "quotation",
+        text: "x",
+      });
+      const emptyReconstruction = yield* reconstructSourceText([]).pipe(Effect.flip);
+      const oversizedReconstruction = yield* reconstructSourceText([
+        RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: oversizedSource }),
+      ]).pipe(Effect.flip);
+      const emptyBatch = yield* locateGroundedExtractions("source", []);
+      const absentBatchSource = yield* locateGroundedExtractions("", [extraction]).pipe(Effect.flip);
+      const oversizedBatchSource = yield* locateGroundedExtractions(oversizedSource, [extraction]).pipe(Effect.flip);
+
+      expect(emptyReconstruction.reason).toBe("absent-text");
+      expect(oversizedReconstruction.reason).toBe("limit-exceeded");
+      expect(emptyBatch).toEqual([]);
+      expect(absentBatchSource.reason).toBe("absent-text");
+      expect(oversizedBatchSource.reason).toBe("limit-exceeded");
+    })
+  );
+
   it("rejects empty and reversed ranges at construction and decode boundaries", () => {
     expect(() =>
       TextOffsetRange.make({
