@@ -48,6 +48,13 @@ export * from "./CandidateClaim/index.ts";
  */
 export * from "./ClaimDisposition/index.ts";
 /**
+ * Contradiction candidate, receipt, and disposition entity exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./Contradiction/index.ts";
+/**
  * Bitemporal edge version entity exports.
  *
  * @example
@@ -75,6 +82,20 @@ export * from "./EdgeVersion/index.ts";
  * @since 0.0.0
  */
 export * from "./Evidence/index.ts";
+/**
+ * Evidence-verification sidecar entity exports.
+ *
+ * @example
+ * ```ts
+ * import { EvidenceVerification } from "@beep/epistemic-domain/entities"
+ *
+ * console.log(EvidenceVerification.definition.entityId.tableName)
+ * ```
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./EvidenceVerification/index.ts";
 /**
  * Usage record entity exports.
  *

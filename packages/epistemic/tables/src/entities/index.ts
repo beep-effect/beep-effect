@@ -34,6 +34,20 @@ export * as CandidateClaim from "./CandidateClaim/index.ts";
  */
 export * as ClaimDisposition from "./ClaimDisposition/index.ts";
 /**
+ * Contradiction table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { Contradiction } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(Contradiction.candidateTable.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as Contradiction from "./Contradiction/index.ts";
+/**
  * EdgeVersion table metadata namespace.
  *
  * @example
@@ -61,6 +75,20 @@ export * as EdgeVersion from "./EdgeVersion/index.ts";
  * @since 0.0.0
  */
 export * as Evidence from "./Evidence/index.ts";
+/**
+ * EvidenceVerification table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { EvidenceVerification } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(EvidenceVerification.Table.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as EvidenceVerification from "./EvidenceVerification/index.ts";
 /**
  * UsageRecord table metadata namespace.
  *

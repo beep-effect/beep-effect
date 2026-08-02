@@ -25,7 +25,7 @@ Scope:
 
 - In: `@beep/epistemic-domain` candidate values/entities; `@beep/epistemic-tables`
   additive candidate tables plus migration; `@beep/epistemic-use-cases` ports,
-  commands, and the `conflicted` `ClaimDispositionStatus` member;
+  commands, and the slice-local `ContradictionDispositionStatus`;
   `@beep/epistemic-server` repository and layer; `@beep/db-admin` migration
   registration; focused PGlite/Postgres fixture, race, and restart tests.
 - Out: automatic supersession; preferred-view selection or belief repair

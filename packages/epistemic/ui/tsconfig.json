@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "references": [
+    {
+      "path": "../client/tsconfig.json"
+    },
+    {
+      "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../config/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    }
+  ]
+}

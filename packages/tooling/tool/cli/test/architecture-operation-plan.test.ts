@@ -244,7 +244,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "decodes older v1 operation JSON with metadata defaults",
     Effect.fnUntraced(function* () {
-      const rootDir = joinPath(tmpdir(), `beep-architecture-legacy-plan-${yield* Clock.currentTimeMillis}`);
+      const rootDir = joinPath(
+        tmpdir(),
+        `beep-architecture-legacy-plan-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       const operationPath = "packages/architecture-lab/domain/src/index.ts";
       const legacyJson = `{
   "schemaVersion": "architecture-operation-plan/v1",
@@ -296,7 +299,7 @@ describe("architecture operation plan", () => {
   it.effect(
     "reports idempotency from the decoded operation list",
     Effect.fnUntraced(function* () {
-      const rootDir = joinPath(tmpdir(), `beep-architecture-plan-${yield* Clock.currentTimeMillis}`);
+      const rootDir = joinPath(tmpdir(), `beep-architecture-plan-${process.pid}-${yield* Clock.currentTimeMillis}`);
       const requiredFile = "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.model.ts";
       yield* makeDirectory(joinPath(rootDir, "packages/architecture-lab/domain/src/aggregates/WorkItem"));
       yield* writeText(joinPath(rootDir, requiredFile), "export {}\n");
@@ -318,7 +321,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "generates every manifest-included WorkItem proof file and second apply is a no-op",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-generated-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-generated-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
       const acceptedFiles = yield* collectAcceptedArchitectureProofFiles();
 
@@ -368,7 +374,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "generates a complete non-default aggregate slice plan with package scaffolds",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-demo-generated-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-demo-generated-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
 
       const plan = yield* makeArchitectureOperationPlan(repoRoot, {
@@ -396,7 +405,7 @@ describe("architecture operation plan", () => {
   it.effect(
     "rejects operation paths that escape the repository root before writing files",
     Effect.fnUntraced(function* () {
-      const rootName = `beep-architecture-escape-${yield* Clock.currentTimeMillis}`;
+      const rootName = `beep-architecture-escape-${process.pid}-${yield* Clock.currentTimeMillis}`;
       const tempRoot = joinPath(tmpdir(), rootName);
       const outsideFileName = `${rootName}-outside.txt`;
       const outsidePath = joinPath(tmpdir(), outsideFileName);
@@ -433,7 +442,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "keeps global db-admin state out of non-default persistence slice plans",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-persistence-generated-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-persistence-generated-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
 
       const plan = yield* makeArchitectureOperationPlan(repoRoot, {
@@ -462,7 +474,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "generates the accepted Worker entity archetype without aggregate-only roles",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-worker-generated-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-worker-generated-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
       const acceptedPath = "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts";
 
@@ -524,7 +539,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "generates the accepted WorkPriority value archetype as domain-only",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-priority-generated-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-priority-generated-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
       const acceptedPath = "packages/architecture-lab/domain/src/values/WorkPriority/WorkPriority.model.ts";
 
@@ -647,7 +665,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "applies a shell-only slice role package twice with a no-op second apply",
     Effect.fnUntraced(function* () {
-      const tempRoot = joinPath(tmpdir(), `beep-architecture-package-shell-${yield* Clock.currentTimeMillis}`);
+      const tempRoot = joinPath(
+        tmpdir(),
+        `beep-architecture-package-shell-${process.pid}-${yield* Clock.currentTimeMillis}`
+      );
       yield* removePath(tempRoot);
       const plan = yield* makeArchitecturePackageOperationPlan({
         boundedContext: "research-lab",
@@ -701,7 +722,7 @@ describe("architecture operation plan", () => {
   it.effect(
     "architecture create package dry-run prints a plan without writing files",
     Effect.fnUntraced(function* () {
-      const sliceName = `dry-run-lab-${yield* Clock.currentTimeMillis}`;
+      const sliceName = `dry-run-lab-${process.pid}-${yield* Clock.currentTimeMillis}`;
       const targetDir = joinPath(repoRoot, "packages", sliceName);
       expect(pathExistsSync(targetDir)).toBe(false);
 
@@ -723,7 +744,10 @@ describe("architecture operation plan", () => {
   it.effect(
     "architecture check command validates an operation-plan file",
     Effect.fnUntraced(function* () {
-      const planPath = joinPath(tmpdir(), `beep-architecture-check-${yield* Clock.currentTimeMillis}.json`);
+      const planPath = joinPath(
+        tmpdir(),
+        `beep-architecture-check-${process.pid}-${yield* Clock.currentTimeMillis}.json`
+      );
       const plan = makeCanonicalSliceOperationPlan();
       const json = yield* encodeCanonicalSliceOperationPlanJson(plan);
       yield* writeText(planPath, json);

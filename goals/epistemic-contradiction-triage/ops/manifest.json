@@ -5,7 +5,7 @@
     "title": "Epistemic Contradiction Triage",
     "status": "active",
     "created": "2026-07-25",
-    "updated": "2026-07-25",
+    "updated": "2026-07-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-triage",
@@ -51,19 +51,21 @@
     {
       "id": "P0",
       "name": "Fixture spike",
-      "status": "pending",
+      "status": "complete",
+      "statusNote": "PASS 2026-07-29. Real EdgeAuthority plus fixture candidate lifecycle passed all five gates and competing-lineage, ordering, and close/reopen boundaries in the in-process PGlite lane. Evidence: history/p0/2026-07-29-fixture-spike.md.",
       "exit": "Hard gate: all five Deferred-spike-B assertions (identity/anchor matching, symmetric-edge representation, duplicate suppression, unresolved-conflict visibility, candidate-to-approved transition) plus the folded boundary fixtures (competing lineages, revision ordering, restart boundary) pass against the real core in the PGlite lane at minimum, with pass/fail per assertion archived under history/p0/."
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending",
-      "exit": "Candidate domain values/entities, additive tables + generated migration, use-case ports/commands including the conflicted ClaimDispositionStatus member, and the server repository + layer land on the P0-proven design; the core's tables are unaltered."
+      "status": "complete",
+      "statusNote": "PASS 2026-07-29. Schema-first candidate, receipt, proposal, disposition, additive persistence, atomic review, RPC, Effect Atom client, and full-source triage UI landed. Browser QA passed 77 assertions with zero required findings. Evidence: history/p1/2026-07-29-implementation-and-browser-qa.md.",
+      "exit": "Candidate domain values/entities, additive tables + generated migration, use-case ports/commands including the slice-local ContradictionDispositionStatus, and the server repository + layer land on the P0-proven design; the core's tables and ClaimDispositionStatus are unaltered."
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending",
+      "status": "in-progress",
       "exit": "Two-axis queries over open and resolved candidates, the approval-to-atomic-supersession race lane (opt-in pattern per standards/architecture/08-testing.md), and restart/migration proof are green, and bun run beep yeet verify reports SUCCESS."
     },
     {

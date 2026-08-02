@@ -217,7 +217,7 @@ describe("Uspto identifier normalization", () => {
 describe("Uspto schema parity", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov/" })
+      S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
     );
     const metadata = decode(UsptoApplicationMetadata, {
       applicationNumberText: "16138242",

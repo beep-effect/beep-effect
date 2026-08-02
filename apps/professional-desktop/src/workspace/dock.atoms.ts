@@ -56,7 +56,7 @@ import type { DockAtomOperation } from "@beep/dock";
 import type { DockAtomGraph } from "@beep/dock-react";
 
 /**
- * Every desktop dock panel: the three shell surfaces plus the nine ontology
+ * Every desktop dock panel: the four shell surfaces plus the nine ontology
  * workbench regions. `cluster` names the default-layout group a panel calls
  * home — reopening a closed panel targets a group where its cluster siblings
  * live, so SPARQL lands beside Inspector rather than in a random group.
@@ -65,7 +65,7 @@ import type { DockAtomGraph } from "@beep/dock-react";
  * ```ts
  * import { DESKTOP_PANELS } from "@/workspace/dock.atoms"
  *
- * console.log(DESKTOP_PANELS.length) // 12
+ * console.log(DESKTOP_PANELS.length) // 13
  * ```
  *
  * @category constants
@@ -86,6 +86,13 @@ export const DESKTOP_PANELS = [
     key: "sync",
     label: "Vault sync",
     title: "Vault sync",
+  },
+  {
+    cluster: "shell",
+    description: "Review contradictory beliefs against their verified source text.",
+    key: "contradiction-triage",
+    label: "Beliefs",
+    title: "Contradiction Triage",
   },
   {
     cluster: "ontology-left",
@@ -153,7 +160,7 @@ export const DESKTOP_PANELS = [
 ] as const;
 
 /**
- * One of the twelve desktop panel keys.
+ * One of the thirteen desktop panel keys.
  *
  * @example
  * ```ts

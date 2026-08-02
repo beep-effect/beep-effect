@@ -37,9 +37,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 fixture spike — not started. Next concrete action: build the spike fixtures
-against the landed core and record pass/fail per gate assertion under
-`history/p0/`. No implementation phase runs until every assertion passes.
+P2 verification — active. P1 landed the P0-fixed immutable candidate, receipt,
+proposal, disposition, and narrow review contracts without widening claim
+disposition, together with the coordinated full-source triage UI. Focused
+package, migration, integration, browser, doctrine, and documentation proof is
+green; the formal quality-review loop and Yeet verification remain.
 
 ## Provenance
 
@@ -63,7 +65,13 @@ Back-links, not copies:
 
 ## Latest Evidence
 
-Not started.
+[`history/p0/2026-07-29-fixture-spike.md`](./history/p0/2026-07-29-fixture-spike.md)
+records the exact command, final `32 passed` result, per-assertion verdicts, and
+the model decisions fixed by the gate.
+
+[`history/p1/2026-07-29-implementation-and-browser-qa.md`](./history/p1/2026-07-29-implementation-and-browser-qa.md)
+records the implemented surface, exact full-source browser scenarios, final
+`77 passed` capture assertions, and independent `REQUIRED FINDINGS: 0` verdict.
 
 ## Notes
 
@@ -73,10 +81,10 @@ High-signal constraints that do not belong in the normative spec:
   only a recorded, scoped human disposition converts a candidate into a
   supersession. A green suite that skips this distinction has not proven the
   packet.
-- **The `conflicted` `ClaimDispositionStatus` member lands here, with its first
-  real consumer.** It was deliberately left out of the core
-  ([`ops/handoffs/p0-to-p1-handoff.md`](../epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md)):
-  adding a `LiteralKit` member later is cheap, removing one is not.
+- **Contradiction resolution owns a slice-local disposition vocabulary.**
+  `ClaimDispositionStatus` remains the claim-admission vocabulary landed by the
+  core. An unresolved contradiction has no contradiction disposition; review
+  records either `rejected` or `superseded`.
 - **Belief views are a different operation and a different packet.** Triage
   *resolves* lineages; a view *selects among* open ones
   ([`explorations/epistemic-belief-view-revision`](../../explorations/epistemic-belief-view-revision/README.md)).

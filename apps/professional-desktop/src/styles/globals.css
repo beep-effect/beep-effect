@@ -20,6 +20,7 @@
    elsewhere — which is exactly what made this look like a layout bug rather than a
    missing stylesheet. */
 @source "../../../../packages/ontology/ui/src";
+@source "../../../../packages/epistemic/ui/src";
 @source "../../../../packages/drivers/cosmos/src";
 
 /* Green-workbench theme — app-local override of the shadcn/Tailwind tokens.

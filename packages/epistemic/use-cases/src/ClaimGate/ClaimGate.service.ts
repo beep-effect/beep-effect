@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 
-import { ClaimGateResult, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values";
+import { ClaimGateResult } from "@beep/epistemic-domain/values";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/semantic-web/rdf";
 import { ShaclValidationRequest } from "@beep/semantic-web/services/shacl-validation";
 import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
@@ -41,7 +41,6 @@ const toDataset = (
   const typeQuad = makeQuad(subject, RDF_TYPE, makeNamedNode(CLAIM_CLASS_IRI));
   const quoteQuads = pipe(
     evidence,
-    A.filter((ev) => isEvidenceSpanInternallyConsistent(ev.span)),
     A.map((ev) => makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.quote, XSD_STRING.value)))
   );
   return makeDataset([typeQuad, ...quoteQuads]);

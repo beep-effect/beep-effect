@@ -20,6 +20,20 @@
  */
 export * from "./entities/index.ts";
 /**
+ * Epistemic slice-local identity exports.
+ *
+ * @example
+ * ```ts
+ * import { Identity } from "@beep/epistemic-domain"
+ *
+ * console.log(Identity.Epistemic.ContradictionCandidateId.tableName)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export * as Identity from "./identity/index.ts";
+/**
  * Epistemic value model exports.
  *
  * @example
