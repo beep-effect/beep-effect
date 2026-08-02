@@ -47,13 +47,16 @@ const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, all
 /**
  * Builds a canonical codec for an HTML enumerated attribute.
  *
+ * **Details**
+ *
  * Encoded keywords are matched ASCII-case-insensitively, as required by the
  * HTML enumerated-attribute microsyntax. Decoded values use the supplied
  * canonical spelling, and direct construction accepts only that fixed point.
  * Attributes whose case distinguishes meaning, such as `ol[type]`, must use a
  * literal schema instead because they are not HTML enumerated attributes.
  *
- * @example
+ * **Example** (Validate with `makeAsciiCaseInsensitiveEnumerated`)
+ *
  * ```ts
  * import { makeAsciiCaseInsensitiveEnumerated } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -114,7 +117,8 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
 /**
  * `dir` global attribute value.
  *
- * @example
+ * **Example** (Validate with `Dir`)
+ *
  * ```ts
  * import { Dir } from "@beep/html/Html.attributes"
  *
@@ -130,7 +134,8 @@ export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pi
 /**
  * Decoded type of {@link Dir}.
  *
- * @example
+ * **Example** (Annotate a `Dir` value)
+ *
  * ```ts
  * import type { Dir } from "@beep/html/Html.attributes"
  *
@@ -148,7 +153,8 @@ const TranslateInput = makeAsciiCaseInsensitiveEnumerated(["", ...TranslateBase.
 /**
  * `translate` global attribute value.
  *
- * @example
+ * **Example** (Validate with `Translate`)
+ *
  * ```ts
  * import { Translate } from "@beep/html/Html.attributes"
  *
@@ -172,7 +178,8 @@ export const Translate = TranslateInput.pipe(
 /**
  * Decoded type of {@link Translate}.
  *
- * @example
+ * **Example** (Annotate a `Translate` value)
+ *
  * ```ts
  * import type { Translate } from "@beep/html/Html.attributes"
  *
@@ -190,7 +197,8 @@ const ContentEditableInput = makeAsciiCaseInsensitiveEnumerated(["", ...ContentE
 /**
  * `contenteditable` global attribute value.
  *
- * @example
+ * **Example** (Validate with `ContentEditable`)
+ *
  * ```ts
  * import { ContentEditable } from "@beep/html/Html.attributes"
  *
@@ -214,7 +222,8 @@ export const ContentEditable = ContentEditableInput.pipe(
 /**
  * Decoded type of {@link ContentEditable}.
  *
- * @example
+ * **Example** (Annotate a `ContentEditable` value)
+ *
  * ```ts
  * import type { ContentEditable } from "@beep/html/Html.attributes"
  *
@@ -229,7 +238,8 @@ export type ContentEditable = typeof ContentEditable.Type;
 /**
  * `draggable` global attribute value.
  *
- * @example
+ * **Example** (Validate with `Draggable`)
+ *
  * ```ts
  * import { Draggable } from "@beep/html/Html.attributes"
  *
@@ -245,7 +255,8 @@ export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).p
 /**
  * Decoded type of {@link Draggable}.
  *
- * @example
+ * **Example** (Annotate a `Draggable` value)
+ *
  * ```ts
  * import type { Draggable } from "@beep/html/Html.attributes"
  *
@@ -263,7 +274,8 @@ const SpellCheckInput = makeAsciiCaseInsensitiveEnumerated(["", ...SpellCheckBas
 /**
  * `spellcheck` global attribute value.
  *
- * @example
+ * **Example** (Validate with `SpellCheck`)
+ *
  * ```ts
  * import { SpellCheck } from "@beep/html/Html.attributes"
  *
@@ -287,7 +299,8 @@ export const SpellCheck = SpellCheckInput.pipe(
 /**
  * Decoded type of {@link SpellCheck}.
  *
- * @example
+ * **Example** (Annotate a `SpellCheck` value)
+ *
  * ```ts
  * import type { SpellCheck } from "@beep/html/Html.attributes"
  *
@@ -305,7 +318,8 @@ const WritingSuggestionsInput = makeAsciiCaseInsensitiveEnumerated(["", ...Writi
 /**
  * `writingsuggestions` global attribute value.
  *
- * @example
+ * **Example** (Validate with `WritingSuggestions`)
+ *
  * ```ts
  * import { WritingSuggestions } from "@beep/html/Html.attributes"
  *
@@ -329,7 +343,8 @@ export const WritingSuggestions = WritingSuggestionsInput.pipe(
 /**
  * Decoded type of {@link WritingSuggestions}.
  *
- * @example
+ * **Example** (Annotate a `WritingSuggestions` value)
+ *
  * ```ts
  * import type { WritingSuggestions } from "@beep/html/Html.attributes"
  *
@@ -344,7 +359,8 @@ export type WritingSuggestions = typeof WritingSuggestions.Type;
 /**
  * `autocapitalize` global attribute value.
  *
- * @example
+ * **Example** (Validate with `AutoCapitalize`)
+ *
  * ```ts
  * import { AutoCapitalize } from "@beep/html/Html.attributes"
  *
@@ -365,7 +381,8 @@ export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
 /**
  * Decoded type of {@link AutoCapitalize}.
  *
- * @example
+ * **Example** (Annotate a `AutoCapitalize` value)
+ *
  * ```ts
  * import type { AutoCapitalize } from "@beep/html/Html.attributes"
  *
@@ -383,7 +400,8 @@ const AutoCorrectInput = makeAsciiCaseInsensitiveEnumerated(["", ...AutoCorrectB
 /**
  * `autocorrect` global attribute value.
  *
- * @example
+ * **Example** (Validate with `AutoCorrect`)
+ *
  * ```ts
  * import { AutoCorrect } from "@beep/html/Html.attributes"
  *
@@ -407,7 +425,8 @@ export const AutoCorrect = AutoCorrectInput.pipe(
 /**
  * Decoded type of {@link AutoCorrect}.
  *
- * @example
+ * **Example** (Annotate a `AutoCorrect` value)
+ *
  * ```ts
  * import type { AutoCorrect } from "@beep/html/Html.attributes"
  *
@@ -422,7 +441,8 @@ export type AutoCorrect = typeof AutoCorrect.Type;
 /**
  * `inputmode` global attribute value.
  *
- * @example
+ * **Example** (Validate with `InputMode`)
+ *
  * ```ts
  * import { InputMode } from "@beep/html/Html.attributes"
  *
@@ -445,7 +465,8 @@ export const InputMode = makeAsciiCaseInsensitiveEnumerated([
 /**
  * Decoded type of {@link InputMode}.
  *
- * @example
+ * **Example** (Annotate a `InputMode` value)
+ *
  * ```ts
  * import type { InputMode } from "@beep/html/Html.attributes"
  *
@@ -460,7 +481,8 @@ export type InputMode = typeof InputMode.Type;
 /**
  * `enterkeyhint` global attribute value.
  *
- * @example
+ * **Example** (Validate with `EnterKeyHint`)
+ *
  * ```ts
  * import { EnterKeyHint } from "@beep/html/Html.attributes"
  *
@@ -482,7 +504,8 @@ export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
 /**
  * Decoded type of {@link EnterKeyHint}.
  *
- * @example
+ * **Example** (Annotate a `EnterKeyHint` value)
+ *
  * ```ts
  * import type { EnterKeyHint } from "@beep/html/Html.attributes"
  *
@@ -500,7 +523,8 @@ const HiddenInput = makeAsciiCaseInsensitiveEnumerated(["", ...HiddenBase.Option
 /**
  * `hidden` global attribute value.
  *
- * @example
+ * **Example** (Validate with `Hidden`)
+ *
  * ```ts
  * import { Hidden } from "@beep/html/Html.attributes"
  *
@@ -524,7 +548,8 @@ export const Hidden = HiddenInput.pipe(
 /**
  * Decoded type of {@link Hidden}.
  *
- * @example
+ * **Example** (Annotate a `Hidden` value)
+ *
  * ```ts
  * import type { Hidden } from "@beep/html/Html.attributes"
  *
@@ -542,7 +567,8 @@ const PopoverInput = makeAsciiCaseInsensitiveEnumerated(["", ...PopoverBase.Opti
 /**
  * `popover` global attribute value.
  *
- * @example
+ * **Example** (Validate with `Popover`)
+ *
  * ```ts
  * import { Popover } from "@beep/html/Html.attributes"
  *
@@ -566,7 +592,8 @@ export const Popover = PopoverInput.pipe(
 /**
  * Decoded type of {@link Popover}.
  *
- * @example
+ * **Example** (Annotate a `Popover` value)
+ *
  * ```ts
  * import type { Popover } from "@beep/html/Html.attributes"
  *
@@ -581,7 +608,8 @@ export type Popover = typeof Popover.Type;
 /**
  * `popovertargetaction` global attribute value.
  *
- * @example
+ * **Example** (Validate with `PopoverTargetAction`)
+ *
  * ```ts
  * import { PopoverTargetAction } from "@beep/html/Html.attributes"
  *
@@ -597,7 +625,8 @@ export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle",
 /**
  * Decoded type of {@link PopoverTargetAction}.
  *
- * @example
+ * **Example** (Annotate a `PopoverTargetAction` value)
+ *
  * ```ts
  * import type { PopoverTargetAction } from "@beep/html/Html.attributes"
  *
@@ -612,11 +641,14 @@ export type PopoverTargetAction = typeof PopoverTargetAction.Type;
 /**
  * An HTML boolean attribute presence value.
  *
+ * **Details**
+ *
  * HTML boolean attributes are true by presence. The literal `false` is not a
  * false value in HTML source (`disabled="false"` still disables), so this
  * schema deliberately accepts only `true` and the empty presence form.
  *
- * @example
+ * **Example** (Call `BooleanAttribute`)
+ *
  * ```ts
  * import { BooleanAttribute } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -634,7 +666,8 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
 /**
  * Decoded type of {@link BooleanAttribute}.
  *
- * @example
+ * **Example** (Annotate a `BooleanAttribute` value)
+ *
  * ```ts
  * import type { BooleanAttribute } from "@beep/html/Html.attributes"
  *
@@ -653,7 +686,8 @@ const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginB
 /**
  * CORS settings attribute with the HTML missing-value spelling normalized.
  *
- * @example
+ * **Example** (Validate with `CrossOrigin`)
+ *
  * ```ts
  * import { CrossOrigin } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -681,7 +715,8 @@ export const CrossOrigin = CrossOriginInput.pipe(
 /**
  * Decoded type of {@link CrossOrigin}.
  *
- * @example
+ * **Example** (Annotate a `CrossOrigin` value)
+ *
  * ```ts
  * import type { CrossOrigin } from "@beep/html/Html.attributes"
  *
@@ -697,7 +732,8 @@ export type CrossOrigin = typeof CrossOrigin.Type;
 /**
  * Referrer-policy keyword accepted by HTML fetch attributes.
  *
- * @example
+ * **Example** (Call `ReferrerPolicy`)
+ *
  * ```ts
  * import { ReferrerPolicy } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -723,7 +759,8 @@ export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
 /**
  * Decoded type of {@link ReferrerPolicy}.
  *
- * @example
+ * **Example** (Annotate a `ReferrerPolicy` value)
+ *
  * ```ts
  * import type { ReferrerPolicy } from "@beep/html/Html.attributes"
  *
@@ -740,7 +777,8 @@ export type ReferrerPolicy = typeof ReferrerPolicy.Type;
  * The only conforming character encoding spelling accepted by HTML metadata
  * and form submission.
  *
- * @example
+ * **Example** (Validate with `Utf8Charset`)
+ *
  * ```ts
  * import { Utf8Charset } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -760,7 +798,8 @@ export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
 /**
  * Decoded type of {@link Utf8Charset}.
  *
- * @example
+ * **Example** (Annotate a `Utf8Charset` value)
+ *
  * ```ts
  * import type { Utf8Charset } from "@beep/html/Html.attributes"
  *
@@ -777,7 +816,8 @@ export type Utf8Charset = typeof Utf8Charset.Type;
  * Form-level autocomplete policy. Form elements accept only `on` or `off`;
  * detailed autofill tokens belong to form controls.
  *
- * @example
+ * **Example** (Validate with `FormAutocomplete`)
+ *
  * ```ts
  * import { FormAutocomplete } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -797,7 +837,8 @@ export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]
 /**
  * Decoded type of {@link FormAutocomplete}.
  *
- * @example
+ * **Example** (Annotate a `FormAutocomplete` value)
+ *
  * ```ts
  * import type { FormAutocomplete } from "@beep/html/Html.attributes"
  *
@@ -830,7 +871,8 @@ const CustomButtonCommand = S.String.check(
 /**
  * Built-in or case-preserving custom `button[command]` keyword.
  *
- * @example
+ * **Example** (Validate with `ButtonCommand`)
+ *
  * ```ts
  * import { ButtonCommand } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -851,7 +893,8 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
 /**
  * Decoded type of {@link ButtonCommand}.
  *
- * @example
+ * **Example** (Annotate a `ButtonCommand` value)
+ *
  * ```ts
  * import type { ButtonCommand } from "@beep/html/Html.attributes"
  *
@@ -867,7 +910,8 @@ export type ButtonCommand = typeof ButtonCommand.Type;
 /**
  * Integer accepted by the `headingoffset` global attribute.
  *
- * @example
+ * **Example** (Call `HeadingOffset`)
+ *
  * ```ts
  * import { HeadingOffset } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -893,7 +937,8 @@ export const HeadingOffset = S.Int.check(
 /**
  * Decoded type of {@link HeadingOffset}.
  *
- * @example
+ * **Example** (Annotate a `HeadingOffset` value)
+ *
  * ```ts
  * import type { HeadingOffset } from "@beep/html/Html.attributes"
  *
@@ -909,7 +954,8 @@ export type HeadingOffset = typeof HeadingOffset.Type;
 /**
  * An HTML non-negative integer microsyntax.
  *
- * @example
+ * **Example** (Call `HtmlNonNegativeInteger`)
+ *
  * ```ts
  * import { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -936,7 +982,8 @@ export const HtmlNonNegativeInteger = S.Int.check(
 /**
  * Decoded type of {@link HtmlNonNegativeInteger}.
  *
- * @example
+ * **Example** (Annotate a `HtmlNonNegativeInteger` value)
+ *
  * ```ts
  * import type { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
  *
@@ -952,7 +999,8 @@ export type HtmlNonNegativeInteger = typeof HtmlNonNegativeInteger.Type;
 /**
  * An HTML positive integer microsyntax.
  *
- * @example
+ * **Example** (Call `HtmlPositiveInteger`)
+ *
  * ```ts
  * import { HtmlPositiveInteger } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -979,7 +1027,8 @@ export const HtmlPositiveInteger = S.Int.check(
 /**
  * Decoded type of {@link HtmlPositiveInteger}.
  *
- * @example
+ * **Example** (Annotate a `HtmlPositiveInteger` value)
+ *
  * ```ts
  * import type { HtmlPositiveInteger } from "@beep/html/Html.attributes"
  *
@@ -995,7 +1044,8 @@ export type HtmlPositiveInteger = typeof HtmlPositiveInteger.Type;
 /**
  * A finite number accepted by the HTML floating-point microsyntax.
  *
- * @example
+ * **Example** (Call `HtmlFiniteNumber`)
+ *
  * ```ts
  * import { HtmlFiniteNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1016,7 +1066,8 @@ export const HtmlFiniteNumber = S.Finite.pipe(
 /**
  * Decoded type of {@link HtmlFiniteNumber}.
  *
- * @example
+ * **Example** (Annotate a `HtmlFiniteNumber` value)
+ *
  * ```ts
  * import type { HtmlFiniteNumber } from "@beep/html/Html.attributes"
  *
@@ -1032,7 +1083,8 @@ export type HtmlFiniteNumber = typeof HtmlFiniteNumber.Type;
 /**
  * A non-negative finite HTML number.
  *
- * @example
+ * **Example** (Call `HtmlNonNegativeNumber`)
+ *
  * ```ts
  * import { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1060,7 +1112,8 @@ export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
 /**
  * Decoded type of {@link HtmlNonNegativeNumber}.
  *
- * @example
+ * **Example** (Annotate a `HtmlNonNegativeNumber` value)
+ *
  * ```ts
  * import type { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
  *
@@ -1076,7 +1129,8 @@ export type HtmlNonNegativeNumber = typeof HtmlNonNegativeNumber.Type;
 /**
  * A positive finite HTML number.
  *
- * @example
+ * **Example** (Call `HtmlPositiveNumber`)
+ *
  * ```ts
  * import { HtmlPositiveNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1104,7 +1158,8 @@ export const HtmlPositiveNumber = HtmlFiniteNumber.check(
 /**
  * Decoded type of {@link HtmlPositiveNumber}.
  *
- * @example
+ * **Example** (Annotate a `HtmlPositiveNumber` value)
+ *
  * ```ts
  * import type { HtmlPositiveNumber } from "@beep/html/Html.attributes"
  *
@@ -1120,7 +1175,8 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
 /**
  * `input[step]` value: the keyword `any` or a positive finite number.
  *
- * @example
+ * **Example** (Validate with `HtmlStep`)
+ *
  * ```ts
  * import { HtmlStep } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1142,7 +1198,8 @@ export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), Ht
 /**
  * Decoded type of {@link HtmlStep}.
  *
- * @example
+ * **Example** (Annotate a `HtmlStep` value)
+ *
  * ```ts
  * import type { HtmlStep } from "@beep/html/Html.attributes"
  *
@@ -1159,7 +1216,8 @@ export type HtmlStep = typeof HtmlStep.Type;
  * Removes only the five ASCII whitespace code points recognized by HTML from
  * both ends of a string.
  *
- * @example
+ * **Example** (Call `stripHtmlAsciiWhitespace`)
+ *
  * ```ts
  * import { stripHtmlAsciiWhitespace } from "@beep/html/Html.attributes"
  *
@@ -1175,10 +1233,13 @@ export const stripHtmlAsciiWhitespace = Str.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$
 /**
  * Splits an HTML space-separated token list on ASCII whitespace only.
  *
+ * **Details**
+ *
  * Unicode spaces such as NBSP remain part of a token, matching the browser's
  * DOMTokenList behavior.
  *
- * @example
+ * **Example** (Call `tokenizeHtmlSpaceSeparated`)
+ *
  * ```ts
  * import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes"
  *
@@ -1197,10 +1258,13 @@ export const tokenizeHtmlSpaceSeparated: (value: string) => ReadonlyArray<string
 /**
  * Builds a schema for a space-separated list of known HTML tokens.
  *
+ * **Details**
+ *
  * Empty text is accepted because attributes such as `sandbox=""` have
  * meaningful presence semantics. Unknown and duplicate tokens are rejected.
  *
- * @example
+ * **Example** (Call `makeSpaceSeparatedTokenList`)
+ *
  * ```ts
  * import { makeSpaceSeparatedTokenList } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1306,11 +1370,14 @@ const makeOpenSpaceSeparatedTokenList = (
 /**
  * Open, ASCII-case-insensitive HTML relation-token list.
  *
+ * **Details**
+ *
  * The structural AST accepts extension relation tokens because WHATWG delegates
  * extension registration to a mutable external registry. Conformance applies
  * semantic rules to known tokens, while SafeHtml owns a smaller finite policy.
  *
- * @example
+ * **Example** (Validate with `HtmlRelationList`)
+ *
  * ```ts
  * import { HtmlRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1332,7 +1399,8 @@ export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined,
 /**
  * Decoded type of {@link HtmlRelationList}.
  *
- * @example
+ * **Example** (Annotate a `HtmlRelationList` value)
+ *
  * ```ts
  * import type { HtmlRelationList } from "@beep/html/Html.attributes"
  *
@@ -1348,11 +1416,14 @@ export type HtmlRelationList = typeof HtmlRelationList.Type;
 /**
  * Open, ASCII-case-insensitive relation-token list for `link[rel]`.
  *
+ * **Details**
+ *
  * Link relation extensions are registrable, so the structural AST retains
  * unknown extension tokens. Placement and SafeHtml policy stay independently
  * closed over their reviewed relation sets.
  *
- * @example
+ * **Example** (Validate with `LinkRelationList`)
+ *
  * ```ts
  * import { LinkRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1382,7 +1453,8 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
 /**
  * Decoded type of {@link LinkRelationList}.
  *
- * @example
+ * **Example** (Annotate a `LinkRelationList` value)
+ *
  * ```ts
  * import type { LinkRelationList } from "@beep/html/Html.attributes"
  *
@@ -1398,7 +1470,8 @@ export type LinkRelationList = typeof LinkRelationList.Type;
 /**
  * Case-preserving unique HTML ID-reference token list.
  *
- * @example
+ * **Example** (Validate with `HtmlIdReferenceList`)
+ *
  * ```ts
  * import { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1420,7 +1493,8 @@ export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
 /**
  * Decoded type of {@link HtmlIdReferenceList}.
  *
- * @example
+ * **Example** (Annotate a `HtmlIdReferenceList` value)
+ *
  * ```ts
  * import type { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  *
@@ -1453,10 +1527,13 @@ const CanonicalMetadataName = MetadataNameInput.check(
 /**
  * Open metadata name for `meta[name]`.
  *
+ * **Details**
+ *
  * HTML permits arbitrary extension metadata names; decoding normalizes their
  * ASCII-insensitive spelling without requiring a central registry.
  *
- * @example
+ * **Example** (Validate with `MetadataName`)
+ *
  * ```ts
  * import { MetadataName } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1483,7 +1560,8 @@ export const MetadataName = MetadataNameInput.pipe(
 /**
  * Decoded type of {@link MetadataName}.
  *
- * @example
+ * **Example** (Annotate a `MetadataName` value)
+ *
  * ```ts
  * import type { MetadataName } from "@beep/html/Html.attributes"
  *
@@ -1526,10 +1604,13 @@ const CanonicalAutocompleteAttribute = S.String.check(
 /**
  * Ordered token-list microsyntax used by the HTML `autocomplete` attribute.
  *
+ * **Details**
+ *
  * Decoding canonicalizes ASCII case and whitespace. Direct construction
  * accepts only the lowercase, single-space fixed point.
  *
- * @example
+ * **Example** (Validate with `AutocompleteAttribute`)
+ *
  * ```ts
  * import { AutocompleteAttribute } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1560,7 +1641,8 @@ export const AutocompleteAttribute = AutocompleteAttributeInput.pipe(
 /**
  * Decoded type of {@link AutocompleteAttribute}.
  *
- * @example
+ * **Example** (Annotate a `AutocompleteAttribute` value)
+ *
  * ```ts
  * import type { AutocompleteAttribute } from "@beep/html/Html.attributes"
  *
@@ -1576,7 +1658,8 @@ export type AutocompleteAttribute = typeof AutocompleteAttribute.Type;
 /**
  * Name of an SVG or MathML foreign element represented inside the HTML AST.
  *
- * @example
+ * **Example** (Call `ForeignElementName`)
+ *
  * ```ts
  * import { ForeignElementName } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1604,7 +1687,8 @@ export const ForeignElementName = S.String.check(
 /**
  * Decoded type of {@link ForeignElementName}.
  *
- * @example
+ * **Example** (Annotate a `ForeignElementName` value)
+ *
  * ```ts
  * import type { ForeignElementName } from "@beep/html/Html.attributes"
  *
@@ -1620,7 +1704,8 @@ export type ForeignElementName = typeof ForeignElementName.Type;
 /**
  * Name of an attribute on an SVG or MathML foreign element.
  *
- * @example
+ * **Example** (Call `ForeignAttributeName`)
+ *
  * ```ts
  * import { ForeignAttributeName } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1647,7 +1732,8 @@ export const ForeignAttributeName = S.String.check(
 /**
  * Decoded type of {@link ForeignAttributeName}.
  *
- * @example
+ * **Example** (Annotate a `ForeignAttributeName` value)
+ *
  * ```ts
  * import type { ForeignAttributeName } from "@beep/html/Html.attributes"
  *
@@ -1663,10 +1749,13 @@ export type ForeignAttributeName = typeof ForeignAttributeName.Type;
 /**
  * Non-empty HTML `id` value without ASCII whitespace.
  *
+ * **Details**
+ *
  * Tree-wide uniqueness is checked by the conformance validator because it
  * depends on the complete root rather than one attribute value.
  *
- * @example
+ * **Example** (Call `HtmlIdValue`)
+ *
  * ```ts
  * import { HtmlIdValue } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1694,7 +1783,8 @@ export const HtmlIdValue = S.String.check(
 /**
  * Decoded type of {@link HtmlIdValue}.
  *
- * @example
+ * **Example** (Annotate a `HtmlIdValue` value)
+ *
  * ```ts
  * import type { HtmlIdValue } from "@beep/html/Html.attributes"
  *
@@ -1717,11 +1807,14 @@ type OptionalString = typeof OptionalString;
 /**
  * Exact hand-authored registry of HTML enumerated global-attribute fields.
  *
+ * **Details**
+ *
  * The individual codecs canonicalize ASCII case and expose semantic fixed
  * points. Keeping the field inventory in one record lets the generator fail
  * when a global enumerated attribute is added or dropped without review.
  *
- * @example
+ * **Example** (Validate with `EnumeratedGlobalAttributes`)
+ *
  * ```ts
  * import { EnumeratedGlobalAttributes } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1752,7 +1845,8 @@ export const EnumeratedGlobalAttributes = {
 /**
  * The WHATWG global attributes (`dom.html#global-attributes`), value-typed.
  *
- * @example
+ * **Example** (Call `StandardGlobalAttributes`)
+ *
  * ```ts
  * import { StandardGlobalAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -1792,10 +1886,13 @@ export const StandardGlobalAttributes = {
 /**
  * Key inside the AST's `dataset` attribute bag.
  *
+ * **Details**
+ *
  * The ASCII-case-fixed key is appended to `data-` by the serializer. Rejecting
  * ASCII uppercase prevents the parser's attribute-name case-fold collisions.
  *
- * @example
+ * **Example** (Call `DatasetKey`)
+ *
  * ```ts
  * import { DatasetKey } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -1823,7 +1920,8 @@ export const DatasetKey = S.String.check(
 /**
  * Decoded type of {@link DatasetKey}.
  *
- * @example
+ * **Example** (Annotate a `DatasetKey` value)
+ *
  * ```ts
  * import { DatasetKey } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
@@ -1845,7 +1943,8 @@ export type DatasetKey = typeof DatasetKey.Type;
  * `data-*` custom data attributes, represented as the `dataset` record bag
  * (mirrors `HTMLElement.dataset`).
  *
- * @example
+ * **Example** (Call `DatasetAttribute`)
+ *
  * ```ts
  * import { DatasetAttribute } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -1921,7 +2020,8 @@ const ariaAttributeNames = [
  * `role` plus the WAI-ARIA `aria-*` state and property attributes. Universally
  * permitted; typed as optional strings.
  *
- * @example
+ * **Example** (Call `AriaAttributes`)
+ *
  * ```ts
  * import { AriaAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -2019,7 +2119,8 @@ const eventHandlerNames = [
  * The global event-handler content attributes (`on*`). Universally permitted;
  * typed as optional strings.
  *
- * @example
+ * **Example** (Call `EventHandlerAttributes`)
+ *
  * ```ts
  * import { EventHandlerAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -2041,7 +2142,8 @@ export const EventHandlerAttributes = Struct.fromEntries(
  * The complete global attribute bundle spread into every generated element
  * class: standard globals + `data-*` (`dataset`) + ARIA + event handlers.
  *
- * @example
+ * **Example** (Call `GlobalAttributes`)
+ *
  * ```ts
  * import { GlobalAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -2065,7 +2167,8 @@ export const GlobalAttributes = {
  * attribute decoded/encoded types referenced (by intersection) in every
  * generated element's companion namespace.
  *
- * @example
+ * **Example** (Call `GlobalAttributesStruct`)
+ *
  * ```ts
  * import { GlobalAttributesStruct } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
@@ -2082,7 +2185,8 @@ export const GlobalAttributesStruct = S.Struct(GlobalAttributes).pipe(
 /**
  * Decoded type of {@link GlobalAttributesStruct}.
  *
- * @example
+ * **Example** (Annotate a `GlobalAttributesStruct` value)
+ *
  * ```ts
  * import type { GlobalAttributesStruct } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -2099,7 +2203,8 @@ export type GlobalAttributesStruct = typeof GlobalAttributesStruct.Type;
 /**
  * Decoded type of the shared global attributes.
  *
- * @example
+ * **Example** (Annotate a `GlobalAttributesType` value)
+ *
  * ```ts
  * import type { GlobalAttributesType } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
@@ -2116,7 +2221,8 @@ export type GlobalAttributesType = GlobalAttributesStruct;
 /**
  * Encoded type of the shared global attributes.
  *
- * @example
+ * **Example** (Annotate a `GlobalAttributesEncoded` value)
+ *
  * ```ts
  * import type { GlobalAttributesEncoded } from "@beep/html/Html.attributes"
  *

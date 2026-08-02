@@ -98,7 +98,8 @@ class HtmlRootView extends HtmlChildView.extend<HtmlRootView>($I`HtmlRootView`)(
 /**
  * Rules reported by the HTML conformance validator.
  *
- * @example
+ * **Example** (Validate with `HtmlConformanceRule`)
+ *
  * ```ts
  * import { HtmlConformanceRule } from "@beep/html/Html.conformance"
  *
@@ -132,7 +133,8 @@ export const HtmlConformanceRule = LiteralKit([
 /**
  * Decoded type of {@link HtmlConformanceRule}.
  *
- * @example
+ * **Example** (Annotate a `HtmlConformanceRule` value)
+ *
  * ```ts
  * import type { HtmlConformanceRule } from "@beep/html/Html.conformance"
  *
@@ -148,7 +150,8 @@ export type HtmlConformanceRule = typeof HtmlConformanceRule.Type;
 /**
  * One path-addressed HTML conformance violation.
  *
- * @example
+ * **Example** (Construct `HtmlConformanceIssue`)
+ *
  * ```ts
  * import { HtmlConformanceIssue } from "@beep/html/Html.conformance"
  *
@@ -177,7 +180,8 @@ export class HtmlConformanceIssue extends S.Class<HtmlConformanceIssue>($I`HtmlC
 /**
  * Failure returned when an AST cannot be proven conformant.
  *
- * @example
+ * **Example** (Construct `HtmlConformanceError`)
+ *
  * ```ts
  * import { HtmlConformanceError } from "@beep/html/Html.conformance"
  *
@@ -221,7 +225,8 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
 /**
  * Runtime-issued proof that an HTML root passed {@link inspectConformance}.
  *
- * @example
+ * **Example** (Call `ConformantHtml`)
+ *
  * ```ts
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
@@ -243,7 +248,8 @@ export const ConformantHtml = S.declare(isConformantHtmlValue).pipe(
 /**
  * Decoded type of {@link ConformantHtml}.
  *
- * @example
+ * **Example** (Annotate a `ConformantHtml` value)
+ *
  * ```ts
  * import { conformantRoot } from "@beep/html/Html.conformance"
  * import type { ConformantHtml } from "@beep/html/Html.conformance"
@@ -260,7 +266,8 @@ export type ConformantHtml = typeof ConformantHtml.Type;
 /**
  * Canonical schema alias for a conformance-proven HTML node or root.
  *
- * @example
+ * **Example** (Call `ConformantHtmlNode`)
+ *
  * ```ts
  * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
  * import { Effect } from "effect"
@@ -278,7 +285,8 @@ export const ConformantHtmlNode = ConformantHtml;
 /**
  * Decoded type of {@link ConformantHtmlNode}.
  *
- * @example
+ * **Example** (Annotate a `ConformantHtmlNode` value)
+ *
  * ```ts
  * import { conformantRoot } from "@beep/html/Html.conformance"
  * import type { ConformantHtmlNode } from "@beep/html/Html.conformance"
@@ -2199,7 +2207,8 @@ const inspectChild = (
 /**
  * Returns every conformance issue in an HTML root.
  *
- * @example
+ * **Example** (Call `inspectConformance`)
+ *
  * ```ts
  * import { inspectConformance } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
@@ -2252,7 +2261,8 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
 /**
  * Validates an HTML root and issues an opaque conformance proof.
  *
- * @example
+ * **Example** (Call `conform`)
+ *
  * ```ts
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
@@ -2285,7 +2295,8 @@ export const conform = Effect.fn("Html.conform")(function* (root: HtmlRoot.Type)
 /**
  * Extracts the validated AST root from a conformance proof.
  *
- * @example
+ * **Example** (Call `conformantRoot`)
+ *
  * ```ts
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"

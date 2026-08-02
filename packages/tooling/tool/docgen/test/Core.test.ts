@@ -1,5 +1,9 @@
 import * as Core from "@beep/repo-docgen/Core";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+
+const fixturePath = new URL("./fixtures/section-example/", import.meta.url).pathname;
+const docgenBinPath = new URL("../src/bin.ts", import.meta.url).pathname;
 
 const expectFencedCode = (
   markdown: string,
@@ -53,4 +57,39 @@ describe("Core", () =>
         ["const a = 1"],
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
+
+    it.effect(
+      "typechecks an Example section harvested from the description",
+      Effect.fnUntraced(function* () {
+        const result = yield* Effect.tryPromise(async () => {
+          const outDir = `${fixturePath}.tmp-docgen`;
+          const markerPath = `${outDir}/tsc-ran`;
+          const removeMarker = Bun.spawn(["rm", "-f", markerPath], { stderr: "pipe", stdout: "pipe" });
+          await removeMarker.exited;
+          const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
+          await prepare.exited;
+          await Promise.all([
+            Bun.write(`${outDir}/seed.ts.md`, ""),
+            Bun.write(`${outDir}/seed.tsx.md`, ""),
+            Bun.write(`${outDir}/seed.mts.md`, ""),
+            Bun.write(`${outDir}/seed.cts.md`, ""),
+          ]);
+          const child = Bun.spawn(["bun", docgenBinPath], {
+            cwd: fixturePath,
+            stderr: "pipe",
+            stdout: "pipe",
+          });
+          const [exitCode, stdout, stderr] = await Promise.all([
+            child.exited,
+            new Response(child.stdout).text(),
+            new Response(child.stderr).text(),
+          ]);
+          await Bun.file(markerPath).text();
+          return { exitCode, stderr, stdout, tscRan: true };
+        });
+
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(result.tscRan).toBe(true);
+      })
+    );
   }));

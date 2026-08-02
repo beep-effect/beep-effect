@@ -78,13 +78,15 @@ export const MySchema = S.String.pipe(
 )
 
 /**
- * Type for {@link MySchema}. {@inheritDoc MySchema}
+ * Decoded value produced by {@link MySchema}.
  *
+ * @see {@link MySchema} for the runtime schema and decoding behavior.
  * @category models
  * @since 0.0.0
  */
 export type MySchema = typeof MySchema.Type
 ```
 
-The type alias JSDoc uses `{@link}` and `{@inheritDoc}` to avoid duplicating
-the description.
+The same-name alias is pure type-level, so precise prose is required but an
+Example is not. Keep its `@see` described; do not duplicate the runtime schema's
+Example or add a legacy `@example` tag.

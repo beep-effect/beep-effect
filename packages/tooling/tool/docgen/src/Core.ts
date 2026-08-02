@@ -199,7 +199,17 @@ const extractPrefixedNestedNamespaces = (
 /**
  * Fence metadata token that removes an example from generated type-check files.
  *
- * @example
+ * **When to use**
+ *
+ * Use with a TypeScript fence that documents intentionally non-compiling code.
+ *
+ * **Details**
+ *
+ * The fence remains available to rendered documentation but is omitted from
+ * docgen's generated example project.
+ *
+ * **Example** (Exclude an intentionally invalid fence)
+ *
  * ```ts
  * import { extractFencedCodeBlocks, SKIP_TYPE_CHECKING_FENCE_METADATA } from "@beep/repo-docgen/Core"
  *
@@ -209,6 +219,8 @@ const extractPrefixedNestedNamespaces = (
  *
  * console.log(examples.length) // 0 — skip-type-checking fences are excluded
  * ```
+ *
+ * @see {@link extractFencedCodeBlocks} for metadata-aware fence extraction.
  * @category constants
  * @since 0.0.0
  */
@@ -217,18 +229,28 @@ export const SKIP_TYPE_CHECKING_FENCE_METADATA = "skip-type-checking";
 /**
  * Extracts type-checkable fenced code block text from markdown.
  *
- * @internal
- * @param content - Markdown text scanned for fenced code blocks.
- * @returns A tuple of the extracted example code strings and any parser warnings.
- * @remarks
+ * **When to use**
+ *
+ * Use when callers need plain code strings and do not need generated file
+ * extensions.
+ *
+ * **Details**
+ *
  * Fences tagged with {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are intentionally ignored.
  * Unterminated fences are reported as warnings so docgen can continue parsing the module.
- * @example
+ *
+ * **Example** (Extract a TypeScript fence)
+ *
  * ```ts
  * import { extractFencedCode } from "@beep/repo-docgen/Core"
  * const [examples] = extractFencedCode("~~~ts\nconst value = 1\n~~~")
  * console.log(examples[0])
  * ```
+ *
+ * @param content - Markdown text scanned for fenced code blocks.
+ * @returns A tuple of the extracted example code strings and any parser warnings.
+ * @see {@link extractFencedCodeBlocks} when generated `.ts` or `.tsx` extensions are required.
+ * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -251,17 +273,33 @@ const isTypeScriptFence = (metadata: string): boolean =>
 /**
  * Extracts type-checkable fenced TypeScript code blocks with their generated file extensions.
  *
- * @internal
- * @param content - Markdown text scanned for fenced TypeScript code blocks.
- * @returns A tuple of the extracted fenced code blocks with extensions and any parser warnings.
- * @remarks
+ * **When to use**
+ *
+ * Use when extracted examples must preserve whether docgen should emit a
+ * `.ts` or `.tsx` file.
+ *
+ * **Details**
+ *
  * `tsx` and `typescript jsx` fences are emitted as `.tsx`; `ts` and `typescript` fences are emitted as `.ts`.
- * @example
+ * Fences carrying {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are omitted.
+ *
+ * **Gotchas**
+ *
+ * An unterminated fence is returned through the warnings tuple rather than
+ * failing extraction.
+ *
+ * **Example** (Preserve a TSX fence extension)
+ *
  * ```ts
  * import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core"
  * const [examples] = extractFencedCodeBlocks("~~~tsx\nconst view = <div />\n~~~")
  * console.log(examples[0]?.extension)
  * ```
+ *
+ * @param content - Markdown text scanned for fenced TypeScript code blocks.
+ * @returns A tuple of the extracted fenced code blocks with extensions and any parser warnings.
+ * @see {@link extractFencedCode} when callers only need code strings.
+ * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -688,25 +726,42 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
 });
 
 /**
- * Runs the full docgen workflow from source parsing through markdown emission.
+ * Runs docgen from source discovery through checked examples and rendered
+ * markdown output.
  *
- * @internal
- * @remarks
- * Full-package runs write a proof manifest after docs are emitted. Focused include runs skip the manifest
- * because the output set does not represent the whole package.
+ * **When to use**
+ *
+ * Use as the main executable workflow after providing a docgen configuration
+ * and its required services.
+ *
+ * **Details**
+ *
+ * Source checking and markdown rendering run concurrently. Full-package runs
+ * write a proof manifest after output is emitted.
+ *
+ * **Gotchas**
+ *
+ * Focused include runs skip the proof manifest because their output set does
+ * not represent the complete package.
+ *
+ * **Example** (Attach error logging to the workflow)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { program } from "@beep/repo-docgen/Core"
+ *
+ * const logged = program.pipe(
+ *   Effect.tapError((error) => Effect.logError(error.message))
+ * )
+ * console.log(Effect.isEffect(logged)) // true
+ * ```
+ *
  * @effects
  * - Reads configured source files and optional generated docs configuration from the current package.
  * - Writes markdown pages, generated example files, example `tsconfig.json`, and full-run proof manifests.
  * - Runs the configured TypeScript compiler against extracted examples and optionally executes them with Bun.
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import { program } from "@beep/repo-docgen/Core"
- * const logged = program.pipe(
- *   Effect.tapError((error) => Effect.logError(error.message))
- * )
- * console.log(logged)
- * ```
+ * @see {@link Configuration.Configuration} for the service that supplies workflow settings.
+ * @internal
  * @category workflows
  * @since 0.0.0
  */

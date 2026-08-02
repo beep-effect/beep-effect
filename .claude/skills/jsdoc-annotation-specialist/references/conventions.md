@@ -1,130 +1,176 @@
-# JSDoc Conventions: Block Structure, Quality, Aliases, Categories, Forbidden Patterns
+# JSDoc Authoring Conventions
 
-## Contents
+## Authoring posture
 
-- [JSDoc Block Structure](#jsdoc-block-structure)
-- [Quality Rubric](#quality-rubric)
-- [Import Aliases in Examples](#import-aliases-in-examples)
-- [Category Conventions](#category-conventions)
-- [Forbidden Patterns in Examples](#forbidden-patterns-in-examples)
+Start from the reader's decision: what does this symbol help them do, and what
+would the TypeScript signature fail to tell them? Write one lead paragraph, add
+only useful sections, then add tags. Do not turn the block into a signature echo.
 
-## JSDoc Block Structure
+The section grammar is:
 
-Every exported symbol MUST have this minimum structure:
+1. `**When to use**`
+2. `**Details**`
+3. `**Gotchas**`
+4. `**Example** (Title)` blocks last
 
-````
+Sections are optional except for Examples required by the kind split. Each present
+section is non-empty and unique, apart from multiple Examples. When-to-use text
+opens with `Use to`, `Use when`, `Use as`, or `Use with`. Every Example title is
+non-empty and unique, contains exactly one `ts` fence, and no loose `ts` fence
+appears outside an Example.
+
+## Carrier and kind split
+
+Use titled Example sections for all new and touched code. A legacy `@example` tag
+is grandfathered in untouched files. When a file's documentation is touched,
+migrate its legacy carriers without mass-editing untouched files. Move `@remarks`
+content into Details or Gotchas. New `@remarks` is forbidden.
+
+Examples are required for value-level exports: functions, constants, classes,
+schemas, services, layers, and other runtime values. Pure type-level exports need
+good prose but not an Example: aliases, interfaces, namespaces, `.Encoded`
+companions, and same-name schema type companions.
+
+## Worked upgrade
+
+Before:
+
+````ts
 /**
- * Brief one-line description.
+ * Decodes a user name.
+ *
+ * @remarks Returns `None` instead of throwing.
  *
  * @example
  * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- *
- * const result = MyModule.myFunction(args)
- * console.log(result)
+ * const value = decodeUserName("Ada")
  * ```
  *
- * @category constructors
+ * @category decoding
  * @since 0.0.0
  */
 ````
 
-Tag order within the block:
+After:
 
-1. Description
-2. `@remarks` (when semantics are non-obvious)
-3. `@example` (one or more)
-4. `@typeParam` (when constrained or non-obvious)
-5. `@param` (when prose adds beyond name + type)
-6. `@returns` (when prose adds beyond type)
-7. `@throws` (synchronous throws / defects only)
-8. `@effects` (custom — side effects)
-9. `@precondition` / `@postcondition` / `@invariant` (custom — contracts)
-10. `@see`
-11. `@deprecated` (with `{@link}` migration target)
-12. `@public` / `@beta` / `@alpha` / `@internal` / `@experimental`
-13. `@category` (required, canonical kebab-case slug)
-14. `@since` (required, `0.0.0`)
+````ts
+/**
+ * Decodes an unknown value as a non-empty user name without throwing.
+ *
+ * **When to use**
+ *
+ * Use when invalid boundary input should become `O.none()`.
+ *
+ * **Details**
+ *
+ * Successful decoding returns the normalized schema value.
+ *
+ * **Example** (Inspect both outcomes)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decodeUserName = S.decodeUnknownOption(S.NonEmptyTrimmedString)
+ *
+ * console.log(O.isSome(decodeUserName("Ada"))) // true
+ * console.log(O.isNone(decodeUserName(""))) // true
+ * ```
+ *
+ * @see {@link S.decodeUnknownOption} for the underlying decoding operation.
+ * @category decoding
+ * @since 0.0.0
+ */
+````
 
-## Quality Rubric
+The After block follows the Option/none teaching style: it shows the meaningful
+success and absence cases and makes the result observable.
 
-The report-only `beep docgen quality` command scores the whole JSDoc block, not
-just whether tags exist. Treat `@example` as universal for exported symbols; for
-error classes, type-only helpers, constants, and schemas, choose a handling,
-narrowing, construction, or import example that fits the symbol.
+## Tag order
 
-Re-export declarations are graph edges, not symbol-quality subjects. Document
-the exported symbol at its owning declaration instead of inventing a fake barrel
-example.
+After body sections, order applicable tags as follows:
 
-A useful example is fenced TypeScript and shows an observable result:
-assertion, returned value, decoded value, Effect execution, visible output, or
-type-level evidence. For type-only exports, useful evidence includes named
-aliases, assignability or `satisfies` checks, `Equal`/`Expect`-style assertions,
-or comments that show inferred types. `const result = ...; void result` is a
-compile trick, not documentation.
+1. `@typeParam`
+2. `@param`
+3. `@returns`
+4. `@throws`
+5. `@effects`
+6. `@precondition`, `@postcondition`, `@invariant`
+7. `@deprecated`
+8. `@defaultValue`
+9. `@see`
+10. `@public`, `@beta`, `@alpha`, `@internal`, `@experimental`
+11. `@category`
+12. `@since`
 
-## Import Aliases in Examples
+Omit conditional tags that restate the signature. Every `@see` has a purpose
+phrase, for example:
 
-Mandatory aliases inside every `@example` code fence:
+```text
+@see {@link UserName} for the runtime schema and decoded representation.
+```
 
-| Module | Alias | Correct | Forbidden |
-|--------|-------|---------|-----------|
-| `effect/Schema` | `S` | `import * as S from "effect/Schema"` | `import { Schema }` |
-| `effect/Array` | `A` | `import * as A from "effect/Array"` | `import { Array }` |
-| `effect/Option` | `O` | `import * as O from "effect/Option"` | `import { Option }` |
-| `effect/Predicate` | `P` | `import * as P from "effect/Predicate"` | `import { Predicate }` |
-| `effect/Record` | `R` | `import * as R from "effect/Record"` | `import { Record }` |
+Every deprecation includes a linked replacement and migration instruction.
+`@since` stays exactly `0.0.0` until v1.0; tooling checks its format, not inferred
+history.
 
-Core combinators use named imports: `import { Effect, Console, Layer } from "effect"`.
+## Example quality and imports
 
-Never import from the deprecated `@effect/schema` package.
+Examples must compile and show an observable result, assertion, decoded value,
+Effect execution, or meaningful inferred type. Never use `void result` merely to
+satisfy compilation.
 
-## Category Conventions
+Use namespace imports for helper modules:
 
-Use canonical kebab-case slugs. Choose the exported symbol's semantic role, not
-its package location. The code source of truth is
-`packages/tooling/tool/cli/src/commands/Shared/JSDocCategories.ts`.
+| Module | Required form |
+| --- | --- |
+| `effect/Schema` | `import * as S from "effect/Schema"` |
+| `effect/Array` | `import * as A from "effect/Array"` |
+| `effect/Option` | `import * as O from "effect/Option"` |
+| `effect/Predicate` | `import * as P from "effect/Predicate"` |
+| `effect/Record` | `import * as R from "effect/Record"` |
+
+Named imports remain appropriate for core combinators from `effect`. Never import
+from `@effect/schema`.
+
+## Categories
+
+The source of truth is
+`packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts`. Choose the
+most specific canonical kebab-case semantic role, not a file or layer name.
 
 Canonical groups:
 
-- Core API roles: `models`, `schemas`, `type-level`, `constructors`,
-  `factories`, `destructors`, `combinators`, `predicates`, `guards`,
-  `refinements`, `assertions`, `getters`, `setters`, `mapping`, `filtering`,
-  `folding`, `sequencing`, `concurrency`, `resource-management`,
-  `error-handling`, `utilities`, `layers`
-- Domain roles: `aggregates`, `entities`, `value-objects`, `domain-events`,
-  `policies`, `specifications`, `identifiers`, `entity-ids`, `type-ids`,
-  `symbols`, `errors`
+- Core: `models`, `schemas`, `type-level`, `constructors`, `factories`,
+  `destructors`, `combinators`, `predicates`, `guards`, `refinements`,
+  `assertions`, `getters`, `setters`, `mapping`, `filtering`, `folding`,
+  `sequencing`, `concurrency`, `resource-management`, `error-handling`,
+  `utilities`, `layers`.
+- Domain: `aggregates`, `entities`, `value-objects`, `domain-events`, `policies`,
+  `specifications`, `identifiers`, `entity-ids`, `type-ids`, `symbols`, `errors`.
 - Application and ports: `use-cases`, `commands`, `queries`, `events`,
   `workflows`, `processes`, `schedulers`, `protocols`, `ports`, `services`,
-  `handlers`, `endpoints`, `clients`, `adapters`, `repositories`,
-  `projections`, `read-models`, `tables`
+  `handlers`, `endpoints`, `clients`, `adapters`, `repositories`, `projections`,
+  `read-models`, `tables`.
 - Data boundaries: `validation`, `parsing`, `encoding`, `decoding`,
-  `serialization`, `codecs`, `formatting`, `normalization`, `dtos`, `mappers`
-- UI and client state: `components`, `hooks`, `providers`, `themes`, `tokens`,
-  `forms`, `atoms`
-- Tooling and cross-cutting: `tools`, `tool-schemas`, `cli-commands`,
-  `configuration`, `constants`, `observability`, `diagnostics`, `fixtures`,
-  `testing`, `streams`, `resources`, `interop`
+  `serialization`, `codecs`, `formatting`, `normalization`, `dtos`, `mappers`.
+- UI and client: `components`, `hooks`, `providers`, `themes`, `tokens`, `forms`,
+  `atoms`.
+- Tooling: `tools`, `tool-schemas`, `cli-commands`, `configuration`, `constants`,
+  `observability`, `diagnostics`, `fixtures`, `testing`, `streams`, `resources`,
+  `interop`.
 
-Legacy values such as `DomainModel`, `Utility`, `UseCase`, `PortContract`, and
-`ToolSchemas` are migration aliases only. New or touched JSDoc should use the
-canonical slug.
+Legacy aliases are for untouched docs only. New and touched blocks use canonical
+slugs.
 
-## Forbidden Patterns in Examples
+## Forbidden patterns
 
-1. `any` types — never.
-2. Type assertions (`as`, `as unknown as`) — never.
-3. `declare` statements — never.
-4. Non-compiling code — every example must pass `bun run docgen`.
-5. `import { Schema } from "effect/Schema"` — use the `S` alias.
-6. `from "@effect/schema"` — the package is deprecated.
-7. Removing examples to fix compilation — always fix the example instead.
-8. `import { Array }` / `import { Option }` etc. — use namespace aliases.
-9. **Empty `Effect.gen` bodies** — examples must be complete and demonstrate
-   real usage. `Effect.gen(function* () {})` with no body is forbidden.
-10. **`@template` instead of `@typeParam`** — replace.
-11. **`{type}` blobs in tags** — drop the braces.
-12. **`@module` instead of `@packageDocumentation`** — replace.
+- `@remarks`, `@module`, or `@template` in new or touched blocks.
+- `{type}` blobs in tags or a hyphen after `@returns`/`@throws`.
+- Bare `@see` links without a purpose phrase.
+- Empty, duplicate, or out-of-order sections; a section after an Example.
+- Untitled or duplicate Example titles, multiple fences per Example, or loose
+  `ts` fences.
+- `any`, type assertions, `declare`, empty generators, or non-compiling Examples.
+- Named Schema/Array/Option/Predicate/Record imports or `@effect/schema`.
+- Removing an Example to hide a compilation failure.

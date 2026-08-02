@@ -1,6 +1,11 @@
 /**
  * Public exports for the repo-local docgen package.
  *
+ * **When to use**
+ *
+ * Use as the namespace-first entry point for configuring, running, and
+ * extending repository documentation generation.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */

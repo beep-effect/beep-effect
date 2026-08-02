@@ -1,129 +1,123 @@
 ---
 name: jsdoc-annotation-specialist
 description: >
-  JSDoc/TSDoc and schema annotation compliance: missing @example/@category/@since,
-  $I.annote/$I.annoteSchema gaps, TSDoc grammar violations, docgen failures, and
-  documentation post-pass or annotation review on exported symbols.
-version: 0.2.0
+  JSDoc/TSDoc and schema annotation compliance: Effect-style section grammar,
+  kind-aware Examples, described @see, $I.annote/$I.annoteSchema gaps, TSDoc
+  violations, docgen failures, and documentation post-passes on exported symbols.
+version: 0.3.0
 status: active
 ---
 
 # JSDoc Annotation Specialist
 
-Use this skill as a post-pass on code written by other agents, or when adding,
-fixing, or reviewing JSDoc documentation and schema annotations. The primary
-source of truth is `.patterns/jsdoc-documentation.md`. This skill enforces and
-extends those conventions.
+Use this skill to author, upgrade, or review JSDoc and schema annotations. The
+binding source is `.patterns/jsdoc-documentation.md`; this skill turns that law
+into a repeatable editing posture.
 
-## References (load on demand)
+## References
 
-- `references/conventions.md` — JSDoc block structure and tag order, quality
-  rubric, import aliases in examples, canonical `@category` slugs, forbidden
-  patterns in examples.
-- `references/annotation-patterns.md` — `$I.annote` / `$I.annoteSchema`
-  patterns per schema kind (S.Class, TaggedErrorClass, non-class, LiteralKit,
-  unions) and the same-name type-alias convention.
-- `references/agent-lifting-and-greps.md` — agent context lifting rules and
-  the full grep audit command set.
+- `references/conventions.md` — section grammar, kind split, tag order, worked
+  before/after block, imports, categories, and forbidden patterns.
+- `references/annotation-patterns.md` — `$I.annote` and `$I.annoteSchema` by
+  schema kind, including same-name type companions.
+- `references/agent-lifting-and-greps.md` — agent-context lifting and focused
+  grep audits.
 
-## Workflow
+Load `references/conventions.md` whenever writing or upgrading a doc block. Load
+the annotation reference for schemas and the grep reference for multi-file audits.
 
-1. Identify all exported symbols in the target file(s).
-2. For each export, verify JSDoc block, `@example`, `@category`, `@since`
-   (structure/order/categories: `references/conventions.md`).
-3. For each export, evaluate whether conditional tags (`@param`, `@returns`,
-   `@typeParam`, `@throws`, `@remarks`, `@effects`, `@precondition`,
-   `@postcondition`, `@invariant`, `@deprecated`, `@public`/`@beta`/etc.) are
-   warranted by the symbol kind and content. Add them only when they encode
-   information not present in the signature.
-4. Evaluate whole-block usefulness: the description, tags, and examples should
-   help a human or coding agent use the symbol without inventing intent.
-5. For each schema value, verify `$I.annote` or `$I.annoteSchema`
-   (`references/annotation-patterns.md`).
-6. Add or fix any missing documentation.
-7. Verify TSDoc grammar — no `{type}` blobs in tags, no `@template`, no
-   `@module`, no hyphen on `@returns`.
-8. Run `bun run docgen` to verify every example compiles.
-9. Run `bun run beep docgen quality -p <package>` when touching a package and
-   use the report as advisory remediation input.
-10. Fix compilation failures in examples until docgen passes.
+## Authoring workflow
 
-## TSDoc Grammar Hard Rules
+1. Inventory the owning declarations for public exports; do not document barrel
+   re-exports as though they were new symbols.
+2. Classify each export as value-level or pure type-level.
+3. Write one lead paragraph that explains purpose rather than restating the
+   signature.
+4. Add only useful body sections in this order: `**When to use**`, `**Details**`,
+   `**Gotchas**`, then titled `**Example** (Title)` blocks.
+5. Require an Example for value-level exports. For pure type-level exports, require
+   prose and add an Example only when it teaches something material.
+6. In each file whose documentation is touched, move legacy `@remarks` into Details
+   or Gotchas and convert legacy `@example` tags into titled Example sections. Do
+   not mass-migrate untouched files.
+7. Add conditional tags only for facts absent from the signature, order them per
+   `references/conventions.md`, and describe every `@see` with a purpose phrase.
+8. Verify `@category`, `@since 0.0.0`, TSDoc grammar, imports, and Example safety.
+9. For schema values, verify `$I.annote` or `$I.annoteSchema` using the annotation
+   reference.
+10. Run the bounded docgen check and fix Example compilation failures.
 
-Violations the post-pass MUST catch and fix:
+## Section grammar
 
-1. **`{type}` blobs in `@param`, `@returns`, `@throws`** — drop the braces.
-   The TS signature is authoritative. `@param x {string} - desc` becomes
-   `@param x - desc`.
-2. **`@template`** — replace with `@typeParam`.
-3. **Hyphen after `@returns`** — drop it. The hyphen separator is
-   `@param`-only. `@returns - The count` becomes `@returns The count`.
-4. **`@module`** — replace with `@packageDocumentation` for package
-   entry-point files.
-5. **`@deprecated` without `{@link}` migration target** — every deprecation
-   must point at its replacement.
+- Sections are optional except for kind-required Examples.
+- Present sections are non-empty, unique, and ordered exactly:
+  When to use -> Details -> Gotchas -> Examples last.
+- The When-to-use body begins with `Use to`, `Use when`, `Use as`, or `Use with`.
+- Every Example title is non-empty and unique within its doc block.
+- Each Example has exactly one `ts` fence; no `ts` fence is loose outside an
+  Example section.
+- Tags follow all body sections.
 
-## Conditional Tag Rules (summary)
+`**Example** (Title)` is canonical for new and touched code. Legacy carriers are
+grandfathered in untouched files. `@remarks` is retired and forbidden in new work;
+files whose documentation is touched migrate their existing carriers.
 
-Default is **omit**. Add a conditional tag only when it encodes information
-not present in the TS signature; prose-padding `@param`/`@returns` that
-restates the signature is a bug, not thoroughness.
+## Kind split
 
-- `@param` / `@returns` — only for units, constraints, ordering, filtering,
-  ownership, or semantic interpretation beyond name + type; skip when
-  `Effect<A, E, R>` channels speak for themselves.
-- `@typeParam` — only when the constraint or semantic role isn't obvious;
-  skip trivial `<A>`.
-- `@throws` — synchronous throws or defects only; skip when all errors live
-  in the `E` channel.
-- `@remarks` — non-obvious semantics, ordering guarantees, idempotency,
-  complexity.
-- `@effects` — writes, publishes, cache mutations, other side effects; skip
-  pure functions.
+Value-level exports require an Example: functions, constants, classes, schemas,
+services, layers, and other runtime values. Pure type-level exports require prose
+only: aliases, interfaces, namespaces, `.Encoded` companions, and same-name schema
+type companions. Their Example is optional.
 
-## Post-Pass Checklist
+## TSDoc hard rules
 
-Run against every file before finishing:
+- Drop `{type}` blobs from `@param`, `@returns`, and `@throws`; the signature owns
+  the type.
+- Use `@typeParam`, never `@template`.
+- Use a hyphen only in `@param name - description`, never after `@returns` or
+  `@throws`.
+- Use `@packageDocumentation`, never `@module`.
+- Use Details or Gotchas, never `@remarks`.
+- Every `@deprecated` links its replacement and explains the migration.
+- Every `@see` contains a link plus a purpose phrase.
 
-1. Every `export const`/`function`/`class`/`interface`/`type` has a JSDoc
-   block with at least one fenced `@example`, a canonical kebab-case
-   `@category`, and `@since 0.0.0`.
-2. Description explains purpose rather than restating the symbol name;
-   `@example` shows meaningful input and an observable result (or type-level
-   evidence for type-only exports). Error/type-only/schema/constant symbols
-   get shape-appropriate examples; re-exports point at owning symbol docs.
-3. Conditional tags present only when they add beyond the signature;
-   `@remarks` on combinators with non-obvious semantics; `@effects` on
-   side-effecting functions; `@deprecated` includes a `{@link}` target.
-4. TSDoc grammar clean: no `{type}` blobs, no `@template`, no `@returns`
-   hyphen, no `@module`.
-5. Schema annotations: every `S.Class`/`Model.Class`/`TaggedErrorClass` call
-   has `$I.annote(...)`; every non-class schema has `$I.annoteSchema(...)` in
-   its pipe; every `LiteralKit` value has `.annotate($I.annote(...))`; every
-   non-class schema export has a same-name `export type` alias.
-6. Examples use correct import aliases (`S`/`A`/`O`/`P`/`R` namespaces; named
-   imports only for core combinators); no empty `Effect.gen(function* () {})`
-   bodies; no `any`, type assertions, `declare`, or deprecated
-   `@effect/schema` imports.
-7. If `@effects`/`@precondition`/`@postcondition`/`@invariant` appear,
-   `tsdoc.json` registers them as block tags (verify once per workspace).
-8. `bun run docgen` passes with zero errors; `bun run beep docgen quality -p
-   <package>` produces a reviewable report.
+## Post-pass checklist
 
-Grep audits for each checklist group: `references/agent-lifting-and-greps.md`.
+1. Every owning export has a useful one-paragraph lead, canonical `@category`, and
+   `@since 0.0.0`.
+2. Every value-level export has a titled, single-fence, observable, compilable
+   Example; pure type-level exports have precise prose.
+3. Sections are non-empty, unique, canonical-order, and Example-last; When-to-use
+   text has an allowed opener; no loose `ts` fence exists.
+4. Files whose documentation was touched have no `@remarks` or legacy `@example`
+   carrier.
+5. Conditional tags add information, follow tag order, and every `@see` is
+   described.
+6. Examples use `S`/`A`/`O`/`P`/`R` namespaces, contain no `any`, assertions,
+   `declare`, empty generators, or deprecated `@effect/schema` imports.
+7. Schema annotations and same-name type companions follow
+   `references/annotation-patterns.md`.
+8. `bun run docgen:local` passes; use
+   `bun run beep docgen quality -p <package>` as advisory editorial input.
+
+The current aggregate ratchet detects repo-wide growth. Direct cleanup-on-touch
+enforcement is scheduled for the goal's P2 changed-files gate; until it lands,
+review touched blocks explicitly rather than claiming per-file gate coverage.
 
 ## Escalation
 
 - `schema-first-development` — schema modeling beyond annotation work.
-- `effect-first-development` — tasks broader than documentation.
-- `effect-error-handling` — new TaggedErrorClass hierarchies.
+- `effect-first-development` — code changes broader than documentation.
+- `effect-error-handling` — new tagged-error hierarchies.
 
-## Source References
+## Source references
 
-- `.patterns/jsdoc-documentation.md` — primary JSDoc/TSDoc standard
-- `tsdoc.json` (workspace root) — custom tag registrations for `@effects`,
-  `@precondition`, `@postcondition`, `@invariant`
-- `packages/tooling/tool/cli/src/commands/Shared/JSDocCategories.ts` — canonical categories
-- `packages/common/schema/src/SemanticVersion.ts` — TemplateLiteral + annoteSchema
-- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` — TaggedErrorClass + annote
-- `packages/common/schema/src/Duration.ts` — S.Class + annote + LiteralKit + annotate
+- `.patterns/jsdoc-documentation.md` — binding JSDoc/TSDoc law
+- `tsdoc.json` — registered custom tags
+- `packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts` — categories
+- `packages/foundation/modeling/schema/src/SemanticVersion.ts` — template-literal
+  schema and annotation
+- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` — tagged error and
+  annotation examples
+- `packages/foundation/modeling/schema/src/Duration/Duration.input.ts` — class,
+  LiteralKit, and annotation examples
