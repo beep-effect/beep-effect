@@ -34,4 +34,4 @@ export * from "./EdgeAuthority.layer.ts";
  * @category repositories
  * @since 0.0.0
  */
-export * from "./EdgeAuthority.repo.ts";
+export { makeDrizzleEdgeAuthorityRepository } from "./EdgeAuthority.repo.ts";

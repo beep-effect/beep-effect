@@ -30,10 +30,19 @@
       "path": "../../foundation/capability/api-transport/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/observability/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"

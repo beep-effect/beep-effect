@@ -28,8 +28,22 @@ const $I = $LangExtractId.create("Extraction");
 const MAX_REQUEST_TEXT_LENGTH = 1_000_000;
 const MAX_CANDIDATE_TEXT_LENGTH = 4_096;
 const MAX_CANDIDATE_ATTRIBUTES = 64;
-const MAX_MODEL_OUTPUT_CANDIDATES = 1_024;
 const MAX_REQUEST_EXAMPLES = 64;
+
+/**
+ * Maximum extraction candidates accepted at any LangExtract boundary.
+ *
+ * @example
+ * ```ts
+ * import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction"
+ *
+ * console.log(MAX_EXTRACTION_CANDIDATES) // 1024
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MAX_EXTRACTION_CANDIDATES = 1_024;
 
 /**
  * Machine-readable LangExtract failure reasons.
@@ -399,8 +413,8 @@ export class LangExtractResult extends S.Class<LangExtractResult>($I`LangExtract
 ) {}
 
 const ModelOutputCandidates = S.Array(ExtractionCandidate).check(
-  S.isMaxLength(MAX_MODEL_OUTPUT_CANDIDATES, {
-    message: `Language model output must contain at most ${MAX_MODEL_OUTPUT_CANDIDATES} extraction candidates.`,
+  S.isMaxLength(MAX_EXTRACTION_CANDIDATES, {
+    message: `Language model output must contain at most ${MAX_EXTRACTION_CANDIDATES} extraction candidates.`,
   })
 );
 

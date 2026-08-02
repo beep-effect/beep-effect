@@ -9,6 +9,7 @@ import { $UsptoId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { identity, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $UsptoId.create("Uspto.config");
 
@@ -27,7 +28,7 @@ const $I = $UsptoId.create("Uspto.config");
  */
 export const USPTO_API_URL = "https://api.uspto.gov";
 
-const stripTrailingSlash = (url: string): string => (url.endsWith("/") ? url.slice(0, -1) : url);
+const stripTrailingSlash = Str.replace(/\/+$/, "");
 
 const UsptoApiUrl = S.String.pipe(
   S.decodeTo(

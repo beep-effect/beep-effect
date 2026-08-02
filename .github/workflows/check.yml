@@ -83,13 +83,13 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"

@@ -8,8 +8,10 @@ import type * as UsageRecord from "@beep/epistemic-domain/entities/UsageRecord";
 import type { DbSchema } from "@beep/epistemic-tables";
 import type * as CandidateClaimTables from "@beep/epistemic-tables/entities/CandidateClaim";
 import type * as ClaimDispositionTables from "@beep/epistemic-tables/entities/ClaimDisposition";
+import type * as ContradictionTables from "@beep/epistemic-tables/entities/Contradiction";
 import type * as EdgeVersionTables from "@beep/epistemic-tables/entities/EdgeVersion";
 import type * as EvidenceTables from "@beep/epistemic-tables/entities/Evidence";
+import type * as EvidenceVerificationTables from "@beep/epistemic-tables/entities/EvidenceVerification";
 import type * as UsageRecordTables from "@beep/epistemic-tables/entities/UsageRecord";
 import type * as ExecutionRecordTables from "@beep/epistemic-tables/values/ExecutionRecord";
 
@@ -18,8 +20,12 @@ describe("EpistemicTables types", () => {
     expect<DbSchema>().type.toBe<{
       readonly candidateClaim: typeof CandidateClaimTables.Table;
       readonly claimDisposition: typeof ClaimDispositionTables.Table;
+      readonly contradictionCandidate: typeof ContradictionTables.candidateTable;
+      readonly contradictionDisposition: typeof ContradictionTables.dispositionTable;
+      readonly contradictionReceipt: typeof ContradictionTables.receiptTable;
       readonly edgeVersion: typeof EdgeVersionTables.Table;
       readonly evidence: typeof EvidenceTables.Table;
+      readonly evidenceVerification: typeof EvidenceVerificationTables.Table;
       readonly executionDecision: typeof ExecutionRecordTables.executionDecisionTable;
       readonly executionOutcome: typeof ExecutionRecordTables.executionOutcomeTable;
       readonly usageRecord: typeof UsageRecordTables.Table;

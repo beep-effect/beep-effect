@@ -10,6 +10,13 @@ strategy models, service interfaces, test fixtures, and reusable path-safety
 operations expressed through Effect's platform-neutral `FileSystem` and `Path`
 services. Process and engine-specific behavior belongs in consuming packages.
 
+The explicit `@beep/file-processing/SourceText` subpath owns the product-neutral
+port for resolving a provenance `SourceTextIdentity` to complete canonical text
+inside a trusted server boundary. It also owns the fixed 65,536 UTF-16-code-unit
+paging helper used to transport that text without splitting surrogate pairs.
+Authority roots, filesystem reads, and extractor selection remain provider
+responsibilities; the initial provider lives in `@beep/workspace-server`.
+
 Current real consumers proving this foundation/capability promotion are:
 
 - `@beep/tika` for Apache Tika-backed detection, text extraction, and metadata extraction driver scaffolding.

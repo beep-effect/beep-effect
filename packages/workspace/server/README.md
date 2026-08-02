@@ -1,6 +1,17 @@
 # @beep/workspace-server
 
-Architecture-lab server adapter package for WorkItem repositories, handlers, and Layers.
+Workspace server adapter package for workspace repositories, handlers, and Layers.
+
+## Source-text provider
+
+`@beep/workspace-server/SourceText` implements the product-neutral
+`@beep/file-processing/SourceText` resolver over `WorkspaceVaultStore`. The
+provider interprets opaque scope references as `workspace:<id>`, pins the
+configured vault root for each request, rejects absolute and symlink-escaping
+locators, and verifies source, extractor, and canonical-text versions before
+returning complete text. `@beep/epistemic-server` is the initial consumer; the
+professional desktop runtime is the application binding site for the provider,
+file-processing service, workspace vault store, and platform Layers.
 
 ## Installation
 
