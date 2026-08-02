@@ -10,6 +10,7 @@ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $EpistemicTablesId } from "@beep/identity/packages";
 import { TextAnchorFields } from "@beep/provenance/TextAnchor";
+import { NonNegativeInt } from "@beep/schema";
 import { pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -104,35 +105,43 @@ class LegacyEvidenceSpan extends S.Class<LegacyEvidenceSpan>($I`LegacyEvidenceSp
       "Persistence-read compatibility shape for evidence spans written before strict width and quote bounds.",
   })
 ) {}
-const LegacyEvidence = Evidence.mapFields((fields) => ({
-  ...fields,
-  span: LegacyEvidenceSpan,
-})).pipe(
-  $I.annoteSchema("LegacyEvidence", {
-    description: "Persistence-read compatibility schema for evidence rows written before strict span checks.",
-  })
-);
+const LegacyEvidence = Evidence.select
+  .mapFields((fields) => ({
+    ...fields,
+    span: LegacyEvidenceSpan,
+  }))
+  .pipe(
+    $I.annoteSchema("LegacyEvidence", {
+      description: "Persistence-read compatibility schema for evidence rows written before strict span checks.",
+    })
+  );
 const decodeLegacyEvidenceRow = S.decodeUnknownResult(LegacyEvidence);
 
 const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.SchemaError> =>
   pipe(
     decodeEvidenceRow(row),
     Result.orElse(() =>
-      Result.map(decodeLegacyEvidenceRow(row), (legacy) =>
-        Evidence.make(
-          {
-            ...legacy,
-            span: EvidenceSpan.make(
-              {
+      Result.flatMap(decodeLegacyEvidenceRow(row), (legacy) => {
+        const endChar = NonNegativeInt.make(legacy.span.startChar + Str.length(legacy.span.quote));
+        return pipe(
+          decodeEvidenceRow({
+            ...row,
+            span: {
+              ...row.span,
+              endChar,
+            },
+          }),
+          Result.orElse(() =>
+            Result.succeed({
+              ...legacy,
+              span: {
                 ...legacy.span,
-                endChar: legacy.span.startChar + Str.length(legacy.span.quote),
+                endChar,
               },
-              { disableChecks: true }
-            ),
-          },
-          { disableChecks: true }
-        )
-      )
+            })
+          )
+        );
+      })
     )
   );
 
