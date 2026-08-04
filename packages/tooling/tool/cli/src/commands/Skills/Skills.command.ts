@@ -14,11 +14,14 @@ import { Console, Crypto, Effect, Encoding, FileSystem, Order, Path, pipe, Resul
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/unstable/cli";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
+import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
+import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
+import type { SkillProvenanceService } from "./Skills.service.ts";
 
 // cspell:ignore mattpocock Gebert
 
@@ -66,11 +69,20 @@ type SkillDriftLineFormatter<Tag extends SkillDrift["_tag"]> = (drift: SkillDrif
 /**
  * GitHub-backed skill source tracked by this checkout.
  *
- * **Example** (Inspect configured remote skill sources)
+ * **Example** (Describe one mirrored skill folder)
  *
  * ```ts
- * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
- * console.log(remoteSkillSources.length)
+ * import { RemoteSkillSource } from "@beep/repo-cli/commands/Skills"
+ *
+ * const source = RemoteSkillSource.make({
+ *   name: "grill-me",
+ *   source: "UditAkhourii/grill-me",
+ *   sourceType: "github",
+ *   ref: "main",
+ *   skillPath: "skills/grill-me",
+ * })
+ *
+ * console.log(source.name) // "grill-me"
  * ```
  *
  * @category models
@@ -293,6 +305,12 @@ const dryRunFlag = Flag.boolean("dry-run").pipe(
 const skillFlag = Flag.string("skill").pipe(
   Flag.withDescription("Update or check one known GitHub-backed skill"),
   Flag.optional
+);
+const provenanceSkillArgument = Argument.string("skill").pipe(
+  Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
+);
+const provenanceJsonFlag = Flag.boolean("json").pipe(
+  Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
 );
 
 const formatJson = (value: unknown): string => {
@@ -1002,6 +1020,42 @@ const skillsUpdateCommand = Command.make(
   })
 ).pipe(Command.withDescription("Update repo-local Claude/Codex skill mirrors from known upstream sources"));
 
+const runSkillsProvenanceCommand = Effect.fn("Skills.runSkillsProvenanceCommand")(function* (options: {
+  readonly json: boolean;
+  readonly skill: string;
+}): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path | SkillProvenanceService> {
+  const repoRoot = yield* findRepoRoot().pipe(
+    SkillsCommandError.mapError("Failed to locate repository root for skill provenance.")
+  );
+  const report = yield* runSkillProvenance(options.skill, repoRoot);
+  yield* Console.log(
+    options.json ? Str.trimEnd(renderSkillProvenanceJson(report)) : renderSkillProvenanceSummary(report)
+  );
+});
+
+const skillsProvenanceCommand = Command.make(
+  "provenance",
+  {
+    skill: provenanceSkillArgument,
+    json: provenanceJsonFlag,
+  },
+  Effect.fn("Skills.provenanceCommand")(function* (options) {
+    yield* runSkillsProvenanceCommand(options).pipe(
+      Effect.catchTag(
+        "SkillsCommandError",
+        Effect.fn("Skills.provenanceCommand.reportError")(function* (error) {
+          const message = `skills:provenance: ${error.message}`;
+          yield* Console.error(message);
+          return yield* failWithReportedExit(message);
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Report a would-be skills-lock/v2 entry without writing repository state"),
+  Command.provide(SkillProvenanceServiceLive)
+);
+
 /**
  * Skills command group.
  *
@@ -1020,8 +1074,10 @@ const skillsUpdateCommand = Command.make(
  * @since 0.0.0
  */
 export const skillsCommand = Command.make("skills", {}, () =>
-  Console.log("Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check")
+  Console.log(
+    "Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check\n- bun run beep skills provenance shadcn"
+  )
 ).pipe(
   Command.withDescription("Manage repo-local Claude and Codex skill mirrors"),
-  Command.withSubcommands([skillsUpdateCommand])
+  Command.withSubcommands([skillsUpdateCommand, skillsProvenanceCommand])
 );
