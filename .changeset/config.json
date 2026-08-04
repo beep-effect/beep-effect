@@ -1,14 +1,24 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
-  "changelog": [
-    "../scripts/changeset-changelog.cjs",
-    { "repo": "beep-effect/beep-effect" }
-  ],
+  "$schema": "https://unpkg.com/@changesets/config@1.6.4/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "Effect-TS/effect" }],
   "commit": false,
-  "fixed": [],
   "linked": [],
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@beep/repo-cli", "@beep/repo-utils", "@beep/scratchpad"]
+  "ignore": [
+    "scratchpad",
+    "scripts"
+  ],
+  "privatePackages": false,
+  "fixed": [
+    [
+      "effect",
+      "@effect/*"
+    ]
+  ],
+  "snapshot": {
+    "useCalculatedVersion": false,
+    "prereleaseTemplate": "{tag}-{commit}"
+  }
 }

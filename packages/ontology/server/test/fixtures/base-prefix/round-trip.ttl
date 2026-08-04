@@ -1,5 +1,0 @@
-@prefix : <https://example.test/base/> .
-@prefix schema: <https://schema.org/> .
-
-:alice a schema:Person ;
-  schema:name "Alice" .

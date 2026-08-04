@@ -1,3 +1,0 @@
-2026/07/25 23:39:22 socat[1485717] E read(5, 0x564a09b9e000, 8192): Connection reset by peer
-2026/07/25 23:39:57 socat[1484725] W exiting on signal 15
-2026/07/25 23:39:57 socat[1484725] W unlink("/tmp/oc-spike2-decoy/bus"): No such file or directory

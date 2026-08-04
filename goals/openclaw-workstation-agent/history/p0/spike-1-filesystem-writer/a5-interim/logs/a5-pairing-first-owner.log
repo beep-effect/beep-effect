@@ -1,7 +1,0 @@
-OPERATOR-ACTION: send the disposable bot a fresh DM (window: 600s).
-pairing-window-waited-seconds=600
-jq: error: syntax error, unexpected .., expecting ';' or ')' at <top-level>, line 4, column 21:
-          any($before[0].. | objects; .code? == $code) | not
-                        ^^
-jq: 1 compile error
-BLOCKED: no new externally triggered pairing request was observed

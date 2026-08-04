@@ -1,6 +1,0 @@
-{
-  "taskId": "scorer-pass",
-  "score": 1,
-  "breakdown": { "completion": 1, "schemaFirst": 1, "tsgo": 1, "biome": 1 },
-  "violations": []
-}

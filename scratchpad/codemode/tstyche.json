@@ -1,5 +1,0 @@
-{
-  "$schema": "https://tstyche.org/schemas/config.json",
-  "testFileMatch": ["dtslint/**/*.tst.*"],
-  "tsconfig": "./tsconfig.dtslint.json"
-}
