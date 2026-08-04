@@ -17,16 +17,15 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Open the first wedge: create the `patent-citation-candor-gate` exploration
-packet and walk it through the normal `/explore` stages (capture → research →
-align) toward shaping (first implementation rung once shaped: a failing
-CandorPolicy test over the existing `PatentReference` + verified-anchor
-substrate). The 2026-08-01 reconciliation grill signed off the routing matrix
-as amended (8 clusters, 4 proposed slugs, all three grill-gated challenges
-resolved without supersession — see [`DECISIONS.md`](./DECISIONS.md)); the
-remaining P1 wedges (`legal-position-relator-runtime`,
-`patent-drafting-episode-ledger`, FunctionalUnit into
-`uspto-patent-driver-depth`) queue behind it.
+Drive the opened first wedge
+[`patent-citation-candor-gate`](../patent-citation-candor-gate/README.md)
+through research → align (its two research lanes and align questions are
+recorded in that packet). This packet itself waits: the remaining P1 wedges
+(`legal-position-relator-runtime` — now also carrying the re-routed
+contradiction-semantics cluster, `patent-drafting-episode-ledger`,
+FunctionalUnit into `uspto-patent-driver-depth`) queue until the candor wedge
+reaches align, per the 2026-08-04 phase-2 grill
+([`DECISIONS.md`](./DECISIONS.md)).
 
 ## Read This First
 
@@ -70,3 +69,8 @@ remaining P1 wedges (`legal-position-relator-runtime`,
   promotion-gates cluster merged into `patent-drafting-episode-ledger` (4
   proposed slugs); first wedge = `patent-citation-candor-gate`. Stage
   research → align.
+- 2026-08-04: phase-2 grill with Benjamin — first wedge OPENED
+  (`explorations/patent-citation-candor-gate`, capture stage, decisions
+  pre-seeded); contradiction-semantics cluster re-routed compose-don't-widen
+  to ride with `legal-position-relator-runtime` (both routing-seed forms
+  amended); phase shape sequential. Three new DECISIONS entries.

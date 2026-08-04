@@ -79,7 +79,16 @@ Original Phase 1 steps (retained for provenance):
 3. Present nine clusters, five proposed slugs, and three `grill[...]` branches to Benjamin; stop for approval.
 4. If a route changes, update both forms and preserve displaced rationale.
 
-### Phase 2 — per approved wedge
+### Phase 2 — per approved wedge — STARTED 2026-08-04
+
+The first wedge is OPEN: `explorations/patent-citation-candor-gate` (capture
+stage), seeded from the candor cluster with wedge-scoped decisions pre-seeded
+in its `DECISIONS.md` (2026-08-04 phase-2 grill; campaign-level entries in
+[`DECISIONS.md`](./DECISIONS.md)). Phase shape is sequential: the remaining
+wedges start no work until the candor wedge reaches align. The
+contradiction-semantics cluster was re-routed in the same grill — compose,
+don't widen; it rides with `legal-position-relator-runtime` (see
+[`ROUTING-SEED.md`](./ROUTING-SEED.md) § Phase-2 amendments).
 
 Run the standard six `/explore` stages plus two review gates:
 
@@ -101,7 +110,7 @@ For `dup-skip`, record the negative disposition and create nothing.
 ## Open questions still requiring align
 
 1. `[T1-F1,T1-F2,T1-F9]` Full Hohfeld scheme+bimap+relator in V1, or scheme-first?
-2. `[T1-F3,T3-F9]` Re-scope contradiction triage for legal semantics, or split?
+2. ~~`[T1-F3,T3-F9]` Re-scope contradiction triage for legal semantics, or split?~~ RESOLVED 2026-08-04 (phase-2 grill): compose, don't widen — rides with `legal-position-relator-runtime`; the triage SPEC is not amended.
 3. `[T1-F4]` Is `goals/law-docketing-patent-spine` sufficient procedure ownership?
 4. `[T1-F8]` Should UFO-L become a versioned donor-alignment model?
 5. `[T2-F1,T2-F10]` Where does `FunctionalUnit` live, and what clean-room verb seed ships?

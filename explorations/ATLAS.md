@@ -47,7 +47,17 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   complete — 122 distillates, four verified track syntheses, /adhd pass, and
   the routing seed (8 clusters, 4 proposed slugs) SIGNED OFF in the
   2026-08-01 reconciliation grill with remo1/remo2/remo3 resolved without
-  supersession; next: shape `patent-citation-candor-gate` first.
+  supersession; first wedge opened 2026-08-04 (phase-2 grill; the
+  contradiction-semantics cluster re-routed to ride with
+  `legal-position-relator-runtime`); remaining wedges queue until it reaches
+  align.
+- [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
+  capture-stage: first wedge of the `legal-patent-kg-deepening` routing
+  matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
+  gate that blocks filing promotion while AI-discovered patent references
+  lack a current disposition; composes `PatentReference`, verified anchors,
+  and `RuntimeApprovalGate`; next: two research lanes (repo surfaces +
+  bounded public-primary-source candor legal frame), then align.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
