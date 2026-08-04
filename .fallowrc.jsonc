@@ -61,7 +61,6 @@
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
-    "**/dtslint/**",
     "goals/**",
     "scratchpad/**",
     "**/test/fixtures/**",
@@ -82,7 +81,11 @@
     "packages/foundation/modeling/html/src/Html.model.ts",
     "packages/foundation/modeling/html/src/Html.meta.ts",
     "packages/foundation/modeling/html/scripts/**",
-    "packages/foundation/modeling/html/data/**"
+    "packages/foundation/modeling/html/data/**",
+    // @beep/data: generator-emitted registry modules (sync-data-to-ts) are intentionally
+    // repetitive tuple/table output, not hand-authored source subject to
+    // dead-code/duplication/complexity review.
+    "packages/foundation/primitive/data/src/generated/**"
   ],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
@@ -103,6 +106,11 @@
     "**/plugins.ts"
   ],
   "ignoreDependencies": [
+    // brace-expansion, fast-uri, hono: root `dependencies` entries that exist solely to back
+    // the security-pin `overrides` in package.json; nothing imports them at root.
+    "brace-expansion",
+    "fast-uri",
+    "hono",
     "@effect/vitest",
     "@effect/language-service",
     "cspell",
@@ -146,14 +154,9 @@
     "babel-plugin-react-compiler",
     // Root: used by git-tracked scratchpad tests; scratchpad/** is ignored above.
     "@faker-js/faker",
-    // @beep/lexical-schema: type-only lexical conformance imports live in
-    // dtslint/** (ignored above); zero runtime lexical imports is the package
-    // contract (goals/rich-text-foundation).
+    // @beep/lexical-schema: unit tests exercise these Lexical dependencies.
     "lexical",
-    "@lexical/code",
-    "@lexical/link",
     "@lexical/list",
-    "@lexical/rich-text",
     // @beep/storybook: package stories are discovered by Storybook's external
     // stories glob; the host app declares @beep/form so Vite can resolve the
     // workspace package while fallow attributes the imports to the package that
@@ -165,9 +168,6 @@
     // @beep/storybook: mounted through Storybook staticDirs so frimousse can
     // load the self-hosted emojibase dataset at runtime.
     "emojibase-data",
-    // @beep/m365: upstream Graph conformance imports live in dtslint/**
-    // (ignored above); the driver intentionally has no runtime SDK dependency.
-    "@microsoft/microsoft-graph-types",
     // @beep/observability: OTel deps staged 2026-06-12 for in-flight tracing
     // work; remove from this list when the wiring lands.
     "@opentelemetry/resources",

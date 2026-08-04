@@ -198,7 +198,11 @@ const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyA
 const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
   expectedTurboArgs(
     task,
-    Bun.env.CI === "true" || A.some(args, isTurboConcurrencyArg) ? args : ["--concurrency=3", ...args]
+    A.some(args, isTurboConcurrencyArg)
+      ? args
+      : Bun.env.CI === "true"
+        ? ["--concurrency=4", ...args]
+        : ["--concurrency=3", ...args]
   );
 const bunScriptStep = (label: string, source: string) =>
   QualityTaskStep.make({
@@ -303,7 +307,15 @@ describe("quality task adapter", () => {
       );
 
       expect(steps).toHaveLength(1);
-      expect(steps[0]?.args).toEqual(["turbo", "run", "audit", "--force", "--filter=@beep/schema", "--dry=json"]);
+      expect(steps[0]?.args).toEqual([
+        "turbo",
+        "run",
+        "audit",
+        "--concurrency=4",
+        "--force",
+        "--filter=@beep/schema",
+        "--dry=json",
+      ]);
     }));
 
   it("honors explicit audit cache-control args in CI", () =>
@@ -314,7 +326,14 @@ describe("quality task adapter", () => {
       );
 
       expect(steps).toHaveLength(1);
-      expect(steps[0]?.args).toEqual(["turbo", "run", "audit", "--cache=local:rw", "--filter=@beep/schema"]);
+      expect(steps[0]?.args).toEqual([
+        "turbo",
+        "run",
+        "audit",
+        "--concurrency=4",
+        "--cache=local:rw",
+        "--filter=@beep/schema",
+      ]);
     }));
 
   it("routes explicit and legacy github audit modes to script checks", () => {
@@ -372,7 +391,7 @@ describe("quality task adapter", () => {
       },
     });
     expect(steps[1]?.args).toEqual(["run", "check", "--", "--affected", "--summarize"]);
-    expect(steps[2]?.args).toEqual(["run", "test", "--", "--unit", "--types", "--affected", "--summarize"]);
+    expect(steps[2]?.args).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
     expect(
       A.some(
         A.map(steps, (step) => step.label),
@@ -753,7 +772,7 @@ describe("quality task adapter", () => {
   it("includes repo-level tsgo diagnostics for affected root check lanes", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--affected", "--summarize"]));
 
-    expect(steps).toHaveLength(4);
+    expect(steps).toHaveLength(3);
     expect(steps[0]).toMatchObject({
       label: "check",
       command: "bunx",
@@ -763,16 +782,11 @@ describe("quality task adapter", () => {
       "turbo",
       "run",
       "check",
-      ...(Bun.env.CI === "true" ? [] : ["--cache=local:rw", "--concurrency=3"]),
+      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
       "--affected",
       "--summarize",
     ]);
     expect(A.slice(steps, { start: 1 })).toEqual([
-      expect.objectContaining({
-        label: "check:dtslint:tsgo",
-        command: "bun",
-        args: ["run", "beep", "quality", "dtslint-tsgo"],
-      }),
       expect.objectContaining({
         label: "check:tsgo:tests",
         command: "bun",
@@ -1208,25 +1222,6 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("runs unit and types as separate turbo invocations", () => {
-    const steps = rootQualityStepsForTesting(
-      "/repo",
-      getInvocation(["test", "--unit", "--types", "--filter=@beep/schema", "--summarize"])
-    );
-
-    expect(steps).toHaveLength(2);
-    expect(steps[0]).toMatchObject({
-      label: "test:unit",
-      command: "bunx",
-      args: expectedRootTurboArgs("test", ["--filter=@beep/schema", "--summarize"]),
-    });
-    expect(steps[1]).toMatchObject({
-      label: "test:types",
-      command: "bunx",
-      args: expectedRootTurboArgs("type-test", ["--filter=@beep/schema", "--summarize"]),
-    });
-  });
-
   it("builds the integration lane command with shared SQL environment", () => {
     const step = sqlIntegrationStepForTesting("/repo", ["--filter=@beep/test-utils", "--summarize"], {
       connectionUri: "postgres://postgres:postgres@127.0.0.1:5432/postgres",
@@ -1550,7 +1545,7 @@ describe("quality task adapter", () => {
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", ["--filter=@beep/schema"]));
   });
 
-  it("limits root type and integration test filters to script-owning workspaces", () =>
+  it("limits root integration test filters to script-owning workspaces", () =>
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
@@ -1558,7 +1553,6 @@ describe("quality task adapter", () => {
           const path = yield* Path.Path;
           const tmpDir = process.cwd();
           const plainPackageDir = path.join(tmpDir, "packages", "plain");
-          const typePackageDir = path.join(tmpDir, "packages", "typed");
           const integrationPackageDir = path.join(tmpDir, "apps", "integration");
 
           yield* fs.writeFileString(
@@ -1582,17 +1576,6 @@ describe("quality task adapter", () => {
               },
             })
           );
-          yield* fs.makeDirectory(typePackageDir, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(typePackageDir, "package.json"),
-            encodeJson({
-              name: "@beep/typed",
-              private: true,
-              scripts: {
-                "type-test": "tstyche",
-              },
-            })
-          );
           yield* fs.makeDirectory(integrationPackageDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(integrationPackageDir, "package.json"),
@@ -1605,10 +1588,8 @@ describe("quality task adapter", () => {
             })
           );
 
-          const typeFilters = yield* workspaceTaskFiltersForTesting(tmpDir, "type-test");
           const integrationFilters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
-          expect(typeFilters).toEqual(["--filter=@beep/typed"]);
           expect(integrationFilters).toEqual(["--filter=@beep/integration"]);
         })
       )

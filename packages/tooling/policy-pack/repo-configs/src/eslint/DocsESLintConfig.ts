@@ -23,7 +23,8 @@ const repoRootDirectory = fileURLToPath(new URL("../../../../../../", import.met
 /**
  * Flat ESLint config array shape exported for repository documentation checks.
  *
- * @example
+ * **Example** (Configure documentation linting)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { DocsESLintConfigShape } from "@beep/repo-configs/eslint/DocsESLintConfig"
@@ -38,6 +39,7 @@ const repoRootDirectory = fileURLToPath(new URL("../../../../../../", import.met
  *
  * strictEqual(config[0]?.rules?.["tsdoc/syntax"], "error")
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -46,7 +48,8 @@ export type DocsESLintConfigShape = ReadonlyArray<Linter.Config>;
 /**
  * Docs-only ESLint configuration used by the repository root `lint:jsdoc` lane.
  *
- * @example
+ * **Example** (Configure documentation linting)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { DocsESLintConfig } from "@beep/repo-configs/eslint/DocsESLintConfig"
@@ -55,6 +58,7 @@ export type DocsESLintConfigShape = ReadonlyArray<Linter.Config>;
  *
  * strictEqual(hasTSDocSyntaxRule, true)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -251,7 +255,6 @@ export const DocsESLintConfig: DocsESLintConfigShape = [
       "**/*.stories.tsx",
       "**/test/**",
       "**/tests/**",
-      "**/dtslint/**",
       "**/.storybook/**",
       "**/dist/**",
       "**/docs/**",

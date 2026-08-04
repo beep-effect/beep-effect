@@ -1207,42 +1207,10 @@ describe("package test import lint command", { concurrent: false }, () => {
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
             expect(errorLines).toContain(
-              "[check-package-test-imports] relative imports from package test/dtslint files into workspace src are not allowed. Use @beep/* package aliases."
+              "[check-package-test-imports] relative imports from package test files into workspace src are not allowed. Use @beep/* package aliases."
             );
             expect(errorLines).toContain(
               "packages/foundation/modeling/example/test/Example.test.ts:1 ../src/index.ts -> @beep/example"
-            );
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    5_000
-  );
-
-  it(
-    "reports cross-package relative imports into src",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const producerDir = path.join("packages", "foundation", "modeling", "producer");
-            const consumerDir = path.join("packages", "foundation", "modeling", "consumer");
-
-            yield* writePackage(producerDir, "@beep/producer");
-            yield* writePackage(consumerDir, "@beep/consumer");
-            yield* fs.makeDirectory(path.join(consumerDir, "dtslint"), { recursive: true });
-            yield* fs.writeFileString(
-              path.join(consumerDir, "dtslint", "Consumer.tst.ts"),
-              `import type { Producer } from "../../producer/src/Producer.ts";\ntype _ = Producer;\n`
-            );
-
-            const exit = yield* Effect.exit(runLintCommand(["package-test-imports"]));
-
-            const errorLines = yield* TestConsole.errorLines;
-            expectReportedExit(exit);
-            expect(errorLines).toContain(
-              "packages/foundation/modeling/consumer/dtslint/Consumer.tst.ts:1 ../../producer/src/Producer.ts -> @beep/producer/Producer"
             );
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -1275,9 +1243,7 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -1310,9 +1276,7 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -1341,9 +1305,7 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))

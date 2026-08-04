@@ -91,6 +91,10 @@ const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
 const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+// Hosted runners died ("runner lost communication") under turbo's default concurrency
+// (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
+// goals/quality-speedup/research/instantiation-census.md §5.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -133,7 +137,6 @@ type ParsedFixArgsState = {
 type TestLaneSelectionState = {
   readonly unit: boolean;
   readonly integration: boolean;
-  readonly types: boolean;
   readonly args: ReadonlyArray<string>;
 };
 
@@ -162,7 +165,6 @@ const emptyParsedFixArgs: ParsedFixArgsState = {
 const emptyTestLaneSelection: TestLaneSelectionState = {
   unit: false,
   integration: false,
-  types: false,
   args: A.empty<string>(),
 };
 
@@ -209,15 +211,13 @@ const parseTestLaneSelection = (args: ReadonlyArray<string>): TestLaneSelectionS
     Match.value(arg).pipe(
       Match.when("--unit", () => ({ ...lanes, unit: true })),
       Match.when("--integration", () => ({ ...lanes, integration: true })),
-      Match.when("--types", () => ({ ...lanes, types: true })),
       Match.orElse(() => ({ ...lanes, args: pipe(lanes.args, A.append(arg)) }))
     )
   );
-  const hasLane = selected.unit || selected.integration || selected.types;
+  const hasLane = selected.unit || selected.integration;
   return {
     unit: hasLane ? selected.unit : true,
     integration: hasLane ? selected.integration : true,
-    types: hasLane ? selected.types : true,
     args: selected.args,
   };
 };
@@ -422,13 +422,15 @@ const workspaceTaskArgs = Effect.fn("QualityTasks.workspaceTaskArgs")(function* 
  * Resolve Turbo filters for workspace packages that define a script.
  * Exposed for focused unit tests of root quality orchestration.
  *
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { workspaceTaskFiltersForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const result = workspaceTaskFiltersForTesting("@beep/repo-cli")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -465,9 +467,11 @@ const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<s
 
 const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const stripped = stripCoverageControlArgs(stripPassthroughDelimiter(args));
-  return isCi() || A.some(stripped, isTurboConcurrencyArg)
+  return A.some(stripped, isTurboConcurrencyArg)
     ? stripped
-    : [ROOT_COVERAGE_TURBO_CONCURRENCY_ARG, ...stripped];
+    : isCi()
+      ? [CI_TURBO_CONCURRENCY_ARG, ...stripped]
+      : [ROOT_COVERAGE_TURBO_CONCURRENCY_ARG, ...stripped];
 };
 
 const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOptions => {
@@ -510,7 +514,11 @@ const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>)
 ];
 
 const boundedRootTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
-  isCi() || A.some(args, isTurboConcurrencyArg) ? args : [ROOT_TURBO_CONCURRENCY_ARG, ...args];
+  A.some(args, isTurboConcurrencyArg)
+    ? args
+    : isCi()
+      ? [CI_TURBO_CONCURRENCY_ARG, ...args]
+      : [ROOT_TURBO_CONCURRENCY_ARG, ...args];
 
 const includesTurboCoverageTask = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): boolean =>
   A.some(tasks, (task) => task === "coverage") || A.some(args, (arg) => arg === "coverage");
@@ -1169,11 +1177,8 @@ type SqlIntegrationStepForTestingOptions = {
 /**
  * Build the SQL integration test subprocess step. Exposed for focused unit tests.
  *
- * @param repoRoot - Repository root directory.
- * @param args - Turbo passthrough arguments.
- * @param options - Shared PostgreSQL-compatible test database options.
- * @returns Planned SQL integration subprocess step.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { sqlIntegrationStepForTesting } from "@beep/repo-cli/commands/Quality"
  *
@@ -1182,6 +1187,11 @@ type SqlIntegrationStepForTestingOptions = {
  * })
  * console.log(step.label) // "test:integration"
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param args - Turbo passthrough arguments.
+ * @param options - Shared PostgreSQL-compatible test database options.
+ * @returns Planned SQL integration subprocess step.
  * @category utilities
  * @since 0.0.0
  */
@@ -1196,7 +1206,8 @@ export const sqlIntegrationStepForTesting: {
  * Run the SQL integration lane with an injected resource and child command.
  * Exposed for lifecycle-focused unit tests.
  *
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runSqlIntegrationTestLaneForTesting } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
@@ -1208,6 +1219,7 @@ export const sqlIntegrationStepForTesting: {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1217,13 +1229,15 @@ export const runSqlIntegrationTestLaneForTesting = runSqlIntegrationTestLane;
  * Resolve the SQL integration database connection URI from environment variables.
  * Exposed for focused unit tests.
  *
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { sqlIntegrationConnectionUriFromEnvForTesting } from "@beep/repo-cli/commands/Quality"
  *
  * const result = sqlIntegrationConnectionUriFromEnvForTesting({ DATABASE_URL: "postgres://localhost/beep" })
  * console.log(result) // rendered command output
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1246,10 +1260,6 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "check:dtslint:tsgo", ["quality", "dtslint-tsgo"]),
-  }),
-  ...optionalQualityTaskStep({
-    enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "check:tsgo:tests", ["quality", "test-tsgo"]),
   }),
   ...optionalQualityTaskStep({
@@ -1258,26 +1268,20 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   }),
 ];
 
-const rootUnitAndTypeTestSteps = (repoRoot: string, lanes: TestLaneSelectionState) => {
+const rootUnitTestSteps = (repoRoot: string, lanes: TestLaneSelectionState) => {
   const testArgs = boundedRootTurboArgs(lanes.args);
 
-  return [
-    ...optionalQualityTaskStep({
-      enabled: lanes.unit,
-      step: () => turboStep(repoRoot, "test:unit", ["test"], testArgs),
-    }),
-    ...optionalQualityTaskStep({
-      enabled: lanes.types,
-      step: () => turboStep(repoRoot, "test:types", ["type-test"], testArgs),
-    }),
-  ];
+  return optionalQualityTaskStep({
+    enabled: lanes.unit,
+    step: () => turboStep(repoRoot, "test:unit", ["test"], testArgs),
+  });
 };
 
 const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   const lanes = parseTestLaneSelection(args);
 
   return [
-    ...rootUnitAndTypeTestSteps(repoRoot, lanes),
+    ...rootUnitTestSteps(repoRoot, lanes),
     ...optionalQualityTaskStep({
       enabled: lanes.integration,
       step: () => turboStep(repoRoot, "test:integration", ["test:integration"], ["--concurrency=1", ...lanes.args]),
@@ -1318,14 +1322,16 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
 /**
  * Build the repo-wide root lint policy subprocess steps.
  *
- * @param repoRoot - Repository root directory.
- * @returns Planned subprocess steps for policy-only lint verification.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/commands/Quality"
  *
  * console.log(rootLintPolicyStepsForTesting("/repo").map((step) => step.label))
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
  */
@@ -1335,7 +1341,8 @@ export const rootLintPolicyStepsForTesting = (repoRoot: string): ReadonlyArray<Q
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
  *
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
@@ -1343,6 +1350,7 @@ export const rootLintPolicyStepsForTesting = (repoRoot: string): ReadonlyArray<Q
  * const program = Effect.succeed(runRootLintPolicyTask)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -1449,10 +1457,8 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
 /**
  * Build root quality task subprocess steps. Exposed for focused unit tests.
  *
- * @param repoRoot - Repository root directory.
- * @param invocation - Parsed quality invocation.
- * @returns Planned subprocess steps.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { rootQualityStepsForTesting } from "@beep/repo-cli/commands/Quality"
  * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality/Tasks"
@@ -1463,6 +1469,10 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
  * )
  * console.log(steps.length > 0) // true
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param invocation - Parsed quality invocation.
+ * @returns Planned subprocess steps.
  * @category utilities
  * @since 0.0.0
  */
@@ -1538,18 +1548,11 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   args: ReadonlyArray<string>
 ) {
   const lanes = parseTestLaneSelection(args);
-  const typeArgs = lanes.types ? yield* workspaceTaskArgs(repoRoot, "type-test", lanes.args) : A.empty<string>();
-  const unitAndTypeSteps = [
-    ...optionalQualityTaskStep({
-      enabled: lanes.unit,
-      step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args)),
-    }),
-    ...optionalQualityTaskStep({
-      enabled: lanes.types,
-      step: () => turboStep(repoRoot, "test:types", ["type-test"], boundedRootTurboArgs(typeArgs)),
-    }),
-  ];
-  const unitAndTypeFailures = yield* collectStreamingStepFailures("test", unitAndTypeSteps);
+  const unitSteps = optionalQualityTaskStep({
+    enabled: lanes.unit,
+    step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args)),
+  });
+  const unitFailures = yield* collectStreamingStepFailures("test", unitSteps);
   const integrationFailures = lanes.integration
     ? yield* Effect.scoped(
         Effect.gen(function* () {
@@ -1562,7 +1565,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
       )
     : A.empty<QualityTaskFailed>();
 
-  yield* failQualityTaskFailures("test", A.appendAll(unitAndTypeFailures, integrationFailures));
+  yield* failQualityTaskFailures("test", A.appendAll(unitFailures, integrationFailures));
 });
 
 const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
@@ -1606,15 +1609,17 @@ type QualityTaskError =
  * Parse a raw argv vector into a quality task invocation when the first token is
  * one of the canonical quality task names.
  *
- * @param argv - Raw command arguments after the binary name.
- * @returns Parsed invocation or `None` when another command group should handle it.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { parseQualityTaskInvocation } from "@beep/repo-cli/commands/Quality/Tasks"
  * import * as O from "effect/Option"
  * const invocation = parseQualityTaskInvocation(["lint", "--fix"])
  * const handled = O.isSome(invocation)
  * ```
+ *
+ * @param argv - Raw command arguments after the binary name.
+ * @returns Parsed invocation or `None` when another command group should handle it.
  * @category utilities
  * @since 0.0.0
  */
@@ -1647,8 +1652,8 @@ export const parseQualityTaskInvocation = (argv: ReadonlyArray<string>): O.Optio
 /**
  * Run a parsed quality task in either repo-root or package-local mode.
  *
- * @param invocation - Parsed quality task invocation.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { QualityTaskInvocation, runQualityTask } from "@beep/repo-cli/commands/Quality/Tasks"
  * const program = runQualityTask(
@@ -1659,6 +1664,8 @@ export const parseQualityTaskInvocation = (argv: ReadonlyArray<string>): O.Optio
  *   })
  * )
  * ```
+ *
+ * @param invocation - Parsed quality task invocation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1682,13 +1689,15 @@ export const runQualityTask: (
 /**
  * Run a quality task directly from a raw argv vector.
  *
- * @param argv - Raw command arguments after the binary name.
- * @returns `true` when the invocation was handled by the quality adapter.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runQualityTaskIfRequested } from "@beep/repo-cli/commands/Quality/Tasks"
  * const program = runQualityTaskIfRequested(["build", "--affected"])
  * ```
+ *
+ * @param argv - Raw command arguments after the binary name.
+ * @returns `true` when the invocation was handled by the quality adapter.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1707,9 +1716,8 @@ export const runQualityTaskIfRequested: (
 /**
  * Run a subprocess and capture all output. Exposed for focused unit tests.
  *
- * @param step - Step to run.
- * @returns Captured combined stdout/stderr and exit code.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/commands/Quality/Tasks"
  * const output = collectStepOutput(
@@ -1721,6 +1729,9 @@ export const runQualityTaskIfRequested: (
  *   })
  * )
  * ```
+ *
+ * @param step - Step to run.
+ * @returns Captured combined stdout/stderr and exit code.
  * @category utilities
  * @since 0.0.0
  */
@@ -1730,16 +1741,18 @@ export const collectStepOutput = (step: QualityTaskStep) =>
 /**
  * Run a bounded quality task group. Exposed for focused unit tests.
  *
- * @param label - Group label rendered in CLI output.
- * @param steps - Subprocess steps to execute.
- * @param concurrency - Maximum number of steps to run at once.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runQualityTaskStepGroup } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStepGroup("lint", [], 1))) // true
  * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param steps - Subprocess steps to execute.
+ * @param concurrency - Maximum number of steps to run at once.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1749,15 +1762,17 @@ export const runQualityTaskStepGroup = runStepGroup;
  * Run independent quality task subprocess steps sequentially while streaming
  * output, then fail with all subprocess failures.
  *
- * @param label - Group label rendered in CLI output.
- * @param steps - Subprocess steps to execute.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runQualityTaskStreamingStepGroup } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStreamingStepGroup("lint", []))) // true
  * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param steps - Subprocess steps to execute.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1766,16 +1781,18 @@ export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
 /**
  * Run a bounded quality task group. Exposed for focused unit tests.
  *
- * @param label - Group label rendered in CLI output.
- * @param steps - Subprocess steps to execute.
- * @param concurrency - Maximum number of steps to run at once.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runQualityTaskStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStepGroupForTesting("lint", [], 1))) // true
  * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param steps - Subprocess steps to execute.
+ * @param concurrency - Maximum number of steps to run at once.
  * @category testing
  * @since 0.0.0
  */
@@ -1785,15 +1802,17 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
  * Run independent quality task subprocess steps sequentially while streaming
  * output. Exposed for focused unit tests.
  *
- * @param label - Group label rendered in CLI output.
- * @param steps - Subprocess steps to execute.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { runQualityTaskStreamingStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStreamingStepGroupForTesting("lint", []))) // true
  * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param steps - Subprocess steps to execute.
  * @category testing
  * @since 0.0.0
  */
@@ -1802,14 +1821,16 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
 /**
  * Collect existing changed files for the root lint fix fast path.
  *
- * @param repoRoot - Repository root directory.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { collectLintFixChangedFilesForTesting } from "@beep/repo-cli/commands/Quality"
  *
  * const result = collectLintFixChangedFilesForTesting
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param repoRoot - Repository root directory.
  * @category utilities
  * @since 0.0.0
  */
@@ -1818,13 +1839,15 @@ export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeCh
 /**
  * Build the root lint fix changed-file step. Exposed for focused unit tests.
  *
- * @param repoRoot - Repository root directory.
- * @param files - Changed files to pass to Biome.
- * @example
+ * **Example** (Run a quality task)
+ *
  * ```ts
  * import { lintFixChangedStepForTesting } from "@beep/repo-cli/commands/Quality"
  * console.log(lintFixChangedStepForTesting("/repo", ["src/example.ts"]))
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param files - Changed files to pass to Biome.
  * @category utilities
  * @since 0.0.0
  */

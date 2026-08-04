@@ -5,31 +5,33 @@
  * @since 0.0.0
  */
 
-import { OfficialMimeTypeDataTypeValues } from "@beep/data/MimeTypes";
+import {
+  ApplicationMimeTypeValues,
+  AudioMimeTypeValues,
+  ImageMimeTypeValues,
+  MiscMimeTypeValues,
+  OfficialMimeTypeDataTypeValues,
+  TextMimeTypeValues,
+  VideoMimeTypeValues,
+} from "@beep/data/MimeTypes";
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Struct } from "@beep/utils";
 import { Function as Fn, flow, pipe } from "effect";
-import * as Str from "effect/String";
 import { LiteralKit } from "./LiteralKit/index.ts";
-import type { OfficialMimeType } from "@beep/data/MimeTypes";
 import type { LiteralKit as LiteralKitSchema } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("MimeType");
-
-const PRIMARY_MIME_TYPE_PREFIXES = ["application/", "audio/", "image/", "text/", "video/"] as const;
 
 type MimeTypeProperty = {
   readonly [mimeType: string]: unknown;
 };
 type MimeTypeKey<T extends MimeTypeProperty> = keyof T & string;
-type PrimaryMimeTypeTopLevel = "application" | "audio" | "image" | "text" | "video";
-type TopLevelMimeType<TopLevel extends PrimaryMimeTypeTopLevel> = Extract<OfficialMimeType, `${TopLevel}/${string}`>;
-type MiscMimeTypeValue = Exclude<OfficialMimeType, TopLevelMimeType<PrimaryMimeTypeTopLevel>>;
 
 /**
  * Extracts all MIME type keys from a MIME type dictionary as a deduplicated array.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import { extractMimeTypes } from "@beep/schema/MimeType"
  *
@@ -49,34 +51,13 @@ export const extractMimeTypes: <const T extends MimeTypeProperty>(mime: T) => Re
   A.dedupe
 );
 
-const nonEmptyMimeTypes = <Mime extends OfficialMimeType>(
-  refinement: (mimeType: OfficialMimeType) => mimeType is Mime,
-  fallback: Mime
-): A.NonEmptyReadonlyArray<Mime> =>
-  pipe(
-    OfficialMimeTypeDataTypeValues,
-    A.filter(refinement),
-    A.match({
-      onEmpty: () => [fallback],
-      onNonEmpty: Fn.identity,
-    })
-  );
-
-const hasTopLevel =
-  <const TopLevel extends PrimaryMimeTypeTopLevel>(topLevel: TopLevel) =>
-  (mimeType: OfficialMimeType): mimeType is TopLevelMimeType<TopLevel> =>
-    Str.startsWith(`${topLevel}/`)(mimeType);
-
-const isMiscMimeType = (mimeType: OfficialMimeType): mimeType is MiscMimeTypeValue =>
-  A.every(PRIMARY_MIME_TYPE_PREFIXES, (prefix) => !Str.startsWith(prefix)(mimeType));
-
 const mimeTypeKinds = {
-  Application: LiteralKit(nonEmptyMimeTypes(hasTopLevel("application"), "application/json")),
-  Video: LiteralKit(nonEmptyMimeTypes(hasTopLevel("video"), "video/mp4")),
-  Text: LiteralKit(nonEmptyMimeTypes(hasTopLevel("text"), "text/html")),
-  Image: LiteralKit(nonEmptyMimeTypes(hasTopLevel("image"), "image/png")),
-  Audio: LiteralKit(nonEmptyMimeTypes(hasTopLevel("audio"), "audio/mpeg")),
-  Misc: LiteralKit(nonEmptyMimeTypes(isMiscMimeType, "font/woff2")),
+  Application: LiteralKit(ApplicationMimeTypeValues),
+  Video: LiteralKit(VideoMimeTypeValues),
+  Text: LiteralKit(TextMimeTypeValues),
+  Image: LiteralKit(ImageMimeTypeValues),
+  Audio: LiteralKit(AudioMimeTypeValues),
+  Misc: LiteralKit(MiscMimeTypeValues),
 } as const;
 
 type MimeTypeSchema = LiteralKitSchema<typeof OfficialMimeTypeDataTypeValues> & {
@@ -86,7 +67,8 @@ type MimeTypeSchema = LiteralKitSchema<typeof OfficialMimeTypeDataTypeValues> & 
 /**
  * Schema kit that covers official IANA media type literals with per-category sub-schemas.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MimeType } from "@beep/schema/MimeType"
@@ -111,7 +93,8 @@ export const MimeType: MimeTypeSchema = pipe(mimeTypeKinds, (kinds) => {
 /**
  * Union of official IANA media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MimeType } from "@beep/schema/MimeType"
@@ -128,7 +111,8 @@ export type MimeType = typeof MimeType.Type;
 /**
  * Schema for `application/*` media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ApplicationMimeType } from "@beep/schema/MimeType"
@@ -145,7 +129,8 @@ export const ApplicationMimeType = MimeType.kinds.Application;
 /**
  * Union of application media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ApplicationMimeType } from "@beep/schema/MimeType"
@@ -162,7 +147,8 @@ export type ApplicationMimeType = typeof MimeType.kinds.Application.Type;
 /**
  * Schema for `video/*` media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { VideoMimeType } from "@beep/schema/MimeType"
@@ -179,7 +165,8 @@ export const VideoMimeType = MimeType.kinds.Video;
 /**
  * Union of video media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { VideoMimeType } from "@beep/schema/MimeType"
@@ -196,7 +183,8 @@ export type VideoMimeType = typeof MimeType.kinds.Video.Type;
 /**
  * Schema for `text/*` media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextMimeType } from "@beep/schema/MimeType"
@@ -213,7 +201,8 @@ export const TextMimeType = MimeType.kinds.Text;
 /**
  * Union of text media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextMimeType } from "@beep/schema/MimeType"
@@ -230,7 +219,8 @@ export type TextMimeType = typeof MimeType.kinds.Text.Type;
 /**
  * Schema for `image/*` media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageMimeType } from "@beep/schema/MimeType"
@@ -247,7 +237,8 @@ export const ImageMimeType = MimeType.kinds.Image;
 /**
  * Union of image media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageMimeType } from "@beep/schema/MimeType"
@@ -264,7 +255,8 @@ export type ImageMimeType = typeof MimeType.kinds.Image.Type;
 /**
  * Schema for `audio/*` media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AudioMimeType } from "@beep/schema/MimeType"
@@ -281,7 +273,8 @@ export const AudioMimeType = MimeType.kinds.Audio;
 /**
  * Union of audio media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AudioMimeType } from "@beep/schema/MimeType"
@@ -298,7 +291,8 @@ export type AudioMimeType = typeof MimeType.kinds.Audio.Type;
 /**
  * Schema for non-core top-level media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MiscMimeType } from "@beep/schema/MimeType"
@@ -315,7 +309,8 @@ export const MiscMimeType = MimeType.kinds.Misc;
 /**
  * Union of non-core top-level media-type literals.
  *
- * @example
+ * **Example** (Use MIME type schemas)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MiscMimeType } from "@beep/schema/MimeType"

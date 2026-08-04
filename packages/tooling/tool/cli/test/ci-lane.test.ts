@@ -108,7 +108,7 @@ describe("ciLaneStepsForTesting", () => {
 
   it("splits the test lanes into CI's unit and integration shapes", () => {
     const unit = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-unit", prShapeOptions));
-    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--types", "--affected", "--summarize"]);
+    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
@@ -238,7 +238,7 @@ describe("ciLaneStepsForTesting", () => {
   it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
     expect(step.command).toBe("bunx");
-    expect([...step.args]).toEqual(["turbo", "run", "test:property", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual(["turbo", "run", "test:property", "--concurrency=4", "--affected", "--summarize"]);
     expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708", TURBO_SCM_BASE: "origin/main" });
 
     const deep = firstOf(

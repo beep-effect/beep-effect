@@ -29,8 +29,7 @@
     },
     "fallow": {
       "type": "stdio",
-      "command": "bunx",
-      "args": ["fallow-mcp"]
+      "command": "./node_modules/.bin/fallow-mcp"
     },
     "chrome-devtools": {
       "type": "stdio",

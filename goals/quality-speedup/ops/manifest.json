@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "quality-speedup",
+    "title": "Quality Speedup",
+    "status": "completed-retained",
+    "created": "2026-08-03",
+    "updated": "2026-08-04",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/quality-speedup",
+  "lifecycle": "completed-retained",
+  "mission": "Cut agent-to-mergeable wall-clock: remove the tstyche lane, measure where quality time goes (fleet + hosted CI), and census TS instantiation/memory cost with a staged remediation plan.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/quality-speedup/README.md",
+    "goals/quality-speedup/SPEC.md",
+    "goals/quality-speedup/PLAN.md",
+    "goals/quality-speedup/GOAL.md",
+    "goals/quality-speedup/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/tstyche-inventory.md",
+    "research/quality-time-inventory.md",
+    "research/instantiation-census.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/quality-speedup/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Measure",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Decisions",
+      "status": "complete",
+      "exit": "Grill-with-docs session over the three reports locks the performance decisions; tstyche delete-vs-port is gating."
+    },
+    {
+      "id": "P2",
+      "name": "Tstyche removal",
+      "status": "complete",
+      "exit": "Removal per reviewed inventory + grill decisions; tsconfig-sync --check returns 0; residue gate clean."
+    },
+    {
+      "id": "P3",
+      "name": "Ship",
+      "status": "complete",
+      "exit": "One PR: packet + reports + decisions + removal, via yeet, citing quality-speedup."
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/quality-speedup/GOAL.md)\" -le 4000",
+    "jq . goals/quality-speedup/ops/manifest.json",
+    "rg -n \"quality-speedup|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/quality-speedup",
+    "git diff --check -- goals/quality-speedup",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A *.tst.ts unique type assertion lacks user sign-off before deletion.",
+    "Tstyche removal requires edits outside the inventoried surfaces.",
+    "A workstream turns out to be owned by an active packet.",
+    "A measurement instrument cannot be verified.",
+    "Any change would touch public API, schemas, migrations, auth, infra, security behavior, dependencies, lockfiles, or generated files beyond what Workstream A explicitly requires."
+  ]
+}

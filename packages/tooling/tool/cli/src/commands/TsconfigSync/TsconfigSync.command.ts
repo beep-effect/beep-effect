@@ -32,7 +32,8 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
 /**
  * CLI command for synchronizing root and workspace tsconfig state.
  *
- * @example
+ * **Example** (Run the tsconfig-sync command)
+ *
  * ```ts
  * import { tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync"
  * import { Command } from "effect/unstable/cli"
@@ -41,6 +42,7 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
  * const run = Command.run(tsconfigSyncCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -92,6 +94,6 @@ export const tsconfigSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Synchronize repo-managed config files including root tsconfig references, aliases, tstyche, syncpack, and package docgen"
+    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, and package docgen"
   )
 );

@@ -27,7 +27,6 @@ const {
   planRootAliasSync,
   planRootReferenceSync,
   planRootSyncpackSync,
-  planRootTstycheSync,
   sortChanges,
   toReportedChange,
   writeFileString,
@@ -37,12 +36,14 @@ const { renderChanges } = TsconfigSyncRender;
 /**
  * Errors raised by the tsconfig-sync programmatic API.
  *
- * @example
+ * **Example** (Run the tsconfig-sync service)
+ *
  * ```ts
  * import type { TsconfigSyncError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * type Handled = TsconfigSyncError
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -56,10 +57,8 @@ export type TsconfigSyncError =
 /**
  * Synchronize tsconfig references and root aliases under a specific repository root.
  *
- * @param rootDir - Absolute repository root directory.
- * @param options - Mode and logging options.
- * @returns Summary of planned/applied changes.
- * @example
+ * **Example** (Run the tsconfig-sync service)
+ *
  * ```ts
  * import { syncTsconfigAtRoot, TsconfigSyncRunOptions } from "@beep/repo-cli/commands/TsconfigSync"
  * import { Effect } from "effect"
@@ -70,6 +69,10 @@ export type TsconfigSyncError =
  * const program = syncTsconfigAtRoot("/repo", options)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param rootDir - Absolute repository root directory.
+ * @param options - Mode and logging options.
+ * @returns Summary of planned/applied changes.
  * @category utilities
  * @since 0.0.0
  */
@@ -111,12 +114,8 @@ export const syncTsconfigAtRoot: {
 
     const rootReferenceChange = yield* planRootReferenceSync(rootDir, workspaces);
     const rootAliasChange = yield* planRootAliasSync(rootDir, workspaces);
-    const rootTstycheChange = yield* planRootTstycheSync(rootDir, workspaces);
     const rootSyncpackChange = yield* planRootSyncpackSync(rootDir);
-    A.appendAllInPlace(
-      plannedChanges,
-      A.getSomes([rootReferenceChange, rootAliasChange, rootTstycheChange, rootSyncpackChange])
-    );
+    A.appendAllInPlace(plannedChanges, A.getSomes([rootReferenceChange, rootAliasChange, rootSyncpackChange]));
 
     const packageChanges = yield* planPackageReferenceSync(
       rootDir,

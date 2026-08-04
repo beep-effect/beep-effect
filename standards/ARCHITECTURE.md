@@ -60,8 +60,7 @@ Start with the smallest boundary that owns the meaning:
 Apps are executable workspaces, not reusable package surfaces by default.
 Framework apps such as Next.js and Tauri should keep their runtime modules
 app-local through `@/*` and should not publish a public `@beep/<app>` TypeScript
-API, root `src/index.ts`, package exports, docgen, dtslint, or type-test
-surface. Runtime proof apps are the explicit exception: they may stay
+API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps are the explicit exception: they may stay
 package-like when the app exists to prove a runtime contract from a public
 workspace API.
 

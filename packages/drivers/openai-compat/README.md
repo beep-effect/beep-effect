@@ -119,9 +119,6 @@ bun run test
 # Integration test
 bun run test:integration
 
-# Type tests
-bun run type-test
-
 # Docs
 bun run docgen
 
@@ -129,7 +126,7 @@ bun run docgen
 bun run lint
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/openai-compat` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/openai-compat` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 

@@ -37,12 +37,14 @@ const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory
 /**
  * Parity classes for CI lanes (one-round-loop D2 taxonomy).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_CLASS_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_CLASS_VALUES.includes("ci-native")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,12 +53,14 @@ export const CI_LANE_CLASS_VALUES = ["cli-runnable", "workflow-gated", "ci-nativ
 /**
  * Parity class for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneClass } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneClass.is["cli-runnable"]("cli-runnable"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,13 +73,15 @@ export const CiLaneClass = LiteralKit(CI_LANE_CLASS_VALUES).pipe(
 /**
  * Parity class for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneClass } from "@beep/repo-cli/commands/Ci"
  *
  * const laneClass: CiLaneClass = "cli-runnable"
  * console.log(laneClass) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,12 +90,14 @@ export type CiLaneClass = typeof CiLaneClass.Type;
 /**
  * Local replay fidelities for CI lanes.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_REPLAY_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_REPLAY_VALUES.includes("exact")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,12 +106,14 @@ export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;
 /**
  * Local replay fidelity for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneReplay } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneReplay.is.exact("exact"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -116,13 +126,15 @@ export const CiLaneReplay = LiteralKit(CI_LANE_REPLAY_VALUES).pipe(
 /**
  * Local replay fidelity for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneReplay } from "@beep/repo-cli/commands/Ci"
  *
  * const replay: CiLaneReplay = "exact"
  * console.log(replay) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,12 +143,14 @@ export type CiLaneReplay = typeof CiLaneReplay.Type;
 /**
  * Runnable CI lane identifiers (every check.yml lane with a CLI body).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_ID_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_ID_VALUES.includes("check")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -166,12 +180,14 @@ export const CI_LANE_ID_VALUES = [
 /**
  * Runnable CI lane identifier.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneId.is.lint("lint"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -184,13 +200,15 @@ export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe(
 /**
  * Runnable CI lane identifier.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
  * const lane: CiLaneId = "lint"
  * console.log(lane) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -201,12 +219,14 @@ const isCiLaneId = S.is(CiLaneId);
 /**
  * Docgen lane execution modes (computed by the workflow lane-gate).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { DOCGEN_LANE_MODE_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(DOCGEN_LANE_MODE_VALUES.includes("affected")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -215,12 +235,14 @@ export const DOCGEN_LANE_MODE_VALUES = ["none", "affected", "full"] as const;
 /**
  * Docgen lane execution mode.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { DocgenLaneMode } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(DocgenLaneMode.is.affected("affected"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -233,13 +255,15 @@ export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
 /**
  * Docgen lane execution mode.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { DocgenLaneMode } from "@beep/repo-cli/commands/Ci"
  *
  * const mode: DocgenLaneMode = "affected"
  * console.log(mode) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -248,7 +272,8 @@ export type DocgenLaneMode = typeof DocgenLaneMode.Type;
 /**
  * Machine-readable descriptor for one check.yml lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneDescriptor } from "@beep/repo-cli/commands/Ci"
  *
@@ -262,6 +287,7 @@ export type DocgenLaneMode = typeof DocgenLaneMode.Type;
  * })
  * console.log(descriptor.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -288,13 +314,15 @@ const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
  * Order mirrors the packet parity table
  * (`goals/one-round-loop/research/ci-lane-parity.md`).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_DESCRIPTORS } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
  *
  * console.log(A.length(CI_LANE_DESCRIPTORS))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -498,7 +526,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
 /**
  * Options accepted by {@link runCiLane}.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions } from "@beep/repo-cli/commands/Ci"
  *
@@ -515,6 +544,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
  * })
  * console.log(options.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -537,6 +567,13 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     description: "Shape options for running one CI lane body.",
   })
 ) {}
+
+// The property lane invokes turbo directly (not through a root script, so it misses the
+// CI concurrency cap in Quality/Tasks.ts). Turbo's default concurrency (~10) starved the
+// hosted runner into 5-minute vitest test timeouts (workspace-use-cases property suite);
+// see goals/quality-speedup/research/instantiation-census.md §5. Lane replay is CI-parity
+// by design, so the cap applies unconditionally.
+const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
@@ -692,11 +729,8 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * runtime additionally maintains `.beep/fallow/status.md` accounting (see
  * {@link runCiLane}).
  *
- * @param repoRoot - Repository root used as every subprocess working directory.
- * @param laneId - CI lane to plan.
- * @param options - Lane shape options.
- * @returns Planned steps in execution order.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
@@ -714,6 +748,11 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * }))
  * console.log(A.map(steps, (step) => step.label))
  * ```
+ *
+ * @param repoRoot - Repository root used as every subprocess working directory.
+ * @param laneId - CI lane to plan.
+ * @param options - Lane shape options.
+ * @returns Planned steps in execution order.
  * @category testing
  * @since 0.0.0
  */
@@ -826,7 +865,7 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:property",
           command: "bunx",
-          args: ["turbo", "run", "test:property", ...turboShapeArgs(options)],
+          args: ["turbo", "run", "test:property", CI_LANE_TURBO_CONCURRENCY_ARG, ...turboShapeArgs(options)],
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
@@ -845,7 +884,7 @@ export const ciLaneStepsForTesting: {
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
-      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", "--types"], options)],
+      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
     })
 );
 
@@ -941,10 +980,8 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
 /**
  * Run a CI lane body exactly as hosted CI would.
  *
- * @param laneId - CI lane to run.
- * @param options - Lane shape options (affected/base/mode/range flags).
- * @returns Effect that fails when the lane's verdict is red.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
  * import { Effect } from "effect"
@@ -962,6 +999,10 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
  * }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param laneId - CI lane to run.
+ * @param options - Lane shape options (affected/base/mode/range flags).
+ * @returns Effect that fails when the lane's verdict is red.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1001,7 +1042,8 @@ const reportCiCommandError = (error: CiCommandError) =>
 /**
  * `beep ci lane` command: run one CI lane body or list the lane inventory.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
@@ -1010,6 +1052,7 @@ const reportCiCommandError = (error: CiCommandError) =>
  * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -1173,7 +1216,8 @@ const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
 /**
  * Resolved shape for planning the local battery's lane dispatch steps.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLocalStepPlan } from "@beep/repo-cli/commands/Ci"
  *
@@ -1184,6 +1228,7 @@ const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
  * })
  * console.log(plan.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1228,11 +1273,8 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
 /**
  * Build the local battery step plan. Exposed for focused unit tests.
  *
- * @param repoRoot - Repository root used as every subprocess working directory.
- * @param selection - Lanes to run, in order.
- * @param plan - Resolved local battery shape.
- * @returns One `beep ci lane` dispatch step per selected lane.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLocalStepPlan, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
@@ -1244,6 +1286,11 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
  * )
  * console.log(A.map(steps, (step) => step.label))
  * ```
+ *
+ * @param repoRoot - Repository root used as every subprocess working directory.
+ * @param selection - Lanes to run, in order.
+ * @param plan - Resolved local battery shape.
+ * @returns One `beep ci lane` dispatch step per selected lane.
  * @category testing
  * @since 0.0.0
  */
@@ -1266,9 +1313,8 @@ export const ciLocalStepsForTesting: {
 /**
  * Run the faithful local CI battery: every locally-runnable check.yml lane.
  *
- * @param options - Local battery options (lane selection, fast preset, shape).
- * @returns Effect that fails when any selected lane's verdict is red.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
  * import { Effect } from "effect"
@@ -1282,6 +1328,9 @@ export const ciLocalStepsForTesting: {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param options - Local battery options (lane selection, fast preset, shape).
+ * @returns Effect that fails when any selected lane's verdict is red.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1307,7 +1356,8 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
 /**
  * `beep ci local` command: replay the locally-runnable CI battery.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
@@ -1316,6 +1366,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  * const run = Command.run(ciLocalCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

@@ -47,7 +47,7 @@ bun run test:integration
 bun run lint:fix
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/firecrawl` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/firecrawl` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 Live integration tests are gated by `FIRECRAWL_API_KEY` and only exercise low-cost account/read endpoints by default.
 

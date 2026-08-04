@@ -113,12 +113,6 @@ bun run check
 # Test
 bun run test
 
-# Type tests
-bun run type-test
-
-# Type tests through Turbo
-bunx turbo run type-test --filter=@beep/md
-
 # Lint
 bun run lint
 
