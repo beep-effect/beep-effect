@@ -17,15 +17,14 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Drive the opened first wedge
-[`patent-citation-candor-gate`](../patent-citation-candor-gate/README.md)
-through research → align (its two research lanes and align questions are
-recorded in that packet). This packet itself waits: the remaining P1 wedges
-(`legal-position-relator-runtime` — now also carrying the re-routed
-contradiction-semantics cluster, `patent-drafting-episode-ledger`,
-FunctionalUnit into `uspto-patent-driver-depth`) queue until the candor wedge
-reaches align, per the 2026-08-04 phase-2 grill
-([`DECISIONS.md`](./DECISIONS.md)).
+The queued wedges are UNBLOCKED: the unblock milestone was decided as the
+candor BRIEF's approval, and that BRIEF was approved the same day
+(2026-08-04 — see [`DECISIONS.md`](./DECISIONS.md) and the wedge packet).
+Next for this packet: open `legal-position-relator-runtime` (carrying the
+re-routed contradiction-semantics cluster) via capture → research → align
+when Benjamin calls it, with `patent-drafting-episode-ledger` and the
+FunctionalUnit extension into `uspto-patent-driver-depth` behind it. The
+candor wedge itself proceeds to decompose (`MAP.md`) in its own packet.
 
 ## Read This First
 
@@ -74,3 +73,11 @@ reaches align, per the 2026-08-04 phase-2 grill
   pre-seeded); contradiction-semantics cluster re-routed compose-don't-widen
   to ride with `legal-position-relator-runtime` (both routing-seed forms
   amended); phase shape sequential. Three new DECISIONS entries.
+- 2026-08-04: packet-open PR #550 merged by Benjamin; the candor wedge then
+  completed its research lanes and align session (four branches closed, see
+  that packet's DECISIONS) — the wedge is at stage `align`, BRIEF next; the
+  queued-wedge unblock milestone is this packet's next open question.
+- 2026-08-04: candor wedge BRIEF approved (three-lens Opus review folded);
+  wedge stage align → shape. Unblock milestone decided (BRIEF approval) and
+  reached same-day — queued wedges UNBLOCKED. Orchestration superseded
+  codex → Opus 5 for remaining campaign sub-agent work (weekly codex limit).

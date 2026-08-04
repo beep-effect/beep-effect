@@ -28,7 +28,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { formatCommandLine, repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CapturedStep } from "../process/StepExec.ts";
+import type { CapturedStep, RunCapturedOptions } from "../process/StepExec.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/GitExec");
 
@@ -91,6 +91,63 @@ export const gitTreeEntriesFromNulOutput = (output: string): O.Option<ReadonlyAr
   return A.length(entries) === A.length(records) ? O.some(entries) : O.none();
 };
 
+const GIT_RENAME_STATUS = /^R([0-9]+)$/u;
+const GIT_COPY_STATUS = /^C[0-9]+$/u;
+const GIT_SINGLE_STATUS = /^[ADMTUXB]$/u;
+
+/** Path fields that follow one status field: two for renames and copies, one for every other tracked status. */
+const nameStatusPathCount = (status: string): O.Option<number> => {
+  if (GIT_RENAME_STATUS.test(status) || GIT_COPY_STATUS.test(status)) {
+    return O.some(2);
+  }
+  return GIT_SINGLE_STATUS.test(status) ? O.some(1) : O.none();
+};
+
+/** Similarity score carried by a rename status, rejecting anything outside Git's `[50, 100]` band. */
+const renameScoreFromStatus = (status: string): O.Option<number> => {
+  const match = GIT_RENAME_STATUS.exec(status);
+  if (match === null || !P.isString(match[1])) {
+    return O.none();
+  }
+  return pipe(
+    N.parse(match[1]),
+    O.filter((score) => score >= 50 && score <= 100)
+  );
+};
+
+/** One consumed name-status record: how many fields it spans, and the rename it carries (copies carry none). */
+type GitNameStatusRecord = {
+  readonly width: number;
+  readonly rename: O.Option<GitRenameEntry>;
+};
+
+const readNameStatusRecord = (fields: ReadonlyArray<string>, index: number): O.Option<GitNameStatusRecord> => {
+  const status = fields[index];
+  if (!P.isString(status)) {
+    return O.none();
+  }
+  const pathCount = nameStatusPathCount(status);
+  const sourcePath = fields[index + 1];
+  if (O.isNone(pathCount) || !P.isString(sourcePath)) {
+    return O.none();
+  }
+  const width = pathCount.value + 1;
+  if (pathCount.value === 1) {
+    return O.some({ width, rename: O.none<GitRenameEntry>() });
+  }
+  const targetPath = fields[index + 2];
+  if (!P.isString(targetPath)) {
+    return O.none();
+  }
+  if (!GIT_RENAME_STATUS.test(status)) {
+    return O.some({ width, rename: O.none<GitRenameEntry>() });
+  }
+  return O.map(renameScoreFromStatus(status), (score) => ({
+    width,
+    rename: O.some(GitRenameEntry.make({ sourcePath, targetPath, score: NonNegativeInt.make(score) })),
+  }));
+};
+
 /** Parse rename-only rows from exact NUL-delimited name-status output. Copies are consumed but ignored. @category parsing @since 0.0.0 */
 export const gitRenameEntriesFromNulOutput = (output: string): O.Option<ReadonlyArray<GitRenameEntry>> => {
   if (Str.isEmpty(output)) {
@@ -104,35 +161,12 @@ export const gitRenameEntriesFromNulOutput = (output: string): O.Option<Readonly
   let renames = A.empty<GitRenameEntry>();
 
   while (index < A.length(fields)) {
-    const status = fields[index];
-    if (!P.isString(status)) {
+    const record = readNameStatusRecord(fields, index);
+    if (O.isNone(record)) {
       return O.none();
     }
-    index += 1;
-    const renameStatus = /^R([0-9]+)$/u.exec(status);
-    const copyStatus = /^C[0-9]+$/u.test(status);
-    const hasPair = renameStatus !== null || copyStatus;
-    if (!hasPair && !/^[ADMTUXB]$/u.test(status)) {
-      return O.none();
-    }
-    const sourcePath = fields[index];
-    const targetPath = hasPair ? fields[index + 1] : undefined;
-    if (!P.isString(sourcePath) || (hasPair && !P.isString(targetPath))) {
-      return O.none();
-    }
-    index += hasPair ? 2 : 1;
-
-    if (renameStatus === null) {
-      continue;
-    }
-    const score = N.parse(renameStatus[1]);
-    if (O.isNone(score) || score.value < 50 || score.value > 100 || !P.isString(targetPath)) {
-      return O.none();
-    }
-    renames = A.append(
-      renames,
-      GitRenameEntry.make({ sourcePath, targetPath, score: NonNegativeInt.make(score.value) })
-    );
+    index += record.value.width;
+    renames = A.appendAll(renames, O.toArray(record.value.rename));
   }
 
   return O.some(renames);
@@ -244,6 +278,23 @@ export const gitPathListFromNulOutput: (output: string) => ReadonlyArray<string>
 export const gitLinesFromOutput = (output: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(output), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
+/**
+ * Shared spawn-capture-then-adapt path behind every runner in this module: only the capture profile
+ * differs between them, so the command line, spawn-failure mapping, and exit/truncation handling live
+ * here once.
+ */
+const runGitCaptured = <E>(
+  args: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>,
+  capture: Omit<RunCapturedOptions, "command" | "args">
+): Effect.Effect<string, E, ChildProcessSpawner.ChildProcessSpawner> => {
+  const commandLine = formatCommandLine("git", args);
+  return runCaptured({ command: "git", args, ...capture }).pipe(
+    Effect.mapError(adapter.onSpawnFailure(commandLine)),
+    Effect.flatMap((captured) => failFromCapture(captured, commandLine, adapter))
+  );
+};
+
 const failFromCapture = <E>(
   captured: CapturedStep,
   commandLine: string,
@@ -295,18 +346,14 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
-  const commandLine = formatCommandLine("git", args);
-  const captured = yield* runCaptured({
-    command: "git",
-    args,
+  return yield* runGitCaptured(args, adapter, {
     cwd,
     extendEnv: true,
     stdin: "inherit",
     source: "merge",
     bound: repoRunOutputBound,
     trim: true,
-  }).pipe(Effect.mapError(adapter.onSpawnFailure(commandLine)));
-  return yield* failFromCapture(captured, commandLine, adapter);
+  });
 });
 
 /**
@@ -383,14 +430,7 @@ export const runGitLines = Effect.fn("GitExec.runGitLines")(function* <E>(
   adapter: GitCommandErrorAdapter<E>,
   parseLines: (output: string) => ReadonlyArray<string> = gitLinesFromOutput
 ): Effect.fn.Return<ReadonlyArray<string>, E, ChildProcessSpawner.ChildProcessSpawner> {
-  const commandLine = formatCommandLine("git", args);
-  const captured = yield* runCaptured({
-    command: "git",
-    args,
-    cwd,
-    source: "stdout",
-  }).pipe(Effect.mapError(adapter.onSpawnFailure(commandLine)));
-  const output = yield* failFromCapture(captured, commandLine, adapter);
+  const output = yield* runGitCaptured(args, adapter, { cwd, source: "stdout" });
   return parseLines(output);
 });
 
@@ -400,15 +440,7 @@ export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
-  const commandLine = formatCommandLine("git", args);
-  const captured = yield* runCaptured({
-    command: "git",
-    args,
-    cwd,
-    stdin: "ignore",
-    source: "all",
-  }).pipe(Effect.mapError(adapter.onSpawnFailure(commandLine)));
-  return yield* failFromCapture(captured, commandLine, adapter);
+  return yield* runGitCaptured(args, adapter, { cwd, stdin: "ignore", source: "all" });
 });
 
 /** Resolve a ref to a verified commit without allowing option reinterpretation. @category execution @since 0.0.0 */

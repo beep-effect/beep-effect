@@ -34,6 +34,7 @@ import {
   FallowReportPayload,
   FallowReportToolFailed,
   FindingAttributionSummary,
+  fallowEnvelopeFileName,
   PositiveExitStatus,
   sameAttributionKind,
   sameEnvelopeStatus,
@@ -941,10 +942,8 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
 /**
  * Build the fallback Fallow audit argv used when base-snapshot worktrees are unavailable.
  *
- * @param base - Base ref passed through to Fallow audit.
- * @param options - Diff path and whether the fallback should pass Fallow's `--quiet` flag.
- * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
- * @example
+ * **Example** (Build diff-fallback audit arguments)
+ *
  * ```ts
  * import { fallowAuditDiffFallbackArgsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
@@ -955,6 +954,10 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
  * console.log(args.includes("--diff-file"), args[args.length - 1])
  * // true all
  * ```
+ *
+ * @param base - Base ref passed through to Fallow audit.
+ * @param options - Diff path and whether the fallback should pass Fallow's `--quiet` flag.
+ * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
  * @category testing
  * @since 0.0.0
  */
@@ -1001,9 +1004,8 @@ const renderWrapperCommand = (feature: FallowFeature, options: FallowCommandOpti
 /**
  * Detect the structured Fallow audit error that should use the diff-scoped fallback.
  *
- * @param result - Captured Fallow audit process result to inspect.
- * @returns `true` when Fallow failed because the base worktree snapshot could not be created.
- * @example
+ * **Example** (Detect a worktree error needing fallback)
+ *
  * ```ts
  * import { fallowAuditNeedsDiffFallbackForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
@@ -1026,6 +1028,9 @@ const renderWrapperCommand = (feature: FallowFeature, options: FallowCommandOpti
  * console.log([worktreeError, unrelatedError])
  * // [true, false]
  * ```
+ *
+ * @param result - Captured Fallow audit process result to inspect.
+ * @returns `true` when Fallow failed because the base worktree snapshot could not be created.
  * @category testing
  * @since 0.0.0
  */
@@ -1209,10 +1214,8 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
 /**
  * Collect the tracked and untracked working-tree diff consumed by the audit fallback.
  *
- * @param repoRoot - Absolute repository root used as the Git working directory.
- * @param base - Base revision for tracked changes.
- * @returns A successful combined binary diff, or the first failed Git process result.
- * @example
+ * **Example** (Collect an audit diff input for testing)
+ *
  * ```ts
  * import { collectAuditDiffInputForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  * import { Effect } from "effect"
@@ -1224,6 +1227,10 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
  * console.log(Effect.isEffect(program))
  * // true
  * ```
+ *
+ * @param repoRoot - Absolute repository root used as the Git working directory.
+ * @param base - Base revision for tracked changes.
+ * @returns A successful combined binary diff, or the first failed Git process result.
  * @category testing
  * @since 0.0.0
  */
@@ -2222,15 +2229,19 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
       check: Flag.boolean("check").pipe(
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
-      out: Flag.string("out").pipe(
-        Flag.withDefault(`${defaultOutDir}/${feature}.json`),
-        Flag.withDescription("Envelope output path")
-      ),
+      out: Flag.string("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
       quiet: Flag.boolean("quiet").pipe(
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
     },
-    ({ advisory, base, check, out, quiet }) => runFallowFeature(feature, { advisory, base, check, out, quiet })
+    ({ advisory, base, check, out, quiet }) =>
+      runFallowFeature(feature, {
+        advisory,
+        base,
+        check,
+        out: Str.isNonEmpty(out) ? out : `${defaultOutDir}/${fallowEnvelopeFileName(feature, advisory)}`,
+        quiet,
+      })
   ).pipe(Command.withDescription(`Run Fallow ${feature} and write a repo-cli report envelope`));
 
 const envelopeCheckCommand = Command.make(
@@ -2331,7 +2342,8 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
 /**
  * Fallow command group under the canonical repo quality surface.
  *
- * @example
+ * **Example** (Wire the fallow quality command)
+ *
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
  * import { Command } from "effect/unstable/cli"
@@ -2340,6 +2352,7 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

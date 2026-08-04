@@ -57,8 +57,6 @@ The allowlist checker verifies schema validity, duplicate keys, referenced file 
 
 ## Dual-Arity Inventory Contract
 
-[dual-arity.inventory.jsonc](./dual-arity.inventory.jsonc) tracks exported 2-3 parameter helper APIs with at least two required, non-rest parameters that are not yet compliant with the dual data-first/data-last convention.
-
 Legitimate scanner exclusions belong in the checker, not in the inventory. Constructor factories documented as `@category constructors`, tagged-template identity helpers, React hooks, and React components are recognized by the scanner and should not create inventory churn.
 
 Inventory entries should remain only for real public helper APIs that need remediation or an explicit package-owner exception. A callable shaped `(input, options?)` is excluded because its one-argument form is already complete. Prefer options objects for third parameters; optional object-shaped third parameters are valid when the first two parameters are required, but scalar third parameters are not.

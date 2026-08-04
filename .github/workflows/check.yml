@@ -441,22 +441,22 @@ jobs:
           set -euo pipefail
 
           for lane in audit dead-code; do
-            test -s ".beep/fallow/${lane}.json"
+            test -s ".beep/fallow/${lane}.check.json"
           done
 
           for lane in health boundaries flags security fix-preview; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
+            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.advisory.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
+              --expect-report-path ".beep/fallow/${lane}.advisory.json" \
               --require-raw-output
           done
 
           for lane in audit dead-code; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
+            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.check.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
+              --expect-report-path ".beep/fallow/${lane}.check.json" \
               --require-raw-output
           done
 
@@ -472,7 +472,7 @@ jobs:
             echo
             cat .beep/fallow/status.md 2>/dev/null || echo "- lane status: unavailable"
             echo
-            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`\n- audit introduced findings: `\(.findingAttributionSummary.introduced // "unknown")`\n- audit inherited-adjacent findings: `\(.findingAttributionSummary.inheritedAdjacent // "unknown")`"' .beep/fallow/audit.json 2>/dev/null || echo "- audit summary: unavailable"
+            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`\n- audit introduced findings: `\(.findingAttributionSummary.introduced // "unknown")`\n- audit inherited-adjacent findings: `\(.findingAttributionSummary.inheritedAdjacent // "unknown")`"' .beep/fallow/audit.check.json 2>/dev/null || echo "- audit summary: unavailable"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Fallow envelopes

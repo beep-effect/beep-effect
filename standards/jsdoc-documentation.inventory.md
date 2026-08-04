@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-04T11:36:14.253Z
+Generated: 2026-08-04T12:13:58.294Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 20 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 111 |
-| publicModules | 2363 |
-| publicExports | 15522 |
+| publicModules | 2361 |
+| publicExports | 15513 |
 | openModules | 443 |
 | openExports | 1379 |
 | missingExportExamples | 0 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 2 | 6 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 3 | 3 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 9 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 155 | 993 | 33 | 58 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 153 | 984 | 33 | 58 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 1 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 2 |
@@ -503,7 +503,7 @@ Module findings:
 
 Export findings:
 - `src/commands/Ci/CiLane.ts:329` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:759` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:762` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.recyclebin.ts:97` `parseRecycleBinMetadata` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.recyclebin.ts:153` `classifyRecycleBinName` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.recyclebin.ts:189` `pairRecycleBinEntries` (const) - 1 documentation section/link violation(s)
@@ -524,8 +524,8 @@ Export findings:
 - `src/commands/Goals/Migration.ts:321` `GoalPacketMigration` (class) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Migration.ts:521` `planGoalPacketMigration` (const) - 1 documentation section/link violation(s)
 - `src/commands/Goals/PortfolioIndex.ts:113` `renderPortfolioIndex` (const) - 1 documentation section/link violation(s)
-- `src/commands/Laws/FrozenGrantSet.ts:320` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
-- `src/commands/Laws/NoNativeRuntime.ts:549` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
+- `src/commands/Laws/FrozenGrantSet.ts:322` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
+- `src/commands/Laws/NoNativeRuntime.ts:551` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Lint/PackageTestTypecheck.ts:194` `TestTypecheckBlindSpotBaseline` (class) - 1 documentation section/link violation(s)
 - `src/commands/Lint/ReflectionArtifact.ts:196` `reflectionFrontmatterIsValid` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Control.ts:112` `markLiveSession` (const) - 1 documentation section/link violation(s)
@@ -551,7 +551,7 @@ Export findings:
 - `src/commands/Qa/Qa.session.ts:580` `discoverRecordedVideo` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Record.ts:159` `harnessEnv` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Record.ts:231` `requireCapturedEvents` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:583` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:582` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:146` `activeOsvIgnoreIdsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Research/Research.schemas.ts:146` `KnowledgeCardFrontmatter` (class) - 1 documentation section/link violation(s)
 - `src/commands/Root.ts:51` `rootCommand` (const) - 1 documentation section/link violation(s)
@@ -2587,8 +2587,8 @@ Export findings:
 - `src/Html.contract.ts:75` `HtmlDocumentChild` (const) - 1 documentation section/link violation(s)
 - `src/Html.contract.ts:119` `HtmlDocument` (class) - 1 documentation section/link violation(s)
 - `src/Html.foreign.ts:189` `isForeignAttributeNameFixedPoint` (const) - 1 documentation section/link violation(s)
-- `src/Html.meta.ts:591` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
-- `src/Html.model.ts:272` `ForeignElement` (class) - 1 documentation section/link violation(s)
+- `src/Html.meta.ts:589` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
+- `src/Html.model.ts:271` `ForeignElement` (class) - 1 documentation section/link violation(s)
 - `src/Html.policy.ts:56` `SafeHtmlAttributes` (const) - 1 documentation section/link violation(s)
 - `src/Html.policy.ts:110` `SafeHtmlElement` (const) - 1 documentation section/link violation(s)
 - `src/Html.policy.ts:246` `SafeUrlAttribute` (const) - 1 documentation section/link violation(s)
@@ -2596,7 +2596,7 @@ Export findings:
 - `src/Html.serialize.ts:125` `SafeHtml` (const) - 1 documentation section/link violation(s)
 - `src/Html.serialize.ts:574` `serialize` (const) - 1 documentation section/link violation(s)
 - `src/Html.serialize.ts:694` `safeHtmlValue` (const) - 1 documentation section/link violation(s)
-- `src/Html.source-size.ts:824` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
+- `src/Html.source-size.ts:823` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
 - `src/Html.srcset.ts:249` `inspectSrcset` (const) - 1 documentation section/link violation(s)
 - `src/index.ts:61` `Html` (const) - 1 documentation section/link violation(s)
 

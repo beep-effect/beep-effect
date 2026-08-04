@@ -40,6 +40,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
+  initiative for a configurable full-document substrate and eventual
+  Professional Desktop document Portal. A live Lexical Playground `0.49.0`
+  audit captured 17 screenshots, keybindings, highlighting, inserts, settings,
+  and accessibility gaps; a pinned source audit reconciled the node/plugin
+  registration graph at commit `a933222`. Architecture grill D1-D27 keeps
+  `@beep/md` canonical, Lexical/Pandoc as projections, product profiles
+  app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
+  single-user parity. First goal graduated:
+  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
   align-stage: wave 2 of the legal/patent ontology-KG strand
   (`legal-ontology-landscape` graduated into
@@ -49,15 +59,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   2026-08-01 reconciliation grill with remo1/remo2/remo3 resolved without
   supersession; first wedge opened 2026-08-04 (phase-2 grill; the
   contradiction-semantics cluster re-routed to ride with
-  `legal-position-relator-runtime`); remaining wedges queue until it reaches
-  align.
+  `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
+  decided milestone — the candor BRIEF's approval — was reached the same
+  day); next: open `legal-position-relator-runtime` when Benjamin calls it.
 - [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
-  capture-stage: first wedge of the `legal-patent-kg-deepening` routing
+  shape-stage: first wedge of the `legal-patent-kg-deepening` routing
   matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
   gate that blocks filing promotion while AI-discovered patent references
-  lack a current disposition; composes `PatentReference`, verified anchors,
-  and `RuntimeApprovalGate`; next: two research lanes (repo surfaces +
-  bounded public-primary-source candor legal frame), then align.
+  lack a current disposition; research done, four align branches closed, and
+  the BRIEF APPROVED 2026-08-04 (one goal packet, two phases; hardened by a
+  three-lens Opus review); next: decompose (`MAP.md`) toward graduation.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill

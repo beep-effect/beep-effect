@@ -86,7 +86,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   const botTokens = normalizedTokens(options.bots);
   const actionableThreads = pipe(
     pullRequest.reviewThreads.nodes,
-    A.filter((thread) => !thread.isResolved && !thread.isOutdated)
+    A.filter((thread) => !thread.isResolved)
   );
   const threadIssues = pipe(actionableThreads, A.map(reviewThreadIssue));
   const topLevelBotComments = pipe(

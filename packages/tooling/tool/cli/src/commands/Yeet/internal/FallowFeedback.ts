@@ -9,7 +9,7 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Console, Context, Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Console, Context, DateTime, Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -20,6 +20,7 @@ import {
   FallowFeatureFamily,
   FallowReportEnvelope,
   FindingAttributionKind,
+  fallowEnvelopeFileName,
 } from "../../Quality/internal/FallowEnvelope.schema.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { buildQualityIssueIndex, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "./QualityIssueIndex.ts";
@@ -31,7 +32,7 @@ import type {
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FallowFeedback");
 
-const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.Options, (feature) => `${feature}.json`);
+const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.Options, (feature) => fallowEnvelopeFileName(feature, true));
 
 // Local aliases keep this module's prior names while sourcing the single
 // shared Fallow report-envelope codec, eliminating producer/consumer drift.
@@ -101,11 +102,13 @@ const readFileText = Effect.fn("YeetFallowFeedback.readFileText")(function* (
  * output directory — for example a temp directory in tests, or a non-repo Fallow
  * output dir — while keeping the symlink/traversal protection intact.
  *
- * @example
+ * **Example** (Read a fallow feedback allowed root entry)
+ *
  * ```ts
  * import { FallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * console.log(FallowFeedbackAllowedRoot.key)
  * ```
+ *
  * @category guards
  * @since 0.0.0
  */
@@ -125,14 +128,16 @@ export const FallowFeedbackAllowedRoot: Context.Reference<O.Option<string>> = Co
  * The symlink/traversal protection of {@link resolvePathWithinRoot} is preserved
  * — any candidate that escapes the supplied root is still rejected.
  *
- * @param root - Absolute directory the advisory feedback reader/writer may resolve paths within.
- * @returns A layer that sets {@link FallowFeedbackAllowedRoot} to the supplied root.
- * @example
+ * **Example** (Restrict feedback output to a root)
+ *
  * ```ts
  * import { layerFallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * const OutputRoot = layerFallowFeedbackAllowedRoot("/tmp/fallow-output")
  * console.log(OutputRoot) // example value
  * ```
+ *
+ * @param root - Absolute directory the advisory feedback reader/writer may resolve paths within.
+ * @returns A layer that sets {@link FallowFeedbackAllowedRoot} to the supplied root.
  * @category guards
  * @since 0.0.0
  */
@@ -278,7 +283,8 @@ const issueIndexFromEnvelopes = (envelopes: ReadonlyArray<FallowEnvelope>, advis
 
 const assertAdvisoryEnvelopes = Effect.fn("YeetFallowFeedback.assertAdvisoryEnvelopes")(function* (
   envelopes: ReadonlyArray<FallowEnvelope>,
-  advisory: boolean
+  advisory: boolean,
+  runStartedAt?: string
 ): Effect.fn.Return<void, YeetCommandError> {
   // Reject self-contradictory payloads up front: a successful envelope's findings
   // must share its subcommand feature family, otherwise the issue id (derived from
@@ -309,6 +315,33 @@ const assertAdvisoryEnvelopes = Effect.fn("YeetFallowFeedback.assertAdvisoryEnve
   if (!A.isReadonlyArrayEmpty(nonAdvisoryRefs)) {
     return yield* YeetCommandError.make({
       message: `Fallow advisory feedback received non-advisory envelope(s): ${A.join(nonAdvisoryRefs, ", ")}`,
+      exitCode: 1,
+    });
+  }
+  const startedAtMillis = pipe(
+    O.fromUndefinedOr(runStartedAt),
+    O.flatMap(DateTime.make),
+    O.map(DateTime.toEpochMillis)
+  );
+  const staleRefs = pipe(
+    startedAtMillis,
+    O.map((startedAt) =>
+      pipe(
+        envelopes,
+        A.filter((envelope) =>
+          pipe(
+            DateTime.make(envelope.generatedAt),
+            O.match({ onNone: () => true, onSome: (generatedAt) => DateTime.toEpochMillis(generatedAt) < startedAt })
+          )
+        ),
+        A.map((envelope) => `${envelope.subcommand} (${envelope.generatedAt})`)
+      )
+    ),
+    O.getOrElse(A.empty<string>)
+  );
+  if (!A.isReadonlyArrayEmpty(staleRefs)) {
+    return yield* YeetCommandError.make({
+      message: `Fallow advisory feedback rejected envelope(s) older than the Yeet run start ${runStartedAt}: ${A.join(staleRefs, ", ")}`,
       exitCode: 1,
     });
   }
@@ -384,10 +417,11 @@ export const runYeetFallowFeedback = Effect.fn("YeetFallowFeedback.runYeetFallow
   readonly advisory: boolean;
   readonly emit: string;
   readonly from: string;
+  readonly runStartedAt?: string;
 }): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const envelopes = yield* readEnvelopesFromDirectory(options.from);
   const selectedEnvelopes = feedbackEnvelopes(envelopes, options.advisory);
-  yield* assertAdvisoryEnvelopes(selectedEnvelopes, options.advisory);
+  yield* assertAdvisoryEnvelopes(selectedEnvelopes, options.advisory, options.runStartedAt);
   const index = issueIndexFromEnvelopes(selectedEnvelopes, options.advisory);
   yield* writeQualityIssueIndex(options.emit, index);
   yield* Console.log(`[yeet] Fallow advisory issue index written to ${options.emit}`);

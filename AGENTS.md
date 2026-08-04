@@ -23,6 +23,10 @@ Ship reliable code with effect-first and schema-first patterns.
   `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
   type parameters already.
 - Apply schema defaults when safe. Keep changes focused and testable.
+- JSDoc on exported symbols uses titled section grammar: `**Example** (Title)`
+  prose sections (one ts fence each) and `**Details**`/`**Gotchas**` prose —
+  never `@example` or `@remarks` tags. Law: `.patterns/jsdoc-documentation.md`;
+  worked before/after in the `jsdoc-annotation-specialist` skill.
 - In `packages/**/test/**/*.{ts,tsx}`, import package source through
   `@beep/*` aliases instead of relative paths into any workspace `src/`;
   relatives only for local helpers, fixtures, snapshots, and other

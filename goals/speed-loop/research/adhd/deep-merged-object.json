@@ -1,0 +1,22 @@
+{
+  "sketch": "For a PR whose merge order the operator has fixed, Yeet would fetch the exact target-base commit and PR head, materialize GitHub-equivalent squash content in a clean worktree, and record the resulting Git tree hash as the candidate landing identity. The full proof battery would run once against a synthetic commit carrying that tree, while its attestation binds the tree hash, base commit, PR head, toolchain lock inputs, and proof results. A required check or GitHub App would permit merge only while the target base and predicted tree still match that attestation; any earlier merge changes the base and forces prediction and proof again. Because GitHub's squash endpoint synthesizes its own commit metadata and therefore cannot be relied on to reproduce a locally predicted commit OID, the durable identity should be the tree hash, with the server-produced squash commit accepted only if its tree equals the attested tree. If literal commit-object identity is required, the workflow must leave standard GitHub squash merging and have the operator install the already-created commit through a protected fast-forward or equivalent controlled integration path. Merge queue is a useful variant: run the gauntlet on the merge_group commit, but still verify whether the object actually installed on main is identical or merely tree-equivalent before treating its commit OID as durable.",
+  "risk": "The load-bearing risk is the integration atomicity gap: standard GitHub squash merge does not promise to install a caller-supplied commit, and the base can move between attestation and merge, so without a trusted gate that atomically checks base-plus-tree at merge time the proof can be attached to content other than what lands.",
+  "first_step": "Add a read-only `bun run beep yeet predict-squash --pr <n>` spike that fetches the exact PR base/head, reproduces squash content in a temporary worktree, emits `{baseOid, headOid, treeOid}`, and validates the algorithm against several already-squash-merged PRs by comparing `treeOid` with the tree of each actual main commit.",
+  "children": [
+    {
+      "text": "Tree-attested proof cache: reuse expensive monorepo lanes across rebases or regenerated commits whenever the complete tree and declared environment inputs are identical."
+    },
+    {
+      "text": "Operator merge-order planner: simulate the queued PR sequence, derive each successive candidate tree, and pre-prove the chain while invalidating only the suffix after an order or content change."
+    },
+    {
+      "text": "Two-tier evidence: keep cheap head-SHA checks for review feedback, then reserve one full Yeet gauntlet for the locked landing tree immediately before merge."
+    },
+    {
+      "text": "Artifact/SBOM binding: sign build outputs, Turbo cache manifests, and provenance against the landing tree so releases can prove they were built from exactly the content admitted to main."
+    },
+    {
+      "text": "Merge-group experiment: compare GitHub merge_group OIDs and trees with eventual main commits to determine whether merge queue can provide true commit-object installation or only a trustworthy pre-merge tree oracle."
+    }
+  ]
+}

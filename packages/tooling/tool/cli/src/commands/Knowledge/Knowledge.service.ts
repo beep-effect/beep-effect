@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
-import { Context, Effect, FileSystem, HashSet, Layer, MutableHashMap, Order, Path, pipe } from "effect";
+import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -275,27 +275,52 @@ const trackedPathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPa
 
 const stripQueryAndFragment = Str.replace(/[?#].*$/u, "");
 
+/** Spellings a governed path may never contain: whitespace, glob and shell syntax, ellipses, absolute roots, URLs. */
+const hasUngovernedPathSyntax = (value: string): boolean =>
+  /[\s\\]/u.test(value) ||
+  /[*[\]{}<>|:]/u.test(value) ||
+  /(?:^|\/)\.\.\.(?:\/|$)/u.test(value) ||
+  Str.includes("…")(value) ||
+  Str.startsWith("/")(value) ||
+  Str.includes("://")(value);
+
+const isRelativePathSpelling = (value: string): boolean => Str.startsWith("./")(value) || Str.startsWith("../")(value);
+
 const isGovernedPathSpelling = (raw: string): boolean => {
   const value = stripQueryAndFragment(nfc(raw));
-  if (
-    Str.isEmpty(value) ||
-    /[\s\\]/u.test(value) ||
-    /[*[\]{}<>|:]/u.test(value) ||
-    /(?:^|\/)\.\.\.(?:\/|$)/u.test(value) ||
-    Str.includes("…")(value) ||
-    Str.startsWith("/")(value) ||
-    Str.includes("://")(value)
-  ) {
+  if (Str.isEmpty(value) || hasUngovernedPathSyntax(value)) {
     return false;
   }
-  if (Str.startsWith("./")(value) || Str.startsWith("../")(value)) {
+  if (isRelativePathSpelling(value)) {
     return true;
   }
-  const first = A.head(Str.split("/")(value));
-  return O.match(first, {
+  return O.match(A.head(Str.split("/")(value)), {
     onNone: () => false,
     onSome: (segment) => HashSet.has(GOVERNED_BARE_ROOTS, segment) || HashSet.has(GOVERNED_ROOT_FILES, value),
   });
+};
+
+/** Applies one path segment to the resolved stack, or `O.none()` when `..` escapes the repository root. */
+const applyPathSegment = (segments: ReadonlyArray<string>, segment: string): O.Option<ReadonlyArray<string>> => {
+  if (segment === "" || segment === ".") {
+    return O.some(segments);
+  }
+  if (segment !== "..") {
+    return O.some(A.append(segments, segment));
+  }
+  return A.isReadonlyArrayEmpty(segments) ? O.none() : O.some(A.dropRight(segments, 1));
+};
+
+const resolvePathSegments = (base: ReadonlyArray<string>, value: string): O.Option<ReadonlyArray<string>> => {
+  let segments = base;
+  for (const segment of Str.split("/")(value)) {
+    const next = applyPathSegment(segments, segment);
+    if (O.isNone(next)) {
+      return O.none();
+    }
+    segments = next.value;
+  }
+  return O.some(segments);
 };
 
 /**
@@ -330,24 +355,13 @@ export const normalizeKnowledgeRepoPath = (documentPath: string, raw: string): O
     return O.none();
   }
   const value = stripQueryAndFragment(nfc(raw));
-  const relative = Str.startsWith("./")(value) || Str.startsWith("../")(value);
-  let segments = relative ? A.dropRight(Str.split("/")(nfc(documentPath)), 1) : A.empty<string>();
+  const base = isRelativePathSpelling(value) ? A.dropRight(Str.split("/")(nfc(documentPath)), 1) : A.empty<string>();
 
-  for (const segment of Str.split("/")(value)) {
-    if (segment === "" || segment === ".") {
-      continue;
-    }
-    if (segment === "..") {
-      if (A.isReadonlyArrayEmpty(segments)) {
-        return O.none();
-      }
-      segments = A.dropRight(segments, 1);
-      continue;
-    }
-    segments = A.append(segments, segment);
-  }
-
-  return A.isReadonlyArrayNonEmpty(segments) ? O.some(nfc(A.join(segments, "/"))) : O.none();
+  return pipe(
+    resolvePathSegments(base, value),
+    O.filter(A.isReadonlyArrayNonEmpty),
+    O.map((segments) => nfc(A.join(segments, "/")))
+  );
 };
 
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
@@ -426,6 +440,93 @@ const commandWords = (span: string): ReadonlyArray<string> => {
   return Str.isEmpty(tail) ? A.empty<string>() : Str.split(/\s+/u)(tail);
 };
 
+/** Drains a global pattern over one line, preserving `exec` order. */
+const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray> => {
+  let matches = A.empty<RegExpExecArray>();
+  let match = pattern.exec(text);
+  while (match !== null) {
+    matches = A.append(matches, match);
+    match = pattern.exec(text);
+  }
+  return matches;
+};
+
+/** An inline code span and the 1-based column its content starts at. */
+type InlineSpan = {
+  readonly span: string;
+  readonly column: number;
+};
+
+const inlineSpanOf = (match: RegExpExecArray): O.Option<InlineSpan> => {
+  const prefix = match[1];
+  const span = match[2];
+  return P.isString(prefix) && P.isString(span)
+    ? O.some({ span, column: match.index + Str.length(prefix) + 1 })
+    : O.none();
+};
+
+/** A tracked path that the paired archive does not contain, or `O.none()` when the spelling is fine. */
+const brokenPathAt = (
+  raw: string,
+  documentPath: string,
+  entries: ReadonlyArray<KnowledgeTrackedEntry>
+): O.Option<string> =>
+  pipe(
+    normalizeKnowledgeRepoPath(documentPath, raw),
+    O.filter((repoPath) => !trackedPathExists(entries, repoPath))
+  );
+
+const assertionCandidate = (
+  match: RegExpExecArray,
+  lineNumber: number,
+  documentPath: string,
+  documentId: string,
+  entries: ReadonlyArray<KnowledgeTrackedEntry>
+): O.Option<KnowledgeFindingCandidate> => {
+  const raw = match[1];
+  if (!P.isString(raw)) {
+    return O.none();
+  }
+  return O.map(brokenPathAt(raw, documentPath, entries), (repoPath) =>
+    failedAssertionCandidate(documentId, documentPath, repoPath, lineNumber, match.index + 1)
+  );
+};
+
+const commandOccurrence = (
+  match: RegExpExecArray,
+  lineNumber: number,
+  documentPath: string,
+  documentId: string
+): O.Option<KnowledgeCommandOccurrence> =>
+  pipe(
+    inlineSpanOf(match),
+    O.filter(({ span }) => isEligibleCommandSpan(span)),
+    O.map(({ column, span }) =>
+      KnowledgeCommandOccurrence.make({
+        documentId,
+        location: findingLocation(documentPath, lineNumber, column),
+        words: commandWords(span),
+      })
+    )
+  );
+
+const inlinePathCandidate = (
+  match: RegExpExecArray,
+  lineNumber: number,
+  documentPath: string,
+  documentId: string,
+  entries: ReadonlyArray<KnowledgeTrackedEntry>
+): O.Option<KnowledgeFindingCandidate> =>
+  pipe(
+    inlineSpanOf(match),
+    O.filter(({ span }) => !isEligibleCommandSpan(span)),
+    O.flatMap((inline) =>
+      O.map(brokenPathAt(inline.span, documentPath, entries), (repoPath) =>
+        missingPathCandidate(documentId, documentPath, repoPath, lineNumber, inline.column)
+      )
+    )
+  );
+
 const extractLineFindings = (
   lineText: string,
   lineNumber: number,
@@ -433,56 +534,53 @@ const extractLineFindings = (
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
-  let candidates = A.empty<KnowledgeFindingCandidate>();
-  let commands = A.empty<KnowledgeCommandOccurrence>();
-  const assertionPattern = /<!-- beep:assert path-exists ([^\s]+) -->/gu;
-  const inlinePattern = /(^|[^`\\])`([^`\r\n]+)`(?!`)/gu;
-  let match = assertionPattern.exec(lineText);
-
-  while (match !== null) {
-    const raw = match[1];
-    if (P.isString(raw)) {
-      const normalized = normalizeKnowledgeRepoPath(documentPath, raw);
-      if (O.isSome(normalized) && !trackedPathExists(entries, normalized.value)) {
-        candidates = A.append(
-          candidates,
-          failedAssertionCandidate(documentId, documentPath, normalized.value, lineNumber, match.index + 1)
-        );
-      }
-    }
-    match = assertionPattern.exec(lineText);
-  }
-
-  match = inlinePattern.exec(lineText);
-  while (match !== null) {
-    const prefix = match[1];
-    const span = match[2];
-    if (P.isString(prefix) && P.isString(span)) {
-      const column = match.index + Str.length(prefix) + 1;
-      if (isEligibleCommandSpan(span)) {
-        commands = A.append(
-          commands,
-          KnowledgeCommandOccurrence.make({
-            documentId,
-            location: findingLocation(documentPath, lineNumber, column),
-            words: commandWords(span),
-          })
-        );
-      } else {
-        const normalized = normalizeKnowledgeRepoPath(documentPath, span);
-        if (O.isSome(normalized) && !trackedPathExists(entries, normalized.value)) {
-          candidates = A.append(
-            candidates,
-            missingPathCandidate(documentId, documentPath, normalized.value, lineNumber, column)
-          );
-        }
-      }
-    }
-    match = inlinePattern.exec(lineText);
-  }
+  const assertions = matchesOf(/<!-- beep:assert path-exists ([^\s]+) -->/gu, lineText);
+  const inlines = matchesOf(/(^|[^`\\])`([^`\r\n]+)`(?!`)/gu, lineText);
+  const candidates = A.appendAll(
+    A.getSomes(A.map(assertions, (match) => assertionCandidate(match, lineNumber, documentPath, documentId, entries))),
+    A.getSomes(A.map(inlines, (match) => inlinePathCandidate(match, lineNumber, documentPath, documentId, entries)))
+  );
+  const commands = A.getSomes(
+    A.map(inlines, (match) => commandOccurrence(match, lineNumber, documentPath, documentId))
+  );
 
   return [candidates, commands];
 };
+
+const FENCE_PATTERN = /^[ \t]{0,3}(`{3,}|~{3,})(.*)$/u;
+
+/** The open fence a line is inside: its marker character and the run length that must be matched to close it. */
+type OpenFence = {
+  readonly marker: string;
+  readonly length: number;
+};
+
+const openedFence = (line: string): O.Option<OpenFence> => {
+  const fence = FENCE_PATTERN.exec(line);
+  if (fence === null || !P.isString(fence[1]) || !P.isString(fence[1][0])) {
+    return O.none();
+  }
+  return O.some({ marker: fence[1][0], length: Str.length(fence[1]) });
+};
+
+const closesFence = (line: string, open: OpenFence): boolean => {
+  const fence = FENCE_PATTERN.exec(line);
+  return (
+    fence !== null &&
+    P.isString(fence[1]) &&
+    P.isString(fence[2]) &&
+    fence[1][0] === open.marker &&
+    Str.length(fence[1]) >= open.length &&
+    /^\s*$/u.test(fence[2])
+  );
+};
+
+/** Fence state after one line: `O.none()` outside a fence, `O.some` while inside one. */
+const advanceFence = (fence: O.Option<OpenFence>, line: string): O.Option<OpenFence> =>
+  O.match(fence, {
+    onNone: () => openedFence(line),
+    onSome: (open) => (closesFence(line, open) ? O.none() : O.some(open)),
+  });
 
 const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   oracle: KnowledgeArchiveOracle,
@@ -493,37 +591,22 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   const lines = Str.split(/\r?\n/u)(text);
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
-  let fenceMarker = "";
-  let fenceLength = 0;
+  let fence = O.none<OpenFence>();
 
   for (let index = 0; index < A.length(lines); index += 1) {
     const line = lines[index];
     if (!P.isString(line)) {
       continue;
     }
-    const fence = /^[ \t]{0,3}(`{3,}|~{3,})(.*)$/u.exec(line);
-    if (fenceMarker !== "") {
-      if (
-        fence !== null &&
-        P.isString(fence[1]) &&
-        P.isString(fence[2]) &&
-        fence[1][0] === fenceMarker &&
-        Str.length(fence[1]) >= fenceLength &&
-        /^\s*$/u.test(fence[2])
-      ) {
-        fenceMarker = "";
-        fenceLength = 0;
-      }
-      continue;
+    const nextFence = advanceFence(fence, line);
+    // Prose only: fence delimiters and fenced content alike stay out of the scan.
+    const scannable = O.isNone(fence) && O.isNone(nextFence);
+    fence = nextFence;
+    if (scannable) {
+      const extracted = extractLineFindings(line, index + 1, entry.path, documentId, oracle.trackedEntries);
+      candidates = A.appendAll(candidates, extracted[0]);
+      commands = A.appendAll(commands, extracted[1]);
     }
-    if (fence !== null && P.isString(fence[1]) && P.isString(fence[1][0])) {
-      fenceMarker = fence[1][0];
-      fenceLength = Str.length(fence[1]);
-      continue;
-    }
-    const extracted = extractLineFindings(line, index + 1, entry.path, documentId, oracle.trackedEntries);
-    candidates = A.appendAll(candidates, extracted[0]);
-    commands = A.appendAll(commands, extracted[1]);
   }
 
   return { candidates, commands };
@@ -838,6 +921,18 @@ const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
   return result.output;
 });
 
+const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProbeResult> => {
+  const fields = Str.split("\t")(line);
+  const canonicalPath = A.drop(fields, 1);
+  return O.flatMap(A.head(fields), (status) =>
+    Match.value(status).pipe(
+      Match.when("resolved", () => O.some(KnowledgeCommandResolved.make({ canonicalPath }))),
+      Match.when("unknown", () => O.some(KnowledgeCommandUnknown.make({ canonicalPath }))),
+      Match.orElse(() => O.none<KnowledgeCommandProbeResult>())
+    )
+  );
+};
+
 const decodeCommandProbeOutput = (
   output: string,
   expectedCount: number
@@ -846,22 +941,10 @@ const decodeCommandProbeOutput = (
   if (A.length(lines) !== expectedCount) {
     return KnowledgeOperationalError.make({ message: "Archive-local command probe emitted malformed output." });
   }
-  let results = A.empty<KnowledgeCommandProbeResult>();
-  for (const line of lines) {
-    const fields = Str.split("\t")(line);
-    const status = A.head(fields);
-    if (O.isNone(status) || (status.value !== "resolved" && status.value !== "unknown")) {
-      return KnowledgeOperationalError.make({ message: "Archive-local command probe emitted an unknown status." });
-    }
-    const canonicalPath = A.drop(fields, 1);
-    results = A.append(
-      results,
-      status.value === "resolved"
-        ? KnowledgeCommandResolved.make({ canonicalPath })
-        : KnowledgeCommandUnknown.make({ canonicalPath })
-    );
-  }
-  return Effect.succeed(results);
+  return O.match(O.all(A.map(lines, commandProbeResultFromLine)), {
+    onNone: () => KnowledgeOperationalError.make({ message: "Archive-local command probe emitted an unknown status." }),
+    onSome: Effect.succeed,
+  });
 };
 
 const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(function* (

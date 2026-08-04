@@ -138,6 +138,32 @@
         "!.beep/**"
       ]
     },
+    "test:integration:parallel": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "env": [
+        "AI_VENICE_API_KEY",
+        "BEEP_TEST_*",
+        "BEEP_TIKA_*",
+        "CLOUD_BOX_TOKEN",
+        "FIRECRAWL_API_KEY"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "!.beep/**"
+      ]
+    },
+    "test:integration:serial": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "env": ["BEEP_TEST_*"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "!.beep/**"
+      ]
+    },
     "coverage": {
       "cache": false,
       "dependsOn": ["^build"],

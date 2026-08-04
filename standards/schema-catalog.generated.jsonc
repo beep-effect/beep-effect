@@ -27114,14 +27114,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.errors.ts",
-      "symbol": "DualArityInventoryReadError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityInventoryReadError",
-      "description": "Raised when the committed dual-arity inventory cannot be parsed or decoded."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.errors.ts",
       "symbol": "EffectImportRulesPersistenceError",
       "kind": "tagged-error",
       "owner": "@beep/repo-cli",
@@ -27143,62 +27135,6 @@
       "owner": "@beep/repo-cli",
       "identity": "TerseEffectRulesPersistenceError",
       "description": "Terse Effect rule updates could not be persisted to disk."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityDiagnosticKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityDiagnosticKind",
-      "description": "Diagnostic kinds emitted by the public API dual-arity law."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityEntryKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityEntryKind",
-      "description": "Kinds of public helper APIs tracked by the dual-arity law."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityEntryStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityEntryStatus",
-      "description": "Tracked status for a dual-arity inventory entry."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityInventoryDocument",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityInventoryDocument",
-      "description": "Committed public API dual-arity inventory baseline for repo-wide Effect governance."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityInventoryEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityInventoryEntry",
-      "description": "Single tracked public API dual-arity finding."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityRulesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityRulesOptions",
-      "description": "Runtime options for public API dual-arity enforcement."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
-      "symbol": "DualArityRulesSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityRulesSummary",
-      "description": "Summary of public API dual-arity inventory verification."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",

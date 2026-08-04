@@ -7,11 +7,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str, Text, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
@@ -280,13 +280,23 @@ const resolveViolation = (
   });
 };
 
-const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* () {
+const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* (
+  includePaths: ReadonlyArray<string> | undefined
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = normalizePath(path.resolve(process.cwd()));
   const packagesRoot = path.join(repoRoot, "packages");
   const sources = yield* collectPackageSourceRoots(packagesRoot);
-  const files = yield* collectPackageTestFiles(packagesRoot, repoRoot);
+  const files =
+    includePaths === undefined
+      ? yield* collectPackageTestFiles(packagesRoot, repoRoot)
+      : pipe(
+          includePaths,
+          A.filter(isPackageTestFilePath),
+          A.map((filePath) => normalizePath(path.resolve(repoRoot, filePath))),
+          A.sort(Order.String)
+        );
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   let violations = A.empty<PackageTestImportViolation>();
 
@@ -331,6 +341,13 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
  * @category utilities
  * @since 0.0.0
  */
-export const lintPackageTestImportsCommand = Command.make("package-test-imports", {}, runLintPackageTestImports).pipe(
-  Command.withDescription("Check package test files for relative imports into workspace src roots")
-);
+export const lintPackageTestImportsCommand = Command.make(
+  "package-test-imports",
+  {
+    include: Flag.string("include").pipe(
+      Flag.withDescription("Comma-separated repo-relative test files to scan; defaults to the full package test scope"),
+      Flag.withDefault("*")
+    ),
+  },
+  ({ include }) => runLintPackageTestImports(include === "*" ? undefined : Text.splitCommaSeparatedTrimmed(include))
+).pipe(Command.withDescription("Check package test files for relative imports into workspace src roots"));

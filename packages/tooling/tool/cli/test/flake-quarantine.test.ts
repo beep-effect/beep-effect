@@ -11,7 +11,7 @@ import {
   QualityTaskStep,
   standaloneQuarantineRerunStep,
 } from "@beep/repo-cli/test/Quality";
-import { buildYeetVerdictForTesting } from "@beep/repo-cli/test/Yeet";
+import { BuildYeetVerdictInput, buildYeetVerdictForTesting } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -204,9 +204,11 @@ describe("flake-quarantine artifact", () => {
       planned: [],
       runId: "feature",
     } as const;
-    const withIncidents = buildYeetVerdictForTesting({ ...base, flakeQuarantine: [incident] });
+    const withIncidents = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({ ...base, flakeQuarantine: [incident] })
+    );
     expect(withIncidents.flakeQuarantine).toHaveLength(1);
-    const withoutIncidents = buildYeetVerdictForTesting({ ...base, flakeQuarantine: [] });
+    const withoutIncidents = buildYeetVerdictForTesting(BuildYeetVerdictInput.make({ ...base, flakeQuarantine: [] }));
     expect(withoutIncidents.flakeQuarantine).toBeUndefined();
   });
 });
