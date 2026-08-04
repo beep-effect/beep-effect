@@ -22,7 +22,7 @@ import {
   sortedUniquePaths,
 } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
-import { tagsFromComment } from "./QualityArtifactSupport.ts";
+import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
@@ -452,13 +452,6 @@ const isPackageSourceFile = (filePath: string): boolean =>
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
-const jsdocCommentsIn = (sourceText: string): ReadonlyArray<string> =>
-  pipe(
-    Str.matchAll(/\/\*\*[\s\S]*?\*\//g)(sourceText),
-    A.fromIterable,
-    A.map((match) => match[0] ?? "")
-  );
-
 const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(function* (
   repoRoot: string
 ): Effect.fn.Return<
@@ -483,7 +476,7 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
       fs.readFileString(path.join(repoRoot, filePath)).pipe(
         Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
         Effect.map((sourceText) => {
-          const tags = pipe(jsdocCommentsIn(sourceText), A.flatMap(tagsFromComment), A.dedupe);
+          const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
           return A.flatMap(JSDocTouchedFileLegacyTag.Options, (tag) =>
             A.contains(tags, tag) ? [JSDocTouchedFileFinding.make({ filePath, tag })] : []
           );

@@ -1,4 +1,8 @@
-import { tagsFromComment, writeJSDocDocumentationInventory } from "@beep/repo-cli/test/Quality";
+import {
+  jsdocCommentsFromSource,
+  tagsFromComment,
+  writeJSDocDocumentationInventory,
+} from "@beep/repo-cli/test/Quality";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -177,6 +181,27 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
  * @since 0.0.0
  */`)
     ).toEqual(["@category", "@since"]);
+  });
+
+  it("preserves outer legacy tags after a complete nested JSDoc example", () => {
+    const comments = jsdocCommentsFromSource(`/**
+ * Outer summary.
+ *
+ * \`\`\`ts
+ * /**
+ *  * Nested summary.
+ *  * @example Nested legacy source.
+ *  */
+ * export const nested = 1
+ * \`\`\`
+ *
+ * @remarks Outer legacy tag that cleanup-on-touch must detect.
+ * @category helpers
+ * @since 0.0.0
+ */`);
+
+    expect(comments).toHaveLength(1);
+    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@remarks", "@category", "@since"]);
   });
 
   it("checks sectionless prose, loose fences, and empty titled examples", () =>
