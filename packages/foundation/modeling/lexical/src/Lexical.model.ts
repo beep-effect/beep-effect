@@ -2599,7 +2599,7 @@ export const LexicalNode = RawLexicalNode.check(
 );
 
 /**
- * {@inheritDoc LexicalNode}
+ * Decoded type of the strict v1 serialized Lexical node union.
  *
  * **Example** (Use the lexical model)
  *

@@ -525,17 +525,15 @@ const SECRET_HEURISTIC_PATTERN = /key|token|secret|credential|password/i;
 // [[allowlists]] syntax, so the path allowlist for generated registry data is inert there.
 // Public registry literals that trip its generic-api-key heuristic (e.g.
 // "application/sslkeylogfile") therefore carry inline allow markers in the generated output.
-const withGitleaksAllowMarkers = (rendered: string): string =>
-  pipe(
-    rendered,
-    Str.split("\n"),
-    A.map((line) =>
-      SECRET_HEURISTIC_PATTERN.test(line) && /^\s*"/.test(line)
-        ? `${line} // gitleaks:allow -- public IANA registry literal`
-        : line
-    ),
-    A.join("\n")
-  );
+const withGitleaksAllowMarkers: (rendered: string) => string = flow(
+  Str.split("\n"),
+  A.map((line) =>
+    SECRET_HEURISTIC_PATTERN.test(line) && /^\s*"/.test(line)
+      ? `${line} // gitleaks:allow -- public IANA registry literal`
+      : line
+  ),
+  A.join("\n")
+);
 
 const formatRegistryLiteral: (value: unknown) => string = flow(formatTsLiteral, withGitleaksAllowMarkers);
 
