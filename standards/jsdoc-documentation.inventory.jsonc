@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-04T09:47:43.507Z",
+  "generatedAt": "2026-08-04T11:36:14.253Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -68,7 +68,7 @@
     "publicModules": 2363,
     "publicExports": 15522,
     "openModules": 443,
-    "openExports": 1384,
+    "openExports": 1379,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
     "missingExportSince": 0,
@@ -90,7 +90,7 @@
     "malformed-example": 85,
     "duplicate-example": 0,
     "loose-ts-fence": 0,
-    "forbidden-remarks": 472,
+    "forbidden-remarks": 467,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -42149,8 +42149,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 772,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-772-createpackagecommand",
+          "line": 773,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-773-createpackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -57739,10 +57739,9 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-77-remoteskillsource",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-79-remoteskillsource",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -57762,10 +57761,9 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-105-skilllockentry",
+          "line": 109,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-109-skilllockentry",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -57785,10 +57783,9 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 133,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-133-skilllockfile",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-139-skilllockfile",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -57808,10 +57805,9 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 234,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-234-remoteskillsources",
+          "line": 242,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-242-remoteskillsources",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -57831,12 +57827,11 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 741,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-741-rendercodexconfigwithskills",
+          "line": 757,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-757-rendercodexconfigwithskills",
           "currentTags": [
             "@param",
             "@returns",
-            "@example",
             "@category",
             "@since"
           ],
@@ -57856,10 +57851,9 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 890,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-890-runskillsupdate",
+          "line": 908,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-908-runskillsupdate",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -57879,10 +57873,9 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
-          "line": 1002,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-1002-skillscommand",
+          "line": 1022,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-command-ts-1022-skillscommand",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -58617,8 +58610,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1055,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1055-tsconfigsyncplan",
+          "line": 1056,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1056-tsconfigsyncplan",
           "currentTags": [
             "@category",
             "@since"
@@ -64637,7 +64630,7 @@
       },
       "counts": {
         "openModules": 2,
-        "openExports": 7,
+        "openExports": 2,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
@@ -64661,7 +64654,7 @@
           "malformed-example": 0,
           "duplicate-example": 0,
           "loose-ts-fence": 0,
-          "forbidden-remarks": 7
+          "forbidden-remarks": 2
         }
       },
       "modules": [
@@ -65027,11 +65020,9 @@
           "exportKind": "const",
           "filePath": "src/AssistantTurn/AnthropicTurnKernel.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts",
-          "line": 279,
-          "anchor": "packages-agents-server-src-assistantturn-anthropicturnkernel-ts-279-anthropicturnkernel",
+          "line": 282,
+          "anchor": "packages-agents-server-src-assistantturn-anthropicturnkernel-ts-282-anthropicturnkernel",
           "currentTags": [
-            "@remarks",
-            "@example",
             "@category",
             "@since"
           ],
@@ -65043,22 +65034,17 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "forbidden-remarks"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IssueReport",
           "exportKind": "class",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 100,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-100-issuereport",
+          "line": 101,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-101-issuereport",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65078,11 +65064,9 @@
           "exportKind": "type",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 215,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-215-blockrepaircall",
+          "line": 218,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-218-blockrepaircall",
           "currentTags": [
-            "@remarks",
-            "@example",
             "@category",
             "@since"
           ],
@@ -65094,23 +65078,17 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "forbidden-remarks"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RepairInvalidBlocks",
           "exportKind": "type",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 256,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-256-repairinvalidblocks",
+          "line": 261,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-261-repairinvalidblocks",
           "currentTags": [
-            "@remarks",
-            "@example",
             "@category",
             "@since"
           ],
@@ -65122,22 +65100,17 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "forbidden-remarks"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "PatchOpSummaryBase",
           "exportKind": "class",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 315,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-315-patchopsummarybase",
+          "line": 321,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-321-patchopsummarybase",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65157,10 +65130,9 @@
           "exportKind": "class",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 342,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-342-addpatchopsummary",
+          "line": 349,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-349-addpatchopsummary",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65180,10 +65152,9 @@
           "exportKind": "class",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 367,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-367-removepatchopsummary",
+          "line": 375,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-375-removepatchopsummary",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65203,10 +65174,9 @@
           "exportKind": "class",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 392,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-392-replacepatchopsummary",
+          "line": 401,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-401-replacepatchopsummary",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65226,10 +65196,9 @@
           "exportKind": "const",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 417,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-417-patchopsummary",
+          "line": 427,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-427-patchopsummary",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65249,10 +65218,9 @@
           "exportKind": "type",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 440,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-440-patchopsummary",
+          "line": 451,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-451-patchopsummary",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -65272,11 +65240,9 @@
           "exportKind": "const",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 657,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-657-makerepairinvalidblocks",
+          "line": 670,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-670-makerepairinvalidblocks",
           "currentTags": [
-            "@remarks",
-            "@example",
             "@category",
             "@since"
           ],
@@ -65288,23 +65254,17 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "forbidden-remarks"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "repairInvalidBlocks",
           "exportKind": "const",
           "filePath": "src/AssistantTurn/BlockRepair.ts",
           "repoPath": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
-          "line": 699,
-          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-699-repairinvalidblocks",
+          "line": 714,
+          "anchor": "packages-agents-server-src-assistantturn-blockrepair-ts-714-repairinvalidblocks",
           "currentTags": [
-            "@remarks",
-            "@example",
             "@category",
             "@since"
           ],
@@ -65316,12 +65276,8 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "forbidden-remarks"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ScanState",
@@ -148107,10 +148063,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 53,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-53-documentsafetypathsegment",
+          "line": 54,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-54-documentsafetypathsegment",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148130,10 +148085,9 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 74,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-74-documentsafetypathsegment",
+          "line": 76,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-76-documentsafetypathsegment",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148153,10 +148107,9 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 90,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-90-rawnodesafetyviolation",
+          "line": 93,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-93-rawnodesafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148176,10 +148129,9 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-121-urlsafetyviolation",
+          "line": 125,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-125-urlsafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148199,10 +148151,9 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 149,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-149-scalarsafetyviolation",
+          "line": 154,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-154-scalarsafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148222,10 +148173,9 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 177,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-177-duplicatefootnotedefinitionsafetyviolation",
+          "line": 183,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-183-duplicatefootnotedefinitionsafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148245,10 +148195,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 205,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-205-documentsafetyviolation",
+          "line": 212,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-212-documentsafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148268,10 +148217,9 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 232,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-232-documentsafetyviolation",
+          "line": 240,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-240-documentsafetyviolation",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148291,10 +148239,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 450,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-450-documentsafetyissues",
+          "line": 459,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-459-documentsafetyissues",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148314,10 +148261,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 469,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-469-inlinesafetyissuesatroot",
+          "line": 479,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-479-inlinesafetyissuesatroot",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148337,10 +148283,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 507,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-507-safeinline",
+          "line": 518,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-518-safeinline",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148360,10 +148305,9 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 534,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-534-safeinline",
+          "line": 546,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-546-safeinline",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148383,10 +148327,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 553,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-553-safedocument",
+          "line": 566,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-566-safedocument",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148406,10 +148349,9 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 580,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-580-safedocument",
+          "line": 594,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-594-safedocument",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148429,10 +148371,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 597,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-597-decodesafedocument",
+          "line": 612,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-612-decodesafedocument",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148452,10 +148393,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 614,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-614-decodesafedocumenteffect",
+          "line": 630,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-630-decodesafedocumenteffect",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148475,10 +148415,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 629,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-629-decodesafedocumentunsafe",
+          "line": 646,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-646-decodesafedocumentunsafe",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],
@@ -148498,10 +148437,9 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 647,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-647-refinesafedocument",
+          "line": 665,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-665-refinesafedocument",
           "currentTags": [
-            "@example",
             "@category",
             "@since"
           ],

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-04T09:47:43.507Z
+Generated: 2026-08-04T11:36:14.253Z
 
 ## Scope
 
@@ -17,7 +17,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | publicModules | 2363 |
 | publicExports | 15522 |
 | openModules | 443 |
-| openExports | 1384 |
+| openExports | 1379 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -39,7 +39,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | malformed-example | 85 |
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
-| forbidden-remarks | 472 |
+| forbidden-remarks | 467 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -78,7 +78,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 155 | 993 | 33 | 58 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 1 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
-| 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
+| 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 2 |
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | needs-remediation | 1 | 1 | 1 | 1 |
 | 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 1 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 25 | 145 | 13 | 13 |
@@ -584,11 +584,6 @@ Module findings:
 Export findings:
 - `src/AssistantTurn/AnthropicTurnCodec.ts:185` `assistantBlockOutput` (const) - 1 documentation section/link violation(s)
 - `src/AssistantTurn/AnthropicTurnCodec.ts:210` `assistantOutput` (const) - 1 documentation section/link violation(s)
-- `src/AssistantTurn/AnthropicTurnKernel.ts:279` `AnthropicTurnKernel` (const) - 1 documentation section/link violation(s)
-- `src/AssistantTurn/BlockRepair.ts:215` `BlockRepairCall` (type) - 1 documentation section/link violation(s)
-- `src/AssistantTurn/BlockRepair.ts:256` `RepairInvalidBlocks` (type) - 1 documentation section/link violation(s)
-- `src/AssistantTurn/BlockRepair.ts:657` `makeRepairInvalidBlocks` (const) - 1 documentation section/link violation(s)
-- `src/AssistantTurn/BlockRepair.ts:699` `repairInvalidBlocks` (const) - 1 documentation section/link violation(s)
 
 ### @beep/courtlistener
 
