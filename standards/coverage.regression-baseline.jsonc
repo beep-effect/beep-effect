@@ -682,10 +682,10 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 67.7,
+      "lines": 67.69,
       "statements": 67.42,
       "branches": 52.35,
-      "functions": 59.08
+      "functions": 58.81
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",

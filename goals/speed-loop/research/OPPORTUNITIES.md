@@ -254,3 +254,41 @@ consolidation (deferred pending cache measurements). Per-lane proof resume
     GithubChecks.ts know their own invocations — embed the exact local repro
     command per lane in the `$GITHUB_STEP_SUMMARY` (and/or check-run output).
     #30's teach-at-point-of-failure philosophy applied to lanes.
+
+## Probe harvest (2026-08-04, effect-fn redundancy workflow, 8 agents adversarially verified)
+
+37. **tsbuildinfo plugin-diagnostic mask (soundness hole across 130 packages).**
+    Effect language-service diagnostics are persisted per-file in tsbuildinfo
+    `semanticDiagnosticsPerFile`, but the `plugins` block is NOT part of the
+    options hash: flipping a rule off→error re-runs nothing on warm state —
+    stale diagnostics replay verbatim (bidirectional; `-p` equally affected
+    since base config sets `incremental: true`; composite references propagate
+    the mask; turbo caches AND restores tsbuildinfo as a `check` output, making
+    a stale mask durable across machines and CI). 16/16 claims confirmed by
+    adversarial verify. This — not a plugin defect — is why rules mass-enabled
+    in May 2026 "didn't fire in some packages". Remedies: content-hash the
+    plugins block into a generated sentinel `.d.ts` included by every program,
+    or detect plugin-block drift and run `tsgo -b --force` once; compiler-
+    version bumps already unmask (bounding the window). Fixing this covers all
+    ~70 configured plugin rules, not just effectFnOpportunity.
+38. **effect-fn law prune verdict: KEEP — detectors are complementary, not
+    redundant.** The probe refuted the prune premise three ways. (a) Test
+    coverage is sound today: all 663 `/test/` files are plugin-checked on
+    hosted CI — `check:tsgo:tests` runs inside the hosted Check lane two
+    script hops below the YAML (`ci lane check` → root `check` script →
+    rootCheckSteps; only `--filter`/`--since` suppress repo-wide steps,
+    `--affected --summarize` do not). (b) The historical test-file miss was a
+    deliberate `**/test/**` severity-off block in tsconfig.base.json at the
+    law's creation (since removed). (c) The "some packages" miss is #37's
+    mask. Meanwhile the shape matrix shows neither tool subsumes the other:
+    the plugin never fires on MethodDeclaration owners or callback-position
+    functions (the law catches both; its tests document this as intentional),
+    while the law misses directly-returned `Effect.gen(...).pipe(...)` (19
+    live sites on its scan surface — plugin catches, with pipeTransformations
+    fix) and any Effect binding not literally named `Effect`. Keep the law
+    (~5.3s, currently 0 violations); the shrink path is upstreaming the
+    method/callback shapes to @effect/tsgo, then re-running this prune
+    analysis. Bonus fixes surfaced: dead `"tooling"` entry in testSearchRoots
+    (Quality.command.ts:269), and 69 packages still lack per-package test
+    typecheck in `check` (already ratcheted:
+    standards/test-typecheck.blindspot-baseline.jsonc, 65 findings).
