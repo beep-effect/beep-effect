@@ -955,11 +955,11 @@ export type MatchEmptyResult<Self extends string, OnEmpty, OnNonEmpty> = string 
  * @since 0.0.0
  */
 export const matchEmpty: {
-  <B, C = B>(options: {
+  <const B, const C = B>(options: {
     readonly onEmpty: LazyArg<B>;
     readonly onNonEmpty: (self: string) => C;
   }): <const Self extends string>(self: Self) => MatchEmptyResult<Self, B, C>;
-  <const Self extends string, B, C = B>(
+  <const Self extends string, const B, const C = B>(
     self: Self,
     options: {
       readonly onEmpty: LazyArg<B>;
