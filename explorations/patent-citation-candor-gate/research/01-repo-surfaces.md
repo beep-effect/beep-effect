@@ -227,9 +227,10 @@ domain-specific `draftKind`, an array of `RuntimeEvidenceRef`, `lifecycle`,
 The current lifecycle vocabulary contains only `candidate`
 (`packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:50-85`).
 
-`RuntimeApprovalGate` has exactly `approvalGateId`, string `candidateRefs`,
-`decision`, generic evidence refs, lifecycle, free-text `policyBasis`, string
-`requestedActions`, and `reviewerPrincipalId`
+`RuntimeApprovalGate` has exactly `approvalGateId`, an array of non-empty string
+`candidateRefs`, `decision`, generic evidence refs, lifecycle, free-text
+`policyBasis`, an array of non-empty string `requestedActions`, and
+`reviewerPrincipalId`
 (`packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts:473-491`).
 The current decision vocabulary contains only `pending`
 (`packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:124-159`).
