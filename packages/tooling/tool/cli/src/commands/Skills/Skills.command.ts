@@ -71,6 +71,7 @@ type SkillDriftLineFormatter<Tag extends SkillDrift["_tag"]> = (drift: SkillDrif
  * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
  * console.log(remoteSkillSources.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -99,6 +100,7 @@ export class RemoteSkillSource extends S.Class<RemoteSkillSource>($I`RemoteSkill
  * const candidate = { name: "jsdoc-annotation-specialist", source: "repo", version: "0.2.0" }
  * console.log(S.is(SkillLockEntry)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,6 +129,7 @@ export class SkillLockEntry extends S.Class<SkillLockEntry>($I`SkillLockEntry`)(
  * const candidate = { skills: [] }
  * console.log(S.is(SkillLockFile)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -228,6 +231,7 @@ const skillSource = (source: {
  *
  * console.log(remoteSkillSources.some((source) => source.name === "grill-me")) // true
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -890,6 +894,7 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
  * const program = runSkillsUpdate({ mode: "check", skill: O.none() })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -1002,6 +1007,7 @@ const skillsUpdateCommand = Command.make(
  * const run = Command.run(skillsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
