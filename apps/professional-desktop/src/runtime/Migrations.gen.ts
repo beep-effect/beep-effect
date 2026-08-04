@@ -6,7 +6,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-/* cspell:disable */
 import type { MigrationBundleEntry } from "@beep/postgres";
 
 /**

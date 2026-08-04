@@ -669,7 +669,8 @@ const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
 const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
 
-const fallowReportPath = (lane: string): string => `.beep/fallow/${lane}.json`;
+const fallowReportPath = (lane: string, advisory: boolean): string =>
+  `.beep/fallow/${lane}.${advisory ? "advisory" : "check"}.json`;
 
 const fallowRunStep = (repoRoot: string, lane: string, gateFlag: string, base: string): QualityTaskStep =>
   QualityTaskStep.make({
@@ -685,13 +686,13 @@ const fallowRunStep = (repoRoot: string, lane: string, gateFlag: string, base: s
       "--base",
       base,
       "--out",
-      fallowReportPath(lane),
+      fallowReportPath(lane, gateFlag === "--advisory"),
       "--quiet",
     ],
     cwd: repoRoot,
   });
 
-const fallowEnvelopeCheckStep = (repoRoot: string, lane: string): QualityTaskStep =>
+const fallowEnvelopeCheckStep = (repoRoot: string, lane: string, advisory: boolean): QualityTaskStep =>
   QualityTaskStep.make({
     label: `ci:fallow:envelope-check:${lane}`,
     command: "bun",
@@ -701,20 +702,22 @@ const fallowEnvelopeCheckStep = (repoRoot: string, lane: string): QualityTaskSte
       "quality",
       "fallow",
       "envelope-check",
-      fallowReportPath(lane),
+      fallowReportPath(lane, advisory),
       "--require",
       FALLOW_ENVELOPE_REQUIRED_FIELDS,
       "--expect-subcommand",
       lane,
       "--expect-report-path",
-      fallowReportPath(lane),
+      fallowReportPath(lane, advisory),
       "--require-raw-output",
     ],
     cwd: repoRoot,
   });
 
-const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
-  A.map([...FALLOW_ADVISORY_LANES, ...FALLOW_BLOCKING_LANES], (lane) => fallowEnvelopeCheckStep(repoRoot, lane));
+const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> => [
+  ...A.map(FALLOW_ADVISORY_LANES, (lane) => fallowEnvelopeCheckStep(repoRoot, lane, true)),
+  ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowEnvelopeCheckStep(repoRoot, lane, false)),
+];
 
 const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> => [
   ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowRunStep(repoRoot, lane, "--check", options.base)),
@@ -940,10 +943,12 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
   yield* Effect.forEach(
     FALLOW_BLOCKING_LANES,
     Effect.fnUntraced(function* (lane) {
-      const reportPath = path.join(repoRoot, fallowReportPath(lane));
+      const reportPath = path.join(repoRoot, fallowReportPath(lane, false));
       const content = yield* fs.readFileString(reportPath).pipe(Effect.orElseSucceed(() => ""));
       if (Str.isEmpty(content)) {
-        return yield* CiCommandError.make({ message: `Missing or empty Fallow envelope: ${fallowReportPath(lane)}` });
+        return yield* CiCommandError.make({
+          message: `Missing or empty Fallow envelope: ${fallowReportPath(lane, false)}`,
+        });
       }
     }),
     { discard: true }

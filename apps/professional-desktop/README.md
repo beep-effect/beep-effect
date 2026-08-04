@@ -1,4 +1,3 @@
-<!-- cspell:words Referer -->
 
 # @beep/professional-desktop
 

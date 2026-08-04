@@ -35,6 +35,10 @@ Exit: research trio exists, packet validates against `beep goals doctor`, branch
   without writing.
 
 Rule: read-only. No mutation until each report's false-positive rate is eyeballed.
+Unlock is per-workstream, not a phase barrier: a workstream's mutation work (its P3/P4
+items below) starts once ITS OWN report is eyeballed, even while another workstream's
+P1 report is still pending (ratified E5, `research/p1-execution-decisions.md`). Phase
+ids in `ops/manifest.json` remain milestone labels, not sequencing gates.
 
 ## P2 — Grill remaining decisions
 

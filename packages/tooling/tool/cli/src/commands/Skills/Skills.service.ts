@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
 import {
   decodeSkillLockV2Entry,
@@ -136,22 +137,6 @@ const validateRelativePath = Effect.fn("SkillsProvenance.validateRelativePath")(
   }
   return normalized;
 });
-
-const asArrayBufferView = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => Uint8Array.from(bytes);
-
-const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  let size = 0;
-  for (const chunk of chunks) {
-    size += chunk.byteLength;
-  }
-  const output = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    output.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return output;
-};
 
 const hashBytes = Effect.fn("SkillsProvenance.hashBytes")(function* (
   bytes: Uint8Array,
@@ -313,75 +298,94 @@ const prefixedLines = (prefix: string, content: string): ReadonlyArray<string> =
 
 const hunkRange = (lineCount: number): string => (lineCount === 0 ? "0,0" : `1,${lineCount}`);
 
+const patchHeader = (filePath: string): string => `diff --git a/${filePath} b/${filePath}`;
+
+const abbreviatedSha = Str.slice(0, 12);
+
+const renderAddedFilePatch = Effect.fn("SkillsProvenance.renderAddedFilePatch")(function* (
+  skill: string,
+  filePath: string,
+  local: HashedSkillFile
+): Effect.fn.Return<string, SkillsCommandError> {
+  const after = yield* decodeTextFile(local, skill);
+  return A.join(
+    [
+      patchHeader(filePath),
+      `new file mode ${local.mode}`,
+      `index 000000000000..${abbreviatedSha(local.sha256)}`,
+      "--- /dev/null",
+      `+++ b/${filePath}`,
+      `@@ -0,0 +${hunkRange(contentLines(after).length)} @@`,
+      ...prefixedLines("+", after),
+      "",
+    ],
+    "\n"
+  );
+});
+
+const renderDeletedFilePatch = Effect.fn("SkillsProvenance.renderDeletedFilePatch")(function* (
+  skill: string,
+  filePath: string,
+  upstream: HashedSkillFile
+): Effect.fn.Return<string, SkillsCommandError> {
+  const before = yield* decodeTextFile(upstream, skill);
+  return A.join(
+    [
+      patchHeader(filePath),
+      `deleted file mode ${upstream.mode}`,
+      `index ${abbreviatedSha(upstream.sha256)}..000000000000`,
+      `--- a/${filePath}`,
+      "+++ /dev/null",
+      `@@ -${hunkRange(contentLines(before).length)} +0,0 @@`,
+      ...prefixedLines("-", before),
+      "",
+    ],
+    "\n"
+  );
+});
+
+const renderModifiedFilePatch = Effect.fn("SkillsProvenance.renderModifiedFilePatch")(function* (
+  skill: string,
+  filePath: string,
+  upstream: HashedSkillFile,
+  local: HashedSkillFile
+): Effect.fn.Return<string, SkillsCommandError> {
+  const sameMode = Str.Equivalence(upstream.mode, local.mode);
+  const modeLines = sameMode ? A.empty<string>() : [`old mode ${upstream.mode}`, `new mode ${local.mode}`];
+  if (Str.Equivalence(upstream.sha256, local.sha256)) {
+    return A.join([patchHeader(filePath), ...modeLines, ""], "\n");
+  }
+  const before = yield* decodeTextFile(upstream, skill);
+  const after = yield* decodeTextFile(local, skill);
+  return A.join(
+    [
+      patchHeader(filePath),
+      ...modeLines,
+      `index ${abbreviatedSha(upstream.sha256)}..${abbreviatedSha(local.sha256)}${sameMode ? ` ${local.mode}` : ""}`,
+      `--- a/${filePath}`,
+      `+++ b/${filePath}`,
+      `@@ -${hunkRange(contentLines(before).length)} +${hunkRange(contentLines(after).length)} @@`,
+      ...prefixedLines("-", before),
+      ...prefixedLines("+", after),
+      "",
+    ],
+    "\n"
+  );
+});
+
 const renderFilePatch = Effect.fn("SkillsProvenance.renderFilePatch")(function* (
   skill: string,
   filePath: string,
   upstream: O.Option<HashedSkillFile>,
   local: O.Option<HashedSkillFile>
 ): Effect.fn.Return<string, SkillsCommandError> {
-  const header = [`diff --git a/${filePath} b/${filePath}`];
-
-  if (O.isNone(upstream) && O.isSome(local)) {
-    const after = yield* decodeTextFile(local.value, skill);
-    return A.join(
-      [
-        ...header,
-        `new file mode ${local.value.mode}`,
-        `index 000000000000..${Str.slice(0, 12)(local.value.sha256)}`,
-        "--- /dev/null",
-        `+++ b/${filePath}`,
-        `@@ -0,0 +${hunkRange(contentLines(after).length)} @@`,
-        ...prefixedLines("+", after),
-        "",
-      ],
-      "\n"
-    );
+  if (O.isNone(upstream)) {
+    return O.isNone(local) ? "" : yield* renderAddedFilePatch(skill, filePath, local.value);
   }
-
-  if (O.isSome(upstream) && O.isNone(local)) {
-    const before = yield* decodeTextFile(upstream.value, skill);
-    return A.join(
-      [
-        ...header,
-        `deleted file mode ${upstream.value.mode}`,
-        `index ${Str.slice(0, 12)(upstream.value.sha256)}..000000000000`,
-        `--- a/${filePath}`,
-        "+++ /dev/null",
-        `@@ -${hunkRange(contentLines(before).length)} +0,0 @@`,
-        ...prefixedLines("-", before),
-        "",
-      ],
-      "\n"
-    );
+  if (O.isNone(local)) {
+    return yield* renderDeletedFilePatch(skill, filePath, upstream.value);
   }
-
-  if (O.isSome(upstream) && O.isSome(local)) {
-    const modeLines = Str.Equivalence(upstream.value.mode, local.value.mode)
-      ? A.empty<string>()
-      : [`old mode ${upstream.value.mode}`, `new mode ${local.value.mode}`];
-    if (Str.Equivalence(upstream.value.sha256, local.value.sha256)) {
-      return A.join([...header, ...modeLines, ""], "\n");
-    }
-    const before = yield* decodeTextFile(upstream.value, skill);
-    const after = yield* decodeTextFile(local.value, skill);
-    const indexMode = Str.Equivalence(upstream.value.mode, local.value.mode) ? ` ${local.value.mode}` : "";
-    return A.join(
-      [
-        ...header,
-        ...modeLines,
-        `index ${Str.slice(0, 12)(upstream.value.sha256)}..${Str.slice(0, 12)(local.value.sha256)}${indexMode}`,
-        `--- a/${filePath}`,
-        `+++ b/${filePath}`,
-        `@@ -${hunkRange(contentLines(before).length)} +${hunkRange(contentLines(after).length)} @@`,
-        ...prefixedLines("-", before),
-        ...prefixedLines("+", after),
-        "",
-      ],
-      "\n"
-    );
-  }
-
-  return "";
+  return yield* renderModifiedFilePatch(skill, filePath, upstream.value, local.value);
 });
 
 const buildPatchSeries = Effect.fn("SkillsProvenance.buildPatchSeries")(function* (

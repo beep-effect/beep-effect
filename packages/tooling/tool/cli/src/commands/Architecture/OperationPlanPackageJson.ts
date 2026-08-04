@@ -57,8 +57,8 @@ const packageExportMapFor = (
 /**
  * Render a structured package manifest operation.
  *
- * @internal
- * @example
+ * **Example** (Render a domain package manifest)
+ *
  * ```ts
  * import { renderPackageJsonOperation, WritePackageJsonOperation } from "@beep/repo-cli/commands/Architecture"
  * import { Effect } from "effect"
@@ -79,6 +79,8 @@ const packageExportMapFor = (
  * const manifestText = Effect.runSync(renderPackageJsonOperation(operation))
  * console.log(manifestText.includes("@beep/research-lab-domain"))
  * ```
+ *
+ * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -116,6 +118,7 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       "lint:fix": "bun run beep:lint:fix",
       test: "bun run beep:test",
       "test:integration": "bun run beep:test:integration",
+      "test:integration:parallel": "bun run beep:test:integration",
     },
     exports: packageExportMapFor(operation.role, operation.exports, false),
     files: ["src/**/*.ts", "dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],

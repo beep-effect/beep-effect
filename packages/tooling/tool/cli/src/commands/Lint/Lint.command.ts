@@ -13,7 +13,7 @@ import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
@@ -85,10 +85,12 @@ const REQUIRED_TAGGED_UNIONS = [
 /**
  * Lint violation report row.
  *
- * @example
+ * **Example** (Reference the lint violation schema)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,12 +122,14 @@ const isContainedLintPath = (path: Path.Path, root: string, candidate: string): 
 /**
  * Collect TypeScript source files under a lint root without following symlink escapes.
  *
- * @param root - Root directory to scan for TypeScript sources.
- * @returns Sorted list of TypeScript source files under the lint root.
- * @example
+ * **Example** (Reference the TypeScript file collector)
+ *
  * ```ts
  * console.log("collectTypeScriptFiles")
  * ```
+ *
+ * @param root - Root directory to scan for TypeScript sources.
+ * @returns Sorted list of TypeScript source files under the lint root.
  * @category utilities
  * @since 0.0.0
  */
@@ -501,10 +505,12 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
 /**
  * Lint command for circular dependency checks.
  *
- * @example
+ * **Example** (Reference the circular-import subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -515,10 +521,12 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
 /**
  * Lint command for deprecated vendor API usage.
  *
- * @example
+ * **Example** (Show the deprecated-apis invocation)
+ *
  * ```ts
  * console.log("bun run beep lint deprecated-apis")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -529,25 +537,33 @@ const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDepreca
 /**
  * Lint command for repo-wide root policy checks.
  *
- * @example
+ * **Example** (Show the policy lint invocation)
+ *
  * ```ts
  * console.log("bun run beep lint policy")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
-const lintPolicyCommand = Command.make("policy", {}, () => runRootLintPolicyTask).pipe(
-  Command.withDescription("Run repo-wide lint policy checks")
-);
+const lintPolicyCommand = Command.make(
+  "policy",
+  {
+    full: Flag.boolean("full").pipe(Flag.withDescription("Run the full policy sweep locally")),
+  },
+  ({ full }) => runRootLintPolicyTask(full)
+).pipe(Command.withDescription("Run repo-wide lint policy checks"));
 
 /**
  * Lint alias for the goals doctor (the CLI has no command-alias mechanism, so
  * this second registration delegates to the Goals runner).
  *
- * @example
+ * **Example** (Show the goal-packets lint invocation)
+ *
  * ```ts
  * console.log("bun run beep lint goal-packets")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -558,10 +574,12 @@ const lintGoalPacketsCommand = Command.make("goal-packets", {}, () => runGoalsDo
 /**
  * Lint command for schema-first CLI conventions.
  *
- * @example
+ * **Example** (Reference the schema-first lint subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -572,10 +590,12 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
 /**
  * Lint command group.
  *
- * @example
+ * **Example** (Reference the lint command group)
+ *
  * ```ts
  * console.log("lintCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

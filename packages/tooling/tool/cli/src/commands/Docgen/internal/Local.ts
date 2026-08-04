@@ -17,7 +17,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
-import { runCaptured, runCapturedStreams, runToExit } from "../../../internal/process/StepExec.ts";
+import { runCapturedStreams, runToExit } from "../../../internal/process/StepExec.ts";
+import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
@@ -116,7 +117,6 @@ const bySelectedPackagePathAscending: Order.Order<DocgenLocalSelectedPackage> = 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 const normalizedFilePath = flow(Str.trim, normalizeSlashes);
 const packagePrefix = (pkg: DocgenWorkspacePackage): string => `${pkg.relativePath}/`;
-const isNonEmptyLine = flow(Str.trim, Str.isNonEmpty);
 const localParallel = (parallel: number): number => Math.max(DEFAULT_LOCAL_PARALLEL, parallel);
 const turboFilterForPackage = (pkg: DocgenLocalSelectedPackage): string => `--filter=...${pkg.name}`;
 const hasPrefix = (prefixes: ReadonlyArray<string>, filePath: string): boolean =>
@@ -390,47 +390,6 @@ const turboArgsForSelectedPackages = (
   "--summarize",
   "--ui=stream",
 ];
-
-const runGitLines = Effect.fn("DocgenLocal.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  });
-  if (result.exitCode !== 0) {
-    return yield* DomainError.make({
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}: ${Str.trim(result.output)}`,
-    });
-  }
-
-  return pipe(Str.split(/\r?\n/)(result.output), A.map(normalizedFilePath), A.filter(isNonEmptyLine));
-});
-
-const collectChangedFiles = Effect.fn("DocgenLocal.collectChangedFiles")(function* (
-  repoRoot: string,
-  base: string,
-  head: string
-) {
-  const baseChanged = yield* runGitLines(repoRoot, ["diff", "--name-only", `${base}...${head}`]).pipe(
-    Effect.mapError(
-      DomainError.newCause(
-        `Unable to resolve local docgen base range ${base}...${head}. Pass --package, --full, or refresh ${base}.`
-      )
-    )
-  );
-  const workingTreeChanged = yield* Effect.forEach(
-    [
-      ["diff", "--name-only", "HEAD"] as const,
-      ["diff", "--cached", "--name-only"] as const,
-      ["ls-files", "--others", "--exclude-standard"] as const,
-    ],
-    (args) => runGitLines(repoRoot, args).pipe(Effect.option, Effect.map(O.getOrElse(A.empty<string>))),
-    { concurrency: "unbounded" }
-  );
-
-  return pipe([...baseChanged, ...A.flatten(workingTreeChanged)], A.dedupe, A.sort(Order.String));
-});
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
   yield* assertNoOrphanDocgenConfigPaths();

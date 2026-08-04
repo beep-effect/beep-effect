@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "speed-loop",
+    "title": "Speed Loop",
+    "status": "active",
+    "created": "2026-08-04",
+    "updated": "2026-08-04",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/speed-loop",
+  "lifecycle": "active",
+  "mission": "Standing research→probe→grill→ship→harvest loop over repo speed/quality/performance; terminates when two consecutive cycles' best probe-gated wins each fall under ~30s of full-sweep saving.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the stop rule fires (two consecutive sub-30s cycles) and the closing cycle's work ships as a PR driven to mergeable via /yeet, citing speed-loop.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/speed-loop/README.md",
+    "goals/speed-loop/SPEC.md",
+    "goals/speed-loop/PLAN.md",
+    "goals/speed-loop/research/OPPORTUNITIES.md",
+    "goals/speed-loop/research/GRILL-DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/GRILL-DECISIONS.md",
+    "research/SYNTHESIS.md",
+    "research/SYNTHESIS-2.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "SPEC.md",
+      "targetChars": 3500,
+      "maxChars": 6000,
+      "command": "/goal follow the loop protocol in goals/speed-loop/SPEC.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "C1",
+      "name": "Cycle 1 (retroactive: quality-speedup ships)",
+      "status": "complete"
+    },
+    {
+      "id": "C2",
+      "name": "Cycle 2 (PR-A/B/C/D wave)",
+      "status": "in-progress"
+    },
+    {
+      "id": "CN",
+      "name": "Further cycles until the stop rule fires",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "jq . goals/speed-loop/ops/manifest.json",
+    "git diff --check -- goals/speed-loop",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The stop rule fires: two consecutive cycles' best probe-gated candidates each under ~30s full-sweep saving.",
+    "The loop's own research cost exceeds its measured wins for a full cycle.",
+    "A cycle would ship a new always-on quality gate without a cost-vs-catch case."
+  ]
+}

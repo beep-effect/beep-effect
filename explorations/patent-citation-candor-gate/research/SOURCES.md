@@ -29,29 +29,61 @@ mined for this wedge; links, not copies.
 
 ## 2. Upstream repositories & licenses
 
-None yet — the wedge composes in-repo bricks; no external repo is a donor at
-capture stage.
+None — the wedge composes in-repo bricks; no external repo is a donor.
 
 ## 3. External research sources
 
-To be populated by research Lane B (bounded public-primary-source candor
-legal frame: 37 CFR 1.56 / 1.97 / 1.98, MPEP 2001 / 609, Therasense) →
-`research/02-candor-legal-frame.md`.
+Lane B's six captures (2026-08-04), held as gitignored working copies under
+`assets/vendor/legal-sources/` (see `../assets/README.md`); reproducible from
+these upstream URLs, which also appear in the provenance header of
+[`02-candor-legal-frame.md`](./02-candor-legal-frame.md):
+
+| Capture | Upstream | License / discipline |
+|---------|----------|----------------------|
+| `cfr-1-56-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.56> | US government work (regulatory text); cite freely |
+| `cfr-1-97-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.97> | US government work; cite freely |
+| `cfr-1-98-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.98> | US government work; cite freely |
+| `mpep-2001.md` | <https://www.uspto.gov/web/offices/pac/mpep/s2001.html> | USPTO public domain (rev. R-01.2024 visible) |
+| `mpep-609.md` | <https://www.uspto.gov/web/offices/pac/mpep/s609.html> | USPTO public domain (rev. R-01.2024 visible) |
+| `therasense-casemine.md` | <https://www.casemine.com/judgement/us/5914af0eadd7b0493474ac8c> | Opinion text public domain (649 F.3d 1276, Fed. Cir. 2011 en banc); Casemine's own layers cited only as capture vehicle, paraphrase-only |
+
+Negative provenance note: the Wikipedia article for the Therasense case does
+not exist; the initially attempted capture was an article-not-found page and
+was discarded (Lane B's in-file gap markers were amended 2026-08-04 once the
+opinion capture landed).
 
 ## 4. In-repo capability references
 
-To be populated by research Lane A (`research/01-repo-surfaces.md`). Known at
-capture (from the routing seed's grounded rows):
+Verified by research Lane A, 2026-08-04
+([`01-repo-surfaces.md`](./01-repo-surfaces.md) — file:line grounding,
+LIVE-SOURCE vs SPEC-CONTRACT classification, and inherited-citation drift
+notes live there):
 
-- `@beep/law-practice-domain` — `PatentMetadata` (`PatentReference`),
-  `PriorArtReference`, `Claim` — reuse/extend.
+- `@beep/law-practice-domain` — `PatentReference` (three optional fields:
+  country/number/kindCode), `PriorArtReference` (examiner-linked occurrence
+  with `officeActionFixtureKey`; do not generalize it), `Claim` (whole-claim
+  entity only), `PatentDocumentTriplet`, `DurableLocator` (quote/context
+  generic legal locator; does not close the structured-fragment gap),
+  `CitationBase` (mixes semantic/occurrence/telemetry; do not reuse as donor)
+  — reuse/extend, LIVE SOURCE.
 - `@beep/provenance` (foundation/modeling/provenance) — `TextAnchor`,
-  `VerifiedTextAnchor` — reuse.
-- `@beep/epistemic-domain` — `EvidenceSpan` — reuse.
+  `VerifiedTextAnchor` (opaque runtime proof vs persistable receipt needing
+  re-verification), `SourceTextIdentity` — reuse, LIVE SOURCE.
+- `@beep/epistemic-domain` — `EvidenceSpan` — reuse, LIVE SOURCE.
 - `@beep/agents-use-cases` — `ProfessionalRuntime` contracts
-  (`RuntimeCandidateDraft`, `RuntimeApprovalGate`) — compose.
-- `PatentCitationEvent`, `CandorDisposition`, `PatentFragmentLocator` —
-  NET-NEW (zero symbols in source as of the 2026-08-01 rg sweep).
+  (`RuntimeCandidateDraft`, `RuntimeApprovalGate` with array-of-non-empty-
+  string `candidateRefs`/`requestedActions`, `RuntimeEvidenceRef`; decision
+  vocabulary currently `pending` only; no candor or observation-version
+  field) and `ExecutionLedger` ports (append-only precedent) — compose,
+  LIVE SOURCE.
+- SPEC CONTRACT only (compose-only, never fork): `CitationMention`
+  (`goals/citation-extraction-engine`), verified-span invariants
+  (`goals/citation-verified-span-substrate`), prosecution observations
+  (`goals/uspto-prosecution-read`), runtime approval flow
+  (`goals/agentic-professional-runtime`).
+- `PatentCitationEvent`, `CandorDisposition`, `PatentFragmentLocator`,
+  `PatentReferenceDiscoveryEvent` — NET-NEW (zero source symbols, re-verified
+  2026-08-04 by Lane A's rg sweep; commands recorded in its §5).
 
 ## 5. Cross-links & provenance
 

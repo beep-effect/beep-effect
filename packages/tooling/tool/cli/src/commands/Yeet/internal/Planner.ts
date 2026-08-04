@@ -17,10 +17,19 @@ import {
   enforceConservativeResume,
   RepoPlanPhase,
   RepoPlanStep,
+  RepoPlanWave,
   RepoRunPlan,
   repoProofStepDefinition,
   TurboPlanSnapshot,
 } from "../../../internal/repo-run/index.ts";
+import {
+  githubCheckChangesetStatusLane,
+  githubCheckFallowLanes,
+  githubCheckLanePlan,
+  githubCheckPrePushExternalLanes,
+  githubCheckQualityLanes,
+  githubCheckRepoSanityLanes,
+} from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.ts";
 
@@ -136,6 +145,10 @@ export type YeetProofTier = typeof YeetProofTier.Type;
 export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`YeetRunPlanModeOptions`)(
   {
     amend: S.Boolean,
+    collectAll: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
     fast: S.Boolean,
     mode: YeetRunMode,
     monitor: S.Boolean,
@@ -239,12 +252,10 @@ export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPl
     tasks: [],
   });
 
-// Deterministic auto-fixers run sequentially (runPhase concurrency:1) so parallel
-// inventory writes cannot corrupt each other. Code rewriters (effect-imports) run
-// first, then artifact generators (dual-arity inventory, tsconfig), then biome
-// formats everything, then docgen regenerates docs last.
-// terse-effect/schema-first are intentionally excluded: they can leave manual
-// candidates and are enforced advisory in verify, not auto-fixed here.
+// Deterministic auto-fixers run sequentially (runPhase concurrency:1). Code
+// rewriters run first, then config generation, formatting, and docgen.
+// terse-effect applies only safe rewrites here; its manual candidates stay
+// advisory during verification. Schema-first remains excluded from repair.
 const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   bunRunStep(
     context,
@@ -258,11 +269,11 @@ const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   ),
   bunRunStep(
     context,
-    "prepare:02-dual-arity",
-    "prepare:laws:dual-arity",
+    "prepare:02-terse-effect",
+    "prepare:laws:terse-effect",
     "prepare",
     "beep",
-    ["laws", "dual-arity", "--write"],
+    ["laws", "terse-effect", "--write"],
     "write",
     "repo"
   ),
@@ -350,11 +361,30 @@ const fallowAdvisoryFeedbackStep = (context: RepoRunContext): RepoPlanStep =>
     "repo"
   );
 
-const proofStep = (context: RepoRunContext, tier: YeetProofTier): RepoPlanStep => {
+const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
   const proof = repoProofStepDefinition(tier === "review-fix" ? "review-fix" : "pre-push");
   const proofArgs =
-    tier === "review-fix" ? [...proof.args, "--base", context.base, "--head", context.head] : proof.args;
-  return bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
+    tier === "review-fix"
+      ? [...proof.args, "--base", context.base, "--head", context.head]
+      : [...proof.args, ...(collectAll ? ["--collect-all"] : [])];
+  const step = bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
+  if (tier === "review-fix") {
+    return step;
+  }
+
+  const lanes = [
+    ...(context.branch === "main" ? [] : [githubCheckChangesetStatusLane(context.repoRoot)]),
+    ...githubCheckRepoSanityLanes(context.repoRoot),
+    ...githubCheckQualityLanes(context.repoRoot),
+    ...githubCheckFallowLanes(context.repoRoot),
+    ...githubCheckPrePushExternalLanes(context.repoRoot),
+  ];
+  return RepoPlanStep.make({
+    ...step,
+    waves: A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) =>
+      RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
+    ),
+  });
 };
 
 const commitStep = (
@@ -374,16 +404,38 @@ const commitStep = (
       : ["commit", "-m", O.getOrElse(message, () => "<required-conventional-commit-message>")]
   );
 
+/**
+ * Stable plan-step identifier for the branch push, shared by both publish paths.
+ *
+ * **Details**
+ *
+ * The early-publish and ordinary publish phases both carry `publish` work, so
+ * this id — not the phase — is what proves the branch actually reached the
+ * remote.
+ *
+ * **Example** (Recognize the push step)
+ *
+ * ```ts
+ * import { GIT_PUSH_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(GIT_PUSH_STEP_ID) // "publish:01-git-push"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
+
 // Keep local pre-push hooks (secret scanning, SAST, policy gates) active on the
 // early push: --no-verify would publish unverified content to the remote before
 // any hook could block secrets or policy violations.
 const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, "publish:01-git-push", "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
+  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
 
 const pushStep = (context: RepoRunContext): RepoPlanStep =>
   gitStep(
     context,
-    "publish:01-git-push",
+    GIT_PUSH_STEP_ID,
     "publish:git:push",
     "publish",
     ["push", "-u", "origin", "HEAD"],
@@ -549,13 +601,13 @@ const publishSteps = (
           headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
           ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
-          proofStep(context, "full"),
+          proofStep(context, "full", options.collectAll),
           ...(options.monitor ? monitorSteps(context) : []),
         ]
       : [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
-          ...(options.fast && options.monitor ? [] : [proofStep(context, "full")]),
+          ...(options.fast && options.monitor ? [] : [proofStep(context, "full", options.collectAll)]),
           headInstallPreflightStep(context, "publish"),
           pushStep(context),
           ...(options.pr ? [prCreateStep(context)] : []),
@@ -571,8 +623,8 @@ const stepsForMode = (
     repair: () => [...repairSteps(context), ...feedbackSteps(context)],
     verify: () => [
       fallowAdvisoryFeedbackStep(context),
-      proofStep(context, options.tier),
-      ...(options.tier === "full" ? [headInstallPreflightStep(context, "full")] : []),
+      proofStep(context, options.tier, options.collectAll),
+      ...(options.tier === "full" ? [headInstallPreflightStep(context, "prepare")] : []),
     ],
     publish: () => publishSteps(context, message, options),
     monitor: () => monitorSteps(context),

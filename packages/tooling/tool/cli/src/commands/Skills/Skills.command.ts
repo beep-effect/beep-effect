@@ -16,8 +16,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as jsonc from "jsonc-parser";
+import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
 import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
 import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
@@ -313,15 +314,6 @@ const provenanceJsonFlag = Flag.boolean("json").pipe(
   Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
 );
 
-const formatJson = (value: unknown): string => {
-  const encoded = Result.getOrThrow(encodeUnknownJsonResult(value));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
-
 const normalizeSlashes = (value: string): string => Str.replaceAll("\\", "/")(value);
 
 const isSafeRelativeSkillFilePath = (filePath: string): boolean => {
@@ -359,24 +351,6 @@ const toSortedRecord = <A>(entries: ReadonlyArray<readonly [string, A]>): Record
     record[key] = value;
   }
   return record;
-};
-
-const asArrayBufferView = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => Uint8Array.from(bytes);
-
-const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  let size = 0;
-  for (const chunk of chunks) {
-    size += chunk.byteLength;
-  }
-
-  const output = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    output.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return output;
 };
 
 const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
@@ -426,15 +400,22 @@ const readExistingFile = Effect.fn("Skills.readExistingFile")(function* (
     .pipe(Effect.map(O.some), SkillsCommandError.mapError(`Failed to read ${absolutePath}.`, absolutePath));
 });
 
-const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
-  absolutePath: string,
-  content: string
+const makeParentDirectory = Effect.fn("Skills.makeParentDirectory")(function* (
+  absolutePath: string
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs
     .makeDirectory(path.dirname(absolutePath), { recursive: true })
     .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
+});
+
+const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
+  absolutePath: string,
+  content: string
+): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
+  const fs = yield* FileSystem.FileSystem;
   yield* fs
     .writeFileString(absolutePath, content)
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -444,11 +425,8 @@ const writeByteFile = Effect.fn("Skills.writeByteFile")(function* (
   absolutePath: string,
   bytes: Uint8Array
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs
-    .makeDirectory(path.dirname(absolutePath), { recursive: true })
-    .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
   yield* fs
     .writeFile(absolutePath, asArrayBufferView(bytes))
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -739,7 +717,7 @@ const buildDesiredLock = Effect.fn("Skills.buildDesiredLock")(function* (
   });
 });
 
-const renderLockFile = (lock: SkillLockFile): string => formatJson(lock);
+const renderLockFile = (lock: SkillLockFile): string => formatJsonValue(lock);
 
 const tomlString = (value: string): string => Result.getOrThrow(encodeUnknownJsonResult(value));
 

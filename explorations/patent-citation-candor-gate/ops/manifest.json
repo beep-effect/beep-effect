@@ -4,11 +4,8 @@
     "slug": "patent-citation-candor-gate",
     "title": "Patent Citation Candor Gate",
     "status": "active",
-    "stage": "capture",
-    "openQuestions": [
-      "PatentFragmentLocator home: law-practice value object vs a neighbor of TextAnchor in foundation/modeling/provenance (a shared-kernel promotion-gate question if the citation engine needs it too) — decide at align with the research lanes in hand.",
-      "Which IDS mechanics (37 CFR 1.97 timing windows, 1.98 content, supplemental-IDS states) must CandorDisposition be able to record without the system ever computing materiality or closure — decide at align from the legal-frame research lane."
-    ],
+    "stage": "shape",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],

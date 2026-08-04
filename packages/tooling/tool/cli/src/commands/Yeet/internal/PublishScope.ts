@@ -16,12 +16,18 @@ import {
   sortedUniquePaths,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { QualityIssue, QualityIssueRouting, YeetPublishIntent } from "../Yeet.schemas.ts";
+import {
+  QualityIssue,
+  QualityIssueRouting,
+  YeetExistingCommitPublishIntent,
+  YeetStagedPublishIntent,
+} from "../Yeet.schemas.ts";
 import { runIdForContext } from "./ArtifactPaths.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
   collectUntrackedPaths,
+  currentCommitSha,
   optionFromNonEmpty,
   runGitOutput,
   runGitPathList,
@@ -31,7 +37,7 @@ import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import type { YeetRunOptions } from "../Yeet.schemas.ts";
+import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
 
 const zeroGitSha = "0000000000000000000000000000000000000000" as const;
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
@@ -40,10 +46,8 @@ const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD
  * Refuse `yeet publish` from protected trunk branches before any publish plan
  * can commit or push.
  *
- * @param context - Hydrated repo context containing the current branch name.
- * @param options - Runtime options used to determine the Yeet mode.
- * @returns Void when publishing is allowed, otherwise a command error.
- * @example
+ * **Example** (Validate a publish branch)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { defaultYeetRunOptions, RepoRunContext, validatePublishBranch } from "@beep/repo-cli/test/Yeet"
@@ -61,6 +65,10 @@ const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD
  *
  * const failure = validatePublishBranch(context, defaultYeetRunOptions()).pipe(Effect.flip)
  * ```
+ *
+ * @param context - Hydrated repo context containing the current branch name.
+ * @param options - Runtime options used to determine the Yeet mode.
+ * @returns Void when publishing is allowed, otherwise a command error.
  * @category validation
  * @since 0.0.0
  */
@@ -92,10 +100,8 @@ export const validatePublishBranchForTesting = validatePublishBranch;
 /**
  * Parse non-delete local commit SHAs from Git pre-push hook stdin.
  *
- * @param input - Raw pre-push stdin lines in Git's
- * `<local-ref> <local-sha> <remote-ref> <remote-sha>` format.
- * @returns Sorted unique local SHAs, excluding delete pushes.
- * @example
+ * **Example** (Extract local SHAs from pre-push stdin)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { prePushLocalShasFromStdin } from "@beep/repo-cli/test/Yeet"
@@ -104,6 +110,10 @@ export const validatePublishBranchForTesting = validatePublishBranch;
  *
  * deepStrictEqual(prePushLocalShasFromStdin(input), ["abc123"])
  * ```
+ *
+ * @param input - Raw pre-push stdin lines in Git's
+ * `<local-ref> <local-sha> <remote-ref> <remote-sha>` format.
+ * @returns Sorted unique local SHAs, excluding delete pushes.
  * @category parsing
  * @since 0.0.0
  */
@@ -120,10 +130,8 @@ export const prePushLocalShasFromStdin = (input: string): ReadonlyArray<string> 
 /**
  * Return pre-push SHAs that differ from the verified commit SHA.
  *
- * @param localShas - Commit SHAs parsed from pre-push stdin.
- * @param expectedCommitSha - Commit SHA recorded in the reusable Yeet proof.
- * @returns Sorted unique SHAs that would push a commit different from the proof.
- * @example
+ * **Example** (Find SHAs that differ from the pushed head)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { prePushShaMismatches } from "@beep/repo-cli/test/Yeet"
@@ -131,6 +139,10 @@ export const prePushLocalShasFromStdin = (input: string): ReadonlyArray<string> 
  * deepStrictEqual(prePushShaMismatches(["abc123", "def456"], "abc123"), ["def456"])
  * deepStrictEqual(prePushShaMismatches("abc123")(["abc123"]), [])
  * ```
+ *
+ * @param localShas - Commit SHAs parsed from pre-push stdin.
+ * @param expectedCommitSha - Commit SHA recorded in the reusable Yeet proof.
+ * @returns Sorted unique SHAs that would push a commit different from the proof.
  * @category validation
  * @since 0.0.0
  */
@@ -179,15 +191,17 @@ const publishUpstreamMismatchWarning = (branch: string, upstream: string): O.Opt
 /**
  * Format publish path lists as sorted markdown-style bullets.
  *
- * @param paths - Repo-relative paths to sort and render.
- * @returns One newline-delimited bullet per unique path.
- * @example
+ * **Example** (Format publish paths)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { formatPublishPaths } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(formatPublishPaths(["src/z.ts", "src/a.ts"]), "  - src/a.ts\n  - src/z.ts")
  * ```
+ *
+ * @param paths - Repo-relative paths to sort and render.
+ * @returns One newline-delimited bullet per unique path.
  * @category formatting
  * @since 0.0.0
  */
@@ -239,11 +253,8 @@ const overlappingBasePaths = (
 /**
  * Emit a structured publish-scope failure packet and fail the Yeet command.
  *
- * @param context - Repo context that determines where quality packets are
- * written.
- * @param scope - Refused path set plus remediation text for the publish gate.
- * @returns A failing Effect containing the publish-scope Yeet command error.
- * @example
+ * **Example** (Fail publish scope with a packet hint)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { failPublishScopeWithPacket, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -266,6 +277,11 @@ const overlappingBasePaths = (
  *   subCategory: "untracked"
  * }).pipe(Effect.either)
  * ```
+ *
+ * @param context - Repo context that determines where quality packets are
+ * written.
+ * @param scope - Refused path set plus remediation text for the publish gate.
+ * @returns A failing Effect containing the publish-scope Yeet command error.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -308,13 +324,15 @@ export const failPublishScopeWithPacket = Effect.fn("Yeet.failPublishScopeWithPa
 /**
  * Parse NUL-delimited Git path output for Yeet publish-safety tests.
  *
- * @example
+ * **Example** (Sort a NUL-separated git path list)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { gitPathListFromNulOutputForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(gitPathListFromNulOutputForTesting("src/z.ts\0src/a.ts\0"), ["src/a.ts", "src/z.ts"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -323,13 +341,15 @@ export const gitPathListFromNulOutputForTesting = gitPathListFromNulOutput;
 /**
  * Parse Git pre-push stdin and return non-delete local commit SHAs.
  *
- * @example
+ * **Example** (Extract local SHAs through the test seam)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { prePushLocalShasFromStdinForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(prePushLocalShasFromStdinForTesting("refs/heads/main abc refs/heads/main def\n"), ["abc"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -338,13 +358,15 @@ export const prePushLocalShasFromStdinForTesting = prePushLocalShasFromStdin;
 /**
  * Return pushed SHAs that do not match the reusable Yeet proof commit.
  *
- * @example
+ * **Example** (Find mismatched SHAs through the test seam)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { prePushShaMismatchesForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(prePushShaMismatchesForTesting(["abc", "def"], "abc"), ["def"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -353,13 +375,15 @@ export const prePushShaMismatchesForTesting = prePushShaMismatches;
 /**
  * Return observed paths that are not part of the reviewed Yeet publish intent.
  *
- * @example
+ * **Example** (Find paths outside the publish intent)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { publishPathsOutsideIntentForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(publishPathsOutsideIntentForTesting(["src/a.ts"], ["src/a.ts", "src/b.ts"]), ["src/b.ts"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -369,13 +393,15 @@ export const publishPathsOutsideIntentForTesting = publishPathsOutsideIntent;
  * Return reviewed paths that can be passed to `git add` without failing on
  * reviewed deletions.
  *
- * @example
+ * **Example** (Select paths that still need restaging)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { publishRestagePathsForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(publishRestagePathsForTesting(["src/a.ts", "src/deleted.ts"], ["src/a.ts"]), ["src/a.ts"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -385,7 +411,8 @@ export const publishRestagePathsForTesting = publishRestagePaths;
  * Return the warning Yeet prints when publish push target differs from branch
  * upstream tracking.
  *
- * @example
+ * **Example** (Warn on a mismatched upstream)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -395,6 +422,7 @@ export const publishRestagePathsForTesting = publishRestagePaths;
  *
  * strictEqual(O.isSome(warning), true)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -404,7 +432,8 @@ export const publishUpstreamMismatchWarningForTesting = publishUpstreamMismatchW
  * Summarize refused publish paths as count, top-level entries, and capped
  * examples instead of a full enumeration.
  *
- * @example
+ * **Example** (Summarize a publish path count)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { summarizePublishPathsForTesting } from "@beep/repo-cli/test/Yeet"
@@ -414,6 +443,7 @@ export const publishUpstreamMismatchWarningForTesting = publishUpstreamMismatchW
  *   true
  * )
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -422,13 +452,15 @@ export const summarizePublishPathsForTesting = summarizePublishPaths;
 /**
  * Return staged paths that also carry unstaged worktree modifications.
  *
- * @example
+ * **Example** (Find partially staged paths)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { partiallyStagedPathsForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(partiallyStagedPathsForTesting(["src/a.ts", "src/b.ts"], ["src/b.ts"]), ["src/b.ts"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -438,13 +470,15 @@ export const partiallyStagedPathsForTesting = partiallyStagedPaths;
  * Return branch-changed paths that were also changed on the base ref since the
  * merge-base.
  *
- * @example
+ * **Example** (Find paths overlapping the base)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { overlappingBasePathsForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * deepStrictEqual(overlappingBasePathsForTesting(["src/a.ts", "src/b.ts"], ["src/b.ts"]), ["src/b.ts"])
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -453,10 +487,8 @@ export const overlappingBasePathsForTesting = overlappingBasePaths;
 /**
  * Park unstaged tracked and untracked residue before a staged-only publish.
  *
- * @param context - Repo context whose worktree is inspected and whose run id
- * is embedded in the stash marker.
- * @returns `Some` stash state when residue was parked, otherwise `None`.
- * @example
+ * **Example** (Stash an unstaged worktree)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, stashUnstagedWorktree } from "@beep/repo-cli/test/Yeet"
@@ -474,6 +506,10 @@ export const overlappingBasePathsForTesting = overlappingBasePaths;
  *
  * const parked = stashUnstagedWorktree(context).pipe(Effect.map((state) => state._tag))
  * ```
+ *
+ * @param context - Repo context whose worktree is inspected and whose run id
+ * is embedded in the stash marker.
+ * @returns `Some` stash state when residue was parked, otherwise `None`.
  * @category resource-management
  * @since 0.0.0
  */
@@ -516,12 +552,8 @@ const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
 /**
  * Restore residue previously parked by staged-only publish.
  *
- * @param context - Repo context whose worktree receives the restored stash.
- * @param stash - Recorded stash identity returned by
- * {@link stashUnstagedWorktree}.
- * @returns An Effect that logs restoration failure instead of failing the
- * publish cleanup path.
- * @example
+ * **Example** (Restore a stashed worktree)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, restoreStashedWorktree, YeetStashState } from "@beep/repo-cli/test/Yeet"
@@ -544,6 +576,12 @@ const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
  *
  * const restored = restoreStashedWorktree(context, stash).pipe(Effect.as("restore attempted"))
  * ```
+ *
+ * @param context - Repo context whose worktree receives the restored stash.
+ * @param stash - Recorded stash identity returned by
+ * {@link stashUnstagedWorktree}.
+ * @returns An Effect that logs restoration failure instead of failing the
+ * publish cleanup path.
  * @category resource-management
  * @since 0.0.0
  */
@@ -575,7 +613,8 @@ export const restoreStashedWorktree = Effect.fn("Yeet.restoreStashedWorktree")(f
  * Park unstaged and untracked residue in a marked stash for staged-only
  * publish.
  *
- * @example
+ * **Example** (Stash a worktree through the test seam)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, stashUnstagedWorktreeForTesting } from "@beep/repo-cli/test/Yeet"
@@ -593,6 +632,7 @@ export const restoreStashedWorktree = Effect.fn("Yeet.restoreStashedWorktree")(f
  *
  * const parked = stashUnstagedWorktreeForTesting(context).pipe(Effect.map((state) => state._tag))
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -602,7 +642,8 @@ export const stashUnstagedWorktreeForTesting = stashUnstagedWorktree;
  * Restore staged-only residue from its recorded stash, preserving the stash on
  * failure.
  *
- * @example
+ * **Example** (Restore a worktree through the test seam)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, restoreStashedWorktreeForTesting, YeetStashState } from "@beep/repo-cli/test/Yeet"
@@ -625,6 +666,7 @@ export const stashUnstagedWorktreeForTesting = stashUnstagedWorktree;
  *
  * const restored = restoreStashedWorktreeForTesting(context, stash).pipe(Effect.as("restore attempted"))
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -633,10 +675,8 @@ export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
 /**
  * Measure how far the publish branch is behind the refreshed base ref.
  *
- * @param context - Repo context containing the base ref and worktree root.
- * @returns Base freshness metadata including overlap paths when the branch is
- * behind.
- * @example
+ * **Example** (Assess base freshness for a context)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { assessBaseFreshness, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -654,6 +694,10 @@ export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
  *
  * const behindCount = assessBaseFreshness(context).pipe(Effect.map((freshness) => freshness.behindCount))
  * ```
+ *
+ * @param context - Repo context containing the base ref and worktree root.
+ * @returns Base freshness metadata including overlap paths when the branch is
+ * behind.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -696,7 +740,8 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
 /**
  * Assess how far the publish branch has diverged from its refreshed base ref.
  *
- * @example
+ * **Example** (Assess base freshness through the test seam)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { assessBaseFreshnessForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -716,6 +761,7 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
  *   Effect.map((freshness) => freshness.overlappingPaths.length)
  * )
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -724,10 +770,8 @@ export const assessBaseFreshnessForTesting = assessBaseFreshness;
 /**
  * Fail publish when a stale base overlaps branch-changed paths.
  *
- * @param context - Repo context containing base and branch identity.
- * @param options - Yeet runtime options controlling the stale-base override.
- * @returns Base freshness metadata when publishing may proceed.
- * @example
+ * **Example** (Enforce base freshness)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { defaultYeetRunOptions, enforceBaseFreshness, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -747,6 +791,10 @@ export const assessBaseFreshnessForTesting = assessBaseFreshness;
  *   Effect.map((state) => state.behindCount)
  * )
  * ```
+ *
+ * @param context - Repo context containing base and branch identity.
+ * @param options - Yeet runtime options controlling the stale-base override.
+ * @returns Base freshness metadata when publishing may proceed.
  * @category validation
  * @since 0.0.0
  */
@@ -801,10 +849,8 @@ const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranc
 /**
  * Warn when the current branch tracks a different upstream than Yeet will push.
  *
- * @param context - Repo context whose branch and worktree are inspected.
- * @returns An Effect that logs a warning only when the tracked upstream differs
- * from `origin/<branch>`.
- * @example
+ * **Example** (Warn on a mismatched publish upstream)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, warnOnMismatchedPublishUpstream } from "@beep/repo-cli/test/Yeet"
@@ -822,6 +868,10 @@ const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranc
  *
  * const warning = warnOnMismatchedPublishUpstream(context).pipe(Effect.as("upstream checked"))
  * ```
+ *
+ * @param context - Repo context whose branch and worktree are inspected.
+ * @returns An Effect that logs a warning only when the tracked upstream differs
+ * from `origin/<branch>`.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -839,69 +889,80 @@ export const warnOnMismatchedPublishUpstream = Effect.fn("Yeet.warnOnMismatchedP
   }
 });
 
-/**
- * Collect the reviewed file set Yeet is allowed to publish.
- *
- * @param context - Repo context whose Git index and worktree are inspected.
- * @param stagedOnly - Whether unstaged residue may be parked instead of
- * blocking immediately.
- * @returns Publish intent containing the exact staged paths approved for the
- * commit.
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import { collectPublishIntent, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- *
- * const context = RepoRunContext.make({
- *   base: "origin/main",
- *   branch: "feature/closeout",
- *   cwd: ".",
- *   head: "HEAD",
- *   originalArgv: [],
- *   packetDir: ".beep/yeet",
- *   repoRoot: ".",
- *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
- * })
- *
- * const pathCount = collectPublishIntent(context, true).pipe(Effect.map((intent) => intent.paths.length))
- * ```
- * @category validation
- * @since 0.0.0
- */
-export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(function* (
-  context: RepoRunContext,
-  stagedOnly: boolean
+const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommitPublishIntent")(function* (
+  context: RepoRunContext
 ): Effect.fn.Return<
-  YeetPublishIntent,
+  O.Option<YeetExistingCommitPublishIntent>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner
 > {
-  const stagedPaths = yield* collectStagedPublishPaths(context.repoRoot);
-  const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
-  const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
+  const remoteRef = `origin/${context.branch}`;
+  const remoteRefExists = yield* runRepoCommandCapture(
+    "git",
+    ["show-ref", "--verify", "--quiet", `refs/remotes/${remoteRef}`],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect publish target ${remoteRef}.`)));
+  const comparisonRef = remoteRefExists.exitCode === 0 ? remoteRef : context.base;
+  const aheadCount = yield* runGitOutput(context.repoRoot, ["rev-list", "--count", `${comparisonRef}..HEAD`]).pipe(
+    Effect.map((output) => Number(Str.trim(output))),
+    Effect.mapError(YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`))
+  );
+  if (aheadCount === 0) {
+    return O.none();
+  }
 
-  if (A.isReadonlyArrayEmpty(stagedPaths)) {
-    return yield* YeetCommandError.make({
-      message: "yeet publish requires reviewed staged changes. Stage the intended files before running yeet.",
-      command: "git diff --cached --name-only",
-      exitCode: 1,
+  const [commitSha, paths] = yield* Effect.all([
+    currentCommitSha(context),
+    runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${comparisonRef}..HEAD`]),
+  ]);
+  return O.some(YeetExistingCommitPublishIntent.make({ commitSha, paths }));
+});
+
+const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(function* (
+  context: RepoRunContext,
+  unstagedPaths: ReadonlyArray<string>,
+  untrackedPaths: ReadonlyArray<string>
+): Effect.fn.Return<YeetPublishIntent, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const cleanWorktree = A.isReadonlyArrayEmpty(unstagedPaths) && A.isReadonlyArrayEmpty(untrackedPaths);
+  const existingCommitIntent = cleanWorktree
+    ? yield* collectExistingCommitPublishIntent(context)
+    : O.none<YeetExistingCommitPublishIntent>();
+  if (O.isSome(existingCommitIntent)) {
+    return existingCommitIntent.value;
+  }
+
+  return yield* YeetCommandError.make({
+    message: "yeet publish requires reviewed staged changes or a clean local commit ahead of the publish remote/base.",
+    command: "git diff --cached --name-only",
+    exitCode: 1,
+  });
+});
+
+const stagedOnlyPublishIntent = Effect.fn("Yeet.stagedOnlyPublishIntent")(function* (
+  context: RepoRunContext,
+  stagedPaths: ReadonlyArray<string>,
+  unstagedPaths: ReadonlyArray<string>
+): Effect.fn.Return<YeetPublishIntent, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const splitPaths = partiallyStagedPaths(stagedPaths, unstagedPaths);
+  if (!A.isReadonlyArrayEmpty(splitPaths)) {
+    return yield* failPublishScopeWithPacket(context, {
+      message:
+        "yeet publish --staged-only refuses files that are both staged and modified in the worktree; it cannot split a partially staged file.",
+      paths: splitPaths,
+      remediation: "Stage the remaining hunks with git add, or stash them manually, then rerun.",
+      subCategory: "partially-staged",
     });
   }
 
-  if (stagedOnly) {
-    const splitPaths = partiallyStagedPaths(stagedPaths, unstagedPaths);
-    if (!A.isReadonlyArrayEmpty(splitPaths)) {
-      return yield* failPublishScopeWithPacket(context, {
-        message:
-          "yeet publish --staged-only refuses files that are both staged and modified in the worktree; it cannot split a partially staged file.",
-        paths: splitPaths,
-        remediation: "Stage the remaining hunks with git add, or stash them manually, then rerun.",
-        subCategory: "partially-staged",
-      });
-    }
-    return YeetPublishIntent.make({ paths: stagedPaths });
-  }
+  return YeetStagedPublishIntent.make({ paths: stagedPaths });
+});
 
+const wholeWorktreePublishIntent = Effect.fn("Yeet.wholeWorktreePublishIntent")(function* (
+  context: RepoRunContext,
+  stagedPaths: ReadonlyArray<string>,
+  unstagedPaths: ReadonlyArray<string>,
+  untrackedPaths: ReadonlyArray<string>
+): Effect.fn.Return<YeetPublishIntent, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   if (!A.isReadonlyArrayEmpty(untrackedPaths)) {
     return yield* failPublishScopeWithPacket(context, {
       message:
@@ -923,22 +984,17 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
     });
   }
 
-  return YeetPublishIntent.make({ paths: stagedPaths });
+  return YeetStagedPublishIntent.make({ paths: stagedPaths });
 });
 
 /**
- * Re-check that the worktree still matches the reviewed publish intent.
+ * Collect the reviewed file set Yeet is allowed to publish.
  *
- * @param context - Repo context whose current Git state is inspected.
- * @param intent - Reviewed staged paths captured before quality ran.
- * @param stagedOnly - Whether unstaged residue outside the intent is allowed to
- * remain parked.
- * @returns An Effect that completes only when no unexpected publish paths are
- * present.
- * @example
+ * **Example** (Collect a publish intent)
+ *
  * ```ts
  * import { Effect } from "effect"
- * import { RepoRunContext, validatePublishIntentStillSafe, YeetPublishIntent } from "@beep/repo-cli/test/Yeet"
+ * import { collectPublishIntent, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -950,16 +1006,75 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
  *   repoRoot: ".",
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
- * const intent = YeetPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
+ *
+ * const pathCount = collectPublishIntent(context, true).pipe(Effect.map((intent) => intent.paths.length))
+ * ```
+ *
+ * @param context - Repo context whose Git index and worktree are inspected.
+ * @param stagedOnly - Whether unstaged residue may be parked instead of
+ * blocking immediately.
+ * @returns Publish intent containing the exact staged paths approved for the
+ * commit.
+ * @category validation
+ * @since 0.0.0
+ */
+export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(function* (
+  context: RepoRunContext,
+  stagedOnly: boolean
+): Effect.fn.Return<
+  YeetPublishIntent,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const stagedPaths = yield* collectStagedPublishPaths(context.repoRoot);
+  const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
+  const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
+
+  if (A.isReadonlyArrayEmpty(stagedPaths)) {
+    return yield* emptyIndexPublishIntent(context, unstagedPaths, untrackedPaths);
+  }
+
+  return yield* stagedOnly
+    ? stagedOnlyPublishIntent(context, stagedPaths, unstagedPaths)
+    : wholeWorktreePublishIntent(context, stagedPaths, unstagedPaths, untrackedPaths);
+});
+
+/**
+ * Re-check that the worktree still matches the reviewed publish intent.
+ *
+ * **Example** (Re-validate a publish intent)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { RepoRunContext, validatePublishIntentStillSafe, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/closeout",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  *
  * const safe = validatePublishIntentStillSafe(context, intent, true).pipe(Effect.as("intent still safe"))
  * ```
+ *
+ * @param context - Repo context whose current Git state is inspected.
+ * @param intent - Reviewed staged paths captured before quality ran.
+ * @param stagedOnly - Whether unstaged residue outside the intent is allowed to
+ * remain parked.
+ * @returns An Effect that completes only when no unexpected publish paths are
+ * present.
  * @category validation
  * @since 0.0.0
  */
 export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishIntentStillSafe")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent,
+  intent: YeetStagedPublishIntent,
   stagedOnly: boolean
 ): Effect.fn.Return<
   void,
@@ -1002,7 +1117,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
 
 const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublishIntentPaths")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent
+  intent: YeetStagedPublishIntent
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1020,14 +1135,11 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  * Restage existing reviewed paths and confirm no unreviewed path entered the
  * commit.
  *
- * @param context - Repo context whose index is restaged.
- * @param intent - Reviewed publish intent collected before quality ran.
- * @param stagedOnly - Whether staged-only residue handling is active.
- * @returns An Effect that completes after the reviewed intent is staged safely.
- * @example
+ * **Example** (Stage a reviewed publish intent)
+ *
  * ```ts
  * import { Effect } from "effect"
- * import { RepoRunContext, stageReviewedPublishIntent, YeetPublishIntent } from "@beep/repo-cli/test/Yeet"
+ * import { RepoRunContext, stageReviewedPublishIntent, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -1039,16 +1151,21 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  *   repoRoot: ".",
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
- * const intent = YeetPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
+ * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  *
  * const staged = stageReviewedPublishIntent(context, intent, true).pipe(Effect.as("reviewed paths staged"))
  * ```
+ *
+ * @param context - Repo context whose index is restaged.
+ * @param intent - Reviewed publish intent collected before quality ran.
+ * @param stagedOnly - Whether staged-only residue handling is active.
+ * @returns An Effect that completes after the reviewed intent is staged safely.
  * @category execution
  * @since 0.0.0
  */
 export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIntent")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent,
+  intent: YeetStagedPublishIntent,
   stagedOnly: boolean
 ): Effect.fn.Return<
   void,
@@ -1095,13 +1212,15 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
  * Failure message used when local proof changes files after the commit but
  * before push.
  *
- * @example
+ * **Example** (Check the pre-push remediation text)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { postCommitProofChangedBeforePushMessage } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(postCommitProofChangedBeforePushMessage.includes("before retrying"), true)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -1112,13 +1231,15 @@ export const postCommitProofChangedBeforePushMessage =
  * Failure message used when start-pr-early proof changes files after the early
  * push.
  *
- * @example
+ * **Example** (Check the post-push remediation text)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { postCommitProofChangedAfterEarlyPushMessage } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(postCommitProofChangedAfterEarlyPushMessage.includes("follow-up fix"), true)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -1128,11 +1249,8 @@ export const postCommitProofChangedAfterEarlyPushMessage =
 /**
  * Confirm that the post-commit full proof left the worktree unchanged.
  *
- * @param context - Repo context whose Git state is checked after proof.
- * @param message - Failure message used when proof wrote files.
- * @returns An Effect that completes only when no staged, unstaged, or untracked
- * paths remain.
- * @example
+ * **Example** (Confirm the proof left the worktree clean)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, validatePostCommitProofDidNotChangeWorktree } from "@beep/repo-cli/test/Yeet"
@@ -1150,6 +1268,11 @@ export const postCommitProofChangedAfterEarlyPushMessage =
  *
  * const unchanged = validatePostCommitProofDidNotChangeWorktree(context).pipe(Effect.as("worktree unchanged"))
  * ```
+ *
+ * @param context - Repo context whose Git state is checked after proof.
+ * @param message - Failure message used when proof wrote files.
+ * @returns An Effect that completes only when no staged, unstaged, or untracked
+ * paths remain.
  * @category validation
  * @since 0.0.0
  */

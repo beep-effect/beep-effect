@@ -73,6 +73,10 @@ const tierFlag = Flag.choiceWithValue("tier", [
   Flag.withDefault("full" as const)
 );
 
+const collectAllFlag = Flag.boolean("collect-all").pipe(
+  Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
+);
+
 const amendFlag = Flag.boolean("amend").pipe(Flag.withDescription("Amend the current local commit during publish"));
 
 const stagedOnlyFlag = Flag.boolean("staged-only").pipe(
@@ -158,6 +162,11 @@ const fallowAdvisoryFlag = Flag.boolean("advisory").pipe(
   Flag.withDescription("Keep every Fallow-derived Yeet issue nonblocking")
 );
 
+const fallowRunStartedAtFlag = Flag.string("run-started-at").pipe(
+  Flag.withDescription("Reject advisory envelopes generated before this Yeet run timestamp"),
+  Flag.withDefault("")
+);
+
 const fallowAssertFlag = Flag.string("assert").pipe(
   Flag.withDescription("Comma-separated fixture assertions to enforce"),
   Flag.withDefault("")
@@ -189,6 +198,7 @@ const expectArgsFlag = Flag.string("expect-args").pipe(
 
 const sharedFlags = {
   base: baseFlag,
+  collectAll: collectAllFlag,
   head: headFlag,
   json: jsonFlag,
   packetDir: packetDirFlag,
@@ -241,6 +251,7 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     base: S.String,
     bots: S.String.pipe(SchemaUtils.withKeyDefaults("greptile")),
+    collectAll: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     head: S.String,
     json: S.Boolean,
@@ -279,6 +290,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
       bots: sharedOptions.bots,
+      collectAll: sharedOptions.collectAll,
       fast: sharedOptions.fast,
       message: options.message ?? "",
       mode,
@@ -337,8 +349,9 @@ const yeetFallowFeedbackCommand = Command.make(
     advisory: fallowAdvisoryFlag,
     emit: fallowEmitFlag,
     from: fallowFromFlag,
+    runStartedAt: fallowRunStartedAtFlag,
   },
-  ({ advisory, emit, from }) => runYeetFallowFeedback({ advisory, emit, from })
+  ({ advisory, emit, from, runStartedAt }) => runYeetFallowFeedback({ advisory, emit, from, runStartedAt })
 ).pipe(Command.withDescription("Convert Fallow advisory envelopes into a Yeet QualityIssueIndex"));
 
 const yeetFallowFixtureCheckCommand = Command.make(
@@ -369,7 +382,8 @@ const yeetPlanContractCheckCommand = Command.make(
 /**
  * Command that repairs, verifies, or publishes repository work through Yeet.
  *
- * @example
+ * **Example** (Wire the yeet command)
+ *
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
  * import { Command } from "effect/unstable/cli"
@@ -378,6 +392,7 @@ const yeetPlanContractCheckCommand = Command.make(
  * const run = Command.run(yeetCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
