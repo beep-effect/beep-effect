@@ -66,7 +66,7 @@ type SkillDriftLineFormatter<Tag extends SkillDrift["_tag"]> = (drift: SkillDrif
 /**
  * GitHub-backed skill source tracked by this checkout.
  *
- * @example
+ * **Example** (Inspect configured remote skill sources)
  * ```ts
  * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
  * console.log(remoteSkillSources.length)
@@ -91,7 +91,7 @@ export class RemoteSkillSource extends S.Class<RemoteSkillSource>($I`RemoteSkill
 /**
  * One deterministic entry in skills-lock.json.
  *
- * @example
+ * **Example** (Validate a skill lock entry)
  * ```ts
  * import { SkillLockEntry } from "@beep/repo-cli/commands/Skills"
  * import * as S from "effect/Schema"
@@ -119,7 +119,7 @@ export class SkillLockEntry extends S.Class<SkillLockEntry>($I`SkillLockEntry`)(
 /**
  * Deterministic project skill lockfile.
  *
- * @example
+ * **Example** (Validate an empty skill lockfile)
  * ```ts
  * import { SkillLockFile } from "@beep/repo-cli/commands/Skills"
  * import * as S from "effect/Schema"
@@ -222,7 +222,7 @@ const skillSource = (source: {
 /**
  * GitHub-backed skills that this repo can update automatically.
  *
- * @example
+ * **Example** (Find a configured remote skill)
  * ```ts
  * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
  *
@@ -734,7 +734,7 @@ const renderSkillsBlock = (names: ReadonlyArray<string>): string =>
  * @param configText - Existing Codex config text.
  * @param names - Skill names to render into the managed skills table.
  * @returns Codex config text with the managed skills table replaced or appended.
- * @example
+ * **Example** (Render managed Codex skills configuration)
  * ```ts
  * import { renderCodexConfigWithSkills } from "@beep/repo-cli/commands/Skills"
  *
@@ -881,7 +881,7 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
 /**
  * Run the skills update workflow.
  *
- * @example
+ * **Example** (Create the skills update workflow)
  * ```ts
  * import { runSkillsUpdate } from "@beep/repo-cli/commands/Skills"
  * import { Effect } from "effect"
@@ -993,7 +993,7 @@ const skillsUpdateCommand = Command.make(
 /**
  * Skills command group.
  *
- * @example
+ * **Example** (Create the skills command runner)
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
  * import { Command } from "effect/unstable/cli"
