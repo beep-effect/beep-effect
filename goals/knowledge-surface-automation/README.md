@@ -46,7 +46,10 @@ session); do not relitigate them in implementation PRs. P1 Phase-0 report comman
 remain in progress and are now unblocked with full doctrine: `KnowledgeFinding` golden
 tests, `beep skills provenance` (pilot: shadcn), `beep knowledge refs --tree HEAD`,
 manifest capability decode-retention tests, and Workstream E's pure bootstrap/adoption
-plans.
+plans. P1 execution shape (tranches, orchestration, publish cadence, evidence path,
+per-workstream P3 unlock) is ratified in
+[`research/p1-execution-decisions.md`](./research/p1-execution-decisions.md)
+(2026-08-04 session).
 
 ## Latest Evidence
 
