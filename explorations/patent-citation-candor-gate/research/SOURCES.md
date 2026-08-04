@@ -54,18 +54,36 @@ opinion capture landed).
 
 ## 4. In-repo capability references
 
-To be populated by research Lane A (`research/01-repo-surfaces.md`). Known at
-capture (from the routing seed's grounded rows):
+Verified by research Lane A, 2026-08-04
+([`01-repo-surfaces.md`](./01-repo-surfaces.md) — file:line grounding,
+LIVE-SOURCE vs SPEC-CONTRACT classification, and inherited-citation drift
+notes live there):
 
-- `@beep/law-practice-domain` — `PatentMetadata` (`PatentReference`),
-  `PriorArtReference`, `Claim` — reuse/extend.
+- `@beep/law-practice-domain` — `PatentReference` (three optional fields:
+  country/number/kindCode), `PriorArtReference` (examiner-linked occurrence
+  with `officeActionFixtureKey`; do not generalize it), `Claim` (whole-claim
+  entity only), `PatentDocumentTriplet`, `DurableLocator` (quote/context
+  generic legal locator; does not close the structured-fragment gap),
+  `CitationBase` (mixes semantic/occurrence/telemetry; do not reuse as donor)
+  — reuse/extend, LIVE SOURCE.
 - `@beep/provenance` (foundation/modeling/provenance) — `TextAnchor`,
-  `VerifiedTextAnchor` — reuse.
-- `@beep/epistemic-domain` — `EvidenceSpan` — reuse.
+  `VerifiedTextAnchor` (opaque runtime proof vs persistable receipt needing
+  re-verification), `SourceTextIdentity` — reuse, LIVE SOURCE.
+- `@beep/epistemic-domain` — `EvidenceSpan` — reuse, LIVE SOURCE.
 - `@beep/agents-use-cases` — `ProfessionalRuntime` contracts
-  (`RuntimeCandidateDraft`, `RuntimeApprovalGate`) — compose.
-- `PatentCitationEvent`, `CandorDisposition`, `PatentFragmentLocator` —
-  NET-NEW (zero symbols in source as of the 2026-08-01 rg sweep).
+  (`RuntimeCandidateDraft`, `RuntimeApprovalGate` with array-of-non-empty-
+  string `candidateRefs`/`requestedActions`, `RuntimeEvidenceRef`; decision
+  vocabulary currently `pending` only; no candor or observation-version
+  field) and `ExecutionLedger` ports (append-only precedent) — compose,
+  LIVE SOURCE.
+- SPEC CONTRACT only (compose-only, never fork): `CitationMention`
+  (`goals/citation-extraction-engine`), verified-span invariants
+  (`goals/citation-verified-span-substrate`), prosecution observations
+  (`goals/uspto-prosecution-read`), runtime approval flow
+  (`goals/agentic-professional-runtime`).
+- `PatentCitationEvent`, `CandorDisposition`, `PatentFragmentLocator`,
+  `PatentReferenceDiscoveryEvent` — NET-NEW (zero source symbols, re-verified
+  2026-08-04 by Lane A's rg sweep; commands recorded in its §5).
 
 ## 5. Cross-links & provenance
 

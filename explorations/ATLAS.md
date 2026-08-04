@@ -49,8 +49,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   2026-08-01 reconciliation grill with remo1/remo2/remo3 resolved without
   supersession; first wedge opened 2026-08-04 (phase-2 grill; the
   contradiction-semantics cluster re-routed to ride with
-  `legal-position-relator-runtime`); remaining wedges queue until it reaches
-  align.
+  `legal-position-relator-runtime`); remaining wedges stay QUEUED — whether
+  the candor wedge's align (reached 2026-08-04) or its BRIEF is the unblock
+  milestone is this packet's open question for Benjamin (see its README /
+  manifest).
 - [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
   align-stage: first wedge of the `legal-patent-kg-deepening` routing
   matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
