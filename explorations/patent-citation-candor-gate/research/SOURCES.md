@@ -29,14 +29,28 @@ mined for this wedge; links, not copies.
 
 ## 2. Upstream repositories & licenses
 
-None yet — the wedge composes in-repo bricks; no external repo is a donor at
-capture stage.
+None — the wedge composes in-repo bricks; no external repo is a donor.
 
 ## 3. External research sources
 
-To be populated by research Lane B (bounded public-primary-source candor
-legal frame: 37 CFR 1.56 / 1.97 / 1.98, MPEP 2001 / 609, Therasense) →
-`research/02-candor-legal-frame.md`.
+Lane B's six captures (2026-08-04), held as gitignored working copies under
+`assets/vendor/legal-sources/` (see `../assets/README.md`); reproducible from
+these upstream URLs, which also appear in the provenance header of
+[`02-candor-legal-frame.md`](./02-candor-legal-frame.md):
+
+| Capture | Upstream | License / discipline |
+|---------|----------|----------------------|
+| `cfr-1-56-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.56> | US government work (regulatory text); cite freely |
+| `cfr-1-97-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.97> | US government work; cite freely |
+| `cfr-1-98-lii.md` | <https://www.law.cornell.edu/cfr/text/37/1.98> | US government work; cite freely |
+| `mpep-2001.md` | <https://www.uspto.gov/web/offices/pac/mpep/s2001.html> | USPTO public domain (rev. R-01.2024 visible) |
+| `mpep-609.md` | <https://www.uspto.gov/web/offices/pac/mpep/s609.html> | USPTO public domain (rev. R-01.2024 visible) |
+| `therasense-casemine.md` | <https://www.casemine.com/judgement/us/5914af0eadd7b0493474ac8c> | Opinion text public domain (649 F.3d 1276, Fed. Cir. 2011 en banc); Casemine's own layers cited only as capture vehicle, paraphrase-only |
+
+Negative provenance note: the Wikipedia article for the Therasense case does
+not exist; the initially attempted capture was an article-not-found page and
+was discarded (Lane B's in-file gap markers were amended 2026-08-04 once the
+opinion capture landed).
 
 ## 4. In-repo capability references
 

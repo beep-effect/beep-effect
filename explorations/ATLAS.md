@@ -52,12 +52,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `legal-position-relator-runtime`); remaining wedges queue until it reaches
   align.
 - [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
-  capture-stage: first wedge of the `legal-patent-kg-deepening` routing
+  align-stage: first wedge of the `legal-patent-kg-deepening` routing
   matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
   gate that blocks filing promotion while AI-discovered patent references
-  lack a current disposition; composes `PatentReference`, verified anchors,
-  and `RuntimeApprovalGate`; next: two research lanes (repo surfaces +
-  bounded public-primary-source candor legal frame), then align.
+  lack a current disposition; research done (repo-surface inventory + candor
+  legal frame incl. the Therasense en banc opinion) and four align branches
+  closed 2026-08-04 (locator law-owned; hard fact/judgment split; derived
+  no-stored-closure gate; core-first scope); next: BRIEF.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
