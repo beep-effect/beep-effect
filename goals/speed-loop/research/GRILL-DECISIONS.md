@@ -213,3 +213,30 @@ decisions close them:
     holds a shipped state, a design + vehicle, a trigger, or an explicit
     parking. Per-item grill coverage is complete; implementation may start
     at PR-E.
+
+## Fleet-coordination amendments (2026-08-04, beep-effect5 session)
+
+34. **#22 split, #16 transferred.** The fleet-coordination session
+    (beep-effect5, 13-clone/one-machine scope; cross-machine out of scope
+    per operator) owns the merge-queue design half — mechanism, cost, batch
+    bisection under a 13-agent fleet. Speed-loop keeps only the E-wave
+    treadmill-tax measurement feeding that design, and opens no grill #5
+    item re-deriving merge-queue mechanics. #16 fleet housekeeping
+    transfers: the fleet session's scan produces the staleness inventory.
+35. **PR-I schema reservations for fleet reuse (implement now, no hold).**
+    (a) #49: the ownership-claim record splits out as its own named schema
+    — OwnershipClaim (owner, ownedPaths, doNotTouch) — with waveId living
+    on WaveManifest, never on the claim, so a fleet-scoped registry reuses
+    the record instead of forking it. (b) #52: AgentBrief carries an
+    optional fleet extension block from day one; the PR-enrichment TTL
+    cache is keyed generically rather than branch-hardcoded. (c) #45:
+    report paths stay deterministic (.beep/agents/<name>/report.json) and
+    `beep agent report list` enumerates them, so out-of-session readers
+    discover reports without the writer's context. PR-I ships in its queue
+    slot with these shapes — one extra named schema, no wait on the fleet
+    grill.
+36. **Worktree detection law (fleet finding).** `[ -d "$d/.git" ]`
+    silently skips linked worktrees — `.git` is a FILE there. #39 sweep,
+    #48 worktree ready, and any future worktree-aware step detect via
+    `git rev-parse --git-dir` / `git worktree list`, never a .git-directory
+    existence check.

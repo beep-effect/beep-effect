@@ -517,6 +517,14 @@ predict-squash → battery → vitest → stage-3.
     remains (likely coverage + non-turbo lanes). Vehicle: small hosted-CI
     PR after PR-B, evidence-gated.
 
+Fleet-coordination amendments (same day, beep-effect5 session;
+GRILL-DECISIONS.md #34–36): #22 design half + #16 transfer to the fleet
+session (speed-loop keeps the E-wave treadmill-tax measurement); PR-I
+reserves fleet-ready shapes — named OwnershipClaim schema with waveId on
+the manifest only, AgentBrief fleet block + generic TTL cache,
+`agent report list` discovery; worktree detection law: never
+`[ -d .git ]` (a file in linked worktrees).
+
 Grill #4b per-item pass (same day; GRILL-DECISIONS.md #24–33): #18 → PR-F
 rider (advisory hot-barrel lint); #19 → PR-G (shares #43 overlay
 internals); #17 → triggered, opens the first stage-2/protocol-boundary PR;
