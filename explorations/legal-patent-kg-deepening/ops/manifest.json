@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "align",
     "openQuestions": [
-      "Candor wedge reached align 2026-08-04 (four branches closed; BRIEF is next, owned by that packet). Decide with Benjamin whether the queued wedges (legal-position-relator-runtime + contradiction-semantics, patent-drafting-episode-ledger, FunctionalUnit into uspto-patent-driver-depth) unblock at this align milestone or after the candor BRIEF."
+      "Queued wedges UNBLOCKED (candor BRIEF approved 2026-08-04, the decided milestone). Open legal-position-relator-runtime (carrying the contradiction-semantics cluster) when Benjamin calls it; patent-drafting-episode-ledger and the FunctionalUnit extension queue behind it."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

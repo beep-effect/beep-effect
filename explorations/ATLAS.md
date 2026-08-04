@@ -59,18 +59,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   2026-08-01 reconciliation grill with remo1/remo2/remo3 resolved without
   supersession; first wedge opened 2026-08-04 (phase-2 grill; the
   contradiction-semantics cluster re-routed to ride with
-  `legal-position-relator-runtime`); remaining wedges stay QUEUED — whether
-  the candor wedge's align (reached 2026-08-04) or its BRIEF is the unblock
-  milestone is this packet's open question for Benjamin (see its README /
-  manifest).
+  `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
+  decided milestone — the candor BRIEF's approval — was reached the same
+  day); next: open `legal-position-relator-runtime` when Benjamin calls it.
 - [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
-  align-stage: first wedge of the `legal-patent-kg-deepening` routing
+  shape-stage: first wedge of the `legal-patent-kg-deepening` routing
   matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
   gate that blocks filing promotion while AI-discovered patent references
-  lack a current disposition; research done (repo-surface inventory + candor
-  legal frame incl. the Therasense en banc opinion) and four align branches
-  closed 2026-08-04 (locator law-owned; hard fact/judgment split; derived
-  no-stored-closure gate; core-first scope); next: BRIEF.
+  lack a current disposition; research done, four align branches closed, and
+  the BRIEF APPROVED 2026-08-04 (one goal packet, two phases; hardened by a
+  three-lens Opus review); next: decompose (`MAP.md`) toward graduation.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
