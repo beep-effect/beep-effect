@@ -65,7 +65,8 @@ const formatOrphanDocgenConfigMessage = (paths: ReadonlyArray<string>): string =
  *
  * @param rootDir - Optional repo root override.
  * @returns Repo-relative orphaned `docgen.json` paths sorted for stable diagnostics.
- * @example
+ * **Example** (List orphaned docgen configs)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { discoverOrphanDocgenConfigPaths } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
@@ -122,7 +123,8 @@ export const discoverOrphanDocgenConfigPaths: (
  *
  * @param rootDir - Optional repo root override.
  * @returns Void when every discovered `docgen.json` belongs to a current workspace.
- * @example
+ * **Example** (Assert there are no orphaned configs)
+ *
  * ```ts
  * import { assertNoOrphanDocgenConfigPaths } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  *
@@ -182,7 +184,8 @@ const computePackageStatus = (hasDocgenConfig: boolean, hasGeneratedDocs: boolea
  *
  * @param relativePath - Workspace-relative package path.
  * @returns Slash-normalized aggregate docs output path without package-root prefixes.
- * @example
+ * **Example** (Normalize a docs output path)
+ *
  * ```ts
  * import { normalizeDocsOutputPath } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
  *
@@ -199,7 +202,8 @@ export const normalizeDocsOutputPath = (relativePath: string): string =>
  *
  * @param absolutePackagePath - Absolute package path containing the `docgen.json` file to decode.
  * @returns Parsed current-schema docgen configuration.
- * @example
+ * **Example** (Load a docgen config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { loadDocgenConfigDocument } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
@@ -228,7 +232,8 @@ export const loadDocgenConfigDocument: (
  * @param targetPackage - Target workspace package.
  * @param rootDir - Absolute repo root.
  * @returns Bootstrapped docgen config using current repo defaults plus dependency-aware paths.
- * @example
+ * **Example** (Create a docgen config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { createDocgenConfigDocument } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
@@ -284,7 +289,8 @@ export const createDocgenConfigDocument: {
  *
  * @param rootDir - Optional repo root override.
  * @returns Sorted workspace package descriptors with current docgen status.
- * @example
+ * **Example** (Discover docgen workspaces)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { discoverDocgenWorkspacePackages } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
@@ -335,7 +341,8 @@ export const discoverDocgenWorkspacePackages: (
  * @param selector - Package selector supplied by the CLI.
  * @param options - Optional repo root override.
  * @returns Resolved workspace package descriptor.
- * @example
+ * **Example** (Resolve a workspace package)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { resolveDocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/internal/Workspace"
