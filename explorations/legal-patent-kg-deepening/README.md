@@ -17,17 +17,14 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The first wedge
-[`patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) has
-completed research AND align (2026-08-04: four branches closed, openQuestions
-cleared); its next step is the BRIEF, owned by that packet. For this packet:
-decide with Benjamin whether the queued wedges
-(`legal-position-relator-runtime` — carrying the re-routed
-contradiction-semantics cluster, `patent-drafting-episode-ledger`,
-FunctionalUnit into `uspto-patent-driver-depth`) open now that the candor
-wedge has reached align, or wait for its BRIEF — the phase-shape decision
-([`DECISIONS.md`](./DECISIONS.md), 2026-08-04) queued them "until then"
-without fixing which milestone unblocks them.
+The queued wedges are UNBLOCKED: the unblock milestone was decided as the
+candor BRIEF's approval, and that BRIEF was approved the same day
+(2026-08-04 — see [`DECISIONS.md`](./DECISIONS.md) and the wedge packet).
+Next for this packet: open `legal-position-relator-runtime` (carrying the
+re-routed contradiction-semantics cluster) via capture → research → align
+when Benjamin calls it, with `patent-drafting-episode-ledger` and the
+FunctionalUnit extension into `uspto-patent-driver-depth` behind it. The
+candor wedge itself proceeds to decompose (`MAP.md`) in its own packet.
 
 ## Read This First
 
@@ -80,3 +77,7 @@ without fixing which milestone unblocks them.
   completed its research lanes and align session (four branches closed, see
   that packet's DECISIONS) — the wedge is at stage `align`, BRIEF next; the
   queued-wedge unblock milestone is this packet's next open question.
+- 2026-08-04: candor wedge BRIEF approved (three-lens Opus review folded);
+  wedge stage align → shape. Unblock milestone decided (BRIEF approval) and
+  reached same-day — queued wedges UNBLOCKED. Orchestration superseded
+  codex → Opus 5 for remaining campaign sub-agent work (weekly codex limit).

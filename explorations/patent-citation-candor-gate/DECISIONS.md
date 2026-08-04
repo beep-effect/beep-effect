@@ -193,3 +193,69 @@ evidence.
 **Rationale:** Align closes branches that change the BRIEF's shape; these
 remaining items are detail within already-closed branches or future branches
 with named triggers.
+
+## 2026-08-04 — orchestration supersession (codex → Opus 5)
+
+**Question:** Does the locked codex-only orchestration mode still govern this
+packet's sub-agent work?
+
+**Answer:** Superseded. Approaching the weekly codex limit, Benjamin directed
+(2026-08-04): "From here on use Opus 5 sub-agents instead." All campaign
+sub-agent work routes to Claude Opus 5 subagents until the codex window
+resets; the BRIEF's three-lens adversarial review already ran on Opus 5.
+
+**Rationale:** The original decision's quota arbitrage inverted — the codex
+window became the scarce pool. The Fable main thread's role (grill, align,
+synthesis) is unchanged.
+
+## 2026-08-04 — shape: BRIEF approved
+
+**Question:** Does the BRIEF match the picture in Benjamin's head (the
+stage-3 exit signal)?
+
+**Answer:** Yes — approved 2026-08-04, after a three-lens adversarial Opus 5
+review whose 24 verified findings were folded in first. Load-bearing
+corrections: quarantine and staleness split into separately-triggered states
+(quarantine from raw-preserving unknown codes, staleness from source-version
+mismatch); evidence grounding upgraded to the live
+`TextAnchorVerificationReceipt`; citing-application identity bound to the
+live `ApplicationNumber` (ST.13) value; `RuntimeApprovalGate` composition
+made explicitly read-only (single-member decision vocabulary; the new
+cross-slice edge is a named inherited risk); rung 2 re-costed around the
+slice's first db-admin migration lane; 1.97 window arithmetic bounded to
+candidate-window-never-compliance; two never-compute no-gos added (examiner
+reliance from IDS markings; computed excusal under 1.98(c)/(d));
+`PatentFragmentLocator` demoted to rung-1-optional/later-rung child. Stage
+align → shape.
+
+**Rationale:** Exit signal per `explorations/README.md` stage 3: the human
+says the brief matches. Next stage: decompose (`MAP.md`).
+
+## 2026-08-04 — shape refinements (PR #557 review)
+
+**Question:** Four review findings challenged the approved BRIEF — stale-event
+membership in the gate predicate, cross-slice import legality, rung 1's
+"independently shippable" claim, and the ST.13-only application identity. How
+do they resolve?
+
+**Answer:** All four accepted as refinements (none reopens an align branch):
+(1) the predicate quantifies every AI-discovered event; coverage requires a
+disposition bound to the exact observation version AND that version being
+current; a superseded event stops blocking only once the newer event is
+itself dispositioned; examiner events do not gate in this wedge. (2)
+Slice-to-slice imports are forbidden doctrine — `EvidenceSpan` is not
+embedded (foundation's `TextAnchorVerificationReceipt` suffices; span
+promotion is a shared-kernel gate question), the gate composes through a
+lawful shape (emitted events / app-runtime coordination / promoted shared
+contract), and the existing law-practice → epistemic deps are prior drift
+this wedge must not compound. (3) Rung 1 relabeled the domain proof
+(in-memory/test-only, the professional-runtime first-proof posture); risk
+retirement lands with rung 2's durability + live promotion-path invocation.
+(4) Citing-application identity is a law-owned union accepting the USPTO
+eight-digit normalized form (driver shape mirrored, never imported) and
+ST.13, with explicit conversion.
+
+**Rationale:** Each finding was verified against live source or
+`standards/ARCHITECTURE.md` before acceptance; the fixes tighten the
+BRIEF's contract without changing the align boundaries (locator home,
+fact/judgment split, derived no-stored-closure gate, core-first scope).
