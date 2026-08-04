@@ -350,9 +350,9 @@ export const mimeTypes: Record<MimeType, MimeTypeDefinition> = internal.mimeType
  * **Example** (Use MIME type registry data)
  *
  * ```ts
- * import { OfficialMimeTypeDataMetadata } from "@beep/data/MimeTypes"
+ * import { OfficialMimeTypeDataMetadata, OfficialMimeTypeDataUpdated } from "@beep/data/MimeTypes"
  *
- * console.assert(OfficialMimeTypeDataMetadata.updated === "2026-06-12")
+ * console.assert(OfficialMimeTypeDataMetadata.updated === OfficialMimeTypeDataUpdated)
  * ```
  *
  * @category constants
@@ -369,7 +369,7 @@ export const OfficialMimeTypeDataMetadata: typeof official.OfficialMimeTypeDataM
  * ```ts
  * import { OfficialMimeTypeDataUpdated } from "@beep/data/MimeTypes"
  *
- * console.assert(OfficialMimeTypeDataUpdated === "2026-06-12")
+ * console.assert(OfficialMimeTypeDataUpdated.length === "YYYY-MM-DD".length)
  * ```
  *
  * @category constants

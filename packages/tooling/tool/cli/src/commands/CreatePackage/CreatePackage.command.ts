@@ -656,6 +656,7 @@ const matchesWorkspacePattern: {
   );
 });
 
+// fallow-ignore-next-line code-duplication -- config-updater helper twins converged after the tstyche removal + JSDoc grammar migration; consolidation onto @beep/repo-utils is a recorded quality-speedup follow-up
 const isPathCoveredByWorkspacePatterns = (patterns: ReadonlyArray<string>, targetPath: string): boolean =>
   A.some(patterns, matchesWorkspacePattern(targetPath));
 

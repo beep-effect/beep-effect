@@ -209,6 +209,7 @@ const normalizeTargets = (targets: ReadonlyArray<ConfigUpdateTarget>): ReadonlyA
 const defaultAliasTargetsForPackage = (packagePath: string) =>
   buildCanonicalAliasTargets(packagePath, "./src/index.ts");
 
+// fallow-ignore-next-line code-duplication -- config-updater helper twins converged after the tstyche removal + JSDoc grammar migration; consolidation onto @beep/repo-utils is a recorded quality-speedup follow-up
 const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
   rootAliasTarget: target.rootAliasTarget ?? defaultAliasTargetsForPackage(target.packagePath).rootAliasTarget,
   wildcardAliasTarget:
