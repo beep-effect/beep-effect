@@ -2,10 +2,15 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated 2026-08-04 into
+[`goals/patent-citation-candor-gate`](../../goals/patent-citation-candor-gate/README.md)
+(one goal packet, two rungs, per the BRIEF appetite). This packet remains as
+provenance.
 
 ## Spark
 
@@ -19,21 +24,27 @@ matrix (2026-08-01 reconciliation grill; phase-2 grill 2026-08-04).
 
 ## Next Open Question
 
-Decompose (stage 4): write `MAP.md` — candidate goal packet(s) (the BRIEF's
-appetite says one goal packet, two phases), dependency/sequencing edges, the
-first vertical slice (the failing `CandorPolicy.test.ts`), and capability
-citations (live bricks vs the named net-new symbols) — then run the
-four-point graduation definition-of-ready.
+None — the packet graduated. Execution continues in the goal packet:
+
+```text
+/goal follow the instructions in goals/patent-citation-candor-gate/GOAL.md
+```
+
+Follow-on children (reconciliation inbox, timeline projection, grouped
+dispositions, continuing-application matrix, 1.97(e) predicates, the full
+locator family) are named with triggers in [`MAP.md`](./MAP.md) Follow-Ons;
+each returns through its own align question, not by reopening this packet.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`BRIEF.md`](./BRIEF.md) - the APPROVED shaped pitch (stage 3, 2026-08-04).
-3. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): cluster row, nuggets, deepened play, cautions.
-4. [`RESEARCH.md`](./RESEARCH.md) - stage-1 synthesis over the two lane artifacts.
-5. [`research/01-repo-surfaces.md`](./research/01-repo-surfaces.md) / [`research/02-candor-legal-frame.md`](./research/02-candor-legal-frame.md) - the lanes.
-6. [`DECISIONS.md`](./DECISIONS.md) - grill log: wedge decisions, align decisions, orchestration supersession, BRIEF approval.
-7. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+2. [`MAP.md`](./MAP.md) - decompose surface (stage 4): the one candidate goal packet, sequencing, first slice, capability check, follow-ons.
+3. [`BRIEF.md`](./BRIEF.md) - the APPROVED shaped pitch (stage 3, 2026-08-04).
+4. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): cluster row, nuggets, deepened play, cautions.
+5. [`RESEARCH.md`](./RESEARCH.md) - stage-1 synthesis over the two lane artifacts.
+6. [`research/01-repo-surfaces.md`](./research/01-repo-surfaces.md) / [`research/02-candor-legal-frame.md`](./research/02-candor-legal-frame.md) - the lanes.
+7. [`DECISIONS.md`](./DECISIONS.md) - grill log: wedge decisions, align decisions, orchestration supersession, BRIEF approval, decompose + graduation.
+8. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (primary copy; the goal packet inherits it).
 
 ## Trail
 
@@ -56,3 +67,16 @@ four-point graduation definition-of-ready.
   shape entry in DECISIONS), and APPROVED by Benjamin. Orchestration
   superseded codex → Opus 5 (weekly codex limit). Stage align → shape.
   Next: decompose (MAP.md).
+- 2026-08-04: four PR #557 review findings accepted as shape refinements
+  (stale-membership predicate semantics, lawful cross-slice shapes, rung-1
+  domain-proof relabel, application-identity union) without reopening align.
+- 2026-08-04: decompose — `MAP.md` authored (one candidate goal packet per
+  the BRIEF appetite, two strict rungs, first slice = the failing
+  `CandorPolicy.test.ts`, full capability check with file-grounded cites,
+  follow-ons named with triggers). Four-point graduation definition-of-ready
+  PASSED. Stage shape → decompose → graduate:
+  [`goals/patent-citation-candor-gate`](../../goals/patent-citation-candor-gate/README.md)
+  scaffolded from `goals/_template` (SPEC seeded from the BRIEF — no-gos →
+  non-goals, rabbit holes → constraints, DECISIONS → SPEC decision log;
+  SOURCES ledger inherited; manifests cross-linked). Status active →
+  graduated; packet retained as provenance.

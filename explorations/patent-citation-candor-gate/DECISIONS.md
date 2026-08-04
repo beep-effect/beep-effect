@@ -259,3 +259,61 @@ ST.13, with explicit conversion.
 `standards/ARCHITECTURE.md` before acceptance; the fixes tighten the
 BRIEF's contract without changing the align boundaries (locator home,
 fact/judgment split, derived no-stored-closure gate, core-first scope).
+
+## 2026-08-04 — decompose + graduate
+
+**Question:** How does the approved BRIEF decompose into goal packets, and
+does the packet pass the four-point graduation definition-of-ready?
+
+**Answer:** One candidate goal packet, `goals/patent-citation-candor-gate`
+(same slug; the `effect-jsdoc-quality` precedent), with the BRIEF's two rungs
+as strict phases — rung 1 the in-memory domain proof around the failing
+`CandorPolicy.test.ts`, rung 2 durability + the slice's first db-admin
+migration + the live promotion-path invocation. `MAP.md` carries the full
+capability check (every component a file-grounded REUSE cite or explicit
+NET-NEW) and names the non-graduating follow-ons with their triggers.
+Definition-of-ready: (1) BRIEF complete — approved 2026-08-04 with all five
+Shape Up parts; (2) manifest `openQuestions` empty, deferrals logged with
+owners; (3) MAP names slug, mission, dependency/sequencing edges, first
+vertical slice; (4) capability check passes — all four hold, so the packet
+GRADUATED the same day: goal scaffolded from `goals/_template` (SPEC seeded
+from the BRIEF: no-gos → non-goals, rabbit holes → constraints, this log →
+the SPEC decision log; `research/SOURCES.md` inherited with the exploration
+ledger primary; manifests cross-linked; goal `active`, phases P0–P4 pending).
+Exploration status → `graduated`, retained as provenance.
+
+**Rationale:** The BRIEF's appetite is explicit (one packet, two phases);
+splitting rungs into separate packets would recreate the sequencing the
+appetite already encodes, and widening to the follow-on children would
+violate the compose-don't-widen phase-2 decision. Rejected: two packets
+(rung-per-packet — the rungs share one schema family and one decision log)
+and holding graduation for another review pass (the BRIEF was already
+twice-hardened; decompose introduced no new semantics).
+
+Two decompose-owned refinements, surfaced by the graduation three-lens Opus 5
+review panel (17 verified findings folded across MAP, SPEC, PLAN, GOAL, both
+READMEs, both SOURCES ledgers, and ATLAS):
+
+1. **Gate-shape narrowing.** The BRIEF assigned the lawful cross-slice shape
+   pick to decomposition and offered three shapes; decompose narrows the set
+   to the two `standards/ARCHITECTURE.md:632-636` actually sanctions —
+   emitted events (preferred) or a contract promoted into `shared/use-cases`
+   through the normal promotion gate — and demotes "app-local runtime
+   coordination" to entrypoint wiring that must never own cross-slice
+   orchestration (the God-Layer rejection test). The final binding pick
+   between the two lands at goal P0 with an `architecture-guardian` check,
+   where the promotion path's real wiring is in evidence; this explicit
+   deferral-of-the-final-pick is recorded here rather than silently
+   reassigned.
+2. **Entity-identity surface.** Every law-practice entity takes its EntityId
+   from `packages/shared/domain/src/identity/LawPractice.ts` (precedent
+   `PriorArtReferenceId`), so the goal's target surfaces include the two new
+   id registrations there — identity infrastructure, not a shared-kernel
+   product-language promotion.
+
+The panel also restored dropped BRIEF semantics verbatim (application-identity
+prohibitions; judgment slots representable at rung 1 with only the vocabulary
+deferred; the T2-F2 separate-fields clause), corrected the refinement count to
+four everywhere, and back-ported the PR #557 refinements into this packet's
+`research/SOURCES.md` §4 (EvidenceSpan superseded; ExecutionLedger
+attribution).
