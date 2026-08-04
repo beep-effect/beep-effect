@@ -580,7 +580,7 @@ export type Success<T> = [T] extends [Config<infer A>] ? A : never
  *
  * @see {@link unwrap} – construct a `Config` from a `Wrap<T>`
  *
- * @category Wrap
+ * @category utility types
  * @since 2.0.0
  */
 export type Wrap<A> = [NonNullable<A>] extends [infer T] ? [IsPlainObject<T>] extends [true] ?
@@ -625,7 +625,7 @@ type IsPlainObject<A> = [A] extends [Record<string, any>]
  *
  * @see {@link Wrap} – the utility type accepted by this function
  *
- * @category Wrap
+ * @category converting
  * @since 2.0.0
  */
 export const unwrap = <T>(wrapped: Wrap<T>): Config<T> => {
@@ -1458,7 +1458,7 @@ export function logLevel(name?: string) {
  *
  * const provider = ConfigProvider.fromEnv({
  *   env: {
- *     API_KEY: "example"
+ *     API_KEY: "sk-1234567890abcdef"
  *   }
  * })
  *
