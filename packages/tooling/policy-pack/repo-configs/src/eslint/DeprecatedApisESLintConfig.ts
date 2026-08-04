@@ -57,6 +57,7 @@ const generatedAndBuildOutputIgnores = [
  *
  * strictEqual(config[0]?.rules?.["@typescript-eslint/no-deprecated"], "error")
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -77,6 +78,7 @@ export type DeprecatedApisESLintConfigShape = ReadonlyArray<Linter.Config>;
  *
  * strictEqual(checksDeprecatedApis, true)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
