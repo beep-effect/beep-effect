@@ -41,7 +41,8 @@ const generatedAndBuildOutputIgnores = [
 /**
  * Flat ESLint config array shape exported for deprecated API checks.
  *
- * @example
+ * ## Example
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { DeprecatedApisESLintConfigShape } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig"
@@ -64,7 +65,8 @@ export type DeprecatedApisESLintConfigShape = ReadonlyArray<Linter.Config>;
 /**
  * Shared deprecated API ESLint flat config.
  *
- * @example
+ * ## Example
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { DeprecatedApisESLintConfig } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig"
