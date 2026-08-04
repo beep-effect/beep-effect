@@ -28,8 +28,11 @@ reconciled against nuggets `T2-F2`/`T3-F7`/`ADHD-1` →
 `research/01-repo-surfaces.md`. Lane B: bounded legal grounding over PUBLIC
 primary sources only — 37 CFR 1.56 / 1.97 / 1.98, MPEP 2001 / 609, and the
 Therasense but-for materiality standard — to draw the "what the system must
-never compute" boundary precisely → `research/02-candor-legal-frame.md`. No
-client or pre-publication material touches any cloud model (standing OIP
+never compute" boundary precisely → `research/02-candor-legal-frame.md`. On
+top of both lanes, `RESEARCH.md` is authored as the canonical stage-1
+synthesis and index (`explorations/README.md` stage contract) before the
+packet advances to align; all three land together in PR 2. No client or
+pre-publication material touches any cloud model (standing OIP
 confidentiality rule).
 
 **Rationale:** The campaign corpus was ontology/KG-focused and never covered

@@ -130,8 +130,9 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 ## First action
 
-Phase 1 is complete and signed off (2026-08-01 reconciliation grill — see the
-Phase 1 section above). First action is now Phase 2, starting with the
-`patent-citation-candor-gate` wedge: open its exploration packet and walk the
-normal `/explore` stages (capture → research → align) toward shaping. Goal
-graduation and merges still require Benjamin's explicit ask.
+Phase 1 is complete and signed off (2026-08-01 reconciliation grill), and the
+first Phase 2 wedge is already OPEN (2026-08-04 phase-2 grill). First action
+is now to RESUME `explorations/patent-citation-candor-gate` where its
+`README.md` Next Open Question points: run its two locked research lanes,
+then hold the align session over their outputs. Do not re-scaffold the
+packet. Goal graduation and merges still require Benjamin's explicit ask.
