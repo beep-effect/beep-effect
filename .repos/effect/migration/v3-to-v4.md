@@ -2,9 +2,9 @@
 
 # v3 to v4 Migration Reference
 
-Base: `v3` (`3d390f232bdbc3f0d3d6a2ae3c775084f494b547`)
+Base: `3d390f232bdbc3f0d3d6a2ae3c775084f494b547` (`3d390f232bdbc3f0d3d6a2ae3c775084f494b547`)
 
-Head: `main` (`0a532e503f165fdea485a5343fc2f420917e8376`)
+Head: `main` (`24e0e93dc307dc2c2ae86caacb7289e1dab3c103`)
 
 This file is generated from the API diff and `migration/annotations/*.yaml`.
 
@@ -5971,6 +5971,8 @@ effect/unstable/rpc/Utils (barrel: effect/unstable/rpc)
 
 - `RequestResolver.dataLoader` -> `effect/RequestResolver#setDelay + effect/RequestResolver#batchN`: Pipe the resolver through setDelay(options.window) and batchN(options.maxBatchSize ?? Infinity); the transformation is now pure.
 
+- `RequestResolver.persisted` -> `effect/RequestResolver#persisted`: Retained after moving to core RequestResolver; requests now implement Persistable and use Persistence.Persistence, timeToLive is optional, and staleWhileRevalidate is supported.
+
 ### `@effect/experimental/Sse`
 
 - `Sse.RetryTypeId` -> `none`: The Retry identifier is private in v4; use effect/unstable/encoding/Sse#Retry and Retry.is instead of inspecting the brand.
@@ -6439,6 +6441,10 @@ effect/unstable/rpc/Utils (barrel: effect/unstable/rpc)
 
 - `FileSystem.CopyOptions` -> `NonNullable<Parameters<FileSystem.FileSystem["copy"]>[2]>`: Operation option interfaces are inline in the v4 FileSystem service.
 
+- `FileSystem.File.Descriptor` -> `none`: Native file descriptors are no longer part of the portable File interface; use the File methods and keep any platform handle private in custom implementations.
+
+- `FileSystem.FileDescriptor` -> `none`: The descriptor branding constructor was removed with the public fd field; use File operations instead of exposing a native descriptor.
+
 - `FileSystem.FileTypeId` -> `typeof FileSystem.FileTypeId`: The runtime marker remains exported, but the separate type alias was removed.
 
 - `FileSystem.MakeDirectoryOptions` -> `NonNullable<Parameters<FileSystem.FileSystem["makeDirectory"]>[1]>`: Operation option interfaces are inline in the v4 FileSystem service.
@@ -6463,7 +6469,7 @@ effect/unstable/rpc/Utils (barrel: effect/unstable/rpc)
 
 - `FileSystem.WatchEventUpdate` -> `FileSystem.WatchEvent.Update`: The constructor was removed; construct a tagged object with \_tag: "Update" and path.
 
-- `FileSystem.WatchOptions` -> `none`: FileSystem.watch now accepts only a path; the recursive watch option was removed.
+- `FileSystem.WatchOptions` -> `FileSystem.WatchOptions`: Retained after moving the module to effect/FileSystem; pass `{ recursive: true }` as the optional second argument to FileSystem.watch.
 
 - `FileSystem.WriteFileOptions` -> `NonNullable<Parameters<FileSystem.FileSystem["writeFile"]>[2]>`: Operation option interfaces are inline in the v4 FileSystem service.
 
@@ -7493,6 +7499,8 @@ effect/unstable/rpc/Utils (barrel: effect/unstable/rpc)
 
 - `Rpc.make` -> `effect/unstable/rpc/Rpc#make`: Retained; schemas use v4 Schema.Top constraints and the defect option accepts Rpc.DefectSchema.
 
+- `Rpc.wrap` -> `effect/unstable/rpc/Rpc#wrap`: Retained after the module move; it still applies fork and uninterruptible handler options, while the return type is now uniformly Rpc.Wrapper.
+
 ### `@effect/rpc/RpcClient`
 
 - `RpcClient.Protocol` -> `effect/unstable/rpc/RpcClient#Protocol`: Retained as a Context.Service; custom transports now route multiple client ids through run and send.
@@ -7726,6 +7734,8 @@ effect/unstable/rpc/Utils (barrel: effect/unstable/rpc)
 - `Model.DateTimeFromDate` -> `effect/Schema#DateTimeUtcFromDate`: Moved to core Schema and retains Date to DateTime.Utc conversion.
 
 - `Model.Generated` -> `effect/unstable/schema/Model#GeneratedByDb`: Renamed and now read-only, with select and json variants only. Use Model.Field with select, update, and json to preserve writable v3 behavior.
+
+- `Model.extract` -> `effect/unstable/schema/Model#extract`: Retained after moving the model variant helpers into core Effect's unstable schema package.
 
 - `Model.fieldFromKey` -> `effect/Schema#encodeKeys`: The field helper was removed; apply encodeKeys to each concrete struct or model-variant schema that crosses the naming boundary.
 
@@ -8937,7 +8947,7 @@ Schema.toArbitraryLazy(schema)
 
 ### `effect/Config`
 
-- `Config.Config` -> `Config.Config`: The model remains and is still a yieldable Effect; it now also exposes parse(provider, pathPrefix?).
+- `Config.Config` -> `Config.Config`: The model remains a yieldable Effect and exposes parse(provider). Compose logical lookup paths with Config.schema(..., path) and Config.nested; parsing no longer accepts a public path prefix.
 
 - `Config.Config.IsPlainObject` -> `none`: This private conditional helper is no longer exposed; use Config.Wrap for the public recursive wrapping contract.
 
@@ -8949,7 +8959,7 @@ Schema.toArbitraryLazy(schema)
 
 - `Config.LiteralValue` -> `SchemaAST.LiteralValue`: Use the literal value type shared by v4 Schema constructors.
 
-- `Config.all` -> `Config.all`: Unchanged; combine an iterable or record of Config values.
+- `Config.all` -> `Config.all`: Combine an iterable or record of Config values. A wholly absent product can use Config.withDefault or Config.option, while a partially supplied product fails.
 
 - `Config.array` -> `Config.schema(Config.Array(valueSchema), path)`: Array parsing is schema-based in v4; rebuild the element Config as a Schema and pass the optional path to Config.schema.
 
@@ -8985,7 +8995,7 @@ Schema.toArbitraryLazy(schema)
 
 - `Config.port` -> `Config.port`: Unchanged.
 
-- `Config.primitive` -> `Config.schema(customSchema, path)`: Custom primitive parsing moved to Schema codecs; express decoding and diagnostics in a Schema, then pass it to Config.schema.
+- `Config.primitive` -> `Config.schema(customSchema, path)`: Custom primitive parsing moved to Schema codecs; express decoding and diagnostics in a Schema, then pass it to Config.schema. Its canonical StringTree encoding must expose a concrete shape; opaque encodings such as Schema.Any or Schema.Unknown are not supported.
 
 - `Config.redacted` -> `Config.redacted`: The string/path overload remains; replace the v3 Config argument overload with Config.map(config, Redacted.make).
 
@@ -9027,7 +9037,7 @@ Schema.toArbitraryLazy(schema)
 
 - `ConfigError.InvalidData` -> `new Config.ConfigError(new Schema.SchemaError(issue))`: Invalid configuration is now expressed as a SchemaIssue wrapped by SchemaError and Config.ConfigError.
 
-- `ConfigError.MissingData` -> `new Config.ConfigError(new Schema.SchemaError(new SchemaIssue.MissingKey(...)))`: Missing configuration is represented by Schema issues, commonly MissingKey under one or more Pointer nodes.
+- `ConfigError.MissingData` -> `none`: There is no public missing-data error variant. A required absent config ultimately fails with a SchemaError, while Config.withDefault and Config.option handle semantic absence before it enters the public Effect error channel.
 
 - `ConfigError.Options` -> `none`: The shared constructor options type was removed; ConfigProvider.SourceError accepts message and optional cause, while Schema issues have issue-specific constructors.
 
@@ -9043,9 +9053,9 @@ Schema.toArbitraryLazy(schema)
 
 - `ConfigError.isInvalidData` -> `Schema.isSchemaError(error.cause)`: Parsing and validation failures are SchemaError causes; inspect the contained SchemaIssue for finer classification.
 
-- `ConfigError.isMissingData` -> `Schema.isSchemaError(error.cause)`: After narrowing to SchemaError, recursively inspect MissingKey, absent InvalidType/InvalidValue, Pointer, and aggregate issues; there is no public one-step guard.
+- `ConfigError.isMissingData` -> `none`: Do not infer semantic absence from a SchemaIssue. Use Config.withDefault or Config.option; they distinguish absent provider input from successful undefined, invalid input, and partial products.
 
-- `ConfigError.isMissingDataOnly` -> `Config.withDefault / Config.option`: The public classifier was removed; these combinators retain the supported missing-only fallback behavior.
+- `ConfigError.isMissingDataOnly` -> `Config.withDefault / Config.option`: The public classifier was removed. These combinators use provider lookup evidence rather than recursively classifying SchemaIssue values.
 
 - `ConfigError.isOr` -> `error.cause.issue._tag === "AnyOf"`: After narrowing cause with Schema.isSchemaError, inspect the SchemaIssue tag; the old Or node no longer exists.
 
@@ -9059,7 +9069,7 @@ Schema.toArbitraryLazy(schema)
 
 ### `effect/ConfigProvider`
 
-- `ConfigProvider.ConfigProvider` -> `ConfigProvider.ConfigProvider`: The model remains but now exposes load(path), returning a raw Node or undefined, and has one unified provider representation.
+- `ConfigProvider.ConfigProvider` -> `ConfigProvider.ConfigProvider`: The model remains but now exposes `load(path)`, returning `Effect<Node | undefined, SourceError>`, and `mapInput(f)` for provider-owned path transformation. `undefined` means the path is missing; a `Node` means it exists.
 
 - `ConfigProvider.ConfigProvider.Flat` -> `ConfigProvider.ConfigProvider`: Flat providers were removed; implement the unified path-based provider with ConfigProvider.make.
 
@@ -9081,7 +9091,7 @@ Schema.toArbitraryLazy(schema)
 
 - `ConfigProvider.fromEnv` -> `ConfigProvider.fromEnv`: The constructor remains; pass env and preserveEmptyStrings options. Paths use underscore semantics, while sequence separators belong on Config schemas.
 
-- `ConfigProvider.fromFlat` -> `ConfigProvider.make`: Flat providers were unified with ConfigProvider; implement load by returning Value, Record, or Array nodes for each path.
+- `ConfigProvider.fromFlat` -> `ConfigProvider.make`: Flat providers were unified with ConfigProvider; return a `Value`, `Record`, or `Array` node for a found path, or `undefined` when missing.
 
 - `ConfigProvider.fromJson` -> `ConfigProvider.fromUnknown`: Renamed to reflect support for any in-memory JavaScript value.
 
@@ -9091,9 +9101,9 @@ Schema.toArbitraryLazy(schema)
 
 - `ConfigProvider.lowerCase` -> `ConfigProvider.mapInput((path) => path.map((part) => typeof part === "string" ? part.toLowerCase() : part))`: Transform string path segments explicitly with mapInput.
 
-- `ConfigProvider.make` -> `ConfigProvider.make`: The constructor now takes a path lookup returning Effect\<Node | undefined, SourceError\>, rather than a full Config loader and flattened provider.
+- `ConfigProvider.make` -> `ConfigProvider.make`: The constructor now takes a path lookup returning `Effect<Node | undefined, SourceError>`, rather than a full Config loader and flattened provider. Return `undefined` for a missing path and a `Node` for a found path.
 
-- `ConfigProvider.makeFlat` -> `ConfigProvider.make`: The flat-provider constructor was removed; return Value, Record, or Array nodes from the unified path lookup.
+- `ConfigProvider.makeFlat` -> `ConfigProvider.make`: The flat-provider constructor was removed; return a `Value`, `Record`, or `Array` node for a found path, or `undefined` when missing.
 
 - `ConfigProvider.mapInputPath` -> `ConfigProvider.mapInput`: Renamed and generalized: the callback receives and returns the complete Path, including numeric array indexes.
 

@@ -20,7 +20,7 @@ corpus is reproduced here only when P0 actually consumes it.
 | --- | --- | --- |
 | Deferred spike B — contradiction-triage fixtures (2026-07-14) | The five P0 hard-gate assertions and the "detection alone never changes authoritative validity" acceptance sentence | [`explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md) |
 | MAP order-2 row | Mission one-liner, dependency on the finalized core, and the P0 gate boundary | [`explorations/agent-memory-tiers-bitemporal-edges/MAP.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/MAP.md) |
-| P0→P1 handoff, item 3 | `ClaimDisposition` vocabulary is `active \| rejected \| superseded`, with `conflicted` left out **until this packet needs it** — it lands here with its first real consumer | [`goals/epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md`](../../epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md) |
+| P0→P1 handoff, item 3 | Claim disposition remains claim-admission state; triage resolves the naming conflict with its own `ContradictionDispositionStatus` instead of widening that vocabulary | [`goals/epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md`](../../epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md) |
 | Core reflection (2026-07-25) | The named head-disambiguation-over-supersession fixture this packet owes | [`goals/epistemic-bitemporal-edge-core/history/reflections/2026-07-25-claude.md`](../../epistemic-bitemporal-edge-core/history/reflections/2026-07-25-claude.md) |
 
 ## 2. Evidence inputs (unconsumed dispatch note)
@@ -53,7 +53,7 @@ from the exploration's capability check:
 | Capability | Package | Expected disposition |
 | --- | --- | --- |
 | Logical edge identity, symmetric-endpoint ordering, bounded endpoints | `packages/epistemic/domain` | reuse — no second symmetric-encoding scheme |
-| `ClaimDisposition` / `ClaimDispositionStatus` | `packages/epistemic/domain` | extend — add the `conflicted` member |
+| `ClaimDisposition` / `ClaimDispositionStatus` | `packages/epistemic/domain` | reuse unchanged; add slice-local contradiction disposition |
 | Atomic close-and-insert supersession, typed conflict mapping | `packages/epistemic/server` | reuse through the existing repository path |
 | Candidate entities, tables, ports, approval command | `packages/epistemic/{domain,tables,use-cases,server}` | NET-NEW, additive only |
 | Migration registration + PGlite proof lane | `packages/_internal/db-admin` | reuse/extend |

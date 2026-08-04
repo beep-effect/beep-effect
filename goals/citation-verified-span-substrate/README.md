@@ -34,13 +34,32 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research: execute the deferred hostile-text fixture spike and lock the
-UTF-16 conversion, normalization-to-source mapping, ambiguity, straddle, and
-source-drift contracts before implementation begins.
+P1 Implement: the hostile-text gate and the coordinated full-source consumer
+are green. The public contracts now preserve the locked UTF-16,
+locator-to-raw, ambiguity, straddle, stale-source, and live re-verification
+behavior. The packet remains active for its broader re-anchor history and
+negative-attempt persistence contract.
+
+## Coordinated Consumer
+
+The same implementation PR coordinates a full-source consumer outside this
+packet's owned packages: the file-processing source-text resolver and its
+workspace-local provider page the exact extracted source by
+`SourceTextIdentity`. Provenance remains a pure identity/anchor model, while
+langextract receives the reconstructed full raw text and never owns file or
+workspace access.
 
 ## Latest Evidence
 
-Not started.
+[`history/p0/2026-07-29-hostile-text-contract.md`](./history/p0/2026-07-29-hostile-text-contract.md)
+records the pre-contract executable spike, its initially caught ligature
+offset mistake, the final 9/9 pass, and the conversion contract now binding P1.
+
+[`history/p1/2026-07-29-provenance-langextract-substrate.md`](./history/p1/2026-07-29-provenance-langextract-substrate.md)
+records green package audits and docgen for the provenance identity/verified
+anchor/receipt split and langextract strict raw-mapping slice. P1 remains
+active for the packet-owned re-anchor history and negative-attempt persistence
+work; the coordinated resolver/consumer is complete.
 
 ## Notes
 

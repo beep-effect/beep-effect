@@ -102,9 +102,9 @@ const ROOT_LINT_STEP_CONCURRENCY = 3;
 // Lint-policy steps are independent read-only tools (cspell, markdownlint,
 // oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
 // converts the lane from sum-of-steps to max-of-steps; keep it at the same
-// hosted-stable cap as full root lint so policy-only checks do not overload
-// constrained runners.
-const LINT_POLICY_STEP_CONCURRENCY = 3;
+// hosted-stable cap below full root lint so policy-only checks do not overload
+// constrained runners when multiple memory-heavy tools overlap.
+const LINT_POLICY_STEP_CONCURRENCY = 2;
 
 type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 

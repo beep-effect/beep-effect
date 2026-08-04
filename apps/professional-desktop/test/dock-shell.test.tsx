@@ -7,6 +7,7 @@ import { AtomRegistry } from "effect/unstable/reactivity";
 import { afterEach, describe, expect } from "vitest";
 import { App } from "@/App";
 import {
+  DESKTOP_PANELS,
   DOCK_SNAPSHOT_KEY,
   defaultDesktopWorkspace,
   dockPersistenceBindingAtom,
@@ -43,12 +44,26 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       expect(isPanelOpen(validated, "ontology-changelog")).toBe(true);
       expect(isPanelOpen(validated, "home")).toBe(true);
       expect(isPanelOpen(validated, "sync")).toBe(true);
+      expect(isPanelOpen(validated, "contradiction-triage")).toBe(false);
       // Heavy tools start closed; the rail menu opens them.
       expect(isPanelOpen(validated, "ontology-sparql")).toBe(false);
       expect(isPanelOpen(validated, "ontology-validation")).toBe(false);
       expect(isPanelOpen(validated, "ontology-metrics")).toBe(false);
     })
   );
+
+  it("registers contradiction triage as the thirteenth direct shell panel", () => {
+    const panel = DESKTOP_PANELS.find(({ key }) => key === "contradiction-triage");
+
+    expect(DESKTOP_PANELS).toHaveLength(13);
+    expect(panel).toEqual({
+      cluster: "shell",
+      description: "Review contradictory beliefs against their verified source text.",
+      key: "contradiction-triage",
+      label: "Beliefs",
+      title: "Contradiction Triage",
+    });
+  });
 
   it.effect(
     "round-trips the workspace through the localStorage snapshot store",
@@ -154,6 +169,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       .findByTestId("chat-app")
       .then((chatApp) => {
         expect(chatApp).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Beliefs" })).toBeNull();
 
         const homeButton = screen.getByRole("button", { name: "Home" });
         fireEvent.click(homeButton);

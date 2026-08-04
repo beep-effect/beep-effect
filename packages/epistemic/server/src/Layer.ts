@@ -7,9 +7,9 @@
  * `ShaclValidationService` backend is provided once at the merge boundary so it
  * is built a single time across consumers.
  *
- * Two compositions are published rather than one. `EpistemicServerLive` requires
- * nothing and keeps the in-memory disposition repository, so gate and lifecycle
- * consumers boot it without standing up a database;
+ * Two core compositions are published. `EpistemicServerLive` requires nothing
+ * and keeps the in-memory disposition repository plus an empty contradiction
+ * repository, so gate and lifecycle consumers boot it without standing up a database;
  * {@link EpistemicServerDrizzleLive} is the same surface plus the bitemporal edge
  * authority, backed by Postgres. The edge authority appears only in the Drizzle
  * composition because its guarantees are the database's — a locked head, a
@@ -31,11 +31,24 @@ import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-en
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { Effect, Layer } from "effect";
 import { ClaimDispositionRepositoryDrizzle, ClaimDispositionRepositoryInMemory } from "./ClaimDisposition/index.ts";
+import {
+  ContradictionHandlersLive,
+  ContradictionTriageRepositoryDrizzle,
+  ContradictionTriageRepositoryFixture,
+  ContradictionTriageServiceLive,
+} from "./ContradictionTriage/index.ts";
 import { EdgeAuthorityRepositoryDrizzle } from "./EdgeAuthority/index.ts";
 import { ExecutionLedgerDrizzle } from "./ExecutionLedger/index.ts";
 import type { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority";
 import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
+import type {
+  ContradictionReviewer,
+  ContradictionReviewScope,
+  ContradictionTriageRepository,
+} from "@beep/epistemic-use-cases/server";
+import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type { PostgresDrizzle } from "@beep/postgres";
+import type * as Crypto from "effect/Crypto";
 
 const ClaimGateLayer = Layer.effect(
   ClaimGate,
@@ -67,11 +80,12 @@ const ClaimGateOutcomeResolverLayer = Layer.effect(
  * @since 0.0.0
  */
 export const EpistemicServerLive: Layer.Layer<
-  ClaimDispositionRepository | ClaimGate | ClaimGateOutcomeResolver | ClaimTransition
+  ClaimDispositionRepository | ClaimGate | ClaimGateOutcomeResolver | ClaimTransition | ContradictionTriageRepository
 > = Layer.mergeAll(
   ClaimGateLayer,
   ClaimTransitionLayer,
   ClaimDispositionRepositoryInMemory,
+  ContradictionTriageRepositoryFixture,
   ClaimGateOutcomeResolverLayer.pipe(
     Layer.provide(Layer.merge(ClaimTransitionLayer, ClaimDispositionRepositoryInMemory))
   )
@@ -97,6 +111,7 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   | ClaimGate
   | ClaimGateOutcomeResolver
   | ClaimTransition
+  | ContradictionTriageRepository
   | EdgeAuthorityRepository
   | ExecutionLedger,
   never,
@@ -105,9 +120,72 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   ClaimGateLayer.pipe(Layer.provide(ShaclValidationServiceLive)),
   ClaimTransitionLayer,
   ClaimDispositionRepositoryDrizzle,
+  ContradictionTriageRepositoryDrizzle,
   EdgeAuthorityRepositoryDrizzle,
   ExecutionLedgerDrizzle,
   ClaimGateOutcomeResolverLayer.pipe(
     Layer.provide(Layer.merge(ClaimTransitionLayer, ClaimDispositionRepositoryDrizzle))
   )
 );
+
+const ContradictionRpcLive = ContradictionHandlersLive.pipe(Layer.provide(ContradictionTriageServiceLive));
+
+/**
+ * In-memory epistemic server surface plus contradiction RPC handlers.
+ *
+ * The application supplies the authenticated reviewer, trusted organization
+ * and source scope, a source-text resolver, and the cryptographic hashing
+ * service used to verify source identity.
+ *
+ * @example
+ * ```ts
+ * import { EpistemicServerRpcLive } from "@beep/epistemic-server/layer"
+ *
+ * console.log(EpistemicServerRpcLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const EpistemicServerRpcLive: Layer.Layer<
+  Layer.Success<typeof ContradictionHandlersLive>,
+  never,
+  ContradictionReviewer | ContradictionReviewScope | Crypto.Crypto | SourceTextResolver
+> = ContradictionRpcLive.pipe(Layer.provide(EpistemicServerLive));
+
+/**
+ * Drizzle-backed epistemic server surface plus contradiction RPC handlers.
+ *
+ * The application supplies Postgres, the authenticated reviewer, trusted
+ * organization and source scope, a source-text resolver, and the cryptographic
+ * hashing service used to verify source identity.
+ *
+ * @example
+ * ```ts
+ * import { EpistemicServerDrizzleRpcLive } from "@beep/epistemic-server/layer"
+ *
+ * console.log(EpistemicServerDrizzleRpcLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const EpistemicServerDrizzleRpcLive: Layer.Layer<
+  Layer.Success<typeof ContradictionHandlersLive>,
+  never,
+  ContradictionReviewer | ContradictionReviewScope | Crypto.Crypto | PostgresDrizzle | SourceTextResolver
+> = ContradictionRpcLive.pipe(Layer.provide(EpistemicServerDrizzleLive));
+
+/**
+ * Contradiction-triage repository, application-service, and RPC-handler layers
+ * for application composition.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export {
+  ContradictionHandlersLive,
+  ContradictionTriageRepositoryDrizzle,
+  ContradictionTriageRepositoryFixture,
+  ContradictionTriageServiceLive,
+};

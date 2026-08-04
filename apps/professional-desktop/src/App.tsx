@@ -1,12 +1,13 @@
 /**
  * Professional Desktop React workbench shell bootstrap.
  *
- * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): twelve
- * keep-alive dock panels — Home, Chat ({@link ChatApp}), Vault sync, and the
- * nine ontology workbench regions — in one workspace whose layout the user
- * can rearrange and which persists to localStorage. The nav rail is the panel
- * launcher: shell panels are direct buttons and the Ontology entry expands to
- * its panel disclosure (focus an open panel, open a closed one). Two atom
+ * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): thirteen
+ * keep-alive dock panels — Home, Chat ({@link ChatApp}), Vault sync,
+ * contradiction triage, and the nine ontology workbench regions — in one
+ * workspace whose layout the user can rearrange and which persists to
+ * localStorage. The nav rail is the panel launcher: shell panels are direct
+ * buttons and the Ontology entry expands to its panel disclosure (focus an
+ * open panel, open a closed one). Two atom
  * registries with explicit ownership: application state lives in the root
  * `RegistryProvider`, dock state lives in the graph's private registry —
  * panel content re-enters the app registry, and the shell reads dock atoms
@@ -20,6 +21,8 @@
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
+import { epistemicProtocolLayerAtom } from "@beep/epistemic-client";
+import { ContradictionTriagePanel } from "@beep/epistemic-ui";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
@@ -29,10 +32,7 @@ import {
   OntologyExplorerRegion,
   OntologyGraphRegion,
   OntologyInspectorRegion,
-  OntologyMetricsRegion,
   OntologySourceRegion,
-  OntologySparqlRegion,
-  OntologyValidationRegion,
 } from "@beep/ontology-ui";
 import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
@@ -44,15 +44,13 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component } from "react";
+import { Component, lazy, Suspense } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
-import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
-import { Graph3DSpike } from "./spikes/Graph3DSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
@@ -76,6 +74,28 @@ import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 
 const $I = $ProfessionalDesktopId.create("App");
+
+const OntologyMetricsRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/metrics").then(({ OntologyMetricsRegion }) => ({
+    default: OntologyMetricsRegion,
+  }))
+);
+const OntologySparqlRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/sparql").then(({ OntologySparqlRegion }) => ({
+    default: OntologySparqlRegion,
+  }))
+);
+const OntologyValidationRegion = lazy(() =>
+  import("@beep/ontology-ui/aggregates/Session/validation").then(({ OntologyValidationRegion }) => ({
+    default: OntologyValidationRegion,
+  }))
+);
+const CosmosSpike = lazy(() =>
+  import("./spikes/CosmosSpike.tsx").then(({ CosmosSpike }) => ({ default: CosmosSpike }))
+);
+const Graph3DSpike = lazy(() =>
+  import("./spikes/Graph3DSpike.tsx").then(({ Graph3DSpike }) => ({ default: Graph3DSpike }))
+);
 
 type AppRegistry = DesktopDockGraph["registry"];
 type BrowserFailureSource = Parameters<typeof reportedBrowserFailureAtoms>[0];
@@ -105,6 +125,9 @@ const browserSidecarTransport = (): SidecarTransport => {
     : SidecarTransport.make({ ipc: false, rpcSessionToken: token });
 };
 
+const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
+  transport.ipc || P.isNotUndefined(transport.rpcSessionToken);
+
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
 // the Tauri Promise boundary and schema-decoded — and in a plain browser it is
@@ -126,6 +149,21 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTransport);
+
+const ContradictionTriageSurface = (): JSX.Element => {
+  const transport = useAtomValue(sidecarTransportAtom);
+  const unavailable = (
+    <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">
+      Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
+    </div>
+  );
+
+  return AsyncResult.match(transport, {
+    onInitial: () => unavailable,
+    onFailure: () => unavailable,
+    onSuccess: ({ value }) => (hasDesktopRpcAccess(value) ? <ContradictionTriagePanel /> : unavailable),
+  });
+};
 
 const BrowserFailureReporter = ({
   cause,
@@ -156,6 +194,7 @@ const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
       ontologyProtocolLayerAtom,
       transport.ipc || O.isSome(sessionToken) ? protocolLayer : HttpOntologyProtocolLive
     );
+    get.set(epistemicProtocolLayerAtom, protocolLayer);
     get.set(chatProtocolLayerAtom, protocolLayer);
   })
 );
@@ -476,6 +515,19 @@ const makePanelRenderers = (
       <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
     </RegistryContext.Provider>
   );
+  const wrapLazy = (label: string, content: ReactNode): JSX.Element =>
+    wrap(
+      label,
+      <Suspense
+        fallback={
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground" role="status">
+            Loading {label}
+          </div>
+        }
+      >
+        {content}
+      </Suspense>
+    );
   // Each ontology region reads the same app-registry atoms it read inside
   // the old monolith, so a region docked anywhere (or floated) stays wired
   // to the same session.
@@ -483,15 +535,16 @@ const makePanelRenderers = (
     home: () => wrap("Home", <HomeSurface graph={graph} />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
+    "contradiction-triage": () => wrap("Contradiction Triage", <ContradictionTriageSurface />),
     "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
     "ontology-document": () => wrap("Document", <OntologyDocumentRegion />),
     "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
     "ontology-source": () => wrap("Source", <OntologySourceRegion />),
     "ontology-inspector": () => wrap("Inspector", <OntologyInspectorRegion />),
-    "ontology-sparql": () => wrap("SPARQL", <OntologySparqlRegion />),
-    "ontology-validation": () => wrap("Validation", <OntologyValidationRegion />),
+    "ontology-sparql": () => wrapLazy("SPARQL", <OntologySparqlRegion />),
+    "ontology-validation": () => wrapLazy("Validation", <OntologyValidationRegion />),
     "ontology-changelog": () => wrap("Change Log", <OntologyChangeLogRegion />),
-    "ontology-metrics": () => wrap("Worker Metrics", <OntologyMetricsRegion />),
+    "ontology-metrics": () => wrapLazy("Worker Metrics", <OntologyMetricsRegion />),
   };
 };
 
@@ -642,6 +695,8 @@ const DesktopShell = ({
   const initializeDockApi = useAtomSet(initializeDockApiAtom);
   const navigatePanel = useAtomSet(navigateDesktopPanelAtom);
   const focusedGroup = useAtomValue(focusedDockGroupAtom(graph)(dockApi));
+  const desktopRpcAvailable = hasDesktopRpcAccess(transport);
+  const shellNavPanels = A.filter(SHELL_NAV_PANELS, ({ key }) => key !== "contradiction-triage" || desktopRpcAvailable);
   // One current page: the panel active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
   const isPanelCurrent = (key: DesktopPanelKey): boolean =>
@@ -672,7 +727,7 @@ const DesktopShell = ({
         <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
-            {A.map(SHELL_NAV_PANELS, (item) => (
+            {A.map(shellNavPanels, (item) => (
               <Button
                 key={item.key}
                 aria-current={isPanelCurrent(item.key) ? "page" : undefined}
@@ -727,8 +782,8 @@ const DesktopShell = ({
 // panels read protocol atoms the bindings never wrote.
 const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
   const appRegistry = useAtomValue(professionalAtomRegistryAtom);
+  const protocolLayerBinding = useAtomValue(protocolLayerBindingAtom);
   const transport = useAtomValue(sidecarTransportAtom);
-  useAtomMount(protocolLayerBindingAtom);
 
   return AsyncResult.match(appRegistry, {
     onInitial: () => (
@@ -781,7 +836,34 @@ const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Ele
             </>
           );
         },
-        onSuccess: ({ value: transport }) => <DesktopShell graph={graph} transport={transport} />,
+        onSuccess: ({ value: transport }) =>
+          AsyncResult.match(protocolLayerBinding, {
+            onInitial: () => (
+              <>
+                <ShellLoading label="Binding desktop transport" />
+                <ChatTurnErrorToasts />
+                <Toaster richColors />
+              </>
+            ),
+            onFailure: (failure) => {
+              const redacted = redactCauseForClient(failure.cause);
+              return (
+                <>
+                  <BrowserFailureReporter cause={failure.cause} source="desktop_transport" />
+                  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+                    <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+                      <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
+                      <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+                      <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+                    </div>
+                  </div>
+                  <ChatTurnErrorToasts />
+                  <Toaster richColors />
+                </>
+              );
+            },
+            onSuccess: () => <DesktopShell graph={graph} transport={transport} />,
+          }),
       }),
   });
 };
@@ -806,11 +888,19 @@ export function App(): JSX.Element {
   const graphResult = useAtomValue(desktopDockGraphAtom);
 
   if (hasCosmosSpikeFlag()) {
-    return <CosmosSpike />;
+    return (
+      <Suspense fallback={<ShellLoading label="Loading Cosmos spike" />}>
+        <CosmosSpike />
+      </Suspense>
+    );
   }
 
   if (hasGraph3dSpikeFlag()) {
-    return <Graph3DSpike />;
+    return (
+      <Suspense fallback={<ShellLoading label="Loading graph-3d spike" />}>
+        <Graph3DSpike />
+      </Suspense>
+    );
   }
 
   return AsyncResult.match(graphResult, {

@@ -5,46 +5,26 @@
  * @since 0.0.0
  */
 
-import { MimeTypesData } from "@beep/data";
+import { OfficialMimeTypeDataTypeValues } from "@beep/data/MimeTypes";
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Struct } from "@beep/utils";
 import { Function as Fn, flow, pipe } from "effect";
+import * as Str from "effect/String";
 import { LiteralKit } from "./LiteralKit/index.ts";
+import type { OfficialMimeType } from "@beep/data/MimeTypes";
 import type { LiteralKit as LiteralKitSchema } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("MimeType");
+
+const PRIMARY_MIME_TYPE_PREFIXES = ["application/", "audio/", "image/", "text/", "video/"] as const;
 
 type MimeTypeProperty = {
   readonly [mimeType: string]: unknown;
 };
 type MimeTypeKey<T extends MimeTypeProperty> = keyof T & string;
-
-type MimeTypeKinds = {
-  readonly Application: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.application, string>>
-  >;
-  readonly Video: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.video, string>>
-  >;
-  readonly Text: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.text, string>>
-  >;
-  readonly Image: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.image, string>>
-  >;
-  readonly Audio: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.audio, string>>
-  >;
-  readonly Misc: LiteralKitSchema<
-    A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByTopLevel.misc, string>>
-  >;
-};
-
-type MimeTypeSchema = LiteralKitSchema<
-  A.NonEmptyReadonlyArray<Extract<keyof typeof MimeTypesData.OfficialMimeTypeDataByType, string>>
-> & {
-  readonly kinds: MimeTypeKinds;
-};
+type PrimaryMimeTypeTopLevel = "application" | "audio" | "image" | "text" | "video";
+type TopLevelMimeType<TopLevel extends PrimaryMimeTypeTopLevel> = Extract<OfficialMimeType, `${TopLevel}/${string}`>;
+type MiscMimeTypeValue = Exclude<OfficialMimeType, TopLevelMimeType<PrimaryMimeTypeTopLevel>>;
 
 /**
  * Extracts all MIME type keys from a MIME type dictionary as a deduplicated array.
@@ -69,17 +49,39 @@ export const extractMimeTypes: <const T extends MimeTypeProperty>(mime: T) => Re
   A.dedupe
 );
 
-const extractNonEmptyMimeTypes = <const T extends MimeTypeProperty>(
-  mime: T,
-  fallback: MimeTypeKey<T>
-): A.NonEmptyReadonlyArray<MimeTypeKey<T>> =>
+const nonEmptyMimeTypes = <Mime extends OfficialMimeType>(
+  refinement: (mimeType: OfficialMimeType) => mimeType is Mime,
+  fallback: Mime
+): A.NonEmptyReadonlyArray<Mime> =>
   pipe(
-    extractMimeTypes(mime),
+    OfficialMimeTypeDataTypeValues,
+    A.filter(refinement),
     A.match({
       onEmpty: () => [fallback],
       onNonEmpty: Fn.identity,
     })
   );
+
+const hasTopLevel =
+  <const TopLevel extends PrimaryMimeTypeTopLevel>(topLevel: TopLevel) =>
+  (mimeType: OfficialMimeType): mimeType is TopLevelMimeType<TopLevel> =>
+    Str.startsWith(`${topLevel}/`)(mimeType);
+
+const isMiscMimeType = (mimeType: OfficialMimeType): mimeType is MiscMimeTypeValue =>
+  A.every(PRIMARY_MIME_TYPE_PREFIXES, (prefix) => !Str.startsWith(prefix)(mimeType));
+
+const mimeTypeKinds = {
+  Application: LiteralKit(nonEmptyMimeTypes(hasTopLevel("application"), "application/json")),
+  Video: LiteralKit(nonEmptyMimeTypes(hasTopLevel("video"), "video/mp4")),
+  Text: LiteralKit(nonEmptyMimeTypes(hasTopLevel("text"), "text/html")),
+  Image: LiteralKit(nonEmptyMimeTypes(hasTopLevel("image"), "image/png")),
+  Audio: LiteralKit(nonEmptyMimeTypes(hasTopLevel("audio"), "audio/mpeg")),
+  Misc: LiteralKit(nonEmptyMimeTypes(isMiscMimeType, "font/woff2")),
+} as const;
+
+type MimeTypeSchema = LiteralKitSchema<typeof OfficialMimeTypeDataTypeValues> & {
+  readonly kinds: typeof mimeTypeKinds;
+};
 
 /**
  * Schema kit that covers official IANA media type literals with per-category sub-schemas.
@@ -96,27 +98,15 @@ const extractNonEmptyMimeTypes = <const T extends MimeTypeProperty>(
  * @since 0.0.0
  * @category schemas
  */
-export const MimeType: MimeTypeSchema = pipe(
-  {
-    Application: LiteralKit(
-      extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.application, "application/json")
-    ),
-    Video: LiteralKit(extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.video, "video/mp4")),
-    Text: LiteralKit(extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.text, "text/html")),
-    Image: LiteralKit(extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.image, "image/png")),
-    Audio: LiteralKit(extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.audio, "audio/mpeg")),
-    Misc: LiteralKit(extractNonEmptyMimeTypes(MimeTypesData.OfficialMimeTypeDataByTopLevel.misc, "font/woff2")),
-  } as const,
-  (kinds) => {
-    const base = LiteralKit(Struct.keysNonEmpty(MimeTypesData.OfficialMimeTypeDataByType)).pipe(
-      $I.annoteSchema("MimeType", {
-        description: "An official IANA media type.",
-      })
-    );
-    Reflect.set(base, "kinds", kinds);
-    return Fn.cast(base);
-  }
-);
+export const MimeType: MimeTypeSchema = pipe(mimeTypeKinds, (kinds) => {
+  const base = LiteralKit(OfficialMimeTypeDataTypeValues).pipe(
+    $I.annoteSchema("MimeType", {
+      description: "An official IANA media type.",
+    })
+  );
+  Reflect.set(base, "kinds", kinds);
+  return Fn.cast(base);
+});
 
 /**
  * Union of official IANA media-type literals.

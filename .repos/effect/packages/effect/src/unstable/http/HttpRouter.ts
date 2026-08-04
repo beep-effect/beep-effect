@@ -217,14 +217,14 @@ export const make = Effect.gen(function*() {
         if (span && span._tag === "Span") {
           span.attribute("http.route", route.path)
         }
-        return Effect.provideContext(
+        return Effect.updateContext(
           (route.uninterruptible ?
             route.handler :
             Effect.interruptible(route.handler)) as Effect.Effect<
               HttpServerResponse.HttpServerResponse,
               unknown
             >,
-          Context.makeUnsafe(contextMap)
+          () => Context.makeUnsafe(contextMap)
         )
       })
       if (middleware.size === 0) return handler
@@ -446,15 +446,26 @@ export const schemaPathParams = <A, I extends Readonly<Record<string, string | u
  *
  * **Example** (Registering routes during layer construction)
  *
- * ```ts
- * import { Effect, Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * ```ts import.meta.vitest
+ * import { Effect } from "effect"
+ * import { HttpRouter, HttpServerResponse } from "effect/unstable/http"
  *
- * const MyRoute = Layer.effectDiscard(Effect.gen(function*() {
- *   const router = yield* HttpRouter.HttpRouter
+ * const Routes = HttpRouter.use((router) =>
+ *   router.add("GET", "/health", HttpServerResponse.text("ready"))
+ * )
  *
- *   // then use `yield* router.add(...)` to add a route
- * }))
+ * const program = Effect.acquireUseRelease(
+ *   Effect.sync(() => HttpRouter.toWebHandler(Routes, { disableLogger: true })),
+ *   ({ handler }) =>
+ *     Effect.gen(function*() {
+ *       const response = yield* Effect.promise(() => handler(new Request("http://localhost/health")))
+ *       const body = yield* Effect.promise(() => response.text())
+ *       return body
+ *     }),
+ *   ({ dispose }) => Effect.promise(dispose)
+ * )
+ *
+ * await Effect.runPromise(program) // => "ready"
  * ```
  *
  * @category HttpRouter
@@ -469,15 +480,16 @@ export const use = <A, E, R>(
  *
  * **Example** (Adding a GET route)
  *
- * ```ts
- * import { Effect } from "effect"
+ * ```ts import.meta.vitest
+ * import { Layer } from "effect"
  * import { HttpRouter, HttpServerResponse } from "effect/unstable/http"
  *
  * const Route = HttpRouter.add(
  *   "GET",
  *   "/hello",
- *   Effect.succeed(HttpServerResponse.text("Hello, World!"))
+ *   HttpServerResponse.text("Hello, World!")
  * )
+ * Layer.isLayer(Route) // => true
  * ```
  *
  * @category HttpRouter
@@ -501,17 +513,18 @@ export const add = <E = never, R = never>(
  *
  * **Example** (Adding multiple routes)
  *
- * ```ts
- * import { Effect } from "effect"
+ * ```ts import.meta.vitest
+ * import { Layer } from "effect"
  * import { HttpRouter, HttpServerResponse } from "effect/unstable/http"
  *
  * const Routes = HttpRouter.addAll([
  *   HttpRouter.route(
  *     "GET",
  *     "/hello",
- *     Effect.succeed(HttpServerResponse.text("Hello, World!"))
+ *     HttpServerResponse.text("Hello, World!")
  *   )
  * ])
+ * Layer.isLayer(Routes) // => true
  * ```
  *
  * @category HttpRouter
@@ -867,50 +880,35 @@ export interface Middleware<
  *
  * **Example** (Applying route and global middleware)
  *
- * ```ts
- * import { Context, Effect, Layer } from "effect"
- * import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http"
+ * ```ts import.meta.vitest
+ * import { Effect, Layer } from "effect"
+ * import { HttpRouter, HttpServerResponse } from "effect/unstable/http"
  *
- * // Here we are defining a CORS middleware
- * const CorsMiddleware = HttpRouter.middleware(HttpMiddleware.cors()).layer
- * // You can also use HttpRouter.cors() to create a CORS middleware
- *
- * class CurrentSession extends Context.Service<CurrentSession, {
- *   readonly token: string
- * }>()("CurrentSession") {}
- *
- * // You can create middleware that provides a service to the HTTP requests.
- * const SessionMiddleware = HttpRouter.middleware<{
- *   provides: CurrentSession
- * }>()(
- *   Effect.gen(function*() {
- *     yield* Effect.log("SessionMiddleware initialized")
- *
- *     return (httpEffect) =>
- *       Effect.provideService(httpEffect, CurrentSession, {
- *         token: "dummy-token"
- *       })
- *   })
+ * const RouteMiddleware = HttpRouter.middleware((httpEffect) =>
+ *   Effect.map(httpEffect, HttpServerResponse.setHeader("x-route", "route"))
  * ).layer
  *
- * Effect.gen(function*() {
- *   const router = yield* HttpRouter.HttpRouter
- *   yield* router.add(
- *     "GET",
- *     "/hello",
- *     Effect.gen(function*() {
- *       // Requests can now access the current session
- *       const session = yield* CurrentSession
- *       return HttpServerResponse.text(
- *         `Hello, World! Your token is ${session.token}`
- *       )
- *     })
- *   )
- * }).pipe(
- *   Layer.effectDiscard,
- *   // Provide the SessionMiddleware & CorsMiddleware to some routes
- *   Layer.provide([SessionMiddleware, CorsMiddleware])
+ * const GlobalMiddleware = HttpRouter.middleware(
+ *   (httpEffect) => Effect.map(httpEffect, HttpServerResponse.setHeader("x-global", "global")),
+ *   { global: true }
  * )
+ *
+ * const Routes = HttpRouter.add("GET", "/hello", HttpServerResponse.text("Hello")).pipe(
+ *   Layer.provide(RouteMiddleware)
+ * )
+ * const App = Layer.mergeAll(Routes, GlobalMiddleware)
+ *
+ * const program = Effect.acquireUseRelease(
+ *   Effect.sync(() => HttpRouter.toWebHandler(App, { disableLogger: true })),
+ *   ({ handler }) =>
+ *     Effect.gen(function*() {
+ *       const response = yield* Effect.promise(() => handler(new Request("http://localhost/hello")))
+ *       return [response.headers.get("x-route"), response.headers.get("x-global")]
+ *     }),
+ *   ({ dispose }) => Effect.promise(dispose)
+ * )
+ *
+ * await Effect.runPromise(program) // => ["route", "global"]
  * ```
  *
  * @category middleware
@@ -1166,18 +1164,19 @@ export const cors = (
  *
  * **Example** (Disabling route logging)
  *
- * ```ts
- * import { Effect, Layer } from "effect"
+ * ```ts import.meta.vitest
+ * import { Layer } from "effect"
  * import { HttpRouter, HttpServerResponse } from "effect/unstable/http"
  *
  * const Route = HttpRouter.add(
  *   "GET",
  *   "/hello",
- *   Effect.succeed(HttpServerResponse.text("Hello, World!"))
+ *   HttpServerResponse.text("Hello, World!")
  * ).pipe(
  *   // disable the logger for this route
  *   Layer.provide(HttpRouter.disableLogger)
  * )
+ * Layer.isLayer(Route) // => true
  * ```
  *
  * @category middleware

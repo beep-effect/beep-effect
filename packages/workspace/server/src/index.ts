@@ -42,3 +42,10 @@ export * as Workspace from "./aggregates/Workspace/index.ts";
  * @since 0.0.0
  */
 export * from "./Layer.ts";
+/**
+ * Workspace-backed canonical source-text resolver exports.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export * as SourceText from "./SourceText/index.ts";

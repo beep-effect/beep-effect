@@ -6185,7 +6185,6 @@ flowchart TD
     LD -->|toJsonSchemaDocument|JD["JsonSchema.Document (draft-2020-12)"]
     JD -->|fromJsonSchemaDocument|S
     LD -->|toMultiDocument|LMD["live MultiDocument"]
-    SMD[SchemaMultiDocument] -->|fromSchemaMultiDocument|LMD
     LMD -->|toCodeDocument|CodeDocument
     LMD -->|toJsonSchemaMultiDocument|JMD[JsonSchema.MultiDocument]
     LMD -->|toJsonMultiDocument|JSON
@@ -6212,20 +6211,6 @@ References let the representation share definitions and support recursion.
 A `MultiDocument` stores multiple root representations that share the same `references` table.
 
 This is useful if you want to serialize a set of schemas together, or if you want to generate code for multiple schemas while emitting shared definitions only once.
-
-### `SchemaMultiDocument`
-
-A `SchemaMultiDocument` contains live schemas plus a named definition map:
-
-```ts
-interface SchemaMultiDocument {
-  readonly schemas: readonly [Schema.Top, ...Array<Schema.Top>]
-  readonly definitions: Readonly<Record<string, Schema.Top>>
-}
-```
-
-`fromJsonSchemaMultiDocument` returns this form. `fromSchemaMultiDocument` projects it to a `MultiDocument` while
-preserving explicit definitions, including definitions that are not reachable from a root.
 
 ## Projection and persistence boundaries
 
@@ -6314,10 +6299,11 @@ const multiDocument = SchemaRepresentation.toRepresentations([
 Repeated structural nodes, identifiers, and recursive schemas are placed in `references`. `toMultiDocument(document)`
 wraps a single document when a compiler requires multiple roots.
 
-An explicit `identifier` uniquely names one schema within a conversion. Reusing the same schema shares its reference, but
-two distinct schemas with the same explicit `identifier` cause `toRepresentation` or `toRepresentations` to throw a
-`Duplicate identifier` error. Internal `~identifier` annotations are allocation hints rather than uniqueness claims; when
-a derived name is already occupied, the generated reference receives a numeric suffix.
+An explicit `identifier` requests a reference name within a conversion. Reusing the same schema shares its reference. Copies
+whose AST fields are referentially identical once property-key context is ignored are canonicalized and also share a
+reference. Otherwise, when referentially distinct schemas request the same name, the first schema keeps it and later schemas
+receive numeric suffixes in encounter order, such as `Value_1` and `Value_2`. Internal `~identifier` annotations are fallback
+allocation hints; their generated names use the `Encoded` suffix and follow the same collision rules.
 
 ## JSON persistence
 
@@ -6374,7 +6360,8 @@ Effect exports individual revivers next to the built-in declarations and checks 
 `Schema.OptionReviver`, `Schema.DateReviver`, and `Schema.isMinLengthReviver`. Supply every reviver required by the
 document; a missing or duplicate `id`, or a payload that does not satisfy its reviver's `payloadSchema`, is an error.
 
-`fromRepresentations` rebuilds every root and named definition in a `MultiDocument` and returns a `SchemaMultiDocument`.
+`fromRepresentations` rebuilds the ordered roots of a `MultiDocument` in a shared reference environment. Only references
+reachable from those roots are revived.
 
 ### Custom revivers
 
@@ -6430,8 +6417,8 @@ schema with revivers first.
 `SchemaRepresentation.fromJsonSchemaDocument` imports a JSON Schema Draft 2020-12 document as a runtime `Schema.Top`.
 It does not return a representation document.
 
-`fromJsonSchemaMultiDocument` returns a `SchemaMultiDocument` containing all root schemas and definitions. Use
-`fromSchemaMultiDocument` when that result must be passed to a representation compiler.
+`fromJsonSchemaMultiDocument` returns the ordered root schemas. It translates only definitions reachable from those
+roots. To pass the result to a representation compiler, call `toRepresentations` with the returned schemas' ASTs.
 
 Import is best-effort: JSON Schema constructs are translated to Effect schemas where possible, but the result is not a
 lossless reconstruction of an original Effect schema. The optional `onEnter` callback can normalize each JSON Schema node

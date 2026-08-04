@@ -38,11 +38,10 @@ import type { NoInfer, TupleOf } from "./Types.ts"
  *
  * **Example** (Accessing the Array constructor)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const arr = new Array.Array(3)
- * console.log(arr) // [undefined, undefined, undefined]
+ * Array.Array === globalThis.Array // => true
  * ```
  *
  * @category constructors
@@ -70,11 +69,13 @@ export interface ReadonlyArrayTypeLambda extends TypeLambda {
  *
  * **Example** (Typing a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import type { Array } from "effect"
  *
  * const nonEmpty: Array.NonEmptyReadonlyArray<number> = [1, 2, 3]
  * const head: number = nonEmpty[0] // guaranteed to exist
+ *
+ * head // => 1
  * ```
  *
  * @see {@link NonEmptyArray} — mutable counterpart
@@ -101,11 +102,13 @@ export type NonEmptyReadonlyArray<A> = readonly [A, ...Array<A>]
  *
  * **Example** (Typing a mutable non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import type { Array } from "effect"
  *
  * const nonEmpty: Array.NonEmptyArray<number> = [1, 2, 3]
  * nonEmpty.push(4)
+ *
+ * nonEmpty // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link NonEmptyReadonlyArray} — readonly counterpart
@@ -130,11 +133,10 @@ export type NonEmptyArray<A> = [A, ...Array<A>]
  *
  * **Example** (Creating an array from values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.make(1, 2, 3)
- * console.log(result) // [1, 2, 3]
+ * Array.make(1, 2, 3) // => [1, 2, 3]
  * ```
  *
  * @see {@link of} — create a single-element array
@@ -160,11 +162,10 @@ export const make = <Elements extends NonEmptyArray<unknown>>(
  *
  * **Example** (Allocating a fixed-size array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.allocate<number>(3)
- * console.log(result.length) // 3
+ * Array.allocate<number>(3).length // => 3
  * ```
  *
  * @see {@link makeBy} — create an array by computing each element
@@ -189,11 +190,10 @@ export const allocate = <A = never>(n: number): Array<A | undefined> => new Arra
  *
  * **Example** (Generating values from indices)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.makeBy(5, (n) => n * 2)
- * console.log(result) // [0, 2, 4, 6, 8]
+ * Array.makeBy(5, (n) => n * 2) // => [0, 2, 4, 6, 8]
  * ```
  *
  * @see {@link range} — create a range of integers
@@ -228,11 +228,10 @@ export const makeBy: {
  *
  * **Example** (Creating a range)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.range(1, 3)
- * console.log(result) // [1, 2, 3]
+ * Array.range(1, 3) // => [1, 2, 3]
  * ```
  *
  * @see {@link makeBy} — generate values from a function
@@ -258,11 +257,10 @@ export const range = (start: number, end: number): NonEmptyArray<number> =>
  *
  * **Example** (Repeating a value)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.replicate("a", 3)
- * console.log(result) // ["a", "a", "a"]
+ * Array.replicate("a", 3) // => ["a", "a", "a"]
  * ```
  *
  * @see {@link makeBy} — vary values based on index
@@ -290,11 +288,10 @@ export const replicate: {
  *
  * **Example** (Converting a Set to an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.fromIterable(new Set([1, 2, 3]))
- * console.log(result) // [1, 2, 3]
+ * Array.fromIterable(new Set([1, 2, 3])) // => [1, 2, 3]
  * ```
  *
  * @see {@link ensure} — wrap a single value or return an existing array
@@ -322,11 +319,11 @@ export const fromIterable = <A>(collection: Iterable<A>): Array<A> =>
  *
  * **Example** (Normalizing input)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.ensure("a")) // ["a"]
- * console.log(Array.ensure(["a", "b", "c"])) // ["a", "b", "c"]
+ * Array.ensure("a") // => ["a"]
+ * Array.ensure(["a", "b", "c"]) // => ["a", "b", "c"]
  * ```
  *
  * @see {@link of} — always wrap in a single-element array
@@ -352,11 +349,10 @@ export const ensure = <A>(self: ReadonlyArray<A> | A): Array<A> => Array.isArray
  *
  * **Example** (Converting a record to entries)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.fromRecord({ a: 1, b: 2, c: 3 })
- * console.log(result) // [["a", 1], ["b", 2], ["c", 3]]
+ * Array.fromRecord({ a: 1, b: 2, c: 3 }) // => [["a", 1], ["b", 2], ["c", 3]]
  * ```
  *
  * @see {@link Record.toEntries} the equivalent function from the Record module
@@ -376,11 +372,11 @@ export const fromRecord: <K extends string, A>(self: Readonly<Record<K, A>>) => 
  *
  * **Example** (Converting an Option to an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Option } from "effect"
  *
- * console.log(Array.fromOption(Option.some(1))) // [1]
- * console.log(Array.fromOption(Option.none())) // []
+ * Array.fromOption(Option.some(1)) // => [1]
+ * Array.fromOption(Option.none()) // => []
  * ```
  *
  * @see {@link getSomes} — extract `Some` values from an array of Options
@@ -404,15 +400,16 @@ export const fromOption: <A>(self: Option.Option<A>) => Array<A> = Option.toArra
  *
  * **Example** (Branching on emptiness)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const describe = Array.match({
  *   onEmpty: () => "empty",
  *   onNonEmpty: ([head, ...tail]) => `head: ${head}, tail: ${tail.length}`
  * })
- * console.log(describe([])) // "empty"
- * console.log(describe([1, 2, 3])) // "head: 1, tail: 2"
+ *
+ * describe([]) // => "empty"
+ * describe([1, 2, 3]) // => "head: 1, tail: 2"
  * ```
  *
  * @see {@link matchLeft} — destructures into head + tail
@@ -458,15 +455,16 @@ export const match: {
  *
  * **Example** (Destructuring head and tail)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const matchLeft = Array.matchLeft({
  *   onEmpty: () => "empty",
  *   onNonEmpty: (head, tail) => `head: ${head}, tail: ${tail.length}`
  * })
- * console.log(matchLeft([])) // "empty"
- * console.log(matchLeft([1, 2, 3])) // "head: 1, tail: 2"
+ *
+ * matchLeft([]) // => "empty"
+ * matchLeft([1, 2, 3]) // => "head: 1, tail: 2"
  * ```
  *
  * @see {@link match} — receives the full non-empty array
@@ -512,15 +510,16 @@ export const matchLeft: {
  *
  * **Example** (Destructuring init and last)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const matchRight = Array.matchRight({
  *   onEmpty: () => "empty",
  *   onNonEmpty: (init, last) => `init: ${init.length}, last: ${last}`
  * })
- * console.log(matchRight([])) // "empty"
- * console.log(matchRight([1, 2, 3])) // "init: 2, last: 3"
+ *
+ * matchRight([]) // => "empty"
+ * matchRight([1, 2, 3]) // => "init: 2, last: 3"
  * ```
  *
  * @see {@link match} — receives the full non-empty array
@@ -564,11 +563,10 @@ export const matchRight: {
  *
  * **Example** (Prepending an element)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.prepend([2, 3, 4], 1)
- * console.log(result) // [1, 2, 3, 4]
+ * Array.prepend([2, 3, 4], 1) // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link append} — add to the end
@@ -595,11 +593,10 @@ export const prepend: {
  *
  * **Example** (Prepending multiple elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.prependAll([2, 3], [0, 1])
- * console.log(result) // [0, 1, 2, 3]
+ * Array.prependAll([2, 3], [0, 1]) // => [0, 1, 2, 3]
  * ```
  *
  * @see {@link prepend} — add a single element to the front
@@ -630,11 +627,10 @@ export const prependAll: {
  *
  * **Example** (Appending an element)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.append([1, 2, 3], 4)
- * console.log(result) // [1, 2, 3, 4]
+ * Array.append([1, 2, 3], 4) // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link prepend} — add to the front
@@ -662,11 +658,10 @@ export const append: {
  *
  * **Example** (Concatenating arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.appendAll([1, 2], [3, 4])
- * console.log(result) // [1, 2, 3, 4]
+ * Array.appendAll([1, 2], [3, 4]) // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link append} — add a single element to the end
@@ -702,11 +697,10 @@ export const appendAll: {
  *
  * **Example** (Running totals)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.scan([1, 2, 3, 4], 0, (acc, value) => acc + value)
- * console.log(result) // [0, 1, 3, 6, 10]
+ * Array.scan([1, 2, 3, 4], 0, (acc, value) => acc + value) // => [0, 1, 3, 6, 10]
  * ```
  *
  * @see {@link scanRight} — right-to-left scan
@@ -743,11 +737,10 @@ export const scan: {
  *
  * **Example** (Scanning running totals in reverse)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.scanRight([1, 2, 3, 4], 0, (acc, value) => acc + value)
- * console.log(result) // [10, 9, 7, 4, 0]
+ * Array.scanRight([1, 2, 3, 4], 0, (acc, value) => acc + value) // => [10, 9, 7, 4, 0]
  * ```
  *
  * @see {@link scan} — left-to-right scan
@@ -783,11 +776,11 @@ export const scanRight: {
  *
  * **Example** (Type-guarding an unknown value)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.isArray(null)) // false
- * console.log(Array.isArray([1, 2, 3])) // true
+ * Array.isArray(null) // => false
+ * Array.isArray([1, 2, 3]) // => true
  * ```
  *
  * @see {@link isArrayEmpty} — check for an empty array
@@ -806,11 +799,11 @@ export const isArray: {
  *
  * **Example** (Checking for an empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.isArrayEmpty([])) // true
- * console.log(Array.isArrayEmpty([1, 2, 3])) // false
+ * Array.isArrayEmpty([]) // => true
+ * Array.isArrayEmpty([1, 2, 3]) // => false
  * ```
  *
  * @see {@link isReadonlyArrayEmpty} — readonly variant
@@ -826,11 +819,11 @@ export const isArrayEmpty = <A>(self: Array<A>): self is [] => self.length === 0
  *
  * **Example** (Checking for an empty readonly array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.isReadonlyArrayEmpty([])) // true
- * console.log(Array.isReadonlyArrayEmpty([1, 2, 3])) // false
+ * Array.isReadonlyArrayEmpty([]) // => true
+ * Array.isReadonlyArrayEmpty([1, 2, 3]) // => false
  * ```
  *
  * @see {@link isArrayEmpty} — mutable variant
@@ -852,11 +845,11 @@ export const isReadonlyArrayEmpty: <A>(self: ReadonlyArray<A>) => self is readon
  *
  * **Example** (Checking for a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.isArrayNonEmpty([])) // false
- * console.log(Array.isArrayNonEmpty([1, 2, 3])) // true
+ * Array.isArrayNonEmpty([]) // => false
+ * Array.isArrayNonEmpty([1, 2, 3]) // => true
  * ```
  *
  * @see {@link isReadonlyArrayNonEmpty} — readonly variant
@@ -878,11 +871,11 @@ export const isArrayNonEmpty: <A>(self: Array<A>) => self is NonEmptyArray<A> = 
  *
  * **Example** (Checking for a non-empty readonly array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.isReadonlyArrayNonEmpty([])) // false
- * console.log(Array.isReadonlyArrayNonEmpty([1, 2, 3])) // true
+ * Array.isReadonlyArrayNonEmpty([]) // => false
+ * Array.isReadonlyArrayNonEmpty([1, 2, 3]) // => true
  * ```
  *
  * @see {@link isArrayNonEmpty} — mutable variant
@@ -903,10 +896,10 @@ export const isReadonlyArrayNonEmpty: <A>(self: ReadonlyArray<A>) => self is Non
  *
  * **Example** (Getting the length)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.length([1, 2, 3])) // 3
+ * Array.length([1, 2, 3]) // => 3
  * ```
  *
  * @category getters
@@ -936,11 +929,11 @@ const clamp = <A>(i: number, as: ReadonlyArray<A>): number => Math.floor(Math.mi
  *
  * **Example** (Accessing indexes safely)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.get([1, 2, 3], 1)) // Some(2)
- * console.log(Array.get([1, 2, 3], 10)) // None
+ * Array.get([1, 2, 3], 1) // => Option.some(2)
+ * Array.get([1, 2, 3], 10) // => Option.none()
  * ```
  *
  * @see {@link getUnsafe} for indexed access that throws when the index is out of bounds
@@ -973,10 +966,10 @@ export const get: {
  *
  * **Example** (Accessing indexes unsafely)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.getUnsafe([1, 2, 3], 1)) // 2
+ * Array.getUnsafe([1, 2, 3], 1) // => 2
  * // Array.getUnsafe([1, 2, 3], 10) // throws Error
  * ```
  *
@@ -1010,11 +1003,10 @@ export const getUnsafe: {
  *
  * **Example** (Destructuring head and tail)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.unprepend([1, 2, 3, 4])
- * console.log(result) // [1, [2, 3, 4]]
+ * Array.unprepend([1, 2, 3, 4]) // => [1, [2, 3, 4]]
  * ```
  *
  * @see {@link unappend} for splitting a non-empty array into init and last
@@ -1043,11 +1035,10 @@ export const unprepend = <A>(
  *
  * **Example** (Destructuring init and last)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.unappend([1, 2, 3, 4])
- * console.log(result) // [[1, 2, 3], 4]
+ * Array.unappend([1, 2, 3, 4]) // => [[1, 2, 3], 4]
  * ```
  *
  * @see {@link unprepend} for splitting a non-empty array into head and tail
@@ -1071,11 +1062,11 @@ export const unappend = <A>(
  *
  * **Example** (Getting the first element)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.head([1, 2, 3])) // Some(1)
- * console.log(Array.head([])) // None
+ * Array.head([1, 2, 3]) // => Option.some(1)
+ * Array.head([]) // => Option.none()
  * ```
  *
  * @see {@link headNonEmpty} — direct access when array is known non-empty
@@ -1097,10 +1088,10 @@ export const head: <A>(self: ReadonlyArray<A>) => Option.Option<A> = get(0)
  *
  * **Example** (Getting the head of a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.headNonEmpty([1, 2, 3, 4])) // 1
+ * Array.headNonEmpty([1, 2, 3, 4]) // => 1
  * ```
  *
  * @see {@link head} — safe version for possibly-empty arrays
@@ -1120,11 +1111,11 @@ export const headNonEmpty: <A>(self: NonEmptyReadonlyArray<A>) => A = getUnsafe(
  *
  * **Example** (Getting the last element)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.last([1, 2, 3])) // Some(3)
- * console.log(Array.last([])) // None
+ * Array.last([1, 2, 3]) // => Option.some(3)
+ * Array.last([]) // => Option.none()
  * ```
  *
  * @see {@link lastNonEmpty} — direct access when array is known non-empty
@@ -1147,10 +1138,10 @@ export const last = <A>(self: ReadonlyArray<A>): Option.Option<A> =>
  *
  * **Example** (Getting the last of a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.lastNonEmpty([1, 2, 3, 4])) // 4
+ * Array.lastNonEmpty([1, 2, 3, 4]) // => 4
  * ```
  *
  * @see {@link last} — safe version for possibly-empty arrays
@@ -1173,11 +1164,11 @@ export const lastNonEmpty = <A>(self: NonEmptyReadonlyArray<A>): A => self[self.
  *
  * **Example** (Getting the tail)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.tail([1, 2, 3, 4])) // Option.some([2, 3, 4])
- * console.log(Array.tail([])) // Option.none()
+ * Array.tail([1, 2, 3, 4]) // => Option.some([2, 3, 4])
+ * Array.tail([]) // => Option.none()
  * ```
  *
  * @see {@link tailNonEmpty} — when the array is known non-empty
@@ -1200,10 +1191,10 @@ export function tail<A>(self: Iterable<A>): Option.Option<Array<A>> {
  *
  * **Example** (Getting the tail of a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.tailNonEmpty([1, 2, 3, 4])) // [2, 3, 4]
+ * Array.tailNonEmpty([1, 2, 3, 4]) // => [2, 3, 4]
  * ```
  *
  * @see {@link tail} — safe version for possibly-empty arrays
@@ -1228,11 +1219,11 @@ export const tailNonEmpty = <A>(self: NonEmptyReadonlyArray<A>): Array<A> => sel
  *
  * **Example** (Getting init)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.init([1, 2, 3, 4])) // Option.some([1, 2, 3])
- * console.log(Array.init([])) // Option.none()
+ * Array.init([1, 2, 3, 4]) // => Option.some([1, 2, 3])
+ * Array.init([]) // => Option.none()
  * ```
  *
  * @see {@link initNonEmpty} — when the array is known non-empty
@@ -1255,10 +1246,10 @@ export function init<A>(self: Iterable<A>): Option.Option<Array<A>> {
  *
  * **Example** (Getting init of a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.initNonEmpty([1, 2, 3, 4])) // [1, 2, 3]
+ * Array.initNonEmpty([1, 2, 3, 4]) // => [1, 2, 3]
  * ```
  *
  * @see {@link init} — safe version for possibly-empty arrays
@@ -1282,10 +1273,10 @@ export const initNonEmpty = <A>(self: NonEmptyReadonlyArray<A>): Array<A> => sel
  *
  * **Example** (Taking from the start)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.take([1, 2, 3, 4, 5], 3)) // [1, 2, 3]
+ * Array.take([1, 2, 3, 4, 5], 3) // => [1, 2, 3]
  * ```
  *
  * @see {@link takeRight} for keeping elements from the end
@@ -1316,10 +1307,10 @@ export const take: {
  *
  * **Example** (Taking from the end)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.takeRight([1, 2, 3, 4, 5], 3)) // [3, 4, 5]
+ * Array.takeRight([1, 2, 3, 4, 5], 3) // => [3, 4, 5]
  * ```
  *
  * @see {@link take} — keep from the start
@@ -1353,10 +1344,10 @@ export const takeRight: {
  *
  * **Example** (Taking while condition holds)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.takeWhile([1, 3, 2, 4, 1, 2], (x) => x < 4)) // [1, 3, 2]
+ * Array.takeWhile([1, 3, 2, 4, 1, 2], (x) => x < 4) // => [1, 3, 2]
  * ```
  *
  * @see {@link take} for keeping a fixed number of leading elements
@@ -1448,10 +1439,10 @@ const spanIndex = <A>(self: Iterable<A>, predicate: (a: A, i: number) => boolean
  *
  * **Example** (Splitting at predicate boundary)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.span([1, 3, 2, 4, 5], (x) => x % 2 === 1)) // [[1, 3], [2, 4, 5]]
+ * Array.span([1, 3, 2, 4, 5], (x) => x % 2 === 1) // => [[1, 3], [2, 4, 5]]
  * ```
  *
  * @see {@link takeWhile} for keeping only the matching prefix
@@ -1494,10 +1485,10 @@ export const span: {
  *
  * **Example** (Dropping from the start)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.drop([1, 2, 3, 4, 5], 2)) // [3, 4, 5]
+ * Array.drop([1, 2, 3, 4, 5], 2) // => [3, 4, 5]
  * ```
  *
  * @see {@link dropRight} for removing a fixed number of elements from the end
@@ -1528,10 +1519,10 @@ export const drop: {
  *
  * **Example** (Dropping from the end)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dropRight([1, 2, 3, 4, 5], 2)) // [1, 2, 3]
+ * Array.dropRight([1, 2, 3, 4, 5], 2) // => [1, 2, 3]
  * ```
  *
  * @see {@link drop} — remove from the start
@@ -1561,10 +1552,10 @@ export const dropRight: {
  *
  * **Example** (Dropping while condition holds)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dropWhile([1, 2, 3, 4, 5], (x) => x < 4)) // [4, 5]
+ * Array.dropWhile([1, 2, 3, 4, 5], (x) => x < 4) // => [4, 5]
  * ```
  *
  * @see {@link takeWhile} — keep the matching prefix instead
@@ -1636,10 +1627,10 @@ export const dropWhileFilter: {
  *
  * **Example** (Finding an index)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.findFirstIndex([5, 3, 8, 9], (x) => x > 5)) // Option.some(2)
+ * Array.findFirstIndex([5, 3, 8, 9], (x) => x > 5) // => Option.some(2)
  * ```
  *
  * @see {@link findLastIndex} — search from the end
@@ -1672,10 +1663,10 @@ export const findFirstIndex: {
  *
  * **Example** (Finding the last matching index)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.findLastIndex([1, 3, 8, 9], (x) => x < 5)) // Option.some(1)
+ * Array.findLastIndex([1, 3, 8, 9], (x) => x < 5) // => Option.some(1)
  * ```
  *
  * @see {@link findFirstIndex} — search from the start
@@ -1714,10 +1705,10 @@ export const findLastIndex: {
  *
  * **Example** (Finding the first match)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.findFirst([1, 2, 3, 4, 5], (x) => x > 3)) // Option.some(4)
+ * Array.findFirst([1, 2, 3, 4, 5], (x) => x > 3) // => Option.some(4)
  * ```
  *
  * @see {@link findLast} — search from the end
@@ -1752,10 +1743,10 @@ export const findFirst: {
  *
  * **Example** (Finding element with its index)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.findFirstWithIndex([1, 2, 3, 4, 5], (x) => x > 3)) // Option.some([4, 3])
+ * Array.findFirstWithIndex([1, 2, 3, 4, 5], (x) => x > 3) // => Option.some([4, 3])
  * ```
  *
  * @see {@link findFirst} — get only the element
@@ -1810,10 +1801,10 @@ export const findFirstWithIndex: {
  *
  * **Example** (Finding the last match)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.findLast([1, 2, 3, 4, 5], (n) => n % 2 === 0)) // Option.some(4)
+ * Array.findLast([1, 2, 3, 4, 5], (n) => n % 2 === 0) // => Option.some(4)
  * ```
  *
  * @see {@link findFirst} — search from the start
@@ -1867,10 +1858,10 @@ export const findLast: {
  *
  * **Example** (Inserting at an index)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.insertAt(["a", "b", "c", "e"], 3, "d")) // Option.some(["a", "b", "c", "d", "e"])
+ * Array.insertAt(["a", "b", "c", "e"], 3, "d") // => Option.some(["a", "b", "c", "d", "e"])
  * ```
  *
  * @see {@link replace} — replace an existing element
@@ -1905,10 +1896,10 @@ export const insertAt: {
  *
  * **Example** (Replacing an element)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.replace([1, 2, 3], 1, 4)) // Option.some([1, 4, 3])
+ * Array.replace([1, 2, 3], 1, 4) // => Option.some([1, 4, 3])
  * ```
  *
  * @see {@link modify} — transform an element with a function
@@ -1946,11 +1937,14 @@ export const replace: {
  *
  * **Example** (Modifying an element)
  *
- * ```ts
- * import { Array } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array, Option } from "effect"
  *
- * console.log(Array.modify([1, 2, 3, 4], 2, (n) => n * 2)) // Option.some([1, 2, 6, 4])
- * console.log(Array.modify([1, 2, 3, 4], 5, (n) => n * 2)) // Option.none()
+ * const values = [1, 2, 3, 4]
+ * const double = (n: number) => n * 2
+ *
+ * Array.modify(values, 2, double) // => Option.some([1, 2, 6, 4])
+ * Array.modify(values, 5, double) // => Option.none()
  * ```
  *
  * @see {@link replace} — set a fixed value at an index
@@ -1992,11 +1986,11 @@ export const modify: {
  *
  * **Example** (Removing an element)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.remove([1, 2, 3, 4], 2)) // [1, 2, 4]
- * console.log(Array.remove([1, 2, 3, 4], 5)) // [1, 2, 3, 4]
+ * Array.remove([1, 2, 3, 4], 2) // => [1, 2, 4]
+ * Array.remove([1, 2, 3, 4], 5) // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link insertAt} — insert an element
@@ -2031,10 +2025,10 @@ export const remove: {
  *
  * **Example** (Reversing an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.reverse([1, 2, 3, 4])) // [4, 3, 2, 1]
+ * Array.reverse([1, 2, 3, 4]) // => [4, 3, 2, 1]
  * ```
  *
  * @category elements
@@ -2059,10 +2053,10 @@ export const reverse = <S extends Iterable<any>>(
  *
  * **Example** (Sorting numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order } from "effect"
  *
- * console.log(Array.sort([3, 1, 4, 1, 5], Order.Number)) // [1, 1, 3, 4, 5]
+ * Array.sort([3, 1, 4, 1, 5], Order.Number) // => [1, 1, 3, 4, 5]
  * ```
  *
  * @see {@link sortWith} — sort by a mapping function
@@ -2098,11 +2092,10 @@ export const sort: {
  *
  * **Example** (Sorting strings by length)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order } from "effect"
  *
- * console.log(Array.sortWith(["aaa", "b", "cc"], (s) => s.length, Order.Number))
- * // ["b", "cc", "aaa"]
+ * Array.sortWith(["aaa", "b", "cc"], (s) => s.length, Order.Number) // => ["b", "cc", "aaa"]
  * ```
  *
  * @see {@link sort} for sorting with an `Order` that compares the elements directly
@@ -2140,7 +2133,7 @@ export const sortWith: {
  *
  * **Example** (Sorting by multiple keys)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order, pipe } from "effect"
  *
  * const users = [
@@ -2149,15 +2142,15 @@ export const sortWith: {
  *   { name: "Charlie", age: 30 }
  * ]
  *
- * const result = pipe(
+ * const sortedUsers = pipe(
  *   users,
  *   Array.sortBy(
  *     Order.mapInput(Order.Number, (user: (typeof users)[number]) => user.age),
  *     Order.mapInput(Order.String, (user: (typeof users)[number]) => user.name)
  *   )
  * )
- * console.log(result)
- * // [{ name: "Bob", age: 25 }, { name: "Alice", age: 30 }, { name: "Charlie", age: 30 }]
+ *
+ * sortedUsers.map((user) => user.name).join(",") // => "Bob,Alice,Charlie"
  * ```
  *
  * @see {@link sort} — sort by a single `Order`
@@ -2195,10 +2188,10 @@ export const sortBy = <S extends Iterable<any>>(
  *
  * **Example** (Zipping two arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.zip([1, 2, 3], ["a", "b"])) // [[1, "a"], [2, "b"]]
+ * Array.zip([1, 2, 3], ["a", "b"]) // => [[1, "a"], [2, "b"]]
  * ```
  *
  * @see {@link zipWith} — zip with a combiner function
@@ -2228,10 +2221,10 @@ export const zip: {
  *
  * **Example** (Zipping with addition)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.zipWith([1, 2, 3], [4, 5, 6], (a, b) => a + b)) // [5, 7, 9]
+ * Array.zipWith([1, 2, 3], [4, 5, 6], (a, b) => a + b) // => [5, 7, 9]
  * ```
  *
  * @see {@link zip} — zip into tuples
@@ -2263,10 +2256,10 @@ export const zipWith: {
  *
  * **Example** (Unzipping pairs)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.unzip([[1, "a"], [2, "b"], [3, "c"]])) // [[1, 2, 3], ["a", "b", "c"]]
+ * Array.unzip([[1, "a"], [2, "b"], [3, "c"]]) // => [[1, 2, 3], ["a", "b", "c"]]
  * ```
  *
  * @see {@link zip} — combine two arrays into pairs
@@ -2306,10 +2299,10 @@ export const unzip: <S extends Iterable<readonly [any, any]>>(
  *
  * **Example** (Interspersing a separator)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.intersperse([1, 2, 3], 0)) // [1, 0, 2, 0, 3]
+ * Array.intersperse([1, 2, 3], 0) // => [1, 0, 2, 0, 3]
  * ```
  *
  * @see {@link join} — intersperse and join into a string
@@ -2349,10 +2342,10 @@ export const intersperse: {
  *
  * **Example** (Modifying the head)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.modifyHeadNonEmpty([1, 2, 3], (n) => n * 10)) // [10, 2, 3]
+ * Array.modifyHeadNonEmpty([1, 2, 3], (n) => n * 10) // => [10, 2, 3]
  * ```
  *
  * @see {@link setHeadNonEmpty} — replace with a fixed value
@@ -2382,10 +2375,10 @@ export const modifyHeadNonEmpty: {
  *
  * **Example** (Setting the head)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.setHeadNonEmpty([1, 2, 3], 10)) // [10, 2, 3]
+ * Array.setHeadNonEmpty([1, 2, 3], 10) // => [10, 2, 3]
  * ```
  *
  * @see {@link modifyHeadNonEmpty} — transform the head with a function
@@ -2413,10 +2406,10 @@ export const setHeadNonEmpty: {
  *
  * **Example** (Modifying the last element)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.modifyLastNonEmpty([1, 2, 3], (n) => n * 2)) // [1, 2, 6]
+ * Array.modifyLastNonEmpty([1, 2, 3], (n) => n * 2) // => [1, 2, 6]
  * ```
  *
  * @see {@link setLastNonEmpty} — replace with a fixed value
@@ -2444,10 +2437,10 @@ export const modifyLastNonEmpty: {
  *
  * **Example** (Setting the last element)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.setLastNonEmpty([1, 2, 3], 4)) // [1, 2, 4]
+ * Array.setLastNonEmpty([1, 2, 3], 4) // => [1, 2, 4]
  * ```
  *
  * @see {@link modifyLastNonEmpty} — transform the last element with a function
@@ -2481,10 +2474,10 @@ export const setLastNonEmpty: {
  *
  * **Example** (Rotating elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.rotate(["a", "b", "c", "d"], 2)) // ["c", "d", "a", "b"]
+ * Array.rotate(["a", "b", "c", "d"], 2) // => ["c", "d", "a", "b"]
  * ```
  *
  * @see {@link take} for taking a fixed number of elements from the start
@@ -2525,11 +2518,12 @@ export const rotate: {
  *
  * **Example** (Checking with custom equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, pipe } from "effect"
  *
  * const containsNumber = Array.containsWith((a: number, b: number) => a === b)
- * console.log(pipe([1, 2, 3, 4], containsNumber(3))) // true
+ *
+ * pipe([1, 2, 3, 4], containsNumber(3)) // => true
  * ```
  *
  * @see {@link contains} for the `Equal.equivalence()` variant
@@ -2561,10 +2555,10 @@ export const containsWith = <A>(isEquivalent: (self: A, that: A) => boolean): {
  *
  * **Example** (Checking membership)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, pipe } from "effect"
  *
- * console.log(pipe(["a", "b", "c", "d"], Array.contains("c"))) // true
+ * pipe(["a", "b", "c", "d"], Array.contains("c")) // => true
  * ```
  *
  * @see {@link containsWith} — use custom equality
@@ -2593,14 +2587,10 @@ export const contains: {
  *
  * **Example** (Chopping an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.chop(
- *   [1, 2, 3, 4, 5],
- *   (as): [number, Array<number>] => [as[0] * 2, as.slice(1)]
- * )
- * console.log(result) // [2, 4, 6, 8, 10]
+ * Array.chop([1, 2, 3, 4, 5], (as): [number, Array<number>] => [as[0] * 2, as.slice(1)]) // => [2, 4, 6, 8, 10]
  * ```
  *
  * @see {@link chunksOf} — split into fixed-size chunks
@@ -2654,10 +2644,10 @@ export const chop: {
  *
  * **Example** (Splitting at an index)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.splitAt([1, 2, 3, 4, 5], 3)) // [[1, 2, 3], [4, 5]]
+ * Array.splitAt([1, 2, 3, 4, 5], 3) // => [[1, 2, 3], [4, 5]]
  * ```
  *
  * @see {@link splitAtNonEmpty} — for non-empty arrays
@@ -2692,11 +2682,10 @@ export const splitAt: {
  *
  * **Example** (Splitting a non-empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.splitAtNonEmpty(["a", "b", "c", "d", "e"], 3))
- * // [["a", "b", "c"], ["d", "e"]]
+ * Array.splitAtNonEmpty(["a", "b", "c", "d", "e"], 3) // => [["a", "b", "c"], ["d", "e"]]
  * ```
  *
  * @see {@link splitAt} — for possibly-empty arrays
@@ -2727,10 +2716,10 @@ export const splitAtNonEmpty: {
  *
  * **Example** (Splitting into groups)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.split([1, 2, 3, 4, 5, 6, 7, 8], 3)) // [[1, 2, 3], [4, 5, 6], [7, 8]]
+ * Array.split([1, 2, 3, 4, 5, 6, 7, 8], 3) // => [[1, 2, 3], [4, 5, 6], [7, 8]]
  * ```
  *
  * @see {@link chunksOf} — split into fixed-size chunks
@@ -2757,10 +2746,10 @@ export const split: {
  *
  * **Example** (Splitting at a condition)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.splitWhere([1, 2, 3, 4, 5], (n) => n > 3)) // [[1, 2, 3], [4, 5]]
+ * Array.splitWhere([1, 2, 3, 4, 5], (n) => n > 3) // => [[1, 2, 3], [4, 5]]
  * ```
  *
  * @see {@link span} — splits at the first element that fails the predicate
@@ -2795,13 +2784,14 @@ export const splitWhere: {
  *
  * **Example** (Copying an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const original = [1, 2, 3]
  * const copied = Array.copy(original)
- * console.log(copied) // [1, 2, 3]
- * console.log(original === copied) // false
+ *
+ * copied // => [1, 2, 3]
+ * original === copied // => false
  * ```
  *
  * @see {@link fromIterable} — returns the same reference for arrays
@@ -2828,10 +2818,10 @@ export const copy: {
  *
  * **Example** (Padding an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.pad([1, 2, 3], 6, 0)) // [1, 2, 3, 0, 0, 0]
+ * Array.pad([1, 2, 3], 6, 0) // => [1, 2, 3, 0, 0, 0]
  * ```
  *
  * @see {@link take} — truncate without padding
@@ -2874,10 +2864,10 @@ export const pad: {
  *
  * **Example** (Chunking an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.chunksOf([1, 2, 3, 4, 5], 2)) // [[1, 2], [3, 4], [5]]
+ * Array.chunksOf([1, 2, 3, 4, 5], 2) // => [[1, 2], [3, 4], [5]]
  * ```
  *
  * @see {@link split} — split into a given number of groups
@@ -2916,11 +2906,13 @@ export const chunksOf: {
  *
  * **Example** (Creating sliding windows)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.window([1, 2, 3, 4, 5], 3)) // [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
- * console.log(Array.window([1, 2, 3, 4, 5], 6)) // []
+ * const values = [1, 2, 3, 4, 5]
+ *
+ * Array.window(values, 3) // => [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
+ * Array.window(values, 6) // => []
  * ```
  *
  * @see {@link chunksOf} — non-overlapping chunks
@@ -2957,11 +2949,13 @@ export const window: {
  *
  * **Example** (Grouping consecutive equal elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.groupWith(["a", "a", "b", "b", "b", "c", "a"], (x, y) => x === y))
- * // [["a", "a"], ["b", "b", "b"], ["c"], ["a"]]
+ * Array.groupWith(
+ *   ["a", "a", "b", "b", "b", "c", "a"],
+ *   (x, y) => x === y
+ * ) // => [["a", "a"], ["b", "b", "b"], ["c"], ["a"]]
  * ```
  *
  * @see {@link group} for grouping adjacent elements with `Equal.equivalence()`
@@ -3006,10 +3000,10 @@ export const groupWith: {
  *
  * **Example** (Grouping adjacent equal elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.group([1, 1, 2, 2, 2, 3, 1])) // [[1, 1], [2, 2, 2], [3], [1]]
+ * Array.group([1, 1, 2, 2, 2, 3, 1]) // => [[1, 1], [2, 2, 2], [3], [1]]
  * ```
  *
  * @see {@link groupWith} — use custom equality
@@ -3037,7 +3031,7 @@ export const group: <A>(self: NonEmptyReadonlyArray<A>) => NonEmptyArray<NonEmpt
  *
  * **Example** (Grouping by a property)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const people = [
@@ -3046,9 +3040,7 @@ export const group: <A>(self: NonEmptyReadonlyArray<A>) => NonEmptyArray<NonEmpt
  *   { name: "Charlie", group: "A" }
  * ]
  *
- * const result = Array.groupBy(people, (person) => person.group)
- * console.log(result)
- * // { A: [{ name: "Alice", group: "A" }, { name: "Charlie", group: "A" }], B: [{ name: "Bob", group: "B" }] }
+ * Object.keys(Array.groupBy(people, (person) => person.group)).join(",") // => "A,B"
  * ```
  *
  * @see {@link group} — group adjacent equal elements
@@ -3132,10 +3124,10 @@ const hashBucketsHas = (buckets: HashBuckets, value: unknown): boolean => {
  *
  * **Example** (Computing unions with custom equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.unionWith([1, 2], [2, 3], (a, b) => a === b)) // [1, 2, 3]
+ * Array.unionWith([1, 2], [2, 3], (a, b) => a === b) // => [1, 2, 3]
  * ```
  *
  * @see {@link union} for the `Equal.equivalence()` variant
@@ -3180,10 +3172,10 @@ export const unionWith: {
  *
  * **Example** (Computing array unions)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.union([1, 2], [2, 3])) // [1, 2, 3]
+ * Array.union([1, 2], [2, 3]) // => [1, 2, 3]
  * ```
  *
  * @see {@link unionWith} — use custom equality
@@ -3225,13 +3217,14 @@ export const union: {
  *
  * **Example** (Computing intersections with custom equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const array1 = [{ id: 1 }, { id: 2 }, { id: 3 }]
  * const array2 = [{ id: 3 }, { id: 4 }, { id: 1 }]
  * const isEquivalent = (a: { id: number }, b: { id: number }) => a.id === b.id
- * console.log(Array.intersectionWith(isEquivalent)(array2)(array1)) // [{ id: 1 }, { id: 3 }]
+ *
+ * Array.intersectionWith(isEquivalent)(array2)(array1) // => [{ id: 1 }, { id: 3 }]
  * ```
  *
  * @see {@link intersection} for the `Equal.equivalence()` variant
@@ -3266,10 +3259,10 @@ export const intersectionWith = <A>(isEquivalent: (self: A, that: A) => boolean)
  *
  * **Example** (Computing array intersections)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.intersection([1, 2, 3], [3, 4, 1])) // [1, 3]
+ * Array.intersection([1, 2, 3], [3, 4, 1]) // => [1, 3]
  * ```
  *
  * @see {@link intersectionWith} — use custom equality
@@ -3303,11 +3296,10 @@ export const intersection: {
  *
  * **Example** (Computing differences with custom equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const diff = Array.differenceWith<number>((a, b) => a === b)([1, 2, 3], [2, 3, 4])
- * console.log(diff) // [1]
+ * Array.differenceWith<number>((a, b) => a === b)([1, 2, 3], [2, 3, 4]) // => [1]
  * ```
  *
  * @see {@link difference} for the `Equal.equivalence()` variant
@@ -3342,10 +3334,10 @@ export const differenceWith = <A>(isEquivalent: (self: A, that: A) => boolean): 
  *
  * **Example** (Computing array differences)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.difference([1, 2, 3], [2, 3, 4])) // [1]
+ * Array.difference([1, 2, 3], [2, 3, 4]) // => [1]
  * ```
  *
  * @see {@link differenceWith} — use custom equality
@@ -3380,11 +3372,10 @@ export const difference: {
  *
  * **Example** (Creating an empty array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.empty<number>()
- * console.log(result) // []
+ * Array.empty<number>() // => []
  * ```
  *
  * @see {@link of} — create a single-element array
@@ -3400,10 +3391,10 @@ export const empty: <A = never>() => Array<A> = () => []
  *
  * **Example** (Creating a single-element array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.of(1)) // [1]
+ * Array.of(1) // => [1]
  * ```
  *
  * @see {@link make} — create from multiple values
@@ -3426,7 +3417,7 @@ export declare namespace ReadonlyArray {
    *
    * **Example** (Inferring an element type)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import type { Array } from "effect"
    *
    * type StringArrayType = Array.ReadonlyArray.Infer<ReadonlyArray<string>>
@@ -3445,7 +3436,7 @@ export declare namespace ReadonlyArray {
    *
    * **Example** (Preserving non-emptiness)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import type { Array } from "effect"
    *
    * type Result = Array.ReadonlyArray.With<readonly [number], string>
@@ -3463,7 +3454,7 @@ export declare namespace ReadonlyArray {
    *
    * **Example** (Preserving non-emptiness from either input)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import type { Array } from "effect"
    *
    * type Result = Array.ReadonlyArray.OrNonEmpty<
@@ -3490,7 +3481,7 @@ export declare namespace ReadonlyArray {
    *
    * **Example** (Preserving non-emptiness from both inputs)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import type { Array } from "effect"
    *
    * type Result = Array.ReadonlyArray.AndNonEmpty<
@@ -3517,7 +3508,7 @@ export declare namespace ReadonlyArray {
    *
    * **Example** (Flattening nested array types)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import type { Array } from "effect"
    *
    * type Nested = ReadonlyArray<ReadonlyArray<number>>
@@ -3547,10 +3538,10 @@ export declare namespace ReadonlyArray {
  *
  * **Example** (Doubling values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.map([1, 2, 3], (x) => x * 2)) // [2, 4, 6]
+ * Array.map([1, 2, 3], (x) => x * 2) // => [2, 4, 6]
  * ```
  *
  * @see {@link flatMap} — map and flatten
@@ -3580,10 +3571,10 @@ export const map: {
  *
  * **Example** (Flat mapping an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.flatMap([1, 2, 3], (x) => [x, x * 2])) // [1, 2, 2, 4, 3, 6]
+ * Array.flatMap([1, 2, 3], (x) => [x, x * 2]) // => [1, 2, 2, 4, 3, 6]
  * ```
  *
  * @see {@link map} — transform without flattening
@@ -3625,10 +3616,10 @@ export const flatMap: {
  *
  * **Example** (Flattening nested arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.flatten([[1, 2], [], [3, 4], [], [5, 6]])) // [1, 2, 3, 4, 5, 6]
+ * Array.flatten([[1, 2], [], [3, 4], [], [5, 6]]) // => [1, 2, 3, 4, 5, 6]
  * ```
  *
  * @see {@link flatMap} — map then flatten in one step
@@ -3649,10 +3640,10 @@ export const flatten: <const S extends ReadonlyArray<ReadonlyArray<any>>>(self: 
  *
  * **Example** (Extracting Some values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Option } from "effect"
  *
- * console.log(Array.getSomes([Option.some(1), Option.none(), Option.some(2)])) // [1, 2]
+ * Array.getSomes([Option.some(1), Option.none(), Option.some(2)]) // => [1, 2]
  * ```
  *
  * @see {@link fromOption} — convert a single Option
@@ -3685,11 +3676,10 @@ export const getSomes: <T extends Iterable<Option.Option<X>>, X = any>(
  *
  * **Example** (Extracting failures)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
- * console.log(Array.getFailures([Result.succeed(1), Result.fail("err"), Result.succeed(2)]))
- * // ["err"]
+ * Array.getFailures([Result.succeed(1), Result.fail("err"), Result.succeed(2)]) // => ["err"]
  * ```
  *
  * @see {@link getSuccesses} — extract success values
@@ -3722,11 +3712,10 @@ export const getFailures = <T extends Iterable<Result.Result<any, any>>>(
  *
  * **Example** (Extracting successes)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
- * console.log(Array.getSuccesses([Result.succeed(1), Result.fail("err"), Result.succeed(2)]))
- * // [1, 2]
+ * Array.getSuccesses([Result.succeed(1), Result.fail("err"), Result.succeed(2)]) // => [1, 2]
  * ```
  *
  * @see {@link getFailures} — extract failure values
@@ -3762,11 +3751,10 @@ export const getSuccesses = <T extends Iterable<Result.Result<any, any>>>(
  *
  * **Example** (Filtering and transforming)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
- * console.log(Array.filterMap([1, 2, 3, 4], (n) => n % 2 === 0 ? Result.succeed(n * 10) : Result.failVoid))
- * // [20, 40]
+ * Array.filterMap([1, 2, 3, 4], (n) => n % 2 === 0 ? Result.succeed(n * 10) : Result.failVoid) // => [20, 40]
  * ```
  *
  * @see {@link filter} — keep original elements matching a predicate
@@ -3805,10 +3793,10 @@ export const filterMap: {
  *
  * **Example** (Filtering even numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.filter([1, 2, 3, 4], (x) => x % 2 === 0)) // [2, 4]
+ * Array.filter([1, 2, 3, 4], (x) => x % 2 === 0) // => [2, 4]
  * ```
  *
  * @see {@link partition} — split into matching and non-matching
@@ -3850,13 +3838,12 @@ export const filter: {
  *
  * **Example** (Partitioning with a filter)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
- * console.log(Array.partition([1, -2, 3], (n, i) =>
+ * Array.partition([1, -2, 3], (n, i) =>
  *   n > 0 ? Result.succeed(n + i) : Result.fail(`negative:${n}`)
- * ))
- * // [["negative:-2"], [1, 5]]
+ * ) // => [["negative:-2"], [1, 5]]
  * ```
  *
  * @see {@link filter} — keep only matching elements
@@ -3909,14 +3896,10 @@ export const partition: {
  *
  * **Example** (Separating Results)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
- * const [failures, successes] = Array.separate([
- *   Result.succeed(1), Result.fail("error"), Result.succeed(2)
- * ])
- * console.log(failures) // ["error"]
- * console.log(successes) // [1, 2]
+ * Array.separate([Result.succeed(1), Result.fail("error"), Result.succeed(2)]) // => [["error"], [1, 2]]
  * ```
  *
  * @see {@link getFailures} — extract only failures
@@ -3946,10 +3929,10 @@ export const separate: <T extends Iterable<Result.Result<any, any>>>(
  *
  * **Example** (Summing an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.reduce([1, 2, 3], 0, (acc, n) => acc + n)) // 6
+ * Array.reduce([1, 2, 3], 0, (acc, n) => acc + n) // => 6
  * ```
  *
  * @see {@link reduceRight} — fold from right to left
@@ -3980,10 +3963,10 @@ export const reduce: {
  *
  * **Example** (Folding from right to left)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.reduceRight([1, 2, 3], 0, (acc, n) => acc + n)) // 6
+ * Array.reduceRight([1, 2, 3], 0, (acc, n) => acc + n) // => 6
  * ```
  *
  * @see {@link reduce} — fold from left to right
@@ -4007,13 +3990,13 @@ export const reduceRight: {
  *
  * **Example** (Wrapping values conditionally)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const isEven = (n: number) => n % 2 === 0
- * const to = Array.liftPredicate(isEven)
- * console.log(to(1)) // []
- * console.log(to(2)) // [2]
+ * const fromEven = Array.liftPredicate((n: number) => n % 2 === 0)
+ *
+ * fromEven(1) // => []
+ * fromEven(2) // => [2]
  * ```
  *
  * @see {@link liftOption} — lift an Option-returning function
@@ -4037,15 +4020,16 @@ export const liftPredicate: { // Note: I intentionally avoid using the NoInfer p
  *
  * **Example** (Lifting an Option function)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Option } from "effect"
  *
  * const parseNumber = Array.liftOption((s: string) => {
  *   const n = Number(s)
  *   return isNaN(n) ? Option.none() : Option.some(n)
  * })
- * console.log(parseNumber("123")) // [123]
- * console.log(parseNumber("abc")) // []
+ *
+ * parseNumber("123") // => [123]
+ * parseNumber("abc") // => []
  * ```
  *
  * @see {@link liftPredicate} — lift a boolean predicate
@@ -4069,12 +4053,12 @@ export const liftOption = <A extends Array<unknown>, B>(
  *
  * **Example** (Converting nullable values to an array)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.fromNullishOr(1)) // [1]
- * console.log(Array.fromNullishOr(null)) // []
- * console.log(Array.fromNullishOr(undefined)) // []
+ * Array.fromNullishOr(1) // => [1]
+ * Array.fromNullishOr(null) // => []
+ * Array.fromNullishOr(undefined) // => []
  * ```
  *
  * @see {@link liftNullishOr} — lift a nullable-returning function
@@ -4091,15 +4075,16 @@ export const fromNullishOr = <A>(a: A): Array<NonNullable<A>> => a == null ? emp
  *
  * **Example** (Lifting a nullable function)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const parseNumber = Array.liftNullishOr((s: string) => {
  *   const n = Number(s)
  *   return isNaN(n) ? null : n
  * })
- * console.log(parseNumber("123")) // [123]
- * console.log(parseNumber("abc")) // []
+ *
+ * parseNumber("123") // => [123]
+ * parseNumber("abc") // => []
  * ```
  *
  * @see {@link fromNullishOr} — convert a single nullable value
@@ -4124,11 +4109,10 @@ export const liftNullishOr = <A extends Array<unknown>, B>(
  *
  * **Example** (Flat mapping with nullable values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.flatMapNullishOr([1, 2, 3], (n) => (n % 2 === 0 ? null : n)))
- * // [1, 3]
+ * Array.flatMapNullishOr([1, 2, 3], (n) => (n % 2 === 0 ? null : n)) // => [1, 3]
  * ```
  *
  * @see {@link flatMap} for mapping each element to an array and flattening
@@ -4156,7 +4140,7 @@ export const flatMapNullishOr: {
  *
  * **Example** (Lifting a Result function)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Result } from "effect"
  *
  * const parseNumber = (s: string): Result.Result<number, Error> =>
@@ -4165,8 +4149,9 @@ export const flatMapNullishOr: {
  *     : Result.succeed(Number(s))
  *
  * const liftedParseNumber = Array.liftResult(parseNumber)
- * console.log(liftedParseNumber("42")) // [42]
- * console.log(liftedParseNumber("not a number")) // []
+ *
+ * liftedParseNumber("42") // => [42]
+ * liftedParseNumber("not a number") // => []
  * ```
  *
  * @see {@link liftOption} — lift an Option-returning function
@@ -4194,11 +4179,11 @@ export const liftResult = <A extends Array<unknown>, E, B>(
  *
  * **Example** (Testing all elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.every([2, 4, 6], (x) => x % 2 === 0)) // true
- * console.log(Array.every([2, 3, 6], (x) => x % 2 === 0)) // false
+ * Array.every([2, 4, 6], (x) => x % 2 === 0) // => true
+ * Array.every([2, 3, 6], (x) => x % 2 === 0) // => false
  * ```
  *
  * @see {@link some} — test if any element matches
@@ -4225,11 +4210,11 @@ export const every: {
  *
  * **Example** (Testing for any match)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.some([1, 3, 4], (x) => x % 2 === 0)) // true
- * console.log(Array.some([1, 3, 5], (x) => x % 2 === 0)) // false
+ * Array.some([1, 3, 4], (x) => x % 2 === 0) // => true
+ * Array.some([1, 3, 5], (x) => x % 2 === 0) // => false
  * ```
  *
  * @see {@link every} — test if all elements match
@@ -4264,10 +4249,10 @@ export const some: {
  *
  * **Example** (Computing suffix lengths)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.extend([1, 2, 3], (as) => as.length)) // [3, 2, 1]
+ * Array.extend([1, 2, 3], (as) => as.length) // => [3, 2, 1]
  * ```
  *
  * @see {@link scan} for keeping intermediate accumulator values during a fold
@@ -4289,10 +4274,10 @@ export const extend: {
  *
  * **Example** (Finding the minimum)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order } from "effect"
  *
- * console.log(Array.min([3, 1, 2], Order.Number)) // 1
+ * Array.min([3, 1, 2], Order.Number) // => 1
  * ```
  *
  * @see {@link max} — find the maximum
@@ -4312,10 +4297,10 @@ export const min: {
  *
  * **Example** (Finding the maximum)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order } from "effect"
  *
- * console.log(Array.max([3, 1, 2], Order.Number)) // 3
+ * Array.max([3, 1, 2], Order.Number) // => 3
  * ```
  *
  * @see {@link min} — find the minimum
@@ -4336,11 +4321,10 @@ export const max: {
  *
  * **Example** (Generating a sequence)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Option } from "effect"
  *
- * console.log(Array.unfold(1, (n) => n <= 5 ? Option.some([n, n + 1]) : Option.none()))
- * // [1, 2, 3, 4, 5]
+ * Array.unfold(1, (n) => n <= 5 ? Option.some([n, n + 1]) : Option.none()) // => [1, 2, 3, 4, 5]
  * ```
  *
  * @see {@link makeBy} — generate from index
@@ -4371,11 +4355,12 @@ export const unfold = <B, A>(b: B, f: (b: B) => Option.Option<readonly [A, B]>):
  *
  * **Example** (Comparing arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, Order } from "effect"
  *
  * const arrayOrder = Array.makeOrder(Order.Number)
- * console.log(arrayOrder([1, 2], [1, 3])) // -1
+ *
+ * arrayOrder([1, 2], [1, 3]) // => -1
  * ```
  *
  * @see {@link makeEquivalence} — create an equivalence for arrays
@@ -4392,11 +4377,12 @@ export const makeOrder: <A>(O: Order.Order<A>) => Order.Order<ReadonlyArray<A>> 
  *
  * **Example** (Comparing arrays for equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
  * const eq = Array.makeEquivalence<number>((a, b) => a === b)
- * console.log(eq([1, 2, 3], [1, 2, 3])) // true
+ *
+ * eq([1, 2, 3], [1, 2, 3]) // => true
  * ```
  *
  * @see {@link makeOrder} — create an ordering for arrays
@@ -4418,10 +4404,13 @@ export const makeEquivalence: <A>(
  *
  * **Example** (Iterating with side-effects)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * Array.forEach([1, 2, 3], (n) => console.log(n)) // 1, 2, 3
+ * const visited: Array<number> = []
+ * Array.forEach([1, 2, 3], (n) => visited.push(n))
+ *
+ * visited // => [1, 2, 3]
  * ```
  *
  * @see {@link map} for transforming each element into a new array
@@ -4445,10 +4434,10 @@ export const forEach: {
  *
  * **Example** (Deduplicating with custom equality)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dedupeWith([1, 2, 2, 3, 3, 3], (a, b) => a === b)) // [1, 2, 3]
+ * Array.dedupeWith([1, 2, 2, 3, 3, 3], (a, b) => a === b) // => [1, 2, 3]
  * ```
  *
  * @see {@link dedupe} — uses default equality
@@ -4492,10 +4481,10 @@ export const dedupeWith: {
  *
  * **Example** (Removing duplicates)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dedupe([1, 2, 1, 3, 2, 4])) // [1, 2, 3, 4]
+ * Array.dedupe([1, 2, 1, 3, 2, 4]) // => [1, 2, 3, 4]
  * ```
  *
  * @see {@link dedupeWith} — use custom equality
@@ -4536,11 +4525,10 @@ export const dedupe = <S extends Iterable<any>>(
  *
  * **Example** (Deduplicating adjacent elements)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dedupeAdjacentWith([1, 1, 2, 2, 3, 3], (a, b) => a === b))
- * // [1, 2, 3]
+ * Array.dedupeAdjacentWith([1, 1, 2, 2, 3, 3], (a, b) => a === b) // => [1, 2, 3]
  * ```
  *
  * @see {@link dedupeAdjacent} — uses default equality
@@ -4574,10 +4562,10 @@ export const dedupeAdjacentWith: {
  *
  * **Example** (Removing adjacent duplicates)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.dedupeAdjacent([1, 1, 2, 2, 3, 3])) // [1, 2, 3]
+ * Array.dedupeAdjacent([1, 1, 2, 2, 3, 3]) // => [1, 2, 3]
  * ```
  *
  * @see {@link dedupeAdjacentWith} — use custom equality
@@ -4593,10 +4581,10 @@ export const dedupeAdjacent: <A>(self: Iterable<A>) => Array<A> = dedupeAdjacent
  *
  * **Example** (Joining strings)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * console.log(Array.join(["a", "b", "c"], "-")) // "a-b-c"
+ * Array.join(["a", "b", "c"], "-") // => "a-b-c"
  * ```
  *
  * @see {@link intersperse} — insert separator elements without joining
@@ -4626,11 +4614,10 @@ export const join: {
  *
  * **Example** (Running sum alongside mapped values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.mapAccum([1, 2, 3], 0, (acc, n) => [acc + n, acc + n])
- * console.log(result) // [6, [1, 3, 6]]
+ * Array.mapAccum([1, 2, 3], 0, (acc, n) => [acc + n, acc + n]) // => [6, [1, 3, 6]]
  * ```
  *
  * @see {@link scan} — when you only need the accumulated results (not the final state)
@@ -4681,11 +4668,10 @@ export const mapAccum: {
  *
  * **Example** (Combining numbers and letters)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.cartesianWith([1, 2], ["a", "b"], (a, b) => `${a}-${b}`)
- * console.log(result) // ["1-a", "1-b", "2-a", "2-b"]
+ * Array.cartesianWith([1, 2], ["a", "b"], (a, b) => `${a}-${b}`) // => ["1-a", "1-b", "2-a", "2-b"]
  * ```
  *
  * @see {@link cartesian} for returning tuples instead of applying a combiner
@@ -4716,11 +4702,10 @@ export const cartesianWith: {
  *
  * **Example** (Generating all pairs from two arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.cartesian([1, 2], ["a", "b"])
- * console.log(result) // [[1, "a"], [1, "b"], [2, "a"], [2, "b"]]
+ * Array.cartesian([1, 2], ["a", "b"]) // => [[1, "a"], [1, "b"], [2, "a"], [2, "b"]]
  * ```
  *
  * @see {@link cartesianWith} — apply a combiner to each pair
@@ -4756,17 +4741,16 @@ export const cartesian: {
  *
  * **Example** (Building array comprehensions with do notation)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, pipe } from "effect"
  *
- * const result = pipe(
+ * pipe(
  *   Array.Do,
  *   Array.bind("x", () => [1, 3, 5]),
  *   Array.bind("y", () => [2, 4, 6]),
  *   Array.filter(({ x, y }) => x < y),
  *   Array.map(({ x, y }) => [x, y] as const)
- * )
- * console.log(result) // [[1, 2], [1, 4], [1, 6], [3, 4], [3, 6], [5, 6]]
+ * ) // => [[1, 2], [1, 4], [1, 6], [3, 4], [3, 6], [5, 6]]
  * ```
  *
  * @see {@link bind} — introduce an array variable into the scope
@@ -4794,16 +4778,14 @@ export const Do: ReadonlyArray<{}> = of({})
  *
  * **Example** (Binding two arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array, pipe } from "effect"
  *
- * const result = pipe(
+ * pipe(
  *   Array.Do,
  *   Array.bind("x", () => [1, 2]),
  *   Array.bind("y", () => ["a", "b"])
- * )
- * console.log(result)
- * // [{ x: 1, y: "a" }, { x: 1, y: "b" }, { x: 2, y: "a" }, { x: 2, y: "b" }]
+ * ) // => [{ x: 1, y: "a" }, { x: 1, y: "b" }, { x: 2, y: "a" }, { x: 2, y: "b" }]
  * ```
  *
  * @see {@link Do} — start a do-notation pipeline
@@ -4842,14 +4824,10 @@ export const bind: {
  *
  * **Example** (Naming an existing array)
  *
- * ```ts
- * import { Array, pipe } from "effect"
+ * ```ts import.meta.vitest
+ * import { Array } from "effect"
  *
- * const result = pipe(
- *   [1, 2, 3],
- *   Array.bindTo("x")
- * )
- * console.log(result) // [{ x: 1 }, { x: 2 }, { x: 3 }]
+ * Array.bindTo([1, 2, 3], "x") // => [{ x: 1 }, { x: 2 }, { x: 3 }]
  * ```
  *
  * @see {@link Do} — start with an empty scope
@@ -4892,16 +4870,14 @@ export {
    *
    * **Example** (Adding a computed value)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Array, pipe } from "effect"
    *
-   * const result = pipe(
+   * pipe(
    *   Array.Do,
    *   Array.bind("x", () => [1, 2, 3]),
    *   Array.let("doubled", ({ x }) => x * 2)
-   * )
-   * console.log(result)
-   * // [{ x: 1, doubled: 2 }, { x: 2, doubled: 4 }, { x: 3, doubled: 6 }]
+   * ) // => [{ x: 1, doubled: 2 }, { x: 2, doubled: 4 }, { x: 3, doubled: 6 }]
    * ```
    *
    * @see {@link Do} — start a do-notation pipeline
@@ -4954,11 +4930,10 @@ export function makeReducerConcat<A>(): Reducer.Reducer<Array<A>> {
  *
  * **Example** (Counting even numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Array } from "effect"
  *
- * const result = Array.countBy([1, 2, 3, 4, 5], (n) => n % 2 === 0)
- * console.log(result) // 2
+ * Array.countBy([1, 2, 3, 4, 5], (n) => n % 2 === 0) // => 2
  * ```
  *
  * @see {@link filter} — when you need the matching elements, not just the count

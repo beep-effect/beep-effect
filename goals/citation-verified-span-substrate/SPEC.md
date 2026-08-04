@@ -49,6 +49,15 @@ Higher sources outrank lower sources when they conflict.
   adapters, `GroundedExtraction[]` input, and cross-chunk/page straddle.
 - Focused hostile-text fixtures, tests, packet evidence, and documentation.
 
+## Coordinated Full-Source Consumer
+
+The same PR coordinates the downstream full-source consumer through a
+separately owned file-processing source-text resolver and workspace-local
+provider. That resolver pages exact extracted text by `SourceTextIdentity`;
+the consumer reconstructs the full raw source before passing it to
+langextract. This packet does not move filesystem, workspace-root, extraction,
+or digest-computation behavior into provenance or langextract.
+
 ## Constraints
 
 1. The six-week three-goal appetite belongs to the full program. This first
@@ -83,6 +92,10 @@ Higher sources outrank lower sources when they conflict.
 11. `NO_CITATION` is not produced by this generic substrate, but its persistence
     contract must support the ratified downstream policy: persist a negative
     extraction attempt and create no citation entity.
+12. The coordinated full-source consumer must resolve text through the
+    file-processing resolver/provider boundary. Provenance exports only the
+    portable identity and verified-anchor contracts; langextract accepts raw
+    text/chunks and remains independent of filesystem and workspace services.
 
 ## Decision Log
 

@@ -59,7 +59,7 @@ jobs:
             install_typos: "true"
           - id: lint-policy
             name: Lint Policy
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 25
             uses_turbo: "false"
             install_typos: "true"
@@ -72,7 +72,7 @@ jobs:
           - id: check
             name: Check
             runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 20
+            timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
@@ -83,20 +83,20 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: blacksmith-8vcpu-ubuntu-2404
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
             name: Docgen
             runner: blacksmith-4vcpu-ubuntu-2404
-            timeout_minutes: 20
+            timeout_minutes: 30
             uses_turbo: "false"
             install_typos: "false"
           - id: codegen

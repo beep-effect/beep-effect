@@ -45,14 +45,24 @@ import {
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/layer";
+import {
+  EpistemicServerDrizzleLive,
+  EpistemicServerDrizzleRpcLive,
+  EpistemicServerRpcLive,
+} from "@beep/epistemic-server/layer";
+import { ContradictionReviewer, ContradictionReviewScope } from "@beep/epistemic-use-cases/server";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
-import { Thread, Workspace } from "@beep/workspace-server";
+import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { SourceText, Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
+import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
@@ -82,7 +92,7 @@ import type * as PlatformError from "effect/PlatformError";
  * @category models
  * @since 0.0.0
  */
-const DesktopHandlersLive = Layer.mergeAll(
+const DesktopHandlersBase = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
@@ -90,6 +100,16 @@ const DesktopHandlersLive = Layer.mergeAll(
   VaultSyncHandlersLive,
   OntologyHandlersLive
 );
+
+const ContradictionQaSeedDesktopLive = ContradictionQaSeedLive.pipe(
+  Layer.provide(EpistemicServerDrizzleLive),
+  Layer.provide(Workspace.WorkspaceVaultStoreDrizzleLayer)
+);
+
+const EpistemicServerDesktopLive = Layer.merge(EpistemicServerDrizzleRpcLive, ContradictionQaSeedDesktopLive);
+
+const DesktopHandlersLive = Layer.merge(DesktopHandlersBase, EpistemicServerDesktopLive);
+const DesktopHandlersTest = Layer.merge(DesktopHandlersBase, EpistemicServerRpcLive);
 
 /**
  * Typed startup failures preserved by the desktop runtime.
@@ -195,6 +215,32 @@ const DocumentsFilingLive = selectByChatAgent(
   })
 );
 
+const SourceTextResolverDrizzleLive = SourceText.WorkspaceSourceTextResolverLayer.pipe(
+  Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine])),
+  Layer.provide(Workspace.WorkspaceVaultStoreDrizzleLayer)
+);
+
+const SourceTextResolverInMemoryLive = SourceText.WorkspaceSourceTextResolverLayer.pipe(
+  Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine])),
+  Layer.provide(Workspace.WorkspaceVaultStoreInMemoryLayer)
+);
+
+const desktopOrganizationId = SharedIdentity.OrganizationId.make(1);
+const desktopReviewer = UserPrincipal.make({
+  userId: SharedIdentity.UserId.make(1),
+});
+const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
+const ContradictionRequestContextLive = Layer.merge(
+  Layer.succeed(ContradictionReviewer, ContradictionReviewer.of(desktopReviewer)),
+  Layer.succeed(
+    ContradictionReviewScope,
+    ContradictionReviewScope.of({
+      orgId: desktopOrganizationId,
+      sourceScopeRef: `workspace:${desktopWorkspaceId}`,
+    })
+  )
+);
+
 /**
  * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
  * fully deterministic keyless engine (in-memory repos + fixture mirror);
@@ -246,6 +292,8 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     TurnKernelLive,
     Thread.ThreadStoreDrizzleLayer,
     Workspace.WorkspaceVaultStoreDrizzleLayer,
+    SourceTextResolverDrizzleLive,
+    ContradictionRequestContextLive,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
     DocumentsSyncLive,
@@ -274,11 +322,13 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
+export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersTest.pipe(
   Layer.provide([
     FixtureTurnKernel,
     Thread.ThreadStoreInMemoryLayer,
     Workspace.WorkspaceVaultStoreInMemoryLayer,
+    SourceTextResolverInMemoryLive,
+    ContradictionRequestContextLive,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
     DocumentsSyncFixtureLive,
