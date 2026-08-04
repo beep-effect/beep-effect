@@ -257,7 +257,8 @@ const streamTurn = (
  * failures are converted to `TurnGenerationError`; blocks that remain invalid
  * after repair are logged and dropped.
  *
- * @example
+ * **Example** (Use AnthropicTurnKernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel"

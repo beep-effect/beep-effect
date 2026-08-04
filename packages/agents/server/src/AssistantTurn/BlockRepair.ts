@@ -82,9 +82,10 @@ const blocksRepaired = Metric.counter("agents_assistant_turn_blocks_repaired_tot
 /**
  * Validation issue report for one streamed assistant-block slice.
  *
- * @example
+ * **Example** (Use IssueReport)
+ *
  * ```ts
- * import { IssueReport } from "@beep/agents-server/AssistantTurn"
+ * import { IssueReport } from "@beep/agents-server/BlockRepair"
  *
  * const report = IssueReport.make({
  *   index: 0,
@@ -182,10 +183,11 @@ class RepairInvalidBlocksResult extends S.Class<RepairInvalidBlocksResult>($I`Re
  * usage; envelope validation, per-block decoding, unexpected indices, and
  * dropped repairs remain the adapter's responsibility.
  *
- * @example
+ * **Example** (Use BlockRepairCall)
+ *
  * ```ts
- * import { IssueReport } from "@beep/agents-server/AssistantTurn"
- * import type { BlockRepairCall } from "@beep/agents-server/AssistantTurn"
+ * import { IssueReport } from "@beep/agents-server/BlockRepair"
+ * import type { BlockRepairCall } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
  * import { Response } from "effect/unstable/ai"
@@ -227,11 +229,12 @@ export type BlockRepairCall = (
  * tool results are handled by the adapter and do not escape as successful
  * blocks; repair-call failures are represented by `BlockRepairFailed`.
  *
- * @example
+ * **Example** (Use RepairInvalidBlocks)
+ *
  * ```ts
- * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
- * import type { RepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import type { RepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { Effect } from "effect"
  * import { Response } from "effect/unstable/ai"
  *
@@ -300,9 +303,10 @@ const toBlockRepairFailed = (message: string): BlockRepairFailed => BlockRepairF
 /**
  * Base schema fields shared by every summarized JSON Patch operation, carrying the redacted JSON Pointer path.
  *
- * @example
+ * **Example** (Use PatchOpSummaryBase)
+ *
  * ```ts
- * import { PatchOpSummaryBase } from "@beep/agents-server/AssistantTurn"
+ * import { PatchOpSummaryBase } from "@beep/agents-server/BlockRepair"
  *
  * const base = PatchOpSummaryBase.make({ path: "/content" })
  * console.log(base.path)
@@ -326,9 +330,10 @@ export class PatchOpSummaryBase extends S.Class<PatchOpSummaryBase>($I`PatchOpSu
 /**
  * Summary of a JSON Patch add operation, tagged with the `add` op discriminant.
  *
- * @example
+ * **Example** (Use AddPatchOpSummary)
+ *
  * ```ts
- * import { AddPatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import { AddPatchOpSummary } from "@beep/agents-server/BlockRepair"
  * import * as S from "effect/Schema"
  *
  * const summary = S.decodeUnknownSync(AddPatchOpSummary)({ op: "add", path: "/content" })
@@ -351,9 +356,10 @@ export class AddPatchOpSummary extends PatchOpSummaryBase.extend<AddPatchOpSumma
 /**
  * Summary of a JSON Patch remove operation, tagged with the `remove` op discriminant.
  *
- * @example
+ * **Example** (Use RemovePatchOpSummary)
+ *
  * ```ts
- * import { RemovePatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import { RemovePatchOpSummary } from "@beep/agents-server/BlockRepair"
  * import * as S from "effect/Schema"
  *
  * const summary = S.decodeUnknownSync(RemovePatchOpSummary)({ op: "remove", path: "/content" })
@@ -376,9 +382,10 @@ export class RemovePatchOpSummary extends PatchOpSummaryBase.extend<RemovePatchO
 /**
  * Summary of a JSON Patch replace operation, tagged with the `replace` op discriminant.
  *
- * @example
+ * **Example** (Use ReplacePatchOpSummary)
+ *
  * ```ts
- * import { ReplacePatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import { ReplacePatchOpSummary } from "@beep/agents-server/BlockRepair"
  * import * as S from "effect/Schema"
  *
  * const summary = S.decodeUnknownSync(ReplacePatchOpSummary)({ op: "replace", path: "/content" })
@@ -401,9 +408,10 @@ export class ReplacePatchOpSummary extends PatchOpSummaryBase.extend<ReplacePatc
 /**
  * Tagged union of summarized JSON Patch operations discriminated on the `op` field.
  *
- * @example
+ * **Example** (Use PatchOpSummary)
+ *
  * ```ts
- * import { PatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import { PatchOpSummary } from "@beep/agents-server/BlockRepair"
  * import * as S from "effect/Schema"
  *
  * const summary = S.decodeUnknownSync(PatchOpSummary)({ op: "add", path: "/content" })
@@ -424,9 +432,10 @@ export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, 
 /**
  * Runtime type of the {@link PatchOpSummary} tagged union of JSON Patch operation summaries.
  *
- * @example
+ * **Example** (Use PatchOpSummary)
+ *
  * ```ts
- * import { PatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import { PatchOpSummary } from "@beep/agents-server/BlockRepair"
  * import * as S from "effect/Schema"
  *
  * const summary: PatchOpSummary = S.decodeUnknownSync(PatchOpSummary)({ op: "remove", path: "/content" })
@@ -629,9 +638,10 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
  * that remain pending after the retry budget. A failed provider call or
  * malformed repair envelope fails the effect with `BlockRepairFailed`.
  *
- * @example
+ * **Example** (Use makeRepairInvalidBlocks)
+ *
  * ```ts
- * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
  * import { Response } from "effect/unstable/ai"
@@ -685,9 +695,10 @@ export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRep
  * structured failure reports. Empty batches return immediately without a
  * provider call, which is useful for branch-free repair tails.
  *
- * @example
+ * **Example** (Use repairInvalidBlocks)
+ *
  * ```ts
- * import { repairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { repairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { Effect } from "effect"
  *
  * Effect.runPromise(repairInvalidBlocks([])).then((result) => console.log(result.blocks.length)) // 0
