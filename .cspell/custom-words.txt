@@ -333,6 +333,7 @@ unioned
 Universitat
 unlogged
 unmodeled
+undescribed
 Unradio
 unrepresentable
 unre

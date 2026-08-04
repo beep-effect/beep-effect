@@ -41,7 +41,8 @@ const generatedAndBuildOutputIgnores = [
 /**
  * Flat ESLint config array shape exported for deprecated API checks.
  *
- * @example
+ * **Example** (Define a deprecated API config shape)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { DeprecatedApisESLintConfigShape } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig"
@@ -56,6 +57,7 @@ const generatedAndBuildOutputIgnores = [
  *
  * strictEqual(config[0]?.rules?.["@typescript-eslint/no-deprecated"], "error")
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -64,7 +66,8 @@ export type DeprecatedApisESLintConfigShape = ReadonlyArray<Linter.Config>;
 /**
  * Shared deprecated API ESLint flat config.
  *
- * @example
+ * **Example** (Detect deprecated API usage)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { DeprecatedApisESLintConfig } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig"
@@ -75,6 +78,7 @@ export type DeprecatedApisESLintConfigShape = ReadonlyArray<Linter.Config>;
  *
  * strictEqual(checksDeprecatedApis, true)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -111,6 +115,7 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
             "packages/tooling/*/*/scripts/*.ts",
             "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/extra.ts",
             "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts",
+            "packages/tooling/tool/docgen/test/fixtures/section-example/src/index.ts",
           ],
           defaultProject: "tsconfig.json",
           maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 160,

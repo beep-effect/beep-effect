@@ -8,9 +8,14 @@
 import * as S from "effect/Schema";
 
 /**
- * Schema for Effect `Duration` values.
+ * Validates values represented by Effect's runtime `Duration` type.
  *
- * @example
+ * **When to use**
+ *
+ * Use when a boundary already exchanges Effect `Duration` values.
+ *
+ * **Example** (Decode an Effect duration)
+ *
  * ```ts
  * import * as Duration from "@beep/schema/Duration"
  * import { Duration as EffectDuration } from "effect"
@@ -28,7 +33,8 @@ export const Schema = S.Duration;
 /**
  * Runtime type extracted from {@link Schema}.
  *
- * @example
+ * **Example** (Annotate an Effect duration)
+ *
  * ```ts
  * import type { Schema as DurationValue } from "@beep/schema/Duration"
  * import { Duration } from "effect"
@@ -37,7 +43,8 @@ export const Schema = S.Duration;
  * console.log(duration)
  * ```
  *
- * @category models
+ * @see {@link Schema} for the runtime schema and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type Schema = typeof Schema.Type;
@@ -45,7 +52,8 @@ export type Schema = typeof Schema.Type;
 /**
  * Compatibility alias for the primary Effect Duration schema.
  *
- * @example
+ * **Example** (Decode through the compatibility schema)
+ *
  * ```ts
  * import { Duration as EffectDuration } from "effect"
  * import { Duration } from "@beep/schema/Duration"
@@ -61,9 +69,10 @@ export type Schema = typeof Schema.Type;
 export const Duration = Schema;
 
 /**
- * Runtime type extracted from {@link Duration}.
+ * Decoded duration type exposed under the compatibility name {@link Duration}.
  *
- * @example
+ * **Example** (Annotate through the compatibility type)
+ *
  * ```ts
  * import type { Duration as DurationValue } from "@beep/schema/Duration"
  * import { Duration } from "effect"
@@ -72,7 +81,8 @@ export const Duration = Schema;
  * console.log(duration)
  * ```
  *
- * @category models
+ * @see {@link Schema} for the canonical runtime schema and decoded type.
+ * @category type-level
  * @since 0.0.0
  */
 export type Duration = Schema;

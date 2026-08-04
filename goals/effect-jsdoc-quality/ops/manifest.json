@@ -3,13 +3,13 @@
   "initiative": {
     "id": "effect-jsdoc-quality",
     "title": "Effect-level JSDoc Quality",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-30",
-    "updated": "2026-07-30",
+    "updated": "2026-08-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-jsdoc-quality",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Port Effect v4's JSDoc section grammar into beep law + kind-aware inventory rules, keep example compile validation, prove on a 3-package pilot, ratchet-on-touch.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -47,27 +47,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Law + skill rewrite",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Inventory rules + docgen harvesting",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Pilot trio + hover acceptance",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -222,3 +222,59 @@ describe("replaceAllWith", () => {
     expect(Str.replaceAllWith(/beep/g, (match) => Str.toUpperCase(match))).type.toBe<(self: string) => string>();
   });
 });
+
+describe("MatchEmptyResult", () => {
+  it("resolves branches by static emptiness", () => {
+    expect<Str.MatchEmptyResult<"", "fallback", number>>().type.toBe<"fallback">();
+    expect<Str.MatchEmptyResult<"beep", "fallback", number>>().type.toBe<number>();
+    expect<Str.MatchEmptyResult<string, "fallback", number>>().type.toBe<"fallback" | number>();
+    expect<Str.MatchEmptyResult<"" | "beep", "fallback", number>>().type.toBe<"fallback" | number>();
+  });
+});
+
+describe("matchEmpty", () => {
+  it("data-first: empty literal input collapses to the onEmpty result without widening", () => {
+    expect(Str.matchEmpty("", { onEmpty: () => "", onNonEmpty: () => 0 })).type.toBe<"">();
+  });
+
+  it("data-first: onNonEmpty is unreachable for the empty literal, so its parameter is never", () => {
+    Str.matchEmpty("", {
+      onEmpty: () => "",
+      onNonEmpty: (s) => {
+        expect(s).type.toBe<never>();
+        return 0;
+      },
+    });
+  });
+
+  it("data-first: non-empty literal input collapses to the onNonEmpty result", () => {
+    expect(Str.matchEmpty("beep", { onEmpty: () => "", onNonEmpty: (s) => s.length })).type.toBe<number>();
+  });
+
+  it("data-first: plain string input returns the union of both results", () => {
+    expect(Str.matchEmpty("beep" as string, { onEmpty: () => "", onNonEmpty: (s) => s.length })).type.toBe<
+      "" | number
+    >();
+  });
+
+  it("data-first: onNonEmpty parameter excludes the empty literal", () => {
+    Str.matchEmpty("beep" as "" | "beep", {
+      onEmpty: () => "",
+      onNonEmpty: (s) => {
+        expect(s).type.toBe<"beep">();
+        return s;
+      },
+    });
+  });
+
+  it("data-last: result adapts to each applied string", () => {
+    const summarize = Str.matchEmpty({ onEmpty: () => "", onNonEmpty: (s) => s.length });
+    expect(summarize("")).type.toBe<"">();
+    expect(summarize("beep")).type.toBe<number>();
+    expect(summarize("beep" as string)).type.toBe<"" | number>();
+  });
+
+  it("data-last: keeps precision through pipe", () => {
+    expect(pipe("" as const, Str.matchEmpty({ onEmpty: () => 0, onNonEmpty: (s) => s.length }))).type.toBe<0>();
+  });
+});

@@ -614,6 +614,67 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
   return O.none();
 };
 
+const fencedLineState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
+  const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+  const fence = match === null ? undefined : match[1];
+  if (openFence === undefined) {
+    return [fence, fence !== undefined];
+  }
+  if (fence === undefined) {
+    return [openFence, true];
+  }
+  if (fence[0] === openFence[0] && fence.length >= openFence.length && Str.isEmpty(Str.trim(match?.[2] ?? ""))) {
+    return [undefined, true];
+  }
+  return [openFence, true];
+};
+
+const jsdocCommentEnd = (sourceText: string, start: number): number => {
+  let cursor = start + 3;
+  let openFence: string | undefined;
+  while (cursor < sourceText.length) {
+    const nextLineBreak = sourceText.indexOf("\n", cursor);
+    const lineEnd = nextLineBreak === -1 ? sourceText.length : nextLineBreak;
+    const rawLine = sourceText.slice(cursor, lineEnd);
+    const line = Str.trimEnd(Str.replace(/^\s*\*\s?/, "")(rawLine));
+    const [nextOpenFence, isFenced] = fencedLineState(line, openFence);
+    openFence = nextOpenFence;
+    if (!isFenced) {
+      const closingOffset = rawLine.indexOf("*/");
+      if (closingOffset !== -1) {
+        return cursor + closingOffset + 2;
+      }
+    }
+    cursor = lineEnd + 1;
+  }
+  return sourceText.length;
+};
+
+/**
+ * Extract complete JSDoc blocks while ignoring comment delimiters in fenced
+ * example source.
+ *
+ * @param sourceText - TypeScript source text to scan.
+ * @returns Complete JSDoc comment blocks in source order.
+ * @category jsdoc
+ * @since 0.0.0
+ */
+export const jsdocCommentsFromSource = (sourceText: string): ReadonlyArray<string> => {
+  const comments: Array<string> = [];
+  let cursor = 0;
+  while (cursor < sourceText.length) {
+    const relativeStart = sourceText.slice(cursor).indexOf("/**");
+    if (relativeStart === -1) {
+      break;
+    }
+    const start = cursor + relativeStart;
+    const end = jsdocCommentEnd(sourceText, start);
+    A.appendInPlace(comments, sourceText.slice(start, end));
+    cursor = end;
+  }
+  return comments;
+};
+
 /**
  * Extract tag names from a JSDoc comment block.
  *
@@ -624,7 +685,13 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
  */
 export const tagsFromComment = (commentText: string): ReadonlyArray<string> => {
   const tags: Array<string> = [];
+  let openFence: string | undefined;
   for (const line of stripCommentFraming(commentText)) {
+    const [nextOpenFence, isFenced] = fencedLineState(line, openFence);
+    openFence = nextOpenFence;
+    if (isFenced) {
+      continue;
+    }
     const match = /^\s*@([A-Za-z][\w-]*)\b/.exec(line);
     if (match !== null) {
       A.appendInPlace(tags, `@${match[1]}`);

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,13 +34,28 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — next concrete action: orient on `SPEC.md` + the exploration
-packet's `research/` legs and `DECISIONS.md`, verify the cited tooling
-baselines still hold, then start the P1 law + skill rewrite.
+Complete (2026-08-02). All phases P0-P4 executed on
+`chore/effect-jsdoc-quality`; see phase reports under
+[`research/`](./research/) and hover evidence under
+[`history/outputs/`](./history/outputs/).
 
 ## Latest Evidence
 
-Not started. Provenance: graduated 2026-07-30 from
+- P0 baseline verification: [`research/P0-baseline-check.md`](./research/P0-baseline-check.md)
+  (8/10 packet facts verified, 2 drift corrections recorded).
+- P1 law + skill + hygiene: [`research/P1-summary.md`](./research/P1-summary.md).
+- P2 inventory rules, cleanup-on-touch ratchet, docgen section fixture,
+  baseline fold: [`research/P2-summary.md`](./research/P2-summary.md).
+- P3 pilot trio conversion (47 exports), 127-tag carrier migration, kind-aware
+  presence rule with zero baseline: [`research/P3-summary.md`](./research/P3-summary.md).
+- Hover fidelity: before/after WebStorm screenshots for `SemanticVersion`,
+  `encodeEffect`, `extractFencedCodeBlocks`, and `ApplicationNumber` in
+  [`history/outputs/`](./history/outputs/), captured from an isolated
+  WebStorm instance.
+- Closeout reflection:
+  [`history/reflections/2026-08-02-claude.md`](./history/reflections/2026-08-02-claude.md).
+
+Provenance: graduated 2026-07-30 from
 [`explorations/effect-jsdoc-quality/`](../../explorations/effect-jsdoc-quality/README.md)
 (twelve grilled decisions in its
 [`DECISIONS.md`](../../explorations/effect-jsdoc-quality/DECISIONS.md);

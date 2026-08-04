@@ -1,5 +1,9 @@
 import * as Core from "@beep/repo-docgen/Core";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+
+const fixturePath = new URL("./fixtures/section-example/", import.meta.url).pathname;
+const docgenBinPath = new URL("../src/bin.ts", import.meta.url).pathname;
 
 const expectFencedCode = (
   markdown: string,
@@ -53,4 +57,39 @@ describe("Core", () =>
         ["const a = 1"],
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
+
+    it.effect(
+      "typechecks an Example section harvested from the description",
+      Effect.fnUntraced(function* () {
+        const outDir = `${fixturePath}.tmp-docgen`;
+        const markerPath = `${outDir}/tsc-ran`;
+        const removeMarker = Bun.spawn(["rm", "-f", markerPath], { stderr: "pipe", stdout: "pipe" });
+        yield* Effect.promise(() => removeMarker.exited);
+        const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
+        yield* Effect.promise(() => prepare.exited);
+        yield* Effect.forEach(
+          ["seed.ts.md", "seed.tsx.md", "seed.mts.md", "seed.cts.md"],
+          (file) => Effect.promise(() => Bun.write(`${outDir}/${file}`, "")),
+          { concurrency: "unbounded" }
+        );
+        const child = Bun.spawn(["bun", docgenBinPath], {
+          cwd: fixturePath,
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        const [exitCode, stdout, stderr] = yield* Effect.all(
+          [
+            Effect.promise(() => child.exited),
+            Effect.promise(() => new Response(child.stdout).text()),
+            Effect.promise(() => new Response(child.stderr).text()),
+          ],
+          { concurrency: "unbounded" }
+        );
+        yield* Effect.promise(() => Bun.file(markerPath).text());
+        const result = { exitCode, stderr, stdout, tscRan: true };
+
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(result.tscRan).toBe(true);
+      })
+    );
   }));

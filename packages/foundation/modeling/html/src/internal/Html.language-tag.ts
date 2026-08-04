@@ -129,13 +129,16 @@ const isValidParsedLanguageTag = ([normalized, subtags, primary]: ParsedLanguage
  * Tests one string against RFC 5646 section 2.2.9 using the pinned IANA
  * Language Subtag Registry.
  *
+ * **Details**
+ *
  * Deprecated registrations remain valid. Registered extended-language subtags
  * require their IANA primary-language prefix. Extension payloads are checked
  * for RFC syntax and duplicate singletons, but not extension-specific
  * semantics, which RFC 5646 does not require a base validating processor to
  * implement.
  *
- * @example
+ * **Example** (Call `isValidBcp47LanguageTag`)
+ *
  * ```ts
  * import { isValidBcp47LanguageTag } from "./Html.language-tag"
  *
