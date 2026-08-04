@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/schema/String";
-import { Effect, FileSystem, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -156,6 +156,19 @@ export const decodeYeetAttemptJournalEvent = S.decodeUnknownEffect(S.fromJsonStr
 export const attemptJournalPath = (context: RepoRunContext): Effect.Effect<string, never, Path.Path> =>
   runArtifactPathForContext(context, JOURNAL_FILE_NAME);
 
+const hasTornTrailingRecord = (lines: ReadonlyArray<string>): Effect.Effect<boolean> =>
+  pipe(
+    A.last(lines),
+    O.match({
+      onNone: () => Effect.succeed(false),
+      onSome: (line) =>
+        decodeYeetAttemptJournalEvent(line).pipe(
+          Effect.as(false),
+          Effect.orElseSucceed(() => true)
+        ),
+    })
+  );
+
 const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
   journalPath: string
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem> {
@@ -163,7 +176,14 @@ const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
   const text = yield* fs
     .readFileString(journalPath)
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to read Yeet attempt journal "${journalPath}".`)));
-  const lines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
+  const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
+  // A host that dies mid-append leaves a torn final record; dropping it keeps the
+  // journal usable instead of failing every later attempt on the same bad line.
+  const torn = yield* hasTornTrailingRecord(rawLines);
+  if (torn) {
+    yield* Console.warn(`[yeet] dropped a torn trailing record from the Yeet attempt journal "${journalPath}"`);
+  }
+  const lines = torn ? A.dropRight(rawLines, 1) : rawLines;
   const events = yield* Effect.forEach(lines, (line) =>
     decodeYeetAttemptJournalEvent(line).pipe(
       Effect.mapError(YeetCommandError.new(`Failed to decode Yeet attempt journal "${journalPath}".`))
@@ -174,17 +194,27 @@ const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
     A.map(([event, index]) => (event._tag === "attempt-started" ? O.some(index) : O.none())),
     A.getSomes
   );
-  if (A.length(startIndexes) <= RETAINED_ATTEMPTS) {
+  const firstRetainedIndex =
+    A.length(startIndexes) <= RETAINED_ATTEMPTS
+      ? 0
+      : pipe(
+          startIndexes,
+          A.takeRight(RETAINED_ATTEMPTS),
+          A.head,
+          O.getOrElse(() => 0)
+        );
+  if (!torn && firstRetainedIndex === 0) {
     return;
   }
-  const firstRetainedIndex = pipe(
-    startIndexes,
-    A.takeRight(RETAINED_ATTEMPTS),
-    A.head,
-    O.getOrElse(() => 0)
-  );
   yield* fs
-    .writeFileString(journalPath, `${A.join(A.drop(lines, firstRetainedIndex), "\n")}\n`)
+    .writeFileString(
+      journalPath,
+      pipe(
+        A.drop(lines, firstRetainedIndex),
+        A.map((line) => `${line}\n`),
+        A.join(Str.empty)
+      )
+    )
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to compact Yeet attempt journal "${journalPath}".`)));
 });
 

@@ -404,16 +404,38 @@ const commitStep = (
       : ["commit", "-m", O.getOrElse(message, () => "<required-conventional-commit-message>")]
   );
 
+/**
+ * Stable plan-step identifier for the branch push, shared by both publish paths.
+ *
+ * **Details**
+ *
+ * The early-publish and ordinary publish phases both carry `publish` work, so
+ * this id — not the phase — is what proves the branch actually reached the
+ * remote.
+ *
+ * **Example** (Recognize the push step)
+ *
+ * ```ts
+ * import { GIT_PUSH_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(GIT_PUSH_STEP_ID) // "publish:01-git-push"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
+
 // Keep local pre-push hooks (secret scanning, SAST, policy gates) active on the
 // early push: --no-verify would publish unverified content to the remote before
 // any hook could block secrets or policy violations.
 const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, "publish:01-git-push", "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
+  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
 
 const pushStep = (context: RepoRunContext): RepoPlanStep =>
   gitStep(
     context,
-    "publish:01-git-push",
+    GIT_PUSH_STEP_ID,
     "publish:git:push",
     "publish",
     ["push", "-u", "origin", "HEAD"],

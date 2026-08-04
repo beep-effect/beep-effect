@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
+import { GhPrView } from "../../../internal/github/index.ts";
 import {
   RepoPlanStep,
   RepoRunContext,
@@ -59,6 +60,7 @@ import {
   writeIssueArtifacts,
   writeTextFile,
 } from "./IssueArtifacts.ts";
+import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import {
   buildYeetRunPlanWithMode,
   emptyTurboPlanSnapshot,
@@ -106,15 +108,17 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
 /**
  * Hydrate a shared yeet run context from repository state.
  *
- * @param options - Runtime options.
- * @returns Shared run context.
- * @example
+ * **Example** (Hydrate a plan-mode run context)
+ *
  * ```ts
  * import { defaultYeetRunOptions, hydrateYeetRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = hydrateYeetRunContext(defaultYeetRunOptions({ plan: true }))
  * console.log(context) // example value
  * ```
+ *
+ * @param options - Runtime options.
+ * @returns Shared run context.
  * @category utilities
  * @since 0.0.0
  */
@@ -205,24 +209,23 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
 > {
   return yield* Effect.forEach(
     steps,
-    (step) =>
-      Effect.gen(function* () {
-        const fallbackStartedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-        const [duration, result] = yield* executeStepWithArtifacts(context, step).pipe(Effect.timed);
-        const fallbackEndedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-        const elapsedMs = result.elapsedMs ?? Duration.toMillis(duration);
-        const timedResult = RepoStepRunResult.make({
-          ...result,
-          startedAt: result.startedAt ?? fallbackStartedAt,
-          endedAt: result.endedAt ?? fallbackEndedAt,
-          elapsedMs,
-        });
-        yield* Ref.update(
-          recorder,
-          A.append(YeetExecutedStep.make({ durationMs: elapsedMs, result: timedResult, step }))
-        );
-        return timedResult;
-      }),
+    Effect.fnUntraced(function* (step: RepoPlanStep) {
+      const fallbackStartedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const [duration, result] = yield* executeStepWithArtifacts(context, step).pipe(Effect.timed);
+      const fallbackEndedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const elapsedMs = result.elapsedMs ?? Duration.toMillis(duration);
+      const timedResult = RepoStepRunResult.make({
+        ...result,
+        startedAt: result.startedAt ?? fallbackStartedAt,
+        endedAt: result.endedAt ?? fallbackEndedAt,
+        elapsedMs,
+      });
+      yield* Ref.update(
+        recorder,
+        A.append(YeetExecutedStep.make({ durationMs: elapsedMs, result: timedResult, step }))
+      );
+      return timedResult;
+    }),
     { concurrency: 1 }
   );
 });
@@ -313,6 +316,38 @@ const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForRe
  */
 export const shouldSkipCommitForReusablePublishForTesting = shouldSkipCommitForReusablePublish;
 
+// `--amend --no-edit` reuses the subject of the commit it rewrites, so a
+// staged-fix retry legitimately carries no `--message`; every other publish that
+// creates or rewrites a commit subject must supply one.
+const validatePublishCommitMessage = Effect.fn("Yeet.validatePublishCommitMessage")(function* (
+  context: RepoRunContext,
+  message: O.Option<string>,
+  options: YeetRunOptions
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (O.isSome(message)) {
+    return yield* validateCommitMessage(context, message.value);
+  }
+  if (options.amend && options.noEdit) {
+    return;
+  }
+  return yield* YeetCommandError.make({
+    message: "yeet publish requires --message with a conventional commit message for reviewed staged changes.",
+    exitCode: 1,
+  });
+});
+
+/**
+ * Decide whether a publish run may proceed without an explicit commit message.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const validatePublishCommitMessageForTesting = validatePublishCommitMessage;
+
 const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   plan: RepoRunPlan,
   message: O.Option<string>,
@@ -348,13 +383,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         `[yeet] skipped commit; clean local HEAD ${Str.takeLeft(12)(publishIntent.commitSha)} is ahead of the publish remote/base`
       );
     } else {
-      if (O.isNone(message)) {
-        return yield* YeetCommandError.make({
-          message: "yeet publish requires --message with a conventional commit message for reviewed staged changes.",
-          exitCode: 1,
-        });
-      }
-      yield* validateCommitMessage(plan.context, message.value);
+      yield* validatePublishCommitMessage(plan.context, message, options);
       yield* stageReviewedPublishIntent(plan.context, publishIntent, options.stagedOnly);
 
       // Park unstaged/untracked residue (keeping the reviewed index) BEFORE the
@@ -532,20 +561,7 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet monitor failed.").pipe(
-    Effect.catch((error) =>
-      Effect.gen(function* () {
-        const snapshot = yield* printOperatorStatusSummary(context, true);
-        return yield* YeetCommandError.make({
-          message: `${error.message}${
-            snapshot.remote.rerunFailedCommand === undefined
-              ? ""
-              : `\nSame-SHA rerun decision: ${snapshot.remote.rerunFailedDecision ?? "rerun failed jobs"}.\nRun: ${snapshot.remote.rerunFailedCommand}`
-          }`,
-          ...(error.command === undefined ? {} : { command: error.command }),
-          ...(error.exitCode === undefined ? {} : { exitCode: error.exitCode }),
-        });
-      })
-    )
+    Effect.catch((error) => failWithRerunGuidance(context, error))
   );
   const snapshot = yield* printOperatorStatusSummary(context, true);
   yield* assertNoUnresolvedReviewThreads(snapshot);
@@ -564,6 +580,27 @@ const printOperatorStatusSummary = Effect.fn("Yeet.printOperatorStatusSummary")(
   yield* writeYeetStatusSnapshot(snapshot);
   yield* Console.log(renderYeetStatusSummary(snapshot));
   return snapshot;
+});
+
+const rerunGuidanceSuffix = (snapshot: YeetStatusSnapshot): string =>
+  snapshot.remote.rerunFailedCommand === undefined
+    ? Str.empty
+    : `\nSame-SHA rerun decision: ${snapshot.remote.rerunFailedDecision ?? "rerun failed jobs"}.\nRun: ${snapshot.remote.rerunFailedCommand}`;
+
+const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* (
+  context: RepoRunContext,
+  error: YeetCommandError
+): Effect.fn.Return<
+  never,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const snapshot = yield* printOperatorStatusSummary(context, true);
+  return yield* YeetCommandError.make({
+    message: `${error.message}${rerunGuidanceSuffix(snapshot)}`,
+    ...(error.command === undefined ? {} : { command: error.command }),
+    ...(error.exitCode === undefined ? {} : { exitCode: error.exitCode }),
+  });
 });
 
 const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReviewThreads")(function* (
@@ -590,7 +627,26 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  yield* runRequiredPhase(context, monitorSteps, recorder, failureMessage);
+  const contextSteps = A.filter(monitorSteps, (step) => step.id === "monitor:01-pr-context");
+  const checkSteps = A.filter(monitorSteps, (step) => step.id === "monitor:02-pr-checks-watch");
+  const contextResults = yield* runPhase(context, contextSteps, recorder);
+  if (A.some(contextResults, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(context, contextSteps, contextResults, failureMessage);
+  }
+  const contextOutput = pipe(
+    contextResults,
+    A.head,
+    O.flatMap((result) => O.fromUndefinedOr(result.output)),
+    O.getOrElse(() => Str.empty)
+  );
+  const pullRequestNumber = yield* S.decodeUnknownEffect(S.fromJsonString(GhPrView))(contextOutput).pipe(
+    Effect.map((pullRequest) => pullRequest.number),
+    Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
+  );
+  yield* Effect.raceFirst(
+    runRequiredPhase(context, checkSteps, recorder, failureMessage),
+    runYeetPullRequestCommentMonitor(context, pullRequestNumber)
+  );
 });
 
 const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(function* (
@@ -604,20 +660,7 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet publish monitor phase failed.").pipe(
-    Effect.catch((error) =>
-      Effect.gen(function* () {
-        const snapshot = yield* printOperatorStatusSummary(context, true);
-        return yield* YeetCommandError.make({
-          message: `${error.message}${
-            snapshot.remote.rerunFailedCommand === undefined
-              ? ""
-              : `\nSame-SHA rerun decision: ${snapshot.remote.rerunFailedDecision ?? "rerun failed jobs"}.\nRun: ${snapshot.remote.rerunFailedCommand}`
-          }`,
-          ...(error.command === undefined ? {} : { command: error.command }),
-          ...(error.exitCode === undefined ? {} : { exitCode: error.exitCode }),
-        });
-      })
-    )
+    Effect.catch((error) => failWithRerunGuidance(context, error))
   );
   if (!A.isReadonlyArrayEmpty(monitorSteps)) {
     const snapshot = yield* printOperatorStatusSummary(context, true);
@@ -778,14 +821,14 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   );
 
   const verdict = buildYeetVerdict({
-    attemptId: attempt.attemptId,
+    attemptId: O.some(attempt.attemptId),
     base: plan.context.base,
     baseFreshness: O.getOrUndefined(extraState.baseFreshness),
     branch: plan.context.branch,
     createdAt: endedAt,
-    startedAt: attempt.startedAt,
-    endedAt,
-    elapsedMs: endedAtEpochMillis - startedAtEpochMillis,
+    startedAt: O.some(attempt.startedAt),
+    endedAt: O.some(endedAt),
+    elapsedMs: O.some(endedAtEpochMillis - startedAtEpochMillis),
     executed,
     failurePolicy: options.collectAll ? "collect-all" : "fail-fast",
     flakeQuarantine,
@@ -958,15 +1001,17 @@ const renderPlan = Effect.fn("Yeet.renderPlan")(function* (
 /**
  * Run yeet with the provided options.
  *
- * @param options - Yeet runtime options.
- * @returns Yeet run result when execution succeeds.
- * @example
+ * **Example** (Run the yeet workflow)
+ *
  * ```ts
  * import { defaultYeetRunOptions, runYeet } from "@beep/repo-cli/test/Yeet"
  *
  * const result = runYeet(defaultYeetRunOptions({ plan: true }))
  * console.log(result) // example value
  * ```
+ *
+ * @param options - Yeet runtime options.
+ * @returns Yeet run result when execution succeeds.
  * @category use-cases
  * @since 0.0.0
  */

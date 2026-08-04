@@ -54,10 +54,12 @@ export class TerseEffectRulesOptions extends S.Class<TerseEffectRulesOptions>($I
 /**
  * Summary of terse Effect style migration results.
  *
- * @example
+ * **Example** (Reference the terse-effect rules summary)
+ *
  * ```ts
  * console.log("TerseEffectRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -564,10 +566,12 @@ const isExplicitDualOverloadCandidate = (functionDeclaration: FunctionDeclaratio
 /**
  * Run terse Effect style migration/check logic.
  *
- * @example
+ * **Example** (Reference the terse-effect rules runner)
+ *
  * ```ts
  * console.log("runTerseEffectRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

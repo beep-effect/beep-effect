@@ -382,7 +382,8 @@ const yeetPlanContractCheckCommand = Command.make(
 /**
  * Command that repairs, verifies, or publishes repository work through Yeet.
  *
- * @example
+ * **Example** (Wire the yeet command)
+ *
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
  * import { Command } from "effect/unstable/cli"
@@ -391,6 +392,7 @@ const yeetPlanContractCheckCommand = Command.make(
  * const run = Command.run(yeetCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

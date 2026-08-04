@@ -120,10 +120,12 @@ const NoNativeRuntimeSeverity = LiteralKit(["warn", "error"]);
 /**
  * Single repo-local native runtime diagnostic.
  *
- * @example
+ * **Example** (Reference the native-runtime diagnostic)
+ *
  * ```ts
  * console.log("NoNativeRuntimeDiagnostic")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -144,10 +146,12 @@ export class NoNativeRuntimeDiagnostic extends S.Class<NoNativeRuntimeDiagnostic
 /**
  * Namespace for {@link NoNativeRuntimeDiagnostic} companion types.
  *
- * @example
+ * **Example** (Reference the native-runtime diagnostic)
+ *
  * ```ts
  * console.log("NoNativeRuntimeDiagnostic")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -155,10 +159,12 @@ export declare namespace NoNativeRuntimeDiagnostic {
   /**
    * Encoded representation of {@link NoNativeRuntimeDiagnostic}.
    *
-   * @example
+   * **Example** (Reference the encoded companion)
+   *
    * ```ts
    * console.log("Encoded")
    * ```
+   *
    * @category models
    * @since 0.0.0
    */
@@ -168,10 +174,12 @@ export declare namespace NoNativeRuntimeDiagnostic {
 /**
  * Summary of repo-local native runtime checks.
  *
- * @example
+ * **Example** (Reference the native-runtime rules summary)
+ *
  * ```ts
  * console.log("NoNativeRuntimeRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -207,10 +215,12 @@ export class NoNativeRuntimeRulesSummary extends S.Class<NoNativeRuntimeRulesSum
 /**
  * Options for collecting native-runtime allowlist lookup keys.
  *
- * @example
+ * **Example** (Reference the violation-key options)
+ *
  * ```ts
  * console.log("NativeRuntimeViolationKeyOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -516,10 +526,12 @@ const collectNativeRuntimeViolations = (
 /**
  * Collect normalized native-runtime violation keys for allowlist integrity checks.
  *
- * @example
+ * **Example** (Reference the violation-key collector)
+ *
  * ```ts
  * console.log("collectNativeRuntimeViolationKeys")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -541,10 +553,12 @@ export const collectNativeRuntimeViolationKeys: {
  * Non-hotspot files remain warning-only for `--check` so the P3 cutover preserves the
  * old warn-vs-error split while moving the blocking path away from the repo-wide ESLint lane.
  *
- * @example
+ * **Example** (Reference the native-runtime rules runner)
+ *
  * ```ts
  * console.log("runNoNativeRuntimeRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -15,12 +15,14 @@ const $I = $RepoCliId.create("commands/Yeet/Yeet.schemas");
 /**
  * Classification domain for normalized yeet quality findings.
  *
- * @example
+ * **Example** (Check quality issue category membership)
+ *
  * ```ts
  * import { QualityIssueCategory } from "@beep/repo-cli/commands/Yeet"
  *
  * console.log(QualityIssueCategory.is.typecheck("typecheck"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,13 +53,15 @@ export const QualityIssueCategory = LiteralKit([
 /**
  * Type-level union of normalized yeet quality finding categories.
  *
- * @example
+ * **Example** (Annotate a value as QualityIssueCategory)
+ *
  * ```ts
  * import type { QualityIssueCategory } from "@beep/repo-cli/commands/Yeet"
  *
  * const category: QualityIssueCategory = "typecheck"
  * console.log(category) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,12 +70,14 @@ export type QualityIssueCategory = typeof QualityIssueCategory.Type;
 /**
  * Blocking level assigned to a normalized yeet quality finding.
  *
- * @example
+ * **Example** (Check quality issue severity membership)
+ *
  * ```ts
  * import { QualityIssueSeverity } from "@beep/repo-cli/commands/Yeet"
  *
  * console.log(QualityIssueSeverity.is.error("error"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,13 +90,15 @@ export const QualityIssueSeverity = LiteralKit(["info", "warning", "error", "fat
 /**
  * Type-level union of yeet quality severity literals.
  *
- * @example
+ * **Example** (Annotate a value as QualityIssueSeverity)
+ *
  * ```ts
  * import type { QualityIssueSeverity } from "@beep/repo-cli/commands/Yeet"
  *
  * const severity: QualityIssueSeverity = "error"
  * console.log(severity) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -99,12 +107,14 @@ export type QualityIssueSeverity = typeof QualityIssueSeverity.Type;
 /**
  * Parser confidence for a normalized issue.
  *
- * @example
+ * **Example** (Check quality issue confidence membership)
+ *
  * ```ts
  * import { QualityIssueConfidence } from "@beep/repo-cli/commands/Yeet"
  *
  * console.log(QualityIssueConfidence.is.raw("raw"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -117,13 +127,15 @@ export const QualityIssueConfidence = LiteralKit(["structured", "partial", "raw"
 /**
  * Parser confidence for a normalized issue.
  *
- * @example
+ * **Example** (Annotate a value as QualityIssueConfidence)
+ *
  * ```ts
  * import type { QualityIssueConfidence } from "@beep/repo-cli/commands/Yeet"
  *
  * const confidence: QualityIssueConfidence = "structured"
  * console.log(confidence) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -132,12 +144,14 @@ export type QualityIssueConfidence = typeof QualityIssueConfidence.Type;
 /**
  * Source attribution carried by normalized advisory analyzer issues.
  *
- * @example
+ * **Example** (Check quality issue attribution membership)
+ *
  * ```ts
  * import { QualityIssueAttribution } from "@beep/repo-cli/commands/Yeet"
  *
  * console.log(QualityIssueAttribution.is.introduced("introduced"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -150,13 +164,15 @@ export const QualityIssueAttribution = LiteralKit(["introduced", "inherited-adja
 /**
  * Source attribution carried by normalized advisory analyzer issues.
  *
- * @example
+ * **Example** (Annotate a value as QualityIssueAttribution)
+ *
  * ```ts
  * import type { QualityIssueAttribution } from "@beep/repo-cli/commands/Yeet"
  *
  * const attribution: QualityIssueAttribution = "introduced"
  * console.log(attribution) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -165,13 +181,15 @@ export type QualityIssueAttribution = typeof QualityIssueAttribution.Type;
 /**
  * Specialist routing hint for one issue.
  *
- * @example
+ * **Example** (Construct a quality issue routing)
+ *
  * ```ts
  * import { QualityIssueRouting } from "@beep/repo-cli/commands/Yeet"
  *
  * const routing = QualityIssueRouting.make({ skill: "effect-first-development", reason: "Effect law failure" })
  * console.log(routing.skill)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -188,7 +206,8 @@ export class QualityIssueRouting extends S.Class<QualityIssueRouting>($I`Quality
 /**
  * One normalized quality issue.
  *
- * @example
+ * **Example** (Construct a quality issue)
+ *
  * ```ts
  * import { QualityIssue } from "@beep/repo-cli/commands/Yeet"
  *
@@ -206,6 +225,7 @@ export class QualityIssueRouting extends S.Class<QualityIssueRouting>($I`Quality
  * })
  * console.log(issue.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -254,13 +274,15 @@ export class QualityIssue extends S.Class<QualityIssue>($I`QualityIssue`)(
 /**
  * Package-level issue report rendered into a quality packet.
  *
- * @example
+ * **Example** (Construct a package quality report)
+ *
  * ```ts
  * import { PackageQualityReport } from "@beep/repo-cli/commands/Yeet"
  *
  * const report = PackageQualityReport.make({ issueCount: 0, blockingCount: 0, issues: [], packageName: "@beep/root" })
  * console.log(report.issueCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -280,13 +302,15 @@ export class PackageQualityReport extends S.Class<PackageQualityReport>($I`Packa
 /**
  * Complete quality issue index for a yeet run.
  *
- * @example
+ * **Example** (Construct a quality issue index)
+ *
  * ```ts
  * import { QualityIssueIndex } from "@beep/repo-cli/commands/Yeet"
  *
  * const index = QualityIssueIndex.make({ issues: [], packages: [], rawOutputRefs: [], schemaVersion: "yeet-quality-issue-index/v1" })
  * console.log(index.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -305,7 +329,8 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
 /**
  * Runtime options accepted by the yeet handler.
  *
- * @example
+ * **Example** (Construct run options)
+ *
  * ```ts
  * import { YeetRunOptions } from "@beep/repo-cli/commands/Yeet"
  *
@@ -342,6 +367,7 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
  * })
  * console.log(options.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -385,13 +411,15 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
 /**
  * Result returned by a yeet execution attempt.
  *
- * @example
+ * **Example** (Construct a run result)
+ *
  * ```ts
  * import { YeetRunResult } from "@beep/repo-cli/commands/Yeet"
  *
  * const result = YeetRunResult.make({ artifactDir: ".beep/yeet", committed: false, packetPaths: [], pushed: false })
  * console.log(result.artifactDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -411,13 +439,15 @@ export class YeetRunResult extends S.Class<YeetRunResult>($I`YeetRunResult`)(
 /**
  * Reviewed staged paths that Yeet is allowed to commit and publish.
  *
- * @example
+ * **Example** (Construct a staged publish intent)
+ *
  * ```ts
  * import { YeetStagedPublishIntent } from "@beep/repo-cli/commands/Yeet"
  *
  * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  * console.log(intent.paths.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -484,7 +514,8 @@ export const YeetPublishIntent = S.Union([YeetStagedPublishIntent, YeetExistingC
   })
 );
 
-/** Decoded staged-or-existing-commit publish intent.
+/**
+ * Decoded staged-or-existing-commit publish intent.
  *
  * @see {@link YeetPublishIntent} for the runtime tagged-union schema.
  * @category models
@@ -495,14 +526,16 @@ export type YeetPublishIntent = typeof YeetPublishIntent.Type;
 /**
  * Construct baseline yeet options for focused tests.
  *
- * @param overrides - Partial option values to replace the defaults.
- * @returns Runtime options with repo-standard defaults applied.
- * @example
+ * **Example** (Apply defaults to a verify run)
+ *
  * ```ts
  * import { defaultYeetRunOptions } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(defaultYeetRunOptions({ mode: "verify" }).mode)
  * ```
+ *
+ * @param overrides - Partial option values to replace the defaults.
+ * @returns Runtime options with repo-standard defaults applied.
  * @category testing
  * @since 0.0.0
  */

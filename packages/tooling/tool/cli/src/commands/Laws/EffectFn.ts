@@ -72,7 +72,8 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
 /**
  * Single Effect.fn supplemental law diagnostic.
  *
- * @example
+ * **Example** (Construct an effect fn diagnostic)
+ *
  * ```ts
  * import { EffectFnDiagnostic } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -88,6 +89,7 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
  *
  * console.log(diagnostic.recommendation)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -109,7 +111,8 @@ export class EffectFnDiagnostic extends S.Class<EffectFnDiagnostic>($I`EffectFnD
 /**
  * Summary of Effect.fn supplemental law results.
  *
- * @example
+ * **Example** (Construct an effect fn rules summary)
+ *
  * ```ts
  * import { EffectFnRulesSummary } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -122,6 +125,7 @@ export class EffectFnDiagnostic extends S.Class<EffectFnDiagnostic>($I`EffectFnD
  *
  * console.log(summary.strictFailure)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -366,10 +370,8 @@ const collectEffectFnDiagnostics = (
 /**
  * Run the repo-local Effect.fn supplemental law.
  *
- * @param options - Runtime options for the check.
- * @returns Effect that scans production TypeScript source and reports direct Effect.gen returns.
- * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
- * @example
+ * **Example** (Run effect fn rules)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runEffectFnRules, EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
@@ -381,6 +383,10 @@ const collectEffectFnDiagnostics = (
  *
  * console.log(program) // example value
  * ```
+ *
+ * @param options - Runtime options for the check.
+ * @returns Effect that scans production TypeScript source and reports direct Effect.gen returns.
+ * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
  * @category utilities
  * @since 0.0.0
  */

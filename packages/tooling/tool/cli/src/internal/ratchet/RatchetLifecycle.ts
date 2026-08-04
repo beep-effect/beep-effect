@@ -1,7 +1,8 @@
 /**
  * Shared fail-on-growth ratchet enforcement skeleton.
  *
- * @remarks
+ * **Details**
+ *
  * Every complete repo-cli ratchet (Knip, JSDoc inventory totals, coverage
  * regression) enforces its committed baseline with the same control flow: run
  * an ordered list of regression checks, short-circuit into a tagged failure on
@@ -30,7 +31,8 @@ import { Console, Effect } from "effect";
  * Enforce a fail-on-growth ratchet: fail on the first present regression,
  * otherwise print the ok line and any tighten-baseline nudge.
  *
- * @remarks
+ * **Details**
+ *
  * Reproduces the shared `enforceComparison` control flow. Each regression's
  * `lines` is the complete stderr block for that check (header, findings, and
  * remediation footer, already truncated). Regressions are evaluated in order
@@ -39,10 +41,8 @@ import { Console, Effect } from "effect";
  * stderr block and fails with its `error`. When none are present the `okLine`
  * is logged, then the `tighten` stdout block when the baseline can be tightened.
  *
- * @param input - Ordered regression checks, the ok line, and an optional
- * tighten-baseline block.
- * @returns Effect that fails with the first present regression's error.
- * @example
+ * **Example** (Enforce a ratchet)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -57,6 +57,10 @@ import { Console, Effect } from "effect";
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - Ordered regression checks, the ok line, and an optional
+ * tighten-baseline block.
+ * @returns Effect that fails with the first present regression's error.
  * @category enforcement
  * @since 0.0.0
  */

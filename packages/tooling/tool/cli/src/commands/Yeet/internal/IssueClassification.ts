@@ -17,17 +17,19 @@ const KNOWN_SUB_LANE_TAIL_CHARS = 16 * 1024;
 /**
  * Return the specialist routing hints associated with a Yeet issue category.
  *
- * @param category - Normalized issue category selected by Yeet's parser or
- * step classifier.
- * @returns Specialist skill routes that should be attached to quality packets
- * for that category.
- * @example
+ * **Example** (Route a schema-first policy failure)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { routeForCategory } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(routeForCategory("schema-first-policy")[0]?.skill, "schema-first-development")
  * ```
+ *
+ * @param category - Normalized issue category selected by Yeet's parser or
+ * step classifier.
+ * @returns Specialist skill routes that should be attached to quality packets
+ * for that category.
  * @category routing
  * @since 0.0.0
  */
@@ -83,11 +85,8 @@ export const routeForCategory = (category: QualityIssueCategory): ReadonlyArray<
 /**
  * Infer the default issue category from a planned Yeet step label.
  *
- * @param step - Planned repo-run step whose label is scanned for known lane
- * names.
- * @returns The broad quality issue category used when a step fails without a
- * more specific parser result.
- * @example
+ * **Example** (Classify a plan step)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { categoryForStep, RepoPlanStep } from "@beep/repo-cli/test/Yeet"
@@ -105,6 +104,11 @@ export const routeForCategory = (category: QualityIssueCategory): ReadonlyArray<
  * })
  * strictEqual(categoryForStep(step), "docgen-jsdoc-quality")
  * ```
+ *
+ * @param step - Planned repo-run step whose label is scanned for known lane
+ * names.
+ * @returns The broad quality issue category used when a step fails without a
+ * more specific parser result.
  * @category classification
  * @since 0.0.0
  */
@@ -146,7 +150,8 @@ export const categoryForStep = (step: RepoPlanStep): QualityIssueCategory => {
 /**
  * Known broad-lane failure hint extracted from raw command output.
  *
- * @example
+ * **Example** (Annotate a value as KnownSubLaneHint)
+ *
  * ```ts
  * import type { KnownSubLaneHint } from "@beep/repo-cli/test/Yeet"
  *
@@ -158,6 +163,7 @@ export const categoryForStep = (step: RepoPlanStep): QualityIssueCategory => {
  * }
  * console.log(hint.subCategory)
  * ```
+ *
  * @category classification
  * @since 0.0.0
  */
@@ -317,11 +323,8 @@ const knownSubLaneHintFromFailureSlices = (slices: FailureHintSlices): O.Option<
 /**
  * Find the latest known sub-lane hint in raw command output.
  *
- * @param output - Raw command output, usually the tail of a broad quality lane
- * failure.
- * @returns The latest matched sub-lane hint when a known failure signature is
- * present.
- * @example
+ * **Example** (Recognize a typos sub-lane)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { knownSubLaneHintFromOutput } from "@beep/repo-cli/test/Yeet"
@@ -329,6 +332,11 @@ const knownSubLaneHintFromFailureSlices = (slices: FailureHintSlices): O.Option<
  *
  * strictEqual(O.getOrThrow(knownSubLaneHintFromOutput("lint:typos failed")).subCategory, "typos")
  * ```
+ *
+ * @param output - Raw command output, usually the tail of a broad quality lane
+ * failure.
+ * @returns The latest matched sub-lane hint when a known failure signature is
+ * present.
  * @category classification
  * @since 0.0.0
  */
@@ -353,15 +361,17 @@ export const knownSubLaneHintFromOutput = (output: string | undefined): O.Option
  * Return the remediation command for a known failed sub-lane found in broad
  * command output.
  *
- * @param output - Captured step output to scan for known sub-lane needles.
- * @returns Remediation text when a known sub-lane hint matches.
- * @example
+ * **Example** (Find remediation for a typos failure)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { knownSubLaneRemediationFromOutput } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(O.isSome(knownSubLaneRemediationFromOutput("lint:typos failed")))
  * ```
+ *
+ * @param output - Captured step output to scan for known sub-lane needles.
+ * @returns Remediation text when a known sub-lane hint matches.
  * @category utilities
  * @since 0.0.0
  */

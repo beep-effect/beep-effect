@@ -185,3 +185,72 @@ consolidation (deferred pending cache measurements). Per-lane proof resume
     Traps recorded from the run: shadow-main outcome racing, RAM-fork on
     unowned infra (un-trapped by #24), rule-mutation fitness (Goodhart),
     monorepo capsule dissolution.
+
+## Shipping harvest (2026-08-04, PR #551 first red wave — why 8 hosted lanes found what local didn't)
+
+28. **Pre-push cheap wave in the ship flow.** The fail-fast ship flow pushed
+    first and ran verify in parallel; the preflight wave (~90s: knip, fallow,
+    changeset, sanity) then found red locally AND hosted simultaneously —
+    burning a full hosted gauntlet on findings a pre-push preflight would
+    have caught. Refine ship flow: run the cheap preflight wave BEFORE
+    `git push`, then push, then heavy lanes in parallel with hosted. Cost:
+    ~90s serial latency per ship; saves a whole hosted round-trip whenever
+    preflight is red (this wave: 2 preflight-detectable lanes red).
+29. **Changed-package unit tests as a preflight gate.** The `attemptId`
+    verdict-schema break red-flagged THREE hosted lanes (Test Unit, Property
+    Laws, Coverage Regression) but is caught by repo-cli's own vitest suite
+    in ~60s. Add `test:changed` (vitest only for packages whose src changed)
+    to the preflight wave. Complements #28; both together would have made
+    this wave's red map fully local.
+30. **Gates teach the fix at point of failure.** JSDoc Ratchet printed only
+    "migrate @example" — no template, no doc pointer — while most repo JSDoc
+    is legacy, so agents guess and fail repeatedly (user-observed chronic
+    failure). Fixed in this PR: cleanup-on-touch failure output now prints
+    the carrier→section transform table + binding-law path. Ritual: every
+    gate's failure output must name the exact fix or the doc that does
+    (effect-fn and schema-first already do; audit the rest).
+31. **Cleanup-on-touch must exempt generated files.** The gate flagged
+    `Runpod.generated.ts` and `Html.language-tag-registry.generated.ts` —
+    generated carriers whose fix belongs in the generator, not the output.
+    Exclude `*.generated.ts`/`_generated/**` from cleanup-on-touch (their
+    generators get a one-time titled-grammar upgrade instead).
+32. **Repo-wide legacy JSDoc codemod (debt bomb defusal).** Wide PRs incur
+    mass cleanup-on-touch migration debt (36 findings on #551's ~116-file
+    diff). The python transform used on #548/#551 (remarks→Details,
+    @example→titled Example) is ~80% mechanizable; run it repo-wide as its
+    own PR, then cleanup-on-touch shrinks to a no-op for future PRs and the
+    "agents don't know the pattern" failure class dies structurally.
+
+## Discussion harvest (2026-08-04, while integrating the #551 fix wave)
+
+33. **Gates that fix instead of teach: `jsdoc-ratchet --fix`.** The carrier
+    migration is ~80% mechanical and has now been run three times as an ad-hoc
+    python transform. Ship it as the gate's own repair arm: `beep quality
+    jsdoc-ratchet --fix` emits the @example→titled-Example / @remarks→Details
+    migration; agents review a diff instead of hand-editing. Doubles as the
+    implementation vehicle for the repo-wide codemod (#32): run once
+    repo-wide, keep forever as the gate's `--fix`. Generalize the principle:
+    any cleanup-on-touch gate with a deterministic fix carries its codemod.
+34. **Append-optional law for persisted artifact schemas + lint.** The
+    `attemptId` incident is a class: a new REQUIRED field on a schema whose
+    instances outlive the code (verdict.json on disk) red-flagged three
+    hosted lanes. Law: on any schema carrying a `schemaVersion` literal, new
+    fields must be modeled as `S.OptionFromOptionalKey(...)` piped with
+    `SchemaUtils.withNoneDefault` (decoded side Option, absent key → none,
+    constructor defaults none) — or the version literal must bump. Enforce in
+    schema-first lint: diff field requiredness of version-carrying S.Class
+    schemas against origin/main; flag "new required field without version
+    bump". Prevention, not acceleration — cheapest item on this list.
+35. **Cause fingerprints → lane collapse in monitor/status.** Eight red
+    lanes on #551 were three root causes; discovering that took six job-log
+    downloads. Lanes should emit a failure fingerprint (failing test id or
+    first-error signature — FlakeQuarantine already computes
+    `cause_fingerprint`); `yeet monitor`/`status` groups red lanes by
+    fingerprint and renders "8 lanes red, 3 causes". Slots into the
+    ci-failure-capsule protocol (#26) as a field, not a new system.
+36. **Per-lane local-repro command in hosted check output.** Local verdict
+    lanes carry `repairCommand`; hosted lanes carry nothing, so every hosted
+    failure starts with log archaeology. The lane definitions in
+    GithubChecks.ts know their own invocations — embed the exact local repro
+    command per lane in the `$GITHUB_STEP_SUMMARY` (and/or check-run output).
+    #30's teach-at-point-of-failure philosophy applied to lanes.

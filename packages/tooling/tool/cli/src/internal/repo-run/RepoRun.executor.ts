@@ -58,18 +58,20 @@ const makeRepoCommandCapture = (identifier: string, tee: boolean) =>
  * Non-zero exit codes are represented in the returned value. Spawn failures
  * remain typed operational errors.
  *
- * @param command - Executable name or path.
- * @param args - Command arguments.
- * @param cwd - Working directory.
- * @param env - Optional environment overrides.
- * @returns Captured output and exit code.
- * @example
+ * **Example** (Run a repo command capture)
+ *
  * ```ts
  * import { runRepoCommandCapture } from "@beep/repo-cli/internal/repo-run"
  *
  * const capture = runRepoCommandCapture("git", ["status", "--short"], process.cwd())
  * console.log(capture)
  * ```
+ *
+ * @param command - Executable name or path.
+ * @param args - Command arguments.
+ * @param cwd - Working directory.
+ * @param env - Optional environment overrides.
+ * @returns Captured output and exit code.
  * @category execution
  * @since 0.0.0
  */
@@ -81,18 +83,20 @@ export const runRepoCommandCapture = makeRepoCommandCapture("RepoRun.runRepoComm
  * Non-zero exit codes are represented in the returned value. Spawn failures
  * remain typed operational errors.
  *
- * @param command - Executable name or path.
- * @param args - Command arguments.
- * @param cwd - Working directory.
- * @param env - Optional environment overrides.
- * @returns Captured output and exit code.
- * @example
+ * **Example** (Run a repo command streaming capture)
+ *
  * ```ts
  * import { runRepoCommandStreamingCapture } from "@beep/repo-cli/internal/repo-run"
  *
  * const capture = runRepoCommandStreamingCapture("bun", ["--version"], process.cwd())
  * console.log(capture)
  * ```
+ *
+ * @param command - Executable name or path.
+ * @param args - Command arguments.
+ * @param cwd - Working directory.
+ * @param env - Optional environment overrides.
+ * @returns Captured output and exit code.
  * @category execution
  * @since 0.0.0
  */
@@ -112,13 +116,42 @@ const writeRawOutput = Effect.fn("RepoRun.writeRawOutput")(function* (
     .pipe(Effect.mapError(DomainError.newCause(`Failed to write raw output "${filePath}".`)));
 });
 
+const makeRepoPlanStepExecutor = (identifier: string, capture: typeof runRepoCommandCapture) =>
+  Effect.fn(identifier)(function* (
+    step: RepoPlanStep,
+    rawOutputPath: O.Option<string> = O.none()
+  ): Effect.fn.Return<
+    RepoStepRunResult,
+    DomainError,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    const commandText = commandTextForStep(step);
+    yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);
+    const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+    const [elapsed, result] = yield* capture(step.command, step.args, step.cwd, step.env).pipe(Effect.timed);
+    const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+    if (O.isSome(rawOutputPath)) {
+      yield* writeRawOutput(rawOutputPath.value, result.output);
+    }
+
+    return RepoStepRunResult.make({
+      stepId: step.id,
+      commandText,
+      exitCode: result.exitCode,
+      startedAt,
+      endedAt,
+      elapsedMs: Duration.toMillis(elapsed),
+      output: result.output,
+      truncated: result.truncated,
+      ...(O.isSome(rawOutputPath) ? { rawOutputRef: rawOutputPath.value } : {}),
+    });
+  });
+
 /**
  * Execute a planned repository step and optionally persist its raw output.
  *
- * @param step - Planned step to execute.
- * @param rawOutputPath - Optional path for captured command output.
- * @returns Captured step result.
- * @example
+ * **Example** (Execute a repo plan step)
+ *
  * ```ts
  * import { executeRepoPlanStep, RepoPlanStep } from "@beep/repo-cli/internal/repo-run"
  *
@@ -135,49 +168,21 @@ const writeRawOutput = Effect.fn("RepoRun.writeRawOutput")(function* (
  * })
  * console.log(executeRepoPlanStep(step))
  * ```
+ *
+ * @param step - Planned step to execute.
+ * @param rawOutputPath - Optional path for captured command output.
+ * @returns Captured step result.
  * @category execution
  * @since 0.0.0
  */
-export const executeRepoPlanStep = Effect.fn("RepoRun.executeRepoPlanStep")(function* (
-  step: RepoPlanStep,
-  rawOutputPath: O.Option<string> = O.none()
-): Effect.fn.Return<
-  RepoStepRunResult,
-  DomainError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const commandText = commandTextForStep(step);
-  yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);
-  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const [elapsed, result] = yield* runRepoCommandCapture(step.command, step.args, step.cwd, step.env).pipe(
-    Effect.timed
-  );
-  const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  if (O.isSome(rawOutputPath)) {
-    yield* writeRawOutput(rawOutputPath.value, result.output);
-  }
-
-  return RepoStepRunResult.make({
-    stepId: step.id,
-    commandText,
-    exitCode: result.exitCode,
-    startedAt,
-    endedAt,
-    elapsedMs: Duration.toMillis(elapsed),
-    output: result.output,
-    truncated: result.truncated,
-    ...(O.isSome(rawOutputPath) ? { rawOutputRef: rawOutputPath.value } : {}),
-  });
-});
+export const executeRepoPlanStep = makeRepoPlanStepExecutor("RepoRun.executeRepoPlanStep", runRepoCommandCapture);
 
 /**
  * Execute a planned repository step, stream output live, and optionally persist
  * its raw output.
  *
- * @param step - Planned step to execute.
- * @param rawOutputPath - Optional path for captured command output.
- * @returns Captured step result.
- * @example
+ * **Example** (Execute a repo plan step streaming)
+ *
  * ```ts
  * import { executeRepoPlanStepStreaming, RepoPlanStep } from "@beep/repo-cli/internal/repo-run"
  *
@@ -194,54 +199,33 @@ export const executeRepoPlanStep = Effect.fn("RepoRun.executeRepoPlanStep")(func
  * })
  * console.log(executeRepoPlanStepStreaming(step))
  * ```
+ *
+ * @param step - Planned step to execute.
+ * @param rawOutputPath - Optional path for captured command output.
+ * @returns Captured step result.
  * @category execution
  * @since 0.0.0
  */
-export const executeRepoPlanStepStreaming = Effect.fn("RepoRun.executeRepoPlanStepStreaming")(function* (
-  step: RepoPlanStep,
-  rawOutputPath: O.Option<string> = O.none()
-): Effect.fn.Return<
-  RepoStepRunResult,
-  DomainError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const commandText = commandTextForStep(step);
-  yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);
-  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const [elapsed, result] = yield* runRepoCommandStreamingCapture(step.command, step.args, step.cwd, step.env).pipe(
-    Effect.timed
-  );
-  const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  if (O.isSome(rawOutputPath)) {
-    yield* writeRawOutput(rawOutputPath.value, result.output);
-  }
-
-  return RepoStepRunResult.make({
-    stepId: step.id,
-    commandText,
-    exitCode: result.exitCode,
-    startedAt,
-    endedAt,
-    elapsedMs: Duration.toMillis(elapsed),
-    output: result.output,
-    truncated: result.truncated,
-    ...(O.isSome(rawOutputPath) ? { rawOutputRef: rawOutputPath.value } : {}),
-  });
-});
+export const executeRepoPlanStepStreaming = makeRepoPlanStepExecutor(
+  "RepoRun.executeRepoPlanStepStreaming",
+  runRepoCommandStreamingCapture
+);
 
 /**
  * Resolve a local node_modules binary when present.
  *
- * @param repoRoot - Repository root.
- * @param binary - Binary name.
- * @returns Absolute binary path when installed, otherwise the binary name.
- * @example
+ * **Example** (Resolve a local repo binary)
+ *
  * ```ts
  * import { resolveLocalRepoBinary } from "@beep/repo-cli/internal/repo-run"
  *
  * const turbo = resolveLocalRepoBinary(process.cwd(), "turbo")
  * console.log(turbo)
  * ```
+ *
+ * @param repoRoot - Repository root.
+ * @param binary - Binary name.
+ * @returns Absolute binary path when installed, otherwise the binary name.
  * @category utilities
  * @since 0.0.0
  */

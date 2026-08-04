@@ -71,7 +71,8 @@ export class FrozenGrantSetRulesOptions extends S.Class<FrozenGrantSetRulesOptio
 /**
  * Single FrozenGrantSet construction law diagnostic.
  *
- * @example
+ * **Example** (Construct a frozen grant set diagnostic)
+ *
  * ```ts
  * import { FrozenGrantSetDiagnostic } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
  *
@@ -86,6 +87,7 @@ export class FrozenGrantSetRulesOptions extends S.Class<FrozenGrantSetRulesOptio
  *
  * console.log(diagnostic.severity)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -107,7 +109,8 @@ export class FrozenGrantSetDiagnostic extends S.Class<FrozenGrantSetDiagnostic>(
 /**
  * Summary of FrozenGrantSet construction law results.
  *
- * @example
+ * **Example** (Construct a frozen grant set rules summary)
+ *
  * ```ts
  * import { FrozenGrantSetRulesSummary } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
  *
@@ -120,6 +123,7 @@ export class FrozenGrantSetDiagnostic extends S.Class<FrozenGrantSetDiagnostic>(
  *
  * console.log(summary.strictFailure)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -301,10 +305,8 @@ const collectFrozenGrantSetDiagnostics = (
  * import aliases, variable aliases, destructured `make` bindings, and
  * extracted `make` references (including calls and `new` on those aliases).
  *
- * @param options - Runtime options for the check.
- * @returns Effect that scans production TypeScript source and reports FrozenGrantSet constructions (make, new, or aliases of either) outside the defining module.
- * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
- * @example
+ * **Example** (Run frozen grant set rules)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runFrozenGrantSetRules, FrozenGrantSetRulesOptions } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
@@ -316,6 +318,10 @@ const collectFrozenGrantSetDiagnostics = (
  *
  * console.log(program) // example value
  * ```
+ *
+ * @param options - Runtime options for the check.
+ * @returns Effect that scans production TypeScript source and reports FrozenGrantSet constructions (make, new, or aliases of either) outside the defining module.
+ * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
  * @category utilities
  * @since 0.0.0
  */

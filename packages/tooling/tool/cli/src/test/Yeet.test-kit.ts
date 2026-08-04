@@ -32,6 +32,7 @@ export * from "../commands/Yeet/internal/Handler.ts";
 export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";
+export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";

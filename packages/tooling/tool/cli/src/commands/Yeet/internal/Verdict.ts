@@ -9,7 +9,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
@@ -25,6 +25,7 @@ import {
   GithubCheckFailurePolicy,
   GithubCheckRunReport,
 } from "../../Quality/Quality.schemas.ts";
+import { GIT_PUSH_STEP_ID } from "./Planner.ts";
 import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
 import type { GithubCheckLaneRun } from "../../Quality/Quality.schemas.ts";
 
@@ -33,12 +34,14 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
 /**
  * Execution status of one planned yeet lane.
  *
- * @example
+ * **Example** (List the lane status options)
+ *
  * ```ts
  * import { YeetLaneStatus } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetLaneStatus.Options)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,7 +63,8 @@ export type YeetLaneStatus = typeof YeetLaneStatus.Type;
 /**
  * Recorded stash identity for staged-only publish residue.
  *
- * @example
+ * **Example** (Construct a yeet stash state)
+ *
  * ```ts
  * import { YeetStashState } from "@beep/repo-cli/test/Yeet"
  *
@@ -71,6 +75,7 @@ export type YeetLaneStatus = typeof YeetLaneStatus.Type;
  * })
  * console.log(stash.marker)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -88,7 +93,8 @@ export class YeetStashState extends S.Class<YeetStashState>($I`YeetStashState`)(
 /**
  * Divergence assessment between the publish branch and its refreshed base.
  *
- * @example
+ * **Example** (Construct a yeet base freshness)
+ *
  * ```ts
  * import { YeetBaseFreshness } from "@beep/repo-cli/test/Yeet"
  *
@@ -99,6 +105,7 @@ export class YeetStashState extends S.Class<YeetStashState>($I`YeetStashState`)(
  * })
  * console.log(freshness.behindCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -116,7 +123,8 @@ export class YeetBaseFreshness extends S.Class<YeetBaseFreshness>($I`YeetBaseFre
 /**
  * One planned lane with its execution status and repair command.
  *
- * @example
+ * **Example** (Construct a yeet verdict lane)
+ *
  * ```ts
  * import { YeetVerdictLane } from "@beep/repo-cli/test/Yeet"
  *
@@ -128,6 +136,7 @@ export class YeetBaseFreshness extends S.Class<YeetBaseFreshness>($I`YeetBaseFre
  * })
  * console.log(lane.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -158,7 +167,12 @@ export const YeetOutcome = LiteralKit(["success", "failure"]).pipe(
   })
 );
 
-/** Failure classification retained when a Yeet attempt terminates unsuccessfully. */
+/**
+ * Failure classification retained when a Yeet attempt terminates unsuccessfully.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
   $I.annoteSchema("YeetFailureKind", {
     description: "Whether a Yeet attempt failed through a returned step result or the handler error channel.",
@@ -168,20 +182,29 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
 /**
  * Machine-readable verdict for one yeet run.
  *
- * @example
+ * **Gotchas**
+ *
+ * `attemptId` and the run-timing trio (`startedAt`, `endedAt`, `elapsedMs`) are
+ * `Option`-typed optional keys so verdict documents written before the attempt
+ * journal landed still decode off disk as `None`; every current writer supplies
+ * all four, and omitting them at construction yields `None` rather than an error.
+ *
+ * **Example** (Construct a yeet verdict)
+ *
  * ```ts
  * import { YeetVerdict } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
  *
  * const verdict = YeetVerdict.make({
  *   schemaVersion: "yeet-verdict/v2",
- *   attemptId: "550e8400-e29b-41d4-a716-446655440000",
+ *   attemptId: O.some("550e8400-e29b-41d4-a716-446655440000"),
  *   base: "origin/main",
  *   branch: "feature",
  *   committed: false,
  *   createdAt: "2026-06-11T00:00:00.000Z",
- *   startedAt: "2026-06-11T00:00:00.000Z",
- *   endedAt: "2026-06-11T00:00:01.000Z",
- *   elapsedMs: 1000,
+ *   startedAt: O.some("2026-06-11T00:00:00.000Z"),
+ *   endedAt: O.some("2026-06-11T00:00:01.000Z"),
+ *   elapsedMs: O.some(1000),
  *   head: "HEAD",
  *   lanes: [],
  *   message: "yeet verification proof passed.",
@@ -193,20 +216,17 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * })
  * console.log(verdict.outcome)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
   {
     schemaVersion: S.Literal("yeet-verdict/v2"),
-    attemptId: UUID,
     base: S.String,
     branch: S.String,
     committed: S.Boolean,
     createdAt: S.String,
-    startedAt: S.String,
-    endedAt: S.String,
-    elapsedMs: S.Finite,
     failurePolicy: GithubCheckFailurePolicy.pipe(
       S.withConstructorDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"])),
       S.withDecodingDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"]))
@@ -219,6 +239,10 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     packetPaths: S.Array(S.String),
     pushed: S.Boolean,
     runId: S.String,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     indexPath: S.optionalKey(S.String),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
     stash: S.optionalKey(YeetStashState),
@@ -234,12 +258,14 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
 /**
  * One executed plan step paired with its run result.
  *
- * @example
+ * **Example** (Inspect the executed step schema)
+ *
  * ```ts
  * import { YeetExecutedStep } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetExecutedStep.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -314,13 +340,13 @@ const laneFromGithubCheckRun = (lane: GithubCheckLaneRun): YeetVerdictLane =>
 export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`BuildYeetVerdictInput`)(
   {
     base: S.String,
-    attemptId: UUID,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     baseFreshness: S.optional(YeetBaseFreshness),
     branch: S.String,
     createdAt: S.String,
-    startedAt: S.String,
-    endedAt: S.String,
-    elapsedMs: S.Finite,
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     executed: S.Array(YeetExecutedStep),
     failurePolicy: GithubCheckFailurePolicy.pipe(
       S.withConstructorDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"]))
@@ -346,20 +372,20 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
 /**
  * Build the run verdict from planned steps and executed results.
  *
- * @param input - Run identity, outcome, planned steps, and executed results.
- * @returns Schema-valid verdict document for the run.
- * @example
- * ```ts
- * import { buildYeetVerdict } from "@beep/repo-cli/test/Yeet"
+ * **Example** (Build a yeet verdict)
  *
- * const verdict = buildYeetVerdict({
- *   attemptId: "550e8400-e29b-41d4-a716-446655440000",
+ * ```ts
+ * import { BuildYeetVerdictInput, buildYeetVerdict } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const verdict = buildYeetVerdict(BuildYeetVerdictInput.make({
+ *   attemptId: O.some("550e8400-e29b-41d4-a716-446655440000"),
  *   base: "origin/main",
  *   branch: "feature",
  *   createdAt: "2026-06-11T00:00:00.000Z",
- *   startedAt: "2026-06-11T00:00:00.000Z",
- *   endedAt: "2026-06-11T00:00:01.000Z",
- *   elapsedMs: 1000,
+ *   startedAt: O.some("2026-06-11T00:00:00.000Z"),
+ *   endedAt: O.some("2026-06-11T00:00:01.000Z"),
+ *   elapsedMs: O.some(1000),
  *   executed: [],
  *   head: "HEAD",
  *   message: "yeet verification proof passed.",
@@ -368,9 +394,12 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
  *   packetPaths: [],
  *   planned: [],
  *   runId: "feature",
- * })
+ * }))
  * console.log(verdict.lanes.length)
  * ```
+ *
+ * @param input - Run identity, outcome, planned steps, and executed results.
+ * @returns Schema-valid verdict document for the run.
  * @category constructors
  * @since 0.0.0
  */
@@ -400,7 +429,6 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
   );
   return YeetVerdict.make({
     schemaVersion: "yeet-verdict/v2",
-    attemptId: input.attemptId,
     base: input.base,
     branch: input.branch,
     committed: pipe(
@@ -408,9 +436,6 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
       A.some((entry) => entry.step.phase === "commit" && entry.result.exitCode === 0)
     ),
     createdAt: input.createdAt,
-    startedAt: input.startedAt,
-    endedAt: input.endedAt,
-    elapsedMs: input.elapsedMs,
     failurePolicy: input.failurePolicy,
     head: input.head,
     lanes,
@@ -420,12 +445,13 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     packetPaths: input.packetPaths,
     pushed: pipe(
       input.executed,
-      A.some(
-        (entry) =>
-          (entry.step.phase === "publish" || entry.step.phase === "early-publish") && entry.result.exitCode === 0
-      )
+      A.some((entry) => entry.step.id === GIT_PUSH_STEP_ID && entry.result.exitCode === 0)
     ),
     runId: input.runId,
+    attemptId: input.attemptId,
+    startedAt: input.startedAt,
+    endedAt: input.endedAt,
+    elapsedMs: input.elapsedMs,
     ...O.getSomesStruct({
       indexPath: O.fromUndefinedOr(input.indexPath),
       baseFreshness: O.fromUndefinedOr(input.baseFreshness),

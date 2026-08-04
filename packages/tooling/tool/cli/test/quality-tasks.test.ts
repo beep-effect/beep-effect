@@ -51,7 +51,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -59,6 +59,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
@@ -527,6 +528,19 @@ describe("quality task adapter", () => {
         expect(report.lanes[0]?.wave).toBe("test");
       })
     ));
+
+  it("property: the wave report schema round-trips arbitrary reports", () => {
+    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport);
+    fc.assert(
+      fc.property(ReportArbitrary, (report) => {
+        const decoded = S.decodeUnknownSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
+        expect(decoded.schemaVersion).toBe("github-check-run/v1");
+        expect(decoded.failurePolicy).toBe(report.failurePolicy);
+        expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
+      }),
+      fcRuns(32)
+    );
+  });
 
   it("finishes a failed wave, reports sibling failures, and marks later waves not run", () =>
     Effect.runPromise(

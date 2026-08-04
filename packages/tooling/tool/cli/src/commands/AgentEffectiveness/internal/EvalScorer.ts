@@ -32,14 +32,16 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScorer");
 /**
  * Aggregate law components by arithmetic mean.
  *
- * @param scores - Schema-first, tsgo, and Biome component scores.
- * @returns Mean law fraction in `[0, 1]`.
- * @example
+ * **Example** (Aggregate a law fraction)
+ *
  * ```ts
  * import { aggregateLawFraction } from "@beep/repo-cli/test/AgentEffectiveness"
  *
  * console.log(aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })) // 0.583333
  * ```
+ *
+ * @param scores - Schema-first, tsgo, and Biome component scores.
+ * @returns Mean law fraction in `[0, 1]`.
  * @category scoring
  * @since 0.0.0
  */
@@ -49,11 +51,8 @@ export const aggregateLawFraction = (scores: Parameters<typeof EvalScoring.aggre
 /**
  * Build the final score report from completion and law evaluations.
  *
- * @param task - Task manifest the fixture was scored against.
- * @param completion - Completion-check outcome for the fixture.
- * @param law - Law-component violation sets for the fixture.
- * @returns Deterministic score report with breakdown and sorted violations.
- * @example
+ * **Example** (Build an agent effectiveness eval score report)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessEvalViolationSource,
@@ -77,6 +76,11 @@ export const aggregateLawFraction = (scores: Parameters<typeof EvalScoring.aggre
  * console.log(report.violations.length === 0) // true
  * console.log(AgentEffectivenessEvalViolationSource.literals.includes("schema-first")) // true
  * ```
+ *
+ * @param task - Task manifest the fixture was scored against.
+ * @param completion - Completion-check outcome for the fixture.
+ * @param law - Law-component violation sets for the fixture.
+ * @returns Deterministic score report with breakdown and sorted violations.
  * @category scoring
  * @since 0.0.0
  */
@@ -97,13 +101,15 @@ export const buildAgentEffectivenessEvalScoreReport: {
 /**
  * Score one SkillOpt eval fixture directory.
  *
- * @example
+ * **Example** (Score an agent effectiveness eval)
+ *
  * ```ts
  * import { scoreAgentEffectivenessEval } from "@beep/repo-cli/test/AgentEffectiveness"
  *
  * const program = scoreAgentEffectivenessEval({ dir: "fixtures/task", taskPath: "fixtures/task.json" })
  * console.log(program) // example value
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -181,7 +187,8 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
 /**
  * Render one scorer report to stdout and optionally record it.
  *
- * @example
+ * **Example** (Run an agent effectiveness eval score command)
+ *
  * ```ts
  * import { runAgentEffectivenessEvalScoreCommand } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer"
  *
@@ -194,6 +201,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  * })
  * console.log(program) // example value
  * ```
+ *
  * @category command-adapters
  * @since 0.0.0
  */

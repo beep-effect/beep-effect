@@ -9,6 +9,7 @@ import {
   appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
   attemptJournalPath,
+  BuildYeetVerdictInput,
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
   buildYeetVerdictForTesting,
@@ -27,6 +28,7 @@ import {
   greptileIssueLimitExceededForTesting,
   greptileRetriggerCommentForTesting,
   inferGreptileIssueCountForTesting,
+  isYeetMonitorCommentAfter,
   jsonObjectTextFromMixedOutputForTesting,
   knownSubLaneRemediationFromOutput,
   latestGreptileSummaryForTesting,
@@ -47,6 +49,7 @@ import {
   RepoRunContext,
   RepoStepRunResult,
   renderPackageQualityPacketMarkdown,
+  renderYeetMonitorComment,
   renderYeetStatusSummary,
   repoProofStepDefinition,
   restoreStashedWorktreeForTesting,
@@ -61,10 +64,14 @@ import {
   TurboWorkspacePackage,
   validateMonitorGuards,
   validatePublishBranchForTesting,
+  validatePublishCommitMessageForTesting,
   YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
   YeetExistingCommitPublishIntent,
+  YeetMonitorCommentCursor,
+  YeetMonitorIssueComment,
+  YeetMonitorReviewComment,
   YeetProofLockStateForTesting,
   YeetPublishIntent,
   YeetStagedPublishIntent,
@@ -76,6 +83,7 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -94,6 +102,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
 const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const attemptUuid = S.decodeUnknownSync(UUID);
 
 const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>
   Effect.sync(() => {
@@ -638,6 +647,25 @@ describe("yeet planner", () => {
     ).toEqual(["publish:head-install-preflight", "publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
     expect(findStep(plan.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
   });
+
+  it("requires a publish message unless the run is an amend that keeps the existing subject", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext }) =>
+        Effect.gen(function* () {
+          yield* validatePublishCommitMessageForTesting(
+            tempContext,
+            O.none(),
+            defaultYeetRunOptions({ amend: true, noEdit: true })
+          );
+
+          const error = yield* Effect.flip(
+            validatePublishCommitMessageForTesting(tempContext, O.none(), defaultYeetRunOptions())
+          );
+
+          expect(error.message).toContain("yeet publish requires --message with a conventional commit message");
+        })
+      )
+    ));
 
   it("rejects push-only reuse when staged changes are present", () =>
     Effect.runPromise(
@@ -1601,6 +1629,47 @@ describe("yeet quality issue index", () => {
   });
 });
 
+describe("yeet monitor comments", () => {
+  it("uses timestamp and id as the in-memory comment watermark", () => {
+    const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-04T12:00:01.000Z", id: 44 });
+    const seen = YeetMonitorIssueComment.make({
+      author: "octocat",
+      body: "Already seen.",
+      createdAt: "2026-08-04T12:00:01.000Z",
+      id: 44,
+      url: "https://github.com/o/r/pull/1#issuecomment-44",
+    });
+    const next = YeetMonitorIssueComment.make({
+      author: "greptile-apps[bot]",
+      body: "New comment.",
+      createdAt: "2026-08-04T12:00:01.000Z",
+      id: 45,
+      url: "https://github.com/o/r/pull/1#issuecomment-45",
+    });
+
+    expect(isYeetMonitorCommentAfter(cursor, seen)).toBe(false);
+    expect(isYeetMonitorCommentAfter(cursor, next)).toBe(true);
+  });
+
+  it("renders review location, compact body, author, and URL", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorReviewComment.make({
+        author: "greptile-apps[bot]",
+        body: "Please preserve\n  the existing polling interval.",
+        createdAt: "2026-08-04T12:00:01.000Z",
+        id: 43,
+        line: O.some(88),
+        path: "src/Monitor.ts",
+        url: "https://github.com/o/r/pull/1#discussion_r43",
+      })
+    );
+
+    expect(output).toContain("[yeet] new PR review comment: greptile-apps[bot] @ src/Monitor.ts:88");
+    expect(output).toContain("Please preserve the existing polling interval.");
+    expect(output).toContain("https://github.com/o/r/pull/1#discussion_r43");
+  });
+});
+
 describe("yeet status helpers", () => {
   it("schema-decodes remote review-thread and rerun guidance", () =>
     Effect.runPromise(
@@ -1728,7 +1797,7 @@ describe("yeet attempt journal", () => {
                 YeetAttemptStarted.make({
                   schemaVersion: "yeet-attempt-journal/v1",
                   _tag: "attempt-started",
-                  attemptId: `00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`,
+                  attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
                   runId: "repo-cli-yeet",
                   branch: "repo-cli-yeet",
                   base: "origin/main",
@@ -1741,11 +1810,46 @@ describe("yeet attempt journal", () => {
           );
           const journalPath = yield* attemptJournalPath(tempContext);
           const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-          const events = yield* Effect.forEach(lines, decodeYeetAttemptJournalEvent);
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
           expect(events).toHaveLength(50);
           expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
           expect(events[49]?.attemptId).toBe("00000000-0000-4000-8000-000000000050");
+        })
+      )
+    ));
+
+  it("recovers from a torn trailing record instead of bricking later attempts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const attemptStarted = (index: number) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              runId: "repo-cli-yeet",
+              branch: "repo-cli-yeet",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: "2026-08-04T00:00:00.000Z",
+            });
+
+          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(1));
+          const intact = yield* fs.readFileString(journalPath);
+          yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-attempt-jour`);
+
+          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(2));
+
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+
+          expect(events).toHaveLength(1);
+          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
         })
       )
     ));
@@ -1976,36 +2080,38 @@ describe("yeet publish scope helpers", () => {
       mutability: "publish",
       resume: "never",
     });
-    const verdict = buildYeetVerdictForTesting({
-      attemptId: "550e8400-e29b-41d4-a716-446655440000",
-      base: "origin/main",
-      branch: "feature",
-      createdAt: "2026-06-11T00:00:00.000Z",
-      startedAt: "2026-06-11T00:00:00.000Z",
-      endedAt: "2026-06-11T00:00:00.012Z",
-      elapsedMs: 12,
-      executed: [
-        YeetExecutedStep.make({
-          durationMs: 12,
-          result: RepoStepRunResult.make({
-            stepId: proofStep.id,
-            commandText: "bun run beep quality github-checks pre-push",
-            exitCode: 1,
-            output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
+    const verdict = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({
+        attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440000")),
+        base: "origin/main",
+        branch: "feature",
+        createdAt: "2026-06-11T00:00:00.000Z",
+        startedAt: O.some("2026-06-11T00:00:00.000Z"),
+        endedAt: O.some("2026-06-11T00:00:00.012Z"),
+        elapsedMs: O.some(12),
+        executed: [
+          YeetExecutedStep.make({
+            durationMs: 12,
+            result: RepoStepRunResult.make({
+              stepId: proofStep.id,
+              commandText: "bun run beep quality github-checks pre-push",
+              exitCode: 1,
+              output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
+            }),
+            step: proofStep,
           }),
-          step: proofStep,
-        }),
-      ],
-      head: "HEAD",
-      message: "yeet publish proof failed after creating the local commit.",
-      mode: "publish",
-      outcome: "failure",
-      failedStepId: proofStep.id,
-      failureKind: "step-exit",
-      packetPaths: [],
-      planned: [proofStep, pushStep],
-      runId: "feature",
-    });
+        ],
+        head: "HEAD",
+        message: "yeet publish proof failed after creating the local commit.",
+        mode: "publish",
+        outcome: "failure",
+        failedStepId: proofStep.id,
+        failureKind: "step-exit",
+        packetPaths: [],
+        planned: [proofStep, pushStep],
+        runId: "feature",
+      })
+    );
 
     expect(verdict.outcome).toBe("failure");
     expect(verdict.committed).toBe(false);
@@ -2040,33 +2146,35 @@ describe("yeet publish scope helpers", () => {
           mutability: "publish",
           resume: "never",
         });
-        const verdict = buildYeetVerdictForTesting({
-          attemptId: "550e8400-e29b-41d4-a716-446655440001",
-          base: "origin/main",
-          branch: "feature",
-          createdAt: "2026-06-11T00:00:00.000Z",
-          startedAt: "2026-06-11T00:00:00.000Z",
-          endedAt: "2026-06-11T00:00:00.010Z",
-          elapsedMs: 10,
-          executed: [
-            YeetExecutedStep.make({
-              result: RepoStepRunResult.make({
-                stepId: pushStep.id,
-                commandText: "git push -u origin HEAD",
-                exitCode: 0,
-                output: "",
+        const verdict = buildYeetVerdictForTesting(
+          BuildYeetVerdictInput.make({
+            attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440001")),
+            base: "origin/main",
+            branch: "feature",
+            createdAt: "2026-06-11T00:00:00.000Z",
+            startedAt: O.some("2026-06-11T00:00:00.000Z"),
+            endedAt: O.some("2026-06-11T00:00:00.010Z"),
+            elapsedMs: O.some(10),
+            executed: [
+              YeetExecutedStep.make({
+                result: RepoStepRunResult.make({
+                  stepId: pushStep.id,
+                  commandText: "git push -u origin HEAD",
+                  exitCode: 0,
+                  output: "",
+                }),
+                step: pushStep,
               }),
-              step: pushStep,
-            }),
-          ],
-          head: "HEAD",
-          message: "yeet publish succeeded.",
-          mode: "publish",
-          outcome: "success",
-          packetPaths: [],
-          planned: [pushStep],
-          runId: "feature",
-        });
+            ],
+            head: "HEAD",
+            message: "yeet publish succeeded.",
+            mode: "publish",
+            outcome: "success",
+            packetPaths: [],
+            planned: [pushStep],
+            runId: "feature",
+          })
+        );
 
         expect(verdict.pushed).toBe(true);
         const encoded = yield* S.encodeEffect(YeetVerdict)(verdict);
@@ -2075,6 +2183,48 @@ describe("yeet publish scope helpers", () => {
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
     ));
+
+  it("keeps pushed false when only the publish-phase install preflight succeeded", () => {
+    const preflightStep = RepoPlanStep.make({
+      id: "publish:00-head-install-preflight",
+      label: "publish:head-install-preflight",
+      phase: "publish",
+      command: "bun",
+      args: ["install", "--frozen-lockfile"],
+      cwd: "/repo",
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+    const verdict = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({
+        base: "origin/main",
+        branch: "feature",
+        createdAt: "2026-06-11T00:00:00.000Z",
+        executed: [
+          YeetExecutedStep.make({
+            result: RepoStepRunResult.make({
+              stepId: preflightStep.id,
+              commandText: "bun install --frozen-lockfile",
+              exitCode: 0,
+              output: "",
+            }),
+            step: preflightStep,
+          }),
+        ],
+        head: "HEAD",
+        message: "yeet publish proof failed.",
+        mode: "publish",
+        outcome: "failure",
+        packetPaths: [],
+        planned: [preflightStep],
+        runId: "feature",
+      })
+    );
+
+    expect(verdict.pushed).toBe(false);
+    expect(O.isNone(verdict.attemptId)).toBe(true);
+  });
 
   it("property: verdict schema round-trips arbitrary verdicts", () => {
     const VerdictArbitrary = S.toArbitrary(YeetVerdict);

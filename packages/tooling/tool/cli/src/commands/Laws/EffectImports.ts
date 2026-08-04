@@ -52,10 +52,12 @@ export class EffectImportRulesOptions extends S.Class<EffectImportRulesOptions>(
 /**
  * Summary of effect import law migration results.
  *
- * @example
+ * **Example** (Reference the import rules summary)
+ *
  * ```ts
  * console.log("EffectImportRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,10 +104,12 @@ const isRootImportExcludedStableSubmodule = (moduleName: string): boolean =>
 /**
  * Run effect import style migration/check logic.
  *
- * @example
+ * **Example** (Reference the import rules runner)
+ *
  * ```ts
  * console.log("runEffectImportRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -390,16 +390,40 @@ const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(functi
   );
 });
 
+const ownerDefinesScript =
+  (script: string) =>
+  (owner: WorkspaceTaskOwner): boolean =>
+    pipe(owner.scripts, R.get(script), O.isSome);
+
+const ownerFilter = (owner: WorkspaceTaskOwner): string => `--filter=${owner.packageName}`;
+
 const workspaceTaskFilters = Effect.fn("QualityTasks.workspaceTaskFilters")(function* (
   repoRoot: string,
   script: string
 ): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
   const owners = yield* workspaceTaskOwners(repoRoot);
 
+  return pipe(owners, A.filter(ownerDefinesScript(script)), A.map(ownerFilter));
+});
+
+const SPLIT_INTEGRATION_SCRIPTS = ["test:integration:parallel", "test:integration:serial"];
+
+// Packages that predate the parallel/serial integration split still ship a plain
+// `test:integration`; without this bucket they would be silently dropped from the
+// root integration lane instead of running alongside the bounded-parallel packages.
+const unsplitIntegrationTaskFilters = Effect.fn("QualityTasks.unsplitIntegrationTaskFilters")(function* (
+  repoRoot: string
+): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+  const owners = yield* workspaceTaskOwners(repoRoot);
+
   return pipe(
     owners,
-    A.filter((owner) => pipe(owner.scripts, R.get(script), O.isSome)),
-    A.map((owner) => `--filter=${owner.packageName}`)
+    A.filter(
+      (owner) =>
+        ownerDefinesScript("test:integration")(owner) &&
+        !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
+    ),
+    A.map(ownerFilter)
   );
 });
 
@@ -1735,6 +1759,9 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   let integrationFailures = A.empty<QualityTaskFailed>();
   if (lanes.integration) {
     const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
+    const unsplitFilters = A.some(lanes.args, isExplicitTurboAffectedOrScopeArg)
+      ? A.empty<string>()
+      : yield* unsplitIntegrationTaskFilters(repoRoot);
     const parallelFailures = yield* collectStreamingStepFailures("test:integration:parallel", [
       turboStep(
         repoRoot,
@@ -1742,6 +1769,16 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
         ["test:integration:parallel"],
         boundedRootTurboArgs(parallelArgs)
       ),
+      ...optionalQualityTaskStep({
+        enabled: A.isReadonlyArrayNonEmpty(unsplitFilters),
+        step: () =>
+          turboStep(
+            repoRoot,
+            "test:integration",
+            ["test:integration"],
+            boundedRootTurboArgs([...unsplitFilters, ...lanes.args])
+          ),
+      }),
     ]);
     const serialFailures = yield* Effect.scoped(
       Effect.gen(function* () {

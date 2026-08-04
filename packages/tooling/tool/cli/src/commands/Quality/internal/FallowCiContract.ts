@@ -187,7 +187,8 @@ const fallowCiLaneDiagnostics = (
 /**
  * Fallow CI workflow contract options.
  *
- * @example
+ * **Example** (Annotate a value as FallowCiContractDiagnosticOptions)
+ *
  * ```ts
  * import type { FallowCiContractDiagnosticOptions } from "@beep/repo-cli/test/Quality"
  *
@@ -201,6 +202,7 @@ const fallowCiLaneDiagnostics = (
  * }
  * console.log(options.expectOutDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -216,13 +218,15 @@ type FallowCiContractDiagnosticOptions = {
 /**
  * Return Fallow CI upload diagnostics for contract tests.
  *
- * @example
+ * **Example** (Collect upload diagnostics)
+ *
  * ```ts
  * import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
  * const diagnostics = fallowCiUploadDiagnosticsForTesting(false, [], [], ".beep/fallow", "error")
  * console.log(diagnostics) // example value
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -231,10 +235,8 @@ export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
 /**
  * Validate the parsed Fallow CI workflow contract.
  *
- * @param workflow - Parsed workflow document.
- * @param options - CI lane and artifact expectations.
- * @returns Diagnostics for every violated Fallow CI invariant.
- * @example
+ * **Example** (Diagnose an empty CI contract)
+ *
  * ```ts
  * import { fallowCiContractDiagnostics } from "@beep/repo-cli/test/Quality"
  *
@@ -247,6 +249,10 @@ export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
  *   advisory: true
  * }))
  * ```
+ *
+ * @param workflow - Parsed workflow document.
+ * @param options - CI lane and artifact expectations.
+ * @returns Diagnostics for every violated Fallow CI invariant.
  * @category validation
  * @since 0.0.0
  */

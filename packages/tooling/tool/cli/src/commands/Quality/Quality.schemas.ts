@@ -35,12 +35,14 @@ export const GITHUB_CHECK_RUN_REPORT_PREFIX = "[beep-github-check-run] ";
 /**
  * Canonical quality task name.
  *
- * @example
+ * **Example** (Check quality task name membership)
+ *
  * ```ts
  * import { QualityTaskName } from "@beep/repo-cli/commands/Quality"
  *
  * console.log(QualityTaskName.is.lint("lint"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -53,13 +55,15 @@ export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "au
 /**
  * Canonical quality task name.
  *
- * @example
+ * **Example** (Annotate a value as QualityTaskName)
+ *
  * ```ts
  * import type { QualityTaskName } from "@beep/repo-cli/commands/Quality"
  *
  * const task: QualityTaskName = "check"
  * console.log(task) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -68,12 +72,14 @@ export type QualityTaskName = typeof QualityTaskName.Type;
 /**
  * Root CLI flags that bypass the quality task fast path.
  *
- * @example
+ * **Example** (Check quality task bypass arg name membership)
+ *
  * ```ts
  * import { QualityTaskBypassArgName } from "@beep/repo-cli/test/Quality"
  *
  * console.log(QualityTaskBypassArgName.is["--help"]("--help"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -93,13 +99,15 @@ export const QualityTaskBypassArgName = LiteralKit([
 /**
  * Root CLI flag name that bypasses the quality task fast path.
  *
- * @example
+ * **Example** (Annotate a value as QualityTaskBypassArgName)
+ *
  * ```ts
  * import type { QualityTaskBypassArgName } from "@beep/repo-cli/commands/Quality/Quality.schemas"
  *
  * const flag: QualityTaskBypassArgName = "--help"
  * console.log(flag) // "--help"
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -108,12 +116,14 @@ export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
 /**
  * Lint policy subcommands owned by the full command tree.
  *
- * @example
+ * **Example** (Check lint policy subcommand membership)
+ *
  * ```ts
  * import { LintPolicySubcommand } from "@beep/repo-cli/test/Quality"
  *
  * console.log(LintPolicySubcommand.is.policy("policy"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,13 +148,15 @@ export const LintPolicySubcommand = LiteralKit([
 /**
  * Lint policy subcommand owned by the full command tree.
  *
- * @example
+ * **Example** (Annotate a value as LintPolicySubcommand)
+ *
  * ```ts
  * import type { LintPolicySubcommand } from "@beep/repo-cli/commands/Quality/Quality.schemas"
  *
  * const subcommand: LintPolicySubcommand = "schema-first"
  * console.log(subcommand) // "schema-first"
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -153,12 +165,14 @@ export type LintPolicySubcommand = typeof LintPolicySubcommand.Type;
 /**
  * Root audit mode names supported by the quality task adapter.
  *
- * @example
+ * **Example** (Check root audit mode membership)
+ *
  * ```ts
  * import { RootAuditMode } from "@beep/repo-cli/test/Quality"
  *
  * console.log(RootAuditMode.is.github("github"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -171,13 +185,15 @@ export const RootAuditMode = LiteralKit(["packages", "github"]).pipe(
 /**
  * Root audit mode name.
  *
- * @example
+ * **Example** (Annotate a value as RootAuditMode)
+ *
  * ```ts
  * import type { RootAuditMode } from "@beep/repo-cli/test/Quality"
  *
  * const mode: RootAuditMode = "packages"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -186,7 +202,8 @@ export type RootAuditMode = typeof RootAuditMode.Type;
 /**
  * Package-local script profile used by the quality task adapter.
  *
- * @example
+ * **Example** (Construct a package task profile)
+ *
  * ```ts
  * import { PackageTaskProfile } from "@beep/repo-cli/commands/Quality"
  *
@@ -197,6 +214,7 @@ export type RootAuditMode = typeof RootAuditMode.Type;
  * })
  * console.log(profile.script)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -214,7 +232,8 @@ export class PackageTaskProfile extends S.Class<PackageTaskProfile>($I`PackageTa
 /**
  * Result of parsing a quality command invocation.
  *
- * @example
+ * **Example** (Construct a quality task invocation)
+ *
  * ```ts
  * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality"
  *
@@ -225,6 +244,7 @@ export class PackageTaskProfile extends S.Class<PackageTaskProfile>($I`PackageTa
  * })
  * console.log(invocation.task)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -242,13 +262,15 @@ export class QualityTaskInvocation extends S.Class<QualityTaskInvocation>($I`Qua
 /**
  * Object-form `package.json` workspaces entry used by quality task resolution.
  *
- * @example
+ * **Example** (Construct a package json workspaces document)
+ *
  * ```ts
  * import { PackageJsonWorkspacesDocument } from "@beep/repo-cli/test/Quality"
  *
  * const workspaces = PackageJsonWorkspacesDocument.make({ packages: ["packages/*"] })
  * console.log(workspaces.packages)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -266,13 +288,15 @@ export class PackageJsonWorkspacesDocument extends S.Class<PackageJsonWorkspaces
 /**
  * Minimal `package.json` document shape used by quality task resolution.
  *
- * @example
+ * **Example** (Construct a package json document)
+ *
  * ```ts
  * import { PackageJsonDocument } from "@beep/repo-cli/test/Quality"
  *
  * const manifest = PackageJsonDocument.make({ name: "@beep/example", scripts: { check: "tsc" } })
  * console.log(manifest.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -290,7 +314,8 @@ export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`Package
 /**
  * Decode a JSON string into the minimal quality task package manifest shape.
  *
- * @example
+ * **Example** (Reference the package.json decoder)
+ *
  * ```ts
  * import { decodePackageJsonDocument } from "@beep/repo-cli/test/Quality"
  * import { Effect } from "effect"
@@ -298,6 +323,7 @@ export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`Package
  * const program = Effect.succeed(decodePackageJsonDocument)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -306,12 +332,14 @@ export const decodePackageJsonDocument = S.decodeUnknownEffect(S.fromJsonString(
 /**
  * Explicit machine profile used to tune future quality scheduling.
  *
- * @example
+ * **Example** (Check quality hardware profile membership)
+ *
  * ```ts
  * import { QualityHardwareProfile } from "@beep/repo-cli/commands/Quality"
  *
  * console.log(QualityHardwareProfile.is.workstation("workstation"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -324,13 +352,15 @@ export const QualityHardwareProfile = LiteralKit(["current", "workstation", "ci"
 /**
  * Explicit machine profile used to tune future quality scheduling.
  *
- * @example
+ * **Example** (Annotate a value as QualityHardwareProfile)
+ *
  * ```ts
  * import type { QualityHardwareProfile } from "@beep/repo-cli/commands/Quality"
  *
  * const profile: QualityHardwareProfile = "current"
  * console.log(profile) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -339,7 +369,8 @@ export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
 /**
  * Static quality scheduling settings for a hardware profile.
  *
- * @example
+ * **Example** (Construct a quality profile config)
+ *
  * ```ts
  * import { QualityProfileConfig } from "@beep/repo-cli/commands/Quality"
  *
@@ -353,6 +384,7 @@ export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
  * })
  * console.log(config.profile)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -373,7 +405,8 @@ export class QualityProfileConfig extends S.Class<QualityProfileConfig>($I`Quali
 /**
  * Detected quality profile plus host facts.
  *
- * @example
+ * **Example** (Construct a quality profile detection)
+ *
  * ```ts
  * import { QualityProfileDetection } from "@beep/repo-cli/commands/Quality"
  *
@@ -392,6 +425,7 @@ export class QualityProfileConfig extends S.Class<QualityProfileConfig>($I`Quali
  * })
  * console.log(detection.profile)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -410,13 +444,15 @@ export class QualityProfileDetection extends S.Class<QualityProfileDetection>($I
 /**
  * Host facts used when selecting a quality profile.
  *
- * @example
+ * **Example** (Describe a detection input)
+ *
  * ```ts
  * import type { QualityProfileDetectionInput } from "@beep/repo-cli/test/Quality"
  *
  * const input: QualityProfileDetectionInput = { ci: false, cpuCount: 8, totalMemoryBytes: 16 }
  * console.log(input.cpuCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -436,12 +472,14 @@ export class QualityProfileDetectionInput extends S.Class<QualityProfileDetectio
 /**
  * GitHub check mode handled by `beep quality github-checks`.
  *
- * @example
+ * **Example** (Check github check mode membership)
+ *
  * ```ts
  * import { GithubCheckMode } from "@beep/repo-cli/commands/Quality"
  *
  * console.log(GithubCheckMode.is.quality("quality"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -450,13 +488,15 @@ export const GithubCheckMode = GithubCheckModeSchema;
 /**
  * GitHub check mode handled by `beep quality github-checks`.
  *
- * @example
+ * **Example** (Annotate a value as GithubCheckMode)
+ *
  * ```ts
  * import type { GithubCheckMode } from "@beep/repo-cli/commands/Quality"
  *
  * const mode: GithubCheckMode = "quality"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -465,12 +505,14 @@ export type GithubCheckMode = GithubCheckModeType;
 /**
  * GitHub check mode values as CLI flag choices.
  *
- * @example
+ * **Example** (Read the first flag choice)
+ *
  * ```ts
  * import { githubCheckModeFlagChoices } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckModeFlagChoices[0])
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -482,12 +524,14 @@ export const githubCheckModeFlagChoices: ReadonlyArray<readonly [GithubCheckMode
 /**
  * Fallow feature-family row tracked by the quality-enforcement matrix.
  *
- * @example
+ * **Example** (Check fallow quality feature family membership)
+ *
  * ```ts
  * import { FallowQualityFeatureFamily } from "@beep/repo-cli/test/Quality"
  *
  * console.log(FallowQualityFeatureFamily.is.audit("audit"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -510,13 +554,15 @@ export const FallowQualityFeatureFamily = LiteralKit([
 /**
  * Fallow feature-family row tracked by the quality-enforcement matrix.
  *
- * @example
+ * **Example** (Annotate a value as FallowQualityFeatureFamily)
+ *
  * ```ts
  * import type { FallowQualityFeatureFamily } from "@beep/repo-cli/test/Quality"
  *
  * const family: FallowQualityFeatureFamily = "security"
  * console.log(family) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -525,12 +571,14 @@ export type FallowQualityFeatureFamily = typeof FallowQualityFeatureFamily.Type;
 /**
  * CI posture for a Fallow feature-family matrix row.
  *
- * @example
+ * **Example** (Check fallow quality ci mode membership)
+ *
  * ```ts
  * import { FallowQualityCiMode } from "@beep/repo-cli/test/Quality"
  *
  * console.log(FallowQualityCiMode.is["blocking-check"]("blocking-check"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -543,13 +591,15 @@ export const FallowQualityCiMode = LiteralKit(["none", "advisory-artifact", "war
 /**
  * CI posture for a Fallow feature-family matrix row.
  *
- * @example
+ * **Example** (Annotate a value as FallowQualityCiMode)
+ *
  * ```ts
  * import type { FallowQualityCiMode } from "@beep/repo-cli/commands/Quality/Quality.schemas"
  *
  * const mode: FallowQualityCiMode = "blocking-check"
  * console.log(mode) // "blocking-check"
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -558,12 +608,14 @@ export type FallowQualityCiMode = typeof FallowQualityCiMode.Type;
 /**
  * Promotion posture for a Fallow feature-family matrix row.
  *
- * @example
+ * **Example** (Check fallow quality promotion status membership)
+ *
  * ```ts
  * import { FallowQualityPromotionStatus } from "@beep/repo-cli/test/Quality"
  *
  * console.log(FallowQualityPromotionStatus.is.blocking("blocking"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -583,13 +635,15 @@ export const FallowQualityPromotionStatus = LiteralKit([
 /**
  * Promotion posture for a Fallow feature-family matrix row.
  *
- * @example
+ * **Example** (Annotate a value as FallowQualityPromotionStatus)
+ *
  * ```ts
  * import type { FallowQualityPromotionStatus } from "@beep/repo-cli/commands/Quality/Quality.schemas"
  *
  * const status: FallowQualityPromotionStatus = "blocking"
  * console.log(status) // "blocking"
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -598,7 +652,8 @@ export type FallowQualityPromotionStatus = typeof FallowQualityPromotionStatus.T
 /**
  * Minimal Fallow feature-matrix row used by GitHub check plan validation.
  *
- * @example
+ * **Example** (Construct a github checks fallow feature matrix row)
+ *
  * ```ts
  * import { GithubChecksFallowFeatureMatrixRow } from "@beep/repo-cli/test/Quality"
  *
@@ -609,6 +664,7 @@ export type FallowQualityPromotionStatus = typeof FallowQualityPromotionStatus.T
  * })
  * console.log(row.featureFamily)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -628,13 +684,15 @@ export class GithubChecksFallowFeatureMatrixRow extends S.Class<GithubChecksFall
 /**
  * Minimal Fallow feature matrix used by GitHub check plan contract validation.
  *
- * @example
+ * **Example** (Construct a github checks fallow feature matrix)
+ *
  * ```ts
  * import { GithubChecksFallowFeatureMatrix } from "@beep/repo-cli/commands/Quality"
  *
  * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
  * console.log(matrix.features.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -652,7 +710,8 @@ export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowF
 /**
  * Decode unknown JSONC data into the Fallow feature matrix contract.
  *
- * @example
+ * **Example** (Reference the feature matrix decoder)
+ *
  * ```ts
  * import { decodeGithubChecksFallowFeatureMatrix } from "@beep/repo-cli/test/Quality"
  * import { Effect } from "effect"
@@ -660,6 +719,7 @@ export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowF
  * const program = Effect.succeed(decodeGithubChecksFallowFeatureMatrix)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -668,12 +728,14 @@ export const decodeGithubChecksFallowFeatureMatrix = S.decodeUnknownEffect(Githu
 /**
  * Stage label for a GitHub check collector lane.
  *
- * @example
+ * **Example** (Check github check lane stage membership)
+ *
  * ```ts
  * import { GithubCheckLaneStage } from "@beep/repo-cli/commands/Quality"
  *
  * console.log(GithubCheckLaneStage.is["repo-quality"]("repo-quality"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -686,13 +748,15 @@ export const GithubCheckLaneStage = LiteralKit(["repo-quality", "repo-sanity", "
 /**
  * Stage label for a GitHub check collector lane.
  *
- * @example
+ * **Example** (Annotate a value as GithubCheckLaneStage)
+ *
  * ```ts
  * import type { GithubCheckLaneStage } from "@beep/repo-cli/commands/Quality"
  *
  * const stage: GithubCheckLaneStage = "repo-quality"
  * console.log(stage) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -718,7 +782,8 @@ export const GithubCheckFailurePolicy = LiteralKit(["fail-fast", "collect-all"])
   })
 );
 
-/** Decoded failure scheduling policy for local GitHub-check batteries.
+/**
+ * Decoded failure scheduling policy for local GitHub-check batteries.
  *
  * @see {@link GithubCheckFailurePolicy} for the runtime schema and literal helpers.
  * @category policies
@@ -746,7 +811,8 @@ export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "do
   })
 );
 
-/** Decoded static execution wave for a local GitHub-check lane.
+/**
+ * Decoded static execution wave for a local GitHub-check lane.
  *
  * @see {@link GithubCheckLaneWave} for the runtime schema and literal helpers.
  * @category models
@@ -757,7 +823,8 @@ export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
 /**
  * Executable lane specification for GitHub check collectors.
  *
- * @example
+ * **Example** (Construct a github check lane spec)
+ *
  * ```ts
  * import { GithubCheckLaneSpec } from "@beep/repo-cli/commands/Quality"
  * import { QualityTaskStep } from "@beep/repo-cli/test/Quality"
@@ -771,6 +838,7 @@ export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
  * })
  * console.log(lane.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -832,7 +900,8 @@ export const GithubCheckLaneRunStatus = LiteralKit(["passed", "failed", "not-run
   })
 );
 
-/** Decoded terminal status for one local GitHub-check lane.
+/**
+ * Decoded terminal status for one local GitHub-check lane.
  *
  * @see {@link GithubCheckLaneRunStatus} for the runtime schema and literal helpers.
  * @category models

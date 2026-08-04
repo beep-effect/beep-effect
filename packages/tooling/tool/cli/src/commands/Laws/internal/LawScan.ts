@@ -12,7 +12,7 @@
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { A } from "@beep/utils";
-import { Effect, Order, Path } from "effect";
+import { Effect, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
@@ -85,6 +85,46 @@ export type LawScanOptions<Diagnostic> = {
 export const lawScanSourcePaths = (includePaths: ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
   includePaths ?? LAW_SCAN_INCLUDED_GLOBS;
 
+type LawScanDiagnostics<Diagnostic> = {
+  readonly affectedFiles: ReadonlyArray<string>;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+};
+
+const noLawScanDiagnostics = <Diagnostic>(): LawScanDiagnostics<Diagnostic> => ({
+  affectedFiles: A.empty<string>(),
+  diagnostics: A.empty<Diagnostic>(),
+});
+
+const isScannedLawSourcePath = <Diagnostic>(options: LawScanOptions<Diagnostic>, relativeFilePath: string): boolean =>
+  !isExcludedLawScanPath(options.excludePaths, relativeFilePath) &&
+  (options.includePaths === undefined || A.contains(options.includePaths, relativeFilePath));
+
+const collectScannedSourceFiles = <Diagnostic>(
+  options: LawScanOptions<Diagnostic>,
+  sourceFiles: ReadonlyArray<SourceFile>,
+  toRelativeFilePath: (sourceFile: SourceFile) => string
+): ReadonlyArray<ScannedSourceFile> =>
+  pipe(
+    sourceFiles,
+    A.map((sourceFile): ScannedSourceFile => [toRelativeFilePath(sourceFile), sourceFile]),
+    A.filter(([relativeFilePath]) => isScannedLawSourcePath(options, relativeFilePath)),
+    A.sort(byScannedSourceFilePathAscending)
+  );
+
+const collectLawScanDiagnostics = <Diagnostic>(
+  scannedSourceFiles: ReadonlyArray<ScannedSourceFile>,
+  collect: LawScanOptions<Diagnostic>["collect"]
+): LawScanDiagnostics<Diagnostic> =>
+  A.reduce(scannedSourceFiles, noLawScanDiagnostics<Diagnostic>(), (scanned, [relativeFilePath, sourceFile]) => {
+    const fileDiagnostics = collect(relativeFilePath, sourceFile);
+    return A.isReadonlyArrayNonEmpty(fileDiagnostics)
+      ? {
+          affectedFiles: A.append(scanned.affectedFiles, relativeFilePath),
+          diagnostics: A.appendAll(scanned.diagnostics, fileDiagnostics),
+        }
+      : scanned;
+  });
+
 /**
  * Accumulated result of a supplemental-law project scan.
  *
@@ -125,34 +165,10 @@ export const runLawScan = Effect.fn("LawScan.runLawScan")(function* <Diagnostic>
   });
 
   return yield* service.inspectProject(request, ({ scope, sourceFiles }) => {
-    let scannedSourceFiles = A.empty<ScannedSourceFile>();
-
-    for (const sourceFile of sourceFiles) {
-      const relativeFilePath = toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()));
-
-      if (
-        isExcludedLawScanPath(options.excludePaths, relativeFilePath) ||
-        (options.includePaths !== undefined && !A.contains(options.includePaths, relativeFilePath))
-      ) {
-        continue;
-      }
-
-      scannedSourceFiles = A.append(scannedSourceFiles, [relativeFilePath, sourceFile] as const);
-    }
-
-    scannedSourceFiles = A.sort(scannedSourceFiles, byScannedSourceFilePathAscending);
-
-    let diagnostics = A.empty<Diagnostic>();
-    let affectedFiles = A.empty<string>();
-
-    for (const [relativeFilePath, sourceFile] of scannedSourceFiles) {
-      const fileDiagnostics = options.collect(relativeFilePath, sourceFile);
-      if (A.isReadonlyArrayNonEmpty(fileDiagnostics)) {
-        affectedFiles = A.append(affectedFiles, relativeFilePath);
-        diagnostics = A.appendAll(diagnostics, fileDiagnostics);
-      }
-    }
-
+    const scannedSourceFiles = collectScannedSourceFiles(options, sourceFiles, (sourceFile) =>
+      toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()))
+    );
+    const { affectedFiles, diagnostics } = collectLawScanDiagnostics(scannedSourceFiles, options.collect);
     const violationCount = A.length(diagnostics);
 
     return {

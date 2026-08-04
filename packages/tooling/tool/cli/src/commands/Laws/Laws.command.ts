@@ -24,10 +24,12 @@ const $I = $RepoCliId.create("commands/Laws/Laws.command");
 /**
  * CLI options for effect import governance command.
  *
- * @example
+ * **Example** (Reference the import command options)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -52,10 +54,12 @@ class EffectImportsCommandOptions extends S.Class<EffectImportsCommandOptions>($
 /**
  * CLI options for terse Effect style command.
  *
- * @example
+ * **Example** (Reference the terse-effect command options)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,10 +88,12 @@ class TerseEffectCommandOptions extends S.Class<TerseEffectCommandOptions>($I`Te
 /**
  * CLI options for the Effect.fn supplemental law.
  *
- * @example
+ * **Example** (Reference the Effect.fn command options)
+ *
  * ```ts
  * console.log("EffectFnCommandOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,10 +114,12 @@ class EffectFnCommandOptions extends S.Class<EffectFnCommandOptions>($I`EffectFn
 /**
  * CLI options for the FrozenGrantSet construction law.
  *
- * @example
+ * **Example** (Reference the frozen-grant-set command options)
+ *
  * ```ts
  * console.log("FrozenGrantSetCommandOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -132,10 +140,12 @@ class FrozenGrantSetCommandOptions extends S.Class<FrozenGrantSetCommandOptions>
 /**
  * CLI options for native runtime parity checks.
  *
- * @example
+ * **Example** (Reference the native-runtime command options)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -186,10 +196,12 @@ const logTerseEffectFileGroup = Effect.fn("Laws.logTerseEffectFileGroup")(functi
 /**
  * CLI command for effect import style migration/check.
  *
- * @example
+ * **Example** (Reference the import-governance subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -238,10 +250,12 @@ const lawsEffectImportsCommand = Command.make(
 /**
  * CLI command for terse Effect style migration/check.
  *
- * @example
+ * **Example** (Reference the terse-effect subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -317,10 +331,12 @@ const lawsTerseEffectCommand = Command.make(
 /**
  * CLI command for the Effect.fn supplemental law.
  *
- * @example
+ * **Example** (Reference the Effect.fn subcommand)
+ *
  * ```ts
  * console.log("lawsEffectFnCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -364,10 +380,12 @@ const lawsEffectFnCommand = Command.make(
 /**
  * CLI command for the FrozenGrantSet construction law.
  *
- * @example
+ * **Example** (Reference the frozen-grant-set subcommand)
+ *
  * ```ts
  * console.log("lawsFrozenGrantSetCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -413,10 +431,12 @@ const lawsFrozenGrantSetCommand = Command.make(
 /**
  * CLI command for repo-local native runtime governance checks.
  *
- * @example
+ * **Example** (Reference the native-runtime subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -465,10 +485,12 @@ const lawsNativeRuntimeCommand = Command.make(
 /**
  * CLI command for validating Effect governance allowlist integrity.
  *
- * @example
+ * **Example** (Reference the allowlist-check subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -493,10 +515,12 @@ const lawsAllowlistCheckCommand = Command.make(
 /**
  * Laws command group.
  *
- * @example
+ * **Example** (Reference the laws command group)
+ *
  * ```ts
  * console.log("lawsCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
