@@ -3,7 +3,7 @@
   "initiative": {
     "id": "effect-jsdoc-quality",
     "title": "Effect-level JSDoc Quality",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-07-30",
     "updated": "2026-08-02",
     "packetAnchorDocument": "SPEC.md"

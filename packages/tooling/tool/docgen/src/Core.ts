@@ -247,10 +247,10 @@ export const SKIP_TYPE_CHECKING_FENCE_METADATA = "skip-type-checking";
  * console.log(examples[0])
  * ```
  *
+ * @internal
  * @param content - Markdown text scanned for fenced code blocks.
  * @returns A tuple of the extracted example code strings and any parser warnings.
  * @see {@link extractFencedCodeBlocks} when generated `.ts` or `.tsx` extensions are required.
- * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -296,10 +296,10 @@ const isTypeScriptFence = (metadata: string): boolean =>
  * console.log(examples[0]?.extension)
  * ```
  *
+ * @internal
  * @param content - Markdown text scanned for fenced TypeScript code blocks.
  * @returns A tuple of the extracted fenced code blocks with extensions and any parser warnings.
  * @see {@link extractFencedCode} when callers only need code strings.
- * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -756,12 +756,12 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
  * console.log(Effect.isEffect(logged)) // true
  * ```
  *
+ * @internal
  * @effects
  * - Reads configured source files and optional generated docs configuration from the current package.
  * - Writes markdown pages, generated example files, example `tsconfig.json`, and full-run proof manifests.
  * - Runs the configured TypeScript compiler against extracted examples and optionally executes them with Bun.
  * @see {@link Configuration.Configuration} for the service that supplies workflow settings.
- * @internal
  * @category workflows
  * @since 0.0.0
  */

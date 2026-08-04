@@ -404,7 +404,7 @@ const parseSections = (
       name: section.name,
       lineOffset: section.index + 1,
       body: A.slice(bodyLines, { start: section.index + 1, end: next?.index ?? tagIndex }),
-      ...(section.title === undefined ? {} : { title: Str.trim(section.title) }),
+      ...O.getSomesStruct({ title: O.map(O.fromUndefinedOr(section.title), Str.trim) }),
     });
   });
   return { bodyLines: A.take(bodyLines, tagIndex), sections };
@@ -435,6 +435,7 @@ const missingRequiredExportTags = (
   return missingRequiredTags(effectiveTags, requiredTags);
 };
 
+// fallow-ignore-next-line complexity -- this flat pass preserves the documented section-order state machine in one auditable rule boundary
 const documentationShapeViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const findings: Array<DocumentationIssue> = [];
   const { bodyLines, sections } = parseSections(commentText);
@@ -876,6 +877,9 @@ const analyzeExportDeclaration = (
   };
 };
 
+const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
+  A.reduce(findingGroups, missingSummary ? 1 : 0, (total, findings) => total + findings.length);
+
 const analyzeDirectExport = (
   name: string,
   declaration: Node,
@@ -896,16 +900,17 @@ const analyzeDirectExport = (
   const missingSummary = O.isNone(summaryFromComment(docText));
   const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
   const shapeIssues = documentationShapeViolations(docText);
-  const findingCount =
-    missingTags.length +
-    forbidden.length +
-    malformedTags.length +
-    importIssues.length +
-    unsafeIssues.length +
-    categoryIssues.length +
-    schemaGaps.length +
-    shapeIssues.length +
-    (missingSummary ? 1 : 0);
+  const findingCount = countFindings(
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    importIssues,
+    unsafeIssues,
+    categoryIssues,
+    schemaGaps,
+    shapeIssues
+  );
 
   return {
     symbolName: name,
@@ -967,16 +972,17 @@ const analyzeFunctionOverloadGroup = (
   const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
   const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
-  const findingCount =
-    missingTags.length +
-    forbidden.length +
-    malformedTags.length +
-    importIssues.length +
-    unsafeIssues.length +
-    categoryIssues.length +
-    schemaGaps.length +
-    shapeIssues.length +
-    (missingSummary ? 1 : 0);
+  const findingCount = countFindings(
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    importIssues,
+    unsafeIssues,
+    categoryIssues,
+    schemaGaps,
+    shapeIssues
+  );
 
   return {
     symbolName: name,

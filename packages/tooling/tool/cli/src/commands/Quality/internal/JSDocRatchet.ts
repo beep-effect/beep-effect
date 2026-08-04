@@ -81,6 +81,7 @@ class JSDocTouchedFileFinding extends S.Class<JSDocTouchedFileFinding>($I`JSDocT
  * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -97,6 +98,7 @@ export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventor
  * const result = defaultJSDocTotalsBaselinePath === "standards/jsdoc-totals.regression-baseline.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -113,6 +115,7 @@ export const defaultJSDocTotalsBaselinePath = "standards/jsdoc-totals.regression
  * const result = jsdocInventoryRegenerationCommand.includes("jsdoc-inventory")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -129,6 +132,7 @@ export const jsdocInventoryRegenerationCommand = "bun run beep quality jsdoc-inv
  * const result = jsdocTotalsSnapshotCommand.includes("write-baseline")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -170,6 +174,7 @@ class JSDocInventoryTotalsDocument extends S.Class<JSDocInventoryTotalsDocument>
  * })
  * console.log(baseline.tracked_totals.missingExportExamples)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -206,6 +211,7 @@ export class JSDocTotalsRegressionBaseline extends S.Class<JSDocTotalsRegression
  * })
  * console.log(delta.metric)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -238,6 +244,7 @@ export class JSDocTotalDelta extends S.Class<JSDocTotalDelta>($I`JSDocTotalDelta
  * })
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -534,6 +541,7 @@ const enforceTouchedFileCleanup = Effect.fn("JSDocRatchet.enforceTouchedFileClea
  * }
  * console.log(options.baselinePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -608,6 +616,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
  * )
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */

@@ -61,32 +61,32 @@ describe("Core", () =>
     it.effect(
       "typechecks an Example section harvested from the description",
       Effect.fnUntraced(function* () {
-        const result = yield* Effect.tryPromise(async () => {
-          const outDir = `${fixturePath}.tmp-docgen`;
-          const markerPath = `${outDir}/tsc-ran`;
-          const removeMarker = Bun.spawn(["rm", "-f", markerPath], { stderr: "pipe", stdout: "pipe" });
-          await removeMarker.exited;
-          const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
-          await prepare.exited;
-          await Promise.all([
-            Bun.write(`${outDir}/seed.ts.md`, ""),
-            Bun.write(`${outDir}/seed.tsx.md`, ""),
-            Bun.write(`${outDir}/seed.mts.md`, ""),
-            Bun.write(`${outDir}/seed.cts.md`, ""),
-          ]);
-          const child = Bun.spawn(["bun", docgenBinPath], {
-            cwd: fixturePath,
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stdout, stderr] = await Promise.all([
-            child.exited,
-            new Response(child.stdout).text(),
-            new Response(child.stderr).text(),
-          ]);
-          await Bun.file(markerPath).text();
-          return { exitCode, stderr, stdout, tscRan: true };
+        const outDir = `${fixturePath}.tmp-docgen`;
+        const markerPath = `${outDir}/tsc-ran`;
+        const removeMarker = Bun.spawn(["rm", "-f", markerPath], { stderr: "pipe", stdout: "pipe" });
+        yield* Effect.tryPromise(() => removeMarker.exited);
+        const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
+        yield* Effect.tryPromise(() => prepare.exited);
+        yield* Effect.forEach(
+          ["seed.ts.md", "seed.tsx.md", "seed.mts.md", "seed.cts.md"],
+          (file) => Effect.tryPromise(() => Bun.write(`${outDir}/${file}`, "")),
+          { concurrency: "unbounded" }
+        );
+        const child = Bun.spawn(["bun", docgenBinPath], {
+          cwd: fixturePath,
+          stderr: "pipe",
+          stdout: "pipe",
         });
+        const [exitCode, stdout, stderr] = yield* Effect.all(
+          [
+            Effect.tryPromise(() => child.exited),
+            Effect.tryPromise(() => new Response(child.stdout).text()),
+            Effect.tryPromise(() => new Response(child.stderr).text()),
+          ],
+          { concurrency: "unbounded" }
+        );
+        yield* Effect.tryPromise(() => Bun.file(markerPath).text());
+        const result = { exitCode, stderr, stdout, tscRan: true };
 
         expect(result.exitCode, result.stderr).toBe(0);
         expect(result.tscRan).toBe(true);

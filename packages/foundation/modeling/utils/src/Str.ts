@@ -5,6 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { cast, dual, flow } from "effect/Function";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
@@ -908,6 +909,18 @@ export const truncate: {
 export const orEmpty = (str: string | null | undefined): string => str ?? "";
 
 /**
+ * Selects the statically reachable result of {@link matchEmpty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MatchEmptyResult<Self extends string, OnEmpty, OnNonEmpty> = string extends Self
+  ? OnEmpty | OnNonEmpty
+  : Self extends ""
+    ? OnEmpty
+    : OnNonEmpty;
+
+/**
  * Pattern-matches on a string, handling the empty and non-empty cases
  * separately — the string analogue of `effect/Array`'s `match`.
  *
@@ -945,24 +958,24 @@ export const matchEmpty: {
   <B, C = B>(options: {
     readonly onEmpty: LazyArg<B>;
     readonly onNonEmpty: (self: string) => C;
-  }): (self: string) => B | C;
-  <B, C = B>(
-    self: string,
+  }): <const Self extends string>(self: Self) => MatchEmptyResult<Self, B, C>;
+  <const Self extends string, B, C = B>(
+    self: Self,
     options: {
       readonly onEmpty: LazyArg<B>;
-      readonly onNonEmpty: (self: string) => C;
+      readonly onNonEmpty: (self: Exclude<Self, "">) => C;
     }
-  ): B | C;
+  ): MatchEmptyResult<Self, B, C>;
 } = dual(
   2,
-  <B, C = B>(
-    self: string,
+  <Self extends string, B, C = B>(
+    self: Self,
     {
       onEmpty,
       onNonEmpty,
     }: {
       readonly onEmpty: LazyArg<B>;
-      readonly onNonEmpty: (self: string) => C;
+      readonly onNonEmpty: (self: Exclude<Self, "">) => C;
     }
-  ): B | C => (Str.isEmpty(self) ? onEmpty() : onNonEmpty(self))
+  ): MatchEmptyResult<Self, B, C> => cast(Str.isEmpty(self) ? onEmpty() : onNonEmpty(cast(self)))
 );

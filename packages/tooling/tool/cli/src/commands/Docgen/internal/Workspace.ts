@@ -34,6 +34,7 @@ const DOCGEN_CONFIG_SCAN_IGNORES = [
   "**/dist/**",
   "**/docs/**",
   "**/node_modules/**",
+  "**/test/fixtures/**",
 ] as const;
 
 const isResolveDocgenWorkspacePackageDataFirst = (args: IArguments): boolean =>
