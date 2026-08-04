@@ -36,7 +36,7 @@ describe("pluck", () => {
 });
 
 describe("encoding adapters", () => {
-  const NumberFromString = S.NumberFromString;
+  const NumberFromString = S.FiniteFromString;
   const Struct = S.Struct({ value: S.String });
   const inputWithExcessProperty = { value: "ok", extra: true };
   const creationOptions = { onExcessProperty: "error" } as const;
