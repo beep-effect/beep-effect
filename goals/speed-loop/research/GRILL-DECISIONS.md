@@ -76,10 +76,17 @@ grills #2–#3.
     authorized only, never auto-invoked. (b) `yeet sweep` (#39): SweepPlan +
     SweepReport schema pair, `--plan` dry-run, worktree-aware safety rails,
     "merged, cleanup skipped: reason" = success; auto-runs on monitor's
-    merged detection and stands alone. (c) `yeet monitor --until-merged`
-    (#42): opt-in flag, follows new SHAs, known-flake fingerprints
-    (ts2589-no-location, CI-timeout) get ONE `gh run rerun --failed` per
-    lane/SHA (#23), other reds report "needs code fix"; surfaces the
+    merged detection and stands alone. Branch deletion contract: `-d` for
+    ancestry-merged; `-D` only when the branch's PR is MERGED AND the
+    local tip equals the PR's recorded head SHA AND no worktree holds the
+    branch (remote deletion needs the same tip match); otherwise
+    skip-and-report. (c) `yeet monitor --until-merged` (#42): opt-in flag,
+    follows new SHAs, known-flake fingerprints (ts2589-no-location,
+    CI-timeout) get ONE job-scoped rerun per job per SHA via
+    `gh run rerun --job <databaseId>` (#23) — never `--failed`, which
+    reruns every failed job and would re-execute coexisting genuine reds,
+    breaking the bounded budget; other reds report "needs code fix";
+    surfaces the
     `mergeReady` verdict (criteria per decision-track #20: checks green +
     threads resolved hard, Greptile displayed target). (d) `yeet reply`
     (#51): ReplyDrafts → validate against live threads → post + resolve
@@ -109,8 +116,12 @@ grills #2–#3.
 17. **PR-C amendments.** #40 changed-scope jsdoc inventory REPLACES o1-A's
     shard-cache design (origin/main...HEAD + dirty, docgen:local pattern;
     sound because findings are per-file and untouched packages inherit
-    baseline by construction); full sweep moves to main/nightly — refines
-    decision 5, hosted PR lane goes scoped. #41 folds into the coverage
+    baseline by construction — sound ONLY while analyzer inputs are
+    unchanged: edits to the inventory scanner, its policy/config, or other
+    global inputs escalate the PR lane to the full repo-wide sweep, same
+    conservative posture as #11's docgen levers, review-hardened on #558);
+    full sweep moves to main/nightly — refines decision 5, hosted PR lane
+    goes scoped. #41 folds into the coverage
     item: affected-only measurement + forensics on the 0/231 cache-hit
     mystery. #44 rider: coverage failures print the corrected baseline hunk.
 18. **PR-B amendment.** #36 rides PR-B: hosted lanes embed their exact local
@@ -181,15 +192,21 @@ decisions close them:
     machine-checkable without a 2× gate tax per wave.
 28. **#49 wave manifests + lint.** WaveManifest at
     `.beep/waves/<id>/manifest.json`: glob ownership (most-specific claim
-    wins) + shared bucket (changesets, lockfile); drift = dirty files
-    outside all claims; attribution joins the manifest with #45 reports to
-    name the straying agent; report-only posture with a signaling exit code
-    — no blocking hook.
+    wins) + shared bucket (changesets, lockfile); drift has TWO detectors —
+    (a) dirty files outside every claim, and (b) any agent report's
+    filesTouched escaping that agent's own resolved claims, which catches
+    the cross-owner case where A edits a file validly claimed by B
+    (review-hardened on #558); attribution joins the manifest with #45
+    reports to name the straying agent; report-only posture with a
+    signaling exit code — no blocking hook.
 29. **#48 `beep worktree ready`.** Idempotent create-or-refresh (new
     branches cut from origin/main after fetch); `bun install` iff bun.lock
-    hash ≠ per-worktree stamp; turbo-cache verify-and-report with
-    `--isolate-cache` opt-in; finishes by emitting the #52 brief. Never
-    mutates a dirty worktree.
+    hash ≠ per-worktree stamp OR the install-health probe fails
+    (node_modules missing, or a sentinel binary such as
+    `node_modules/.bin/tsgo` absent) — a matching stamp must never mask a
+    deleted or gutted node_modules (review-hardened on #558); turbo-cache
+    verify-and-report with `--isolate-cache` opt-in; finishes by emitting
+    the #52 brief. Never mutates a dirty worktree.
 30. **#11 docgen escalation narrowing.** turbo.json docgen-slice hash +
     bun.lock moved-entry dependent-closure attribution; escalates to the
     full proof whenever narrowness is unprovable (parse failure, closure
@@ -240,3 +257,21 @@ decisions close them:
     #48 worktree ready, and any future worktree-aware step detect via
     `git rev-parse --git-dir` / `git worktree list`, never a .git-directory
     existence check.
+37. **OwnershipClaim stays provenance-free; fleet wraps.** Decided against
+    a `provenance: declared | derived` discriminant on OwnershipClaim: the
+    record describes WHAT is claimed; how a claim came to be known
+    (scannedAt, signal, liveness, expiry) is knowledge about the claim and
+    lives on the fleet layer's wrapper (FleetClaim { claim, ... }). Wave-
+    side the discriminant would be a constant `declared`; derived claims'
+    differing expiry semantics is the signature of decoration, not
+    discrimination. If a mixed-collection consumer ever needs provenance on
+    the record, #34's append-optional lint makes that a safe versioned
+    addition — reserving the field now buys nothing. PR-I implementers: do
+    not add provenance "helpfully."
+38. **#56 ↔ #22 sequencing coupling (fleet cost-model finding).** Scoped PR
+    checks (#56) + full gauntlet at merge-group time dissolves most of the
+    "24 required checks serialize a 13-agent fleet" objection to a merge
+    queue. #56 therefore sequences BEFORE any #22 adoption and the two are
+    evaluated as a composition, not independently; the fleet session names
+    the specific flip condition so the E-wave treadmill data settles
+    adoption without reopening design.

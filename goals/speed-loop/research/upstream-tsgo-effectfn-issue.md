@@ -47,12 +47,18 @@ codebases:
    })
    ```
 
-Both shapes are rewritable to `Effect.fn`/`Effect.fnUntraced` exactly like
-the covered declaration forms. We maintain a custom repo lint solely to
-cover these two cases (its test suite documents them as intentional
-coverage beyond the plugin); extending `effectFnOpportunity` to
-MethodDeclaration owners and callback-position function expressions would
-let downstream repos retire such custom lints entirely.
+The callback-position shape is directly rewritable to
+`Effect.fn`/`Effect.fnUntraced` like the covered declaration forms. The
+class-method shape is NOT: rewriting a method to a
+`findById = Effect.fn(...)` field moves it from the prototype to a
+per-instance property, which can break `super` calls, overrides,
+decorators, and prototype consumers — so for MethodDeclaration owners we
+are asking for a **diagnostic-only** case (or a semantics-preserving
+suggestion, if one exists), not the standard auto-fix. We maintain a
+custom repo lint solely to cover these two cases (its test suite documents
+them as intentional coverage beyond the plugin); extending
+`effectFnOpportunity` to both would let downstream repos retire such
+custom lints entirely.
 
 For contrast, the directly-returned `Effect.gen(...).pipe(...)` shape IS
 handled by the plugin (with `pipeTransformations` configured) — the two

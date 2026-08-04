@@ -322,9 +322,15 @@ consolidation (deferred pending cache measurements). Per-lane proof resume
     `git fetch origin main:main` correctly refuses when main is checked out
     elsewhere — the skip-and-report branch of (b) is reachable and needed.
     Squash-merge detection note for (c): merged branch tips are NOT
-    ancestors of origin/main, so `git branch -d` will refuse; deletion must
-    key on the branch's PR being MERGED (then `-D`, with the report citing
-    the PR).
+    ancestors of origin/main, so `git branch -d` will refuse there. The
+    force-deletion contract (review-hardened on #558): `-d` stays the tool
+    for ancestry-merged branches; `-D` is permitted ONLY when ALL of
+    (i) the branch's PR is MERGED, (ii) the local tip equals that PR's
+    recorded head SHA (post-merge pushes make the MERGED state stale —
+    tip mismatch means local-only work exists), and (iii) the branch is
+    not checked out in any worktree. Remote deletion requires the same
+    tip match against the remote ref. Any precondition failing →
+    skip-and-report with the reason; unpushed/unmatched work is sacred.
 
 ## Discussion harvest (2026-08-04, while driving #551's fix waves to green)
 
@@ -515,7 +521,52 @@ predict-squash → battery → vitest → stage-3.
     cache replay may already collapse the turbo-backed lanes (replay is
     proof, not skipping); implement the short-circuit only for what
     remains (likely coverage + non-turbo lanes). Vehicle: small hosted-CI
-    PR after PR-B, evidence-gated.
+    PR after PR-B, evidence-gated. Coupling (fleet session, decisions
+    37-38): #56 sequences BEFORE any #22 merge-queue adoption — scoped PR
+    checks + full merge-group gauntlet is the composition that makes the
+    queue affordable at fleet scale; OwnershipClaim ships provenance-free
+    (fleet wraps, never mutates the record).
+
+57. **Work-item claims for parallel sessions (input to the fleet grill;
+    fleet-owned design).** The beep-effect5 ownership negotiation (#22/#16
+    transfers, PR-I schema reservations, a "say so before PR-I lands"
+    deadline) worked — but ran entirely through operator-relayed chat. The
+    fleet session's OwnershipClaim covers FILES; nothing covers WORK ITEMS:
+    ledger entries, design reservations, and their deadlines live in prose.
+    A small claims manifest (item → owning session/campaign, reservations,
+    expiry) would let parallel sessions discover "who has #22" without a
+    relay hop. Explicitly an input to the fleet-coordination docket, not a
+    speed-loop vehicle — recorded here so the trench evidence isn't lost.
+58. **Decisions-PR adversarial review as a design gate (ritual).** The #558
+    bot wave caught two P1 soundness holes (scoped-inventory unsound under
+    analyzer changes; `-D` authorized by stale MERGED state) plus five
+    hardening items — against PROSE, before any implementation existed.
+    Cheapest possible catch point. Ritual: decisions PRs are review
+    surfaces, not just records; review findings amend the decision text
+    with a "review-hardened on #NNN" provenance tag (started organically on
+    #558); implementers treat un-hardened decisions as less trustworthy
+    than hardened ones.
+59. **Thread triage context in status/monitor output (PR-E rider).**
+    `yeet status` lists unresolved threads as opaque GraphQL ids
+    (PRRT_...) + file paths; triaging #558's seven required a second REST
+    pass and hand-mapping thread ids ↔ comment ids by file. Carry author,
+    severity badge (parseable from bot bodies), first-line excerpt, and the
+    numeric comment id per thread — so the #51 drafts file is writable
+    straight from status output. Implementation note for #51: `yeet reply`
+    must accept EITHER the REST comment id or the GraphQL thread id and
+    resolve the mapping itself.
+60. **Generated-file conflicts resolve by regeneration, not merging
+    (sweep/rebase rider).** Live evidence: my INDEX.md heal raced the
+    operator's #555 heal — benign only because both regenerations were
+    deterministic and the rebase happened to converge. Repo-global
+    generated artifacts (goals/INDEX.md, law allowlist snapshots, docgen
+    aggregate, baselines) are guaranteed collision hotspots for parallel
+    sessions, and hand-merging them is always wrong. Widget: a
+    generated-path → regenerate-command map (data, not docs); rebase/merge
+    tooling and #39's sweep consult it to auto-resolve conflicts under
+    those paths by re-running the generator on the merged tree. The
+    goals:index gate already teaches its writer command — this generalizes
+    that contract into machine-consumable form (#50 family).
 
 Fleet-coordination amendments (same day, beep-effect5 session;
 GRILL-DECISIONS.md #34–36): #22 design half + #16 transfer to the fleet
