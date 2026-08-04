@@ -314,6 +314,7 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
  *   amend: false,
  *   base: "origin/main",
  *   bots: "greptile,coderabbit,chatgpt",
+ *   collectAll: false,
  *   fast: false,
  *   head: "HEAD",
  *   json: false,
@@ -350,6 +351,7 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
     amend: S.Boolean,
     base: S.String,
     bots: S.String,
+    collectAll: S.Boolean,
     fast: S.Boolean,
     head: S.String,
     json: S.Boolean,
@@ -407,26 +409,88 @@ export class YeetRunResult extends S.Class<YeetRunResult>($I`YeetRunResult`)(
 ) {}
 
 /**
- * Reviewed Git index paths that Yeet is allowed to publish.
+ * Reviewed staged paths that Yeet is allowed to commit and publish.
  *
  * @example
  * ```ts
- * import { YeetPublishIntent } from "@beep/repo-cli/commands/Yeet"
+ * import { YeetStagedPublishIntent } from "@beep/repo-cli/commands/Yeet"
  *
- * const intent = YeetPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
+ * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  * console.log(intent.paths.length)
  * ```
  * @category models
  * @since 0.0.0
  */
-export class YeetPublishIntent extends S.Class<YeetPublishIntent>($I`YeetPublishIntent`)(
+export class YeetStagedPublishIntent extends S.Class<YeetStagedPublishIntent>($I`YeetStagedPublishIntent`)(
   {
+    kind: S.tag("staged"),
     paths: S.Array(S.String),
   },
-  $I.annote("YeetPublishIntent", {
-    description: "Reviewed Git index paths that yeet is allowed to publish.",
+  $I.annote("YeetStagedPublishIntent", {
+    description: "Reviewed staged paths that yeet is allowed to commit and publish.",
   })
 ) {}
+
+/**
+ * Clean local commit state that Yeet may prove and push without creating a new
+ * commit.
+ *
+ * **Example** (Resume from an existing commit)
+ *
+ * ```ts
+ * import { YeetExistingCommitPublishIntent } from "@beep/repo-cli/commands/Yeet"
+ *
+ * const intent = YeetExistingCommitPublishIntent.make({ commitSha: "abc123", paths: ["src/index.ts"] })
+ * console.log(intent.kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetExistingCommitPublishIntent extends S.Class<YeetExistingCommitPublishIntent>(
+  $I`YeetExistingCommitPublishIntent`
+)(
+  {
+    kind: S.tag("existing-commit"),
+    commitSha: S.String,
+    paths: S.Array(S.String),
+  },
+  $I.annote("YeetExistingCommitPublishIntent", {
+    description: "Clean local commit state ahead of the publish target that yeet may prove and push.",
+  })
+) {}
+
+/**
+ * Publish intent state selected from reviewed staged changes or a clean local
+ * commit ahead of the publish target.
+ *
+ * **Example** (Decode a staged intent)
+ *
+ * ```ts
+ * import { YeetPublishIntent } from "@beep/repo-cli/commands/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(YeetPublishIntent)({ kind: "staged", paths: ["src/index.ts"] })
+ * console.log(decoded)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetPublishIntent = S.Union([YeetStagedPublishIntent, YeetExistingCommitPublishIntent]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("YeetPublishIntent", {
+    description: "Publish intent selected from reviewed staged changes or a clean local commit ahead of the target.",
+  })
+);
+
+/** Decoded staged-or-existing-commit publish intent.
+ *
+ * @see {@link YeetPublishIntent} for the runtime tagged-union schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetPublishIntent = typeof YeetPublishIntent.Type;
 
 /**
  * Construct baseline yeet options for focused tests.
@@ -448,6 +512,7 @@ export const defaultYeetRunOptions = (overrides: Partial<YeetRunOptions> = {}): 
     amend: false,
     base: "origin/main",
     bots: "greptile",
+    collectAll: false,
     fast: false,
     head: "HEAD",
     json: false,

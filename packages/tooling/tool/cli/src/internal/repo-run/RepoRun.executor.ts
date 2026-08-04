@@ -6,7 +6,7 @@
  */
 
 import { DomainError } from "@beep/repo-utils";
-import { Console, Effect, FileSystem, Path } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
@@ -148,7 +148,11 @@ export const executeRepoPlanStep = Effect.fn("RepoRun.executeRepoPlanStep")(func
 > {
   const commandText = commandTextForStep(step);
   yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);
-  const result = yield* runRepoCommandCapture(step.command, step.args, step.cwd, step.env);
+  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const [elapsed, result] = yield* runRepoCommandCapture(step.command, step.args, step.cwd, step.env).pipe(
+    Effect.timed
+  );
+  const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   if (O.isSome(rawOutputPath)) {
     yield* writeRawOutput(rawOutputPath.value, result.output);
   }
@@ -157,6 +161,9 @@ export const executeRepoPlanStep = Effect.fn("RepoRun.executeRepoPlanStep")(func
     stepId: step.id,
     commandText,
     exitCode: result.exitCode,
+    startedAt,
+    endedAt,
+    elapsedMs: Duration.toMillis(elapsed),
     output: result.output,
     truncated: result.truncated,
     ...(O.isSome(rawOutputPath) ? { rawOutputRef: rawOutputPath.value } : {}),
@@ -200,7 +207,11 @@ export const executeRepoPlanStepStreaming = Effect.fn("RepoRun.executeRepoPlanSt
 > {
   const commandText = commandTextForStep(step);
   yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);
-  const result = yield* runRepoCommandStreamingCapture(step.command, step.args, step.cwd, step.env);
+  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const [elapsed, result] = yield* runRepoCommandStreamingCapture(step.command, step.args, step.cwd, step.env).pipe(
+    Effect.timed
+  );
+  const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   if (O.isSome(rawOutputPath)) {
     yield* writeRawOutput(rawOutputPath.value, result.output);
   }
@@ -209,6 +220,9 @@ export const executeRepoPlanStepStreaming = Effect.fn("RepoRun.executeRepoPlanSt
     stepId: step.id,
     commandText,
     exitCode: result.exitCode,
+    startedAt,
+    endedAt,
+    elapsedMs: Duration.toMillis(elapsed),
     output: result.output,
     truncated: result.truncated,
     ...(O.isSome(rawOutputPath) ? { rawOutputRef: rawOutputPath.value } : {}),

@@ -40,8 +40,6 @@ import { toAsciiLowerCase } from "./Html.foreign.ts";
 import type { ComponentValue, FunctionNode, SimpleBlockNode } from "@csstools/css-parser-algorithms";
 import type { CSSToken } from "@csstools/css-tokenizer";
 
-// cspell:words cqmax cqmin dpcm dppx dvmax dvmin lvmax lvmin rcap svmax svmin vmax vmin
-
 const $I = $HtmlId.create("Html.source-size");
 
 const LENGTH_UNITS = [

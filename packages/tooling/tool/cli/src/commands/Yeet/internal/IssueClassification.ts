@@ -152,9 +152,9 @@ export const categoryForStep = (step: RepoPlanStep): QualityIssueCategory => {
  *
  * const hint: KnownSubLaneHint = {
  *   category: "lint-tool",
- *   needle: "cspell",
- *   remediation: "Run cspell.",
- *   subCategory: "cspell"
+ *   needle: "typos",
+ *   remediation: "Run typos.",
+ *   subCategory: "typos"
  * }
  * console.log(hint.subCategory)
  * ```
@@ -182,29 +182,11 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
       "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`.",
   },
   {
-    needle: "cspell",
-    subCategory: "cspell",
-    category: "lint-tool",
-    remediation: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
-  },
-  {
-    needle: "unknown word found",
-    subCategory: "cspell",
-    category: "lint-tool",
-    remediation: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
-  },
-  {
     needle: "terse-effect",
     subCategory: "terse-effect",
     category: "repo-law",
     remediation:
       "Run `bun run beep laws terse-effect --check` and inspect blocking, rewritable, and informational files.",
-  },
-  {
-    needle: "dual-arity",
-    subCategory: "dual-arity",
-    category: "repo-law",
-    remediation: "Run `bun run beep laws dual-arity --check` and fix enforced candidates.",
   },
   {
     needle: "repo-exports",
@@ -345,7 +327,7 @@ const knownSubLaneHintFromFailureSlices = (slices: FailureHintSlices): O.Option<
  * import { knownSubLaneHintFromOutput } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * strictEqual(O.getOrThrow(knownSubLaneHintFromOutput("lint:cspell failed")).subCategory, "cspell")
+ * strictEqual(O.getOrThrow(knownSubLaneHintFromOutput("lint:typos failed")).subCategory, "typos")
  * ```
  * @category classification
  * @since 0.0.0
@@ -378,7 +360,7 @@ export const knownSubLaneHintFromOutput = (output: string | undefined): O.Option
  * import * as O from "effect/Option"
  * import { knownSubLaneRemediationFromOutput } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(O.isSome(knownSubLaneRemediationFromOutput("lint:cspell failed")))
+ * console.log(O.isSome(knownSubLaneRemediationFromOutput("lint:typos failed")))
  * ```
  * @category utilities
  * @since 0.0.0

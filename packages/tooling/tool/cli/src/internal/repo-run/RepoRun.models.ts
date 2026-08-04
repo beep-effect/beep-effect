@@ -271,6 +271,31 @@ export class RepoRunContext extends S.Class<RepoRunContext>($I`RepoRunContext`)(
 ) {}
 
 /**
+ * One named wave rendered inside a repository proof plan.
+ *
+ * **Example** (Render a preflight wave)
+ *
+ * ```ts
+ * import { RepoPlanWave } from "@beep/repo-cli/internal/repo-run"
+ *
+ * const wave = RepoPlanWave.make({ id: "preflight", laneIds: ["quality:changeset-status"] })
+ * console.log(wave.laneIds.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RepoPlanWave extends S.Class<RepoPlanWave>($I`RepoPlanWave`)(
+  {
+    id: S.String,
+    laneIds: S.Array(S.String),
+  },
+  $I.annote("RepoPlanWave", {
+    description: "One named lane wave rendered inside a repository proof plan.",
+  })
+) {}
+
+/**
  * One subprocess or git operation planned for a repo run.
  *
  * @example
@@ -309,6 +334,7 @@ export class RepoPlanStep extends S.Class<RepoPlanStep>($I`RepoPlanStep`)(
     packagePath: S.optionalKey(S.String),
     task: S.optionalKey(S.String),
     verification: S.optionalKey(S.String),
+    waves: RepoPlanWave.pipe(S.Array, S.optionalKey),
   },
   $I.annote("RepoPlanStep", {
     description: "Planned repository command step.",
@@ -356,6 +382,9 @@ export class RepoStepRunResult extends S.Class<RepoStepRunResult>($I`RepoStepRun
     stepId: S.String,
     commandText: S.String,
     exitCode: S.Finite,
+    startedAt: S.optionalKey(S.String),
+    endedAt: S.optionalKey(S.String),
+    elapsedMs: S.optionalKey(S.Finite),
     output: S.optionalKey(S.String),
     rawOutputRef: S.optionalKey(S.String),
     truncated: S.optionalKey(S.Boolean),

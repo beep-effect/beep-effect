@@ -14,7 +14,7 @@
  *   `JSDocRatchet.compareTotals` (increased / decreased / missing) over a
  *   `Record<string, number>`.
  *
- * The inventory-merge ratchets (`DualArity`, `Lint/SchemaFirst`) compute
+ * The schema-first inventory ratchet computes
  * missing/stale via the same membership classification, but keep their bespoke
  * merge, per-diagnostic logging, and strict-failure gating outside this pure
  * core; see the divergence catalog in the wave report.

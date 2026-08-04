@@ -16,37 +16,6 @@ const messageWithCause = (message: string, cause: unknown): string =>
   `${message}: ${Inspectable.toStringUnknown(cause, 0)}`;
 
 /**
- * Failure raised when the dual-arity inventory cannot be read or decoded.
- *
- * @example
- * ```ts
- * import { DualArityInventoryReadError } from "@beep/repo-cli/commands/Laws/Laws.errors"
- *
- * const error = DualArityInventoryReadError.new("Could not read standards/dual-arity.inventory.jsonc.")
- * console.log(error.message)
- * ```
- * @category errors
- * @since 0.0.0
- */
-export class DualArityInventoryReadError extends TaggedErrorClass<DualArityInventoryReadError>(
-  $I`DualArityInventoryReadError`
-)(
-  "DualArityInventoryReadError",
-  {
-    message: S.String,
-  },
-  $I.annote("DualArityInventoryReadError", {
-    description: "Raised when the committed dual-arity inventory cannot be parsed or decoded.",
-  })
-) {
-  static readonly new = (message: string): DualArityInventoryReadError => DualArityInventoryReadError.make({ message });
-
-  static readonly mapError = Err.mapCauseError<DualArityInventoryReadError, [message: string]>((cause, message) =>
-    DualArityInventoryReadError.new(messageWithCause(message, cause))
-  );
-}
-
-/**
  * Failure raised when Effect import rule updates cannot be written.
  *
  * @example

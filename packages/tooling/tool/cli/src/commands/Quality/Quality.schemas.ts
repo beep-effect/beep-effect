@@ -16,6 +16,23 @@ import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
 /**
+ * Output-line prefix carrying the schema-backed GitHub-check run report.
+ *
+ * **Example** (Recognize a report line)
+ *
+ * ```ts
+ * import { GITHUB_CHECK_RUN_REPORT_PREFIX } from "@beep/repo-cli/commands/Quality"
+ * import * as Str from "effect/String"
+ *
+ * console.log(Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX)(`${GITHUB_CHECK_RUN_REPORT_PREFIX}{}`)) // true
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const GITHUB_CHECK_RUN_REPORT_PREFIX = "[beep-github-check-run] ";
+
+/**
  * Canonical quality task name.
  *
  * @example
@@ -682,6 +699,62 @@ export const GithubCheckLaneStage = LiteralKit(["repo-quality", "repo-sanity", "
 export type GithubCheckLaneStage = typeof GithubCheckLaneStage.Type;
 
 /**
+ * Failure scheduling policy for local GitHub-check batteries.
+ *
+ * **Example** (Select aggregate diagnostics)
+ *
+ * ```ts
+ * import { GithubCheckFailurePolicy } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GithubCheckFailurePolicy.is["collect-all"]("collect-all")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GithubCheckFailurePolicy = LiteralKit(["fail-fast", "collect-all"]).annotate(
+  $I.annote("GithubCheckFailurePolicy", {
+    description: "Policy controlling whether local GitHub-check execution stops after the first failed wave.",
+  })
+);
+
+/** Decoded failure scheduling policy for local GitHub-check batteries.
+ *
+ * @see {@link GithubCheckFailurePolicy} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GithubCheckFailurePolicy = typeof GithubCheckFailurePolicy.Type;
+
+/**
+ * Static cost-ordered wave assigned to a local GitHub-check lane.
+ *
+ * **Example** (Inspect the preflight wave)
+ *
+ * ```ts
+ * import { GithubCheckLaneWave } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GithubCheckLaneWave.is.preflight("preflight")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "documentation"]).annotate(
+  $I.annote("GithubCheckLaneWave", {
+    description: "Static cost-ordered execution wave for local GitHub-check lanes.",
+  })
+);
+
+/** Decoded static execution wave for a local GitHub-check lane.
+ *
+ * @see {@link GithubCheckLaneWave} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
+
+/**
  * Executable lane specification for GitHub check collectors.
  *
  * @example
@@ -692,6 +765,7 @@ export type GithubCheckLaneStage = typeof GithubCheckLaneStage.Type;
  * const lane = GithubCheckLaneSpec.make({
  *   id: "quality:build",
  *   stage: "repo-quality",
+ *   wave: "heavy",
  *   blockedBy: [],
  *   step: QualityTaskStep.make({ label: "build", command: "bun", args: ["run", "build"], cwd: "/repo" })
  * })
@@ -704,10 +778,126 @@ export class GithubCheckLaneSpec extends S.Class<GithubCheckLaneSpec>($I`GithubC
   {
     id: S.String,
     stage: GithubCheckLaneStage,
+    wave: GithubCheckLaneWave,
     blockedBy: S.Array(S.String),
     step: QualityTaskStep,
   },
   $I.annote("GithubCheckLaneSpec", {
     description: "Executable lane specification for GitHub check collectors.",
+  })
+) {}
+
+/**
+ * One ordered execution wave of local GitHub-check lanes.
+ *
+ * **Example** (Build a documentation wave)
+ *
+ * ```ts
+ * import { GithubCheckLaneWaveSpec } from "@beep/repo-cli/commands/Quality"
+ *
+ * const wave = GithubCheckLaneWaveSpec.make({ lanes: [], wave: "documentation" })
+ * console.log(wave.wave)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubCheckLaneWaveSpec extends S.Class<GithubCheckLaneWaveSpec>($I`GithubCheckLaneWaveSpec`)(
+  {
+    wave: GithubCheckLaneWave,
+    lanes: S.Array(GithubCheckLaneSpec),
+  },
+  $I.annote("GithubCheckLaneWaveSpec", {
+    description: "One ordered execution wave of local GitHub-check lanes.",
+  })
+) {}
+
+/**
+ * Execution status recorded for one GitHub-check lane.
+ *
+ * **Example** (Identify an early stop)
+ *
+ * ```ts
+ * import { GithubCheckLaneRunStatus } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GithubCheckLaneRunStatus.is["not-run-early-stop"]("not-run-early-stop")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubCheckLaneRunStatus = LiteralKit(["passed", "failed", "not-run-early-stop"]).annotate(
+  $I.annote("GithubCheckLaneRunStatus", {
+    description: "Terminal status of one lane in a local GitHub-check wave run.",
+  })
+);
+
+/** Decoded terminal status for one local GitHub-check lane.
+ *
+ * @see {@link GithubCheckLaneRunStatus} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
+
+/**
+ * One lane outcome in a local GitHub-check wave report.
+ *
+ * **Example** (Record an early-stopped lane)
+ *
+ * ```ts
+ * import { GithubCheckLaneRun } from "@beep/repo-cli/commands/Quality"
+ *
+ * const lane = GithubCheckLaneRun.make({
+ *   id: "quality:docgen",
+ *   stage: "repo-quality",
+ *   status: "not-run-early-stop",
+ *   wave: "documentation"
+ * })
+ * console.log(lane.status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubCheckLaneRun extends S.Class<GithubCheckLaneRun>($I`GithubCheckLaneRun`)(
+  {
+    id: S.String,
+    stage: GithubCheckLaneStage,
+    status: GithubCheckLaneRunStatus,
+    wave: GithubCheckLaneWave,
+  },
+  $I.annote("GithubCheckLaneRun", {
+    description: "One lane outcome in a local GitHub-check wave report.",
+  })
+) {}
+
+/**
+ * Machine-readable report emitted after a local GitHub-check wave run.
+ *
+ * **Example** (Record a fail-fast run)
+ *
+ * ```ts
+ * import { GithubCheckRunReport } from "@beep/repo-cli/commands/Quality"
+ *
+ * const report = GithubCheckRunReport.make({
+ *   failurePolicy: "fail-fast",
+ *   lanes: [],
+ *   schemaVersion: "github-check-run/v1"
+ * })
+ * console.log(report.failurePolicy)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubCheckRunReport extends S.Class<GithubCheckRunReport>($I`GithubCheckRunReport`)(
+  {
+    schemaVersion: S.Literal("github-check-run/v1"),
+    failurePolicy: GithubCheckFailurePolicy,
+    lanes: S.Array(GithubCheckLaneRun),
+  },
+  $I.annote("GithubCheckRunReport", {
+    description: "Machine-readable lane outcomes and failure policy for a local GitHub-check wave run.",
   })
 ) {}

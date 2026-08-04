@@ -90,10 +90,11 @@ const TYPEOF_RUNTIME_LITERALS = HashSet.fromIterable([
 /**
  * Runtime options for repo-local native runtime checks.
  *
- * @example
+ * **Example** (Configure native-runtime scanning)
  * ```ts
  * console.log("NoNativeRuntimeRulesOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -107,6 +108,7 @@ export class NoNativeRuntimeRulesOptions extends S.Class<NoNativeRuntimeRulesOpt
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("NoNativeRuntimeRulesOptions", {
     description: "Runtime options for repo-local native runtime checks.",
@@ -566,7 +568,7 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
     skipAddingFilesFromTsConfig: true,
   });
 
-  project.addSourceFilesAtPaths(SOURCE_FILE_GLOBS);
+  project.addSourceFilesAtPaths(options.includePaths ?? SOURCE_FILE_GLOBS);
 
   let sourceFiles = A.empty<ScannedSourceFile>();
 

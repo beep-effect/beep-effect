@@ -16,12 +16,18 @@ import {
   sortedUniquePaths,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { QualityIssue, QualityIssueRouting, YeetPublishIntent } from "../Yeet.schemas.ts";
+import {
+  QualityIssue,
+  QualityIssueRouting,
+  YeetExistingCommitPublishIntent,
+  YeetStagedPublishIntent,
+} from "../Yeet.schemas.ts";
 import { runIdForContext } from "./ArtifactPaths.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
   collectUntrackedPaths,
+  currentCommitSha,
   optionFromNonEmpty,
   runGitOutput,
   runGitPathList,
@@ -31,7 +37,7 @@ import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import type { YeetRunOptions } from "../Yeet.schemas.ts";
+import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
 
 const zeroGitSha = "0000000000000000000000000000000000000000" as const;
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
@@ -839,6 +845,35 @@ export const warnOnMismatchedPublishUpstream = Effect.fn("Yeet.warnOnMismatchedP
   }
 });
 
+const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommitPublishIntent")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<
+  O.Option<YeetExistingCommitPublishIntent>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
+  const remoteRef = `origin/${context.branch}`;
+  const remoteRefExists = yield* runRepoCommandCapture(
+    "git",
+    ["show-ref", "--verify", "--quiet", `refs/remotes/${remoteRef}`],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect publish target ${remoteRef}.`)));
+  const comparisonRef = remoteRefExists.exitCode === 0 ? remoteRef : context.base;
+  const aheadCount = yield* runGitOutput(context.repoRoot, ["rev-list", "--count", `${comparisonRef}..HEAD`]).pipe(
+    Effect.map((output) => Number(Str.trim(output))),
+    Effect.mapError(YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`))
+  );
+  if (aheadCount === 0) {
+    return O.none();
+  }
+
+  const [commitSha, paths] = yield* Effect.all([
+    currentCommitSha(context),
+    runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${comparisonRef}..HEAD`]),
+  ]);
+  return O.some(YeetExistingCommitPublishIntent.make({ commitSha, paths }));
+});
+
 /**
  * Collect the reviewed file set Yeet is allowed to publish.
  *
@@ -881,8 +916,15 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
   const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
 
   if (A.isReadonlyArrayEmpty(stagedPaths)) {
+    if (A.isReadonlyArrayEmpty(unstagedPaths) && A.isReadonlyArrayEmpty(untrackedPaths)) {
+      const existingCommitIntent = yield* collectExistingCommitPublishIntent(context);
+      if (O.isSome(existingCommitIntent)) {
+        return existingCommitIntent.value;
+      }
+    }
     return yield* YeetCommandError.make({
-      message: "yeet publish requires reviewed staged changes. Stage the intended files before running yeet.",
+      message:
+        "yeet publish requires reviewed staged changes or a clean local commit ahead of the publish remote/base.",
       command: "git diff --cached --name-only",
       exitCode: 1,
     });
@@ -899,7 +941,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
         subCategory: "partially-staged",
       });
     }
-    return YeetPublishIntent.make({ paths: stagedPaths });
+    return YeetStagedPublishIntent.make({ paths: stagedPaths });
   }
 
   if (!A.isReadonlyArrayEmpty(untrackedPaths)) {
@@ -923,7 +965,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
     });
   }
 
-  return YeetPublishIntent.make({ paths: stagedPaths });
+  return YeetStagedPublishIntent.make({ paths: stagedPaths });
 });
 
 /**
@@ -938,7 +980,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { RepoRunContext, validatePublishIntentStillSafe, YeetPublishIntent } from "@beep/repo-cli/test/Yeet"
+ * import { RepoRunContext, validatePublishIntentStillSafe, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -950,7 +992,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
  *   repoRoot: ".",
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
- * const intent = YeetPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
+ * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  *
  * const safe = validatePublishIntentStillSafe(context, intent, true).pipe(Effect.as("intent still safe"))
  * ```
@@ -959,7 +1001,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
  */
 export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishIntentStillSafe")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent,
+  intent: YeetStagedPublishIntent,
   stagedOnly: boolean
 ): Effect.fn.Return<
   void,
@@ -1002,7 +1044,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
 
 const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublishIntentPaths")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent
+  intent: YeetStagedPublishIntent
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1027,7 +1069,7 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { RepoRunContext, stageReviewedPublishIntent, YeetPublishIntent } from "@beep/repo-cli/test/Yeet"
+ * import { RepoRunContext, stageReviewedPublishIntent, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -1039,7 +1081,7 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  *   repoRoot: ".",
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
- * const intent = YeetPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
+ * const intent = YeetStagedPublishIntent.make({ paths: ["packages/tooling/tool/cli/src/index.ts"] })
  *
  * const staged = stageReviewedPublishIntent(context, intent, true).pipe(Effect.as("reviewed paths staged"))
  * ```
@@ -1048,7 +1090,7 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
  */
 export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIntent")(function* (
   context: RepoRunContext,
-  intent: YeetPublishIntent,
+  intent: YeetStagedPublishIntent,
   stagedOnly: boolean
 ): Effect.fn.Return<
   void,

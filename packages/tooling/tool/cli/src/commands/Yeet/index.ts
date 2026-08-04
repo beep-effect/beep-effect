@@ -65,7 +65,9 @@ export {
   QualityIssueIndex,
   QualityIssueRouting,
   QualityIssueSeverity,
+  YeetExistingCommitPublishIntent,
   YeetPublishIntent,
   YeetRunOptions,
   YeetRunResult,
+  YeetStagedPublishIntent,
 } from "./Yeet.schemas.ts";

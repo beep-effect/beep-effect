@@ -5,6 +5,7 @@ import {
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
+import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
@@ -15,8 +16,13 @@ import {
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
+  GithubCheckFailurePolicy,
+  GithubCheckLaneSpec,
+  GithubCheckLaneWaveSpec,
   GithubCheckMode,
+  GithubCheckRunReport,
   GithubChecksFallowFeatureMatrix,
+  githubCheckLanePlan,
   githubCheckLanesForModeForTesting,
   githubCheckPrePushExternalLanesForTesting,
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
@@ -56,7 +62,7 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
-import type { QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -210,6 +216,15 @@ const bunScriptStep = (label: string, source: string) =>
     command: "bun",
     args: ["-e", source],
     cwd: process.cwd(),
+  });
+
+const githubCheckTestLane = (id: string, wave: GithubCheckLaneWave, source: string): GithubCheckLaneSpec =>
+  GithubCheckLaneSpec.make({
+    blockedBy: [],
+    id,
+    stage: "repo-quality",
+    step: bunScriptStep(id, source),
+    wave,
   });
 
 type FallowFeatureMatrixRowTuple = readonly [
@@ -435,20 +450,26 @@ describe("quality task adapter", () => {
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
       "quality:build",
+      "quality:lint",
       "quality:check",
       "quality:knip",
       "quality:jsdoc-ratchet",
-      "quality:lint",
       "quality:docgen",
       "quality:test",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
-    expect(lanes[1]?.step.args).toEqual(["run", "check"]);
-    expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
-    expect(lanes[3]?.step.args).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
-    expect(lanes[4]?.step.args).toEqual(["run", "lint"]);
+    expect(lanes[1]?.step.args).toEqual(["run", "lint"]);
+    expect(lanes[2]?.step.args).toEqual(["run", "check"]);
+    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
+    expect(lanes[4]?.step.args).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     expect(lanes[6]?.step.args).toEqual(["run", "test"]);
+    expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
+      "preflight",
+      "heavy",
+      "test",
+      "documentation",
+    ]);
   });
 
   it("maps repo-sanity github checks as collector lanes", () => {
@@ -486,6 +507,80 @@ describe("quality task adapter", () => {
     ]);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
   });
+
+  it("decodes the failure policy and wave report schemas", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        expect(yield* S.decodeUnknownEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
+        const report = yield* S.decodeUnknownEffect(GithubCheckRunReport)({
+          failurePolicy: "collect-all",
+          lanes: [
+            {
+              id: "quality:test",
+              stage: "repo-quality",
+              status: "passed",
+              wave: "test",
+            },
+          ],
+          schemaVersion: "github-check-run/v1",
+        });
+        expect(report.lanes[0]?.wave).toBe("test");
+      })
+    ));
+
+  it("finishes a failed wave, reports sibling failures, and marks later waves not run", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane("preflight:a", "preflight", "process.exit(2)"),
+              githubCheckTestLane("preflight:b", "preflight", "process.exit(3)"),
+            ],
+          }),
+          GithubCheckLaneWaveSpec.make({
+            wave: "heavy",
+            lanes: [githubCheckTestLane("heavy:check", "heavy", "process.exit(0)")],
+          }),
+        ],
+        "fail-fast"
+      ).pipe(
+        Effect.map(({ failures, report }) => {
+          expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a", "preflight:b"]);
+          expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+            ["preflight:a", "failed"],
+            ["preflight:b", "failed"],
+            ["heavy:check", "not-run-early-stop"],
+          ]);
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("runs later waves under collect-all", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [githubCheckTestLane("preflight:failed", "preflight", "process.exit(1)")],
+          }),
+          GithubCheckLaneWaveSpec.make({
+            wave: "heavy",
+            lanes: [githubCheckTestLane("heavy:passed", "heavy", "process.exit(0)")],
+          }),
+        ],
+        "collect-all"
+      ).pipe(
+        Effect.map(({ report }) => {
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
 
   it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([
@@ -956,7 +1051,6 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:frozen-grant-set",
       "lint:native-runtime",
-      "lint:dual-arity",
       "lint:allowlist",
       "lint:tsgo-rules",
       "lint:identity-registry",
@@ -971,8 +1065,6 @@ describe("quality task adapter", () => {
       "lint:jsdoc",
       "lint:jsdoc-module-tags",
       "lint:docgen",
-      "lint:spell",
-      "lint:markdown",
       "lint:circular",
       "lint:typos",
       "lint:oxlint",
@@ -989,7 +1081,6 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:frozen-grant-set",
       "lint:native-runtime",
-      "lint:dual-arity",
       "lint:allowlist",
       "lint:tsgo-rules",
       "lint:identity-registry",
@@ -1004,13 +1095,37 @@ describe("quality task adapter", () => {
       "lint:jsdoc",
       "lint:jsdoc-module-tags",
       "lint:docgen",
-      "lint:spell",
-      "lint:markdown",
       "lint:circular",
       "lint:typos",
       "lint:oxlint",
     ]);
     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
+    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
+  });
+
+  it("passes changed TypeScript files to file-oriented policy laws", () => {
+    const files = ["packages/demo/src/index.ts", "README.md"];
+    const steps = rootLintPolicyStepsForTesting("/repo", files);
+
+    expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual([
+      "run",
+      "beep",
+      "laws",
+      "effect-fn",
+      "--check",
+      "--include",
+      "packages/demo/src/index.ts",
+    ]);
+    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
+    expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual([
+      "run",
+      "beep",
+      "laws",
+      "allowlist-check",
+    ]);
+    expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
+      "packages/demo/src/index.ts,README.md"
+    );
   });
 
   it("runs repo-wide root lint policy with hosted-stable concurrency", () =>
@@ -1033,7 +1148,7 @@ describe("quality task adapter", () => {
           const exit = yield* withEnvVarEffect(
             "PATH",
             `${binDir}:${Bun.env.PATH ?? ""}`,
-            Effect.exit(runRootLintPolicyTask)
+            Effect.exit(runRootLintPolicyTask(true))
           );
 
           expect(Exit.isSuccess(exit)).toBe(true);
@@ -1228,9 +1343,13 @@ describe("quality task adapter", () => {
     });
 
     expect(step).toMatchObject({
-      label: "test:integration",
+      label: "test:integration:serial",
       command: "bunx",
-      args: expectedTurboArgs("test:integration", ["--concurrency=1", "--filter=@beep/test-utils", "--summarize"]),
+      args: expectedTurboArgs("test:integration:serial", [
+        "--concurrency=1",
+        "--filter=@beep/test-utils",
+        "--summarize",
+      ]),
       cwd: "/repo",
       env: {
         BEEP_TEST_DATABASE_DRIVER: "pg-external",
@@ -1238,6 +1357,15 @@ describe("quality task adapter", () => {
         BEEP_TEST_DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:5432/postgres",
       },
     });
+  });
+
+  it("plans the bounded parallel integration pass before the serial SQL pass", () => {
+    const steps = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration", "--summarize"]));
+
+    expect(A.map(steps, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
+    expect(steps[0]?.args).toContain("test:integration:parallel");
+    expect(steps[0]?.args).toContain("--summarize");
+    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
   });
 
   it("requires explicit test SQL URLs over generic application defaults", () => {

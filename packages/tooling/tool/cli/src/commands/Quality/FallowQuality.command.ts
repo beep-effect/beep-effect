@@ -34,6 +34,7 @@ import {
   FallowReportPayload,
   FallowReportToolFailed,
   FindingAttributionSummary,
+  fallowEnvelopeFileName,
   PositiveExitStatus,
   sameAttributionKind,
   sameEnvelopeStatus,
@@ -2222,15 +2223,19 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
       check: Flag.boolean("check").pipe(
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
-      out: Flag.string("out").pipe(
-        Flag.withDefault(`${defaultOutDir}/${feature}.json`),
-        Flag.withDescription("Envelope output path")
-      ),
+      out: Flag.string("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
       quiet: Flag.boolean("quiet").pipe(
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
     },
-    ({ advisory, base, check, out, quiet }) => runFallowFeature(feature, { advisory, base, check, out, quiet })
+    ({ advisory, base, check, out, quiet }) =>
+      runFallowFeature(feature, {
+        advisory,
+        base,
+        check,
+        out: Str.isNonEmpty(out) ? out : `${defaultOutDir}/${fallowEnvelopeFileName(feature, advisory)}`,
+        quiet,
+      })
   ).pipe(Command.withDescription(`Run Fallow ${feature} and write a repo-cli report envelope`));
 
 const envelopeCheckCommand = Command.make(

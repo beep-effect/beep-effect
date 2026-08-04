@@ -60,10 +60,30 @@ export const isExcludedLawScanPath: {
  */
 export type LawScanOptions<Diagnostic> = {
   readonly sourceFileGlobs: ReadonlyArray<string>;
+  readonly includePaths: ReadonlyArray<string> | undefined;
   readonly excludePaths: ReadonlyArray<string>;
   readonly strictCheck: boolean;
   readonly collect: (relativeFilePath: string, sourceFile: SourceFile) => ReadonlyArray<Diagnostic>;
 };
+
+/**
+ * Select the default law globs unless an explicit file scope was supplied.
+ *
+ * **Example** (Select a changed-file scope)
+ *
+ * ```ts
+ * import { lawScanSourcePaths } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ *
+ * console.log(lawScanSourcePaths(["packages/demo/src/index.ts"]))
+ * ```
+ *
+ * @param includePaths - Explicit repo-relative files, or `undefined` for the full law scope.
+ * @returns Source paths suitable for ts-morph project inspection.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lawScanSourcePaths = (includePaths: ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
+  includePaths ?? LAW_SCAN_INCLUDED_GLOBS;
 
 /**
  * Accumulated result of a supplemental-law project scan.
@@ -110,7 +130,10 @@ export const runLawScan = Effect.fn("LawScan.runLawScan")(function* <Diagnostic>
     for (const sourceFile of sourceFiles) {
       const relativeFilePath = toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()));
 
-      if (isExcludedLawScanPath(options.excludePaths, relativeFilePath)) {
+      if (
+        isExcludedLawScanPath(options.excludePaths, relativeFilePath) ||
+        (options.includePaths !== undefined && !A.contains(options.includePaths, relativeFilePath))
+      ) {
         continue;
       }
 

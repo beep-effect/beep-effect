@@ -13,7 +13,7 @@ import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
@@ -536,9 +536,13 @@ const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDepreca
  * @category cli-commands
  * @since 0.0.0
  */
-const lintPolicyCommand = Command.make("policy", {}, () => runRootLintPolicyTask).pipe(
-  Command.withDescription("Run repo-wide lint policy checks")
-);
+const lintPolicyCommand = Command.make(
+  "policy",
+  {
+    full: Flag.boolean("full").pipe(Flag.withDescription("Run the full policy sweep locally")),
+  },
+  ({ full }) => runRootLintPolicyTask(full)
+).pipe(Command.withDescription("Run repo-wide lint policy checks"));
 
 /**
  * Lint alias for the goals doctor (the CLI has no command-alias mechanism, so

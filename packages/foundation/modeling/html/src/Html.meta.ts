@@ -14,8 +14,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
-// cspell:words numoctaves onpagereveal onpageswap pointsatx pointsaty pointsatz refx refy
-// cspell:words targetx targety xchannelselector ychannelselector
 
 const $I = $HtmlId.create("Html.meta");
 

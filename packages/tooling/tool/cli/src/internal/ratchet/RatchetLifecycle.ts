@@ -15,7 +15,7 @@
  * {@link @beep/repo-cli/internal/artifacts/ArtifactIo!renderTruncatedLines};
  * baseline regeneration is `formatJsonc` + `writeArtifact` from the same
  * module, applied to each command's own `schema_version`-carrying baseline
- * schema. The inventory-merge ratchets (`DualArity`, `Lint/SchemaFirst`) keep
+ * schema. The schema-first inventory ratchet keeps
  * their bespoke per-diagnostic logging and strict-failure gating; see the
  * divergence catalog in the wave report.
  *

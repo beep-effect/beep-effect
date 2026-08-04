@@ -39,6 +39,8 @@ import {
   runCaptured,
   runToExit,
 } from "../../internal/process/index.ts";
+import { collectChangedFiles } from "../../internal/repo-run/ChangedFiles.ts";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
@@ -57,7 +59,10 @@ import {
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
+  GITHUB_CHECK_RUN_REPORT_PREFIX,
+  GithubCheckLaneRun,
   GithubCheckMode,
+  GithubCheckRunReport,
   LintPolicySubcommand,
   PackageTaskProfile,
   QualityTaskBypassArgName,
@@ -70,7 +75,12 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
-import type { PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.ts";
+import type {
+  GithubCheckFailurePolicy,
+  GithubCheckLaneWaveSpec,
+  PackageJsonDocument,
+  PackageJsonWorkspacesDocument,
+} from "./Quality.schemas.ts";
 
 export { QualityTaskStep } from "../../internal/process/index.ts";
 /**
@@ -103,8 +113,8 @@ const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
 // its group fan-out aligned with the root Turbo cap so hosted main checks do
 // not start multiple CPU/memory-heavy process graphs at once.
 const ROOT_LINT_STEP_CONCURRENCY = 3;
-// Lint-policy steps are independent read-only tools (cspell, markdownlint,
-// oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
+// Lint-policy steps are independent read-only tools (oxlint, eslint-jsdoc, law
+// checks, madge...). Running them grouped-concurrent
 // converts the lane from sum-of-steps to max-of-steps; keep it at the same
 // hosted-stable cap below full root lint so policy-only checks do not overload
 // constrained runners when multiple memory-heavy tools overlap.
@@ -939,6 +949,109 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
   yield* failQualityTaskFailures(label, failures);
 });
 
+/**
+ * Execute static GitHub-check waves and retain every sibling failure in the
+ * active wave before applying the selected scheduling policy.
+ *
+ * **Example** (Inspect an empty fail-fast run)
+ *
+ * ```ts
+ * import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const report = collectGithubCheckLaneWavesForTesting("pre-push", [], "fail-fast").pipe(
+ *   Effect.map(({ report: value }) => value)
+ * )
+ * console.log(Effect.isEffect(report)) // true
+ * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param waves - Static lane waves in execution order.
+ * @param failurePolicy - Whether a failed wave stops later scheduling.
+ * @returns The schema-backed run report and all failures observed in executed waves.
+ * @category execution
+ * @since 0.0.0
+ */
+const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLaneWaves")(function* (
+  label: string,
+  waves: ReadonlyArray<GithubCheckLaneWaveSpec>,
+  failurePolicy: GithubCheckFailurePolicy
+) {
+  let failures = A.empty<QualityTaskFailed>();
+  let laneRuns = A.empty<GithubCheckLaneRun>();
+  let stopped = false;
+
+  for (const wave of waves) {
+    if (stopped) {
+      laneRuns = A.appendAll(
+        laneRuns,
+        A.map(wave.lanes, (lane) =>
+          GithubCheckLaneRun.make({ id: lane.id, stage: lane.stage, status: "not-run-early-stop", wave: lane.wave })
+        )
+      );
+      continue;
+    }
+
+    const waveFailures = yield* collectStreamingStepFailures(
+      `${label}:${wave.wave}`,
+      A.map(wave.lanes, (lane) => lane.step)
+    );
+    const failedLabels = A.map(waveFailures, (failure) => failure.label);
+    laneRuns = A.appendAll(
+      laneRuns,
+      A.map(wave.lanes, (lane) =>
+        GithubCheckLaneRun.make({
+          id: lane.id,
+          stage: lane.stage,
+          status: A.contains(failedLabels, lane.step.label) ? "failed" : "passed",
+          wave: lane.wave,
+        })
+      )
+    );
+    failures = A.appendAll(failures, waveFailures);
+    stopped = failurePolicy === "fail-fast" && A.isReadonlyArrayNonEmpty(waveFailures);
+  }
+
+  return {
+    report: GithubCheckRunReport.make({ failurePolicy, lanes: laneRuns, schemaVersion: "github-check-run/v1" }),
+    failures,
+  };
+});
+
+const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
+
+/**
+ * Run local GitHub-check waves, emit their schema-backed report, and fail with
+ * the aggregate failures from every wave that was scheduled.
+ *
+ * **Example** (Run an empty battery)
+ *
+ * ```ts
+ * import { runQualityTaskGithubCheckLaneWaves } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast"))) // true
+ * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param waves - Static lane waves in execution order.
+ * @param failurePolicy - Whether a failed wave stops later scheduling.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGithubCheckLaneWaves")(function* (
+  label: string,
+  waves: ReadonlyArray<GithubCheckLaneWaveSpec>,
+  failurePolicy: GithubCheckFailurePolicy
+) {
+  const result = yield* collectGithubCheckLaneWaves(label, waves, failurePolicy);
+  const reportJson = yield* githubCheckRunReportJson
+    .encode(result.report)
+    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
+  yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* failQualityTaskFailures(label, result.failures);
+});
+
 const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOutput")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
@@ -1087,7 +1200,7 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
 
 const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration"], ["--concurrency=1", ...args]),
+  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...args]),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -1119,7 +1232,7 @@ const sqlIntegrationStep = (
   childCommand: SqlIntegrationChildCommand = sqlIntegrationChildCommand(args)
 ) =>
   QualityTaskStep.make({
-    label: "test:integration",
+    label: "test:integration:serial",
     command: childCommand.command,
     args: childCommand.args,
     cwd: repoRoot,
@@ -1284,22 +1397,53 @@ const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
     ...rootUnitTestSteps(repoRoot, lanes),
     ...optionalQualityTaskStep({
       enabled: lanes.integration,
-      step: () => turboStep(repoRoot, "test:integration", ["test:integration"], ["--concurrency=1", ...lanes.args]),
+      step: () =>
+        turboStep(
+          repoRoot,
+          "test:integration:parallel",
+          ["test:integration:parallel"],
+          boundedRootTurboArgs(lanes.args)
+        ),
+    }),
+    ...optionalQualityTaskStep({
+      enabled: lanes.integration,
+      step: () =>
+        turboStep(repoRoot, "test:integration:serial", ["test:integration:serial"], ["--concurrency=1", ...lanes.args]),
     }),
   ];
 };
 
-const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> => [
-  repoCliStep(repoRoot, "lint:effect-imports", ["laws", "effect-imports", "--check"]),
-  repoCliStep(repoRoot, "lint:terse-effect", ["laws", "terse-effect", "--check"]),
-  repoCliStep(repoRoot, "lint:effect-fn", ["laws", "effect-fn", "--check"]),
-  repoCliStep(repoRoot, "lint:frozen-grant-set", ["laws", "frozen-grant-set", "--check"]),
-  repoCliStep(repoRoot, "lint:native-runtime", ["laws", "native-runtime", "--check"]),
-  repoCliStep(repoRoot, "lint:dual-arity", ["laws", "dual-arity", "--check"]),
+const isLawSourcePath = (filePath: string): boolean =>
+  (Str.startsWith("apps/")(filePath) || Str.startsWith("packages/")(filePath) || Str.startsWith("infra/")(filePath)) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
+
+const scopedLawArgs = (
+  command: string,
+  args: ReadonlyArray<string>,
+  files?: ReadonlyArray<string>
+): ReadonlyArray<string> => [
+  "laws",
+  command,
+  ...args,
+  ...(files === undefined ? A.empty<string>() : ["--include", A.join(A.filter(files, isLawSourcePath), ",")]),
+];
+
+const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> => [
+  repoCliStep(repoRoot, "lint:effect-imports", scopedLawArgs("effect-imports", ["--check"], files)),
+  repoCliStep(repoRoot, "lint:terse-effect", scopedLawArgs("terse-effect", ["--check", "--advisory"], files)),
+  repoCliStep(repoRoot, "lint:effect-fn", scopedLawArgs("effect-fn", ["--check"], files)),
+  repoCliStep(repoRoot, "lint:frozen-grant-set", scopedLawArgs("frozen-grant-set", ["--check"], files)),
+  repoCliStep(repoRoot, "lint:native-runtime", scopedLawArgs("native-runtime", ["--check"], files)),
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
-  repoCliStep(repoRoot, "lint:package-test-imports", ["lint", "package-test-imports"]),
+  repoCliStep(
+    repoRoot,
+    "lint:package-test-imports",
+    files === undefined
+      ? ["lint", "package-test-imports"]
+      : ["lint", "package-test-imports", "--include", A.join(files, ",")]
+  ),
   repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
   repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
   repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
@@ -1310,8 +1454,6 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
   repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
   repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
-  bunxStep(repoRoot, "lint:spell", ["cspell", ".", "--no-progress"]),
-  bunxStep(repoRoot, "lint:markdown", ["markdownlint-cli2"]),
   repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
   bunxStep(repoRoot, "lint:typos", ["typos"]),
   // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
@@ -1331,12 +1473,15 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
  * ```
  *
  * @param repoRoot - Repository root directory.
+ * @param files - Optional changed-file scope for naturally file-scoped policy steps.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
  */
-export const rootLintPolicyStepsForTesting = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
-  rootRepoLintPolicySteps(repoRoot);
+export const rootLintPolicyStepsForTesting = (
+  repoRoot: string,
+  files?: ReadonlyArray<string>
+): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files);
 
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
@@ -1347,22 +1492,56 @@ export const rootLintPolicyStepsForTesting = (repoRoot: string): ReadonlyArray<Q
  * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  *
- * const program = Effect.succeed(runRootLintPolicyTask)
+ * const program = runRootLintPolicyTask(false)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @category use-cases
  * @since 0.0.0
  */
-export const runRootLintPolicyTask: Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> = Effect.gen(
-  function* () {
-    const path = yield* Path.Path;
-    const cwd = path.resolve(process.cwd());
-    const repoRoot = yield* findRepoRoot(cwd);
-
-    yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot), LINT_POLICY_STEP_CONCURRENCY);
+const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyTask")(function* (
+  full: boolean
+): Effect.fn.Return<void, QualityTaskError, QualityTaskEnvironment> {
+  const path = yield* Path.Path;
+  const cwd = path.resolve(process.cwd());
+  const repoRoot = yield* findRepoRoot(cwd);
+  const runFull = full || isCi();
+  let files: ReadonlyArray<string> | undefined;
+  if (!runFull) {
+    files = yield* collectChangedFiles(repoRoot, "origin/main", "HEAD");
   }
-);
+  const changedFileCount = pipe(
+    O.fromUndefinedOr(files),
+    O.map(A.length),
+    O.getOrElse(() => 0)
+  );
+
+  yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
+  yield* Console.log(
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+  );
+  yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
+});
+
+/**
+ * Run the root lint policy battery (changed-scope by default, full on demand).
+ *
+ * **Example** (Use runRootLintPolicyTask)
+ *
+ * ```ts
+ * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
+ *
+ * const program = runRootLintPolicyTask(false)
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param full - Run the full-repo sweep instead of the changed-scope default.
+ * @returns The lint policy battery effect.
+ * @category tasks
+ * @since 0.0.0
+ */
+export const runRootLintPolicyTask = (full = false) => runRootLintPolicyTaskInternal(full);
 
 const rootLintPolicySteps = (
   repoRoot: string,
@@ -1553,17 +1732,28 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
     step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args)),
   });
   const unitFailures = yield* collectStreamingStepFailures("test", unitSteps);
-  const integrationFailures = lanes.integration
-    ? yield* Effect.scoped(
-        Effect.gen(function* () {
-          const integrationArgs = yield* workspaceTaskArgs(repoRoot, "test:integration", lanes.args);
-          const resource = yield* acquireDefaultSqlIntegrationResource;
-          return yield* collectStreamingStepFailures("test:integration", [
-            sqlIntegrationStep(repoRoot, integrationArgs, resource),
-          ]);
-        })
-      )
-    : A.empty<QualityTaskFailed>();
+  let integrationFailures = A.empty<QualityTaskFailed>();
+  if (lanes.integration) {
+    const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
+    const parallelFailures = yield* collectStreamingStepFailures("test:integration:parallel", [
+      turboStep(
+        repoRoot,
+        "test:integration:parallel",
+        ["test:integration:parallel"],
+        boundedRootTurboArgs(parallelArgs)
+      ),
+    ]);
+    const serialFailures = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const serialArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:serial", lanes.args);
+        const resource = yield* acquireDefaultSqlIntegrationResource;
+        return yield* collectStreamingStepFailures("test:integration:serial", [
+          sqlIntegrationStep(repoRoot, serialArgs, resource),
+        ]);
+      })
+    );
+    integrationFailures = A.appendAll(parallelFailures, serialFailures);
+  }
 
   yield* failQualityTaskFailures("test", A.appendAll(unitFailures, integrationFailures));
 });
@@ -1777,6 +1967,24 @@ export const runQualityTaskStepGroup = runStepGroup;
  * @since 0.0.0
  */
 export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
+
+/**
+ * Execute GitHub-check waves without raising their collected subprocess
+ * failures. Exposed for focused scheduling tests.
+ *
+ * **Example** (Inspect a report effect)
+ *
+ * ```ts
+ * import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(collectGithubCheckLaneWavesForTesting("pre-push", [], "fail-fast"))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectGithubCheckLaneWavesForTesting = collectGithubCheckLaneWaves;
 
 /**
  * Run a bounded quality task group. Exposed for focused unit tests.

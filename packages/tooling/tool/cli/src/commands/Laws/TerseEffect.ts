@@ -22,10 +22,11 @@ const $I = $RepoCliId.create("commands/Laws/TerseEffect");
 /**
  * Runtime options for terse Effect style migration checks.
  *
- * @example
+ * **Example** (Configure terse Effect scanning)
  * ```ts
  * console.log("TerseEffectRulesOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -43,6 +44,7 @@ export class TerseEffectRulesOptions extends S.Class<TerseEffectRulesOptions>($I
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("TerseEffectRulesOptions", {
     description: "Runtime options for terse Effect style migration checks.",
@@ -579,7 +581,7 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
     skipAddingFilesFromTsConfig: true,
   });
 
-  for (const pattern of INCLUDED_GLOBS) {
+  for (const pattern of options.includePaths ?? INCLUDED_GLOBS) {
     project.addSourceFilesAtPaths(pattern);
   }
 

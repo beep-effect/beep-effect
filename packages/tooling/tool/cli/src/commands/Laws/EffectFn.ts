@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "./internal/LawScan.ts";
+import { lawScanSourcePaths, runLawScan } from "./internal/LawScan.ts";
 import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
 import type { Path } from "effect";
 import type {
@@ -37,7 +37,7 @@ type EffectFnOwner = ArrowFunction | FunctionDeclaration | FunctionExpression | 
 /**
  * Runtime options for the Effect.fn supplemental law.
  *
- * @example
+ * **Example** (Configure Effect.fn scanning)
  * ```ts
  * import { EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -48,6 +48,7 @@ type EffectFnOwner = ArrowFunction | FunctionDeclaration | FunctionExpression | 
  *
  * console.log(options.strictCheck)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,6 +62,7 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("EffectFnRulesOptions", {
     description: "Runtime options for the repo-local Effect.fn supplemental law.",
@@ -386,7 +388,8 @@ export const runEffectFnRules = Effect.fn("EffectFn.runEffectFnRules")(function*
   options: EffectFnRulesOptions
 ): Effect.fn.Return<EffectFnRulesSummary, S.SchemaError | TSMorphServiceError, TSMorphService | Path.Path> {
   const scan = yield* runLawScan({
-    sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,
+    sourceFileGlobs: lawScanSourcePaths(options.includePaths),
+    includePaths: options.includePaths,
     excludePaths: options.excludePaths,
     strictCheck: options.strictCheck,
     collect: collectEffectFnDiagnostics,

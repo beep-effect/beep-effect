@@ -13,7 +13,6 @@ import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
-import { DualArityRulesOptions, runDualArityRules } from "./DualArity.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
 import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "./FrozenGrantSet.ts";
@@ -43,6 +42,7 @@ class EffectImportsCommandOptions extends S.Class<EffectImportsCommandOptions>($
       S.withDecodingDefault(Effect.succeed(false))
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+    include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
   },
   $I.annote("EffectImportsCommandOptions", {
     description: "CLI options for effect import governance command.",
@@ -70,36 +70,14 @@ class TerseEffectCommandOptions extends S.Class<TerseEffectCommandOptions>($I`Te
       S.withDecodingDefault(Effect.succeed(false))
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+    include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
+    advisory: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
   },
   $I.annote("TerseEffectCommandOptions", {
     description: "CLI options for terse Effect style command.",
-  })
-) {}
-
-/**
- * CLI options for public API dual-arity command.
- *
- * @example
- * ```ts
- * console.log("docgen metadata")
- * ```
- * @category models
- * @since 0.0.0
- */
-class DualArityCommandOptions extends S.Class<DualArityCommandOptions>($I`DualArityCommandOptions`)(
-  {
-    write: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefault(Effect.succeed(false))
-    ),
-    check: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefault(Effect.succeed(false))
-    ),
-    exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
-  },
-  $I.annote("DualArityCommandOptions", {
-    description: "CLI options for public API dual-arity command.",
   })
 ) {}
 
@@ -120,6 +98,7 @@ class EffectFnCommandOptions extends S.Class<EffectFnCommandOptions>($I`EffectFn
       S.withDecodingDefault(Effect.succeed(false))
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+    include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
   },
   $I.annote("EffectFnCommandOptions", {
     description: "CLI options for the Effect.fn supplemental law.",
@@ -143,6 +122,7 @@ class FrozenGrantSetCommandOptions extends S.Class<FrozenGrantSetCommandOptions>
       S.withDecodingDefault(Effect.succeed(false))
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+    include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
   },
   $I.annote("FrozenGrantSetCommandOptions", {
     description: "CLI options for the FrozenGrantSet construction law.",
@@ -166,6 +146,7 @@ class NoNativeRuntimeCommandOptions extends S.Class<NoNativeRuntimeCommandOption
       S.withDecodingDefault(Effect.succeed(false))
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+    include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
   },
   $I.annote("NoNativeRuntimeCommandOptions", {
     description: "CLI options for native runtime parity checks.",
@@ -174,6 +155,19 @@ class NoNativeRuntimeCommandOptions extends S.Class<NoNativeRuntimeCommandOption
 
 const parseExcludePaths = (excludeValue: string): ReadonlyArray<string> =>
   Text.splitCommaSeparatedTrimmed(excludeValue);
+
+const parseIncludePaths = (includeValue: string): ReadonlyArray<string> | undefined =>
+  includeValue === "*" ? undefined : Text.splitCommaSeparatedTrimmed(includeValue);
+
+const includePathsOption = (includeValue: string): { readonly includePaths?: ReadonlyArray<string> } => {
+  const includePaths = parseIncludePaths(includeValue);
+  return includePaths === undefined ? {} : { includePaths };
+};
+
+const includeFlag = Flag.string("include").pipe(
+  Flag.withDescription("Comma-separated repo-relative source files to scan; defaults to the full source scope"),
+  Flag.withDefault("*")
+);
 
 const logTerseEffectFileGroup = Effect.fn("Laws.logTerseEffectFileGroup")(function* (
   label: string,
@@ -208,14 +202,16 @@ const lawsEffectImportsCommand = Command.make(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
+    include: includeFlag,
   },
-  Effect.fn(function* ({ write, check, exclude }) {
-    const options = EffectImportsCommandOptions.make({ write, check, exclude });
+  Effect.fn(function* ({ write, check, exclude, include }) {
+    const options = EffectImportsCommandOptions.make({ write, check, exclude, include });
     const summary = yield* runEffectImportRules(
       EffectImportRulesOptions.make({
         write: options.write,
         strictCheck: options.check,
         excludePaths: parseExcludePaths(options.exclude),
+        ...includePathsOption(options.include),
       })
     );
 
@@ -258,14 +254,19 @@ const lawsTerseEffectCommand = Command.make(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
+    include: includeFlag,
+    advisory: Flag.boolean("advisory").pipe(
+      Flag.withDescription("Report terse-effect candidates as advisory and always exit successfully")
+    ),
   },
-  Effect.fn(function* ({ write, check, exclude }) {
-    const options = TerseEffectCommandOptions.make({ write, check, exclude });
+  Effect.fn(function* ({ write, check, exclude, include, advisory }) {
+    const options = TerseEffectCommandOptions.make({ write, check, exclude, include, advisory });
     const summary = yield* runTerseEffectRules(
       TerseEffectRulesOptions.make({
         write: options.write,
-        strictCheck: options.check,
+        strictCheck: options.check && !options.advisory,
         excludePaths: parseExcludePaths(options.exclude),
+        ...includePathsOption(options.include),
       })
     );
 
@@ -295,6 +296,10 @@ const lawsTerseEffectCommand = Command.make(
     yield* logTerseEffectFileGroup("rewritable", summary.rewritableFiles, summary.rewritableFindings);
     yield* logTerseEffectFileGroup("informational", summary.informationalFiles, summary.informationalFindings);
 
+    if (options.advisory) {
+      yield* Console.log("[effect-governance-terse-effect] ADVISORY: candidates never block this invocation.");
+    }
+
     if (!options.write && summary.rewritableFiles.length > 0) {
       yield* Console.log("[effect-governance-terse-effect] Run with --write to persist rewritable helper changes.");
     }
@@ -308,42 +313,6 @@ const lawsTerseEffectCommand = Command.make(
     }
   })
 ).pipe(Command.withDescription("Check or rewrite terse Effect helper wrappers"));
-
-/**
- * CLI command for public helper dual-arity enforcement.
- *
- * @example
- * ```ts
- * console.log("docgen metadata")
- * ```
- * @category utilities
- * @since 0.0.0
- */
-const lawsDualArityCommand = Command.make(
-  "dual-arity",
-  {
-    write: Flag.boolean("write").pipe(Flag.withDescription("Refresh standards/dual-arity.inventory.jsonc")),
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when the dual-arity inventory is stale or enforced")),
-    exclude: Flag.string("exclude").pipe(
-      Flag.withDescription("Comma-separated list of file paths to exclude"),
-      Flag.withDefault("")
-    ),
-  },
-  Effect.fn(function* ({ write, check, exclude }) {
-    const options = DualArityCommandOptions.make({ write, check, exclude });
-    const summary = yield* runDualArityRules(
-      DualArityRulesOptions.make({
-        write: options.write,
-        strictCheck: options.check,
-        excludePaths: parseExcludePaths(options.exclude),
-      })
-    );
-
-    if (summary.strictFailure) {
-      return yield* failWithReportedExit("effect-governance-dual-arity: check failed.");
-    }
-  })
-).pipe(Command.withDescription("Check or refresh public helper dual-arity inventory"));
 
 /**
  * CLI command for the Effect.fn supplemental law.
@@ -363,13 +332,15 @@ const lawsEffectFnCommand = Command.make(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
+    include: includeFlag,
   },
-  Effect.fn(function* ({ check, exclude }) {
-    const options = EffectFnCommandOptions.make({ check, exclude });
+  Effect.fn(function* ({ check, exclude, include }) {
+    const options = EffectFnCommandOptions.make({ check, exclude, include });
     const summary = yield* runEffectFnRules(
       EffectFnRulesOptions.make({
         strictCheck: options.check,
         excludePaths: parseExcludePaths(options.exclude),
+        ...includePathsOption(options.include),
       })
     );
 
@@ -410,13 +381,15 @@ const lawsFrozenGrantSetCommand = Command.make(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
+    include: includeFlag,
   },
-  Effect.fn(function* ({ check, exclude }) {
-    const options = FrozenGrantSetCommandOptions.make({ check, exclude });
+  Effect.fn(function* ({ check, exclude, include }) {
+    const options = FrozenGrantSetCommandOptions.make({ check, exclude, include });
     const summary = yield* runFrozenGrantSetRules(
       FrozenGrantSetRulesOptions.make({
         strictCheck: options.check,
         excludePaths: parseExcludePaths(options.exclude),
+        ...includePathsOption(options.include),
       })
     );
 
@@ -455,13 +428,15 @@ const lawsNativeRuntimeCommand = Command.make(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
+    include: includeFlag,
   },
-  Effect.fn(function* ({ check, exclude }) {
-    const options = NoNativeRuntimeCommandOptions.make({ check, exclude });
+  Effect.fn(function* ({ check, exclude, include }) {
+    const options = NoNativeRuntimeCommandOptions.make({ check, exclude, include });
     const summary = yield* runNoNativeRuntimeRules(
       NoNativeRuntimeRulesOptions.make({
         strictCheck: options.check,
         excludePaths: parseExcludePaths(options.exclude),
+        ...includePathsOption(options.include),
       })
     );
 
@@ -531,8 +506,6 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws effect-imports --check",
     "- bun run beep laws effect-imports --write",
     "- bun run beep laws native-runtime --check",
-    "- bun run beep laws dual-arity --check",
-    "- bun run beep laws dual-arity --write",
     "- bun run beep laws effect-fn --check",
     "- bun run beep laws frozen-grant-set --check",
     "- bun run beep laws terse-effect --check",
@@ -544,7 +517,6 @@ export const lawsCommand = Command.make("laws", {}, () =>
   Command.withSubcommands([
     lawsEffectImportsCommand,
     lawsNativeRuntimeCommand,
-    lawsDualArityCommand,
     lawsEffectFnCommand,
     lawsFrozenGrantSetCommand,
     lawsTerseEffectCommand,

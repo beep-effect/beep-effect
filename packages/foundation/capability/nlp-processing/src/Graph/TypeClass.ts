@@ -575,7 +575,7 @@ interface EffectfulMapOperationSignature {
  * effectful `f`, naming the derived operation with the given `suffix`. Factored
  * out so the `flatMap` and `traverse` instances share one implementation while
  * each export still applies {@link dual} visibly at its own call site (the
- * dual-arity law requires `dual(...)` on the exported binding).
+ * exported helper supports data-first and data-last calls via `dual(...)`).
  */
 const makeEffectfulMapBody =
   (suffix: string) =>

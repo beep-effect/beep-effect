@@ -3,17 +3,22 @@ import {
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
+  GITHUB_CHECK_RUN_REPORT_PREFIX,
 } from "@beep/repo-cli/test/Quality";
 import {
+  appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
+  attemptJournalPath,
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
   buildYeetVerdictForTesting,
   closeoutGateStatesForTesting,
   closeoutWritePlanForTesting,
   collectDiffFingerprintForTesting,
+  collectPublishIntent,
   commandTextForStep,
   decodeTurboPlanTasksFromQueryJsonForTesting,
+  decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
@@ -56,10 +61,13 @@ import {
   TurboWorkspacePackage,
   validateMonitorGuards,
   validatePublishBranchForTesting,
+  YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
+  YeetExistingCommitPublishIntent,
   YeetProofLockStateForTesting,
   YeetPublishIntent,
+  YeetStagedPublishIntent,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -388,14 +396,33 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["fallow-advisory-feedback", "full:pre-push", "publish:head-install-preflight"]);
+    ).toEqual(["publish:head-install-preflight", "fallow-advisory-feedback", "full:pre-push"]);
     expect(
       pipe(
         plan.steps,
         A.map((step) => step.mutability),
         A.dedupe
       )
-    ).toEqual(["write", "readonly"]);
+    ).toEqual(["readonly", "write"]);
+    expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
+      expect.objectContaining({ id: "preflight" }),
+      expect.objectContaining({ id: "heavy", laneIds: ["quality:build", "quality:lint", "quality:check"] }),
+      expect.objectContaining({ id: "test", laneIds: ["quality:test"] }),
+      expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
+    ]);
+  });
+
+  it("plans collect-all as an explicit override of fail-fast wave scheduling", () => {
+    const plan = buildYeetRunPlanForTesting({ collectAll: true, context, message: O.none(), mode: "verify" });
+
+    expect(findStep(plan.steps, "full:pre-push").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "pre-push",
+      "--collect-all",
+    ]);
   });
 
   it("builds review-fix verify as the targeted review proof", () => {
@@ -725,7 +752,7 @@ describe("yeet planner", () => {
       )
     ).toEqual([
       "prepare:laws:effect-imports",
-      "prepare:laws:dual-arity",
+      "prepare:laws:terse-effect",
       "prepare:config-sync",
       "prepare:lint:fix",
       "prepare:docgen",
@@ -835,7 +862,7 @@ describe("yeet planner", () => {
       )
     ).toEqual([
       "prepare:laws:effect-imports",
-      "prepare:laws:dual-arity",
+      "prepare:laws:terse-effect",
       "prepare:config-sync",
       "prepare:lint:fix",
       "prepare:docgen",
@@ -877,7 +904,7 @@ describe("yeet planner", () => {
 
           yield* stageReviewedPublishIntent(
             tempContext,
-            YeetPublishIntent.make({ paths: ["regular.txt", "tracked.txt"] }),
+            YeetStagedPublishIntent.make({ paths: ["regular.txt", "tracked.txt"] }),
             false
           );
 
@@ -1181,8 +1208,8 @@ describe("yeet quality issue index", () => {
           );
 
           yield* fs.makeDirectory(fromDir, { recursive: true });
-          yield* fs.writeFileString(path.join(fromDir, "audit.json"), `${auditText}\n`);
-          yield* fs.writeFileString(path.join(fromDir, "health.json"), `${healthText}\n`);
+          yield* fs.writeFileString(path.join(fromDir, "audit.check.json"), `${auditText}\n`);
+          yield* fs.writeFileString(path.join(fromDir, "health.advisory.json"), `${healthText}\n`);
           // CSF-011: the Fallow feedback reader/writer is constrained to its
           // configured allowed root. Point the guard at this temp dir so the
           // mixed-output directory is exercised under the symlink/traversal
@@ -1208,6 +1235,37 @@ describe("yeet quality issue index", () => {
               packageName: "@beep/root",
             }),
           ]);
+        })
+      )
+    ));
+
+  it("rejects advisory Fallow envelopes older than the Yeet run start", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fromDir = path.join(tmpDir, ".beep", "fallow");
+          const emitPath = path.join(tmpDir, ".beep", "yeet", "fallow-quality-issues.json");
+          const healthText = yield* encodeJson(
+            fallowOkEnvelope({
+              advisory: true,
+              blocking: false,
+              feature: "health",
+              findingId: "health-stale",
+            })
+          );
+          yield* fs.makeDirectory(fromDir, { recursive: true });
+          yield* fs.writeFileString(path.join(fromDir, "health.advisory.json"), `${healthText}\n`);
+          const error = yield* runYeetFallowFeedbackForTesting({
+            advisory: true,
+            emit: emitPath,
+            from: fromDir,
+            runStartedAt: "2026-06-16T00:00:00.000Z",
+          }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)), Effect.flip);
+
+          expect(error.message).toContain("older than the Yeet run start");
+          expect(error.message).toContain("health");
         })
       )
     ));
@@ -1396,14 +1454,15 @@ describe("yeet quality issue index", () => {
   });
 
   it("extracts known sub-lane hints from broad proof failures", () => {
-    const issues = prePushFailureIssues(context, "[beep-cli] lint:cspell: cspell .\nUnknown word found");
+    const issues = prePushFailureIssues(context, "[beep-cli] lint:typos: typos\nerror: misspelling found");
 
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({
       category: "lint-tool",
-      message: "full:pre-push failed in cspell with exit code 1.",
-      remediation: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
-      subCategory: "cspell",
+      message: "full:pre-push failed in typos with exit code 1.",
+      remediation:
+        "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
+      subCategory: "typos",
     });
   });
 
@@ -1484,7 +1543,7 @@ describe("yeet quality issue index", () => {
 
   it("extracts a sub-lane hint from the failure prefix before unrelated success tail", () => {
     const remediation = knownSubLaneRemediationFromOutput(
-      "Unknown word found: operator\n" +
+      "lint:typos failed: operator\n" +
         pipe(
           A.makeBy(16, (index) => `context line ${index}`),
           A.join("\n")
@@ -1493,7 +1552,7 @@ describe("yeet quality issue index", () => {
     );
 
     expect(O.isSome(remediation)).toBe(true);
-    expect(O.getOrUndefined(remediation)).toContain("cspell");
+    expect(O.getOrUndefined(remediation)).toContain("typos");
   });
 
   it("extracts the changeset sub-lane hint with the empty-changeset remedy", () => {
@@ -1543,6 +1602,26 @@ describe("yeet quality issue index", () => {
 });
 
 describe("yeet status helpers", () => {
+  it("schema-decodes remote review-thread and rerun guidance", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const remote = YeetStatusRemote.make({
+          available: true,
+          checked: true,
+          detail: "PR #42 OPEN",
+          rerunFailedCommand: "gh run rerun 123 --failed",
+          rerunFailedDecision: "same-SHA red candidate",
+          unresolvedReviewThreadCount: 1,
+          unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
+        });
+        const encoded = yield* S.encodeEffect(YeetStatusRemote)(remote);
+        const decoded = yield* S.decodeUnknownEffect(YeetStatusRemote)(encoded);
+
+        expect(decoded.unresolvedReviewThreadCount).toBe(1);
+        expect(decoded.rerunFailedCommand).toBe("gh run rerun 123 --failed");
+      })
+    ));
+
   it("renders compact local status and suggests repair commands from verdict artifacts", () => {
     const verdict = YeetStatusArtifact.make({
       detail: "publish failure: proof failed",
@@ -1550,7 +1629,7 @@ describe("yeet status helpers", () => {
       outcome: "failure",
       path: ".beep/yeet/runs/feature/verdict.json",
       repairCommand: "Run `bun run docgen:local`.",
-      schemaVersion: "yeet-verdict/v1",
+      schemaVersion: "yeet-verdict/v2",
       state: "present",
     });
     const closeout = YeetStatusArtifact.make({
@@ -1595,6 +1674,81 @@ describe("yeet status helpers", () => {
 
     expect(command).toContain("publish --staged-only --pr --monitor");
   });
+
+  it("names unresolved threads and records the same-SHA rerun-failed decision", () => {
+    const remote = YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR #42 OPEN",
+      rerunFailedCommand: "gh run rerun 123 --failed",
+      rerunFailedDecision: "same-SHA red detected; suggest rerun-failed before pushing",
+      unresolvedReviewThreadCount: 1,
+      unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
+    });
+    const command = yeetStatusNextCommandForTesting(
+      YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+      YeetStatusArtifact.make({ detail: "success", outcome: "success", path: "verdict.json", state: "present" }),
+      YeetStatusArtifact.make({ detail: "closed", issueCount: 0, path: "pr-closeout.json", state: "present" }),
+      remote
+    );
+
+    expect(command).toContain("gh run rerun 123 --failed");
+    expect(command).not.toContain("merge the PR");
+  });
+});
+
+describe("yeet attempt journal", () => {
+  it("schema-decodes repository step timing fields", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const result = yield* S.decodeUnknownEffect(RepoStepRunResult)({
+          stepId: "feedback:check",
+          commandText: "bun run check",
+          exitCode: 0,
+          startedAt: "2026-08-04T00:00:00.000Z",
+          endedAt: "2026-08-04T00:00:01.000Z",
+          elapsedMs: 1000,
+        });
+
+        expect(result.elapsedMs).toBe(1000);
+      })
+    ));
+
+  it("schema-decodes events and retains the newest 50 attempts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          yield* Effect.forEach(
+            A.makeBy(51, (index) => index),
+            (index) =>
+              appendYeetAttemptJournalEvent(
+                tempContext,
+                YeetAttemptStarted.make({
+                  schemaVersion: "yeet-attempt-journal/v1",
+                  _tag: "attempt-started",
+                  attemptId: `00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`,
+                  runId: "repo-cli-yeet",
+                  branch: "repo-cli-yeet",
+                  base: "origin/main",
+                  head: "HEAD",
+                  mode: "verify",
+                  startedAt: "2026-08-04T00:00:00.000Z",
+                })
+              ),
+            { discard: true, concurrency: 1 }
+          );
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, decodeYeetAttemptJournalEvent);
+
+          expect(events).toHaveLength(50);
+          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
+          expect(events[49]?.attemptId).toBe("00000000-0000-4000-8000-000000000050");
+        })
+      )
+    ));
 });
 
 describe("yeet publish scope helpers", () => {
@@ -1636,6 +1790,65 @@ describe("yeet publish scope helpers", () => {
     expect(partiallyStagedPathsForTesting(["a.ts"], [])).toEqual([]);
     expect(partiallyStagedPathsForTesting([], ["a.ts"])).toEqual([]);
   });
+
+  it("decodes both publish intent states", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const staged = yield* S.decodeUnknownEffect(YeetPublishIntent)({ kind: "staged", paths: ["src/a.ts"] });
+        const existing = yield* S.decodeUnknownEffect(YeetPublishIntent)({
+          commitSha: "abc123",
+          kind: "existing-commit",
+          paths: ["src/a.ts"],
+        });
+
+        expect(staged).toBeInstanceOf(YeetStagedPublishIntent);
+        expect(existing).toBeInstanceOf(YeetExistingCommitPublishIntent);
+      })
+    ));
+
+  it("accepts a clean local commit ahead of the publish remote/base", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+          yield* fs.writeFileString(filePath, "committed ahead\n");
+          yield* runGit(tmpDir, ["add", "tracked.txt"]);
+          yield* runGit(tmpDir, ["commit", "-m", "test: committed ahead"]);
+
+          const intent = yield* collectPublishIntent(tempContext, false);
+
+          expect(intent).toBeInstanceOf(YeetExistingCommitPublishIntent);
+          if (intent.kind === "existing-commit") {
+            expect(intent.paths).toEqual(["tracked.txt"]);
+            expect(intent.commitSha).toBe(Str.trim(yield* runGitCapture(tmpDir, ["rev-parse", "HEAD"])));
+          }
+        })
+      )
+    ));
+
+  it("rejects dirty, contained, and no-ahead clean trees as existing-commit intent", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+
+          const noAhead = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(noAhead.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+
+          yield* fs.writeFileString(filePath, "dirty\n");
+          const dirty = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(dirty.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+
+          yield* runGit(tmpDir, ["add", "tracked.txt"]);
+          yield* runGit(tmpDir, ["commit", "-m", "test: committed ahead"]);
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/repo-cli-yeet", "HEAD"]);
+          const contained = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(contained.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+        })
+      )
+    ));
 
   it("returns branch paths that were also changed on the base since merge-base", () => {
     expect(overlappingBasePathsForTesting(["src/a.ts", "src/b.ts"], ["src/b.ts", "src/c.ts"])).toEqual(["src/b.ts"]);
@@ -1764,9 +1977,13 @@ describe("yeet publish scope helpers", () => {
       resume: "never",
     });
     const verdict = buildYeetVerdictForTesting({
+      attemptId: "550e8400-e29b-41d4-a716-446655440000",
       base: "origin/main",
       branch: "feature",
       createdAt: "2026-06-11T00:00:00.000Z",
+      startedAt: "2026-06-11T00:00:00.000Z",
+      endedAt: "2026-06-11T00:00:00.012Z",
+      elapsedMs: 12,
       executed: [
         YeetExecutedStep.make({
           durationMs: 12,
@@ -1774,7 +1991,7 @@ describe("yeet publish scope helpers", () => {
             stepId: proofStep.id,
             commandText: "bun run beep quality github-checks pre-push",
             exitCode: 1,
-            output: "[beep-cli] lint:cspell: cspell .\nUnknown word found",
+            output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
           }),
           step: proofStep,
         }),
@@ -1783,6 +2000,8 @@ describe("yeet publish scope helpers", () => {
       message: "yeet publish proof failed after creating the local commit.",
       mode: "publish",
       outcome: "failure",
+      failedStepId: proofStep.id,
+      failureKind: "step-exit",
       packetPaths: [],
       planned: [proofStep, pushStep],
       runId: "feature",
@@ -1791,14 +2010,20 @@ describe("yeet publish scope helpers", () => {
     expect(verdict.outcome).toBe("failure");
     expect(verdict.committed).toBe(false);
     expect(verdict.pushed).toBe(false);
-    expect(verdict.lanes).toHaveLength(2);
+    expect(verdict.failurePolicy).toBe("fail-fast");
+    expect(verdict.failedStepId).toBe(proofStep.id);
+    expect(verdict.failureKind).toBe("step-exit");
+    expect(verdict.lanes).toHaveLength(4);
     expect(verdict.lanes[0]).toMatchObject({
       id: "full:pre-push",
       durationMs: 12,
-      repairCommand: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
+      repairCommand:
+        "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
       status: "failed",
     });
-    expect(verdict.lanes[1]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
+    expect(verdict.lanes[1]).toMatchObject({ id: "quality:lint", status: "failed" });
+    expect(verdict.lanes[2]).toMatchObject({ id: "quality:docgen", status: "not-run-early-stop" });
+    expect(verdict.lanes[3]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
   });
 
   it("round-trips the verdict schema and marks executed push lanes", () =>
@@ -1816,9 +2041,13 @@ describe("yeet publish scope helpers", () => {
           resume: "never",
         });
         const verdict = buildYeetVerdictForTesting({
+          attemptId: "550e8400-e29b-41d4-a716-446655440001",
           base: "origin/main",
           branch: "feature",
           createdAt: "2026-06-11T00:00:00.000Z",
+          startedAt: "2026-06-11T00:00:00.000Z",
+          endedAt: "2026-06-11T00:00:00.010Z",
+          elapsedMs: 10,
           executed: [
             YeetExecutedStep.make({
               result: RepoStepRunResult.make({
@@ -1843,7 +2072,7 @@ describe("yeet publish scope helpers", () => {
         const encoded = yield* S.encodeEffect(YeetVerdict)(verdict);
         const decoded = yield* S.decodeUnknownEffect(YeetVerdict)(encoded);
         expect(decoded.lanes[0]?.status).toBe("passed");
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v1");
+        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
     ));
 
@@ -1853,7 +2082,7 @@ describe("yeet publish scope helpers", () => {
       fc.property(VerdictArbitrary, (verdict) => {
         const encoded = S.encodeSync(YeetVerdict)(verdict);
         const decoded = S.decodeUnknownSync(YeetVerdict)(encoded);
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v1");
+        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
         expect(decoded.lanes.length).toBe(verdict.lanes.length);
         expect(decoded.outcome).toBe(verdict.outcome);
       }),

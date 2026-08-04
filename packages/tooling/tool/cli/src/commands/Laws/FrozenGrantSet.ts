@@ -19,7 +19,7 @@ import { Effect, HashSet, Order } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "./internal/LawScan.ts";
+import { lawScanSourcePaths, runLawScan } from "./internal/LawScan.ts";
 import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
 import type { Path } from "effect";
 import type { CallExpression, NewExpression, ObjectBindingPattern, SourceFile, VariableDeclaration } from "ts-morph";
@@ -36,7 +36,7 @@ const FrozenGrantSetSeverity = LiteralKit(["error"]);
 /**
  * Runtime options for the FrozenGrantSet construction law.
  *
- * @example
+ * **Example** (Configure FrozenGrantSet scanning)
  * ```ts
  * import { FrozenGrantSetRulesOptions } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
  *
@@ -47,6 +47,7 @@ const FrozenGrantSetSeverity = LiteralKit(["error"]);
  *
  * console.log(options.strictCheck)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,6 +61,7 @@ export class FrozenGrantSetRulesOptions extends S.Class<FrozenGrantSetRulesOptio
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("FrozenGrantSetRulesOptions", {
     description: "Runtime options for the repo-local FrozenGrantSet construction law.",
@@ -321,7 +323,8 @@ export const runFrozenGrantSetRules = Effect.fn("FrozenGrantSet.runFrozenGrantSe
   options: FrozenGrantSetRulesOptions
 ): Effect.fn.Return<FrozenGrantSetRulesSummary, S.SchemaError | TSMorphServiceError, TSMorphService | Path.Path> {
   const scan = yield* runLawScan({
-    sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,
+    sourceFileGlobs: lawScanSourcePaths(options.includePaths),
+    includePaths: options.includePaths,
     excludePaths: A.append(options.excludePaths, FROZEN_GRANT_SET_DEFINING_MODULE),
     strictCheck: options.strictCheck,
     collect: collectFrozenGrantSetDiagnostics,

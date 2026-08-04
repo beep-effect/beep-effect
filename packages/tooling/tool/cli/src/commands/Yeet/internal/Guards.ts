@@ -273,21 +273,7 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
  */
 export const validateRequiredMessage = (options: YeetRunOptions): Effect.Effect<O.Option<string>, YeetCommandError> => {
   const message = optionFromNonEmpty(options.message);
-  if (
-    options.plan ||
-    options.mode !== "publish" ||
-    O.isSome(message) ||
-    (options.amend && options.noEdit) ||
-    options.pushOnly
-  ) {
-    return Effect.succeed(message);
-  }
-  return Effect.fail(
-    YeetCommandError.make({
-      message: "yeet publish requires --message with a conventional commit message unless --plan is used.",
-      exitCode: 1,
-    })
-  );
+  return Effect.succeed(message);
 };
 
 /**

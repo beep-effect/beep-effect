@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DEFAULT_AI_METRICS_DATA_ROOT } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Console, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
@@ -223,7 +223,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
       })
     )
   );
-  const report = yield* scoreAgentEffectivenessEval({ dir, taskPath });
+  const [elapsed, report] = yield* scoreAgentEffectivenessEval({ dir, taskPath }).pipe(Effect.timed);
 
   if (json) {
     yield* Console.log(yield* encodeAgentEffectivenessEvalScoreReportJson(report));
@@ -236,6 +236,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
   if (record) {
     yield* recordAgentEffectivenessEvalScore({
       dataRoot,
+      elapsedMs: Duration.toMillis(elapsed),
       report,
       task,
       taskPath,

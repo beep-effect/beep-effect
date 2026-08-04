@@ -184,8 +184,8 @@ export class QualityTaskFailed extends TaggedErrorClass<QualityTaskFailed>($I`Qu
  *   exitCode: 1,
  *   failures: [
  *     new QualityTaskFailed({
- *       label: "lint:spell",
- *       command: "bunx cspell .",
+ *       label: "lint:typos",
+ *       command: "bunx typos",
  *       exitCode: 1
  *     })
  *   ]

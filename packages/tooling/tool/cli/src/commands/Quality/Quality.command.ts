@@ -25,6 +25,7 @@ import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
+  githubCheckChangesetStatusLane,
   githubCheckFallowLanes,
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting as githubCheckLanesForModeForTestingImpl,
@@ -63,14 +64,16 @@ import {
 import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.ts";
 import {
   decodeGithubChecksFallowFeatureMatrix,
+  GithubCheckFailurePolicy,
   GithubCheckMode,
   githubCheckModeFlagChoices,
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
-import { runQualityTaskStreamingStepGroup } from "./Tasks.ts";
+import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 import type {
+  GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
   GithubCheckLaneSpec,
   GithubChecksFallowFeatureMatrix,
   QualityProfileDetectionInput as QualityProfileDetectionInputType,
@@ -262,7 +265,7 @@ export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl
 export const activeOsvIgnoreIdsForTesting = activeOsvIgnoreIdsForTestingImpl;
 
 const $I = $RepoCliId.create("commands/Quality/ScriptCommands");
-const { bunRunLane, githubCheckLane, githubCheckLaneSteps } = githubCheckLanePlan;
+const { githubCheckLaneWaves } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const ignoredTestPathSegments = ["/test/fixtures/"] as const;
@@ -353,6 +356,7 @@ type GithubCheckError =
 type GithubCheckRunOptions = {
   readonly base?: string;
   readonly head?: string;
+  readonly failurePolicy?: GithubCheckFailurePolicyType;
 };
 type TsgoDiagnosticOutput = {
   readonly output: string;
@@ -440,9 +444,10 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
 
 const runGithubCheckLaneGroup = (
   label: string,
-  lanes: ReadonlyArray<GithubCheckLaneSpec>
+  lanes: ReadonlyArray<GithubCheckLaneSpec>,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskStreamingStepGroup(label, githubCheckLaneSteps(lanes));
+  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy);
 
 const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function* (
   step: QualityTaskStep
@@ -549,13 +554,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
     return A.empty<GithubCheckLaneSpec>();
   }
 
-  return [
-    githubCheckLane(
-      "quality:changeset-status",
-      "repo-quality",
-      bunRunLane(repoRoot, "quality:changeset-status", ["changeset:status:since-main"])
-    ),
-  ];
+  return [githubCheckChangesetStatusLane(repoRoot)];
 });
 
 // `[[IgnoredVulns]]` table header delimiting one OSV ignore entry in
@@ -610,41 +609,48 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 });
 
 const runRepoSanity = Effect.fn("QualityScriptCommands.runRepoSanity")(function* (
-  repoRoot: string
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
-  yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot));
+  yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot), failurePolicy);
 });
 
 const runQuality = Effect.fn("QualityScriptCommands.runQuality")(function* (
-  repoRoot: string
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
-  yield* runGithubCheckLaneGroup("github-checks:quality", [
-    ...githubCheckQualityLanes(repoRoot),
-    ...githubCheckRepoSanityLanes(repoRoot),
-    ...changesetStatusLanes,
-  ]);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:quality",
+    [...changesetStatusLanes, ...githubCheckRepoSanityLanes(repoRoot), ...githubCheckQualityLanes(repoRoot)],
+    failurePolicy
+  );
 });
 
 const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(function* (
-  repoRoot: string
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
-  yield* runGithubCheckLaneGroup("github-checks:pre-push", [
-    ...githubCheckQualityLanes(repoRoot),
-    ...githubCheckFallowLanes(repoRoot),
-    ...githubCheckRepoSanityLanes(repoRoot),
-    ...changesetStatusLanes,
-    ...githubCheckPrePushExternalLanes(repoRoot),
-  ]);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:pre-push",
+    [
+      ...changesetStatusLanes,
+      ...githubCheckRepoSanityLanes(repoRoot),
+      ...githubCheckQualityLanes(repoRoot),
+      ...githubCheckFallowLanes(repoRoot),
+      ...githubCheckPrePushExternalLanes(repoRoot),
+    ],
+    failurePolicy
+  );
 });
 
 const qualityRangeEnv = (base: string, head: string): Record<string, string | undefined> => ({
@@ -979,16 +985,17 @@ export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks"
   options: GithubCheckRunOptions = {}
 ): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
   yield* GithubCheckMode.$match(mode, {
-    quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot))),
+    quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot, failurePolicy))),
     "review-fix": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runReviewFix(repoRoot, options))),
-    "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot))),
+    "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot, failurePolicy))),
     secrets: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSecretScan(repoRoot))),
     security: () => runSecurityScan(repoRoot),
     sast: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSastScan(repoRoot))),
     nix: () => runNixChecks(repoRoot),
-    "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot))),
+    "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot, failurePolicy))),
   });
 });
 
@@ -1941,9 +1948,19 @@ const githubChecksCommand = Command.make(
       Flag.withDescription("Base git ref for affected review-fix checks")
     ),
     head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for affected checks")),
+    collectAll: Flag.boolean("collect-all").pipe(
+      Flag.withDescription("Run every local GitHub-check wave after failures instead of stopping before later waves")
+    ),
     mode: Argument.choice("mode", GITHUB_CHECK_MODE_VALUES).pipe(Argument.withDescription("GitHub check mode to run")),
   },
-  ({ base, head, mode }) => runQualityProgram(runGithubChecks(mode, { base, head }))
+  ({ base, collectAll, head, mode }) =>
+    runQualityProgram(
+      runGithubChecks(mode, {
+        base,
+        head,
+        failurePolicy: collectAll ? "collect-all" : "fail-fast",
+      })
+    )
 ).pipe(Command.withDescription("Run repository GitHub verification lanes"));
 
 const githubChecksPlanContractCheckCommand = Command.make(

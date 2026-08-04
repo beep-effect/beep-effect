@@ -132,6 +132,10 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
     pendingCheckCount: S.optionalKey(S.Finite),
+    unresolvedReviewThreadCount: S.optionalKey(S.Finite),
+    unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
+    rerunFailedCommand: S.optionalKey(S.String),
+    rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
     state: S.optionalKey(S.String),
     url: S.optionalKey(S.String),
@@ -189,6 +193,8 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
 
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
+    id: S.String,
+    headRefOid: S.String,
     isDraft: S.Boolean,
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
@@ -200,6 +206,60 @@ class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRe
   $I.annote("GhStatusPullRequest", {
     description: "GitHub pull request payload used by yeet status remote summaries.",
   })
+) {}
+
+class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusReviewThread`)(
+  {
+    id: S.String,
+    isResolved: S.Boolean,
+    isOutdated: S.Boolean,
+    path: S.NullOr(S.String),
+  },
+  $I.annote("GhStatusReviewThread", {
+    description: "Minimal review-thread identity used by Yeet remote status.",
+  })
+) {}
+
+class GhStatusReviewThreadPageInfo extends S.Class<GhStatusReviewThreadPageInfo>($I`GhStatusReviewThreadPageInfo`)(
+  { hasNextPage: S.Boolean },
+  $I.annote("GhStatusReviewThreadPageInfo", {
+    description: "Pagination marker for the single-query Yeet review-thread status check.",
+  })
+) {}
+
+class GhStatusReviewThreadConnection extends S.Class<GhStatusReviewThreadConnection>(
+  $I`GhStatusReviewThreadConnection`
+)(
+  { nodes: S.Array(GhStatusReviewThread), pageInfo: GhStatusReviewThreadPageInfo },
+  $I.annote("GhStatusReviewThreadConnection", {
+    description: "Review threads returned by the single-query Yeet remote status check.",
+  })
+) {}
+
+class GhStatusReviewThreadsNode extends S.Class<GhStatusReviewThreadsNode>($I`GhStatusReviewThreadsNode`)(
+  { reviewThreads: GhStatusReviewThreadConnection },
+  $I.annote("GhStatusReviewThreadsNode", { description: "Pull request review-thread status node." })
+) {}
+
+class GhStatusReviewThreadsData extends S.Class<GhStatusReviewThreadsData>($I`GhStatusReviewThreadsData`)(
+  { node: GhStatusReviewThreadsNode },
+  $I.annote("GhStatusReviewThreadsData", { description: "GraphQL review-thread status data." })
+) {}
+
+class GhStatusReviewThreadsDocument extends S.Class<GhStatusReviewThreadsDocument>($I`GhStatusReviewThreadsDocument`)(
+  { data: GhStatusReviewThreadsData },
+  $I.annote("GhStatusReviewThreadsDocument", { description: "GraphQL review-thread status document." })
+) {}
+
+class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatusWorkflowRun`)(
+  {
+    conclusion: S.NullOr(S.String),
+    databaseId: S.Finite,
+    headSha: S.String,
+    name: S.String,
+    status: S.String,
+  },
+  $I.annote("GhStatusWorkflowRun", { description: "GitHub workflow run used for rerun-failed guidance." })
 ) {}
 
 class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
@@ -216,6 +276,10 @@ class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
 const decodeYeetVerdict = S.decodeUnknownEffect(S.fromJsonString(YeetVerdict));
 const decodePrCloseoutReport = S.decodeUnknownEffect(S.fromJsonString(PrCloseoutReport));
 const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatusPullRequest));
+const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
+const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
+const reviewThreadsQuery =
+  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved isOutdated path} pageInfo{hasNextPage}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 
 const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
@@ -405,6 +469,42 @@ const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function
   return yield* decodeGhStatusChecks(result.output).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
 });
 
+const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
+  context: RepoRunContext,
+  pullRequestId: string
+): Effect.fn.Return<GhStatusReviewThreadConnection, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture(
+    "gh",
+    ["api", "graphql", "-f", `query=${reviewThreadsQuery}`, "-F", `id=${pullRequestId}`],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR review threads for yeet status.")));
+  if (result.exitCode !== 0 || result.truncated) {
+    return yield* YeetCommandError.make({
+      message: "Failed to collect the single-query PR review-thread closeout gate.",
+      command: "gh api graphql",
+      exitCode: result.exitCode === 0 ? 1 : result.exitCode,
+    });
+  }
+  return yield* decodeGhStatusReviewThreads(result.output).pipe(
+    Effect.map((document) => document.data.node.reviewThreads),
+    Effect.mapError(YeetCommandError.new("Failed to decode PR review threads for yeet status."))
+  );
+});
+
+const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRuns")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<ReadonlyArray<GhStatusWorkflowRun>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture(
+    "gh",
+    ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
+    context.repoRoot
+  ).pipe(Effect.orElseSucceed(() => ({ exitCode: 1, output: "", truncated: false })));
+  if (result.exitCode !== 0 || result.truncated) {
+    return A.empty();
+  }
+  return yield* decodeGhStatusWorkflowRuns(result.output).pipe(Effect.orElseSucceed(A.empty<GhStatusWorkflowRun>));
+});
+
 const skippedRemote = YeetStatusRemote.make({
   available: false,
   checked: false,
@@ -420,7 +520,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   }
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision"],
+    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR for yeet status.")));
   if (result.exitCode !== 0) {
@@ -441,6 +541,12 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet status."))
   );
   const checks = yield* collectRemoteChecks(context);
+  const reviewThreads = yield* collectRemoteReviewThreads(context, view.id);
+  const unresolvedThreads = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
+  const unresolvedReviewThreads = [
+    ...A.map(unresolvedThreads, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
+    ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
+  ];
   const checkCount = pipe(checks, O.map(A.length));
   const failingCheckCount = pipe(
     checks,
@@ -450,6 +556,22 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     checks,
     O.map((values) => A.length(A.filter(values, checkIsPending)))
   );
+  const workflowRuns = yield* collectRemoteWorkflowRuns(context);
+  const sameShaFailedRun = A.findFirst(
+    workflowRuns,
+    (run) => run.headSha === view.headRefOid && run.conclusion === "failure"
+  );
+  const rerunFailedCommand = O.map(sameShaFailedRun, (run) => `gh run rerun ${run.databaseId} --failed`);
+  const hasFailingCheck = pipe(
+    failingCheckCount,
+    O.exists((count) => count > 0)
+  );
+  const rerunFailedDecision = pipe(
+    sameShaFailedRun,
+    O.filter(() => hasFailingCheck),
+    O.map((run) => `same-SHA red detected for ${run.name}; suggest rerun-failed before pushing`),
+    O.orElse(() => O.some("no same-SHA failed workflow rerun is currently indicated"))
+  );
   return YeetStatusRemote.make({
     available: true,
     checked: true,
@@ -458,10 +580,14 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     number: view.number,
     state: view.state,
     url: view.url,
+    unresolvedReviewThreadCount: A.length(unresolvedReviewThreads),
+    unresolvedReviewThreads,
     ...O.getSomesStruct({
       checkCount,
       failingCheckCount,
       pendingCheckCount,
+      rerunFailedCommand,
+      rerunFailedDecision,
     }),
     ...O.getSomesStruct({
       mergeStateStatus: O.fromNullishOr(view.mergeStateStatus),
@@ -488,10 +614,18 @@ const nextCommandForStatus = (
     return 'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
   }
   const closeoutIssueCount = O.fromUndefinedOr(closeout.issueCount);
-  if (remote.available && O.isSome(closeoutIssueCount) && closeoutIssueCount.value === 0) {
+  if (
+    remote.available &&
+    remote.unresolvedReviewThreadCount === 0 &&
+    O.isSome(closeoutIssueCount) &&
+    closeoutIssueCount.value === 0
+  ) {
     return "confirm GitHub mergeability, then merge the PR";
   }
   if (remote.available) {
+    if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
+      return `${remote.rerunFailedCommand} # ${remote.rerunFailedDecision ?? "same-SHA failed workflow"}`;
+    }
     return "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
   }
   return "run `bun run beep yeet verify` or pass `--remote` for PR status";
@@ -582,6 +716,15 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
     snapshot.remote.checked && O.isSome(O.fromUndefinedOr(snapshot.remote.checkCount))
       ? `checks: ${snapshot.remote.checkCount} total, ${snapshot.remote.failingCheckCount ?? 0} failing, ${snapshot.remote.pendingCheckCount ?? 0} pending`
       : "checks: not checked";
+  const reviewThreadLine =
+    snapshot.remote.checked && snapshot.remote.available
+      ? `review threads: ${snapshot.remote.unresolvedReviewThreadCount ?? 0} unresolved${
+          A.isReadonlyArrayNonEmpty(snapshot.remote.unresolvedReviewThreads ?? [])
+            ? ` -> ${A.join(snapshot.remote.unresolvedReviewThreads ?? [], ", ")}`
+            : ""
+        }`
+      : "review threads: not checked";
+  const rerunLine = snapshot.remote.rerunFailedDecision ?? "not checked";
   return pipe(
     [
       "yeet status",
@@ -592,6 +735,8 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- closeout: ${snapshot.closeout.detail}`,
       `- remote: ${remoteLine}`,
       `- ${checkLine}`,
+      `- ${reviewThreadLine}`,
+      `- rerun-failed: ${rerunLine}`,
       `- status artifact: ${snapshot.statusPath}`,
       `- next: ${snapshot.nextCommand}`,
     ],

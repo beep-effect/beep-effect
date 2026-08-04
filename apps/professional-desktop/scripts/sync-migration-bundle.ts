@@ -71,7 +71,6 @@ const renderMigrationsGenModule = Effect.fn("ProfessionalDesktop.syncMigrationBu
       " * @packageDocumentation",
       " * @since 0.0.0",
       " */",
-      "/* cspell:disable */",
       'import type { MigrationBundleEntry } from "@beep/postgres";',
       "",
       "/**",

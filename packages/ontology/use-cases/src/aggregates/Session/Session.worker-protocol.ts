@@ -247,7 +247,7 @@ export type WorkerResult = typeof WorkerResult.Type;
 
 // The exported encoders below wrap these rather than being them: `S.encodeSync`
 // returns a function carrying an optional options parameter, which the repo's
-// dual-arity law reads as a public two-parameter helper that ought to be `dual`.
+// This stays local because callers never need a data-last form.
 // Nobody passes encode options across a worker boundary.
 const encodeWorkerCommandSync = S.encodeSync(WorkerCommand);
 const encodeWorkerResultSync = S.encodeSync(WorkerResult);

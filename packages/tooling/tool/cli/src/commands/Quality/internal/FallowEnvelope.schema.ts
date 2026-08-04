@@ -49,6 +49,10 @@ export const FallowFeatureFamily = LiteralKit([
  */
 export type FallowFeature = typeof FallowFeatureFamily.Type;
 
+/** Return the fixed envelope filename for a Fallow feature and execution mode. */
+export const fallowEnvelopeFileName = (feature: FallowFeature, advisory: boolean): string =>
+  `${feature}.${advisory ? "advisory" : "check"}.json`;
+
 /**
  * Attribution kind retained by repo-cli Fallow envelopes.
  *
