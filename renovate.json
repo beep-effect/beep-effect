@@ -34,12 +34,7 @@
     },
     {
       "description": "Group test tooling updates",
-      "matchPackageNames": [
-        "vitest",
-        "@vitest/coverage-v8",
-        "tstyche",
-        "@effect/vitest"
-      ],
+      "matchPackageNames": ["vitest", "@vitest/coverage-v8", "@effect/vitest"],
       "groupName": "Test tooling",
       "automerge": false
     },

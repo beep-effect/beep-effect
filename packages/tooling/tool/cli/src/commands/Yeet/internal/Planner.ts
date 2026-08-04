@@ -47,12 +47,14 @@ type YeetFeedbackTask = (typeof YEET_FEEDBACK_TASKS)[number];
 /**
  * Yeet execution modes.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetRunMode } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetRunMode.is.verify("verify"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -81,12 +83,14 @@ export type YeetRunMode = typeof YeetRunMode.Type;
 /**
  * Yeet local proof tier.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetProofTier } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetProofTier.is["review-fix"]("review-fix"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -107,7 +111,8 @@ export type YeetProofTier = typeof YeetProofTier.Type;
 /**
  * Options for building a Yeet run plan in a specific mode.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetRunPlanModeOptions } from "@beep/repo-cli/test/Yeet"
  *
@@ -124,6 +129,7 @@ export type YeetProofTier = typeof YeetProofTier.Type;
  *   }).mode
  * )
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -213,14 +219,16 @@ const gitStep = (
 /**
  * Create an empty Turbo metadata snapshot.
  *
- * @param warnings - Optional graph-health warnings.
- * @returns Empty Turbo snapshot with graph health status.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { emptyTurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(emptyTurboPlanSnapshot([]).graphHealthStatus)
  * ```
+ *
+ * @param warnings - Optional graph-health warnings.
+ * @returns Empty Turbo snapshot with graph health status.
  * @category constructors
  * @since 0.0.0
  */
@@ -282,9 +290,9 @@ const feedbackFilterArgs = (context: RepoRunContext, feedbackTask: YeetFeedbackT
   );
 
 const feedbackRunArgs = (feedbackTask: YeetFeedbackTask, filters: ReadonlyArray<string>): ReadonlyArray<string> =>
-  // Repair feedback stays on unit/type lanes; verify/publish use only the full pre-push proof.
+  // Repair feedback stays on the unit lane; verify/publish use only the full pre-push proof.
   feedbackTask === "test"
-    ? ["--unit", "--types", ...filters, ...sharedFeedbackTurboArgs]
+    ? ["--unit", ...filters, ...sharedFeedbackTurboArgs]
     : [...filters, ...sharedFeedbackTurboArgs];
 
 const feedbackStep = (
@@ -587,11 +595,8 @@ const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean)
 /**
  * Build a yeet run plan for a specific mode.
  *
- * @param context - Hydrated run context.
- * @param message - Optional conventional commit message; required by publish execution.
- * @param options - Mode selector used to choose repair, verify, or publish steps.
- * @returns Ordered repository run plan.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import {
  *   buildYeetRunPlanWithMode,
@@ -628,6 +633,11 @@ const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean)
  *   ).steps
  * )
  * ```
+ *
+ * @param context - Hydrated run context.
+ * @param message - Optional conventional commit message; required by publish execution.
+ * @param options - Mode selector used to choose repair, verify, or publish steps.
+ * @returns Ordered repository run plan.
  * @category workflows
  * @since 0.0.0
  */
@@ -649,10 +659,8 @@ export const buildYeetRunPlanWithMode: {
 /**
  * Build the publish-mode yeet run plan.
  *
- * @param context - Hydrated run context.
- * @param message - Optional conventional commit message; omitted only for plan mode.
- * @returns Ordered repository run plan.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { buildYeetRunPlan, RepoRunContext, TurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
@@ -669,6 +677,10 @@ export const buildYeetRunPlanWithMode: {
  * })
  * console.log(buildYeetRunPlan(context, O.some("feat(repo-cli): add yeet")))
  * ```
+ *
+ * @param context - Hydrated run context.
+ * @param message - Optional conventional commit message; omitted only for plan mode.
+ * @returns Ordered repository run plan.
  * @category workflows
  * @since 0.0.0
  */

@@ -108,6 +108,9 @@ const includeFlag = Flag.string("include").pipe(
 );
 const planFlag = Flag.boolean("plan").pipe(Flag.withDescription("Print the local docgen plan without executing it"));
 const fullFlag = Flag.boolean("full").pipe(Flag.withDescription("Run the canonical full docgen proof"));
+const allowFullFlag = Flag.boolean("allow-full").pipe(
+  Flag.withDescription("Execute the canonical full docgen proof automatically when the bounded plan requires it")
+);
 const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Run against every configured docgen package"));
 const checkFlag = Flag.boolean("check").pipe(Flag.withDescription("Fail when the command reports failure findings"));
 const reuseProofManifestFlag = Flag.boolean("reuse-proof-manifest").pipe(
@@ -478,11 +481,13 @@ const docgenLocalCommand = Command.make(
     parallel: localParallelFlag,
     plan: planFlag,
     full: fullFlag,
+    allowFull: allowFullFlag,
     json: jsonFlag,
   },
   Effect.fn(
-    function* ({ package: packageSelector, base, head, parallel, plan, full, json }) {
+    function* ({ package: packageSelector, allowFull, base, head, parallel, plan, full, json }) {
       yield* runDocgenLocal({
+        allowFull,
         base,
         full,
         head,
@@ -996,10 +1001,13 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
 /**
  * Human-first docgen command suite.
  *
- * @remarks
+ * **Details**
+ *
  * The `quality` subcommand is advisory/report-only unless `--check` is used;
  * `local` plans from changed files before choosing a scoped or full docgen run.
- * @example
+ *
+ * **Example** (Run the docgen command)
+ *
  * ```ts
  * import { docgenCommand } from "@beep/repo-cli/commands/Docgen"
  * import { Command } from "effect/unstable/cli"
@@ -1009,6 +1017,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
  * console.log(qualityArgs.join(" "))
  * console.log(program) // example value
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

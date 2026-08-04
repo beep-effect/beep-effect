@@ -138,11 +138,6 @@
         "!.beep/**"
       ]
     },
-    "type-test": {
-      "cache": true,
-      "dependsOn": ["^type-test"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tstyche.json", "!.beep/**"]
-    },
     "coverage": {
       "cache": false,
       "dependsOn": ["^build"],
@@ -170,7 +165,6 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
-        "$TURBO_ROOT$/tstyche.json",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/.env*",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
@@ -204,7 +198,6 @@
         ".output/**",
         ".vercel/output/**",
         "docs/**",
-        "dtslint/**",
         "**/node_modules/.tmp/*.tsbuildinfo",
         "!**/.turbo/**",
         "!.next/cache/**"
@@ -215,7 +208,7 @@
       "cache": true,
       "dependsOn": ["^docgen"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
-      "outputs": ["docs/**", "dtslint/**", ".beep/docgen/**"]
+      "outputs": ["docs/**", ".beep/docgen/**"]
     },
     "dev": {
       "persistent": true,

@@ -18,18 +18,20 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
-const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "type-test", "docgen"] as const;
+const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;
 const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
-const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "type-test", "docgen"];
+const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen"];
 
 /**
  * Turbo task names supported by the scoped-config proof harness.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality"
  * const task = TurboConfigProofTaskName.pick("lint")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,11 +44,13 @@ export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUE
 /**
  * Turbo task name supported by the scoped-config proof harness.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import type { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality"
  * const task: TurboConfigProofTaskName = "check"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -55,11 +59,13 @@ export type TurboConfigProofTaskName = typeof TurboConfigProofTaskName.Type;
 /**
  * Selector mode used for Turbo dry-run proof.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import { TurboConfigProofSelectorMode } from "@beep/repo-cli/test/Quality"
  * const mode = TurboConfigProofSelectorMode.pick("affected")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -72,11 +78,13 @@ export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECT
 /**
  * Selector mode used for Turbo dry-run proof.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import type { TurboConfigProofSelectorMode } from "@beep/repo-cli/test/Quality"
  * const mode: TurboConfigProofSelectorMode = "filter-range"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

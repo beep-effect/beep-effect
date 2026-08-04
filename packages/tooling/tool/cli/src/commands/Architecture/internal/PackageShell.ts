@@ -22,14 +22,16 @@ import type * as R from "effect/Record";
 /**
  * Builds the synthetic target used for shell-only package plans.
  *
- * @param boundedContext - Slug of the slice the shell package belongs to.
- * @returns A synthetic plan target pinned to the `PackageShell` concept.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * console.log(packageShellTargetFor("research-lab").concept) // "PackageShell"
  * ```
+ *
+ * @param boundedContext - Slug of the slice the shell package belongs to.
+ * @returns A synthetic plan target pinned to the `PackageShell` concept.
  * @category constructors
  * @since 0.0.0
  */
@@ -72,16 +74,18 @@ const packageShellExportsForRole = ArchitecturePackageRole.$match({
 /**
  * Builds role metadata for a shell-only package plan.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose name, path, and exports are resolved.
- * @returns Role plan metadata for the shell-only package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellRolePlanFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const target = packageShellTargetFor("research-lab")
  * console.log(packageShellRolePlanFor(target, "domain").path)
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose name, path, and exports are resolved.
+ * @returns Role plan metadata for the shell-only package.
  * @category constructors
  * @since 0.0.0
  */
@@ -188,16 +192,18 @@ const packageShellDevDependenciesForRole = (role: ArchitecturePackageRole): R.Re
 /**
  * Builds the package.json operation for a shell-only role package.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose manifest fields are derived.
- * @returns A write-package-json operation for the shell role package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellTargetFor, shellPackageJsonOperationFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const operation = shellPackageJsonOperationFor(packageShellTargetFor("research-lab"), "domain")
  * console.log(operation.packageName)
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose manifest fields are derived.
+ * @returns A write-package-json operation for the shell role package.
  * @category constructors
  * @since 0.0.0
  */
@@ -259,7 +265,7 @@ const packageShellTsconfigContent = (): string => `{
 const packageShellTestTsconfigContent = (): string => `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
-  "include": ["src", "test", "dtslint"],
+  "include": ["src", "test"],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
@@ -420,16 +426,18 @@ export type DbSchema = typeof DbSchema;
 /**
  * Builds file operations for a shell-only role package.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose file set is emitted.
- * @returns The ordered write-file operations that materialize the role package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellFileOperationsFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const operations = packageShellFileOperationsFor(packageShellTargetFor("research-lab"), "domain")
  * console.log(operations.some((operation) => operation.path.endsWith("src/index.ts")))
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose file set is emitted.
+ * @returns The ordered write-file operations that materialize the role package.
  * @category constructors
  * @since 0.0.0
  */
@@ -494,14 +502,6 @@ export const packageShellFileOperationsFor: {
       writer: "template",
       content: packageShellVitestContent(),
       description: `Write ${role} package Vitest configuration.`,
-    }),
-    WriteFileOperation.make({
-      kind: "write-file",
-      role,
-      path: `${basePath}/dtslint/.gitkeep`,
-      writer: "template",
-      content: "",
-      description: `Create ${role} package dtslint directory.`,
     }),
     WriteFileOperation.make({
       kind: "write-file",

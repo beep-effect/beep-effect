@@ -48,7 +48,6 @@ const EXCLUDED_SOURCE_SEGMENTS = [
   "/node_modules/",
   "/test/",
   "/tests/",
-  "/dtslint/",
 ] as const;
 const EXCLUDED_SOURCE_SUFFIXES = [".stories.ts", ".stories.tsx"] as const;
 
@@ -57,13 +56,15 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 /**
  * Wall-clock budget used while collecting package quality subjects.
  *
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { QualityRuntimeBudget } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  *
  * const budget = QualityRuntimeBudget.make({ startedAtMs: 0, timeoutMs: 1_000 })
  * console.log(budget.timeoutMs)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,9 +81,8 @@ export class QualityRuntimeBudget extends S.Class<QualityRuntimeBudget>($I`Quali
 /**
  * Create a runtime budget from an Effect duration.
  *
- * @param timeout - Maximum allowed runtime.
- * @returns Runtime budget anchored to the current performance clock.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { makeRuntimeBudget } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  * import { Duration } from "effect"
@@ -90,6 +90,9 @@ export class QualityRuntimeBudget extends S.Class<QualityRuntimeBudget>($I`Quali
  * const budget = makeRuntimeBudget(Duration.seconds(1))
  * console.log(budget.timeoutMs)
  * ```
+ *
+ * @param timeout - Maximum allowed runtime.
+ * @returns Runtime budget anchored to the current performance clock.
  * @category constructors
  * @since 0.0.0
  */
@@ -102,14 +105,16 @@ export const makeRuntimeBudget = (timeout: Duration.Duration): QualityRuntimeBud
 /**
  * Read elapsed runtime for a quality-analysis budget.
  *
- * @param budget - Runtime budget created by `makeRuntimeBudget`.
- * @returns Elapsed milliseconds rounded for report stability.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { budgetDurationMs } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  *
  * console.log(budgetDurationMs({ startedAtMs: performance.now(), timeoutMs: 1_000 }) >= 0)
  * ```
+ *
+ * @param budget - Runtime budget created by `makeRuntimeBudget`.
+ * @returns Elapsed milliseconds rounded for report stability.
  * @category getters
  * @since 0.0.0
  */
@@ -119,14 +124,16 @@ export const budgetDurationMs = (budget: QualityRuntimeBudget): number =>
 /**
  * Check whether a quality-analysis budget has expired.
  *
- * @param budget - Runtime budget to inspect.
- * @returns `true` when elapsed time is at least the configured timeout.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { budgetExceeded } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  *
  * console.log(budgetExceeded({ startedAtMs: 0, timeoutMs: 0 }))
  * ```
+ *
+ * @param budget - Runtime budget to inspect.
+ * @returns `true` when elapsed time is at least the configured timeout.
  * @category predicates
  * @since 0.0.0
  */
@@ -135,10 +142,8 @@ export const budgetExceeded = (budget: QualityRuntimeBudget): boolean => budgetD
 /**
  * Format the package timeout diagnostic used in partial quality reports.
  *
- * @param target - Workspace package being analyzed.
- * @param budget - Runtime budget that expired.
- * @returns Stable timeout message.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { packageTimeoutMessage } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
@@ -155,6 +160,10 @@ export const budgetExceeded = (budget: QualityRuntimeBudget): boolean => budgetD
  * console.log(packageTimeoutMessage(target, { startedAtMs: 0, timeoutMs: 1_000 }))
  * console.log(packageTimeoutMessage({ startedAtMs: 0, timeoutMs: 1_000 })(target))
  * ```
+ *
+ * @param target - Workspace package being analyzed.
+ * @param budget - Runtime budget that expired.
+ * @returns Stable timeout message.
  * @category formatting
  * @since 0.0.0
  */
@@ -784,10 +793,8 @@ const generatedDocSnippetForFile = Effect.fn("DocgenQuality.generatedDocSnippetF
 /**
  * Finalize a quality subject candidate with a stable content hash identity.
  *
- * @param candidate - Subject candidate collected from a source declaration.
- * @returns Fully identified quality subject.
- * @effects Hashes the candidate source text and maps hash failures to `DomainError`.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { finalizeSubject } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  * import { Effect } from "effect"
@@ -795,6 +802,10 @@ const generatedDocSnippetForFile = Effect.fn("DocgenQuality.generatedDocSnippetF
  * const program = Effect.succeed(finalizeSubject)
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param candidate - Subject candidate collected from a source declaration.
+ * @returns Fully identified quality subject.
+ * @effects Hashes the candidate source text and maps hash failures to `DomainError`.
  * @category workflows
  * @since 0.0.0
  */
@@ -816,7 +827,8 @@ export const finalizeSubject = Effect.fn("DocgenQuality.finalizeSubject")(functi
 /**
  * Result of collecting package subject candidates for docgen quality analysis.
  *
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { PackageSubjectCandidateResult } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  *
@@ -828,6 +840,7 @@ export const finalizeSubject = Effect.fn("DocgenQuality.finalizeSubject")(functi
  * })
  * console.log(result.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -848,11 +861,8 @@ export class PackageSubjectCandidateResult extends S.Class<PackageSubjectCandida
 /**
  * Collect exported-symbol JSDoc subject candidates for one package.
  *
- * @param target - Workspace package to inspect.
- * @param budget - Runtime budget for the collection pass.
- * @returns Candidate collection result with partial status when the budget expires.
- * @effects Reads package configuration and TypeScript source files.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { collectPackageSubjectCandidates } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  * import { Effect } from "effect"
@@ -860,6 +870,11 @@ export class PackageSubjectCandidateResult extends S.Class<PackageSubjectCandida
  * const program = Effect.succeed(collectPackageSubjectCandidates)
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param target - Workspace package to inspect.
+ * @param budget - Runtime budget for the collection pass.
+ * @returns Candidate collection result with partial status when the budget expires.
+ * @effects Reads package configuration and TypeScript source files.
  * @category workflows
  * @since 0.0.0
  */
@@ -944,11 +959,8 @@ export const collectPackageSubjectCandidates = Effect.fn("DocgenQuality.collectP
 /**
  * Attach generated-doc snippets to finalized quality subjects.
  *
- * @param target - Workspace package that owns the subjects.
- * @param subjects - Finalized quality subjects to enrich.
- * @returns Subjects with generated Markdown snippets when available.
- * @effects Reads generated docs from the package `docs/modules` tree.
- * @example
+ * **Example** (Collect docgen quality subjects)
+ *
  * ```ts
  * import { withGeneratedDocSnippets } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.subjects"
  * import { Effect } from "effect"
@@ -956,6 +968,11 @@ export const collectPackageSubjectCandidates = Effect.fn("DocgenQuality.collectP
  * const program = Effect.succeed(withGeneratedDocSnippets)
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param target - Workspace package that owns the subjects.
+ * @param subjects - Finalized quality subjects to enrich.
+ * @returns Subjects with generated Markdown snippets when available.
+ * @effects Reads generated docs from the package `docs/modules` tree.
  * @category workflows
  * @since 0.0.0
  */

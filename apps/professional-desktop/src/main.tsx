@@ -3,6 +3,7 @@ import "./styles/globals.css";
 import "./styles/dock.css";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { invoke } from "@tauri-apps/api/core";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { StrictMode } from "react";
@@ -46,7 +47,6 @@ const loadRendererObservabilityConfig = Effect.fn("professional_desktop.bootstra
   function* () {
     if (!("__TAURI_INTERNALS__" in globalThis)) return;
 
-    const { invoke } = yield* Effect.tryPromise(() => import("@tauri-apps/api/core"));
     const wire = yield* Effect.tryPromise(() => invoke("renderer_observability_config"));
     const config = yield* decodeRendererObservabilityConfig(wire);
     setRuntimeString("__BEEP_BUILD_COMMIT__", config.buildCommit);

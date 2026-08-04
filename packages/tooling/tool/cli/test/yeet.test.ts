@@ -783,7 +783,6 @@ describe("yeet planner", () => {
       "test",
       "--",
       "--unit",
-      "--types",
       "--filter=@beep/repo-cli",
       "--concurrency=3",
       "--continue=dependencies-successful",

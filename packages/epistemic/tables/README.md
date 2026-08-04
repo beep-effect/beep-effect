@@ -42,7 +42,7 @@ bun run docgen
 bun run lint
 ```
 
-Tests and dtslint files import package source through
+Tests import package source through
 `@beep/epistemic-tables` or other `@beep/*` aliases. Use relative imports only
 for local helpers, fixtures, and snapshots.
 

@@ -364,6 +364,7 @@ export const ProofFixture = 1;
           yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
 
           const plan = yield* buildDocgenLocalPlan({
+            allowFull: false,
             base: "origin/main",
             full: false,
             head: "HEAD",

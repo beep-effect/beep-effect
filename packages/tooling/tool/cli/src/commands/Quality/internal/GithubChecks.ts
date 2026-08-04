@@ -22,16 +22,18 @@ import type {
 /**
  * Build a `bun run` quality lane step.
  *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param label - Human-readable lane label.
- * @param args - Arguments passed after `bun run`.
- * @returns Planned quality task step.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { bunRunLane } from "@beep/repo-cli/test/Quality"
  *
  * console.log(bunRunLane("/repo", "quality:check", ["check"]).args)
  * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Human-readable lane label.
+ * @param args - Arguments passed after `bun run`.
+ * @returns Planned quality task step.
  * @category utilities
  * @since 0.0.0
  */
@@ -46,16 +48,18 @@ const bunRunLane = (repoRoot: string, label: string, args: ReadonlyArray<string>
 /**
  * Build a `bunx` quality lane step.
  *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param label - Human-readable lane label.
- * @param args - Arguments passed to `bunx`.
- * @returns Planned quality task step.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { bunxLane } from "@beep/repo-cli/test/Quality"
  *
  * console.log(bunxLane("/repo", "repo-sanity:syncpack", ["syncpack", "lint"]).command)
  * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Human-readable lane label.
+ * @param args - Arguments passed to `bunx`.
+ * @returns Planned quality task step.
  * @category utilities
  * @since 0.0.0
  */
@@ -70,16 +74,18 @@ const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>):
 /**
  * Build a `bun run beep quality ...` lane step.
  *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param label - Human-readable lane label.
- * @param args - Arguments passed after `beep quality`.
- * @returns Planned quality task step.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { repoCliLane } from "@beep/repo-cli/test/Quality"
  *
  * console.log(repoCliLane("/repo", "quality:knip", ["knip"]).args)
  * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Human-readable lane label.
+ * @param args - Arguments passed after `beep quality`.
+ * @returns Planned quality task step.
  * @category utilities
  * @since 0.0.0
  */
@@ -89,15 +95,17 @@ const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string
 /**
  * Opt a Turbo-backed lane into no-location TS2589 flake quarantine.
  *
- * @param step - Planned lane step running a full Turbo build or check sweep.
- * @returns The same step carrying the `ts2589-no-location` quarantine policy.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckLanePlan } from "@beep/repo-cli/test/Quality"
  *
  * const lane = githubCheckLanePlan.bunRunLane("/repo", "quality:build", ["build"])
  * console.log(githubCheckLanePlan.ts2589QuarantineLane(lane).flakeQuarantine)
  * ```
+ *
+ * @param step - Planned lane step running a full Turbo build or check sweep.
+ * @returns The same step carrying the `ts2589-no-location` quarantine policy.
  * @category utilities
  * @since 0.0.0
  */
@@ -110,17 +118,19 @@ const ts2589QuarantineLane = (step: QualityTaskStep): QualityTaskStep =>
 /**
  * Attach metadata to a GitHub check lane step.
  *
- * @param id - Stable lane id.
- * @param stage - Stage bucket used for reporting.
- * @param step - Planned subprocess step.
- * @param blockedBy - Upstream lane ids that must pass first.
- * @returns GitHub check lane specification.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckLane, bunRunLane } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckLane("quality:check", "repo-quality", bunRunLane("/repo", "quality:check", ["check"])).id)
  * ```
+ *
+ * @param id - Stable lane id.
+ * @param stage - Stage bucket used for reporting.
+ * @param step - Planned subprocess step.
+ * @param blockedBy - Upstream lane ids that must pass first.
+ * @returns GitHub check lane specification.
  * @category utilities
  * @since 0.0.0
  */
@@ -140,14 +150,16 @@ const githubCheckLane = (
 /**
  * Project lane specs down to executable task steps.
  *
- * @param lanes - GitHub check lane specs.
- * @returns Quality task steps in lane order.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckLaneSteps } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckLaneSteps([]))
  * ```
+ *
+ * @param lanes - GitHub check lane specs.
+ * @returns Quality task steps in lane order.
  * @category utilities
  * @since 0.0.0
  */
@@ -157,12 +169,14 @@ const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
 /**
  * Command-internal GitHub check lane constructors.
  *
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckLanePlan } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckLanePlan.bunRunLane("/repo", "quality:check", ["check"]).label)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -177,14 +191,16 @@ export const githubCheckLanePlan = {
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-quality lane specifications.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckQualityLanes } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckQualityLanes("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered repo-quality lane specifications.
  * @category utilities
  * @since 0.0.0
  */
@@ -206,21 +222,30 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     bunRunLane(repoRoot, "quality:jsdoc-ratchet", ["beep", "ci", "lane", "jsdoc-ratchet"])
   ),
   githubCheckLane("quality:lint", "repo-quality", bunRunLane(repoRoot, "quality:lint", ["lint"])),
-  githubCheckLane("quality:docgen", "repo-quality", bunRunLane(repoRoot, "quality:docgen", ["docgen"])),
+  // Local proof uses bounded docgen (origin/main...HEAD + dirty files) and self-escalates
+  // to the full proof when global docgen inputs changed; the hosted Docgen lane keeps the
+  // full-repo proof (goals/quality-speedup grill decision, 2026-08-04).
+  githubCheckLane(
+    "quality:docgen",
+    "repo-quality",
+    bunRunLane(repoRoot, "quality:docgen", ["docgen:local", "--", "--allow-full"])
+  ),
   githubCheckLane("quality:test", "repo-quality", bunRunLane(repoRoot, "quality:test", ["test"])),
 ];
 
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-sanity lane specifications.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckRepoSanityLanes } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckRepoSanityLanes("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered repo-sanity lane specifications.
  * @category utilities
  * @since 0.0.0
  */
@@ -265,14 +290,16 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
 /**
  * Build the external pre-push diagnostic lanes.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered pre-push lane specifications for secrets, security, SAST, and Nix.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckPrePushExternalLanes } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckPrePushExternalLanes("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered pre-push lane specifications for secrets, security, SAST, and Nix.
  * @category utilities
  * @since 0.0.0
  */
@@ -300,14 +327,16 @@ const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): str
 /**
  * Build promoted Fallow lanes included in pre-push checks.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered promoted Fallow lane specifications.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckFallowLanes } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckFallowLanes("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered promoted Fallow lane specifications.
  * @category utilities
  * @since 0.0.0
  */
@@ -330,15 +359,17 @@ const isBlockingFallowMatrixRow = (row: GithubChecksFallowFeatureMatrixRow): boo
 /**
  * Derive the GitHub check lane ids required by currently promoted Fallow matrix rows.
  *
- * @param matrix - Minimal Fallow feature matrix.
- * @returns Sorted lane ids for feature families marked as blocking.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { GithubChecksFallowFeatureMatrix, promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
  * console.log(promotedFallowGithubCheckLaneIdsForTesting(matrix))
  * ```
+ *
+ * @param matrix - Minimal Fallow feature matrix.
+ * @returns Sorted lane ids for feature families marked as blocking.
  * @category testing
  * @since 0.0.0
  */
@@ -356,15 +387,17 @@ export const promotedFallowGithubCheckLaneIdsForTesting = (
 /**
  * Return the static GitHub check collector lanes for a mode.
  *
- * @param repoRoot - Repository root used for subprocess working directories.
- * @param mode - GitHub check mode.
- * @returns Static lane specs owned by the mode.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckLanesForModeForTesting("/repo", "pre-push").map((lane) => lane.id))
  * ```
+ *
+ * @param repoRoot - Repository root used for subprocess working directories.
+ * @param mode - GitHub check mode.
+ * @returns Static lane specs owned by the mode.
  * @category testing
  * @since 0.0.0
  */
@@ -405,17 +438,19 @@ export const githubCheckLanesForModeForTesting: {
 /**
  * Compare promoted Fallow matrix rows against static GitHub check lanes.
  *
- * @param repoRoot - Repository root used for lane construction.
- * @param mode - GitHub check mode to inspect.
- * @param matrix - Minimal Fallow feature matrix.
- * @returns Diagnostics explaining missing or premature Fallow pre-push lanes.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { GithubChecksFallowFeatureMatrix, githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
  * console.log(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix))
  * ```
+ *
+ * @param repoRoot - Repository root used for lane construction.
+ * @param mode - GitHub check mode to inspect.
+ * @param matrix - Minimal Fallow feature matrix.
+ * @returns Diagnostics explaining missing or premature Fallow pre-push lanes.
  * @category testing
  * @since 0.0.0
  */
@@ -446,14 +481,16 @@ export const githubCheckPromotedFallowLaneDiagnosticsForTesting: {
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-quality lane specifications.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckQualityLanesForTesting("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered repo-quality lane specifications.
  * @category testing
  * @since 0.0.0
  */
@@ -462,14 +499,16 @@ export const githubCheckQualityLanesForTesting = githubCheckQualityLanes;
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-sanity lane specifications.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckRepoSanityLanesForTesting("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered repo-sanity lane specifications.
  * @category testing
  * @since 0.0.0
  */
@@ -478,14 +517,16 @@ export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanes;
 /**
  * Build the external pre-push diagnostic lanes used by GitHub check collectors.
  *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered pre-push lane specifications for secrets, security, SAST, and Nix.
- * @example
+ * **Example** (Inspect GitHub checks)
+ *
  * ```ts
  * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(githubCheckPrePushExternalLanesForTesting("/repo"))
  * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @returns Ordered pre-push lane specifications for secrets, security, SAST, and Nix.
  * @category testing
  * @since 0.0.0
  */

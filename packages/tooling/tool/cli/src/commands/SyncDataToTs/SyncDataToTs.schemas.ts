@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import type { Crypto, Effect } from "effect";
+import type { Crypto, Effect, FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
@@ -29,13 +29,15 @@ const SyncDataSourceFormatKit = LiteralKit(["json", "csv", "xml", "bytes", "text
 /**
  * Supported source formats for sync-data-to-ts helpers.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataSourceFormat } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataSourceFormat | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -48,13 +50,15 @@ export const SyncDataSourceFormat = SyncDataSourceFormatKit.pipe(
 /**
  * Supported source formats for sync-data-to-ts helpers.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataSourceFormat } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataSourceFormat | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -63,13 +67,15 @@ export type SyncDataSourceFormat = typeof SyncDataSourceFormat.Type;
 /**
  * Command execution mode for sync-data-to-ts.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataRunMode } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataRunMode | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -78,13 +84,15 @@ export const SyncDataRunMode = RunMode;
 /**
  * Command execution mode for sync-data-to-ts.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataRunMode } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataRunMode | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -95,13 +103,15 @@ const SyncDataTargetAccessKit = LiteralKit(["public", "authenticated"]);
 /**
  * Access class for a checked-in sync target.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataTargetAccess } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataTargetAccess | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -114,13 +124,15 @@ export const SyncDataTargetAccess = SyncDataTargetAccessKit.pipe(
 /**
  * Access class for a checked-in sync target.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataTargetAccess } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataTargetAccess | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -129,7 +141,8 @@ export type SyncDataTargetAccess = typeof SyncDataTargetAccess.Type;
 /**
  * Schema-backed metadata shared by every checked-in sync target.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataTargetMetadata } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
@@ -141,6 +154,7 @@ export type SyncDataTargetAccess = typeof SyncDataTargetAccess.Type;
  * })
  * console.log(metadata.id) // "example"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -167,12 +181,14 @@ export class SyncDataTargetMetadata extends S.Class<SyncDataTargetMetadata>($I`S
 /**
  * Stable source metadata recorded in generated sidecars and PR reports.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataSourceMetadata } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * console.log(typeof SyncDataSourceMetadata !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -192,12 +208,14 @@ export class SyncDataSourceMetadata extends S.Class<SyncDataSourceMetadata>($I`S
 /**
  * A generated file emitted by a sync target.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataOutputFile } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * console.log(typeof SyncDataOutputFile !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -214,12 +232,14 @@ export class SyncDataOutputFile extends S.Class<SyncDataOutputFile>($I`SyncDataO
 /**
  * Rendered target projection ready to compare or write to disk.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataTargetProjection } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * console.log(typeof SyncDataTargetProjection !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -240,28 +260,32 @@ export class SyncDataTargetProjection extends S.Class<SyncDataTargetProjection>(
 /**
  * Effect requirements shared by checked-in sync targets.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataTargetServices } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataTargetServices | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto;
+export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto | FileSystem.FileSystem | Path.Path;
 
 /**
  * Checked-in sync target definition.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import type { SyncDataTarget } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * const example: SyncDataTarget | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -272,12 +296,14 @@ export interface SyncDataTarget extends SyncDataTargetMetadata {
 /**
  * Per-file command result after diffing or writing.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataFileResult } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
  * console.log(typeof SyncDataFileResult !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -323,7 +349,8 @@ const SyncDataJsonPatch = S.Array(SyncDataJsonPatchOperation).pipe(
 /**
  * Per-target command result after diffing or writing.
  *
- * @example
+ * **Example** (Use sync-data schemas)
+ *
  * ```ts
  * import { SyncDataTargetResult } from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas"
  *
@@ -342,6 +369,7 @@ const SyncDataJsonPatch = S.Array(SyncDataJsonPatchOperation).pipe(
  * })
  * console.log(result.changed) // false
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

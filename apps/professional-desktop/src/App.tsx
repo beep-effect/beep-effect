@@ -38,6 +38,7 @@ import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { invoke } from "@tauri-apps/api/core";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -139,10 +140,7 @@ const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
 // and renders the unavailable state.
 const readSidecarTransport = Effect.suspend(() =>
   hasTauriRuntime()
-    ? Effect.tryPromise(() => import("@tauri-apps/api/core")).pipe(
-        Effect.flatMap(({ invoke }) => Effect.tryPromise(() => invoke("sidecar_transport"))),
-        Effect.flatMap(SidecarTransport.decodeUnknownEffect)
-      )
+    ? Effect.tryPromise(() => invoke("sidecar_transport")).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect))
     : Effect.sync(browserSidecarTransport)
 );
 

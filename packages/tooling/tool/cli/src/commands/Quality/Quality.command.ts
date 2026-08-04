@@ -102,13 +102,15 @@ export {
 /**
  * Host facts used when selecting a quality profile.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import type { QualityProfileDetectionInput } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const example: QualityProfileDetectionInput | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -117,12 +119,14 @@ export type QualityProfileDetectionInput = QualityProfileDetectionInputType;
 /**
  * Return the static GitHub check collector lanes for a mode.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckLanesForModeForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -131,12 +135,14 @@ export const githubCheckLanesForModeForTesting = githubCheckLanesForModeForTesti
 /**
  * Build the external pre-push diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckPrePushExternalLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -145,12 +151,14 @@ export const githubCheckPrePushExternalLanesForTesting = githubCheckPrePushExter
 /**
  * Compare promoted Fallow matrix rows against static GitHub check lanes.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckPromotedFallowLaneDiagnosticsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -160,12 +168,14 @@ export const githubCheckPromotedFallowLaneDiagnosticsForTesting =
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckQualityLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -174,12 +184,14 @@ export const githubCheckQualityLanesForTesting = githubCheckQualityLanesForTesti
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckRepoSanityLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -188,12 +200,14 @@ export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanesFo
 /**
  * Derive GitHub check lane ids required by promoted Fallow matrix rows.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof promotedFallowGithubCheckLaneIdsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -202,12 +216,14 @@ export const promotedFallowGithubCheckLaneIdsForTesting = promotedFallowGithubCh
 /**
  * Detect the quality hardware profile from host facts.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { detectQualityProfileForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof detectQualityProfileForTesting !== "undefined") // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -216,12 +232,14 @@ export const detectQualityProfileForTesting = detectQualityProfileForTestingImpl
 /**
  * Return static quality scheduling settings for a hardware profile.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { qualityProfileConfigForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof qualityProfileConfigForTesting !== "undefined") // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -230,12 +248,14 @@ export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl
 /**
  * Select OSV advisory ids that may still be suppressed at a given time.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof activeOsvIgnoreIdsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -246,7 +266,6 @@ const { bunRunLane, githubCheckLane, githubCheckLaneSteps } = githubCheckLanePla
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const ignoredTestPathSegments = ["/test/fixtures/"] as const;
-const dtslintSearchRoots = ["apps", "packages", "tooling"] as const;
 const testSearchRoots = ["apps", "packages", "tooling", "infra"] as const;
 const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as const;
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
@@ -549,13 +568,15 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
  * `bun audit --ignore`; expired or malformed-expiry entries are dropped so the
  * audit re-flags the advisory instead of silently suppressing it past expiry.
  *
- * @param repoRoot - Repository root directory.
- * @returns Effect that exits non-zero when audit fails.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runBunAudit } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runBunAudit("/repo")
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns Effect that exits non-zero when audit fails.
  * @category use-cases
  * @since 0.0.0
  */
@@ -638,10 +659,8 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
 /**
  * Build the balanced local development quality steps for a repository.
  *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param options - Git range and surface-check options for the dev quality lane.
- * @returns Planned quality task steps for the requested development profile.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { devQualityStepsForTesting } from "@beep/repo-cli/test/Quality"
  * import * as A from "effect/Array"
@@ -658,6 +677,10 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
  * )
  * console.log(labels) // example value
  * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param options - Git range and surface-check options for the dev quality lane.
+ * @returns Planned quality task steps for the requested development profile.
  * @category testing
  * @since 0.0.0
  */
@@ -684,7 +707,7 @@ export const devQualityStepsForTesting: {
     QualityTaskStep.make({
       label: "dev:test",
       command: "bun",
-      args: ["run", "test", "--", "--unit", "--types", ...devQualityAffectedArgs],
+      args: ["run", "test", "--", "--unit", ...devQualityAffectedArgs],
       cwd: repoRoot,
       env,
     }),
@@ -715,15 +738,17 @@ const runDevQuality = Effect.fn("QualityScriptCommands.runDevQuality")(function*
 /**
  * Build the docgen command arguments for the review-fix proof lane.
  *
- * @param base - Git base ref for changed package discovery.
- * @param head - Git head ref for changed package discovery.
- * @returns Arguments passed to `bun run`.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { reviewFixDocgenLocalArgsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(reviewFixDocgenLocalArgsForTesting("origin/main", "HEAD"))
  * ```
+ *
+ * @param base - Git base ref for changed package discovery.
+ * @param head - Git head ref for changed package discovery.
+ * @returns Arguments passed to `bun run`.
  * @category testing
  * @since 0.0.0
  */
@@ -756,12 +781,7 @@ const runReviewFix = Effect.fn("QualityScriptCommands.runReviewFix")(function* (
   yield* runBunWithEnv(repoRoot, "review-fix:build", ["build", "--", "--affected", "--summarize"], env);
   yield* runBunWithEnv(repoRoot, "review-fix:check", ["check", "--", "--affected", "--summarize"], env);
   yield* runBunWithEnv(repoRoot, "review-fix:lint", ["lint", "--", "--affected", "--summarize"], env);
-  yield* runBunWithEnv(
-    repoRoot,
-    "review-fix:test",
-    ["test", "--", "--unit", "--types", "--affected", "--summarize"],
-    env
-  );
+  yield* runBunWithEnv(repoRoot, "review-fix:test", ["test", "--", "--unit", "--affected", "--summarize"], env);
 
   yield* Console.log("[github-checks] review-fix: local docgen");
   yield* runBun(repoRoot, "review-fix:docgen-local", reviewFixDocgenLocalArgsForTesting(base, head));
@@ -942,13 +962,15 @@ const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
 /**
  * Run a GitHub checks mode from the repository root.
  *
- * @param mode - GitHub check mode to run.
- * @returns Effect that executes the requested mode.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runGithubChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runGithubChecks("repo-sanity")
  * ```
+ *
+ * @param mode - GitHub check mode to run.
+ * @returns Effect that executes the requested mode.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1250,13 +1272,15 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 /**
  * Collect Effect tsgo diagnostics from command output regardless of process exit code.
  *
- * @param results - Completed tsgo command outputs to scan.
- * @returns Matching Effect diagnostic output lines.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { collectEffectTsgoDiagnosticLines } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const diagnostics = collectEffectTsgoDiagnosticLines([{ output: "warning TS90001: effect(service)\\n" }])
  * ```
+ *
+ * @param results - Completed tsgo command outputs to scan.
+ * @returns Matching Effect diagnostic output lines.
  * @category utilities
  * @since 0.0.0
  */
@@ -1397,12 +1421,14 @@ const renderTsgoRuleDiagnostics = (label: string, diagnostics: ReadonlyArray<str
 /**
  * Check that the root tsgo Effect diagnostics configuration enables every installed rule as an error.
  *
- * @returns Effect that fails when tsgo rules drift or local source suppresses Effect diagnostics.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTsgoRulesCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTsgoRulesCheck()
  * ```
+ *
+ * @returns Effect that fails when tsgo rules drift or local source suppresses Effect diagnostics.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1535,111 +1561,18 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   );
 });
 
-const runTsgoWithSyntheticConfig = Effect.fn("QualityScriptCommands.runTsgoWithSyntheticConfig")(function* (
-  repoRoot: string,
-  label: string,
-  discoveredFiles: ReadonlyArray<string>,
-  configName: string,
-  baseTsconfig: string,
-  extraCompilerOptions: Record<string, unknown>,
-  extraArgs: unknown
-): Effect.fn.Return<
-  void,
-  QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const tempDir = path.join(repoRoot, "node_modules", ".tmp", label);
-  const syntheticConfigPath = path.join(tempDir, configName);
-  const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
-  const syntheticConfig = {
-    extends: path.join(repoRoot, baseTsconfig),
-    references: [],
-    include: discoveredFiles,
-    exclude: [],
-    compilerOptions: {
-      composite: false,
-      incremental: false,
-      noEmit: true,
-      rootDir: repoRoot,
-      ...extraCompilerOptions,
-    },
-  };
-  const configText = yield* jsonStringifyPretty(syntheticConfig).pipe(
-    QualityScriptCommandError.mapError(`Failed to encode ${label} synthetic tsconfig.`)
-  );
-
-  yield* fs
-    .makeDirectory(tempDir, { recursive: true })
-    .pipe(QualityScriptCommandError.mapError(`Failed to create ${tempDir}.`));
-  yield* fs
-    .writeFileString(syntheticConfigPath, `${configText}\n`)
-    .pipe(QualityScriptCommandError.mapError(`Failed to write ${syntheticConfigPath}.`));
-
-  yield* runFixedStep(repoRoot, label, path.join(repoRoot, "node_modules", ".bin", "tsgo"), [
-    "-p",
-    syntheticConfigPath,
-    ...normalizedExtraArgs,
-  ]).pipe(Effect.ensuring(fs.remove(syntheticConfigPath, { recursive: false }).pipe(Effect.ignore)));
-});
-
-/**
- * Run repo-wide tsgo diagnostics for dtslint files.
- *
- * @param extraArgs - Additional arguments passed to tsgo.
- * @returns Effect that runs the dtslint tsgo lane.
- * @example
- * ```ts
- * import { runDtslintTsgoChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const program = runDtslintTsgoChecks([])
- * ```
- * @category use-cases
- * @since 0.0.0
- */
-export const runDtslintTsgoChecks = Effect.fn("QualityScriptCommands.runDtslintTsgoChecks")(function* (
-  extraArgs: ReadonlyArray<string>
-): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
-  const discoveredFiles = yield* Effect.forEach(
-    dtslintSearchRoots,
-    (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        (normalized, name) => Str.includes("/dtslint/")(normalized) && /\.tst\.[^.]+$/u.test(name),
-        thunkFalse
-      ),
-    { concurrency: 1 }
-  ).pipe(Effect.map(A.flatten));
-
-  if (A.isReadonlyArrayEmpty(discoveredFiles)) {
-    yield* Console.log("[check:dtslint:tsgo] no dtslint files found");
-    return;
-  }
-
-  yield* Console.log(`[check:dtslint:tsgo] checking ${A.length(discoveredFiles)} file(s) with tsconfig.json`);
-  yield* runTsgoWithSyntheticConfig(
-    repoRoot,
-    "check:dtslint:tsgo",
-    discoveredFiles,
-    "dtslint.tsconfig.json",
-    "tsconfig.json",
-    {},
-    extraArgs
-  );
-});
-
 /**
  * Run repo-wide Effect diagnostics for test files.
  *
- * @param extraArgs - Additional arguments passed to tsgo.
- * @returns Effect that runs the test-file tsgo lane.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTestTsgoChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTestTsgoChecks([])
  * ```
+ *
+ * @param extraArgs - Additional arguments passed to tsgo.
+ * @returns Effect that runs the test-file tsgo lane.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1730,12 +1663,14 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
 /**
  * Verify that tsgo reports the Effect diagnostic expected by this repo.
  *
- * @returns Effect that performs the smoke check.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTsgoSmokeCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTsgoSmokeCheck()
  * ```
+ *
+ * @returns Effect that performs the smoke check.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1831,12 +1766,14 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
 /**
  * Verify tracked fileoverview comments do not use the legacy `@module` tag.
  *
- * @returns Effect that performs the module-tag lint.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocModuleTagsCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runJSDocModuleTagsCheck()
  * ```
+ *
+ * @returns Effect that performs the module-tag lint.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1908,12 +1845,14 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
 /**
  * Run the JSDoc inventory generator now owned by repo-cli.
  *
- * @returns Effect that writes the tracked inventory artifacts.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocInventory } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runJSDocInventory()
  * ```
+ *
+ * @returns Effect that writes the tracked inventory artifacts.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1958,13 +1897,15 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 /**
  * Run the repo-wide JSDoc quality gate.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocQuality } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const program = runJSDocQuality()
  * console.log(program) // example value
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -2060,14 +2001,6 @@ const bunAuditCommand = Command.make("bun-audit", {}, () =>
     )
   )
 ).pipe(Command.withDescription("Run Bun audit with OSV ignore config"));
-
-const dtslintTsgoCommand = Command.make(
-  "dtslint-tsgo",
-  {
-    args: Argument.string("args").pipe(Argument.variadic),
-  },
-  ({ args }) => runQualityProgram(runDtslintTsgoChecks(args as ReadonlyArray<string>))
-).pipe(Command.withDescription("Run tsgo diagnostics for dtslint files"));
 
 const testTsgoCommand = Command.make(
   "test-tsgo",
@@ -2178,7 +2111,7 @@ const turboConfigProofCommand = Command.make(
     json: Flag.boolean("json").pipe(Flag.withDescription("Print the proof report as JSON")),
     taskArgs: Argument.string("task").pipe(
       Argument.variadic,
-      Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test type-test docgen")
+      Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test docgen")
     ),
   },
   ({ base, head, json, selector, taskArgs }) =>
@@ -2281,10 +2214,12 @@ const qualityProfileCommand = Command.make("profile", {}, () =>
 /**
  * Quality command group for repo operational checks.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * console.log("qualityCommand")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -2299,7 +2234,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run coverage",
     "- bun run coverage:baseline:write",
     "- bun run beep quality bun-audit",
-    "- bun run beep quality dtslint-tsgo",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
     "- bun run beep quality tsgo-rules",
@@ -2322,7 +2256,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     devQualityCommand,
     githubChecksCommandWithSubcommands,
     bunAuditCommand,
-    dtslintTsgoCommand,
     testTsgoCommand,
     tsgoSmokeCommand,
     tsgoRulesCommand,

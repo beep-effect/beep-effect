@@ -37,7 +37,7 @@ const $I = $RepoCliId.create("commands/Docgen/internal/Local");
 const DEFAULT_LOCAL_PARALLEL = 1 as const;
 const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".md", ".mdx"] as const;
-const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/", "dtslint/"] as const;
+const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_FILES = [
   "docgen.json",
   "package.json",
@@ -95,6 +95,7 @@ const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
 type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {
+  readonly allowFull: boolean;
   readonly base: string;
   readonly full: boolean;
   readonly head: string;
@@ -136,12 +137,14 @@ const collectOptions = <T>(options: ReadonlyArray<O.Option<T>>): ReadonlyArray<T
 /**
  * Local docgen execution mode selected by the planner.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalMode } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * console.log(DocgenLocalMode.is.scoped("scoped"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -154,13 +157,15 @@ export const DocgenLocalMode = LiteralKit(["scoped", "full", "full-required", "n
 /**
  * Local docgen execution mode selected by the planner.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import type { DocgenLocalMode } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * const mode: DocgenLocalMode = "scoped"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -169,7 +174,8 @@ export type DocgenLocalMode = typeof DocgenLocalMode.Type;
 /**
  * Package selected for a local docgen run.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalSelectedPackage } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -180,6 +186,7 @@ export type DocgenLocalMode = typeof DocgenLocalMode.Type;
  * })
  * console.log(selected.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,7 +204,8 @@ export class DocgenLocalSelectedPackage extends S.Class<DocgenLocalSelectedPacka
 /**
  * Reason local docgen must escalate to the full proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalFullReason } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -207,6 +215,7 @@ export class DocgenLocalSelectedPackage extends S.Class<DocgenLocalSelectedPacka
  * })
  * console.log(reason.message)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -223,7 +232,8 @@ export class DocgenLocalFullReason extends S.Class<DocgenLocalFullReason>($I`Doc
 /**
  * Planned local docgen proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalPlan } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -240,6 +250,7 @@ export class DocgenLocalFullReason extends S.Class<DocgenLocalFullReason>($I`Doc
  * })
  * console.log(plan.mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -263,7 +274,8 @@ export class DocgenLocalPlan extends S.Class<DocgenLocalPlan>($I`DocgenLocalPlan
 /**
  * Turbo dry-run package summary used by local docgen.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalTurboTask } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -275,6 +287,7 @@ export class DocgenLocalPlan extends S.Class<DocgenLocalPlan>($I`DocgenLocalPlan
  * })
  * console.log(task.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -747,10 +760,8 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
 /**
  * Select package-local docgen targets for changed files.
  *
- * @param packages - Workspace packages eligible for docgen selection.
- * @param changedFiles - Repo-relative changed file paths to classify.
- * @returns Packages selected for a scoped local docgen run.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { selectDocgenLocalPackagesForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -759,6 +770,10 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
  * ])
  * console.log(selected.length)
  * ```
+ *
+ * @param packages - Workspace packages eligible for docgen selection.
+ * @param changedFiles - Repo-relative changed file paths to classify.
+ * @returns Packages selected for a scoped local docgen run.
  * @category testing
  * @since 0.0.0
  */
@@ -782,10 +797,8 @@ export const selectDocgenLocalPackagesForTesting: {
 /**
  * Build Turbo argv for local docgen targets.
  *
- * @param selectedPackages - Packages selected for local docgen execution.
- * @param parallel - Maximum package concurrency requested by the caller.
- * @returns Turbo command arguments for the scoped local docgen run.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { docgenLocalTurboArgsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -794,6 +807,10 @@ export const selectDocgenLocalPackagesForTesting: {
  * ], 1)
  * console.log(args.join(" "))
  * ```
+ *
+ * @param selectedPackages - Packages selected for local docgen execution.
+ * @param parallel - Maximum package concurrency requested by the caller.
+ * @returns Turbo command arguments for the scoped local docgen run.
  * @category testing
  * @since 0.0.0
  */
@@ -807,15 +824,17 @@ export const docgenLocalTurboArgsForTesting: {
 /**
  * Resolve changed files that require the full docgen proof.
  *
- * @param changedFiles - Repo-relative changed file paths to classify.
- * @returns Reasons the changed file set requires the full docgen proof.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { docgenLocalFullReasonsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * const reasons = docgenLocalFullReasonsForTesting(["turbo.json"])
  * console.log(reasons[0]?.filePath)
  * ```
+ *
+ * @param changedFiles - Repo-relative changed file paths to classify.
+ * @returns Reasons the changed file set requires the full docgen proof.
  * @category testing
  * @since 0.0.0
  */
@@ -836,13 +855,15 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
 /**
  * Build a local docgen plan from repository state and command options.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { buildDocgenLocalPlan } from "@beep/repo-cli/commands/Docgen/internal/Local"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const program = buildDocgenLocalPlan({
+ *   allowFull: false,
  *   base: "origin/main",
  *   full: false,
  *   head: "HEAD",
@@ -853,6 +874,7 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -870,7 +892,8 @@ export const buildDocgenLocalPlan: (
 /**
  * Run the bounded local docgen proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { runDocgenLocal } from "@beep/repo-cli/commands/Docgen/internal/Local"
  * import { Effect } from "effect"
@@ -887,6 +910,7 @@ export const buildDocgenLocalPlan: (
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -917,6 +941,11 @@ export const runDocgenLocal: (
     }
 
     if (plan.mode === "full-required") {
+      if (options.allowFull) {
+        yield* Console.log("docgen:local: full docgen proof required; executing it (--allow-full).");
+        yield* runFullDocgen(repoRoot);
+        return plan;
+      }
       yield* Console.error('docgen:local: full docgen proof required; re-run with "--full" to execute it.');
       return yield* failWithReportedExit("docgen:local: full docgen proof required.");
     }

@@ -51,10 +51,9 @@
       ]
     }
   },
-  // Type-tests (tstyche .tst.ts), ops scripts, scratch, test fixtures, runnable examples, and
-  // build configs are not part of the analyzable source graph.
+  // Ops scripts, scratch, test fixtures, runnable examples, and build configs are not part of
+  // the analyzable source graph.
   "ignore": [
-    "**/dtslint/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)
@@ -102,11 +101,6 @@
   // inspeffct: intentionally exposed as a root developer CLI via `bun run inspeffct*` scripts;
   // knip sees the package script command as binary usage but does not count that as satisfying
   // the root devDependency.
-  // @microsoft/microsoft-graph-types + @lexical/code, @lexical/link, @lexical/list,
-  // @lexical/rich-text, lexical: dtslint (packages/drivers/m365/dtslint/M365.tst.ts,
-  // packages/foundation/modeling/lexical/dtslint/Lexical.tst.ts) is a wired `type-test` turbo
-  // task, but "**/dtslint/**" is excluded from knip's source graph above, so devDependencies
-  // used only there read as unused.
   // @beep/graph-3d: same story-glob shape as @beep/form — apps/storybook hosts
   // packages/drivers/graph-3d/stories/** via a .storybook/main.ts glob, invisible to knip's
   // per-workspace import scan.
@@ -133,12 +127,13 @@
     "@types/ws",
     "@beep/repo-utils",
     "@beep/test-utils",
-    "@microsoft/microsoft-graph-types",
-    "@lexical/code",
-    "@lexical/link",
     "@lexical/list",
-    "@lexical/rich-text",
     "lexical",
+    // brace-expansion, fast-uri, hono: root `dependencies` entries that exist solely to back
+    // the security-pin `overrides` (see package.json overrides); nothing imports them at root.
+    "brace-expansion",
+    "fast-uri",
+    "hono",
     "@beep/form",
     "@beep/graph-3d",
     "@vitest/browser",

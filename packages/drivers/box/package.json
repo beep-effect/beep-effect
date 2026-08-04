@@ -17,7 +17,7 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps --compact false",
-    "beep:audit": "bun run generate && bun run beep:build && bun run beep:check && bun run type-test && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "beep:audit": "bun run generate && bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
     "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:scripts",
     "beep:check:scripts": "tsgo -p tsconfig.scripts.json --noEmit",
@@ -31,13 +31,11 @@
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "codegen": "bun run generate",
-    "dtslint": "bunx tstyche --config ../../../tstyche.json --root ../../.. packages/drivers/box/dtslint/Box.tst.ts",
     "generate": "bun run scripts/generate.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "type-test": "bun run dtslint",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {

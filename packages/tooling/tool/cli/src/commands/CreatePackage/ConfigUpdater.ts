@@ -13,10 +13,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
-import { A, Str, thunkNegative1 } from "@beep/utils";
-import { Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaTransformation } from "effect";
+import { A, Str } from "@beep/utils";
+import { Effect, FileSystem, HashMap, Order, Path } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -32,7 +31,8 @@ const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
  * Each boolean field is `true` when the corresponding file was actually written
  * (or, in the case of {@link checkConfigNeedsUpdate}, would need updating).
  *
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { ConfigUpdateResult } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -40,6 +40,7 @@ const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
  * const candidate = { path: "tsconfig.json", updated: false }
  * console.log(S.is(ConfigUpdateResult)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -47,7 +48,6 @@ export class ConfigUpdateResult extends S.Class<ConfigUpdateResult>($I`ConfigUpd
   {
     tsconfigPackages: SchemaUtils.BoolKeyDefaultFalse,
     tsconfigPaths: SchemaUtils.BoolKeyDefaultFalse,
-    tstycheConfig: SchemaUtils.BoolKeyDefaultFalse,
   },
   $I.annote("ConfigUpdateResult", {
     description: "Summary of root configuration files modified during a config update pass.",
@@ -57,7 +57,8 @@ export class ConfigUpdateResult extends S.Class<ConfigUpdateResult>($I`ConfigUpd
 /**
  * Config update target for a package that should be registered in root tsconfig files.
  *
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -65,6 +66,7 @@ export class ConfigUpdateResult extends S.Class<ConfigUpdateResult>($I`ConfigUpd
  * const candidate = { packageName: "@beep/example", packagePath: "packages/example" }
  * console.log(S.is(ConfigUpdateTarget)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -83,7 +85,8 @@ export class ConfigUpdateTarget extends S.Class<ConfigUpdateTarget>($I`ConfigUpd
 /**
  * Per-target config update summary.
  *
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { ConfigUpdateTargetResult } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -91,6 +94,7 @@ export class ConfigUpdateTarget extends S.Class<ConfigUpdateTarget>($I`ConfigUpd
  * const candidate = { packageName: "@beep/example", packagePath: "packages/example", updated: false }
  * console.log(S.is(ConfigUpdateTargetResult)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -114,7 +118,8 @@ const DefaultedConfigUpdateTargetResults = S.Array(ConfigUpdateTargetResult).pip
  * `tsconfigPackages` and `tsconfigPaths` are aggregate booleans indicating whether
  * at least one target changed (or needs a change, in check mode) for the file.
  *
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { ConfigUpdateBatchResult } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -122,6 +127,7 @@ const DefaultedConfigUpdateTargetResults = S.Array(ConfigUpdateTargetResult).pip
  * const candidate = { results: [], updated: false }
  * console.log(S.is(ConfigUpdateBatchResult)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -130,7 +136,6 @@ export class ConfigUpdateBatchResult extends S.Class<ConfigUpdateBatchResult>($I
     targets: DefaultedConfigUpdateTargetResults,
     tsconfigPackages: SchemaUtils.BoolKeyDefaultFalse,
     tsconfigPaths: SchemaUtils.BoolKeyDefaultFalse,
-    tstycheConfig: SchemaUtils.BoolKeyDefaultFalse,
   },
   $I.annote("ConfigUpdateBatchResult", {
     description: "Batch config orchestration result for one or more package targets.",
@@ -139,44 +144,6 @@ export class ConfigUpdateBatchResult extends S.Class<ConfigUpdateBatchResult>($I
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
-const PACKAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9/_-]*$/;
-const TSTYCHE_TEST_FILE_MATCH_PATTERN = /\/dtslint\/\*\*\/\*\.tst\.\*$/;
-
-const PackagePath = S.String.check(S.isPattern(PACKAGE_PATH_PATTERN)).pipe(
-  S.brand("PackagePath"),
-  $I.annoteSchema("PackagePath", {
-    description: "Repo-relative package path segment used by root config updaters.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-const TstycheTestFileMatchPattern = S.String.check(S.isPattern(TSTYCHE_TEST_FILE_MATCH_PATTERN)).pipe(
-  S.brand("TstycheTestFileMatchPattern"),
-  $I.annoteSchema("TstycheTestFileMatchPattern", {
-    description: "tstyche testFileMatch glob pattern for dtslint test files.",
-  })
-);
-
-const PackagePathToTstychePattern = PackagePath.pipe(
-  S.decodeTo(
-    TstycheTestFileMatchPattern,
-    SchemaTransformation.transform({
-      decode: (packagePath) => `${packagePath}/dtslint/**/*.tst.*`,
-      encode: flow(Str.replace(TSTYCHE_TEST_FILE_MATCH_PATTERN, Str.empty), PackagePath.make),
-    })
-  ),
-  $I.annoteSchema("PackagePathToTstychePattern", {
-    description: "Schema transformation from package path to tstyche testFileMatch glob.",
-  })
-);
-
-const decodeTstychePattern = S.decodeUnknownOption(PackagePathToTstychePattern);
-const fallbackTstychePattern = (packagePath: string): string => `${packagePath}/dtslint/**/*.tst.*`;
-const toTstychePattern = (packagePath: string): string =>
-  pipe(
-    decodeTstychePattern(packagePath),
-    O.getOrElse(() => fallbackTstychePattern(packagePath))
-  );
 const stringArrayEquivalence = S.toEquivalence(S.Array(S.String));
 const JsoncUnknownObject = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("JsoncUnknownObject", {
@@ -225,23 +192,6 @@ const pathValuesEqual: {
   return stringArrayEquivalence(currentValue, expectedValue);
 });
 
-const readTestFileMatch = (parsed: Record<string, unknown>): ReadonlyArray<unknown> =>
-  A.isArray(parsed.testFileMatch) ? A.fromIterable(parsed.testFileMatch) : A.empty();
-
-const isTstycheEntryCovered: {
-  (testFileMatch: ReadonlyArray<unknown>, packagePath: string): boolean;
-  (packagePath: string): (testFileMatch: ReadonlyArray<unknown>) => boolean;
-} = dual(2, (testFileMatch: ReadonlyArray<unknown>, packagePath: string): boolean => {
-  if (!PackagePath.is(packagePath)) return false;
-  const candidatePattern = toTstychePattern(packagePath);
-  if (A.some(testFileMatch, (entry) => P.isString(entry) && Str.equivalence(entry, candidatePattern))) return true;
-  const lastSlash = pipe(packagePath, Str.lastIndexOf("/"), O.getOrElse(thunkNegative1));
-  if (lastSlash < 0) return false;
-  const parentDir = Str.substring(0, lastSlash)(packagePath);
-  const parentWildcard = `${parentDir}/*/dtslint/**/*.tst.*`;
-  return A.some(testFileMatch, (entry) => P.isString(entry) && Str.equivalence(entry, parentWildcard));
-});
-
 const byPackagePathAscending: Order.Order<ConfigUpdateTarget> = Order.mapInput(
   Str.orderAsc,
   (target: ConfigUpdateTarget) => target.packagePath
@@ -259,6 +209,7 @@ const normalizeTargets = (targets: ReadonlyArray<ConfigUpdateTarget>): ReadonlyA
 const defaultAliasTargetsForPackage = (packagePath: string) =>
   buildCanonicalAliasTargets(packagePath, "./src/index.ts");
 
+// fallow-ignore-next-line code-duplication -- config-updater helper twins converged after the tstyche removal + JSDoc grammar migration; consolidation onto @beep/repo-utils is a recorded quality-speedup follow-up
 const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
   rootAliasTarget: target.rootAliasTarget ?? defaultAliasTargetsForPackage(target.packagePath).rootAliasTarget,
   wildcardAliasTarget:
@@ -313,17 +264,19 @@ const modifyFileString: {
  *
  * Idempotent: if the reference already exists, the file is left untouched.
  *
- * @param repoRoot - Absolute path to the repository root directory.
- * @param packagePath - Relative path from the repo root to the new package (e.g. `"packages/tooling/library/my-utils"`).
- * @returns `true` when the file was modified, `false` when the entry already existed.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { updateTsconfigPackages } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(updateTsconfigPackages("/repo", "packages/schema"))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to the repository root directory.
+ * @param packagePath - Relative path from the repo root to the new package (e.g. `"packages/tooling/library/my-utils"`).
+ * @returns `true` when the file was modified, `false` when the entry already existed.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */
@@ -360,12 +313,8 @@ export const updateTsconfigPackages: {
  * (`@beep/<name>/*`) pointing at the package's `src/` directory.
  * Idempotent: if the alias already exists, the file is left untouched.
  *
- * @param repoRoot - Absolute path to the repository root directory.
- * @param packageName - Unscoped package name (e.g. `"my-utils"`).
- * @param packagePath - Relative path from the repo root to the new package (e.g. `"packages/tooling/library/my-utils"`).
- * @returns `true` when the file was modified, `false` when the aliases already existed.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { updateTsconfigPaths, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -373,6 +322,12 @@ export const updateTsconfigPackages: {
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateTsconfigPaths("/repo", target))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to the repository root directory.
+ * @param packageName - Unscoped package name (e.g. `"my-utils"`).
+ * @param packagePath - Relative path from the repo root to the new package (e.g. `"packages/tooling/library/my-utils"`).
+ * @returns `true` when the file was modified, `false` when the aliases already existed.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */
@@ -417,57 +372,6 @@ export const updateTsconfigPaths: {
   })
 );
 
-/**
- * Add a test file match entry to `tstyche.json`.
- *
- * Idempotent: if the entry already exists or is covered by a parent wildcard
- * glob, the file is left untouched.
- *
- * @param repoRoot - Absolute path to the repository root directory.
- * @param packagePath - Relative path from the repo root to the new package (e.g. `"packages/foundation/primitive/data"`).
- * @returns `true` when the file was modified, `false` when the entry already existed or was covered.
- * @depends FileSystem, Path
- * @example
- * ```ts
- * import { updateTstycheConfig } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(updateTstycheConfig("/repo", "packages/schema"))) // true
- * ```
- * @category utilities
- * @since 0.0.0
- */
-export const updateTstycheConfig: {
-  (repoRoot: string, packagePath: string): Effect.Effect<boolean, DomainError, FileSystem.FileSystem | Path.Path>;
-  (packagePath: string): (repoRoot: string) => Effect.Effect<boolean, DomainError, FileSystem.FileSystem | Path.Path>;
-} = dual(
-  2,
-  Effect.fn(function* (repoRoot, packagePath) {
-    const path = yield* Path.Path;
-    const filePath = path.join(repoRoot, "tstyche.json");
-
-    return yield* modifyFileString(
-      filePath,
-      Effect.fn(function* (content: string) {
-        const parsed = yield* parseJsoncObject(content, filePath);
-        const testFileMatch = readTestFileMatch(parsed);
-
-        if (isTstycheEntryCovered(testFileMatch, packagePath)) {
-          return content;
-        }
-
-        const candidatePattern = pipe(
-          packagePath,
-          O.liftPredicate(PackagePath.is),
-          O.map(toTstychePattern),
-          O.getOrElse(() => fallbackTstychePattern(packagePath))
-        );
-        return applyJsoncModification(content, ["testFileMatch"], A.append(testFileMatch, candidatePattern));
-      })
-    );
-  })
-);
-
 const updateRootConfigsForTarget: {
   (
     repoRoot: string,
@@ -481,11 +385,9 @@ const updateRootConfigsForTarget: {
   Effect.fn(function* (repoRoot, target) {
     const tsconfigPackages = yield* updateTsconfigPackages(repoRoot, target.packagePath);
     const tsconfigPaths = yield* updateTsconfigPaths(repoRoot, target);
-    const tstycheConfig = yield* updateTstycheConfig(repoRoot, target.packagePath);
     return ConfigUpdateResult.make({
       tsconfigPackages,
       tsconfigPaths,
-      tstycheConfig,
     });
   })
 );
@@ -522,17 +424,9 @@ const checkConfigNeedsUpdateForTarget: {
       pathValuesEqual(paths[alias], [rootAliasTarget]) && pathValuesEqual(paths[`${alias}/*`], [wildcardAliasTarget])
     );
 
-    const tstycheContent = yield* fs
-      .readFileString(path.join(repoRoot, "tstyche.json"))
-      .pipe(Effect.mapError(DomainError.newCauseMessage("Failed to read tstyche.json")));
-    const tstycheParsed = yield* parseJsoncObject(tstycheContent, "tstyche.json");
-    const testFileMatch = readTestFileMatch(tstycheParsed);
-    const tstycheConfig = !isTstycheEntryCovered(testFileMatch, target.packagePath);
-
     return ConfigUpdateResult.make({
       tsconfigPackages,
       tsconfigPaths,
-      tstycheConfig,
     });
   })
 );
@@ -540,11 +434,8 @@ const checkConfigNeedsUpdateForTarget: {
 /**
  * Batch root config updater for slice flows creating multiple packages.
  *
- * @param repoRoot - Absolute path to repository root.
- * @param targets - Package targets to register in root tsconfig files.
- * @returns Per-target results and aggregate booleans indicating whether each file changed for at least one target.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { updateRootConfigsForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -552,6 +443,11 @@ const checkConfigNeedsUpdateForTarget: {
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateRootConfigsForTargets("/repo", [target]))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to repository root.
+ * @param targets - Package targets to register in root tsconfig files.
+ * @returns Per-target results and aggregate booleans indicating whether each file changed for at least one target.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */
@@ -580,7 +476,6 @@ export const updateRootConfigsForTargets: {
       targets: targetResults,
       tsconfigPackages: A.some(targetResults, ({ result }) => result.tsconfigPackages),
       tsconfigPaths: A.some(targetResults, ({ result }) => result.tsconfigPaths),
-      tstycheConfig: A.some(targetResults, ({ result }) => result.tstycheConfig),
     });
   })
 );
@@ -588,11 +483,8 @@ export const updateRootConfigsForTargets: {
 /**
  * Batch read-only drift checker for root config updates.
  *
- * @param repoRoot - Absolute path to repository root.
- * @param targets - Package targets to check in root tsconfig files.
- * @returns Per-target results and aggregate booleans indicating whether each file needs updates for at least one target.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { checkConfigNeedsUpdateForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -600,6 +492,11 @@ export const updateRootConfigsForTargets: {
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(checkConfigNeedsUpdateForTargets("/repo", [target]))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to repository root.
+ * @param targets - Package targets to check in root tsconfig files.
+ * @returns Per-target results and aggregate booleans indicating whether each file needs updates for at least one target.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */
@@ -628,7 +525,6 @@ export const checkConfigNeedsUpdateForTargets: {
       targets: targetResults,
       tsconfigPackages: A.some(targetResults, ({ result }) => result.tsconfigPackages),
       tsconfigPaths: A.some(targetResults, ({ result }) => result.tsconfigPaths),
-      tstycheConfig: A.some(targetResults, ({ result }) => result.tstycheConfig),
     });
   })
 );
@@ -638,11 +534,8 @@ export const checkConfigNeedsUpdateForTargets: {
  *
  * Single-target wrapper around {@link updateRootConfigsForTargets}.
  *
- * @param repoRoot - Absolute path to the repository root directory.
- * @param target - Package target to register in root config files.
- * @returns A {@link ConfigUpdateResult} indicating which config files were modified.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { updateRootConfigs, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -650,6 +543,11 @@ export const checkConfigNeedsUpdateForTargets: {
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateRootConfigs("/repo", target))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to the repository root directory.
+ * @param target - Package target to register in root config files.
+ * @returns A {@link ConfigUpdateResult} indicating which config files were modified.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */
@@ -674,11 +572,8 @@ export const updateRootConfigs: {
  *
  * Single-target wrapper around {@link checkConfigNeedsUpdateForTargets}.
  *
- * @param repoRoot - Absolute path to the repository root directory.
- * @param target - Package target to check in root config files.
- * @returns A {@link ConfigUpdateResult} where `true` means the file still needs updating.
- * @depends FileSystem, Path
- * @example
+ * **Example** (Update package configuration)
+ *
  * ```ts
  * import { checkConfigNeedsUpdate, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -686,6 +581,11 @@ export const updateRootConfigs: {
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(checkConfigNeedsUpdate("/repo", target))) // true
  * ```
+ *
+ * @param repoRoot - Absolute path to the repository root directory.
+ * @param target - Package target to check in root config files.
+ * @returns A {@link ConfigUpdateResult} where `true` means the file still needs updating.
+ * @depends FileSystem, Path
  * @category utilities
  * @since 0.0.0
  */

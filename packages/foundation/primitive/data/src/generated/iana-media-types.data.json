@@ -3,8 +3,8 @@
   "metadata": {
     "id": "iana-media-types-xml",
     "url": "https://www.iana.org/assignments/media-types/media-types.xml",
-    "sha256": "08ccc35c87a54045f7c09146778cddd473de3857e031fb30fa51ad9ad2267e5c",
-    "published": "2026-06-12"
+    "sha256": "607a4c1c70acbb3ceb2ce2c34c548887e069d7348c5bb15f355e6d4c2c0153e8",
+    "published": "2026-07-22"
   },
   "mediaTypesByType": {
     "application/1d-interleaved-parityfec": {
@@ -1613,6 +1613,13 @@
       "registryName": "jsonpath",
       "date": "2023-10-03"
     },
+    "application/jumbf": {
+      "type": "application/jumbf",
+      "topLevel": "application",
+      "name": "jumbf",
+      "registryName": "jumbf",
+      "date": "2026-07-09"
+    },
     "application/jwk+json": {
       "type": "application/jwk+json",
       "topLevel": "application",
@@ -2724,6 +2731,20 @@
       "name": "route-usd+xml",
       "registryName": "route-usd+xml",
       "date": "2017-08-11"
+    },
+    "application/rpki-ccr": {
+      "type": "application/rpki-ccr",
+      "topLevel": "application",
+      "name": "rpki-ccr",
+      "registryName": "rpki-ccr",
+      "date": "2026-07-10"
+    },
+    "application/rpki-ccr+gzip": {
+      "type": "application/rpki-ccr+gzip",
+      "topLevel": "application",
+      "name": "rpki-ccr+gzip",
+      "registryName": "rpki-ccr+gzip",
+      "date": "2026-07-10"
     },
     "application/rpki-checklist": {
       "type": "application/rpki-checklist",
@@ -4229,6 +4250,13 @@
       "name": "vnd.3m.post-it-notes",
       "registryName": "vnd.3M.Post-it-Notes"
     },
+    "application/vnd.abdalsecuritygroup.lockbox": {
+      "type": "application/vnd.abdalsecuritygroup.lockbox",
+      "topLevel": "application",
+      "name": "vnd.abdalsecuritygroup.lockbox",
+      "registryName": "vnd.abdalsecuritygroup.lockbox",
+      "date": "2026-06-26"
+    },
     "application/vnd.accpac.simply.aso": {
       "type": "application/vnd.accpac.simply.aso",
       "topLevel": "application",
@@ -4787,6 +4815,13 @@
       "registryName": "vnd.blink-idb-value-wrapper",
       "date": "2017-06-12"
     },
+    "application/vnd.blockfact.facts": {
+      "type": "application/vnd.blockfact.facts",
+      "topLevel": "application",
+      "name": "vnd.blockfact.facts",
+      "registryName": "vnd.blockfact.facts",
+      "date": "2026-07-15"
+    },
     "application/vnd.blueice.multipass": {
       "type": "application/vnd.blueice.multipass",
       "topLevel": "application",
@@ -5236,6 +5271,20 @@
       "name": "vnd.curl",
       "registryName": "vnd.curl"
     },
+    "application/vnd.cxtf": {
+      "type": "application/vnd.cxtf",
+      "topLevel": "application",
+      "name": "vnd.cxtf",
+      "registryName": "vnd.cxtf",
+      "date": "2026-07-09"
+    },
+    "application/vnd.cxzip": {
+      "type": "application/vnd.cxzip",
+      "topLevel": "application",
+      "name": "vnd.cxzip",
+      "registryName": "vnd.cxzip",
+      "date": "2026-07-09"
+    },
     "application/vnd.cyan.dean.root+xml": {
       "type": "application/vnd.cyan.dean.root+xml",
       "topLevel": "application",
@@ -5379,6 +5428,13 @@
       "name": "vnd.deut+json",
       "registryName": "vnd.deut+json",
       "date": "2026-03-19"
+    },
+    "application/vnd.dgl": {
+      "type": "application/vnd.dgl",
+      "topLevel": "application",
+      "name": "vnd.dgl",
+      "registryName": "vnd.dgl",
+      "date": "2026-07-21"
     },
     "application/vnd.digitalstack.document+zip": {
       "type": "application/vnd.digitalstack.document+zip",
@@ -5982,6 +6038,13 @@
       "name": "vnd.faf+yaml",
       "registryName": "vnd.faf+yaml",
       "date": "2025-10-30"
+    },
+    "application/vnd.fafa+yaml": {
+      "type": "application/vnd.fafa+yaml",
+      "topLevel": "application",
+      "name": "vnd.fafa+yaml",
+      "registryName": "vnd.fafa+yaml",
+      "date": "2026-06-26"
     },
     "application/vnd.fafm+yaml": {
       "type": "application/vnd.fafm+yaml",
@@ -7551,6 +7614,13 @@
       "name": "vnd.modl",
       "registryName": "vnd.modl",
       "date": "2023-02-22"
+    },
+    "application/vnd.mohnetic": {
+      "type": "application/vnd.mohnetic",
+      "topLevel": "application",
+      "name": "vnd.mohnetic",
+      "registryName": "vnd.mohnetic",
+      "date": "2026-07-15"
     },
     "application/vnd.mophun.application": {
       "type": "application/vnd.mophun.application",
@@ -9318,6 +9388,13 @@
       "name": "vnd.paos.xml",
       "registryName": "vnd.paos.xml"
     },
+    "application/vnd.pasti-stx-disk-image": {
+      "type": "application/vnd.pasti-stx-disk-image",
+      "topLevel": "application",
+      "name": "vnd.pasti-stx-disk-image",
+      "registryName": "vnd.pasti-stx-disk-image",
+      "date": "2026-06-23"
+    },
     "application/vnd.patentdive": {
       "type": "application/vnd.patentdive",
       "topLevel": "application",
@@ -9400,6 +9477,13 @@
       "topLevel": "application",
       "name": "vnd.pocketlearn",
       "registryName": "vnd.pocketlearn"
+    },
+    "application/vnd.portableweb+zip": {
+      "type": "application/vnd.portableweb+zip",
+      "topLevel": "application",
+      "name": "vnd.portableweb+zip",
+      "registryName": "vnd.portableweb+zip",
+      "date": "2026-07-21"
     },
     "application/vnd.powerbuilder6": {
       "type": "application/vnd.powerbuilder6",
@@ -9986,6 +10070,13 @@
       "registryName": "vnd.snesdev-page-table",
       "date": "2020-04-06"
     },
+    "application/vnd.softpres-ipf-disk-image": {
+      "type": "application/vnd.softpres-ipf-disk-image",
+      "topLevel": "application",
+      "name": "vnd.softpres-ipf-disk-image",
+      "registryName": "vnd.softpres-ipf-disk-image",
+      "date": "2026-06-23"
+    },
     "application/vnd.software602.filler.form+xml": {
       "type": "application/vnd.software602.filler.form+xml",
       "topLevel": "application",
@@ -10071,6 +10162,13 @@
       "topLevel": "application",
       "name": "vnd.sun.wadl+xml",
       "registryName": "vnd.sun.wadl+xml"
+    },
+    "application/vnd.supercard-pro-disk-image": {
+      "type": "application/vnd.supercard-pro-disk-image",
+      "topLevel": "application",
+      "name": "vnd.supercard-pro-disk-image",
+      "registryName": "vnd.supercard-pro-disk-image",
+      "date": "2026-06-23"
     },
     "application/vnd.superfile.super": {
       "type": "application/vnd.superfile.super",
@@ -10436,6 +10534,13 @@
       "name": "vnd.vel+json",
       "registryName": "vnd.vel+json",
       "date": "2016-04-04"
+    },
+    "application/vnd.veraison.nvidia-gpu-evidence+json": {
+      "type": "application/vnd.veraison.nvidia-gpu-evidence+json",
+      "topLevel": "application",
+      "name": "vnd.veraison.nvidia-gpu-evidence+json",
+      "registryName": "vnd.veraison.nvidia-gpu-evidence+json",
+      "date": "2026-07-13"
     },
     "application/vnd.veraison.tsm-report+cbor": {
       "type": "application/vnd.veraison.tsm-report+cbor",
@@ -11825,6 +11930,13 @@
       "name": "pcmu-wb",
       "registryName": "PCMU-WB"
     },
+    "audio/prs.aaud": {
+      "type": "audio/prs.aaud",
+      "topLevel": "audio",
+      "name": "prs.aaud",
+      "registryName": "prs.aaud",
+      "date": "2026-07-13"
+    },
     "audio/prs.sid": {
       "type": "audio/prs.sid",
       "topLevel": "audio",
@@ -12610,6 +12722,13 @@
       "topLevel": "image",
       "name": "png",
       "registryName": "png"
+    },
+    "image/prs.aimg": {
+      "type": "image/prs.aimg",
+      "topLevel": "image",
+      "name": "prs.aimg",
+      "registryName": "prs.aimg",
+      "date": "2026-07-13"
     },
     "image/prs.btif": {
       "type": "image/prs.btif",
@@ -13805,6 +13924,13 @@
       "registryName": "vnd.ascii-art",
       "date": "2016-08-12"
     },
+    "text/vnd.bovnar": {
+      "type": "text/vnd.bovnar",
+      "topLevel": "text",
+      "name": "vnd.bovnar",
+      "registryName": "vnd.bovnar",
+      "date": "2026-07-13"
+    },
     "text/vnd.curl": {
       "type": "text/vnd.curl",
       "topLevel": "text",
@@ -14362,6 +14488,13 @@
       "topLevel": "video",
       "name": "pointer",
       "registryName": "pointer"
+    },
+    "video/prs.avid": {
+      "type": "video/prs.avid",
+      "topLevel": "video",
+      "name": "prs.avid",
+      "registryName": "prs.avid",
+      "date": "2026-07-13"
     },
     "video/quicktime": {
       "type": "video/quicktime",

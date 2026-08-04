@@ -30,13 +30,11 @@
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
-    "dtslint": "bunx tstyche dtslint/Editor.tst.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration",
-    "type-test": "bun run dtslint"
+    "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",

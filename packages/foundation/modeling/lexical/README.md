@@ -4,8 +4,8 @@ Schema-first models of Lexical's serialized editor state with Md ↔ Lexical
 codecs over the canonical `@beep/md` AST.
 
 - **Zero runtime `lexical` imports.** The schemas import only `effect` (plus
-  beep foundation packages); `lexical` and `@lexical/*` are devDependencies
-  used type-only by the dtslint conformance tests (`dtslint/Lexical.tst.ts`).
+  beep foundation packages); Lexical devDependencies support compatibility
+  checks in the unit tests.
 - **The schema owns the persisted contract.** Lexical ships minor-breaking
   releases monthly; persisted state must decode through this package, never
   couple to a raw Lexical release's serialization.
@@ -146,11 +146,10 @@ caller needs both the retained wire and an optional strict semantic state.
 ```bash
 bun run check      # tsgo type check
 bun run test       # vitest
-bun run dtslint    # tstyche conformance vs lexical types
 bun run lint:fix   # biome
 ```
 
-Unit tests stay outside `test/integration`; tests and dtslint files import
+Unit tests stay outside `test/integration`; tests import
 package source through `@beep/lexical-schema` or other `@beep/*` aliases. Use
 relative imports only for local helpers, fixtures, and snapshots.
 

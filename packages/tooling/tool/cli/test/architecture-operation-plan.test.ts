@@ -74,9 +74,8 @@ const architectureManifestIncludedSurfaceEntries = [
   "packages/architecture-lab/*/vitest.config.ts",
   "packages/architecture-lab/*/src/**",
   "packages/architecture-lab/*/test/**",
-  "packages/architecture-lab/*/dtslint/**",
-  "apps/architecture-lab-proof/{AGENTS.md,LICENSE,README.md,docgen.json,package.json,tsconfig.json,vitest.config.ts,src/**,test/**,dtslint/**}",
-  "packages/_internal/db-admin/{AGENTS.md,LICENSE,README.md,docgen.json,drizzle.config.ts,package.json,tsconfig.json,tsconfig.drizzle.json,vitest.config.ts,src/**,test/**,dtslint/**}",
+  "apps/architecture-lab-proof/{AGENTS.md,LICENSE,README.md,docgen.json,package.json,tsconfig.json,vitest.config.ts,src/**,test/**}",
+  "packages/_internal/db-admin/{AGENTS.md,LICENSE,README.md,docgen.json,drizzle.config.ts,package.json,tsconfig.json,tsconfig.drizzle.json,vitest.config.ts,src/**,test/**}",
   "packages/_internal/db-admin/drizzle/**",
 ] as const;
 const architectureManifestExcludedSurfaceEntries = [
@@ -154,7 +153,6 @@ const isManifestIncludedRelativeFile = (
   pipe(topLevelFiles, A.contains(repoPath)) ||
   Str.startsWith("src/")(repoPath) ||
   Str.startsWith("test/")(repoPath) ||
-  Str.startsWith("dtslint/")(repoPath) ||
   (includeDrizzle && Str.startsWith("drizzle/")(repoPath));
 
 const isManifestIncludedArchitectureProofFile = (repoPath: string): boolean => {

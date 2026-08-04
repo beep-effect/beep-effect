@@ -23,7 +23,7 @@ Ship reliable code with effect-first and schema-first patterns.
   `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
   type parameters already.
 - Apply schema defaults when safe. Keep changes focused and testable.
-- In `packages/**/{test,dtslint}/**/*.{ts,tsx}`, import package source through
+- In `packages/**/test/**/*.{ts,tsx}`, import package source through
   `@beep/*` aliases instead of relative paths into any workspace `src/`;
   relatives only for local helpers, fixtures, snapshots, and other
   non-`src` test files.

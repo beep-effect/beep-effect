@@ -10,16 +10,20 @@ import { A, Str } from "@beep/utils";
 /**
  * Path segments excluded from TypeScript source lint traversals.
  *
- * @remarks
+ * **Details**
+ *
  * Segment values include leading and trailing slashes because callers normalize
  * paths before matching. That avoids accidentally excluding names such as
  * `contest` while still matching `/test/`.
- * @example
+ *
+ * **Example** (Apply TypeScript source exclusions)
+ *
  * ```ts
  * import { TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions"
  * const skipsGeneratedFolders = TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS.includes("/_generated/")
  * console.log(skipsGeneratedFolders) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -38,18 +42,19 @@ export const TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS = [
   "/goals/",
   "/test/",
   "/tests/",
-  "/dtslint/",
 ] as const;
 
 /**
  * File suffixes excluded from TypeScript source lint traversals.
  *
- * @example
+ * **Example** (Apply TypeScript source exclusions)
+ *
  * ```ts
  * import { TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions"
  * const skipsGeneratedFiles = TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES.includes(".gen.ts")
  * console.log(skipsGeneratedFiles) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -67,14 +72,16 @@ export const TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES = [
 /**
  * Normalize filesystem paths to POSIX separators before string matching.
  *
- * @param value - Filesystem path whose backslash separators are normalized.
- * @returns The path with every backslash separator replaced by a forward slash.
- * @example
+ * **Example** (Apply TypeScript source exclusions)
+ *
  * ```ts
  * import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions"
  * const normalized = toPosixPath("packages\\schema\\src\\index.ts")
  * console.log(normalized) // "packages/schema/src/index.ts"
  * ```
+ *
+ * @param value - Filesystem path whose backslash separators are normalized.
+ * @returns The path with every backslash separator replaced by a forward slash.
  * @category utilities
  * @since 0.0.0
  */
@@ -83,19 +90,23 @@ export const toPosixPath = (value: string): string => Str.replace(/\\/g, "/")(va
 /**
  * Check whether a TypeScript source path should be excluded from lint traversals.
  *
- * @param filePath - TypeScript source path checked against the exclusion rules.
- * @returns `true` when the path matches an excluded suffix or segment, otherwise `false`.
- * @remarks
+ * **Details**
+ *
  * Matching is purely lexical after separator normalization. Pass paths that are
  * already scoped to the traversal root if symlink resolution or case folding is
  * required by the caller.
- * @example
+ *
+ * **Example** (Apply TypeScript source exclusions)
+ *
  * ```ts
  * import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions"
  * const generated = isExcludedTypeScriptSourcePath("packages/schema/src/_generated/schema.gen.ts")
  * const source = isExcludedTypeScriptSourcePath("packages/schema/src/index.ts")
  * console.log({ generated, source }) // { generated: true, source: false }
  * ```
+ *
+ * @param filePath - TypeScript source path checked against the exclusion rules.
+ * @returns `true` when the path matches an excluded suffix or segment, otherwise `false`.
  * @category utilities
  * @since 0.0.0
  */
