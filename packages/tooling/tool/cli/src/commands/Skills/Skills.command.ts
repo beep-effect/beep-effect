@@ -233,6 +233,12 @@ const skillSource = (source: {
  */
 export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
   skillSource({
+    name: "adhd",
+    source: "UditAkhourii/adhd",
+    ref: "main",
+    skillPath: "skills/adhd/SKILL.md",
+  }),
+  skillSource({
     name: "grill-me",
     source: "mattpocock/skills",
     ref: "main",
