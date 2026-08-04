@@ -105,11 +105,12 @@ const queryPglite = <A>(
 /**
  * Live toolkit handlers over injected PGlite SQL, DuckDB, and bundle metadata.
  *
- * @remarks
+ * **Details**
+ *
  * This layer never constructs either database. The app owns both long-lived
  * resource layers and supplies them once for the stdio host lifetime.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PracticeKgToolkitHandlersLive } from "@beep/law-practice-server"
  * import { Layer } from "effect"
@@ -251,7 +252,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
               label: bundle.manifest.builtAt,
               naturalKey: version,
               provenanceKind: "bundle-manifest",
-              provenanceRef: bundle.bundleDir,
+              provenanceRef: version,
             });
             return projectRows([toToolRecord(statusRow)], practiceKgGraphFieldTiers, request.budgetBytes, version);
           }

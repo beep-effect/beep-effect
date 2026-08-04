@@ -35,6 +35,7 @@ import type * as Crypto from "effect/Crypto";
 const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");
 const LOCATOR_NORMALIZATION_VERSION = "1";
 const CANONICAL_TEXT_CACHE_CAPACITY = 32;
+const MAX_SOURCE_BYTES = 32 * 1024 * 1024;
 const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 const utf8Encoder = new TextEncoder();
 const sourceTextDigestEquals = S.toEquivalence(SourceTextDigest);
@@ -166,7 +167,7 @@ const resolveWorkspaceId = Effect.fnUntraced(function* (scopeRef: string) {
 /**
  * Build the workspace-vault implementation of the source-text resolver port.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { makeWorkspaceSourceTextResolver } from "@beep/workspace-server/SourceText"
  *
@@ -249,10 +250,22 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
             "The source locator does not identify a file."
           );
         }
+        if (Number(info.size) > MAX_SOURCE_BYTES) {
+          return yield* SourceTextResolverError.new(
+            "source-unavailable",
+            `The source exceeds the ${MAX_SOURCE_BYTES}-byte resolution limit.`
+          );
+        }
 
         const bytes = yield* fs
           .readFile(resolvedPath)
           .pipe(Effect.mapError(resolverError("source-unavailable", "The source file could not be read.")));
+        if (bytes.byteLength > MAX_SOURCE_BYTES) {
+          return yield* SourceTextResolverError.new(
+            "source-unavailable",
+            `The source exceeds the ${MAX_SOURCE_BYTES}-byte resolution limit.`
+          );
+        }
         const sourceDigest = yield* digestBytes(bytes).pipe(Effect.provide(crypto));
         yield* verifyDigest(
           sourceDigest,
@@ -314,7 +327,7 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
 /**
  * Workspace-vault source-text resolver layer.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { WorkspaceSourceTextResolverLayer } from "@beep/workspace-server/SourceText"
  * import { SourceTextResolver } from "@beep/file-processing/SourceText"

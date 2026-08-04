@@ -123,7 +123,8 @@ const fixture = Effect.fn(function* (stubScript: string) {
   yield* fs.writeFileString(stubPath, stubScript);
   yield* fs.chmod(stubPath, 0o755);
   const sourcePath = path.join(dir, "mailbox.pst");
-  yield* fs.writeFileString(sourcePath, "not a real pst");
+  const sourceBytes = new TextEncoder().encode("not a real pst");
+  yield* fs.writeFile(sourcePath, sourceBytes);
   const exportRoot = path.join(dir, "out");
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
@@ -142,7 +143,8 @@ const fixture = Effect.fn(function* (stubScript: string) {
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "mailbox.pst",
       relativePath,
-      sizeBytes: NonNegativeInt.make(14),
+      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      bytes: sourceBytes,
     }),
   });
 

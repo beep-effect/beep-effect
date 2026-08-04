@@ -232,6 +232,31 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
   );
 
   it.effect(
+    "rejects source files larger than the resolver memory budget before extraction",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-source-text-limit-" });
+      const locator = "oversized.txt";
+      const bytes = new Uint8Array(32 * 1024 * 1024 + 1);
+      const placeholderDigest = yield* digestBytes(new Uint8Array());
+      yield* fs.writeFile(path.join(root, locator), bytes);
+      yield* configureVault(root);
+
+      const error = yield* resolve(
+        identityFor({
+          locator,
+          sourceDigest: placeholderDigest,
+          textDigest: placeholderDigest,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.reason).toBe("source-unavailable");
+      expect(error.message).toContain("33554432-byte resolution limit");
+    }, provideScopedLayer(ResolverTestLayer))
+  );
+
+  it.effect(
     "rejects unsupported locator-normalization versions before interpreting the locator",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

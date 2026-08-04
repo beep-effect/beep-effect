@@ -96,11 +96,9 @@ interface ProcessCollectedFile {
   readonly sourcePath: string;
 }
 
-// Deliberately light: bytes are hashed and released during preparation, and
-// the dispatch-time SourceArtifact is built per representative so the whole
-// corpus is never resident at once.
 interface ProcessPreparedSource {
   readonly artifactId: ArtifactId;
+  readonly bytes: Uint8Array;
   readonly digest: ContentDigest;
   readonly format: FileFormatFamily;
   readonly locatorPath: PosixPath;
@@ -579,6 +577,7 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
 
   return {
     artifactId,
+    bytes,
     digest,
     format: classifyProcessExtension(sourceFile.extension),
     locatorPath,
@@ -588,31 +587,18 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
   };
 });
 
-// Built per dispatched representative, never retained across the batch: real
-// engines read the source through the file locator, so only the in-memory
-// test engine's text-like extraction materializes content here.
 const makeDispatchSourceArtifact = Effect.fn("Files.makeDispatchSourceArtifact")(function* (
   prepared: ProcessPreparedSource,
   options: ProcessFilesOptions
-): Effect.fn.Return<SourceArtifact, FilesCommandError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<SourceArtifact, FilesCommandError> {
   const mediaType = mediaTypeForProcessFormat(prepared.format);
   const text =
     options.engine === "test" && A.contains(processTextLikeFormats, prepared.format)
-      ? O.some(
-          processUtf8Decoder.decode(
-            yield* fs
-              .readFile(prepared.sourceFile.sourcePath)
-              .pipe(
-                Effect.mapError((cause) =>
-                  formatPlatformError("Failed to read process source", prepared.sourceFile.sourcePath, { cause })
-                )
-              )
-          )
-        )
+      ? O.some(processUtf8Decoder.decode(prepared.bytes))
       : O.none<string>();
 
   return SourceArtifact.make({
+    bytes: prepared.bytes,
     digest: prepared.digest,
     extension: prepared.sourceFile.extension,
     id: prepared.artifactId,

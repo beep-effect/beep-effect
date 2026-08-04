@@ -203,6 +203,28 @@ describe("@beep/openclaw intent models", () => {
     expect(S.is(OpenclawProviderApiKey)(secretRef)).toBe(true);
   });
 
+  it("requires HTTPS for secret-backed hosted providers while preserving loopback placeholders", () => {
+    const secretApiKey = {
+      _tag: "SecretRef",
+      ref: "op://vault/provider/api-key",
+    };
+    const provider = {
+      api: "openai-compat",
+      apiKey: secretApiKey,
+      baseUrl: "https://provider.example/v1",
+      id: "hosted",
+      models: [{ id: "model", input: ["text"], name: "model" }],
+    };
+
+    expect(Result.isSuccess(S.decodeUnknownResult(OpenclawModelProviderIntent)(provider))).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(OpenclawModelProviderIntent)({ ...provider, baseUrl: "http://provider.example/v1" })
+      )
+    ).toBe(true);
+    expect(S.is(OpenclawModelProviderIntent)(ollamaProvider)).toBe(true);
+  });
+
   it("round-trips schema-derived intent payloads", () =>
     fc.assert(
       fc.property(

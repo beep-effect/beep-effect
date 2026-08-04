@@ -372,7 +372,6 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const turn = yield* cli.agentTurn(gatewayContext, {
           agentId: "spike3",
           message: "ping",
-          sessionKey: "p0-spike3",
           timeoutSeconds: 120,
         });
 
@@ -388,22 +387,21 @@ describe("@beep/openclaw OpenclawCli service", () => {
           "agent",
           "--agent",
           "spike3",
-          "--session-key",
-          "p0-spike3",
-          "--message",
-          "ping",
+          "--message-file",
+          "-",
           "--thinking",
           "off",
           "--timeout",
           "120",
           "--json",
         ]);
+        expect(O.getOrThrow(lastSuccessRequest().stdinText)).toBe("ping");
+        expect(A.contains(lastSuccessRequest().args, "ping")).toBe(false);
 
         yield* cli.agentTurn(gatewayContext, {
           agentId: "spike3",
           local: true,
           message: "ping",
-          sessionKey: "p0-spike3",
           timeoutSeconds: 120,
         });
         expect(A.contains(lastSuccessRequest().args, "--local")).toBe(true);

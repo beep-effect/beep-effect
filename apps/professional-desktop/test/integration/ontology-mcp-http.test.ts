@@ -224,7 +224,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
       const decisions = yield* Ref.get(probe.decisions);
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("denied");
-      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("operation-not-granted");
+      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
       expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
     })
   );

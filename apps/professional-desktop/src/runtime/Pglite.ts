@@ -27,7 +27,6 @@
  */
 /// <reference path="../assets.d.ts" />
 
-import { tmpdir } from "node:os";
 import * as NodeURL from "node:url";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
@@ -293,6 +292,8 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
   profilePhase({ phase: "professional_desktop.pglite.compile_binary_assets" })
 );
 
+const DataDirPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+
 // The bundled migrations issue `CREATE EXTENSION btree_gist` (the epistemic
 // bitemporal edge exclusion constraint), so the extension has to be registered
 // on every PGlite instance this app opens — the compatibility probe as much as
@@ -305,17 +306,16 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
 // compiled sidecar's single-file executable. PGlite's extension loader reads
 // `file://` bundles through node:fs, which cannot open the executable's
 // embedded `$bunfs` assets either, so the bytes are materialized once per boot
-// into a real content-named temp file (`Bun.hash` over the bundle bytes) and
-// PGlite is handed that URL. Re-boots and concurrent sidecars converge on the
-// same content-addressed path, so an existing complete copy is reused as-is.
+// into a private unpredictable temp directory and PGlite is handed that URL.
+// Exclusive creation prevents another local process from pre-positioning or
+// swapping the loadable extension path.
 const materializeBtreeGistBundle = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const bytes = yield* Effect.promise(() => Bun.file(toBunFileSystemPath(btreeGistBundlePath)).arrayBuffer());
-  const target = `${tmpdir()}/beep-professional-desktop-btree-gist-${Bun.hash(bytes).toString(16)}.tar.gz`;
-  const existing = Bun.file(target);
-  const alreadyMaterialized = (yield* Effect.promise(() => existing.exists())) && existing.size === bytes.byteLength;
-  if (!alreadyMaterialized) {
-    yield* Effect.promise(() => Bun.write(target, bytes));
-  }
+  const directory = yield* fs.makeTempDirectory({ prefix: "beep-professional-desktop-btree-gist-" });
+  const target = path.join(directory, "btree_gist.tar.gz");
+  yield* fs.writeFile(target, new Uint8Array(bytes), { flag: "wx", mode: 0o600 });
   return NodeURL.pathToFileURL(target);
 });
 
@@ -346,10 +346,6 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
         })
     )
   );
-
-// Platform layers serve only the data-dir compatibility probe/marker below;
-// migrations apply in-memory and no longer touch the filesystem.
-const DataDirPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
 /**
  * Live {@link PostgresDrizzle} layer over a file-backed in-process PGlite

@@ -640,6 +640,16 @@ describe("practice KG projections", () => {
       expect(summary.claims).toBe(2);
       expect(summary.files).toBe(2);
       expect(summary.failedFiles).toBe(2);
+      const outsideClaimsPath = path.join(corpusRoot, "outside-claims.txt");
+      const linkedClaimsPath = path.join(inputs, "9_Response OA - 20001US09.txt");
+      yield* fs.writeFileString(outsideClaimsPath, "private file outside the claims input root");
+      yield* fs.symlink(outsideClaimsPath, linkedClaimsPath);
+      const linkedClaimsFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(linkedClaimsFailure.message).toBe("Practice KG claims batch failed.");
+      expect(linkedClaimsFailure.cause).toBeDefined();
+      yield* fs.remove(linkedClaimsPath);
       const rerunSummary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
         provideScopedLayer(claimsLayer)
       );
