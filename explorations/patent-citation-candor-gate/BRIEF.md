@@ -33,9 +33,14 @@ gate as the first risk-retiring wedge.
 ## Appetite
 
 **One goal packet, two phases, roughly two focused weeks total.** Rung 1 is
-independently shippable and retires the primary risk; rung 2's real cost is
-the migration lane, not the schema. Busting the budget means rung 1 not
-reaching a green `CandorPolicy` test inside its week.
+the **domain proof** — schemas, the `CandorPolicy` contract, and the
+predicate's semantics proven by the failing-then-green test over
+in-memory/test-only storage (the same first-proof posture
+`goals/agentic-professional-runtime` used). It is deliberately not
+shippable protection on its own: risk retirement lands with rung 2, which
+delivers durability (the migration lane) and the live promotion-path
+invocation. Busting the budget means rung 1 not reaching a green
+`CandorPolicy` test inside its week.
 
 If rung 1 busts its budget, drop `PatentFragmentLocator` from rung 1
 entirely (events ground on the anchor receipt plus document identity; the
@@ -52,10 +57,14 @@ epistemic and agents bricks are composed, never widened.
 
 - `PatentCitationEvent` (entity) — a source-versioned, evidence-grounded
   occurrence relating an existing `PatentReference` to a citing application
-  identified by the live `ApplicationNumber` value (WIPO ST.13) — not by
-  `OfficeAction`'s free-text application number or a `PatentAsset` fixture
-  key; a normalized application identity beyond ST.13 is gated on
-  `goals/uspto-prosecution-read`. Fat-marker fields: citation actor
+  identified by a **law-owned application-identity union**: it must accept
+  the USPTO eight-digit normalized form (the live driver boundary's
+  `UsptoApplicationNumber` shape, mirrored in law-practice — domain never
+  imports drivers) and the WIPO ST.13 form (live `ApplicationNumber`
+  value), with explicit conversion between them; never `OfficeAction`'s
+  free-text number or a `PatentAsset` fixture key, and never ST.13-only.
+  The union's exact shape is goal-packet design latitude. Fat-marker
+  fields: citation actor
   (`applicant | examiner | both | unknown` as a LiteralKit domain), a tagged
   discovery-provenance union (engine mention, model suggestion, examiner
   document, manual entry), optional office-action linkage, submission and
@@ -65,9 +74,13 @@ epistemic and agents bricks are composed, never widened.
   cursor-upstream identity per the `uspto-prosecution-read` SPEC objectives —
   as a gated criterion), grounding by a persisted
   `TextAnchorVerificationReceipt` (`{ anchor, source }` — the live receipt
-  form of `VerifiedTextAnchor`; re-verification required before any
-  "current" claim) with optional `EvidenceSpan` for extraction evidence,
-  and two separately-triggered states that never rewrite evidence:
+  form of `VerifiedTextAnchor`, from foundation/provenance; re-verification
+  required before any "current" claim — epistemic's `EvidenceSpan` is NOT
+  embedded: that would be a new law-practice/domain → epistemic/domain
+  edge, and slice-to-slice imports are forbidden doctrine; an extraction-
+  evidence span joins the event only if that shape is promoted to a
+  shared/foundation home through the normal promotion gate), and two
+  separately-triggered states that never rewrite evidence:
   **explicit staleness** derived from source-version mismatch, and
   **explicit quarantine** carried from raw-preserving unknown or
   undecodable source codes (the `uspto-prosecution-read` fail-explicit
@@ -90,23 +103,34 @@ epistemic and agents bricks are composed, never widened.
 
 **Rung 1 — use-case contract (`packages/law-practice/use-cases`):**
 
-- `CandorPolicy` (`Context.Service`) — owns the derived gate predicate:
-  *promotion is blocked while any current AI-discovered citation event lacks
-  a disposition bound to that event's exact observation version.* Stale,
-  quarantined, and duplicate events count as undisposed (fail closed). No
-  stored closure state exists anywhere; the predicate is recomputed from
-  events + dispositions. Composes `RuntimeApprovalGate` as the
-  reviewer-facing surface only and never mutates it — see the gate rabbit
-  hole for why composition is read-only at rung 1.
+- `CandorPolicy` (`Context.Service`) — owns the derived gate predicate,
+  quantified over **every AI-discovered citation event** for the filing's
+  references (examiner-observed events are recorded but do not gate in this
+  wedge; widening the quantified set is a later align question). An event is
+  *covered* only by a disposition bound to its exact observation version,
+  and only while that observation remains current for its source. Staleness
+  therefore re-blocks: when a newer observation of a source arrives, a
+  disposition bound to the superseded version never covers the new event,
+  and a superseded event stops blocking only once the newer event is itself
+  dispositioned. Quarantined events and possible duplicates are never
+  covered (fail closed). No stored closure state exists anywhere; the
+  predicate is recomputed from events + dispositions. Reads
+  `RuntimeApprovalGate` state only through a lawful cross-slice shape — see
+  the gate rabbit hole.
 
 **Rung 2 (`law-practice/domain` + `tables` + `server`, plus a db-admin
 migration):**
 
-- Append-only IDS fact records following the `ExecutionLedger` precedent end
-  to end — ports, repo/layer, and the law-practice slice's **first**
+- Durable storage for `PatentCitationEvent` and `CandorDisposition` plus the
+  append-only IDS fact records, following the `ExecutionLedger` precedent
+  end to end — ports, repo/layer, and the law-practice slice's **first**
   db-admin migration with its PGlite migration test, both registered in
   `AcceptedProofManifest`. That migration lane, not the schema, is rung 2's
   real cost.
+- The live invocation boundary: the filing-promotion path actually consults
+  `CandorPolicy` (through the lawful cross-slice shape chosen at
+  decomposition), so a blocked predicate blocks a real filing candidate —
+  this is where the primary risk is retired.
 - Fact families (presence only, never sufficiency or truth): submission acts
   with dates and 1.97-window facts (window arithmetic derives a *candidate*
   window only — it must surface the controlling dates and Lane B's edge
@@ -132,17 +156,20 @@ version of the same source arrives.
 
 ## Rabbit Holes
 
-- **Gate composition is read-only at rung 1.** `RuntimeApprovalDecision` has
-  exactly one member (`pending`) and `RuntimeCandidateLifecycle` one
-  (`candidate`), so the gate carries no blocked-vs-released signal;
-  law-practice owns blocked/released entirely and only reads the gate. A
-  gate that can express release is a gated criterion on
+- **Gate composition is read-only and must take a lawful cross-slice
+  shape.** `RuntimeApprovalDecision` has exactly one member (`pending`) and
+  `RuntimeCandidateLifecycle` one (`candidate`), so the gate carries no
+  blocked-vs-released signal; law-practice owns blocked/released entirely.
+  A gate that can express release is a gated criterion on
   `goals/agentic-professional-runtime` landing further decision members —
-  rung 1 must not widen the agents vocabulary to get one. The composition
-  also creates a new cross-slice edge (`law-practice/use-cases` has no
-  `@beep/agents-use-cases` dependency today); whether it lands as a direct
-  dependency or a coordination surface is a goal-packet design question and
-  an explicit inherited risk.
+  this wedge must not widen the agents vocabulary. Doctrine forbids a
+  direct `law-practice/use-cases` → `agents/use-cases` dependency
+  (slice-to-slice imports are forbidden; `standards/ARCHITECTURE.md`), so
+  decomposition must pick from the lawful shapes: emitted events, app-local
+  runtime coordination, or a promoted shared contract. Note the existing
+  `law-practice/use-cases` → `@beep/epistemic-domain`/`-use-cases`
+  dependencies are prior drift from that doctrine — this wedge must not
+  compound it with a new edge.
 - **Quarantine has no live producer at rung 1.** Real quarantined events
   arrive only when `uspto-prosecution-read` lands its raw-preserving
   unknown-code failures; rung 1 proves the predicate's quarantine branch
