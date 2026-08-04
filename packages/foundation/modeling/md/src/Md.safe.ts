@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 
-import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html";
+import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";

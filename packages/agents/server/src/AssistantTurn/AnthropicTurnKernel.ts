@@ -37,8 +37,9 @@ import { LanguageModel, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
-import type { AssistantTurnEvent, IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { BlockRepairFailed } from "@beep/agents-use-cases/server";
+import type { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contracts";
+import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
+import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import type { Config } from "effect";
 import type { AiError, Response } from "effect/unstable/ai";
 

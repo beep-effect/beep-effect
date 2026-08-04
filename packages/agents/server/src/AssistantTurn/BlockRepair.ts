@@ -6,8 +6,8 @@
  */
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import { IndexedBlock } from "@beep/agents-use-cases/public";
-import { BlockRepairFailed } from "@beep/agents-use-cases/server";
+import { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contracts";
+import { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
 import { generateAnthropicToolJson } from "@beep/anthropic";
 import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";

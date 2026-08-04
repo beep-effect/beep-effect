@@ -1,4 +1,4 @@
-import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn";
+import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair";
 import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
 import { describe, expect, it } from "@effect/vitest";

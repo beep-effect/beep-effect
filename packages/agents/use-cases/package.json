@@ -30,11 +30,13 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./AssistantTurn.contracts": "./src/processes/AssistantTurn/AssistantTurn.contracts.ts",
+    "./AssistantTurn.repair-errors": "./src/processes/AssistantTurn/AssistantTurn.repair-errors.ts",
+    "./package.json": "./package.json",
+    "./proof": "./src/proof.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
-    "./proof": "./src/proof.ts",
-    "./test": "./src/test.ts",
-    "./package.json": "./package.json"
+    "./test": "./src/test.ts"
   },
   "files": [
     "src/**/*.ts",

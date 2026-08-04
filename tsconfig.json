@@ -1863,6 +1863,15 @@
       ],
       "@beep/workspace-server/SourceText": [
         "./packages/workspace/server/src/SourceText/index.ts"
+      ],
+      "@beep/agents-server/BlockRepair": [
+        "./packages/agents/server/src/AssistantTurn/BlockRepair.ts"
+      ],
+      "@beep/agents-use-cases/AssistantTurn.contracts": [
+        "./packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts"
+      ],
+      "@beep/agents-use-cases/AssistantTurn.repair-errors": [
+        "./packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.repair-errors.ts"
       ]
     }
   }

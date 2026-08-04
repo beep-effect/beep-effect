@@ -33,13 +33,14 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./test": "./src/test.ts",
-    "./AssistantTurn": "./src/AssistantTurn/index.ts",
-    "./ProviderInstance": "./src/ProviderInstance/index.ts",
     "./AnthropicTurnCodec": "./src/AssistantTurn/AnthropicTurnCodec.ts",
     "./AnthropicTurnKernel": "./src/AssistantTurn/AnthropicTurnKernel.ts",
+    "./AssistantTurn": "./src/AssistantTurn/index.ts",
+    "./BlockRepair": "./src/AssistantTurn/BlockRepair.ts",
+    "./ProviderInstance": "./src/ProviderInstance/index.ts",
     "./internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./test": "./src/test.ts"
   },
   "files": [
     "src/**/*.ts",
@@ -54,13 +55,14 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
-      "./test": "./dist/test.js",
-      "./AssistantTurn": "./dist/AssistantTurn/index.js",
-      "./ProviderInstance": "./dist/ProviderInstance/index.js",
       "./AnthropicTurnCodec": "./dist/AssistantTurn/AnthropicTurnCodec.js",
       "./AnthropicTurnKernel": "./dist/AssistantTurn/AnthropicTurnKernel.js",
+      "./AssistantTurn": "./dist/AssistantTurn/index.js",
+      "./BlockRepair": "./dist/AssistantTurn/BlockRepair.js",
+      "./ProviderInstance": "./dist/ProviderInstance/index.js",
       "./internal/*": null,
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./test": "./dist/test.js"
     }
   },
   "dependencies": {
