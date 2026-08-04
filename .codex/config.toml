@@ -10,9 +10,97 @@
   apps = false
 
 [skills]
-  # Codex 0.145 applies skill pruning from user/profile/session config. This
-  # checkout only opts into repo-skill instruction loading.
   include_instructions = true
+  [[skills.config]]
+    name = "adhd"
+    enabled = true
+  [[skills.config]]
+    name = "atom-reactivity-specialist"
+    enabled = true
+  [[skills.config]]
+    name = "browser-qa-loop"
+    enabled = true
+  [[skills.config]]
+    name = "claude-frontend-lane"
+    enabled = true
+  [[skills.config]]
+    name = "crispen"
+    enabled = true
+  [[skills.config]]
+    name = "effect-first-development"
+    enabled = true
+  [[skills.config]]
+    name = "effect-services"
+    enabled = true
+  [[skills.config]]
+    name = "effect-v4-imports"
+    enabled = true
+  [[skills.config]]
+    name = "exif-provenance"
+    enabled = true
+  [[skills.config]]
+    name = "explore"
+    enabled = true
+  [[skills.config]]
+    name = "grill-me"
+    enabled = true
+  [[skills.config]]
+    name = "grill-with-docs"
+    enabled = true
+  [[skills.config]]
+    name = "jsdoc-annotation-specialist"
+    enabled = true
+  [[skills.config]]
+    name = "mcp-jetbrains"
+    enabled = true
+  [[skills.config]]
+    name = "motion-evidence-review"
+    enabled = true
+  [[skills.config]]
+    name = "onepassword-secret-refs"
+    enabled = true
+  [[skills.config]]
+    name = "oracle"
+    enabled = true
+  [[skills.config]]
+    name = "ponytail"
+    enabled = true
+  [[skills.config]]
+    name = "ponytail-review"
+    enabled = true
+  [[skills.config]]
+    name = "portless"
+    enabled = true
+  [[skills.config]]
+    name = "qa-session-ops"
+    enabled = true
+  [[skills.config]]
+    name = "quality-review-fix-loop"
+    enabled = true
+  [[skills.config]]
+    name = "reflect"
+    enabled = true
+  [[skills.config]]
+    name = "repo-symbol-discovery"
+    enabled = true
+  [[skills.config]]
+    name = "schema-first-development"
+    enabled = true
+  [[skills.config]]
+    name = "schema-model-specialist"
+    enabled = true
+  [[skills.config]]
+    name = "shadcn"
+    enabled = true
+  [[skills.config]]
+    name = "teach"
+    enabled = true
+  [[skills.config]]
+    name = "turborepo"
+    enabled = true
+  [[skills.config]]
+    name = "yeet"
+    enabled = true
 
   [mcp_servers.webstorm]
     url = "http://127.0.0.1:64542/stream"

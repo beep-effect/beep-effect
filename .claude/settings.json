@@ -1,12 +1,4 @@
 {
-  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
-  "enabledMcpjsonServers": [],
-  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
-  "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": false,
-    "serena@claude-plugins-official": false,
-    "compound-engineering@compound-engineering-plugin": true
-  },
   "permissions": {
     "allow": [
       "Bash(rg:*)",
@@ -108,6 +100,8 @@
       "Edit(**/.claude/settings.json)"
     ]
   },
+  "enabledMcpjsonServers": [],
+  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
   "hooks": {
     "PostToolUse": [
       {
@@ -121,6 +115,11 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": false,
+    "serena@claude-plugins-official": false,
+    "compound-engineering@compound-engineering-plugin": true
+  },
   "extraKnownMarketplaces": {
     "compound-engineering-plugin": {
       "source": {
@@ -128,5 +127,6 @@
         "repo": "EveryInc/compound-engineering-plugin"
       }
     }
-  }
+  },
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
 }

@@ -1,10 +1,22 @@
 {
   "version": 1,
   "skills": {
+    "adhd": {
+      "source": "UditAkhourii/adhd",
+      "sourceType": "github",
+      "computedHash": "80f91a41407324331584093cba54c260bc17402f8777923a70d6550d045bb972",
+      "ref": "main",
+      "skillPath": "skills/adhd/SKILL.md"
+    },
     "atom-reactivity-specialist": {
       "source": "repo-local",
       "sourceType": "local",
       "computedHash": "a87b7f054119d2031ca502ae169cd8172fb589c039e6b6f58769be3d423394ef"
+    },
+    "browser-qa-loop": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "3cb76b66284fb2ff73a083678e04e78702e6593baef10b472d3c8b5a45c8bae2"
     },
     "claude-frontend-lane": {
       "source": "repo-local",
@@ -31,6 +43,11 @@
       "sourceType": "local",
       "computedHash": "ef9017b17f61af636932ab9f2c91238f78a65adf4c956952c0e13cf06aeb05d7"
     },
+    "exif-provenance": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "fbdd2ffdffe6f189a9ed53f802e56156e19a8cf483ad4260b5f5f2cea578c0e1"
+    },
     "explore": {
       "source": "repo-local",
       "sourceType": "local",
@@ -53,15 +70,15 @@
       "sourceType": "local",
       "computedHash": "10416ab9cef6cae0dfb84e3725ab40147fa876f5e9e62b83f8025be5eabb7c7b"
     },
-    "mcp-graphiti-memory": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "88d3799d59cfe2fef7f220e7a1b4ba2e94db7d154e1d3a166cfa570ee2221a62"
-    },
     "mcp-jetbrains": {
       "source": "repo-local",
       "sourceType": "local",
       "computedHash": "086f63730b8f67536bef92230b8636fb6c9d1d4af306587b0c5bb18b1d2b1fb3"
+    },
+    "motion-evidence-review": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "38ed990b31e94b36a28a80bccc2171a28dde9c5f7c24d768f13ea970d729588e"
     },
     "onepassword-secret-refs": {
       "source": "repo-local",
@@ -71,7 +88,7 @@
     "oracle": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "7d26aca9256fabd6c96a755e980aee8c53f755bbdf361819ac9ac59072d70f9f"
+      "computedHash": "8a9d9a995c92395ca9d0793c6a96e7d46dd268b19d99649d30a9a1f80465ea93"
     },
     "ponytail": {
       "source": "DietrichGebert/ponytail",
@@ -90,7 +107,12 @@
     "portless": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "0c51d744928d020595c8b5c3ab8ac48354d9600900b0e8af2841f95d087dd181"
+      "computedHash": "e266af0e1ad6002c323bdab45468c4fa7bfca1bed34058930337f1f7b5f02e40"
+    },
+    "qa-session-ops": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "7521503efb23d6d3b02128958a9a177a43999dd2a7aed7bf634dc52890333e09"
     },
     "quality-review-fix-loop": {
       "source": "repo-local",
