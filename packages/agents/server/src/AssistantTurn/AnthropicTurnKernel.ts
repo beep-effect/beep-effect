@@ -250,7 +250,8 @@ const streamTurn = (
  * requirement is the redacted `AI_ANTHROPIC_API_KEY` config resolved by the
  * plan's provided client layer.
  *
- * @remarks
+ * **Details**
+ *
  * The kernel streams valid blocks as soon as they decode. After the first
  * invalid slice, later valid blocks are buffered until the repair tail can emit
  * repaired and already-valid blocks in original envelope order. Repair-call

@@ -177,7 +177,8 @@ class RepairInvalidBlocksResult extends S.Class<RepairInvalidBlocksResult>($I`Re
  * Provider call used by {@link makeRepairInvalidBlocks} to obtain repair tool
  * parameters for a batch of invalid block slices.
  *
- * @remarks
+ * **Details**
+ *
  * `attempt` is one-based and never exceeds the adapter retry limit. The call
  * returns the raw repair-tool parameters JSON together with terminal provider
  * usage; envelope validation, per-block decoding, unexpected indices, and
@@ -223,7 +224,8 @@ export type BlockRepairCall = (
  * Repair function shape used by the Anthropic turn kernel after streamed block
  * validation has collected one or more failures.
  *
- * @remarks
+ * **Details**
+ *
  * The returned effect succeeds with repaired indexed blocks and aggregate
  * repair-call token usage. Missing, duplicated, unexpected, or still-invalid
  * tool results are handled by the adapter and do not escape as successful
@@ -631,7 +633,8 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
 /**
  * Build a retrying invalid-block repair function from a provider call.
  *
- * @remarks
+ * **Details**
+ *
  * The returned repair function makes at most two sequential repair attempts.
  * It keeps the first accepted repair per index, ignores unexpected indices,
  * logs codec-invalid tool results, records repair metrics, and drops failures
@@ -690,7 +693,8 @@ export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRep
 /**
  * Default Anthropic-backed invalid-block repair function.
  *
- * @remarks
+ * **Details**
+ *
  * Non-empty failure batches call the Anthropic repair tool with redacted,
  * structured failure reports. Empty batches return immediately without a
  * provider call, which is useful for branch-free repair tails.
