@@ -51,10 +51,9 @@ spike B in `DECISIONS.md`), and the unconsumed dispatch note
 - `packages/epistemic/tables` + shared migration folder — candidate table(s);
   additive only.
 - `packages/epistemic/use-cases` — candidate ports/commands; approval
-  transition command composing the existing `SupersedeEdgeFact` path. The
-  `conflicted` member joins `ClaimDispositionStatus` here (deliberately left
-  out of the core until this packet needed it —
-  `ops/handoffs/p0-to-p1-handoff.md`).
+  transition command composing the existing `SupersedeEdgeFact` path.
+  Contradiction review uses a slice-local `ContradictionDispositionStatus`;
+  `ClaimDispositionStatus` remains unchanged.
 - `packages/epistemic/server` — repository + layer wiring.
 - `packages/_internal/db-admin` — migration target registration (follow the
   `CREATE EXTENSION` consumer-sweep checklist in that package's `AGENTS.md` if
@@ -67,6 +66,9 @@ spike B in `DECISIONS.md`), and the unconsumed dispatch note
 - Approval is a recorded scoped human disposition, not truth manufacture
   (academia align decision 2); the approval record and the resulting
   supersession are distinct records with distinct identities.
+- An unresolved contradiction is represented by the absence of a contradiction
+  disposition. `ContradictionDispositionStatus` contains only `rejected` and
+  `superseded`; it does not overload claim-admission disposition.
 - Symmetric relations (`CONTRADICTS`) reuse the core's symmetric-endpoint
   ordering in `LogicalEdgeIdentity`; no second symmetric-encoding scheme.
 - Duplicate suppression is identity-based (logical key + match basis), not
@@ -107,14 +109,13 @@ they graduate onward with the packets that own those records.
 
 ## Acceptance Criteria
 
-- [ ] P0 spike NOTES with pass/fail per gate assertion, archived under
+- [x] P0 spike NOTES with pass/fail per gate assertion, archived under
       `history/p0/`.
 - [ ] Candidate storage is bitemporal, immutable, and additive; detection
       writes never appear in the core's authority tables.
 - [ ] Approval transition executes candidate → atomic supersession + durable
       disposition in one transaction, reusing the core's typed-conflict
-      mapping; `conflicted` disposition status lands with its first real
-      consumer.
+      mapping; claim-admission disposition remains unchanged.
 - [ ] Unresolved candidates and resolved outcomes are queryable two-axis;
       restart/migration proof repeats the P0 queries identically.
 - [ ] Reflection passes `bun run beep lint reflection-artifacts`; packet state

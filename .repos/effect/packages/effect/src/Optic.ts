@@ -42,7 +42,7 @@ import type { IsUnion } from "./Types.ts"
  *
  * **Example** (Converting between Celsius and Fahrenheit)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic } from "effect"
  *
  * const fahrenheit = Optic.makeIso<number, number>(
@@ -50,11 +50,9 @@ import type { IsUnion } from "./Types.ts"
  *   (f) => (f - 32) * 5 / 9
  * )
  *
- * console.log(fahrenheit.get(100))
- * // Output: 212
+ * fahrenheit.get(100) // => 212
  *
- * console.log(fahrenheit.set(32))
- * // Output: 0
+ * fahrenheit.set(32) // => 0
  * ```
  *
  * @see {@link makeIso} — constructor
@@ -80,7 +78,7 @@ export interface Iso<in out S, in out A> extends Lens<S, A>, Prism<S, A> {}
  *
  * **Example** (Wrapping and unwrapping a branded type)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic } from "effect"
  *
  * type Meters = { readonly value: number }
@@ -89,11 +87,9 @@ export interface Iso<in out S, in out A> extends Lens<S, A>, Prism<S, A> {}
  *   (n) => ({ value: n })
  * )
  *
- * console.log(meters.get({ value: 100 }))
- * // Output: 100
+ * meters.get({ value: 100 }) // => 100
  *
- * console.log(meters.set(42))
- * // Output: { value: 42 }
+ * meters.set(42) // => { value: 42 }
  * ```
  *
  * @see {@link Iso} — the type this function returns
@@ -124,15 +120,14 @@ export function makeIso<S, A>(get: (s: S) => A, set: (a: A) => S): Iso<S, A> {
  *
  * **Example** (Focusing on a struct field)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic } from "effect"
  *
  * type Person = { readonly name: string; readonly age: number }
  *
  * const _name = Optic.id<Person>().key("name")
  *
- * console.log(_name.get({ name: "Alice", age: 30 }))
- * // Output: "Alice"
+ * _name.get({ name: "Alice", age: 30 }) // => "Alice"
  * ```
  *
  * @see {@link makeLens} — constructor
@@ -161,7 +156,7 @@ export interface Lens<in out S, in out A> extends Optional<S, A> {
  *
  * **Example** (Focusing on the first element of a pair)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic } from "effect"
  *
  * const _first = Optic.makeLens<readonly [string, number], string>(
@@ -169,11 +164,9 @@ export interface Lens<in out S, in out A> extends Optional<S, A> {
  *   (s, pair) => [s, pair[1]]
  * )
  *
- * console.log(_first.get(["hello", 42]))
- * // Output: "hello"
+ * _first.get(["hello", 42]) // => "hello"
  *
- * console.log(_first.replace("world", ["hello", 42]))
- * // Output: ["world", 42]
+ * _first.replace("world", ["hello", 42]) // => ["world", 42]
  * ```
  *
  * @see {@link Lens} — the type this function returns
@@ -207,7 +200,7 @@ export function makeLens<S, A>(get: (s: S) => A, replace: (a: A, s: S) => S): Le
  *
  * **Example** (Narrowing a tagged union)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * type Shape =
@@ -216,11 +209,9 @@ export function makeLens<S, A>(get: (s: S) => A, replace: (a: A, s: S) => S): Le
  *
  * const _circle = Optic.id<Shape>().tag("Circle")
  *
- * console.log(Result.isSuccess(_circle.getResult({ _tag: "Circle", radius: 5 })))
- * // Output: true
+ * _circle.getResult({ _tag: "Circle", radius: 5 }) // => Result.succeed({ _tag: "Circle", radius: 5 })
  *
- * console.log(Result.isFailure(_circle.getResult({ _tag: "Rect", width: 10 })))
- * // Output: true
+ * Result.isFailure(_circle.getResult({ _tag: "Rect", width: 10 })) // => true
  * ```
  *
  * @see {@link makePrism} — constructor
@@ -248,7 +239,7 @@ export interface Prism<in out S, in out A> extends Optional<S, A> {
  *
  * **Example** (Parsing a string to a number)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * const numeric = Optic.makePrism<string, number>(
@@ -259,11 +250,9 @@ export interface Prism<in out S, in out A> extends Optional<S, A> {
  *   String
  * )
  *
- * console.log(Result.isSuccess(numeric.getResult("42")))
- * // Output: true
+ * numeric.getResult("42") // => Result.succeed(42)
  *
- * console.log(numeric.set(42))
- * // Output: "42"
+ * numeric.set(42) // => "42"
  * ```
  *
  * @see {@link Prism} — the type this function returns
@@ -293,7 +282,7 @@ export function makePrism<S, A>(getResult: (s: S) => Result.Result<A, string>, s
  *
  * **Example** (Creating a positive integer prism)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result, Schema } from "effect"
  *
  * const posInt = Optic.fromChecks<number>(
@@ -301,11 +290,9 @@ export function makePrism<S, A>(getResult: (s: S) => Result.Result<A, string>, s
  *   Schema.isInt()
  * )
  *
- * console.log(Result.isSuccess(posInt.getResult(3)))
- * // Output: true
+ * posInt.getResult(3) // => Result.succeed(3)
  *
- * console.log(Result.isFailure(posInt.getResult(-1)))
- * // Output: true
+ * Result.isFailure(posInt.getResult(-1)) // => true
  * ```
  *
  * @see {@link makePrism} — constructor with custom getter/setter
@@ -429,21 +416,18 @@ type ForbidUnion<A, Message extends string> = IsUnion<A> extends true ? [Message
  *
  * **Example** (Focusing on an optional record key)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * type Env = { [key: string]: string }
  * const _home = Optic.id<Env>().at("HOME")
  *
- * console.log(Result.isSuccess(_home.getResult({ HOME: "/root" })))
- * // Output: true
+ * _home.getResult({ HOME: "/root" }) // => Result.succeed("/root")
  *
- * console.log(Result.isFailure(_home.getResult({ PATH: "/bin" })))
- * // Output: true
+ * Result.isFailure(_home.getResult({ PATH: "/bin" })) // => true
  *
  * // replace returns original on failure
- * console.log(_home.replace("/new", { PATH: "/bin" }))
- * // Output: { PATH: "/bin" }
+ * _home.replace("/new", { PATH: "/bin" }) // => { PATH: "/bin" }
  * ```
  *
  * @see {@link makeOptional} — constructor
@@ -476,13 +460,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Composing a lens with a prism)
    *
-   * ```ts
-   * import { Optic, Option } from "effect"
+   * ```ts import.meta.vitest
+   * import { Optic, Option, Result } from "effect"
    *
    * type State = { value: Option.Option<number> }
    *
    * const _inner = Optic.id<State>().key("value").compose(Optic.some())
    * // _inner is Optional<State, number>
+   * _inner.getResult({ value: Option.some(1) }) // => Result.succeed(1)
    * ```
    *
    * @see {@link id} — start a composition chain
@@ -498,15 +483,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Incrementing a nested field)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic } from "effect"
    *
    * type S = { readonly a: { readonly b: number } }
    * const _b = Optic.id<S>().key("a").key("b")
    *
    * const inc = _b.modify((n) => n + 1)
-   * console.log(inc({ a: { b: 1 } }))
-   * // Output: { a: { b: 2 } }
+   * inc({ a: { b: 1 } }) // => { a: { b: 2 } }
    * ```
    */
   modify(f: (a: A) => A): (s: S) => S
@@ -522,14 +506,13 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Drilling into nested structs)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic } from "effect"
    *
    * type S = { readonly a: { readonly b: number } }
    * const _b = Optic.id<S>().key("a").key("b")
    *
-   * console.log(_b.get({ a: { b: 42 } }))
-   * // Output: 42
+   * _b.get({ a: { b: 42 } }) // => 42
    * ```
    */
   key<S, A extends object, Key extends keyof A>(
@@ -554,17 +537,15 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Deleting an optional key)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic } from "effect"
    *
    * type S = { readonly a?: number }
    * const _a = Optic.id<S>().optionalKey("a")
    *
-   * console.log(_a.replace(undefined, { a: 1 }))
-   * // Output: {}
+   * _a.replace(undefined, { a: 1 }) // => {}
    *
-   * console.log(_a.replace(2, {}))
-   * // Output: { a: 2 }
+   * _a.replace(2, {}) // => { a: 2 }
    * ```
    */
   optionalKey<S, A extends object, Key extends keyof A>(
@@ -589,16 +570,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Focusing only on positive numbers)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Result, Schema } from "effect"
    *
    * const _pos = Optic.id<number>().check(Schema.isGreaterThan(0))
    *
-   * console.log(Result.isSuccess(_pos.getResult(5)))
-   * // Output: true
+   * _pos.getResult(5) // => Result.succeed(5)
    *
-   * console.log(Result.isFailure(_pos.getResult(-1)))
-   * // Output: true
+   * Result.isFailure(_pos.getResult(-1)) // => true
    * ```
    *
    * @see {@link fromChecks} — standalone prism from checks
@@ -620,7 +599,7 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Narrowing a union)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Result } from "effect"
    *
    * type B = { readonly _tag: "b"; readonly b: number }
@@ -631,8 +610,7 @@ export interface Optional<in out S, in out A> {
    *   { expected: `"b" tag` }
    * )
    *
-   * console.log(Result.isSuccess(_b.getResult({ _tag: "b", b: 1 })))
-   * // Output: true
+   * _b.getResult({ _tag: "b", b: 1 }) // => Result.succeed({ _tag: "b", b: 1 })
    * ```
    *
    * @see `.tag()` — shorthand for narrowing by `_tag`
@@ -660,7 +638,7 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Focusing a tagged variant)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Result } from "effect"
    *
    * type Shape =
@@ -669,11 +647,9 @@ export interface Optional<in out S, in out A> {
    *
    * const _radius = Optic.id<Shape>().tag("Circle").key("radius")
    *
-   * console.log(Result.isSuccess(_radius.getResult({ _tag: "Circle", radius: 5 })))
-   * // Output: true
+   * _radius.getResult({ _tag: "Circle", radius: 5 }) // => Result.succeed(5)
    *
-   * console.log(Result.isFailure(_radius.getResult({ _tag: "Rect", width: 10 })))
-   * // Output: true
+   * Result.isFailure(_radius.getResult({ _tag: "Rect", width: 10 })) // => true
    * ```
    *
    * @see `.refine()` — for arbitrary type guards
@@ -701,17 +677,15 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Accessing records safely)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Result } from "effect"
    *
    * type Env = { [key: string]: number }
    * const _x = Optic.id<Env>().at("x")
    *
-   * console.log(Result.isSuccess(_x.getResult({ x: 1 })))
-   * // Output: true
+   * _x.getResult({ x: 1 }) // => Result.succeed(1)
    *
-   * console.log(Result.isFailure(_x.getResult({ y: 2 })))
-   * // Output: true
+   * Result.isFailure(_x.getResult({ y: 2 })) // => true
    * ```
    *
    * @see `.key()` — when the key is always present
@@ -733,15 +707,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Picking keys)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic } from "effect"
    *
    * type S = { readonly a: string; readonly b: number; readonly c: boolean }
    *
    * const _ac = Optic.id<S>().pick(["a", "c"])
    *
-   * console.log(_ac.get({ a: "hi", b: 1, c: true }))
-   * // Output: { a: "hi", c: true }
+   * _ac.get({ a: "hi", b: 1, c: true }) // => { a: "hi", c: true }
    * ```
    *
    * @see `.omit()` — the inverse operation
@@ -768,15 +741,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Omitting keys)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic } from "effect"
    *
    * type S = { readonly a: string; readonly b: number; readonly c: boolean }
    *
    * const _ac = Optic.id<S>().omit(["b"])
    *
-   * console.log(_ac.get({ a: "hi", b: 1, c: true }))
-   * // Output: { a: "hi", c: true }
+   * _ac.get({ a: "hi", b: 1, c: true }) // => { a: "hi", c: true }
    * ```
    *
    * @see `.pick()` — the inverse operation
@@ -800,16 +772,14 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Filtering undefined values)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Result } from "effect"
    *
    * const _defined = Optic.id<number | undefined>().notUndefined()
    *
-   * console.log(Result.isSuccess(_defined.getResult(42)))
-   * // Output: true
+   * _defined.getResult(42) // => Result.succeed(42)
    *
-   * console.log(Result.isFailure(_defined.getResult(undefined)))
-   * // Output: true
+   * Result.isFailure(_defined.getResult(undefined)) // => true
    * ```
    *
    * @since 4.0.0
@@ -834,7 +804,7 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Incrementing liked posts)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Schema } from "effect"
    *
    * type Post = { title: string; likes: number }
@@ -847,12 +817,10 @@ export interface Optional<in out S, in out A> {
    *
    * const addLike = _likes.modifyAll((n) => n + 1)
    *
-   * console.log(
-   *   addLike({
-   *     user: { posts: [{ title: "a", likes: 0 }, { title: "b", likes: 1 }] }
-   *   })
-   * )
-   * // Output: { user: { posts: [{ title: "a", likes: 0 }, { title: "b", likes: 2 }] } }
+   * const result = addLike({
+   *   user: { posts: [{ title: "a", likes: 0 }, { title: "b", likes: 1 }] }
+   * })
+   * result.user.posts // => [{ title: "a", likes: 0 }, { title: "b", likes: 2 }]
    * ```
    *
    * @see {@link getAll} — extract all focused elements as an array
@@ -873,7 +841,7 @@ export interface Optional<in out S, in out A> {
    *
    * **Example** (Doubling all focused values)
    *
-   * ```ts
+   * ```ts import.meta.vitest
    * import { Optic, Schema } from "effect"
    *
    * type S = { readonly items: ReadonlyArray<number> }
@@ -884,8 +852,7 @@ export interface Optional<in out S, in out A> {
    *
    * const doubled = _positive.modifyAll((n) => n * 2)
    *
-   * console.log(doubled({ items: [1, -2, 3] }))
-   * // Output: { items: [2, -2, 6] }
+   * doubled({ items: [1, -2, 3] }) // => { items: [2, -2, 6] }
    * ```
    *
    * @see `.forEach()` — create a sub-traversal
@@ -910,7 +877,7 @@ export interface Optional<in out S, in out A> {
  *
  * **Example** (Accessing record keys safely)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * const atKey = (key: string) =>
@@ -925,8 +892,7 @@ export interface Optional<in out S, in out A> {
  *         : Result.fail(`Key "${key}" not found`)
  *   )
  *
- * console.log(Result.isSuccess(atKey("x").getResult({ x: 1 })))
- * // Output: true
+ * atKey("x").getResult({ x: 1 }) // => Result.succeed(1)
  * ```
  *
  * @see {@link Optional} — the type this function returns
@@ -962,7 +928,7 @@ export function makeOptional<S, A>(
  *
  * **Example** (Traversing array elements with a filter)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Schema } from "effect"
  *
  * type S = { readonly items: ReadonlyArray<number> }
@@ -973,8 +939,7 @@ export function makeOptional<S, A>(
  *
  * const getPositive = Optic.getAll(_positive)
  *
- * console.log(getPositive({ items: [1, -2, 3] }))
- * // Output: [1, 3]
+ * getPositive({ items: [1, -2, 3] }) // => [1, 3]
  * ```
  *
  * @see {@link getAll} — extract focused elements
@@ -1308,7 +1273,7 @@ function composeKind(a: Kind, b: Kind): Kind {
  *
  * **Example** (Collecting positive numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Schema } from "effect"
  *
  * type S = { readonly values: ReadonlyArray<number> }
@@ -1319,11 +1284,9 @@ function composeKind(a: Kind, b: Kind): Kind {
  *
  * const getPositive = Optic.getAll(_pos)
  *
- * console.log(getPositive({ values: [3, -1, 5] }))
- * // Output: [3, 5]
+ * getPositive({ values: [3, -1, 5] }) // => [3, 5]
  *
- * console.log(getPositive({ values: [-1, -2] }))
- * // Output: []
+ * getPositive({ values: [-1, -2] }) // => []
  * ```
  *
  * @see {@link Traversal} — the optic type this operates on
@@ -1360,15 +1323,14 @@ const identityIso = make([])
  *
  * **Example** (Starting an optic chain)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic } from "effect"
  *
  * type S = { readonly x: number }
  *
  * const _x = Optic.id<S>().key("x")
  *
- * console.log(_x.get({ x: 42 }))
- * // Output: 42
+ * _x.get({ x: 42 }) // => 42
  * ```
  *
  * @see {@link Iso} — the type this function returns
@@ -1397,7 +1359,7 @@ export function id<S>(): Iso<S, S> {
  *
  * **Example** (Traversing record values)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Schema } from "effect"
  *
  * const _positiveValues = Optic.entries<number>()
@@ -1405,8 +1367,7 @@ export function id<S>(): Iso<S, S> {
  *
  * const inc = _positiveValues.modifyAll((n) => n + 1)
  *
- * console.log(inc({ a: 0, b: 3, c: -1 }))
- * // Output: { a: 0, b: 4, c: -1 }
+ * inc({ a: 0, b: 3, c: -1 }) // => { a: 0, b: 4, c: -1 }
  * ```
  *
  * @see {@link Iso} — the type this function returns
@@ -1434,19 +1395,16 @@ export function entries<A>(): Iso<Record<string, A>, ReadonlyArray<readonly [str
  *
  * **Example** (Accessing Some value)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Option, Result } from "effect"
  *
  * const _some = Optic.id<Option.Option<number>>().compose(Optic.some())
  *
- * console.log(Result.isSuccess(_some.getResult(Option.some(42))))
- * // Output: true
+ * _some.getResult(Option.some(42)) // => Result.succeed(42)
  *
- * console.log(Result.isFailure(_some.getResult(Option.none())))
- * // Output: true
+ * Result.isFailure(_some.getResult(Option.none())) // => true
  *
- * console.log(_some.set(10))
- * // Output: { _tag: "Some", value: 10 }
+ * _some.set(10) // => Option.some(10)
  * ```
  *
  * @see {@link none} — focuses on `None` instead
@@ -1482,16 +1440,14 @@ export function some<A>(): Prism<Option.Option<A>, A> {
  *
  * **Example** (Matching None)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Option, Result } from "effect"
  *
  * const _none = Optic.id<Option.Option<number>>().compose(Optic.none())
  *
- * console.log(Result.isSuccess(_none.getResult(Option.none())))
- * // Output: true
+ * _none.getResult(Option.none()) // => Result.succeed(undefined)
  *
- * console.log(Result.isFailure(_none.getResult(Option.some(1))))
- * // Output: true
+ * Result.isFailure(_none.getResult(Option.some(1))) // => true
  * ```
  *
  * @see {@link some} — focuses on `Some` instead
@@ -1527,16 +1483,14 @@ export function none<A>(): Prism<Option.Option<A>, undefined> {
  *
  * **Example** (Accessing success)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * const _ok = Optic.id<Result.Result<number, string>>().compose(Optic.success())
  *
- * console.log(Result.isSuccess(_ok.getResult(Result.succeed(42))))
- * // Output: true
+ * _ok.getResult(Result.succeed(42)) // => Result.succeed(42)
  *
- * console.log(Result.isFailure(_ok.getResult(Result.fail("err"))))
- * // Output: true
+ * Result.isFailure(_ok.getResult(Result.fail("err"))) // => true
  * ```
  *
  * @see {@link failure} — focuses on the failure side
@@ -1572,16 +1526,14 @@ export function success<A, E>(): Prism<Result.Result<A, E>, A> {
  *
  * **Example** (Accessing failure)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Optic, Result } from "effect"
  *
  * const _err = Optic.id<Result.Result<number, string>>().compose(Optic.failure())
  *
- * console.log(Result.isSuccess(_err.getResult(Result.fail("oops"))))
- * // Output: true
+ * _err.getResult(Result.fail("oops")) // => Result.succeed("oops")
  *
- * console.log(Result.isFailure(_err.getResult(Result.succeed(42))))
- * // Output: true
+ * Result.isFailure(_err.getResult(Result.succeed(42))) // => true
  * ```
  *
  * @see {@link success} — focuses on the success side

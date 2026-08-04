@@ -109,7 +109,7 @@ export interface Definitions extends Record<string, JsonSchema> {}
  *
  * **Example** (Inspecting a parsed document)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const raw: JsonSchema.JsonSchema = {
@@ -119,9 +119,9 @@ export interface Definitions extends Record<string, JsonSchema> {}
  *
  * const doc = JsonSchema.fromSchemaDraft2020_12(raw)
  *
- * console.log(doc.dialect)     // "draft-2020-12"
- * console.log(doc.schema)      // { type: "string" }
- * console.log(doc.definitions) // { Trimmed: { type: "string", minLength: 1 } }
+ * doc.dialect // => "draft-2020-12"
+ * doc.schema // => { type: "string" }
+ * doc.definitions // => { Trimmed: { type: "string", minLength: 1 } }
  * ```
  *
  * @see {@link MultiDocument}
@@ -224,7 +224,7 @@ const RE_COMPONENTS_SCHEMAS = /^#\/components\/schemas(?=\/|$)/
  *
  * **Example** (Parsing a Draft-07 schema)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const raw: JsonSchema.JsonSchema = {
@@ -238,8 +238,8 @@ const RE_COMPONENTS_SCHEMAS = /^#\/components\/schemas(?=\/|$)/
  * }
  *
  * const doc = JsonSchema.fromSchemaDraft07(raw)
- * console.log(doc.dialect) // "draft-2020-12"
- * console.log(doc.schema.properties) // { tags: { type: "array", items: { type: "string" } } }
+ * doc.dialect // => "draft-2020-12"
+ * doc.schema.properties // => { tags: { type: "array", items: { type: "string" } } }
  * ```
  *
  * @see {@link fromSchemaDraft2020_12}
@@ -370,7 +370,7 @@ export function fromSchemaDraft07(js: JsonSchema): Document<"draft-2020-12"> {
  *
  * **Example** (Parsing a Draft-2020-12 schema)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const raw: JsonSchema.JsonSchema = {
@@ -380,8 +380,8 @@ export function fromSchemaDraft07(js: JsonSchema): Document<"draft-2020-12"> {
  * }
  *
  * const doc = JsonSchema.fromSchemaDraft2020_12(raw)
- * console.log(doc.schema)      // { type: "number", minimum: 0 }
- * console.log(doc.definitions) // { PositiveInt: { type: "integer", minimum: 1 } }
+ * doc.schema // => { type: "number", minimum: 0 }
+ * doc.definitions // => { PositiveInt: { type: "integer", minimum: 1 } }
  * ```
  *
  * @see {@link fromSchemaDraft07}
@@ -413,7 +413,7 @@ export function fromSchemaDraft2020_12(js: JsonSchema): Document<"draft-2020-12"
  *
  * **Example** (Parsing an OpenAPI 3.1 schema)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const raw: JsonSchema.JsonSchema = {
@@ -424,8 +424,7 @@ export function fromSchemaDraft2020_12(js: JsonSchema): Document<"draft-2020-12"
  * }
  *
  * const doc = JsonSchema.fromSchemaOpenApi3_1(raw)
- * // $ref is rewritten to Draft-2020-12 form
- * console.log(doc.schema.properties) // { user: { $ref: "#/$defs/User" } }
+ * doc.schema.properties // => { user: { $ref: "#/$defs/User" } }
  * ```
  *
  * @see {@link fromSchemaOpenApi3_0}
@@ -455,7 +454,7 @@ export function fromSchemaOpenApi3_1(js: JsonSchema): Document<"draft-2020-12"> 
  *
  * **Example** (Parsing an OpenAPI 3.0 nullable schema)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const raw: JsonSchema.JsonSchema = {
@@ -464,8 +463,7 @@ export function fromSchemaOpenApi3_1(js: JsonSchema): Document<"draft-2020-12"> 
  * }
  *
  * const doc = JsonSchema.fromSchemaOpenApi3_0(raw)
- * // nullable is expanded into a type array
- * console.log(doc.schema.type) // ["string", "null"]
+ * doc.schema.type // => ["string", "null"]
  * ```
  *
  * @see {@link fromSchemaOpenApi3_1}
@@ -499,7 +497,7 @@ export function fromSchemaOpenApi3_0(schema: JsonSchema): Document<"draft-2020-1
  *
  * **Example** (Converting to Draft-07)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const doc = JsonSchema.fromSchemaDraft2020_12({
@@ -509,9 +507,9 @@ export function fromSchemaOpenApi3_0(schema: JsonSchema): Document<"draft-2020-1
  * })
  *
  * const draft07 = JsonSchema.toDocumentDraft07(doc)
- * console.log(draft07.dialect)                // "draft-07"
- * console.log(draft07.schema.items)           // [{ type: "string" }, { type: "number" }]
- * console.log(draft07.schema.additionalItems) // { type: "boolean" }
+ * draft07.dialect // => "draft-07"
+ * draft07.schema.items // => [{ type: "string" }, { type: "number" }]
+ * draft07.schema.additionalItems // => { type: "boolean" }
  * ```
  *
  * @see {@link fromSchemaDraft07}
@@ -647,7 +645,7 @@ function toSchemaDraft07(schema: JsonSchema): JsonSchema {
  *
  * **Example** (Converting to OpenAPI 3.1)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const multi: JsonSchema.MultiDocument<"draft-2020-12"> = {
@@ -659,8 +657,8 @@ function toSchemaDraft07(schema: JsonSchema): JsonSchema {
  * }
  *
  * const openapi = JsonSchema.toMultiDocumentOpenApi3_1(multi)
- * console.log(openapi.dialect) // "openapi-3.1"
- * console.log(openapi.schemas[0]) // { $ref: "#/components/schemas/User" }
+ * openapi.dialect // => "openapi-3.1"
+ * openapi.schemas[0] // => { $ref: "#/components/schemas/User" }
  * ```
  *
  * @see {@link toDocumentDraft07}
@@ -873,18 +871,15 @@ function widen_type(node: Record<string, unknown>): Record<string, unknown> {
  *
  * **Example** (Resolving a $ref)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const definitions: JsonSchema.Definitions = {
  *   User: { type: "object", properties: { name: { type: "string" } } }
  * }
  *
- * const result = JsonSchema.resolve$ref("#/$defs/User", definitions)
- * console.log(result) // { type: "object", properties: { name: { type: "string" } } }
- *
- * const missing = JsonSchema.resolve$ref("#/$defs/Unknown", definitions)
- * console.log(missing) // undefined
+ * JsonSchema.resolve$ref("#/$defs/User", definitions) // => { type: "object", properties: { name: { type: "string" } } }
+ * JsonSchema.resolve$ref("#/$defs/Unknown", definitions) // => undefined
  * ```
  *
  * @see {@link resolveTopLevel$ref}
@@ -915,7 +910,7 @@ export function resolve$ref($ref: string, definitions: Definitions): JsonSchema 
  *
  * **Example** (Resolving a top-level $ref)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { JsonSchema } from "effect"
  *
  * const doc: JsonSchema.Document<"draft-2020-12"> = {
@@ -927,7 +922,7 @@ export function resolve$ref($ref: string, definitions: Definitions): JsonSchema 
  * }
  *
  * const resolved = JsonSchema.resolveTopLevel$ref(doc)
- * console.log(resolved.schema) // { type: "object", properties: { name: { type: "string" } } }
+ * resolved.schema // => { type: "object", properties: { name: { type: "string" } } }
  * ```
  *
  * @see {@link resolve$ref}

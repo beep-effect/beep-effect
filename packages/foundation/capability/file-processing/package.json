@@ -43,6 +43,7 @@
     "./Operation": "./src/Operation/index.ts",
     "./PathSafety": "./src/PathSafety/index.ts",
     "./Service": "./src/Service/index.ts",
+    "./SourceText": "./src/SourceText/index.ts",
     "./Strategy": "./src/Strategy/index.ts",
     "./test": "./src/test.ts",
     "./*": "./src/*.ts",
@@ -67,6 +68,7 @@
       "./Operation": "./dist/Operation/index.js",
       "./PathSafety": "./dist/PathSafety/index.js",
       "./Service": "./dist/Service/index.js",
+      "./SourceText": "./dist/SourceText/index.js",
       "./Strategy": "./dist/Strategy/index.js",
       "./test": "./dist/test.js",
       "./*": "./dist/*.js",
@@ -76,6 +78,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"

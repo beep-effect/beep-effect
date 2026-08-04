@@ -21,3 +21,24 @@
  * @since 0.0.0
  */
 export * as ClaimProjection from "./ClaimProjection/index.ts";
+/**
+ * Contradiction-triage public contracts.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionTriage } from "@beep/epistemic-use-cases/public"
+ *
+ * console.log(ContradictionTriage.ReviewContradictionCandidate)
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * as ContradictionTriage from "./ContradictionTriage/index.ts";
+/**
+ * Direct client-safe contradiction-triage exports.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./ContradictionTriage/index.ts";

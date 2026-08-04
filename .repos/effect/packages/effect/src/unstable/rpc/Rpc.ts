@@ -956,7 +956,7 @@ export const make = <
  *
  * **Example** (Defining a paginated RPC constructor)
  *
- * ```ts
+ * ```ts import.meta.vitest
  * import { Schema } from "effect"
  * import { Rpc } from "effect/unstable/rpc"
  *
@@ -992,6 +992,8 @@ export const make = <
  * export const listAllRpc = makePaginated("listAll", {
  *   success: Schema.String
  * })
+ *
+ * const result = [listAllRpc._tag, Schema.isSchema(listAllRpc.successSchema)] // => ["listAll", true]
  * ```
  *
  * @category constructors

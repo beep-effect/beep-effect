@@ -34,6 +34,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./aggregates/*": "./src/aggregates/*/index.ts",
+    "./aggregates/Session/metrics": "./src/aggregates/Session/Session.metrics.tsx",
+    "./aggregates/Session/sparql": "./src/aggregates/Session/Session.sparql.tsx",
+    "./aggregates/Session/validation": "./src/aggregates/Session/Session.validation.tsx",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -51,6 +54,9 @@
     "exports": {
       ".": "./dist/index.js",
       "./aggregates/*": "./dist/aggregates/*/index.js",
+      "./aggregates/Session/metrics": "./dist/aggregates/Session/Session.metrics.js",
+      "./aggregates/Session/sparql": "./dist/aggregates/Session/Session.sparql.js",
+      "./aggregates/Session/validation": "./dist/aggregates/Session/Session.validation.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

@@ -52,6 +52,27 @@ export * as ClaimGate from "./ClaimGate/index.ts";
  */
 export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
 /**
+ * Contradiction-triage repository contracts.
+ *
+ * @example
+ * ```ts
+ * import { ContradictionTriage } from "@beep/epistemic-use-cases/server"
+ *
+ * console.log(ContradictionTriage.ContradictionTriageRepository)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * as ContradictionTriage from "./ContradictionTriage/server.ts";
+/**
+ * Direct server-only contradiction-triage exports.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./ContradictionTriage/server.ts";
+/**
  * Bitemporal edge authority command, error, and repository port exports.
  *
  * @example
@@ -66,6 +87,13 @@ export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
  * @since 0.0.0
  */
 export * as EdgeAuthority from "./EdgeAuthority/index.ts";
+/**
+ * Direct server-only edge-authority exports.
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * from "./EdgeAuthority/index.ts";
 /**
  * Execution ledger error and repository port exports.
  *

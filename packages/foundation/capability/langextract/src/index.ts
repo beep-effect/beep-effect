@@ -40,3 +40,10 @@ export * as Service from "./Service/index.ts";
  * @since 0.0.0
  */
 export * as Target from "./Target/index.ts";
+/**
+ * Strict normalized-locator to exact-raw-span mapping.
+ *
+ * @category alignment
+ * @since 0.0.0
+ */
+export * as VerifiedSpan from "./VerifiedSpan/index.ts";

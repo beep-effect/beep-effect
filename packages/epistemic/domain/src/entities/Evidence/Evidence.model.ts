@@ -36,11 +36,11 @@ const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
  *   source: "Agent",
  *   span: {
  *     confidence: 0.92,
- *     endChar: 48,
+ *     endChar: 57,
  *     quote: "a processor configured to receive sensor data",
  *     startChar: 12
  *   },
- *   spanFixtureKey: "span:oa-1:12-48",
+ *   spanFixtureKey: "span:oa-1:12-57",
  *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * })

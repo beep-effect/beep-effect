@@ -109,6 +109,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      EFFECT_INTEGRATION_TESTS: "1"
     permissions:
       contents: read
     timeout-minutes: 10
@@ -145,6 +147,19 @@ jobs:
       - name: Test
         if: matrix.runtime == 'Deno'
         run: deno task test --shard ${{ matrix.shard }}
+
+  doctest:
+    name: Documentation Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Test Documentation
+        run: pnpm doctest
 
   docgen:
     name: Documentation Generation

@@ -29,6 +29,13 @@ export const VERSION = "0.0.0" as const;
  */
 export * from "./ClaimDisposition/index.ts";
 /**
+ * Contradiction-triage server adapter exports.
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * from "./ContradictionTriage/index.ts";
+/**
  * Edge authority server adapter exports.
  *
  * @category repositories

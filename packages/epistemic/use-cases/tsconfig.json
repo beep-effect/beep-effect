@@ -12,10 +12,16 @@
       "path": "../domain/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"

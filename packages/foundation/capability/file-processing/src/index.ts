@@ -41,6 +41,13 @@ export * as PathSafety from "./PathSafety/index.ts";
  */
 export * as Service from "./Service/index.ts";
 /**
+ * Canonical full-source resolution and bounded UTF-16 paging contracts.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * as SourceText from "./SourceText/index.ts";
+/**
  * Engine selection and V1 support strategy schemas.
  *
  * @category models
