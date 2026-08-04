@@ -34,5 +34,6 @@ export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
 export * from "../commands/Quality/internal/KnipRatchet.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";
+export { tagsFromComment } from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../internal/process/index.ts";

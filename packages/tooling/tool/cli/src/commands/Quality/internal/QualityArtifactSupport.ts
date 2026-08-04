@@ -624,7 +624,19 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
  */
 export const tagsFromComment = (commentText: string): ReadonlyArray<string> => {
   const tags: Array<string> = [];
+  let openFence: string | undefined;
   for (const line of stripCommentFraming(commentText)) {
+    const fence = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
+    if (openFence !== undefined) {
+      if (fence?.[0] === openFence[0] && fence.length >= openFence.length) {
+        openFence = undefined;
+      }
+      continue;
+    }
+    if (fence !== undefined) {
+      openFence = fence;
+      continue;
+    }
     const match = /^\s*@([A-Za-z][\w-]*)\b/.exec(line);
     if (match !== null) {
       A.appendInPlace(tags, `@${match[1]}`);

@@ -449,11 +449,8 @@ const documentationShapeViolations = (commentText: string): ReadonlyArray<Docume
   if (A.contains(tagsFromComment(commentText), "@remarks")) {
     A.appendInPlace(findings, { rule: "forbidden-remarks" });
   }
-  if (!hasNewStyleSections) {
-    return findings;
-  }
 
-  const firstSectionLine = A.headNonEmpty(sections).lineOffset - 1;
+  const firstSectionLine = hasNewStyleSections ? A.headNonEmpty(sections).lineOffset - 1 : bodyLines.length;
   const leadWithSeparator = A.take(bodyLines, firstSectionLine);
   const lead = Str.isEmpty(Str.trim(leadWithSeparator[leadWithSeparator.length - 1] ?? ""))
     ? A.dropRight(leadWithSeparator, 1)
@@ -489,11 +486,19 @@ const documentationShapeViolations = (commentText: string): ReadonlyArray<Docume
       const fences = extractFencedCodeBlocks(bodyText)[0];
       exampleFenceCount += fences.length;
       const title = section.title ?? "";
-      if (Str.isEmpty(title) || fences.length !== 1) {
+      const hasEmptyFence = fences.length === 1 && Str.isEmpty(Str.trim(fences[0]?.code ?? ""));
+      if (hasEmptyFence) {
+        A.appendInPlace(findings, { rule: "empty-section", lineOffset: section.lineOffset, detail: section.name });
+      }
+      if (Str.isEmpty(title) || fences.length !== 1 || hasEmptyFence) {
         A.appendInPlace(findings, {
           rule: "malformed-example",
           lineOffset: section.lineOffset,
-          detail: Str.isEmpty(title) ? "Example title is required." : "Example must contain exactly one ts fence.",
+          detail: Str.isEmpty(title)
+            ? "Example title is required."
+            : hasEmptyFence
+              ? "Example fence must contain code."
+              : "Example must contain exactly one ts fence.",
         });
       }
       if (Str.isNonEmpty(title) && MutableHashSet.has(seenExampleTitles, title)) {

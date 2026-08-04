@@ -37,6 +37,10 @@ describe("pluck", () => {
 
 describe("encoding adapters", () => {
   const NumberFromString = S.NumberFromString;
+  const Struct = S.Struct({ value: S.String });
+  const inputWithExcessProperty = { value: "ok", extra: true };
+  const creationOptions = { onExcessProperty: "error" } as const;
+  const applicationOptions = { onExcessProperty: "ignore" } as const;
 
   it.effect(
     "encodes through Effect and Promise adapters",
@@ -57,6 +61,64 @@ describe("encoding adapters", () => {
     expect(Result.isSuccess(Encoders.encodeUnknownResult(NumberFromString)(42))).toBe(true);
     expect(Encoders.encodeSync(NumberFromString)(42)).toBe("42");
     expect(Encoders.encodeUnknownSync(NumberFromString)(42)).toBe("42");
+  });
+
+  it.effect(
+    "forwards application options through Effect and Promise adapters",
+    Effect.fnUntraced(function* () {
+      expect(
+        yield* Encoders.encodeEffect(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
+      ).toEqual({
+        value: "ok",
+      });
+      expect(
+        yield* Encoders.encodeUnknownEffect(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
+      ).toEqual({ value: "ok" });
+      expect(
+        yield* Effect.tryPromise(() =>
+          Encoders.encodePromise(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
+        )
+      ).toEqual({ value: "ok" });
+      expect(
+        yield* Effect.tryPromise(() =>
+          Encoders.encodeUnknownPromise(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
+        )
+      ).toEqual({ value: "ok" });
+    })
+  );
+
+  it("forwards application options through synchronous adapters", () => {
+    expect(
+      Exit.isSuccess(Encoders.encodeExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
+    ).toBe(true);
+    expect(
+      Exit.isSuccess(Encoders.encodeUnknownExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
+    ).toBe(true);
+    expect(O.isSome(Encoders.encodeOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))).toBe(
+      true
+    );
+    expect(
+      O.isSome(Encoders.encodeUnknownOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
+    ).toBe(true);
+    expect(
+      Result.isSuccess(Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Encoders.encodeUnknownResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
+      )
+    ).toBe(true);
+    expect(Encoders.encodeSync(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)).toEqual({
+      value: "ok",
+    });
+    expect(Encoders.encodeUnknownSync(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)).toEqual({
+      value: "ok",
+    });
+  });
+
+  it("exports the encoding adapters from the SchemaUtils barrel", () => {
+    expect(SchemaUtils.encodeEffect).toBe(Encoders.encodeEffect);
+    expect(SchemaUtils.encodeSync).toBe(Encoders.encodeSync);
   });
 });
 
