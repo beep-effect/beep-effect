@@ -40,8 +40,6 @@ import { toAsciiLowerCase } from "./Html.foreign.ts";
 import type { ComponentValue, FunctionNode, SimpleBlockNode } from "@csstools/css-parser-algorithms";
 import type { CSSToken } from "@csstools/css-tokenizer";
 
-// cspell:words cqmax cqmin dpcm dppx dvmax dvmin lvmax lvmin rcap svmax svmin vmax vmin
-
 const $I = $HtmlId.create("Html.source-size");
 
 const LENGTH_UNITS = [
@@ -191,7 +189,8 @@ type SourceSizeIssueCode = typeof SourceSizeIssueCode.Type;
 /**
  * A diagnostic produced while validating a responsive-image source-size list.
  *
- * @example
+ * **Example** (Inspect a rejected source size)
+ *
  * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
@@ -223,7 +222,8 @@ export class SourceSizeIssue extends S.Class<SourceSizeIssue>($I`SourceSizeIssue
 /**
  * Successful structural analysis of a responsive-image source-size list.
  *
- * @example
+ * **Example** (Read the auto flag from an analysis)
+ *
  * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
@@ -809,7 +809,8 @@ const inspectSourceSizeEntries = (
  * element is allowed to use `auto`, or requires a sizes attribute for a width
  * `srcset`, remains an element/tree relationship check.
  *
- * @example
+ * **Example** (Accept a media-condition sizes list)
+ *
  * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"

@@ -113,8 +113,6 @@
     "hono",
     "@effect/vitest",
     "@effect/language-service",
-    "cspell",
-    "markdownlint-cli2",
     "babel-plugin-annotate-pure-calls",
     "babel-plugin-transform-next-use-client",
     "@babel/plugin-transform-export-namespace-from",

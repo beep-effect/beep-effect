@@ -447,10 +447,21 @@ const jsdocGitErrorAdapter = {
   onTruncated: O.none<(commandLine: string) => QualityScriptCommandError>(),
 };
 
+const isGeneratedSourceFile = (filePath: string): boolean =>
+  Str.endsWith(".generated.ts")(filePath) ||
+  Str.includes("/_generated/")(filePath) ||
+  Str.includes("/generated/")(filePath);
+
+const GENERATED_HEADER_PROBE_LENGTH = 512;
+
+const hasGeneratedFileHeader = (sourceText: string): boolean =>
+  pipe(Str.slice(0, GENERATED_HEADER_PROBE_LENGTH)(sourceText), Str.includes("GENERATED FILE"));
+
 const isPackageSourceFile = (filePath: string): boolean =>
   Str.startsWith("packages/")(filePath) &&
   Str.includes("/src/")(filePath) &&
-  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
+  !isGeneratedSourceFile(filePath);
 
 const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(function* (
   repoRoot: string
@@ -476,6 +487,9 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
       fs.readFileString(path.join(repoRoot, filePath)).pipe(
         Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
         Effect.map((sourceText) => {
+          if (hasGeneratedFileHeader(sourceText)) {
+            return A.empty<JSDocTouchedFileFinding>();
+          }
           const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
           return A.flatMap(JSDocTouchedFileLegacyTag.Options, (tag) =>
             A.contains(tags, tag) ? [JSDocTouchedFileFinding.make({ filePath, tag })] : []
@@ -506,6 +520,11 @@ const enforceTouchedFileCleanup = Effect.fn("JSDocRatchet.enforceTouchedFileClea
             limit: 25,
           }),
           "[jsdoc-ratchet] changed package source files must use titled Example sections and Details/Gotchas.",
+          "[jsdoc-ratchet] migrate each legacy carrier in place:",
+          "  `@example` + loose ts fence  ->  a `**Example** (Short Title)` prose section holding exactly one ts fence",
+          "  `@remarks <text>`            ->  a `**Details**` (or `**Gotchas**`) prose section above the tag block",
+          "  section order: lead paragraph, **When to use**, **Details**, **Gotchas**, **Example** (Title) blocks, then @category/@since tags",
+          "[jsdoc-ratchet] binding law: .patterns/jsdoc-documentation.md (worked before/after: .claude/skills/jsdoc-annotation-specialist/references/conventions.md)",
         ],
         error: QualityScriptCommandError.make({
           message: "JSDoc cleanup-on-touch gate failed.",

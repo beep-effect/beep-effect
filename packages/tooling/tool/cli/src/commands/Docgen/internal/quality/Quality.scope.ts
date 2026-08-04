@@ -9,21 +9,16 @@ import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe } from "effect";
-import { dual } from "effect/Function";
 import * as Str from "effect/String";
-import { runCaptured } from "../../../../internal/process/StepExec.ts";
+import { collectDirtyWorktreeFiles, runGitLines } from "../../../../internal/repo-run/ChangedFiles.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
 } from "../Workspace.ts";
 import { byPackagePathAscending } from "./Quality.schemas.ts";
-import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 import type { DocgenQualityScopeMode } from "./Quality.schemas.ts";
-
-const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 const REPO_BASE_CHANGED_FILE_COMMAND = [
   "diff",
@@ -34,49 +29,17 @@ const REPO_BASE_CHANGED_FILE_COMMAND = [
   "*.ts",
   "*.tsx",
 ] as const;
-const WORKING_TREE_CHANGED_FILE_COMMANDS = [
-  ["diff", "--name-only", "--diff-filter=ACMR", "HEAD", "--", "*.ts", "*.tsx"],
-  ["ls-files", "--others", "--exclude-standard", "--", "*.ts", "*.tsx"],
-] as const;
 
-const runGitLines: {
-  (
-    repoRoot: string,
-    args: readonly string[]
-  ): Effect.Effect<string[], DomainError | PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner>;
-  (
-    args: readonly string[]
-  ): (
-    repoRoot: string
-  ) => Effect.Effect<string[], DomainError | PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner>;
-} = dual(
-  2,
-  Effect.fn("DocgenQuality.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-    const captured = yield* runCaptured({
-      command: "git",
-      args,
-      cwd: repoRoot,
-      source: "stdout",
-    });
-    if (captured.exitCode !== 0) {
-      return yield* DomainError.make({
-        message: `git ${A.join(args, " ")} failed with exit code ${captured.exitCode}.`,
-      });
-    }
-    return pipe(Str.split(/\r?\n/)(captured.output), A.map(Str.trim), A.filter(Str.isNonEmpty));
-  })
-);
+// Docgen quality tolerates broken worktree probes: `--changed-files` must still resolve a
+// scope in repositories without a HEAD commit, where the `git diff HEAD` probe fails.
+const WORKING_TREE_CHANGED_FILE_SCAN = {
+  diffArgs: ["--diff-filter=ACMR"],
+  pathspecs: ["*.ts", "*.tsx"],
+  onProbeFailure: "ignore",
+} as const;
 
-const collectWorkingTreeChangedFiles = Effect.fn("DocgenQuality.collectWorkingTreeChangedFiles")(function* (
-  repoRoot: string
-) {
-  const files = yield* Effect.forEach(
-    WORKING_TREE_CHANGED_FILE_COMMANDS,
-    (args) => runGitLines(repoRoot, args).pipe(Effect.option, Effect.map(O.getOrElse(A.empty<string>))),
-    { concurrency: "unbounded" }
-  );
-  return pipe(A.flatten(files), A.map(normalizeSlashes), A.dedupe);
-});
+const collectWorkingTreeChangedFiles = (repoRoot: string) =>
+  collectDirtyWorktreeFiles(repoRoot, WORKING_TREE_CHANGED_FILE_SCAN).pipe(Effect.map(A.dedupe));
 
 const collectChangedFiles = Effect.fn("DocgenQuality.collectChangedFiles")(function* (
   repoRoot: string,
@@ -95,7 +58,7 @@ const collectChangedFiles = Effect.fn("DocgenQuality.collectChangedFiles")(funct
   );
   const workingTreeChanged = yield* collectWorkingTreeChangedFiles(repoRoot);
 
-  return pipe([...baseChanged, ...workingTreeChanged], A.map(normalizeSlashes), A.dedupe);
+  return A.dedupe([...baseChanged, ...workingTreeChanged]);
 });
 
 const selectPackagesForFiles = (
@@ -114,8 +77,8 @@ const countSelectedScopes = (packageSelector: O.Option<string>, all: boolean, ch
 /**
  * Resolves `docgen quality` targets using the v1 scope policy.
  *
- * @effects Requires workspace discovery and git state for affected or changed-file scopes.
- * @example
+ * **Example** (Resolve changed-file docgen targets)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { resolveDocgenQualityTargets } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.scope"
@@ -136,6 +99,8 @@ const countSelectedScopes = (packageSelector: O.Option<string>, all: boolean, ch
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @effects Requires workspace discovery and git state for affected or changed-file scopes.
  * @category workflows
  * @since 0.0.0
  */

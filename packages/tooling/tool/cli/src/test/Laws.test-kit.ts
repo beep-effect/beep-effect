@@ -6,7 +6,6 @@
  */
 
 export * from "@beep/repo-cli/commands/Laws/AllowlistCheck";
-export * from "@beep/repo-cli/commands/Laws/DualArity";
 export * from "@beep/repo-cli/commands/Laws/EffectFn";
 export * from "@beep/repo-cli/commands/Laws/EffectImports";
 export * from "@beep/repo-cli/commands/Laws/FrozenGrantSet";

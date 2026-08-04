@@ -36,6 +36,7 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
+    "test:integration:serial": "bun run beep:test:integration",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:build": "tsc -b tsconfig.json && bun run babel",

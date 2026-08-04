@@ -41,6 +41,7 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
 )(
   {
     dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))),
+    elapsedMs: S.Finite,
     report: AgentEffectivenessEvalScoreReport,
     task: SkillOptTaskManifest,
     taskPath: S.String,
@@ -62,6 +63,7 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
  */
 export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEvalScorer.record")(function* ({
   dataRoot = DEFAULT_AI_METRICS_DATA_ROOT,
+  elapsedMs,
   report,
   task,
   taskPath,
@@ -114,7 +116,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
         AiMetricsBenchmarkRunInput.make({
           benchmarkCaseId: task.id,
           configSnapshotId: `skillopt-scorer-${configSnapshotDigest}`,
-          elapsedMs: 0,
+          elapsedMs,
           note: recordNote(report),
           passed: report.score >= 0.999,
           qualityGate:

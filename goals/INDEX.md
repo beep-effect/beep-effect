@@ -36,6 +36,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [projection-dispatch-core](./projection-dispatch-core/README.md) | Projection Dispatch Core | 0/4 | 2026-07-14 | Deliver one restart-safe accepted-record projection cycle with durable target isolation and a disposable authenticated … |
 | [secure-document-delivery](./secure-document-delivery/README.md) | Secure Document Delivery | 0/4 | 2026-07-14 | Deliver an incubated secure-document-delivery capability and authenticated desktop route, proven by one authorized fixt… |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 1/6 | 2026-07-14 | — |
+| [speed-loop](./speed-loop/README.md) | Speed Loop | 1/3 | 2026-08-04 | Standing research→probe→grill→ship→harvest loop over repo speed/quality/performance; terminates when two consecutive cy… |
 | [uspto-prosecution-read](./uspto-prosecution-read/README.md) | USPTO Prosecution Read | 0/4 | 2026-07-14 | Deliver the known-application provenance-bearing USPTO prosecution observation and deterministic four-vocabulary genera… |
 | [uspto-ptmnfee2-ingest](./uspto-ptmnfee2-ingest/README.md) | USPTO PTMNFEE2 Ingest | 0/4 | 2026-07-14 | Checksum-pin and atomically full-replace the weekly cumulative PTMNFEE2 release into typed native maintenance events an… |
 | [voice-composer-slice](./voice-composer-slice/README.md) | Voice Composer Slice | 0/4 | 2026-07-14 | Add all-device push-to-talk Moonshine dictation and manual, interruptible Kokoro read-aloud to the professional-desktop… |

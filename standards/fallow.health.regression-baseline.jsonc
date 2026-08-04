@@ -945,26 +945,6 @@
         "count": 2
       }
     },
-    "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.analysis.ts": {
-      "complexity_critical": {
-        "count": 1
-      },
-      "complexity_high": {
-        "count": 3
-      },
-      "complexity_moderate": {
-        "count": 2
-      },
-      "crap_critical": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 3
-      },
-      "crap_moderate": {
-        "count": 2
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts": {
       "complexity_moderate": {
         "count": 3
@@ -1211,7 +1191,6 @@
     "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts:complexity",
     "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:complexity",
-    "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.analysis.ts:complexity",
     "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:complexity",
     "packages/foundation/ui-system/ui/src/themes/components/button.ts:complexity",
     "packages/foundation/ui-system/ui/src/components/live-waveform.tsx:complexity",

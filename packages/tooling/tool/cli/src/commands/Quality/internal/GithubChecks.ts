@@ -10,10 +10,11 @@ import { Match, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
-import { GithubCheckLaneSpec } from "../Quality.schemas.ts";
+import { GithubCheckLaneSpec, GithubCheckLaneWave, GithubCheckLaneWaveSpec } from "../Quality.schemas.ts";
 import type {
   FallowQualityFeatureFamily,
   GithubCheckLaneStage,
+  GithubCheckLaneWave as GithubCheckLaneWaveType,
   GithubCheckMode,
   GithubChecksFallowFeatureMatrix,
   GithubChecksFallowFeatureMatrixRow,
@@ -123,11 +124,12 @@ const ts2589QuarantineLane = (step: QualityTaskStep): QualityTaskStep =>
  * ```ts
  * import { githubCheckLane, bunRunLane } from "@beep/repo-cli/test/Quality"
  *
- * console.log(githubCheckLane("quality:check", "repo-quality", bunRunLane("/repo", "quality:check", ["check"])).id)
+ * console.log(githubCheckLane("quality:check", "repo-quality", "heavy", bunRunLane("/repo", "quality:check", ["check"])).id)
  * ```
  *
  * @param id - Stable lane id.
  * @param stage - Stage bucket used for reporting.
+ * @param wave - Static cost-ordered execution wave.
  * @param step - Planned subprocess step.
  * @param blockedBy - Upstream lane ids that must pass first.
  * @returns GitHub check lane specification.
@@ -137,34 +139,48 @@ const ts2589QuarantineLane = (step: QualityTaskStep): QualityTaskStep =>
 const githubCheckLane = (
   id: string,
   stage: GithubCheckLaneStage,
+  wave: GithubCheckLaneWaveType,
   step: QualityTaskStep,
   blockedBy: ReadonlyArray<string> = A.empty<string>()
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
     stage,
+    wave,
     blockedBy,
     step,
   });
 
 /**
- * Project lane specs down to executable task steps.
+ * Group lane specs into their static cost-ordered execution waves.
  *
  * **Example** (Inspect GitHub checks)
  *
  * ```ts
- * import { githubCheckLaneSteps } from "@beep/repo-cli/test/Quality"
+ * import { githubCheckLaneWaves } from "@beep/repo-cli/test/Quality"
  *
- * console.log(githubCheckLaneSteps([]))
+ * console.log(githubCheckLaneWaves([]))
  * ```
  *
  * @param lanes - GitHub check lane specs.
- * @returns Quality task steps in lane order.
+ * @returns Non-empty waves in fail-fast execution order.
  * @category utilities
  * @since 0.0.0
  */
-const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<QualityTaskStep> =>
-  A.map(lanes, (lane) => lane.step);
+// Canonical local order: preflight -> heavy (build, lint, check) -> test -> documentation.
+// Evidence: goals/quality-speedup/research/quality-time-inventory.md §2 records the cheap
+// policy gates as higher-yield and JSDoc/Docgen as the slowest low-failure tail.
+const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<GithubCheckLaneWaveSpec> =>
+  pipe(
+    GithubCheckLaneWave.Options,
+    A.map((wave) => {
+      const waveLanes = A.filter(lanes, (lane) => lane.wave === wave);
+      return A.isReadonlyArrayEmpty(waveLanes)
+        ? O.none()
+        : O.some(GithubCheckLaneWaveSpec.make({ lanes: waveLanes, wave }));
+    }),
+    A.getSomes
+  );
 
 /**
  * Command-internal GitHub check lane constructors.
@@ -183,7 +199,7 @@ const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
 export const githubCheckLanePlan = {
   bunRunLane,
   githubCheckLane,
-  githubCheckLaneSteps,
+  githubCheckLaneWaves,
   repoCliLane,
   ts2589QuarantineLane,
 } as const;
@@ -208,30 +224,58 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
   githubCheckLane(
     "quality:build",
     "repo-quality",
+    "heavy",
     ts2589QuarantineLane(bunRunLane(repoRoot, "quality:build", ["build"]))
   ),
+  githubCheckLane("quality:lint", "repo-quality", "heavy", bunRunLane(repoRoot, "quality:lint", ["lint"])),
   githubCheckLane(
     "quality:check",
     "repo-quality",
+    "heavy",
     ts2589QuarantineLane(bunRunLane(repoRoot, "quality:check", ["check"]))
   ),
-  githubCheckLane("quality:knip", "repo-quality", repoCliLane(repoRoot, "quality:knip", ["knip"])),
+  githubCheckLane("quality:knip", "repo-quality", "preflight", repoCliLane(repoRoot, "quality:knip", ["knip"])),
   githubCheckLane(
     "quality:jsdoc-ratchet",
     "repo-quality",
+    "documentation",
     bunRunLane(repoRoot, "quality:jsdoc-ratchet", ["beep", "ci", "lane", "jsdoc-ratchet"])
   ),
-  githubCheckLane("quality:lint", "repo-quality", bunRunLane(repoRoot, "quality:lint", ["lint"])),
   // Local proof uses bounded docgen (origin/main...HEAD + dirty files) and self-escalates
   // to the full proof when global docgen inputs changed; the hosted Docgen lane keeps the
   // full-repo proof (goals/quality-speedup grill decision, 2026-08-04).
   githubCheckLane(
     "quality:docgen",
     "repo-quality",
+    "documentation",
     bunRunLane(repoRoot, "quality:docgen", ["docgen:local", "--", "--allow-full"])
   ),
-  githubCheckLane("quality:test", "repo-quality", bunRunLane(repoRoot, "quality:test", ["test"])),
+  githubCheckLane("quality:test", "repo-quality", "test", bunRunLane(repoRoot, "quality:test", ["test"])),
 ];
+
+/**
+ * Build the branch-only changeset-status preflight lane.
+ *
+ * **Example** (Inspect the changeset preflight)
+ *
+ * ```ts
+ * import { githubCheckChangesetStatusLane } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(githubCheckChangesetStatusLane("/repo").wave) // "preflight"
+ * ```
+ *
+ * @param repoRoot - Repository root path used as the subprocess working directory.
+ * @returns The changeset-status lane assigned to the preflight wave.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const githubCheckChangesetStatusLane = (repoRoot: string): GithubCheckLaneSpec =>
+  githubCheckLane(
+    "quality:changeset-status",
+    "repo-quality",
+    "preflight",
+    bunRunLane(repoRoot, "quality:changeset-status", ["changeset:status:since-main"])
+  );
 
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
@@ -253,36 +297,43 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
   githubCheckLane(
     "repo-sanity:changeset-graph",
     "repo-sanity",
+    "preflight",
     repoCliLane(repoRoot, "repo-sanity:changeset-graph", ["changeset-graph"])
   ),
   githubCheckLane(
     "repo-sanity:tsconfig-sync",
     "repo-sanity",
+    "preflight",
     bunRunLane(repoRoot, "repo-sanity:tsconfig-sync", ["config-sync:check"])
   ),
   githubCheckLane(
     "repo-sanity:fallow-boundaries-config",
     "repo-sanity",
+    "preflight",
     repoCliLane(repoRoot, "repo-sanity:fallow-boundaries-config", ["fallow", "boundaries", "config-check", "--check"])
   ),
   githubCheckLane(
     "repo-sanity:versions",
     "repo-sanity",
+    "preflight",
     bunRunLane(repoRoot, "repo-sanity:versions", ["version-sync", "--skip-network"])
   ),
   githubCheckLane(
     "repo-sanity:syncpack",
     "repo-sanity",
+    "preflight",
     bunxLane(repoRoot, "repo-sanity:syncpack", ["syncpack", "lint"])
   ),
   githubCheckLane(
     "repo-sanity:sherif",
     "repo-sanity",
+    "preflight",
     bunxLane(repoRoot, "repo-sanity:sherif", ["sherif@1.10.0", "-r", "non-existent-packages"])
   ),
   githubCheckLane(
     "repo-sanity:bun-audit",
     "repo-sanity",
+    "preflight",
     repoCliLane(repoRoot, "repo-sanity:bun-audit", ["bun-audit"])
   ),
 ];
@@ -307,15 +358,27 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
   githubCheckLane(
     "pre-push:secrets",
     "diff-security",
+    "preflight",
     repoCliLane(repoRoot, "pre-push:secrets", ["github-checks", "secrets"])
   ),
   githubCheckLane(
     "pre-push:security",
     "diff-security",
+    "preflight",
     repoCliLane(repoRoot, "pre-push:security", ["github-checks", "security"])
   ),
-  githubCheckLane("pre-push:sast", "diff-security", repoCliLane(repoRoot, "pre-push:sast", ["github-checks", "sast"])),
-  githubCheckLane("pre-push:nix", "environment", repoCliLane(repoRoot, "pre-push:nix", ["github-checks", "nix"])),
+  githubCheckLane(
+    "pre-push:sast",
+    "diff-security",
+    "preflight",
+    repoCliLane(repoRoot, "pre-push:sast", ["github-checks", "sast"])
+  ),
+  githubCheckLane(
+    "pre-push:nix",
+    "environment",
+    "preflight",
+    repoCliLane(repoRoot, "pre-push:nix", ["github-checks", "nix"])
+  ),
 ];
 
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
@@ -344,11 +407,13 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
   githubCheckLane(
     "fallow:audit",
     "repo-quality",
+    "preflight",
     repoCliLane(repoRoot, "fallow:audit", ["fallow", "audit", "--check", "--quiet"])
   ),
   githubCheckLane(
     "fallow:dead-code",
     "repo-quality",
+    "preflight",
     repoCliLane(repoRoot, "fallow:dead-code", ["fallow", "dead-code", "--check", "--quiet"])
   ),
 ];

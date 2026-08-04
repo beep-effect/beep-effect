@@ -101,7 +101,6 @@ the *upgrade path*:
 
 ```bash
 bun run beep laws terse-effect --check
-bun run beep laws dual-arity --check
 bun run beep laws effect-fn --check
 bun run beep laws native-runtime --check
 bun run beep laws effect-imports --check

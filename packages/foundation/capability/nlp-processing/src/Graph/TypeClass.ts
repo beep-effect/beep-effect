@@ -40,7 +40,8 @@ import type { EffectGraph, GraphNode } from "./EffectGraph.ts";
  * `B`, requiring context `R` and possibly failing with `E`. Operations produce
  * NEW nodes, forming the next layer of the DAG.
  *
- * @example
+ * **Example** (Type a named text operation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeOperation, type TextOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -53,8 +54,8 @@ import type { EffectGraph, GraphNode } from "./EffectGraph.ts";
  * console.log(operation.name) // "emit-none"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface TextOperation<A, B, R = never, E = never> {
   readonly apply: (node: GraphNode<A>) => Effect.Effect<ReadonlyArray<GraphNode<B>>, E, R>;
@@ -64,7 +65,8 @@ export interface TextOperation<A, B, R = never, E = never> {
 /**
  * Build a {@link TextOperation} from an effectful node-producing function.
  *
- * @example
+ * **Example** (Make an operation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -73,8 +75,8 @@ export interface TextOperation<A, B, R = never, E = never> {
  * console.log(operation.name) // "emit-none"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeOperation: {
   <A, B, R = never, E = never>(
@@ -96,7 +98,8 @@ export const makeOperation: {
  * A pure text operation: maps node data to new data values (no context/errors),
  * minting a child node per produced value (effectful only via id/clock).
  *
- * @example
+ * **Example** (Build a pure splitting operation)
+ *
  * ```ts
  * import { pureOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -104,8 +107,8 @@ export const makeOperation: {
  * console.log(split.name) // "split"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const pureOperation: {
   <A, B>(name: string, f: (data: A) => ReadonlyArray<B>): TextOperation<A, B>;
@@ -124,7 +127,8 @@ export const pureOperation: {
  * Operations composable end-to-end, forming a monoid (sequential composition +
  * identity). Laws: associativity and identity.
  *
- * @example
+ * **Example** (Assemble a composable instance)
+ *
  * ```ts
  * import { composeOperations, identityOperation, type Composable } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -136,8 +140,8 @@ export const pureOperation: {
  * console.log(composable.identity.name) // "identity"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Composable<A, R = never, E = never> {
   readonly compose: <B>(
@@ -150,7 +154,8 @@ export interface Composable<A, R = never, E = never> {
 /**
  * The identity operation: re-emits the node under a fresh id (effectful id).
  *
- * @example
+ * **Example** (Build the identity operation)
+ *
  * ```ts
  * import { identityOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -158,8 +163,8 @@ export interface Composable<A, R = never, E = never> {
  * console.log(operation.name) // "identity"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const identityOperation = <A>(): TextOperation<A, A> =>
   makeOperation("identity", (node) =>
@@ -175,7 +180,8 @@ export const identityOperation = <A>(): TextOperation<A, A> =>
 /**
  * Compose two operations sequentially: the first's outputs feed the second.
  *
- * @example
+ * **Example** (Compose operations)
+ *
  * ```ts
  * import { composeOperations, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -187,8 +193,8 @@ export const identityOperation = <A>(): TextOperation<A, A> =>
  * console.log(trimThenLength.name) // "trim -> length"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const composeOperations: {
   <A, B, C, R, E>(first: TextOperation<A, B, R, E>, second: TextOperation<B, C, R, E>): TextOperation<A, C, R, E>;
@@ -218,7 +224,8 @@ export const composeOperations: {
  * homomorphism. Parameterized by `A` so instances are implementable without
  * `any`.
  *
- * @example
+ * **Example** (Fold a structure through the instance)
+ *
  * ```ts
  * import type { Foldable } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -228,8 +235,8 @@ export const composeOperations: {
  * console.log(foldStrings)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Foldable<F, A> {
   readonly fold: <B>(fa: F, algebra: (b: B, a: A) => B, initial: B) => B;
@@ -239,7 +246,8 @@ export interface Foldable<F, A> {
  * The {@link Foldable} instance for {@link EffectGraph}, folding over
  * node data in graph order.
  *
- * @example
+ * **Example** (Sum node lengths across a graph)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -251,8 +259,8 @@ export interface Foldable<F, A> {
  * console.log(total) // 4
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const foldableGraph = <A>(): Foldable<EffectGraph<A>, A> => ({
   fold: (graph, algebra, initial) =>
@@ -274,7 +282,8 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  * Apply an operation to every current leaf node, adding the results as children
  * (one new DAG layer). A natural transformation between graph functors.
  *
- * @example
+ * **Example** (Execute an operation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -288,8 +297,8 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  * console.log(size(Effect.runSync(program))) // 2
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const executeOperation: {
   <A, B, R, E>(graph: EffectGraph<A>, operation: TextOperation<A, B, R, E>): Effect.Effect<EffectGraph<A | B>, E, R>;
@@ -317,7 +326,8 @@ export const executeOperation: {
 /**
  * Apply a sequence of operations, each adding a DAG layer.
  *
- * @example
+ * **Example** (Execute operations)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -331,8 +341,8 @@ export const executeOperation: {
  * console.log(size(Effect.runSync(program))) // 2
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const executeOperations: {
   <R, E>(
@@ -363,7 +373,8 @@ export const executeOperations: {
 /**
  * The free (expansion) functor: one node to many (e.g. text -\> sentences).
  *
- * @example
+ * **Example** (Type a free mapping operation)
+ *
  * ```ts
  * import { mapOperation, type FreeOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -371,15 +382,16 @@ export const executeOperations: {
  * console.log(operation.name) // "length"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FreeOperation<A, B, R = never, E = never> = TextOperation<A, B, R, E>;
 
 /**
  * The forgetful (aggregation) functor: many nodes to one (e.g. sentences -\> text).
  *
- * @example
+ * **Example** (Type a forgetful join operation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeNode } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -393,8 +405,8 @@ export type FreeOperation<A, B, R = never, E = never> = TextOperation<A, B, R, E
  * console.log(operation.name) // "join"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface ForgetfulOperation<A, B, R = never, E = never> {
   readonly apply: (nodes: ReadonlyArray<GraphNode<A>>) => Effect.Effect<GraphNode<B>, E, R>;
@@ -404,7 +416,8 @@ export interface ForgetfulOperation<A, B, R = never, E = never> {
 /**
  * Pair a free expansion with its aggregation operation.
  *
- * @example
+ * **Example** (Make an adjunction)
+ *
  * ```ts
  * import { makeNode } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { makeAdjunction, mapOperation, type ForgetfulOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -418,8 +431,8 @@ export interface ForgetfulOperation<A, B, R = never, E = never> {
  * console.log(pairing.expand.name) // "length"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeAdjunction = <A, B, R, E>(
   free: FreeOperation<A, B, R, E>,
@@ -436,7 +449,8 @@ export const makeAdjunction = <A, B, R, E>(
 /**
  * Map operation: transform node data without changing structure (a functor map).
  *
- * @example
+ * **Example** (Map text to its length)
+ *
  * ```ts
  * import { mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -444,8 +458,8 @@ export const makeAdjunction = <A, B, R, E>(
  * console.log(operation.name) // "length"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const mapOperation: {
   <A, B>(name: string, f: (a: A) => B): TextOperation<A, B>;
@@ -455,7 +469,8 @@ export const mapOperation: {
 /**
  * Filter operation: keep nodes whose data satisfies the predicate.
  *
- * @example
+ * **Example** (Filter an operation)
+ *
  * ```ts
  * import { filterOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -463,8 +478,8 @@ export const mapOperation: {
  * console.log(operation.name) // "non-empty"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const filterOperation: {
   <A>(name: string, predicate: (a: A) => boolean): TextOperation<A, A>;
@@ -478,7 +493,8 @@ export const filterOperation: {
 /**
  * FlatMap operation: map then flatten in one step.
  *
- * @example
+ * **Example** (Expand text into words)
+ *
  * ```ts
  * import { flatMapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -486,8 +502,8 @@ export const filterOperation: {
  * console.log(operation.name) // "words"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const flatMapOperation: {
   <A, B>(name: string, f: (a: A) => ReadonlyArray<B>): TextOperation<A, B>;
@@ -497,7 +513,8 @@ export const flatMapOperation: {
 /**
  * Collect all node data values from the graph.
  *
- * @example
+ * **Example** (Collect a data)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -506,15 +523,16 @@ export const flatMapOperation: {
  * console.log(collectData(Effect.runSync(singleton("root")))) // ["root"]
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const collectData = <A>(graph: EffectGraph<A>): ReadonlyArray<A> => A.map(toArray(graph), (node) => node.data);
 
 /**
  * Graph depth: the maximum node depth (longest root-to-leaf path).
  *
- * @example
+ * **Example** (Measure a singleton graph's depth)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
@@ -523,8 +541,8 @@ export const collectData = <A>(graph: EffectGraph<A>): ReadonlyArray<A> => A.map
  * console.log(depth(Effect.runSync(singleton("root")))) // 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const depth = <A>(graph: EffectGraph<A>): number =>
   A.reduce(toArray(graph), 0, (max, node) => Math.max(max, node.metadata.depth));
@@ -538,7 +556,8 @@ export const depth = <A>(graph: EffectGraph<A>): number =>
  * Laws: identity and composition. (Documented abstraction; the standalone
  * {@link map} witnesses it for {@link TextOperation}.)
  *
- * @example
+ * **Example** (Accept any functor instance)
+ *
  * ```ts
  * import type { Functor } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -546,8 +565,8 @@ export const depth = <A>(graph: EffectGraph<A>): number =>
  * console.log(acceptsFunctor)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Functor<F> {
   readonly map: <A, B>(fa: F, f: (a: A) => B) => F;
@@ -575,7 +594,7 @@ interface EffectfulMapOperationSignature {
  * effectful `f`, naming the derived operation with the given `suffix`. Factored
  * out so the `flatMap` and `traverse` instances share one implementation while
  * each export still applies {@link dual} visibly at its own call site (the
- * dual-arity law requires `dual(...)` on the exported binding).
+ * exported helper supports data-first and data-last calls via `dual(...)`).
  */
 const makeEffectfulMapBody =
   (suffix: string) =>
@@ -599,7 +618,8 @@ const makeEffectfulMapBody =
 /**
  * Map over a {@link TextOperation}'s output data, preserving structure/effects.
  *
- * @example
+ * **Example** (Compose a map onto an operation)
+ *
  * ```ts
  * import { map, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -607,8 +627,8 @@ const makeEffectfulMapBody =
  * console.log(operation.name) // "trim |> map"
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const map: {
   <A, B, C, R, E>(operation: TextOperation<A, B, R, E>, f: (b: B) => C): TextOperation<A, C, R, E>;
@@ -629,7 +649,8 @@ export const map: {
 /**
  * FlatMap over a {@link TextOperation}'s output data with an effectful function.
  *
- * @example
+ * **Example** (Sequence an effectful step)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { flatMap, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -642,8 +663,8 @@ export const map: {
  * console.log(operation.name) // "trim |> flatMap"
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const flatMap: EffectfulMapOperationSignature = dual(2, makeEffectfulMapBody("flatMap"));
 
@@ -654,7 +675,8 @@ export const flatMap: EffectfulMapOperationSignature = dual(2, makeEffectfulMapB
 /**
  * Apply an operation of functions to an operation of values (Cartesian product).
  *
- * @example
+ * **Example** (Apply lifted functions to values)
+ *
  * ```ts
  * import { ap, mapOperation, pureOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -665,8 +687,8 @@ export const flatMap: EffectfulMapOperationSignature = dual(2, makeEffectfulMapB
  * console.log(operation.name) // "ap(fn, trim)"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const ap: {
   <A, B, C, R1, E1, R2, E2>(
@@ -705,7 +727,8 @@ export const ap: {
 /**
  * Lift a value into an operation that always produces it.
  *
- * @example
+ * **Example** (Lift a constant into an operation)
+ *
  * ```ts
  * import { pure } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -713,8 +736,8 @@ export const ap: {
  * console.log(operation.name) // "pure"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const pure = <A, B>(value: B): TextOperation<A, B> =>
   makeOperation("pure", (node) => Effect.map(makeNode(value, O.some(node.id), O.some("pure")), A.of));
@@ -726,7 +749,8 @@ export const pure = <A, B>(value: B): TextOperation<A, B> =>
 /**
  * Sequence dependent operations: the first's outputs choose the next operation.
  *
- * @example
+ * **Example** (Chain two operations)
+ *
  * ```ts
  * import { chain, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -738,8 +762,8 @@ export const pure = <A, B>(value: B): TextOperation<A, B> =>
  * console.log(operation.name) // "trim >>= chain"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const chain: {
   <A, B, C, R1, E1, R2, E2>(
@@ -771,7 +795,8 @@ export const chain: {
 /**
  * Flatten nested operations (alias of {@link chain}).
  *
- * @example
+ * **Example** (Flatten a nested operation)
+ *
  * ```ts
  * import { flatten, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -783,8 +808,8 @@ export const chain: {
  * console.log(operation.name) // "trim >>= chain"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const flatten: {
   <A, B, C, R1, E1, R2, E2>(
@@ -809,7 +834,8 @@ export const flatten: {
 /**
  * Combine two operations, collecting results from both (parallel branching).
  *
- * @example
+ * **Example** (Fall back to an alternative operation)
+ *
  * ```ts
  * import { alt, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -821,8 +847,8 @@ export const flatten: {
  * console.log(operation.name) // "alt(lower, upper)"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const alt: {
   <A, B, R1, E1, R2, E2>(
@@ -851,7 +877,8 @@ export const alt: {
 /**
  * The empty operation (identity for {@link alt}): produces no nodes.
  *
- * @example
+ * **Example** (Build the empty operation)
+ *
  * ```ts
  * import { empty } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -859,8 +886,8 @@ export const alt: {
  * console.log(operation.name) // "empty"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const empty = <A, B>(): TextOperation<A, B> =>
   makeOperation("empty", () => Effect.succeed(A.empty<GraphNode<B>>()));
@@ -872,7 +899,8 @@ export const empty = <A, B>(): TextOperation<A, B> =>
 /**
  * Traverse an operation's outputs with an effectful function.
  *
- * @example
+ * **Example** (Traverse with an effectful step)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { mapOperation, traverse } from "@beep/nlp-processing/Graph/TypeClass"
@@ -885,8 +913,8 @@ export const empty = <A, B>(): TextOperation<A, B> =>
  * console.log(operation.name) // "trim |> traverse"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const traverse: EffectfulMapOperationSignature = dual(2, makeEffectfulMapBody("traverse"));
 
@@ -897,7 +925,8 @@ export const traverse: EffectfulMapOperationSignature = dual(2, makeEffectfulMap
 /**
  * Apply an operation `n` times and collect all results.
  *
- * @example
+ * **Example** (Replicate an operation twice)
+ *
  * ```ts
  * import { mapOperation, replicate } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -905,8 +934,8 @@ export const traverse: EffectfulMapOperationSignature = dual(2, makeEffectfulMap
  * console.log(operation.name) // "replicate(length, 2)"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const replicate: {
   <A, B, R, E>(operation: TextOperation<A, B, R, E>, n: number): TextOperation<A, B, R, E>;
@@ -930,7 +959,8 @@ export const replicate: {
 /**
  * Apply an operation only when the node data satisfies the predicate.
  *
- * @example
+ * **Example** (Run an operation under a predicate)
+ *
  * ```ts
  * import { mapOperation, when } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -942,8 +972,8 @@ export const replicate: {
  * console.log(operation.name) // "when(length)"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const when: {
   <A, B, R, E>(predicate: (a: A) => boolean, operation: TextOperation<A, B, R, E>): TextOperation<A, B, R, E>;
@@ -959,7 +989,8 @@ export const when: {
 /**
  * Apply an operation unless the node data satisfies the predicate.
  *
- * @example
+ * **Example** (Skip an operation under a predicate)
+ *
  * ```ts
  * import { mapOperation, unless } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -971,8 +1002,8 @@ export const when: {
  * console.log(operation.name) // "when(length)"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const unless: {
   <A, B, R, E>(predicate: (a: A) => boolean, operation: TextOperation<A, B, R, E>): TextOperation<A, B, R, E>;

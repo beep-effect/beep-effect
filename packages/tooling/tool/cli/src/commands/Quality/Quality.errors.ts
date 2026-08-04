@@ -27,7 +27,8 @@ type QualityScriptCommandErrorOptions =
 /**
  * Failure raised while validating changeset package references.
  *
- * @example
+ * **Example** (Raise a changeset graph error)
+ *
  * ```ts
  * import { ChangesetGraphError } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -36,6 +37,7 @@ type QualityScriptCommandErrorOptions =
  * })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -76,11 +78,13 @@ export class ChangesetGraphError extends TaggedErrorClass<ChangesetGraphError>($
 /**
  * Typed failure for repo operational commands.
  *
- * @example
+ * **Example** (Raise a quality script command error)
+ *
  * ```ts
  * import { QualityScriptCommandError } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const error = new QualityScriptCommandError({ message: "failed" })
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -128,7 +132,8 @@ export class QualityScriptCommandError extends TaggedErrorClass<QualityScriptCom
 /**
  * Error raised when a quality task subprocess exits unsuccessfully.
  *
- * @example
+ * **Example** (Raise a quality task failed)
+ *
  * ```ts
  * import { QualityTaskFailed } from "@beep/repo-cli/commands/Quality/Tasks"
  * const failure = new QualityTaskFailed({
@@ -137,6 +142,7 @@ export class QualityScriptCommandError extends TaggedErrorClass<QualityScriptCom
  *   exitCode: 1
  * })
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -176,7 +182,8 @@ export class QualityTaskFailed extends TaggedErrorClass<QualityTaskFailed>($I`Qu
 /**
  * Error raised when a bounded quality task group completes with failed steps.
  *
- * @example
+ * **Example** (Raise a quality task group failed)
+ *
  * ```ts
  * import { QualityTaskGroupFailed, QualityTaskFailed } from "@beep/repo-cli/commands/Quality/Tasks"
  * const failure = new QualityTaskGroupFailed({
@@ -184,13 +191,14 @@ export class QualityTaskFailed extends TaggedErrorClass<QualityTaskFailed>($I`Qu
  *   exitCode: 1,
  *   failures: [
  *     new QualityTaskFailed({
- *       label: "lint:spell",
- *       command: "bunx cspell .",
+ *       label: "lint:typos",
+ *       command: "bunx typos",
  *       exitCode: 1
  *     })
  *   ]
  * })
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -231,13 +239,15 @@ export class QualityTaskGroupFailed extends TaggedErrorClass<QualityTaskGroupFai
 /**
  * Error raised when a quality task cannot resolve its required configuration.
  *
- * @example
+ * **Example** (Raise a quality task configuration error)
+ *
  * ```ts
  * import { QualityTaskConfigurationError } from "@beep/repo-cli/commands/Quality/Tasks"
  * const error = new QualityTaskConfigurationError({
  *   message: "Could not find package.json"
  * })
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -263,13 +273,15 @@ export class QualityTaskConfigurationError extends TaggedErrorClass<QualityTaskC
 /**
  * Error raised when an unexpected quality task cause reaches the command boundary.
  *
- * @example
+ * **Example** (Raise an unexpected quality task failure)
+ *
  * ```ts
  * import { UnexpectedQualityTaskFailure } from "@beep/repo-cli/commands/Quality/Tasks"
  * const error = new UnexpectedQualityTaskFailure({
  *   message: "Unexpected quality task failure"
  * })
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

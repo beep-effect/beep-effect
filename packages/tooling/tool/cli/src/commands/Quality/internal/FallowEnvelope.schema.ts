@@ -50,6 +50,27 @@ export const FallowFeatureFamily = LiteralKit([
 export type FallowFeature = typeof FallowFeatureFamily.Type;
 
 /**
+ * Return the fixed envelope filename for a Fallow feature and execution mode.
+ *
+ * **Example** (Resolve a check-mode envelope filename)
+ *
+ * ```ts
+ * import { fallowEnvelopeFileName } from "@beep/repo-cli/commands/Quality/internal/FallowEnvelope.schema"
+ *
+ * console.log(fallowEnvelopeFileName("audit", false))
+ * // "audit.check.json"
+ * ```
+ *
+ * @param feature - The Fallow feature family the envelope belongs to.
+ * @param advisory - Whether the envelope was produced in advisory mode.
+ * @returns The fixed envelope filename for the feature and mode.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fallowEnvelopeFileName = (feature: FallowFeature, advisory: boolean): string =>
+  `${feature}.${advisory ? "advisory" : "check"}.json`;
+
+/**
  * Attribution kind retained by repo-cli Fallow envelopes.
  *
  * @internal

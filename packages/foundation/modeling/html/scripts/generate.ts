@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// cspell:words extlangs qaaa qabx
 import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
@@ -250,7 +249,6 @@ const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): stri
  */
 
 // Raw registered IANA subtags are authoritative data, not prose.
-// cspell:disable
 
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
@@ -2495,7 +2493,6 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 // WHATWG's lowercase global event handler names are normative.
-// cspell:words onpagereveal onpageswap
 
 import {
   AutocompleteAttribute,
@@ -2821,8 +2818,6 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
-// cspell:words numoctaves onpagereveal onpageswap pointsatx pointsaty pointsatz refx refy
-// cspell:words targetx targety xchannelselector ychannelselector
 
 const $I = $HtmlId.create("Html.meta");
 

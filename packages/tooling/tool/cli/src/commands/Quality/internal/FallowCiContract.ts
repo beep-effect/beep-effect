@@ -66,25 +66,15 @@ const missingDiagnostic = (condition: boolean, diagnostic: string): ReadonlyArra
 const presentDiagnostic = (condition: boolean, diagnostic: string): ReadonlyArray<string> =>
   condition ? A.of(diagnostic) : A.empty();
 
-const repeatedLineDiagnostics = (
-  jobRunLines: ReadonlyArray<string>,
-  expectedLine: string,
-  diagnostic: string
-): ReadonlyArray<string> =>
-  missingDiagnostic(A.length(A.filter(jobRunLines, (line) => Str.Equivalence(line, expectedLine))) >= 2, diagnostic);
-
 const laneEnvelopeDiagnostics = (
   lanes: ReadonlyArray<string>,
-  expectOutDir: string,
   jobRunBody: string,
   hasLaneEnvelopeTemplate: boolean,
+  expectedPath: (lane: string) => string,
   message: (lane: string) => string
 ): ReadonlyArray<string> =>
   A.flatMap(lanes, (lane) =>
-    missingDiagnostic(
-      hasLaneEnvelopeTemplate || Str.includes(`${expectOutDir}/${lane}.json`)(jobRunBody),
-      message(lane)
-    )
+    missingDiagnostic(hasLaneEnvelopeTemplate || Str.includes(expectedPath(lane))(jobRunBody), message(lane))
   );
 
 const laneNameDiagnostics = (
@@ -97,10 +87,11 @@ const laneNameDiagnostics = (
 const fallowCiRequiredTextDiagnostics = (
   jobRunBody: string,
   blockingLanes: ReadonlyArray<string>,
-  advisory: boolean
+  advisory: boolean,
+  delegated: boolean
 ): ReadonlyArray<string> => [
   ...missingDiagnostic(
-    Str.includes("bun run beep quality fallow")(jobRunBody),
+    delegated || Str.includes("bun run beep quality fallow")(jobRunBody),
     "missing repo-cli Fallow envelope invocation"
   ),
   ...presentDiagnostic(
@@ -119,10 +110,13 @@ const fallowCiRequiredTextDiagnostics = (
     "base fetch must be best-effort so Fallow wrappers can emit base-resolution envelopes"
   ),
   ...missingDiagnostic(
-    A.isReadonlyArrayEmpty(blockingLanes) || Str.includes("--check")(jobRunBody),
+    delegated || A.isReadonlyArrayEmpty(blockingLanes) || Str.includes("--check")(jobRunBody),
     "missing blocking Fallow --check invocation"
   ),
-  ...missingDiagnostic(!advisory || Str.includes("--advisory")(jobRunBody), "missing advisory Fallow invocation"),
+  ...missingDiagnostic(
+    delegated || !advisory || Str.includes("--advisory")(jobRunBody),
+    "missing advisory Fallow invocation"
+  ),
 ];
 
 const fallowCiUploadDiagnostics = (
@@ -153,35 +147,37 @@ const fallowCiLaneDiagnostics = (
   expectOutDir: string,
   jobRunBody: string,
   jobRunLines: ReadonlyArray<string>,
-  hasLaneEnvelopeTemplate: boolean
+  hasLaneEnvelopeTemplate: boolean,
+  delegated: boolean
 ): ReadonlyArray<string> => {
   const expectedLaneLoop = `for lane in ${A.join(lanes, " ")}; do`;
   const expectedBlockingLaneLoop = `for lane in ${A.join(blockingLanes, " ")}; do`;
 
   return [
-    ...repeatedLineDiagnostics(
-      jobRunLines,
-      expectedLaneLoop,
+    ...missingDiagnostic(
+      delegated || A.length(A.filter(jobRunLines, (line) => Str.Equivalence(line, expectedLaneLoop))) >= 2,
       `missing run and validation loops over expected Fallow lanes: ${expectedLaneLoop}`
     ),
     ...missingDiagnostic(
       A.isReadonlyArrayEmpty(blockingLanes) ||
+        delegated ||
         A.length(A.filter(jobRunLines, (line) => Str.Equivalence(line, expectedBlockingLaneLoop))) >= 2,
       `missing run and validation loops over expected promoted blocking Fallow lanes: ${expectedBlockingLaneLoop}`
     ),
     ...laneEnvelopeDiagnostics(
       lanes,
-      expectOutDir,
       jobRunBody,
       hasLaneEnvelopeTemplate,
-      (lane) => `missing CI envelope path for ${lane}: ${expectOutDir}/${lane}.json`
+      (lane) => `${expectOutDir}/${lane}.${A.contains(blockingLanes, lane) ? "check" : "advisory"}.json`,
+      (lane) =>
+        `missing CI envelope path for ${lane}: ${expectOutDir}/${lane}.${A.contains(blockingLanes, lane) ? "check" : "advisory"}.json`
     ),
     ...laneEnvelopeDiagnostics(
       blockingLanes,
-      expectOutDir,
       jobRunBody,
       hasLaneEnvelopeTemplate,
-      (lane) => `missing CI envelope path for promoted blocking lane ${lane}: ${expectOutDir}/${lane}.json`
+      (lane) => `${expectOutDir}/${lane}.check.json`,
+      (lane) => `missing CI envelope path for promoted blocking lane ${lane}: ${expectOutDir}/${lane}.check.json`
     ),
     ...laneNameDiagnostics(lanes, jobRunBody, (lane) => `missing CI advisory lane name ${lane}`),
     ...laneNameDiagnostics(blockingLanes, jobRunBody, (lane) => `missing promoted blocking CI lane name ${lane}`),
@@ -191,7 +187,8 @@ const fallowCiLaneDiagnostics = (
 /**
  * Fallow CI workflow contract options.
  *
- * @example
+ * **Example** (Annotate a value as FallowCiContractDiagnosticOptions)
+ *
  * ```ts
  * import type { FallowCiContractDiagnosticOptions } from "@beep/repo-cli/test/Quality"
  *
@@ -205,6 +202,7 @@ const fallowCiLaneDiagnostics = (
  * }
  * console.log(options.expectOutDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,13 +218,15 @@ type FallowCiContractDiagnosticOptions = {
 /**
  * Return Fallow CI upload diagnostics for contract tests.
  *
- * @example
+ * **Example** (Collect upload diagnostics)
+ *
  * ```ts
  * import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
  * const diagnostics = fallowCiUploadDiagnosticsForTesting(false, [], [], ".beep/fallow", "error")
  * console.log(diagnostics) // example value
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -235,10 +235,8 @@ export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
 /**
  * Validate the parsed Fallow CI workflow contract.
  *
- * @param workflow - Parsed workflow document.
- * @param options - CI lane and artifact expectations.
- * @returns Diagnostics for every violated Fallow CI invariant.
- * @example
+ * **Example** (Diagnose an empty CI contract)
+ *
  * ```ts
  * import { fallowCiContractDiagnostics } from "@beep/repo-cli/test/Quality"
  *
@@ -251,6 +249,10 @@ export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
  *   advisory: true
  * }))
  * ```
+ *
+ * @param workflow - Parsed workflow document.
+ * @param options - CI lane and artifact expectations.
+ * @returns Diagnostics for every violated Fallow CI invariant.
  * @category validation
  * @since 0.0.0
  */
@@ -278,8 +280,11 @@ export const fallowCiContractDiagnostics: {
   const lanes = csvValues(options.expectLanes);
   const blockingLanes = csvValues(options.expectBlockingLanes);
   const hasLaneEnvelopeTemplate =
-    Str.includes(`${options.expectOutDir}/\${lane}.json`)(jobRunBody) ||
-    Str.includes(`${options.expectOutDir}/$lane.json`)(jobRunBody);
+    (Str.includes(`${options.expectOutDir}/\${lane}.advisory.json`)(jobRunBody) &&
+      Str.includes(`${options.expectOutDir}/\${lane}.check.json`)(jobRunBody)) ||
+    (Str.includes(`${options.expectOutDir}/$lane.advisory.json`)(jobRunBody) &&
+      Str.includes(`${options.expectOutDir}/$lane.check.json`)(jobRunBody));
+  const delegatesLaneExecution = Str.includes("bun run beep ci lane fallow")(jobRunBody);
 
   return [
     ...missingDiagnostic(O.isSome(fallowJob), "missing fallow-advisory workflow job id"),
@@ -289,9 +294,10 @@ export const fallowCiContractDiagnostics: {
       options.expectOutDir,
       jobRunBody,
       jobRunLines,
-      hasLaneEnvelopeTemplate
+      hasLaneEnvelopeTemplate,
+      delegatesLaneExecution
     ),
-    ...fallowCiRequiredTextDiagnostics(jobRunBody, blockingLanes, options.advisory),
+    ...fallowCiRequiredTextDiagnostics(jobRunBody, blockingLanes, options.advisory, delegatesLaneExecution),
     ...fallowCiUploadDiagnostics(
       options.requireUpload,
       jobUsesValues,
