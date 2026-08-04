@@ -71,3 +71,7 @@ d75d260d2841d8269bf9c8979f6a4be4e6819149:v25/https.d.ts:generic-api-key:344
 d75d260d2841d8269bf9c8979f6a4be4e6819149:v25/node-tests/crypto.ts:generic-api-key:1262
 d75d260d2841d8269bf9c8979f6a4be4e6819149:v25/node-tests/crypto.ts:generic-api-key:1275
 goals/repo-crispening-orchestration/ops/inventory/S5/beep__shared-domain.json:generic-api-key:7
+
+# False positives in the immutable Effect subtree squash used by PR #546.
+8657c68a54a437e3646c0d2291fdd259f2455b4d:packages/effect/src/Config.ts:generic-api-key:1461
+8657c68a54a437e3646c0d2291fdd259f2455b4d:packages/platform-node/test/NodeHttpServer.test.ts:generic-api-key:853

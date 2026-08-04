@@ -8,15 +8,22 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect, Path, pipe } from "effect";
+import { Console, DateTime, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
+import {
+  collectChangedPathsSinceBase,
+  collectDirtyPaths,
+  sortedUniquePaths,
+} from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
-import type { FileSystem } from "effect";
+import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
 
@@ -27,22 +34,54 @@ const JSDocRatchetedTotalName = LiteralKit([
   "missingExportSince",
   "unsafeExampleFindings",
   "schemaAnnotationFindings",
+  "undescribed-see",
+  "multiple-description-paragraphs",
+  "leading-blank",
+  "trailing-blank",
+  "invalid-heading",
+  "section-out-of-order",
+  "duplicate-section",
+  "empty-section",
+  "section-after-example",
+  "invalid-when-to-use-prefix",
+  "malformed-example",
+  "duplicate-example",
+  "loose-ts-fence",
+  "forbidden-remarks",
 ]).pipe(
   $I.annoteSchema("JSDocRatchetedTotalName", {
     description: "JSDoc inventory total names guarded by the A4 fail-on-growth ratchet.",
   })
 );
 
+const JSDocTouchedFileLegacyTag = LiteralKit(["@remarks", "@example"]).pipe(
+  $I.annoteSchema("JSDocTouchedFileLegacyTag", {
+    description: "Legacy JSDoc carriers forbidden by the cleanup-on-touch gate.",
+  })
+);
+
+class JSDocTouchedFileFinding extends S.Class<JSDocTouchedFileFinding>($I`JSDocTouchedFileFinding`)(
+  {
+    filePath: S.String,
+    tag: JSDocTouchedFileLegacyTag,
+  },
+  $I.annote("JSDocTouchedFileFinding", {
+    description: "Legacy JSDoc tag found in a changed package source file.",
+  })
+) {}
+
 /**
  * Repo-relative path to the generated JSDoc documentation inventory.
  *
- * @example
+ * **Example** (Inspect the default inventory path)
+ *
  * ```ts
  * import { defaultJSDocInventoryPath } from "@beep/repo-cli/test/Quality"
  *
  * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -51,13 +90,15 @@ export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventor
 /**
  * Repo-relative path to the committed JSDoc totals regression baseline.
  *
- * @example
+ * **Example** (Inspect the default baseline path)
+ *
  * ```ts
  * import { defaultJSDocTotalsBaselinePath } from "@beep/repo-cli/test/Quality"
  *
  * const result = defaultJSDocTotalsBaselinePath === "standards/jsdoc-totals.regression-baseline.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -66,13 +107,15 @@ export const defaultJSDocTotalsBaselinePath = "standards/jsdoc-totals.regression
 /**
  * Full inventory regeneration command recorded in the totals baseline header.
  *
- * @example
+ * **Example** (Inspect the inventory command)
+ *
  * ```ts
  * import { jsdocInventoryRegenerationCommand } from "@beep/repo-cli/test/Quality"
  *
  * const result = jsdocInventoryRegenerationCommand.includes("jsdoc-inventory")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -81,13 +124,15 @@ export const jsdocInventoryRegenerationCommand = "bun run beep quality jsdoc-inv
 /**
  * Totals snapshot refresh command recorded in the baseline header.
  *
- * @example
+ * **Example** (Inspect the snapshot command)
+ *
  * ```ts
  * import { jsdocTotalsSnapshotCommand } from "@beep/repo-cli/test/Quality"
  *
  * const result = jsdocTotalsSnapshotCommand.includes("write-baseline")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -113,7 +158,8 @@ class JSDocInventoryTotalsDocument extends S.Class<JSDocInventoryTotalsDocument>
 /**
  * Committed JSDoc totals regression baseline document.
  *
- * @example
+ * **Example** (Construct a totals baseline)
+ *
  * ```ts
  * import { JSDocTotalsRegressionBaseline } from "@beep/repo-cli/test/Quality"
  *
@@ -128,6 +174,7 @@ class JSDocInventoryTotalsDocument extends S.Class<JSDocInventoryTotalsDocument>
  * })
  * console.log(baseline.tracked_totals.missingExportExamples)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,7 +198,8 @@ export class JSDocTotalsRegressionBaseline extends S.Class<JSDocTotalsRegression
 /**
  * Difference for one tracked JSDoc inventory total.
  *
- * @example
+ * **Example** (Construct a total delta)
+ *
  * ```ts
  * import { JSDocTotalDelta } from "@beep/repo-cli/test/Quality"
  *
@@ -163,6 +211,7 @@ export class JSDocTotalsRegressionBaseline extends S.Class<JSDocTotalsRegression
  * })
  * console.log(delta.metric)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -181,7 +230,8 @@ export class JSDocTotalDelta extends S.Class<JSDocTotalDelta>($I`JSDocTotalDelta
 /**
  * Comparison between current generated inventory totals and the committed baseline.
  *
- * @example
+ * **Example** (Construct a totals comparison)
+ *
  * ```ts
  * import { JSDocTotalsComparison } from "@beep/repo-cli/test/Quality"
  *
@@ -194,6 +244,7 @@ export class JSDocTotalDelta extends S.Class<JSDocTotalDelta>($I`JSDocTotalDelta
  * })
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -376,10 +427,103 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
   });
 });
 
+const jsdocGitErrorAdapter = {
+  onSpawnFailure: (commandLine: string) => (cause: unknown) =>
+    QualityScriptCommandError.new(cause, `Failed to run ${commandLine}.`),
+  onNonZeroExit: ({
+    commandLine,
+    exitCode,
+    output,
+  }: {
+    readonly commandLine: string;
+    readonly exitCode: number;
+    readonly output: string;
+  }) =>
+    QualityScriptCommandError.make({
+      message: `${commandLine} failed with exit code ${exitCode}: ${output}`,
+      command: commandLine,
+      exitCode,
+    }),
+  onTruncated: O.none<(commandLine: string) => QualityScriptCommandError>(),
+};
+
+const isPackageSourceFile = (filePath: string): boolean =>
+  Str.startsWith("packages/")(filePath) &&
+  Str.includes("/src/")(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
+
+const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  ReadonlyArray<JSDocTouchedFileFinding>,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const changedSinceBase = yield* collectChangedPathsSinceBase(repoRoot, "origin/main...HEAD", jsdocGitErrorAdapter);
+  const dirty = yield* collectDirtyPaths(repoRoot, jsdocGitErrorAdapter);
+  const touchedSourceFiles = A.filter(sortedUniquePaths(A.appendAll(changedSinceBase, dirty)), isPackageSourceFile);
+  const existingSourceFiles = yield* Effect.filter(touchedSourceFiles, (filePath) =>
+    fs
+      .exists(path.join(repoRoot, filePath))
+      .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to inspect ${filePath}.`)))
+  );
+
+  return yield* Effect.forEach(
+    existingSourceFiles,
+    (filePath) =>
+      fs.readFileString(path.join(repoRoot, filePath)).pipe(
+        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
+        Effect.map((sourceText) => {
+          const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
+          return A.flatMap(JSDocTouchedFileLegacyTag.Options, (tag) =>
+            A.contains(tags, tag) ? [JSDocTouchedFileFinding.make({ filePath, tag })] : []
+          );
+        })
+      ),
+    { concurrency: 16 }
+  ).pipe(Effect.map(A.flatten));
+});
+
+const enforceTouchedFileCleanup = Effect.fn("JSDocRatchet.enforceTouchedFileCleanup")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const findings = yield* touchedFileFindings(repoRoot);
+  yield* enforceRatchet({
+    regressions: [
+      {
+        present: A.isReadonlyArrayNonEmpty(findings),
+        lines: [
+          `[jsdoc-ratchet] cleanup-on-touch: ${A.length(findings)} changed source file/tag finding(s)`,
+          ...renderTruncatedLines({
+            items: findings,
+            render: (finding) => `  - ${finding.filePath}: migrate ${finding.tag}`,
+            limit: 25,
+          }),
+          "[jsdoc-ratchet] changed package source files must use titled Example sections and Details/Gotchas.",
+        ],
+        error: QualityScriptCommandError.make({
+          message: "JSDoc cleanup-on-touch gate failed.",
+          command: "bun run beep quality jsdoc-ratchet",
+          exitCode: 1,
+        }),
+      },
+    ],
+    okLine: `[jsdoc-ratchet] cleanup-on-touch ok: files=${A.length(findings)}`,
+    tighten: O.none(),
+  });
+});
+
 /**
  * Options accepted by {@link runJSDocRatchet}.
  *
- * @example
+ * **Example** (Configure a ratchet run)
+ *
  * ```ts
  * import type { RunJSDocRatchetOptions } from "@beep/repo-cli/test/Quality"
  *
@@ -390,6 +534,7 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
  * }
  * console.log(options.baselinePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -409,7 +554,8 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
  *
  * @param options - Inventory path, baseline path, and write mode.
  * @returns Effect that fails when any tracked inventory total grows.
- * @example
+ * **Example** (Build the ratchet Effect)
+ *
  * ```ts
  * import { runJSDocRatchet } from "@beep/repo-cli/test/Quality"
  *
@@ -427,7 +573,11 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
   baselinePath,
   inventoryPath,
   writeBaseline: shouldWriteBaseline,
-}: RunJSDocRatchetOptions): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+}: RunJSDocRatchetOptions): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const currentTotals = yield* readCurrentInventoryTotals(repoRoot, inventoryPath);
 
@@ -442,12 +592,14 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 
   const baseline = yield* readBaseline(repoRoot, baselinePath);
   yield* enforceComparison(compareTotals(currentTotals, baseline.tracked_totals), baselinePath);
+  yield* enforceTouchedFileCleanup(repoRoot);
 });
 
 /**
  * Compare JSDoc inventory totals for focused tests.
  *
- * @example
+ * **Example** (Compare totals)
+ *
  * ```ts
  * import { compareJSDocTotalsForTesting } from "@beep/repo-cli/test/Quality"
  *
@@ -457,6 +609,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
  * )
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */

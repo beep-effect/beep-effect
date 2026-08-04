@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete` (2026-08-02)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Orient on SPEC + exploration packet; verify the cited baselines still hold (inventory rule chassis, docgen harvest points, pattern-doc line numbers). | Facts confirmed or drift recorded; no re-mining of Effect. |
-| P1 Law + skill | pending | Rewrite `.patterns/jsdoc-documentation.md` (sections, carrier, kind-split, described-@see, @remarks retirement, tag-order rework) + `jsdoc-annotation-specialist` skill; hygiene fixes (tsdoc.json, line-848 bug, stale skill paths). | Law and skill teach the new grammar with worked exemplars; hygiene landed. |
-| P2 Tooling | pending | New inventory rules (section shape, When-to-use prefix, titled unique single-fence Examples, loose-fence ban, described-@see, no-@remarks-in-new-work, kind-aware Example presence via the `requiredExportTags` section-or-tag update) + a diff-aware touched-file gate for cleanup-on-touch rules + a regression fixture proving docgen's EXISTING description-fence harvest (`Core.ts:319-338`); fold new codes into the regression baseline. | `bun run beep quality jsdoc-inventory` + docgen green with new rules active and baselined. |
-| P3 Pilot | pending | Convert `foundation/modeling/schema` + one tooling package + one law-practice values slice to full section style; capture before/after WebStorm hover screenshots to `history/outputs/`. | Pilot green across inventory/docgen/check battery; screenshots recorded; SPEC acceptance boxes checked. |
-| P4 Close | pending | Yeet PR(s) to mergeable, closeout reflection, packet status flip. | Packet status and evidence updated; a closeout reflection exists. |
+| P0 Research | complete | Orient on SPEC + exploration packet; verify the cited baselines still hold (inventory rule chassis, docgen harvest points, pattern-doc line numbers). | Facts confirmed or drift recorded; no re-mining of Effect. |
+| P1 Law + skill | complete | Rewrite `.patterns/jsdoc-documentation.md` (sections, carrier, kind-split, described-@see, @remarks retirement, tag-order rework) + `jsdoc-annotation-specialist` skill; hygiene fixes (tsdoc.json, line-848 bug, stale skill paths). | Law and skill teach the new grammar with worked exemplars; hygiene landed. |
+| P2 Tooling | complete | New inventory rules (section shape, When-to-use prefix, titled unique single-fence Examples, loose-fence ban, described-@see, no-@remarks-in-new-work, kind-aware Example presence via the `requiredExportTags` section-or-tag update) + a diff-aware touched-file gate for cleanup-on-touch rules + a regression fixture proving docgen's EXISTING description-fence harvest (`Core.ts:319-338`); fold new codes into the regression baseline. | `bun run beep quality jsdoc-inventory` + docgen green with new rules active and baselined. |
+| P3 Pilot | complete | Convert `foundation/modeling/schema` + one tooling package + one law-practice values slice to full section style; capture before/after WebStorm hover screenshots to `history/outputs/`. | Pilot green across inventory/docgen/check battery; screenshots recorded; SPEC acceptance boxes checked. |
+| P4 Close | complete | Yeet PR(s) to mergeable, closeout reflection, packet status flip. | Packet status and evidence updated; a closeout reflection exists. |
 
 ## P4 Closeout Checklist
 
