@@ -204,6 +204,26 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
     expect(tagsFromComment(comments[0] ?? "")).toEqual(["@remarks", "@category", "@since"]);
   });
 
+  it("keeps delimiter-prefixed source inside the active fence", () => {
+    const comments = jsdocCommentsFromSource(`/**
+ * Outer summary.
+ *
+ * \`\`\`ts
+ * \`\`\`sourceText
+ * /**
+ *  * Nested summary.
+ *  * @remarks Nested legacy source.
+ *  */
+ * \`\`\`
+ *
+ * @category helpers
+ * @since 0.0.0
+ */`);
+
+    expect(comments).toHaveLength(1);
+    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@category", "@since"]);
+  });
+
   it("checks sectionless prose, loose fences, and empty titled examples", () =>
     Effect.runPromise(
       withFixtureRepo(

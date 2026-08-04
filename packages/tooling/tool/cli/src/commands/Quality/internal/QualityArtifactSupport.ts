@@ -615,7 +615,7 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
 };
 
 const fencedLineState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
-  const match = /^\s*(`{3,}|~{3,})/.exec(line);
+  const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
   const fence = match === null ? undefined : match[1];
   if (openFence === undefined) {
     return [fence, fence !== undefined];
@@ -623,7 +623,7 @@ const fencedLineState = (line: string, openFence: string | undefined): readonly 
   if (fence === undefined) {
     return [openFence, true];
   }
-  if (fence[0] === openFence[0] && fence.length >= openFence.length) {
+  if (fence[0] === openFence[0] && fence.length >= openFence.length && Str.isEmpty(Str.trim(match?.[2] ?? ""))) {
     return [undefined, true];
   }
   return [openFence, true];
