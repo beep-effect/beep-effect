@@ -292,3 +292,248 @@ consolidation (deferred pending cache measurements). Per-lane proof resume
     (Quality.command.ts:269), and 69 packages still lack per-package test
     typecheck in `check` (already ratcheted:
     standards/test-typecheck.blindspot-baseline.jsonc, 65 findings).
+
+39. **Post-merge workspace reset (`yeet sweep`).** After the merge lands via
+    gh CLI, the local clone is left stale and the NEXT yeet run pays for it:
+    the feature branch lingers, origin refs are unpruned, local main is
+    behind (stale-base → rebase treadmill), and a lockfile-moving main means
+    stale node_modules phantom failures. Add a closeout step (or standalone
+    `beep yeet sweep`) that leaves the clone ready to go: (a) `git fetch
+    --prune`; (b) FF-only main update — worktree-aware: when main is not
+    checked out anywhere use `git fetch origin main:main`, when another
+    worktree holds main skip-and-report rather than checkout; (c) delete
+    local branches fully merged into origin/main (`git branch -d`, never
+    `-D`; skip any branch checked out in a worktree, skip branches with
+    unpushed commits); (d) diff the lockfile across the main update and run
+    `bun install` when it moved; (e) end on main (or report why not).
+    Safety rails: never touch a dirty worktree, report every skip with its
+    reason, and never force-delete — unmerged local work is sacred. Natural
+    wiring: the tail of `yeet monitor`'s merged-PR path and/or closeout.
+
+    *Live evidence (#551 merge, 2026-08-04):* `gh pr merge --squash
+    --delete-branch` from the agent worktree API-merged successfully, then
+    its LOCAL cleanup failed (`fatal: 'main' is already used by worktree at
+    …/beep-effect3`), exited nonzero — mimicking a failed merge — and
+    silently ABORTED the remote branch deletion. Sweep must therefore own
+    the whole post-merge sequence itself: merge WITHOUT `--delete-branch`,
+    verify merged state via API, then do remote deletion + ref updates +
+    local cleanup as its own worktree-aware plan steps, classifying
+    "merged, cleanup skipped: <reason>" as success. Also confirmed:
+    `git fetch origin main:main` correctly refuses when main is checked out
+    elsewhere — the skip-and-report branch of (b) is reachable and needed.
+    Squash-merge detection note for (c): merged branch tips are NOT
+    ancestors of origin/main, so `git branch -d` will refuse; deletion must
+    key on the branch's PR being MERGED (then `-D`, with the report citing
+    the PR).
+
+## Discussion harvest (2026-08-04, while driving #551's fix waves to green)
+
+40. **Changed-scope jsdoc inventory.** The ci lane spends 242s generating the
+    repo-wide inventory (`quality jsdoc-inventory`) to feed a 2s ratchet —
+    7m26s hosted lane total on #551. The ratchet needs only tracked-package
+    baseline counts plus findings on touched files; scope inventory to
+    `origin/main...HEAD` + dirty exactly like docgen:local, and reserve the
+    repo-wide inventory for main/nightly. Likely the cheapest large
+    lane-time cut currently on the board.
+41. **Coverage lane affected-scoping + cache forensics.** Longest pole on
+    #551's run: 18m28s, and 0 of 231 turbo coverage tasks were cache hits.
+    Two independent levers: (a) measure coverage only for affected packages —
+    the per-package ratchet comparison for untouched packages is a no-op by
+    construction; (b) find out why coverage tasks never cache (outputs not
+    declared? TURBO_FORCE? instrumentation nondeterminism?) — either lever
+    alone is minutes off every PR.
+42. **Merge-readiness as data + a monitor that survives pushes.** The merge
+    protocol (checks pass + threads resolved + Greptile 5/5) is enforced by a
+    human reading three surfaces, but monitor/status already fetches all
+    three: emit a single `mergeReady` verdict naming the failing criterion.
+    And `yeet monitor` exits 1 on first red, forcing a manual re-arm after
+    every push — add `--until-merged`: follow new SHAs, keep babysitting
+    through fix waves, end merged-or-abandoned. Natural pair with #39's
+    sweep as the merged-path tail.
+43. **Touched-package src+test typecheck in the pre-push wave.** #551's
+    Check-lane red (verdict-fixture TS2739) was only catchable on hosted CI
+    because local overlays checked `src/` while test files live solely in
+    the `check:tsgo:tests` program. A combined src+test overlay per touched
+    package (~90s for repo-cli) generated into the #28 cheap wave kills this
+    failure class pre-push. Deliverable: an overlay generator, not a doc.
+44. **Coverage failures emit their own baseline patch.** Truing up the
+    repo-cli baseline meant fishing 58.81/67.69 out of a 10k-line job log.
+    The lane computes those exact values — print the corrected
+    `coverage.regression-baseline.jsonc` hunk (or write a patch artifact)
+    next to the failure. Teach-at-point-of-failure (#33/#36 family),
+    near-zero cost.
+
+## Agent-ergonomics harvest (2026-08-04, operator wishlist — each grounded in a real incident from the #551 waves)
+
+45. **Agent completion reports as schema-validated artifacts.** Three times
+    this session a subagent went idle with no final report (fallow-fixes ×2,
+    jsdoc-migrate, yeet-batch), forcing gate-based re-verification of unknown
+    state. Widget: `beep agent report write` — agent writes a completion
+    packet (files touched, gates run WITH exit codes and output excerpts,
+    out-of-scope files encountered, open questions) to a known path before
+    idling; `beep agent report check <agent>` validates it exists and its
+    claimed gates actually pass. Makes partition-protocol rule 4 ("reports
+    are not proof") machine-checkable instead of tribal.
+46. **Lane-parity local proof: `beep ci affected-lanes` + structured battery
+    verdicts.** The "why weren't these caught locally" class recurred twice
+    today (test-file TS2739, coverage dip) because local proof and hosted
+    lanes are different surfaces. Hosted lanes are already locally invokable
+    (`beep ci lane jsdoc-ratchet` worked); missing pieces: (a) `beep ci
+    affected-lanes` — list exactly which hosted lanes the current diff will
+    trigger, with expected durations, so the operator runs them BY NAME
+    pre-push; (b) battery runs emit a per-gate JSON verdict (pass/fail,
+    duration, first-error, repro command) instead of agents hand-rolling
+    zsh scripts and grepping tails. Subsumes the ad-hoc battery.zsh pattern.
+47. **`beep ci logs <lane>` — failure-region fetcher.** Fetching one job log
+    today took the `gh api .../logs --allow-escape-sequences | sed` incanta-
+    tion, failed silently once with wrong flags, and returned 10k lines to
+    grep for 3 relevant ones. Widget: resolve lane → job id for the current
+    PR/SHA, fetch, strip ANSI, extract the failure region (first error +
+    context + the lane's repro command), print attribution hints
+    (introduced/inherited per #35's fingerprints).
+48. **`beep worktree ready <branch>` — agent workspace provisioner.** Known
+    failure classes when provisioning agent worktrees: missing node_modules
+    (ENOENT on relative .bin paths), stale node_modules after lock-moving
+    updates, shared-turbo-cache contamination. One command: create/refresh
+    worktree, bun install iff lockfile differs, verify cache isolation,
+    print the env-facts block (tool paths, branch, PR state) agents need.
+49. **Wave partition manifests as data + `beep wave lint`.** Fix-wave
+    partitions live in prose briefs today; enforcement is the orchestrator
+    eyeballing diffs. Widget: orchestrator writes the partition (agent →
+    owned file-set → do-not-touch) as a schema-validated manifest;
+    `beep wave lint` diffs actual dirty files against claims and reports
+    drift ("jsdoc-migrate touched Handler.ts — owned by yeet-batch"). Turns
+    partition-protocol rules 1-3 from discipline into a gate.
+50. **Gate failure-output contract (generalize #30).** jsdoc-ratchet now
+    teaches at point of failure because we hand-built that output; every
+    other gate still fails with bare findings. Convention + shared helper:
+    a gate failure renders findings, the exact local repro command, and the
+    binding law/doc pointer — schema-shaped so agents parse it. New-gate
+    scaffold emits the contract by default; a meta-lint checks existing
+    gates against it.
+51. **`beep yeet reply` — auditable review-thread reply/resolve.** The
+    operator cannot post PR thread replies (API write denied), so six
+    verified fixes ended as paste-these-drafts handoffs. Widget: a drafts
+    file (thread id → reply body) posted via the user's gh auth through a
+    repo CLI command — auditable, permission-scoped, and it closes the
+    "comments resolved" merge criterion loop that #42's mergeReady verdict
+    checks.
+52. **`beep agent brief` — canonical subagent context preamble.** Every
+    subagent prompt this session hand-carried the same boilerplate: repo
+    root, worktree state, tool paths (tsgo, mise/zsh -ic wrapper), branch/PR
+    facts, do-not-touch dirs, scratchpad location. Generate that block from
+    live repo state on demand; orchestrators paste one command's output
+    instead of re-deriving env facts per prompt (and staleness bugs — wrong
+    branch, wrong worktree — die with the hand-copying).
+
+    **Definition-of-done rider for #45-52 (and any agent-facing widget):**
+    shipping the command is half the item — the other half is the awareness
+    surface, decided at grill time per item: an AGENTS.md law/tool-routing
+    line, a skill reference update, and/or gate output that names the widget
+    at the moment it's needed (#50's contract is the delivery vehicle for
+    that last one). A widget agents don't discover in-context is dead code
+    with extra steps; every one of these lands with its documentation in the
+    same PR.
+
+53. **Permission-envelope-aware handoffs.** Two denials this cycle (PR thread
+    replies, `git push origin --delete`) were each discovered by attempting
+    the operation mid-flow, failing, and falling back to a chat handoff — the
+    user then ran the deletion in seconds under his own auth. The envelope is
+    knowable in advance; make it data instead of discovered friction:
+    (a) `beep agent brief` (#52) ships a "needs-operator" operation list
+    (remote deletions, thread replies/resolves, anything else the session
+    denies by policy) so agents PLAN batched handoff blocks — "here are the
+    3 commands only you can run" — instead of serial try-fail-handoff;
+    (b) design cleanup/closeout commands like `yeet sweep` (#39) and
+    `yeet reply` (#51) to be equally runnable BY THE USER as one command:
+    the agent's deliverable is the validated plan artifact, and whoever
+    holds the permission executes it. Explicitly NOT in scope: widening the
+    agent's permissions — the widget is knowing the boundary, not moving it.
+
+54. **Sub-agent reflection harvest (operator directive, 2026-08-04).** Every
+    sub-agent prompt in future workflows carries a reflection rider: before
+    finishing, report tooling/process friction hit and widgets wished for —
+    "additional Opportunities" from the trench view. The orchestrator
+    harvests each report into this ledger on completion. Effective
+    immediately as a prompt ritual; the durable home is #45's completion
+    packet schema, which gains an `opportunities` field so the harvest is
+    structured data instead of prose scraping. Rationale: the operator sees
+    orchestration friction, sub-agents see execution friction — only they
+    know which env facts were missing, which gate output confused them,
+    which command they hand-rolled.
+
+## Grill #4 dispositions (2026-08-04 — full docket; GRILL-DECISIONS.md #13–23)
+
+Queue: PR-E "merge loop" → (PR-B ∥) → PR-F "soundness" → PR-I "agent kit" →
+PR-C "pipeline 2" → PR-G "preflight parity" → PR-H "teach pack" → jsdoc
+codemod PR. Spikes: LAN cache + workstation runner (one session) →
+predict-squash → battery → vitest → stage-3.
+
+- **PR-E**: verdict encode fix (Json-codec law for all yeet artifacts), #39
+  sweep (merge porcelain + auto-sweep + SweepPlan/SweepReport + --plan), #42
+  (--until-merged + mergeReady), #23 (fingerprint-gated rerun, once per
+  lane/SHA), #51 reply (ReplyDrafts/ReplyReport, post+resolve), #38a
+  testSearchRoots cleanup.
+- **PR-B** += #36 hosted repro commands (joins #13's step-summary surface).
+- **PR-F**: #37 sentinel ambient .d.ts remedy + #34 append-optional lint +
+  #31 generated-file exemption; one-time unmask chore this week.
+- **PR-I**: #45 report (+#54 opportunities field), #48 worktree ready, #49
+  wave manifests + wave lint, #52 brief (+#53a needs-operator list);
+  awareness surfaces ship same-PR per the rider.
+- **PR-C** += #40 changed-scope inventory (replaces o1-A shard cache;
+  nightly keeps full sweep), #41 affected coverage + cache forensics, #44
+  baseline-patch emission.
+- **PR-G**: #28 + #29 + #43 (concurrent preflight wave, ~2.5 min) + #46 +
+  #47.
+- **PR-H**: #33 --fix + #50 failure-output contract + meta-lint; #32 codemod
+  PR immediately after.
+- **Closed/parked**: #21 subsumed by #25; grit collector parked (#40
+  collapsed its payback); #27 parked behind #24/#26.
+- **Triggered dockets**: #22 merge-queue eval (on E-wave monitor data); #26
+  capsule + #35 lane-collapse (grill #5).
+- **#38b**: blindspot burn-down passive + opportunistic riders; upstream
+  @effect/tsgo issue drafted by agent, filed by operator this week.
+- **#24**: workstation-runner pilot rides the LAN-cache spike session; AWS
+  after pilot data.
+
+56. **Docs-only PRs short-circuit the inert lane family (operator idea,
+    2026-08-04).** Build/check/test/coverage/docgen lanes are provably inert
+    for `goals/**`/`explorations/**` markdown diffs, yet a docs-only PR pays
+    the full gauntlet. NOT the naive fix: `paths-ignore` triggers leave
+    required checks stuck "Expected" (unmergeable), and dummy-success twin
+    workflows drift. Design: lanes always trigger; one shared
+    `beep ci lane-scope` step computes diff ∩ lane input scope from a
+    conservative curated inert-path allowlist; empty intersection → lane
+    reports success immediately with a "no inputs in scope" conclusion in
+    its step summary — required-check semantics honest, logic in one
+    testable place. Never skips: gitleaks (secrets in prose; public repo),
+    goals/reflection governance lints (docs PRs are their use case),
+    commitlint. This is #21's input-hash idea in path-set form — the
+    degenerate case shippable before #25's tree-hash machinery, and it
+    retires into #25 when that lands. Evidence gate: after PR-B's
+    trusted-base turbo cache lands, measure a docs-only PR's gauntlet —
+    cache replay may already collapse the turbo-backed lanes (replay is
+    proof, not skipping); implement the short-circuit only for what
+    remains (likely coverage + non-turbo lanes). Vehicle: small hosted-CI
+    PR after PR-B, evidence-gated.
+
+Grill #4b per-item pass (same day; GRILL-DECISIONS.md #24–33): #18 → PR-F
+rider (advisory hot-barrel lint); #19 → PR-G (shares #43 overlay
+internals); #17 → triggered, opens the first stage-2/protocol-boundary PR;
+#55 → PR-E rider (advisory phase purges stale envelopes + skips, never
+exit 1); full designs locked for #52/#45/#49/#48 (agent kit), #11 (docgen
+narrowing levers), PR-G posture (preflight blocks push, --push-anyway
+audited), #50 (ratcheted-advisory contract). All 55 items now covered.
+
+55. **Fallow advisory phase: stale envelopes should regenerate, not fail the
+    run.** (Live incident, this PR's first publish attempt, 2026-08-04.)
+    PR-A's envelope mode-split upgraded the old poisoning failure
+    ("non-advisory envelope rejected") into a timestamp guard ("envelope(s)
+    older than the Yeet run start") — correct detection, wrong reaction: the
+    feedback phase fails the whole publish over gitignored, regenerable
+    state, and the operator recovery is still the manual `rm -rf
+    .beep/fallow` from the 2026-06 memory. The advisory phase should treat
+    stale/mode-mismatched envelopes as absent — delete and regenerate (or
+    skip with a note), never exit 1. Candidate vehicle: PR-E rider (it's the
+    yeet surface); also a #50 exhibit — the failure output taught neither
+    the fix nor the one command to run.

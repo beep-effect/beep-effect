@@ -58,3 +58,158 @@ allow-marker workaround once the [[allowlists]] syntax is honored hosted-side.
 12. **Spike order: cross-clone LAN cache → grit collector → single-process
     battery → vitest projects → stage-3 html** (stage-3 keeps its ≤8M exit
     gate; battery waits for PR-A timing fields).
+
+## Grill #4 — merge loop, soundness, agent kit, parity (2026-08-04)
+
+Eleven decisions over the full ledger docket (#21–#54). Shipped state at
+grill time: PR-A merged (#551), #548/#549/#547 merged, PR-B/PR-C queued from
+grills #2–#3.
+
+13. **Queue topology: PR-E jumps.** Order: PR-E "merge loop" → (PR-B in
+    parallel; execution-only, disjoint surfaces) → PR-F "soundness" → PR-I
+    "agent kit" → PR-C "pipeline 2" → PR-G "preflight parity" → PR-H "teach
+    pack" → repo-wide jsdoc codemod PR. Rationale: closeout friction taxed
+    all four merges this week; the kit serves C/G/H's own implementation
+    waves.
+14. **PR-E "merge loop".** (a) `beep yeet merge` porcelain: merge WITHOUT
+    `--delete-branch` → verify MERGED via API → sweep tail; operator-
+    authorized only, never auto-invoked. (b) `yeet sweep` (#39): SweepPlan +
+    SweepReport schema pair, `--plan` dry-run, worktree-aware safety rails,
+    "merged, cleanup skipped: reason" = success; auto-runs on monitor's
+    merged detection and stands alone. (c) `yeet monitor --until-merged`
+    (#42): opt-in flag, follows new SHAs, known-flake fingerprints
+    (ts2589-no-location, CI-timeout) get ONE `gh run rerun --failed` per
+    lane/SHA (#23), other reds report "needs code fix"; surfaces the
+    `mergeReady` verdict (criteria per decision-track #20: checks green +
+    threads resolved hard, Greptile displayed target). (d) `yeet reply`
+    (#51): ReplyDrafts → validate against live threads → post + resolve
+    (GraphQL mutation) → ReplyReport; runnable by either party. (e) Verdict
+    encode fix: YeetVerdict gains a Json codec (FlakeQuarantineArtifactJson
+    pattern) + round-trip test — LAW: every yeet artifact writes through
+    `S.encode`. (f) Rider: dead `"tooling"` testSearchRoots entry removed
+    (#38 bonus).
+15. **PR-F "soundness pair".** #37 durable remedy = sentinel ambient `.d.ts`
+    emitted by tsconfig-sync codegen carrying the plugins-block content hash
+    (global-scope change → full per-file diagnostic invalidation); fallback
+    if flaky: wrapper drift-detect + `tsgo -b --force`. Plus #34
+    append-optional lint: version-carrying S.Class schemas may not gain
+    required fields vs origin/main without a version bump; failure output
+    teaches `S.OptionFromOptionalKey` + `SchemaUtils.withNoneDefault`. Plus
+    #31: cleanup-on-touch exempts `*.generated.ts`/`_generated/**`
+    (generators get a one-time upgrade). One-time unmask chore (forced
+    rebuild + turbo cache bust on main) runs this week, independent of the
+    PR.
+16. **PR-I "agent kit".** #45 `beep agent report` write/check (completion
+    packet gains an `opportunities` field — durable home of the #54
+    reflection rider), #48 `beep worktree ready`, #49 wave partition
+    manifests + `beep wave lint`, #52 `beep agent brief` including #53a's
+    needs-operator operation list. Definition-of-done rider applies: each
+    command ships its awareness surface (AGENTS.md tool-routing block, skill
+    references, gate output naming the widget) in the same PR.
+17. **PR-C amendments.** #40 changed-scope jsdoc inventory REPLACES o1-A's
+    shard-cache design (origin/main...HEAD + dirty, docgen:local pattern;
+    sound because findings are per-file and untouched packages inherit
+    baseline by construction); full sweep moves to main/nightly — refines
+    decision 5, hosted PR lane goes scoped. #41 folds into the coverage
+    item: affected-only measurement + forensics on the 0/231 cache-hit
+    mystery. #44 rider: coverage failures print the corrected baseline hunk.
+18. **PR-B amendment.** #36 rides PR-B: hosted lanes embed their exact local
+    repro command in `$GITHUB_STEP_SUMMARY` — same check.yml surface as
+    #13's failure excerpts.
+19. **PR-G "preflight parity".** #28 preflight-before-push reorder + #29
+    changed-package vitest + #43 touched-package src+test overlay generator,
+    run concurrently (~2.5 min wall) + #46 `beep ci affected-lanes` and
+    per-gate JSON battery verdicts (retires ad-hoc battery.zsh) + #47
+    `beep ci logs <lane>` failure-region fetcher.
+20. **PR-H "teach pack" + codemod.** #33 `jsdoc-ratchet --fix` (the gate
+    carries its codemod) + #50 gate failure-output contract (findings +
+    repro command + doc pointer, schema-shaped; scaffold emits by default;
+    meta-lint audits existing gates). #32 lands as its own mass-diff PR
+    immediately after H by running the `--fix` repo-wide once.
+21. **Structural CI disposition.** #21 CLOSED (subsumed by #25). #24
+    workstation-runner pilot folds into the LAN-cache spike session ($0
+    hardware, hygiene rails per ledger; AWS variant waits for pilot data).
+    #25 `yeet predict-squash` read-only spike enters the queue. #22
+    merge-queue evaluation triggers on E-wave monitor data (treadmill tax
+    quantified), pairs with deferred lane consolidation. #26 capsule
+    protocol + #35 fingerprint lane-collapse → grill #5 design docket, after
+    B/G/E teach us the fields. #27 attestation parked behind #24 + #26.
+    Grit collector PARKED — #40's changed-scope collapsed its payback;
+    revivable only if nightly full-sweep cost matters. Updated spike order:
+    LAN cache + workstation runner → predict-squash → single-process battery
+    → vitest projects → stage-3 html.
+22. **Test-typecheck blindspot burn-down: passive + opportunistic.** The
+    ratchet (standards/test-typecheck.blindspot-baseline.jsonc) blocks new
+    blindspots; queued PRs wire test typecheck for packages they already
+    touch; no new gate (gates-diet doctrine), no dedicated burn-down series.
+    Upstream @effect/tsgo issue (MethodDeclaration owners +
+    callback-position functions) drafted by the agent, filed by the operator
+    this week; effect-fn law re-pruned after upstream ships.
+23. **Sub-agent reflection harvest (#54).** Standing prompt ritual effective
+    immediately: every sub-agent reports friction/opportunities before
+    finishing; orchestrator harvests into the ledger. Structured home is
+    #45's `opportunities` field once PR-I lands.
+
+## Grill #4b — per-item design pass (2026-08-04, same session)
+
+Operator asked for per-item coverage before implementation begins; the audit
+found #17–#19 unplaced and design trees open on PR-I/C/G/H. Ten more
+decisions close them:
+
+24. **#17–#19 placement.** #18 hot-barrel advisory → PR-F rider (advisory
+    severity, changed-scope, curated hot-barrel list — schema root, html
+    root, agents-use-cases public/server). #19 `beep quality probe <file>` →
+    PR-G, sharing #43's overlay-generator internals so measurements stay
+    method-identical. #17 `beep architecture add-leaf` → triggered: opening
+    commits of the first stage-2/protocol-boundary PR, proving the codegen
+    against a live boundary in the same diff.
+25. **#55 fallow advisory self-heal.** Stale or mode-mismatched envelopes
+    are purged and the phase skips with a verdict note — an advisory phase
+    never exits 1 (precedent: decision 2). PR-E rider.
+26. **#52 `beep agent brief`.** AgentBrief S.Class → fenced-markdown render
+    (+`--json`); contents: env facts (tool paths, zsh -ic wrapper), git
+    facts, PR facts, boundaries, scratchpad path, canonical gate commands,
+    and the #53a needs-operator list as a curated in-code LiteralKit domain.
+    PR enrichment default-on behind a short-TTL per-branch cache;
+    `--no-remote` opt-out.
+27. **#45 `beep agent report`.** Packet at `.beep/agents/<name>/report.json`:
+    agentName, waveId?, status (complete|partial|blocked), filesTouched,
+    gatesRun {command, exitCode, excerpt, durationMs}, outOfScope
+    encountered, open questions, opportunities {kind: friction|wish, text}
+    (#54's structured home). `check` validates schema + file-claim drift by
+    default; `check --prove` re-runs claimed gates. Rule 4 becomes
+    machine-checkable without a 2× gate tax per wave.
+28. **#49 wave manifests + lint.** WaveManifest at
+    `.beep/waves/<id>/manifest.json`: glob ownership (most-specific claim
+    wins) + shared bucket (changesets, lockfile); drift = dirty files
+    outside all claims; attribution joins the manifest with #45 reports to
+    name the straying agent; report-only posture with a signaling exit code
+    — no blocking hook.
+29. **#48 `beep worktree ready`.** Idempotent create-or-refresh (new
+    branches cut from origin/main after fetch); `bun install` iff bun.lock
+    hash ≠ per-worktree stamp; turbo-cache verify-and-report with
+    `--isolate-cache` opt-in; finishes by emitting the #52 brief. Never
+    mutates a dirty worktree.
+30. **#11 docgen escalation narrowing.** turbo.json docgen-slice hash +
+    bun.lock moved-entry dependent-closure attribution; escalates to the
+    full proof whenever narrowness is unprovable (parse failure, closure
+    escaping the changed set). o3-B ship porcelain and o4-B coverage
+    designs stand as grilled in #3, with #41 forensics and #44 rider folded
+    in.
+31. **PR-G posture + consistency locks.** Preflight red blocks the push;
+    `--push-anyway` proceeds and records the overridden findings in the
+    verdict. Battery verdicts reuse #45's GateRun shape (one schema, two
+    consumers); `ci affected-lanes` derives from the hosted lane
+    definitions (single source of truth); #43 overlays generate into
+    gitignored `.beep/overlays/`.
+32. **#50 contract enforcement: ratcheted advisory.** GateFailure schema
+    (findings + exact repro + binding-doc pointer; text render for humans,
+    S.encode JSON for agents); baseline file freezes existing non-compliant
+    gates; the new-gate scaffold emits the contract so new gates are born
+    compliant and the ratchet blocks new baseline entries; existing gates
+    migrate cleanup-on-touch. `--fix` default-off, in-place, diff-reviewed;
+    #32's repo-wide run stays its own mass-diff PR.
+33. **Coverage audit result.** With 24–32 locked, every ledger item #1–#55
+    holds a shipped state, a design + vehicle, a trigger, or an explicit
+    parking. Per-item grill coverage is complete; implementation may start
+    at PR-E.
