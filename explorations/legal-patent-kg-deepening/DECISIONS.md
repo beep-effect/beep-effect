@@ -290,3 +290,22 @@ cadence with BRIEF gated behind align).
 log records that they exist and where they live. Ownership grounding needed
 no decision: `PatentCitationEvent` and `CandorDisposition` are law-practice
 product language beside `PatentMetadata`/`PriorArtReference`/`Claim`.
+
+## 2026-08-04 — phase-2: queued-wedge unblock milestone
+
+**Question:** Which milestone unblocks the queued wedges
+(`legal-position-relator-runtime` + contradiction semantics,
+`patent-drafting-episode-ledger`, FunctionalUnit into
+`explorations/uspto-patent-driver-depth`)?
+
+**Answer:** The candor BRIEF's approval — which landed the same day
+(2026-08-04). The queued wedges are now UNBLOCKED; opening order and timing
+stay Benjamin's call, with `legal-position-relator-runtime` first per the
+routing seed.
+
+**Rationale:** Keeps the sequential-focus rationale intact through shaping;
+the approved BRIEF's schema boundaries (event/disposition/gate shapes) are
+stable reference points the relator and episode-ledger wedges compose
+against. Rejected: align-unblocks-now (three concurrent pre-shape packets)
+and open-only-the-next-one (partial parallelism without clear gain once the
+BRIEF was near).
