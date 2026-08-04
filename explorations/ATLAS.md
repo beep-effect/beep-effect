@@ -40,6 +40,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
+  initiative for a configurable full-document substrate and eventual
+  Professional Desktop document Portal. A live Lexical Playground `0.49.0`
+  audit captured 17 screenshots, keybindings, highlighting, inserts, settings,
+  and accessibility gaps; a pinned source audit reconciled the node/plugin
+  registration graph at commit `a933222`. Architecture grill D1-D27 keeps
+  `@beep/md` canonical, Lexical/Pandoc as projections, product profiles
+  app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
+  single-user parity. First goal graduated:
+  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
   align-stage: wave 2 of the legal/patent ontology-KG strand
   (`legal-ontology-landscape` graduated into
