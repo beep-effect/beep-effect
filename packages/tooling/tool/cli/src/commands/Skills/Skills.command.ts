@@ -739,9 +739,6 @@ const renderSkillsBlock = (names: ReadonlyArray<string>): string =>
 /**
  * Render `.codex/config.toml` with skills sourced from `.claude/skills`.
  *
- * @param configText - Existing Codex config text.
- * @param names - Skill names to render into the managed skills table.
- * @returns Codex config text with the managed skills table replaced or appended.
  * **Example** (Render managed Codex skills configuration)
  *
  * ```ts
@@ -750,6 +747,10 @@ const renderSkillsBlock = (names: ReadonlyArray<string>): string =>
  * const rendered = renderCodexConfigWithSkills("", ["grill-me"])
  * console.log(rendered.includes("[skills]")) // true
  * ```
+ *
+ * @param configText - Existing Codex config text.
+ * @param names - Skill names to render into the managed skills table.
+ * @returns Codex config text with the managed skills table replaced or appended.
  * @category commands
  * @since 0.0.0
  */
