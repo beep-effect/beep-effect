@@ -100,7 +100,7 @@ jobs:
         run: node ./packages/tools/bundle/src/bin.ts compare --base-dir base/packages/tools/bundle/fixtures
       - name: Upload stats artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bundle-stats
           path: stats.txt
@@ -148,6 +148,21 @@ jobs:
         if: matrix.runtime == 'Deno'
         run: deno task test --shard ${{ matrix.shard }}
 
+  test-bun:
+    name: Test on Bun
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+        with:
+          bun-version: 1.3.13
+      - name: Test
+        run: bun node_modules/vitest/vitest.mjs run --project @effect/platform-bun
+
   doctest:
     name: Documentation Tests
     runs-on: ubuntu-latest
@@ -160,19 +175,6 @@ jobs:
         uses: ./.github/actions/setup
       - name: Test Documentation
         run: pnpm doctest
-
-  docgen:
-    name: Documentation Generation
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install dependencies
-        uses: ./.github/actions/setup
-      - name: Generate Documentation
-        run: pnpm docgen
 
   ai-docgen:
     name: AI Documentation Generation

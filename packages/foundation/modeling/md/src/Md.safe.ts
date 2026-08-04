@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 
-import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html";
+import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
@@ -35,7 +35,8 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 /**
  * A stable path segment locating a safety violation in the Markdown AST.
  *
- * @example
+ * **Example** (Use DocumentSafetyPathSegment)
+ *
  * ```ts
  * import { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -60,7 +61,8 @@ export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGrea
 /**
  * Type for {@link DocumentSafetyPathSegment}.
  *
- * @example
+ * **Example** (Use DocumentSafetyPathSegment)
+ *
  * ```ts
  * import type { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
  *
@@ -76,7 +78,8 @@ export type DocumentSafetyPathSegment = typeof DocumentSafetyPathSegment.Type;
 /**
  * A trusted raw Markdown or HTML node found at a user-content boundary.
  *
- * @example
+ * **Example** (Use RawNodeSafetyViolation)
+ *
  * ```ts
  * import { RawNodeSafetyViolation } from "@beep/md/Md.safe"
  *
@@ -102,7 +105,8 @@ export class RawNodeSafetyViolation extends S.TaggedClass<RawNodeSafetyViolation
  * A URL-bearing Markdown node whose destination is outside its user-content
  * allow list.
  *
- * @example
+ * **Example** (Use UrlSafetyViolation)
+ *
  * ```ts
  * import { UrlSafetyViolation } from "@beep/md/Md.safe"
  *
@@ -135,7 +139,8 @@ export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`Url
  * A string containing a code point that cannot be represented by the canonical
  * HTML serializer.
  *
- * @example
+ * **Example** (Use ScalarSafetyViolation)
+ *
  * ```ts
  * import { ScalarSafetyViolation } from "@beep/md/Md.safe"
  *
@@ -160,7 +165,8 @@ export class ScalarSafetyViolation extends S.TaggedClass<ScalarSafetyViolation>(
  * A repeated footnote-definition identifier that would produce duplicate HTML
  * ids during safe projection.
  *
- * @example
+ * **Example** (Use DuplicateFootnoteDefinitionSafetyViolation)
+ *
  * ```ts
  * import { DuplicateFootnoteDefinitionSafetyViolation } from "@beep/md/Md.safe"
  *
@@ -191,7 +197,8 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedClass<Du
  * Structured safety issue returned before a document crosses an editor or RPC
  * trust boundary.
  *
- * @example
+ * **Example** (Use DocumentSafetyViolation)
+ *
  * ```ts
  * import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe"
  *
@@ -217,7 +224,8 @@ export const DocumentSafetyViolation = S.Union([
 /**
  * Type for {@link DocumentSafetyViolation}.
  *
- * @example
+ * **Example** (Use DocumentSafetyViolation)
+ *
  * ```ts
  * import { RawNodeSafetyViolation } from "@beep/md/Md.safe"
  * import type { DocumentSafetyViolation } from "@beep/md/Md.safe"
@@ -436,7 +444,8 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
 /**
  * Returns every path-located user-content safety violation.
  *
- * @example
+ * **Example** (Use documentSafetyIssues)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { documentSafetyIssues } from "@beep/md/Md.safe"
@@ -455,7 +464,8 @@ export const documentSafetyIssues = (document: Document): ReadonlyArray<Document
 /**
  * Returns every user-content safety violation below an inline node.
  *
- * @example
+ * **Example** (Use inlineSafetyIssuesAtRoot)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { inlineSafetyIssuesAtRoot } from "@beep/md/Md.safe"
@@ -491,7 +501,8 @@ const SafeDocumentCheck = S.makeFilter<Document>(
  * Branded user-content inline refinement with the same wire representation as
  * {@link Inline}.
  *
- * @example
+ * **Example** (Use SafeInline)
+ *
  * ```ts
  * import { SafeInline } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -516,7 +527,8 @@ export const SafeInline = Inline.pipe(
 /**
  * Type for {@link SafeInline}.
  *
- * @example
+ * **Example** (Use SafeInline)
+ *
  * ```ts
  * import { SafeInline } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -537,7 +549,8 @@ export type SafeInline = typeof SafeInline.Type;
  * Branded user-content document refinement with the same wire representation
  * as {@link Document}.
  *
- * @example
+ * **Example** (Use SafeDocument)
+ *
  * ```ts
  * import { SafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -562,7 +575,8 @@ export const SafeDocument = Document.pipe(
 /**
  * Type for {@link SafeDocument}.
  *
- * @example
+ * **Example** (Use SafeDocument)
+ *
  * ```ts
  * import { SafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -582,7 +596,8 @@ export type SafeDocument = typeof SafeDocument.Type;
 /**
  * Decodes unknown input into a safe document without throwing.
  *
- * @example
+ * **Example** (Use decodeSafeDocument)
+ *
  * ```ts
  * import { decodeSafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
@@ -599,7 +614,8 @@ export const decodeSafeDocument = S.decodeUnknownResult(SafeDocument);
 /**
  * Decodes unknown input into a safe document as an Effect.
  *
- * @example
+ * **Example** (Use decodeSafeDocumentEffect)
+ *
  * ```ts
  * import { decodeSafeDocumentEffect } from "@beep/md/Md.safe"
  * import { Effect } from "effect"
@@ -616,7 +632,8 @@ export const decodeSafeDocumentEffect = S.decodeUnknownEffect(SafeDocument);
 /**
  * Decodes unknown input into a safe document and throws on failure.
  *
- * @example
+ * **Example** (Use decodeSafeDocumentUnsafe)
+ *
  * ```ts
  * import { decodeSafeDocumentUnsafe } from "@beep/md/Md.safe"
  *
@@ -632,7 +649,8 @@ export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument =>
 /**
  * Narrows an already-decoded document after reporting structured issues.
  *
- * @example
+ * **Example** (Use refineSafeDocument)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { refineSafeDocument } from "@beep/md/Md.safe"

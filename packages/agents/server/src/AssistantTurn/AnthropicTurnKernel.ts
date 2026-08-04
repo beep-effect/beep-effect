@@ -37,8 +37,9 @@ import { LanguageModel, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
-import type { AssistantTurnEvent, IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { BlockRepairFailed } from "@beep/agents-use-cases/server";
+import type { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contracts";
+import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
+import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import type { Config } from "effect";
 import type { AiError, Response } from "effect/unstable/ai";
 
@@ -249,14 +250,16 @@ const streamTurn = (
  * requirement is the redacted `AI_ANTHROPIC_API_KEY` config resolved by the
  * plan's provided client layer.
  *
- * @remarks
+ * **Details**
+ *
  * The kernel streams valid blocks as soon as they decode. After the first
  * invalid slice, later valid blocks are buffered until the repair tail can emit
  * repaired and already-valid blocks in original envelope order. Repair-call
  * failures are converted to `TurnGenerationError`; blocks that remain invalid
  * after repair are logged and dropped.
  *
- * @example
+ * **Example** (Use AnthropicTurnKernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel"

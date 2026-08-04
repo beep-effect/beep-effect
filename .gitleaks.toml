@@ -2,9 +2,10 @@
 useDefault = true
 
 [[allowlists]]
-description = "Vendored openclaw subtree contains upstream docs and test fixtures with placeholder secrets"
+description = "Vendored subtrees (openclaw, effect) contain upstream docs and test fixtures with placeholder secrets"
 paths = [
   '''^\.repos/openclaw/.*$''',
+  '''^\.repos/effect/.*$''',
 ]
 
 [[allowlists]]
