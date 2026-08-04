@@ -115,7 +115,7 @@ bunx @beep/repo-cli create-package <name> --type=app --app-kind=runtime-proof
 
 `--type app` requires `--app-kind`. `nextjs` and `tauri` generate framework
 apps without a public `@beep/<app>` TypeScript package API: no `src/index.ts`,
-package exports, docgen, dtslint, or type-test script. Use app-local `@/*`
+package exports or docgen. Use app-local `@/*`
 imports for tests and internal modules. `runtime-proof` is the explicit
 exception for app workspaces that intentionally prove runtime package contracts;
 it keeps the package-like scaffold.
@@ -445,7 +445,6 @@ Run repository operational quality lanes that are not package-local Turbo tasks.
 bun run beep quality github-checks quality
 bun run beep quality github-checks repo-sanity
 bun run beep quality bun-audit
-bun run beep quality dtslint-tsgo
 bun run beep quality test-tsgo
 bun run beep quality tsgo-smoke
 bun run beep quality tsgo-rules
@@ -468,8 +467,8 @@ bun run beep yeet monitor
 ```
 
 `repair` runs deterministic write steps: changed-file lint fixes, local docgen,
-and affected feedback. Affected test feedback is scoped to unit and type-test
-lanes; integration stays in the full proof. `verify` runs the canonical full
+and affected feedback. Affected test feedback is scoped to the unit lane;
+integration stays in the full proof. `verify` runs the canonical full
 local `quality github-checks pre-push` proof without
 duplicate affected feedback first. `publish` requires reviewed staged changes,
 commits them, runs the same `pre-push` proof against the new local commit, and

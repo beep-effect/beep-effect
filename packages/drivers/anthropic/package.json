@@ -17,7 +17,7 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run type-test && bun run beep:lint",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
     "beep:check": "tsgo -b tsconfig.json",
     "beep:lint": "biome check .",
@@ -27,12 +27,10 @@
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
-    "dtslint": "bunx tstyche --config ../../../tstyche.json --root ../../.. packages/drivers/anthropic/dtslint/Anthropic.tst.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:property": "bun run beep:test",
-    "type-test": "bun run dtslint"
+    "test:property": "bun run beep:test"
   },
   "exports": {
     ".": "./src/index.ts",

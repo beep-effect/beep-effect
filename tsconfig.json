@@ -15,8 +15,6 @@
     "./packages/**/test/**/*.ts",
     "./packages/**/test/**/*.tsx",
     "./packages/**/test/**/*.json",
-    "./packages/**/dtslint/**/*.ts",
-    "./packages/**/dtslint/**/*.tsx",
     "./syncpack.config.ts",
     "./*.ts",
     "./*.json"

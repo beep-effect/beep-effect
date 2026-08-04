@@ -38,7 +38,7 @@ bun run test
 bun run lint:fix
 ```
 
-Tests and dtslint files import package source through `@beep/dock` or other `@beep/*` aliases. Relative imports are reserved for local fixtures and internal test-only projections.
+Tests import package source through `@beep/dock` or other `@beep/*` aliases. Relative imports are reserved for local fixtures and internal test-only projections.
 
 ## License
 

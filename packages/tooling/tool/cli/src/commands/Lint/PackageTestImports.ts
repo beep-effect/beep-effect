@@ -63,13 +63,13 @@ class PackageNameDocument extends S.Class<PackageNameDocument>($I`PackageNameDoc
 
 const decodePackageNameDocument = S.decodeUnknownEffect(S.fromJsonString(PackageNameDocument));
 const moduleExtensionPattern = /\.(?:[cm]?[tj]sx?)$/;
-const packageTestFilePattern = /^packages\/.+\/(?:test|dtslint)\/.+\.(?:ts|tsx)$/;
+const packageTestFilePattern = /^packages\/.+\/test\/.+\.(?:ts|tsx)$/;
 // Source-owned test helpers live under a package `src` tree, i.e. a `src`
-// directory segment appears before the `test`/`dtslint` boundary (e.g.
+// directory segment appears before the `test` boundary (e.g.
 // `packages/foo/src/internal/test/Example.test-kit.ts`). Package-level tests
 // such as `packages/foo/test/src/Example.test.ts` keep `src` after the
 // boundary and must stay in scope for import linting.
-const packageSourceOwnedTestPattern = /\/src\/(?:.*\/)?(?:test|dtslint)\//;
+const packageSourceOwnedTestPattern = /\/src\/(?:.*\/)?test\//;
 const stripKnownModuleExtension = Str.replace(moduleExtensionPattern, Str.empty);
 const bySourceRootLengthDescending = Order.mapInput(
   Order.Number,
@@ -305,7 +305,7 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     yield* Console.error(
-      "[check-package-test-imports] relative imports from package test/dtslint files into workspace src are not allowed. Use @beep/* package aliases."
+      "[check-package-test-imports] relative imports from package test files into workspace src are not allowed. Use @beep/* package aliases."
     );
 
     for (const violation of violations) {
@@ -316,19 +316,21 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
     return yield* failWithReportedExit("check-package-test-imports: violations found.");
   }
 
-  yield* Console.log("[check-package-test-imports] OK: package test/dtslint imports use package aliases.");
+  yield* Console.log("[check-package-test-imports] OK: package test imports use package aliases.");
 });
 
 /**
- * Lint command for enforcing package aliases from package test and dtslint files.
+ * Lint command for enforcing package aliases from package test files.
  *
- * @example
+ * **Example** (Run the package-test-imports lint command)
+ *
  * ```ts
  * console.log("bun run beep lint package-test-imports")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const lintPackageTestImportsCommand = Command.make("package-test-imports", {}, runLintPackageTestImports).pipe(
-  Command.withDescription("Check package test/dtslint files for relative imports into workspace src roots")
+  Command.withDescription("Check package test files for relative imports into workspace src roots")
 );

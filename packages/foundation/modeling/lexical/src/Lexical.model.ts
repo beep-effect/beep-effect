@@ -8,8 +8,8 @@
  * namespaces (required to break TS inference cycles through the recursive
  * `children`).
  *
- * The package has zero runtime `lexical` imports — `lexical` is a
- * devDependency for dtslint type-conformance tests only.
+ * The package has zero runtime `lexical` imports; Lexical devDependencies
+ * support compatibility checks in the unit tests.
  *
  * @packageDocumentation \@beep/lexical-schema/Lexical.model
  * @since 0.0.0
@@ -81,7 +81,8 @@ const YouTubeVideoIdFromLegacyInput = S.String.pipe(
 /**
  * Serialized Lexical node version accepted by this package.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -103,7 +104,8 @@ export const LexicalNodeVersion = S.Literal(1).pipe(
 /**
  * Type for {@link LexicalNodeVersion}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
  *
@@ -133,7 +135,8 @@ const TextFormatBitMapping = MappedLiteralKit([
 /**
  * Lexical TextFormatType flag values.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextFormatBits } from "@beep/lexical-schema/Lexical.model"
  *
@@ -148,7 +151,8 @@ export const TextFormatBits = TextFormatBitMapping.From.Enum;
 /**
  * Reusable literal domain for individual Lexical text format bits.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
  *
@@ -167,7 +171,8 @@ export const TextFormatBit = LiteralKit(TextFormatBitMapping.To.Options).pipe(
 /**
  * Type for {@link TextFormatBit}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
  *
@@ -183,7 +188,8 @@ export type TextFormatBit = typeof TextFormatBit.Type;
 /**
  * Bitwise union of every known Lexical text-format bit.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TEXT_FORMAT_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
@@ -212,7 +218,8 @@ const TextFormatMaskBase = NonNegativeInt.check(
 /**
  * Branded Lexical TextFormatType bitmask.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -230,7 +237,8 @@ export const TextFormatMask = TextFormatMaskBase;
 /**
  * Type for {@link TextFormatMask}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -246,7 +254,8 @@ export type TextFormatMask = typeof TextFormatMask.Type;
 /**
  * Returns whether a Lexical text-format mask contains a specific flag.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -267,7 +276,8 @@ export const hasTextFormat: {
 /**
  * Adds a Lexical text-format bit and rebrands the resulting valid mask.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -293,7 +303,8 @@ const TextDetailBitMapping = MappedLiteralKit([
 /**
  * Lexical TextDetailType flag values.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextDetailBits } from "@beep/lexical-schema/Lexical.model"
  *
@@ -308,7 +319,8 @@ export const TextDetailBits = TextDetailBitMapping.From.Enum;
 /**
  * Reusable literal domain for individual Lexical text detail bits.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
  *
@@ -327,7 +339,8 @@ export const TextDetailBit = LiteralKit(TextDetailBitMapping.To.Options).pipe(
 /**
  * Type for {@link TextDetailBit}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
  *
@@ -343,7 +356,8 @@ export type TextDetailBit = typeof TextDetailBit.Type;
 /**
  * Bitwise union of every known Lexical text-detail bit.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TEXT_DETAIL_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
@@ -372,7 +386,8 @@ const TextDetailMaskBase = NonNegativeInt.check(
 /**
  * Branded Lexical TextDetailType bitmask.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -390,7 +405,8 @@ export const TextDetailMask = TextDetailMaskBase;
 /**
  * Type for {@link TextDetailMask}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -406,7 +422,8 @@ export type TextDetailMask = typeof TextDetailMask.Type;
 /**
  * Non-negative Lexical indentation depth.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -429,7 +446,8 @@ export const LexicalIndentDepth = NonNegativeInt.pipe(
 /**
  * Type for {@link LexicalIndentDepth}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
@@ -445,7 +463,8 @@ export type LexicalIndentDepth = typeof LexicalIndentDepth.Type;
 /**
  * Lexical table cell header-state bitmask.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
  *
@@ -464,7 +483,8 @@ export const TableCellHeaderState = LiteralKit([0, 1, 2, 3]).pipe(
 /**
  * Type for {@link TableCellHeaderState}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
  *
@@ -480,7 +500,8 @@ export type TableCellHeaderState = typeof TableCellHeaderState.Type;
 /**
  * Positive span count for merged Lexical table cells.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -503,7 +524,8 @@ export const TableCellSpan = PosInt.pipe(
 /**
  * Type for {@link TableCellSpan}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
@@ -519,7 +541,8 @@ export type TableCellSpan = typeof TableCellSpan.Type;
 /**
  * Non-negative pixel-like table dimension emitted by Lexical table nodes.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -542,7 +565,8 @@ export const TableDimension = NonNegativeInt.pipe(
 /**
  * Type for {@link TableDimension}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
@@ -558,7 +582,8 @@ export type TableDimension = typeof TableDimension.Type;
 /**
  * Package-owned artifact reference id used by `artifact-ref` decorator nodes.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
@@ -586,7 +611,8 @@ export const ArtifactRefId = S.NonEmptyString.check(
 /**
  * Type for {@link ArtifactRefId}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
@@ -602,7 +628,8 @@ export type ArtifactRefId = typeof ArtifactRefId.Type;
 /**
  * `ElementFormatType` from lexical.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ElementFormat } from "@beep/lexical-schema/Lexical.model"
  *
@@ -622,7 +649,8 @@ export const ElementFormat = LiteralKit(["left", "start", "center", "right", "en
 /**
  * Type for {@link ElementFormat}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { ElementFormat } from "@beep/lexical-schema/Lexical.model"
  *
@@ -638,7 +666,8 @@ export type ElementFormat = typeof ElementFormat.Type;
 /**
  * Text direction token from lexical.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Direction } from "@beep/lexical-schema/Lexical.model"
  *
@@ -657,7 +686,8 @@ export const Direction = LiteralKit(["ltr", "rtl"]).pipe(
 /**
  * Type for {@link Direction}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { Direction } from "@beep/lexical-schema/Lexical.model"
  *
@@ -673,7 +703,8 @@ export type Direction = typeof Direction.Type;
 /**
  * `TextModeType` from lexical.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextMode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -692,7 +723,8 @@ export const TextMode = LiteralKit(["normal", "token", "segmented"]).pipe(
 /**
  * Type for {@link TextMode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { TextMode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -708,7 +740,8 @@ export type TextMode = typeof TextMode.Type;
 /**
  * `HeadingTagType` from `@lexical/rich-text`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { HeadingTag } from "@beep/lexical-schema/Lexical.model"
  *
@@ -727,7 +760,8 @@ export const HeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]).pipe(
 /**
  * Type for {@link HeadingTag}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { HeadingTag } from "@beep/lexical-schema/Lexical.model"
  *
@@ -743,7 +777,8 @@ export type HeadingTag = typeof HeadingTag.Type;
 /**
  * `ListType` from `@lexical/list`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ListType } from "@beep/lexical-schema/Lexical.model"
  *
@@ -762,7 +797,8 @@ export const ListType = LiteralKit(["number", "bullet", "check"]).pipe(
 /**
  * Type for {@link ListType}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { ListType } from "@beep/lexical-schema/Lexical.model"
  *
@@ -778,7 +814,8 @@ export type ListType = typeof ListType.Type;
 /**
  * `ListNodeTagType` from `@lexical/list`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ListTag } from "@beep/lexical-schema/Lexical.model"
  *
@@ -797,7 +834,8 @@ export const ListTag = LiteralKit(["ul", "ol"]).pipe(
 /**
  * Type for {@link ListTag}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { ListTag } from "@beep/lexical-schema/Lexical.model"
  *
@@ -824,7 +862,8 @@ const SafeInlineStyleType = S.String.check(
  * decode and encode so that neither persisted untrusted state nor re-encoded
  * viewer/composer state can carry attacker-controlled CSS into the DOM.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -856,7 +895,8 @@ export const SafeInlineStyle = S.String.pipe(
 /**
  * Type for {@link SafeInlineStyle}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
@@ -883,7 +923,8 @@ const SafeStyleValueType = S.String.check(
  * `verticalAlign`) sanitized at the schema boundary so the bare-value sink
  * cannot smuggle extra declarations or URL/function constructs into the DOM.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -913,7 +954,8 @@ export const SafeStyleValue = S.String.pipe(
 /**
  * Type for {@link SafeStyleValue}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
@@ -939,7 +981,8 @@ const SafeUrlType = S.String.check(
  * Serialized Lexical link URL sanitized at the schema boundary before an
  * untrusted editor state reaches an anchor `href` sink.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -967,7 +1010,8 @@ export const SafeUrl = S.String.pipe(
 /**
  * Type for {@link SafeUrl}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
@@ -984,7 +1028,8 @@ export type SafeUrl = typeof SafeUrl.Type;
  * Mirrors `SerializedLexicalNode`. The `type` discriminant is added by each
  * concrete subclass via `S.tag(...)`. `"$"` is `NODE_STATE_KEY`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { BaseNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1019,7 +1064,8 @@ export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
 /**
  * Companion namespace for {@link BaseNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1076,7 +1122,8 @@ const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode
  * schema package owns the persisted contract and must not couple to one
  * Lexical release's wire shape.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ElementNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1129,7 +1176,8 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
 /**
  * Companion namespace for {@link ElementNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1181,7 +1229,8 @@ export declare namespace ElementNode {
  * `.extend` would intersect `{type: "tab"} & {type: "text"}` into `never`),
  * so lexical's `TabNode extends TextNode` becomes two siblings of TextBase.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TextBase } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1209,7 +1258,8 @@ export class TextBase extends BaseNode.extend<TextBase>($I`TextBase`)(
 /**
  * Companion namespace for {@link TextBase}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1257,7 +1307,8 @@ export declare namespace TextBase {
 /**
  * Mirrors `SerializedTextNode`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1282,7 +1333,8 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
 /**
  * Companion namespace for {@link TextNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1322,7 +1374,8 @@ export declare namespace TextNode {
 /**
  * Mirrors `SerializedTabNode`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1347,7 +1400,8 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
 /**
  * Companion namespace for {@link TabNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1387,7 +1441,8 @@ export declare namespace TabNode {
 /**
  * Mirrors `SerializedLineBreakNode`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1410,7 +1465,8 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
 /**
  * Companion namespace for {@link LineBreakNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1449,7 +1505,8 @@ export declare namespace LineBreakNode {
 /**
  * Mirrors `SerializedRootNode`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { RootNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1469,7 +1526,8 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
 /**
  * Companion namespace for {@link RootNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1508,7 +1566,8 @@ export declare namespace RootNode {
 /**
  * Mirrors `SerializedParagraphNode`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ParagraphNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1528,7 +1587,8 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
 /**
  * Companion namespace for {@link ParagraphNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1567,7 +1627,8 @@ export declare namespace ParagraphNode {
 /**
  * Mirrors `SerializedHeadingNode` from `@lexical/rich-text`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { HeadingNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1588,7 +1649,8 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
 /**
  * Companion namespace for {@link HeadingNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1630,7 +1692,8 @@ export declare namespace HeadingNode {
 /**
  * Mirrors `SerializedQuoteNode` from `@lexical/rich-text`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1650,7 +1713,8 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
 /**
  * Companion namespace for {@link QuoteNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1717,7 +1781,8 @@ const ListNodeFields = S.Struct({
 /**
  * Mirrors `SerializedListNode` from `@lexical/list`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ListNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1743,7 +1808,8 @@ export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
 /**
  * Companion namespace for {@link ListNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1790,7 +1856,8 @@ export declare namespace ListNode {
  * Mirrors `SerializedListItemNode` from `@lexical/list` — `checked` is
  * `boolean | undefined` on the wire.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { ListItemNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1825,7 +1892,8 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
 /**
  * Companion namespace for {@link ListItemNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1869,7 +1937,8 @@ export declare namespace ListItemNode {
 /**
  * Mirrors `SerializedLinkNode` from `@lexical/link`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { LinkNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1902,7 +1971,8 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
 /**
  * Companion namespace for {@link LinkNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1951,7 +2021,8 @@ export declare namespace LinkNode {
  * Mirrors `SerializedCodeNode` from `@lexical/code` — `language` is
  * `string | null | undefined` on the wire.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { CodeNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1981,7 +2052,8 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
 /**
  * Companion namespace for {@link CodeNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2026,7 +2098,8 @@ export declare namespace CodeNode {
  * runtime artifact, rendered as a chip in the editor and round-tripped to
  * `@beep/md` as a paragraph wrapping an `artifact://` link.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2058,7 +2131,8 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
 /**
  * Companion namespace for {@link ArtifactRefNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2105,7 +2179,8 @@ export declare namespace ArtifactRefNode {
  * Mirrors the serialized shape used by the editor runtime:
  * `{ type: "youtube", videoID, format }`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2137,7 +2212,8 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
 /**
  * Companion namespace for {@link YouTubeNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2181,7 +2257,8 @@ export declare namespace YouTubeNode {
 /**
  * Serialized table cell node from `@lexical/table`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TableCellNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2241,7 +2318,8 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
 /**
  * Companion namespace for {@link TableCellNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2293,7 +2371,8 @@ export declare namespace TableCellNode {
 /**
  * Serialized table row node from `@lexical/table`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TableRowNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2326,7 +2405,8 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
 /**
  * Companion namespace for {@link TableRowNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2367,7 +2447,8 @@ export declare namespace TableRowNode {
 /**
  * Serialized table node from `@lexical/table`.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { TableNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2407,7 +2488,8 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
 /**
  * Companion namespace for {@link TableNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2484,7 +2566,8 @@ const RawLexicalNode = S.Union([
  * The strict tagged union of all v1 serialized Lexical nodes, discriminated by
  * Lexical's own `type` key and validated against the recursive child grammar.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2518,7 +2601,8 @@ export const LexicalNode = RawLexicalNode.check(
 /**
  * {@inheritDoc LexicalNode}
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2534,7 +2618,8 @@ export type LexicalNode = typeof LexicalNode.Type;
 /**
  * Companion namespace for {@link LexicalNode}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2663,11 +2748,13 @@ const StrictRootNode = RootNode.check(
 /**
  * Models the strict runtime-compatible subset of `SerializedEditorState`.
  *
- * @remarks
+ * **Details**
+ *
  * Use {@link SerializedEditorStateWire} when persistence or migration must
  * retain runtime-incompatible wire, including an empty root.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2700,7 +2787,8 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
   /**
    * Soft-decodes an unknown serialized editor-state payload.
    *
-   * @example
+   * **Example** (Use the lexical model)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
@@ -2729,7 +2817,8 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
 /**
  * Companion namespace for {@link SerializedEditorState}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2776,7 +2865,8 @@ export declare namespace SerializedEditorState {
 /**
  * JSON-only wire node that retains unknown node types, versions, and fields.
  *
- * @remarks
+ * **Details**
+ *
  * This is a persistence and migration shape, not a render-safe semantic node.
  * Decode through {@link decodeEditorStateStrict} before using values in editor
  * behavior or DOM adapters. `StructWithRest` is intentional here: Effect
@@ -2784,7 +2874,8 @@ export declare namespace SerializedEditorState {
  * future keys. Replacing this open wire object with a class would discard
  * unknown fields, versions, or `"$"` NodeState and violate lossless identity.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -2816,7 +2907,8 @@ export const LexicalNodeWire = S.StructWithRest(
 /**
  * Runtime type for {@link LexicalNodeWire}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2832,7 +2924,8 @@ export type LexicalNodeWire = typeof LexicalNodeWire.Type;
 /**
  * Companion opaque JSON types for {@link LexicalNodeWire}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2864,13 +2957,15 @@ export declare namespace LexicalNodeWire {
 /**
  * Lossless JSON-only editor-state envelope.
  *
- * @remarks
+ * **Details**
+ *
  * This is deliberately an open `StructWithRest`, not a class model. Both the
  * envelope and root may carry future extension fields, while root `children`
  * must remain an array of open {@link LexicalNodeWire} values. A closed class
  * would discard top-level or root extensions and break exact wire identity.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -2908,7 +3003,8 @@ export const SerializedEditorStateWire = S.StructWithRest(
 /**
  * Runtime type for {@link SerializedEditorStateWire}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import type { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2924,7 +3020,8 @@ export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
 /**
  * Lossless editor-state wire codec over a JSON string.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -2948,7 +3045,8 @@ export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWir
 /**
  * Typed failure raised by strict or lossless editor-state decoding.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
@@ -2972,7 +3070,8 @@ export class LexicalDecodeError extends CauseTaggedError<LexicalDecodeError>($I`
 /**
  * Reason a lossless wire payload cannot be used as a strict semantic state.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { LexicalCompatibilityIssue } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3002,7 +3101,8 @@ export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue
  * Compatibility inspection retaining lossless wire alongside an optional
  * strict semantic state.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
@@ -3035,7 +3135,8 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
   /**
    * Whether the wire can be consumed through the strict semantic model.
    *
-   * @example
+   * **Example** (Use the lexical model)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
@@ -3072,7 +3173,8 @@ const losslessEditorStateDecodeError = LexicalDecodeError.new(
  * render admission. Effectful callers should prefer
  * {@link decodeEditorStateStrict}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { decodeEditorStateStrictResult } from "@beep/lexical-schema/Lexical.model"
@@ -3100,12 +3202,14 @@ export const decodeEditorStateStrictResult = (
 /**
  * Decodes an unknown payload into the supported strict semantic editor state.
  *
- * @remarks
+ * **Details**
+ *
  * Excess fields, invalid topology, and empty roots that Lexical cannot apply
  * are errors. Use {@link decodeEditorStateLossless} when their exact wire must
  * be retained for migration or read-only fallback.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
@@ -3131,7 +3235,8 @@ export const decodeEditorStateStrict = (input: unknown): Effect.Effect<Serialize
 /**
  * Decodes an unknown payload into the JSON-only lossless wire model.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateLossless } from "@beep/lexical-schema/Lexical.model"
@@ -3157,7 +3262,8 @@ export const decodeEditorStateLossless = (
  * This Result boundary is intended for synchronous framework rendering.
  * Effectful callers should prefer {@link analyzeEditorStateCompatibility}.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
@@ -3192,7 +3298,8 @@ export const analyzeEditorStateCompatibilityResult = (
 /**
  * Retains lossless wire and reports whether strict semantic decoding succeeds.
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
@@ -3215,7 +3322,8 @@ export const analyzeEditorStateCompatibility = (
  * The same envelope, but encoding directly to/from a JSON string (for
  * persistence boundaries).
  *
- * @example
+ * **Example** (Use the lexical model)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"

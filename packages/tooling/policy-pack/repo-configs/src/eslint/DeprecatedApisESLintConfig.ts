@@ -97,8 +97,6 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
       parserOptions: {
         projectService: {
           allowDefaultProject: [
-            "apps/*/dtslint/*.ts",
-            "apps/*/dtslint/*.tsx",
             "apps/*/scripts/*.ts",
             "packages/_internal/*/drizzle.config.ts",
             "packages/_internal/*/scripts/*.ts",

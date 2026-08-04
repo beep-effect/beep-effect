@@ -43,7 +43,7 @@ bun run test:integration
 bun run lint
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/agents-server` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/agents-server` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 The `scanChunk` extractor is property-test-proven: its slices are exactly the
 envelope's elements regardless of how the structured-output text is chunked.

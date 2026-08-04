@@ -73,9 +73,8 @@ const templateDirCandidates = (baseDir: string, path: Path.Path): ReadonlyArray<
  * A legacy dist fallback is retained so existing copied templates still work
  * in environments that already have them on disk.
  *
- * @param baseDir - Optional command module directory override (defaults to current module directory).
- * @returns Resolved template directory path.
- * @example
+ * **Example** (Run the create-package command)
+ *
  * ```ts
  * import { resolveCreatePackageTemplateDir } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -83,6 +82,9 @@ const templateDirCandidates = (baseDir: string, path: Path.Path): ReadonlyArray<
  * const program = Effect.succeed(resolveCreatePackageTemplateDir)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param baseDir - Optional command module directory override (defaults to current module directory).
+ * @returns Resolved template directory path.
  * @category models
  * @since 0.0.0
  */
@@ -398,7 +400,6 @@ const PACKAGE_FILES = [
   "tsconfig.test.json",
   "src/index.ts",
   "test/.gitkeep",
-  "dtslint/.gitkeep",
   "LICENSE",
   "README.md",
   "AGENTS.md",
@@ -473,7 +474,7 @@ const filesFor: (appKind: O.Option<AppKind>, withStoriesTsconfig: boolean) => Re
  * @category configuration
  * @since 0.0.0
  */
-const PACKAGE_DIRECTORIES = ["src", "test", "dtslint", "docs"] as const;
+const PACKAGE_DIRECTORIES = ["src", "test", "docs"] as const;
 const STORIES_DIRECTORIES = ["stories"] as const;
 const NEXTJS_APP_DIRECTORIES = ["src", "src/app", "test"] as const;
 const TAURI_APP_DIRECTORIES = ["src", "test", "src-tauri", "src-tauri/capabilities", "src-tauri/src"] as const;
@@ -500,10 +501,7 @@ const directoriesFor: (appKind: O.Option<AppKind>, withStoriesTsconfig: boolean)
 const gitkeepFilesFor = (appKind: O.Option<AppKind>): ReadonlyArray<PlannedFile> =>
   O.isSome(appKind) && !appKindEquivalence(appKind.value, "runtime-proof")
     ? A.empty<PlannedFile>()
-    : [
-        PlannedFile.make({ relativePath: "test/.gitkeep", content: "" }),
-        PlannedFile.make({ relativePath: "dtslint/.gitkeep", content: "" }),
-      ];
+    : [PlannedFile.make({ relativePath: "test/.gitkeep", content: "" })];
 
 const appKindIs = (appKind: O.Option<AppKind>, kind: AppKind): boolean =>
   O.isSome(appKind) && appKindEquivalence(appKind.value, kind);
@@ -518,7 +516,8 @@ const fileGenerationPlanService = createFileGenerationPlanService();
 /**
  * Variables passed into every template during package scaffolding.
  *
- * @example
+ * **Example** (Run the create-package command)
+ *
  * ```ts
  * import { TemplateContext } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -526,6 +525,7 @@ const fileGenerationPlanService = createFileGenerationPlanService();
  * const candidate = { domain: "foundation", family: "modeling", name: "example", packageName: "@beep/example" }
  * console.log(S.is(TemplateContext)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -587,6 +587,7 @@ const parseJsonDocument: {
   })
 );
 
+// fallow-ignore-next-line code-duplication -- converged with TsconfigSync's twin after the tstyche removal; consolidation onto @beep/repo-utils workspaceGlobsFrom/readPackageJsonFile is a recorded quality-speedup follow-up
 const readRootPackageJsonDocument = Effect.fn(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -754,7 +755,8 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  * CLI command that scaffolds a new package with templates, a Schema-validated
  * `package.json`, root workspace registration, identity registration, and shared repo config synchronization.
  *
- * @example
+ * **Example** (Run the create-package command)
+ *
  * ```ts
  * import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage"
  * import { Command } from "effect/unstable/cli"
@@ -763,6 +765,7 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  * const run = Command.run(createPackageCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -1060,7 +1063,7 @@ export const createPackageCommand = Command.make(
             ? `Register "${name}" and export ${toIdentityAccessorName(name)}`
             : "SKIP (already registered)"
         }`,
-        `[dry-run] Derived repo configs: shared sync runs after scaffolding to update tsconfig references, aliases, tstyche, syncpack, and docgen`,
+        `[dry-run] Derived repo configs: shared sync runs after scaffolding to update tsconfig references, aliases, syncpack, and docgen`,
         `[dry-run] Lockfile: ${skipLockfile ? "SKIP (--skip-lockfile)" : "bun install --lockfile-only"}`,
       ]);
 

@@ -16,6 +16,7 @@ import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, N, O, P } from "@beep/utils";
 import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
+import { invoke } from "@tauri-apps/api/core";
 import { Effect, Match, Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -568,8 +569,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       }).pipe(Effect.andThen(Effect.sync(() => globalThis.window.prompt("Workspace vault path"))));
       const selected = yield* hasTauriRuntime()
         ? Effect.tryPromise({
-            try: () =>
-              import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory")),
+            try: () => invoke<string | null>("select_vault_directory"),
             catch: (cause) => VaultDirectoryPickerInvocationError.make({ cause }),
           }).pipe(
             Effect.tapCause((cause) =>

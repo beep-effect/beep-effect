@@ -56,7 +56,7 @@ export const GENERATED_MANAGERS: ReadonlyArray<string> = [
   "avatars",
   // Box.streaming.ts — chunked upload session lifecycle.
   "chunkedUploads",
-  // Box.streaming.ts — byte downloads; test/dtslint surface.
+  // Box.streaming.ts — byte downloads; test surface.
   "downloads",
   // DmsMirrorBox.ts (event polling); Box.streaming.ts (event stream); tests.
   "events",

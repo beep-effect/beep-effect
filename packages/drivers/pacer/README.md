@@ -77,7 +77,7 @@ bun run test
 bun run lint:fix
 ```
 
-No live integration tests or live runner are committed. Tests and dtslint files import package source through `@beep/pacer` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+No live integration tests or live runner are committed. Tests import package source through `@beep/pacer` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 

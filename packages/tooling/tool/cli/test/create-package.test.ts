@@ -63,10 +63,6 @@ const StoriesTsconfig = S.Struct({
 const StoriesDirectoryTsconfig = S.Struct({
   extends: S.Literal("../tsconfig.stories.json"),
 });
-const TstycheConfig = S.Struct({
-  testFileMatch: S.Array(S.String),
-  tsconfig: S.String,
-});
 const GeneratedPackageManifest = S.Struct({
   scripts: S.Record(S.String, S.String),
   exports: S.optionalKey(S.Unknown),
@@ -99,7 +95,6 @@ const DriverPackageMetadata = S.Struct({
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
-const decodeTstycheConfig = S.decodeUnknownSync(TstycheConfig);
 const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
 const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
 const decodePackageScripts = S.decodeUnknownSync(PackageScripts);
@@ -296,7 +291,6 @@ const bootstrapIdentityWorkspace = Effect.fn(function* (
   });
   yield* writeTextFile(path.join(identityDir, "src", "index.ts"), `export * from "./packages.ts";\n`);
   yield* writeTextFile(path.join(identityDir, "src", "Id.ts"), `export type IdentityComposer<T extends string> = T;\n`);
-  yield* writeTextFile(path.join(identityDir, "dtslint", ".gitkeep"), "");
   yield* writeTextFile(
     path.join(identityDir, "src", "packages.ts"),
     `import * as Identity from "./Id.ts";
@@ -320,7 +314,6 @@ type RootConfigOptions = {
   readonly workspaces: ReadonlyArray<string>;
   readonly references: ReadonlyArray<string>;
   readonly paths: Record<string, ReadonlyArray<string>>;
-  readonly testFileMatch: ReadonlyArray<string>;
   readonly syncpackSources: ReadonlyArray<string>;
 };
 
@@ -346,10 +339,6 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
     references: A.map(options.references, (referencePath) => ({ path: referencePath })),
   });
-  yield* writeJsonFile(path.join(rootDir, "tstyche.json"), {
-    testFileMatch: options.testFileMatch,
-    tsconfig: "./tsconfig.dtslint.json",
-  });
   yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
 });
 
@@ -361,10 +350,6 @@ describe("create-package", { concurrent: false }, () => {
       "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
       "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
     },
-    testFileMatch: [
-      "packages/foundation/*/*/dtslint/**/*.tst.*",
-      "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
-    ],
     syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
   } satisfies RootConfigOptions;
 
@@ -375,7 +360,6 @@ describe("create-package", { concurrent: false }, () => {
       "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
       "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
     },
-    testFileMatch: ["packages/*/dtslint/**/*.tst.*", "packages/foundation/modeling/identity/dtslint/**/*.tst.*"],
     syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
   } satisfies RootConfigOptions;
 
@@ -386,7 +370,6 @@ describe("create-package", { concurrent: false }, () => {
       "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
       "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
     },
-    testFileMatch: ["packages/foundation/modeling/identity/dtslint/**/*.tst.*"],
     syncpackSources: ["package.json", "packages/foundation/modeling/identity/package.json"],
   } satisfies RootConfigOptions;
 
@@ -502,16 +485,6 @@ describe("create-package", { concurrent: false }, () => {
               "packages/foundation/modeling/identity",
             ]);
 
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual([
-              "packages/foundation/*/*/dtslint/**/*.tst.*",
-              "packages/example-domain/dtslint/**/*.tst.*",
-            ]);
-            expect(tstycheConfig.tsconfig).toBe("./tsconfig.dtslint.json");
-            expect(yield* fs.exists(path.join(rootDir, "packages", "example-domain", "dtslint", "tsconfig.json"))).toBe(
-              false
-            );
-
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"packages/example-domain/package.json"`);
 
@@ -567,8 +540,6 @@ describe("create-package", { concurrent: false }, () => {
 
             expect(generatedPackage.scripts).toMatchObject(ExpectedNextjsAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
-            expect(generatedPackage.scripts.dtslint).toBeUndefined();
-            expect(generatedPackage.scripts["type-test"]).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();
             expect(generatedPackage.publishConfig).toBeUndefined();
@@ -579,7 +550,6 @@ describe("create-package", { concurrent: false }, () => {
             });
 
             expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "dtslint"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "src", "app", "page.tsx"))).toBe(true);
 
@@ -591,9 +561,6 @@ describe("create-package", { concurrent: false }, () => {
             const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web/*"]).toBeUndefined();
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/modeling/identity/dtslint/**/*.tst.*"]);
 
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"apps/marketing-web/package.json"`);
@@ -630,8 +597,6 @@ describe("create-package", { concurrent: false }, () => {
 
             expect(generatedPackage.scripts).toMatchObject(ExpectedTauriAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
-            expect(generatedPackage.scripts.dtslint).toBeUndefined();
-            expect(generatedPackage.scripts["type-test"]).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();
             expect(generatedPackage.publishConfig).toBeUndefined();
@@ -642,7 +607,6 @@ describe("create-package", { concurrent: false }, () => {
             });
 
             expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "dtslint"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "src-tauri", "tauri.conf.json"))).toBe(true);
@@ -660,9 +624,6 @@ describe("create-package", { concurrent: false }, () => {
             const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell/*"]).toBeUndefined();
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/modeling/identity/dtslint/**/*.tst.*"]);
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "desktop-shell", "DesktopShell");
           })
@@ -701,7 +662,6 @@ describe("create-package", { concurrent: false }, () => {
               "./package.json": "./package.json",
             });
             expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "dtslint"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(true);
 
             const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
@@ -709,9 +669,6 @@ describe("create-package", { concurrent: false }, () => {
               "@beep/runtime-proof-lab": ["./apps/runtime-proof-lab/src/index.ts"],
               "@beep/runtime-proof-lab/*": ["./apps/runtime-proof-lab/src/*"],
             });
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toContain("apps/runtime-proof-lab/dtslint/**/*.tst.*");
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "runtime-proof-lab", "RuntimeProofLab");
           })
@@ -764,9 +721,6 @@ describe("create-package", { concurrent: false }, () => {
               "@beep/schema-kit": ["./packages/foundation/modeling/schema-kit/src/index.ts"],
               "@beep/schema-kit/*": ["./packages/foundation/modeling/schema-kit/src/*"],
             });
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/*/*/dtslint/**/*.tst.*"]);
 
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"packages/foundation/*/*/package.json"`);
@@ -877,91 +831,6 @@ describe("create-package", { concurrent: false }, () => {
   );
 
   it(
-    "adds tstyche coverage for uncovered nested package paths",
-    () =>
-      Effect.runPromise(
-        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
-          Effect.gen(function* () {
-            yield* bootstrapIdentityWorkspace(rootDir);
-
-            yield* runCreatePackageCommand([
-              "telemetry",
-              "--parent-dir",
-              "packages/foundation/modeling",
-              "--description",
-              "A telemetry package",
-            ]);
-
-            const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
-            expect(rootPackage.workspaces).toEqual([
-              "packages/foundation/modeling/identity",
-              "packages/foundation/modeling/telemetry",
-            ]);
-
-            const packageRefs = decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-            );
-            expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
-              "packages/foundation/modeling/identity",
-              "packages/foundation/modeling/telemetry",
-            ]);
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toContain("packages/foundation/modeling/telemetry/dtslint/**/*.tst.*");
-            expect(tstycheConfig.tsconfig).toBe("./tsconfig.dtslint.json");
-            expect(
-              yield* fs.exists(
-                path.join(rootDir, "packages", "foundation", "modeling", "telemetry", "dtslint", "tsconfig.json")
-              )
-            ).toBe(false);
-
-            const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
-            expect(syncpackConfig).toContain(`"packages/foundation/modeling/telemetry/package.json"`);
-
-            yield* expectIdentityRegistration({ fs, path, rootDir }, "telemetry", "Telemetry");
-          })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
-
-  it(
-    "does not duplicate tstyche entries when a covered parent dtslint glob already exists",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const rootDir = process.cwd();
-
-            yield* bootstrapFoundationIdentityRoot(rootDir);
-
-            yield* runCreatePackageCommand([
-              "audit-log",
-              "--parent-dir",
-              "packages/foundation/modeling",
-              "--description",
-              "An audit log package",
-            ]);
-
-            const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/*/*/dtslint/**/*.tst.*"]);
-            expect(tstycheConfig.testFileMatch).not.toContain(
-              "packages/foundation/modeling/audit-log/dtslint/**/*.tst.*"
-            );
-            expect(
-              yield* fs.exists(
-                path.join(rootDir, "packages", "foundation", "modeling", "audit-log", "dtslint", "tsconfig.json")
-              )
-            ).toBe(false);
-          })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
-
-  it(
     "creates canonical tooling packages with family metadata",
     () =>
       Effect.runPromise(
@@ -975,11 +844,6 @@ describe("create-package", { concurrent: false }, () => {
               "@beep/repo-cli": ["./packages/tooling/tool/cli/src/index.ts"],
               "@beep/repo-cli/*": ["./packages/tooling/tool/cli/src/*"],
             },
-            testFileMatch: [
-              "packages/*/dtslint/**/*.tst.*",
-              "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
-              "packages/tooling/tool/cli/dtslint/**/*.tst.*",
-            ],
             syncpackSources: [
               "package.json",
               "packages/foundation/*/*/package.json",
@@ -1068,10 +932,6 @@ describe("create-package", { concurrent: false }, () => {
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
             },
-            testFileMatch: [
-              "packages/drivers/*/dtslint/**/*.tst.*",
-              "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
-            ],
             syncpackSources: [
               "package.json",
               "packages/foundation/*/*/package.json",

@@ -65,15 +65,6 @@ const writeRootConfigFiles = Effect.fn(function* (rootDir: string) {
 }
 `
   );
-  yield* fs.writeFileString(
-    path.join(rootDir, "tstyche.json"),
-    `{
-  "testFileMatch": [
-    "packages/foundation/modeling/identity/dtslint/**/*.tst.*"
-  ]
-}
-`
-  );
 });
 
 describe("create-package security", () => {
@@ -115,7 +106,6 @@ describe("create-package security", () => {
 
           expect(result.tsconfigPackages).toBe(false);
           expect(result.tsconfigPaths).toBe(false);
-          expect(result.tstycheConfig).toBe(false);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));

@@ -186,7 +186,6 @@ const config: ViteUserConfig = {
         "dist/",
         "benchmark/",
         "bundle/",
-        "**/dtslint/**",
         "build/",
         "coverage/",
         "test/utils/",

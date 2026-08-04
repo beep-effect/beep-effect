@@ -30,15 +30,11 @@ import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect, FileSystem, flow, HashMap, HashSet, Path, pipe } from "effect";
-import { constTrue, dual } from "effect/Function";
+import { constTrue } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  applyJsoncModification as applySharedJsoncModification,
-  decodeJsoncTextAs,
-  jsonText,
-} from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
   byPlannedChangeAscending,
@@ -50,7 +46,6 @@ import {
   isRootDepIndexKey,
   JsonObject,
   PlannedFileChange,
-  ROOT_TSTYCHE_TSCONFIG,
   stringArrayEquivalence,
   TsconfigSyncChange,
   TsconfigSyncSchemaInternals,
@@ -94,14 +89,6 @@ const parseJsonObject = Effect.fn(function* (content: string, filePath: string) 
   );
 });
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const renderJson: (value: unknown) => Effect.Effect<string, DomainError> = Effect.fn(function* (value) {
-  const encoded = yield* encodeJson(value).pipe(
-    Effect.mapError(DomainError.newCause("Failed to encode tsconfig-sync JSON output."))
-  );
-  return `${jsonText(encoded)}\n`;
-});
-
 const renderDocgenJson = Effect.fn(function* (filePath: string, value: unknown) {
   return yield* renderBiomeJson(filePath, value);
 });
@@ -132,7 +119,8 @@ const readFileString = Effect.fn(function* (filePath: string) {
 /**
  * Write a generated config file with DomainError context.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { writeFileString } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -141,6 +129,7 @@ const readFileString = Effect.fn(function* (filePath: string) {
  * const program = writeFileString("/repo/tsconfig.json", "{}\n")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -167,11 +156,8 @@ const applyJsoncModification = (
 /**
  * Render a file path relative to the repository root.
  *
- * @param rootDir - Absolute repository root the path is made relative to.
- * @param filePath - Absolute file path to render relative to the root.
- * @param path - Effect `Path` service used to compute the relative path.
- * @returns The POSIX-normalized path of `filePath` relative to `rootDir`.
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { relativeFromRoot } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect, Path } from "effect"
@@ -182,6 +168,11 @@ const applyJsoncModification = (
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param rootDir - Absolute repository root the path is made relative to.
+ * @param filePath - Absolute file path to render relative to the root.
+ * @param path - Effect `Path` service used to compute the relative path.
+ * @returns The POSIX-normalized path of `filePath` relative to `rootDir`.
  * @category utilities
  * @since 0.0.0
  */
@@ -191,6 +182,7 @@ const relativeFromRoot = (rootDir: string, filePath: string, path: Path.Path): s
 const normalizeRelativeRef = (sourceDir: string, targetPath: string, path: Path.Path): string =>
   toPosixPath(path.relative(sourceDir, targetPath));
 
+// fallow-ignore-next-line code-duplication -- converged with CreatePackage's twin after the tstyche removal; consolidation onto @beep/repo-utils workspaceGlobsFrom/readPackageJsonFile is a recorded quality-speedup follow-up
 const workspacePatternsFromPackageJson = (
   workspaces: O.Option<ReadonlyArray<string> | { readonly packages?: ReadonlyArray<string> }>
 ): ReadonlyArray<string> => {
@@ -213,80 +205,6 @@ const workspacePatternsFromPackageJson = (
   }
 
   return A.empty();
-};
-
-const pathSegments: (value: string) => ReadonlyArray<string> = flow(
-  toPosixPath,
-  Str.split("/"),
-  A.filter(Str.isNonEmpty)
-);
-
-const readStringArray = (value: unknown): ReadonlyArray<string> =>
-  A.isArray(value) && A.every(value, P.isString) ? value : A.empty<string>();
-
-const readTstycheTestFileMatch = (parsed: Record<string, unknown>): ReadonlyArray<string> =>
-  readStringArray(parsed.testFileMatch);
-
-const readTstycheTsconfig = (parsed: Record<string, unknown>): string | undefined =>
-  P.isString(parsed.tsconfig) ? parsed.tsconfig : undefined;
-
-const isManagedTstycheWorkspace = (relativeDir: string): boolean =>
-  Str.startsWith("packages/")(relativeDir) || Str.startsWith("apps/")(relativeDir);
-
-const workspacePatternCoversPath: {
-  (workspacePattern: string, relativeDir: string): boolean;
-  (relativeDir: string): (workspacePattern: string) => boolean;
-} = dual(2, (workspacePattern: string, relativeDir: string): boolean => {
-  const patternSegments = pathSegments(workspacePattern);
-  const pathParts = pathSegments(relativeDir);
-
-  if (A.length(patternSegments) !== A.length(pathParts)) {
-    return false;
-  }
-
-  for (const [index, segment] of A.entries(patternSegments)) {
-    if (segment !== "*" && !Str.equivalence(segment, pathParts[index] ?? "")) {
-      return false;
-    }
-  }
-
-  return true;
-});
-
-const buildCanonicalTstycheTestFileMatch = (
-  workspaces: ReadonlyArray<WorkspaceDescriptor>,
-  workspacePatterns: ReadonlyArray<string>
-): ReadonlyArray<string> => {
-  const managedWorkspaces = pipe(
-    workspaces,
-    A.filter((workspace) => isManagedTstycheWorkspace(workspace.relativeDir))
-  );
-  const managedWorkspacePatterns = pipe(
-    workspacePatterns,
-    A.filter(isManagedTstycheWorkspace),
-    A.filter((pattern) => {
-      const coveredWorkspaces = A.filter(managedWorkspaces, (workspace) =>
-        workspacePatternCoversPath(pattern, workspace.relativeDir)
-      );
-      return (
-        !A.isArrayEmpty(coveredWorkspaces) && A.every(coveredWorkspaces, (workspace) => workspace.hasDtslintDirectory)
-      );
-    })
-  );
-  const workspacePatternEntries = pipe(
-    managedWorkspacePatterns,
-    A.map((pattern) => `${pattern}/dtslint/**/*.tst.*`)
-  );
-  const explicitWorkspacePatterns = pipe(
-    managedWorkspaces,
-    A.filter((workspace) => workspace.hasDtslintDirectory),
-    A.map((workspace) => workspace.relativeDir),
-    A.filter((relativeDir) => !A.some(managedWorkspacePatterns, workspacePatternCoversPath(relativeDir))),
-    A.map((relativeDir) => `${relativeDir}/dtslint/**/*.tst.*`),
-    A.sort(byStringAscending)
-  );
-
-  return A.dedupe([...workspacePatternEntries, ...explicitWorkspacePatterns]);
 };
 
 const SYNCPACK_SOURCE_ARRAY_PATTERN = /source:\s*\[(?<body>[\s\S]*?)\],/m;
@@ -345,7 +263,8 @@ const workspaceContainsPath = (workspace: WorkspaceDescriptor, targetPath: strin
 /**
  * Discover workspace descriptors used by tsconfig-sync planners.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { buildWorkspaceDescriptors } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -354,6 +273,7 @@ const workspaceContainsPath = (workspace: WorkspaceDescriptor, targetPath: strin
  * const program = buildWorkspaceDescriptors("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -386,9 +306,6 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
     );
     const hasDocgenConfig = yield* fs
       .exists(path.join(absoluteDir, DOCGEN_CONFIG_FILENAME))
-      .pipe(Effect.orElseSucceed(thunkFalse));
-    const hasDtslintDirectory = yield* fs
-      .exists(path.join(absoluteDir, "dtslint"))
       .pipe(Effect.orElseSucceed(thunkFalse));
     const aliasTargets = pipe(
       packageJson.exports,
@@ -440,7 +357,6 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
         relativeDir,
         ownerTsconfigPath,
         hasProjectTsconfig,
-        hasDtslintDirectory,
         hasDocgenConfig,
         ...aliasTargetFields,
       })
@@ -453,9 +369,8 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
 /**
  * Build the workspace dependency adjacency map.
  *
- * @param depIndex - Dependency index mapping each package to its workspace dependencies.
- * @returns An adjacency map from each package name to the set of packages it depends on.
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { HashMap } from "effect"
@@ -463,6 +378,9 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
  * // An empty dependency index yields an empty adjacency map.
  * console.log(HashMap.size(buildAdjacency(HashMap.empty()))) // 0
  * ```
+ *
+ * @param depIndex - Dependency index mapping each package to its workspace dependencies.
+ * @returns An adjacency map from each package name to the set of packages it depends on.
  * @category utilities
  * @since 0.0.0
  */
@@ -512,7 +430,8 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
 /**
  * Plan root tsconfig package-reference edits.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { planRootReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -520,6 +439,7 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
  * const program = planRootReferenceSync("/repo", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -669,7 +589,8 @@ const pathValuesEqual = (currentValue: unknown, expectedValue: ReadonlyArray<str
 /**
  * Plan root tsconfig path-alias edits.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { planRootAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -677,6 +598,7 @@ const pathValuesEqual = (currentValue: unknown, expectedValue: ReadonlyArray<str
  * const program = planRootAliasSync("/repo", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -739,54 +661,10 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
 });
 
 /**
- * Plan root tstyche test-file-match edits.
- *
- * @example
- * ```ts
- * import { planRootTstycheSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import { Effect } from "effect"
- *
- * const program = planRootTstycheSync("/repo", [])
- * console.log(Effect.isEffect(program)) // true
- * ```
- * @category utilities
- * @since 0.0.0
- */
-const planRootTstycheSync = Effect.fn(function* (rootDir: string, workspaces: ReadonlyArray<WorkspaceDescriptor>) {
-  const path = yield* Path.Path;
-  const filePath = path.join(rootDir, "tstyche.json");
-
-  const { packageJson } = yield* readRootPackageJson(rootDir);
-  const workspacePatterns = workspacePatternsFromPackageJson(packageJson.workspaces);
-  const original = yield* readFileString(filePath);
-  const parsed = yield* parseJsonObject(original, filePath);
-  const current = readTstycheTestFileMatch(parsed);
-  const currentTsconfig = readTstycheTsconfig(parsed);
-  const expected = buildCanonicalTstycheTestFileMatch(workspaces, workspacePatterns);
-
-  if (arraysEqual(current, expected) && currentTsconfig === ROOT_TSTYCHE_TSCONFIG) {
-    return O.none<PlannedFileChange>();
-  }
-
-  const nextContent = yield* renderJson({
-    ...parsed,
-    testFileMatch: expected,
-    tsconfig: ROOT_TSTYCHE_TSCONFIG,
-  });
-
-  return O.some(
-    PlannedFileChange.cases["root-tstyche"].make({
-      filePath,
-      summary: summaryCounts(current, expected, "testFileMatch"),
-      content: nextContent,
-    })
-  );
-});
-
-/**
  * Plan root syncpack source-array edits.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { planRootSyncpackSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -794,6 +672,7 @@ const planRootTstycheSync = Effect.fn(function* (rootDir: string, workspaces: Re
  * const program = planRootSyncpackSync("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -918,7 +797,8 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
 /**
  * Plan per-package tsconfig reference edits.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect, HashMap } from "effect"
@@ -926,6 +806,7 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
  * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), HashMap.empty())
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1048,7 +929,8 @@ const planPackageReferenceSync = Effect.fn(function* (
 /**
  * Plan package docgen config edits.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { planPackageDocgenSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect } from "effect"
@@ -1056,6 +938,7 @@ const planPackageReferenceSync = Effect.fn(function* (
  * const program = planPackageDocgenSync("/repo", [], undefined)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1107,15 +990,17 @@ const planPackageDocgenSync = Effect.fn(function* (
 /**
  * Sort planned file changes in deterministic report order.
  *
- * @param changes - Planned file changes to order for reporting.
- * @returns The planned changes sorted into deterministic report order.
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { sortChanges } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
  * const result = sortChanges([{ file: "tsconfig.json", section: "references", status: "changed" }])
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param changes - Planned file changes to order for reporting.
+ * @returns The planned changes sorted into deterministic report order.
  * @category utilities
  * @since 0.0.0
  */
@@ -1125,15 +1010,17 @@ const sortChanges = (changes: ReadonlyArray<PlannedFileChange>): ReadonlyArray<P
 /**
  * Convert an internal planned file change into the public report shape.
  *
- * @param change - Internal planned file change to convert.
- * @returns The public report shape describing the same file change.
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { toReportedChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
  * const result = toReportedChange({ file: "tsconfig.json", section: "references", status: "changed" })
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param change - Internal planned file change to convert.
+ * @returns The public report shape describing the same file change.
  * @category utilities
  * @since 0.0.0
  */
@@ -1143,8 +1030,6 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-references"].make({ filePath, summary }),
     "root-aliases": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-aliases"].make({ filePath, summary }),
-    "root-tstyche": ({ filePath, summary }): TsconfigSyncChange =>
-      TsconfigSyncChange.cases["root-tstyche"].make({ filePath, summary }),
     "root-syncpack": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-syncpack"].make({ filePath, summary }),
     "package-references": ({ filePath, summary }): TsconfigSyncChange =>
@@ -1156,12 +1041,14 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
 /**
  * Internal planner surface used by the tsconfig-sync service and renderer.
  *
- * @example
+ * **Example** (Plan tsconfig synchronization)
+ *
  * ```ts
  * import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
  * console.log(TsconfigSyncPlan.sortChanges)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1173,7 +1060,6 @@ export const TsconfigSyncPlan = {
   planRootAliasSync,
   planRootReferenceSync,
   planRootSyncpackSync,
-  planRootTstycheSync,
   relativeFromRoot,
   sortChanges,
   toReportedChange,

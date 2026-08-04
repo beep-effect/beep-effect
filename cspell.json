@@ -94,7 +94,6 @@
     "**/internal/data/**",
     "packages/law-practice/domain/src/internal/generated/free-law-project/**",
     "packages/foundation/primitive/data/src/generated/**",
-    "**/dtslint/**",
     "**/test/**",
     "patches/**",
     "**/src-tauri/gen/**",

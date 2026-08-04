@@ -30,7 +30,7 @@ const IDENTITY_PACKAGE_NAME = "@beep/identity";
 const IDENTITY_MODULE_PREFIX = "@beep/identity/";
 const IDENTITY_PACKAGES_MODULE = "@beep/identity/packages";
 const FIX_HINT = "Run `bun run beep lint identity-registry --fix` to register missing packages.";
-// Test and dtslint sources are deliberately exempt from the local-root scan;
+// Test sources are deliberately exempt from the local-root scan;
 // generated/output directories never carry authored composers.
 const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
   "node_modules",
@@ -40,7 +40,6 @@ const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
   "coverage",
   ".turbo",
   "test",
-  "dtslint",
 ]);
 
 class IdentityRegistryViolation extends S.Class<IdentityRegistryViolation>($I`IdentityRegistryViolation`)(
@@ -249,10 +248,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 /**
  * Lint command enforcing canonical `@beep/identity` composer registration.
  *
- * @example
+ * **Example** (Run the identity-registry lint command)
+ *
  * ```ts
  * console.log("bun run beep lint identity-registry")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

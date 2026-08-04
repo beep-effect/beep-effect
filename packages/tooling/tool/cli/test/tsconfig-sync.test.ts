@@ -31,14 +31,8 @@ const TsconfigPaths = S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
   }),
 });
-const TstycheConfig = S.Struct({
-  testFileMatch: S.Array(S.String),
-  tsconfig: S.String,
-});
-
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
-const decodeTstycheConfig = S.decodeUnknownSync(TstycheConfig);
 
 const expectTsconfigReferencesRoundTrip = (value: typeof TsconfigReferences.Type): void => {
   const encoded = S.encodeUnknownSync(TsconfigReferences)(value);
@@ -120,7 +114,6 @@ const bootstrapRootConfig = Effect.fn(function* (
     readonly workspaces: ReadonlyArray<string>;
     readonly references: ReadonlyArray<string>;
     readonly paths: Record<string, ReadonlyArray<string>>;
-    readonly testFileMatch: ReadonlyArray<string>;
     readonly syncpackSources: ReadonlyArray<string>;
   }
 ) {
@@ -139,10 +132,6 @@ const bootstrapRootConfig = Effect.fn(function* (
       paths: options.paths,
     },
   });
-  yield* writeJsonFile(path.join(rootDir, "tstyche.json"), {
-    testFileMatch: options.testFileMatch,
-    tsconfig: "./tsconfig.dtslint.json",
-  });
   yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
 });
 
@@ -155,10 +144,8 @@ const bootstrapWorkspace = Effect.fn(function* (
     readonly references?: ReadonlyArray<string>;
     readonly docgenConfig?: unknown;
     readonly exports?: unknown;
-    readonly hasDtslintDirectory?: boolean;
   }
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const workspaceDir = path.join(rootDir, options.relativeDir);
 
@@ -186,10 +173,6 @@ const bootstrapWorkspace = Effect.fn(function* (
     path.join(workspaceDir, "src", "index.ts"),
     `export const workspaceName = "${options.packageName}";\n`
   );
-  if (options.hasDtslintDirectory !== false) {
-    yield* fs.makeDirectory(path.join(workspaceDir, "dtslint"), { recursive: true });
-  }
-
   if (options.docgenConfig !== undefined) {
     yield* writeJsonFile(path.join(workspaceDir, "docgen.json"), options.docgenConfig);
   }
@@ -216,7 +199,6 @@ describe("tsconfig-sync", () => {
               workspaces: ["packages/example-domain"],
               references: [],
               paths: {},
-              testFileMatch: [],
               syncpackSources: ["package.json"],
             });
             yield* bootstrapWorkspace(rootDir, {
@@ -234,7 +216,7 @@ describe("tsconfig-sync", () => {
     20_000
   );
 
-  it("synchronizes root references, aliases, tstyche, and syncpack from workspace discovery", () =>
+  it("synchronizes root references, aliases, and syncpack from workspace discovery", () =>
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
@@ -249,10 +231,6 @@ describe("tsconfig-sync", () => {
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
             },
-            testFileMatch: [
-              "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
-              "packages/example-domain/dtslint/**/*.tst.*",
-            ],
             syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
           });
           yield* bootstrapWorkspace(rootDir, {
@@ -274,7 +252,6 @@ describe("tsconfig-sync", () => {
             "root-syncpack",
             "root-aliases",
             "root-references",
-            "root-tstyche",
           ]);
 
           const refs = decodeTsconfigReferences(yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json")));
@@ -290,13 +267,6 @@ describe("tsconfig-sync", () => {
             "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
             "@beep/example-domain/*": ["./packages/example-domain/src/*"],
           });
-
-          const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-          expect(tstycheConfig.testFileMatch).toEqual([
-            "packages/foundation/*/*/dtslint/**/*.tst.*",
-            "packages/example-domain/dtslint/**/*.tst.*",
-          ]);
-          expect(tstycheConfig.tsconfig).toBe("./tsconfig.dtslint.json");
 
           const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
           expect(syncpackConfig).toContain(`"packages/example-domain/package.json"`);
@@ -318,7 +288,6 @@ describe("tsconfig-sync", () => {
               "@beep/example-use-cases": ["./packages/example-use-cases/src/index.ts"],
               "@beep/example-use-cases/*": ["./packages/example-use-cases/src/*"],
             },
-            testFileMatch: ["packages/example-use-cases/dtslint/**/*.tst.*"],
             syncpackSources: ["package.json", "packages/example-use-cases/package.json"],
           });
           yield* bootstrapWorkspace(rootDir, {
@@ -386,7 +355,6 @@ describe("tsconfig-sync", () => {
             paths: {
               "@beep/example-slices": ["./packages/example-slices/src/index.ts"],
             },
-            testFileMatch: ["packages/example-slices/dtslint/**/*.tst.*"],
             syncpackSources: ["package.json", "packages/example-slices/package.json"],
           });
           yield* bootstrapWorkspace(rootDir, {
@@ -423,49 +391,6 @@ describe("tsconfig-sync", () => {
       )
     ));
 
-  it("repairs stale root tstyche tsconfig drift", () =>
-    Effect.runPromise(
-      withTempRepo(
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const rootDir = process.cwd();
-
-          yield* bootstrapRootConfig(rootDir, {
-            workspaces: ["packages/foundation/*/*"],
-            references: ["packages/foundation/modeling/identity"],
-            paths: {
-              "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
-              "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
-            },
-            testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*"],
-            syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
-          });
-          yield* writeJsonFile(path.join(rootDir, "tstyche.json"), {
-            testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*"],
-            tsconfig: "./tsconfig.json",
-          });
-          yield* bootstrapWorkspace(rootDir, {
-            relativeDir: "packages/foundation/modeling/identity",
-            packageName: "@beep/identity",
-          });
-
-          const result = yield* syncTsconfigAtRoot(rootDir, {
-            mode: "sync",
-            filter: undefined,
-            verbose: false,
-          });
-
-          expect(A.map(result.changes, (change) => change.section)).toEqual(["root-tstyche"]);
-
-          const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-          expect(tstycheConfig).toEqual({
-            testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*"],
-            tsconfig: "./tsconfig.dtslint.json",
-          });
-        })
-      )
-    ));
-
   it("syncs managed docgen fields, preserves extras, and respects filter", () =>
     Effect.runPromise(
       withTempRepo(
@@ -486,7 +411,6 @@ describe("tsconfig-sync", () => {
               ],
               "@beep/schema/test/Yaml": ["./packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"],
             },
-            testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*"],
             syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
           });
 
@@ -604,7 +528,6 @@ describe("tsconfig-sync", () => {
                 "@beep/example-protocol": ["./packages/example/protocol/src/index.ts"],
                 "@beep/example-protocol/*": ["./packages/example/protocol/src/*"],
               },
-              testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*", "packages/example/*/dtslint/**/*.tst.*"],
               syncpackSources: [
                 "package.json",
                 "packages/foundation/*/*/package.json",
@@ -743,7 +666,6 @@ describe("tsconfig-sync", () => {
                 "@beep/example-docgen": ["./packages/foundation/modeling/example-docgen/src/index.ts"],
                 "@beep/example-docgen/*": ["./packages/foundation/modeling/example-docgen/src/*"],
               },
-              testFileMatch: ["packages/foundation/*/*/dtslint/**/*.tst.*"],
               syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
             });
 

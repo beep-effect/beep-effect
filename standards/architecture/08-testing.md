@@ -7,9 +7,9 @@ from a package/root script, or `bunx --bun vitest run ...` for a targeted local
 lane. Never `bun test` — Bun's runner breaks `@effect/vitest`.
 
 The executable proof target for the architecture is `packages/architecture-lab/*`
-with `apps/architecture-lab-proof`. It carries focused runtime and type tests
-for boundary subpaths, package shape, and strict port-to-action error
-translation.
+with `apps/architecture-lab-proof`. It carries focused runtime tests for
+boundary subpaths, package shape, and strict port-to-action error translation
+(the tstyche type-test surface was retired 2026-08-03 — see DECISIONS.md).
 
 ## Domain In Isolation
 

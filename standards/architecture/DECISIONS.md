@@ -1196,6 +1196,36 @@ dead-code baseline demonstrated that a written-but-never-read snapshot enforces
 nothing. The pair — gate for the margin, ratchet for the mass — is the same
 division the dead-code campaign proved.
 
+## 2026-08-03: Retire The Tstyche Type-Test Surface
+
+- **Status:** Active
+
+Decision:
+
+beep-effect removes the tstyche/dtslint type-test surface entirely: all
+`*.tst.ts` files, per-package `dtslint/` directories, sentinels, and scripts,
+the root `tstyche.json`/`tsconfig.dtslint.json` configs, the Turbo `type-test`
+task, the `quality dtslint-tsgo` lane, the `--types` test selection, and the
+create-package/tsconfig-sync/architecture generator support for them. The
+architecture proof surface is runtime tests only. The type-level guarantees
+lost are recorded per file in
+`goals/quality-speedup/research/data/tst-coverage-assessment.tsv`; porting any
+of them to a compile-only surface is deliberate future work triggered by an
+actual type-level regression, not maintained insurance.
+
+Rationale:
+
+Measured cost versus proof value (`goals/quality-speedup`): ~110s of serial
+lane time per full local verify (dtslint-tsgo 49.9s + type-test sweep 59.9s),
+the fleet's #2 cumulative Turbo task sink (`@beep/repo-cli#type-test`, p50
+35s, 3.7% cache-hit), 22 package scripts, three generator code paths, and
+~330 tracked files — against a surface whose hosted execution hid inside Test
+Unit and whose local lane ran on every root check. The per-file coverage
+assessment found 117/142 files carrying unique type-only assertions; the loss
+is accepted, documented, and reversible from git history plus the committed
+ledger. Supersedes the 08-testing promise that the architecture proof carries
+focused type tests.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

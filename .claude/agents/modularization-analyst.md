@@ -32,7 +32,7 @@ splits; you never perform them. You are strictly read-only.
    with a semantic name, or shared-extraction candidate (name the existing
    owner package/module if one exists — check before proposing new homes).
 4. Trace consumers: facade exports, test imports (including source-only test
-   aliases and dtslint), cross-package imports. Every split plan lists what
+   aliases), cross-package imports. Every split plan lists what
    could break.
 
 ## Output contract

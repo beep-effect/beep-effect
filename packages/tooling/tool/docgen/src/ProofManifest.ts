@@ -21,12 +21,14 @@ const $I = $RepoDocgenId.create("ProofManifest");
 /**
  * Literal marker written into proof manifests to identify the document format.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestStandard } from "@beep/repo-docgen/ProofManifest"
  *
  * console.log(DocgenProofManifestStandard.is["docgen-proof-manifest"]("docgen-proof-manifest")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,13 +41,15 @@ export const DocgenProofManifestStandard = LiteralKit(["docgen-proof-manifest"])
 /**
  * Type-level representation of the proof manifest format marker.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestStandard } from "@beep/repo-docgen/ProofManifest"
  * const standard: DocgenProofManifestStandard = "docgen-proof-manifest"
  * console.log(DocgenProofManifestStandard.is["docgen-proof-manifest"](standard))
  * // true
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -54,12 +58,14 @@ export type DocgenProofManifestStandard = typeof DocgenProofManifestStandard.Typ
 /**
  * Literal schema version written into proof manifests.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestSchemaVersion } from "@beep/repo-docgen/ProofManifest"
  *
  * console.log(DocgenProofManifestSchemaVersion.is["1"]("1")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -72,13 +78,15 @@ export const DocgenProofManifestSchemaVersion = LiteralKit(["1"]).pipe(
 /**
  * Type-level representation of the proof manifest schema version.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestSchemaVersion } from "@beep/repo-docgen/ProofManifest"
  * const version: DocgenProofManifestSchemaVersion = "1"
  * console.log(DocgenProofManifestSchemaVersion.is["1"](version))
  * // true
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -87,12 +95,14 @@ export type DocgenProofManifestSchemaVersion = typeof DocgenProofManifestSchemaV
 /**
  * Verification status for a package-local docgen proof manifest.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestStatus } from "@beep/repo-docgen/ProofManifest"
  *
  * console.log(DocgenProofManifestStatus.is.current("current")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -105,13 +115,15 @@ export const DocgenProofManifestStatus = LiteralKit(["current", "missing", "stal
 /**
  * Verification status for a package-local docgen proof manifest.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestStatus } from "@beep/repo-docgen/ProofManifest"
  * const status: DocgenProofManifestStatus = "current"
  * console.log(DocgenProofManifestStatus.is.current(status))
  * // true
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -120,7 +132,8 @@ export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
 /**
  * File-level SHA-256 digest included in a docgen proof manifest.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFile } from "@beep/repo-docgen/ProofManifest"
@@ -133,6 +146,7 @@ export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
  *
  * console.log(file.path) // "src/index.ts"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -150,7 +164,8 @@ export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I
 /**
  * Package input and generated-docs fingerprint for docgen reuse.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFingerprint } from "@beep/repo-docgen/ProofManifest"
@@ -166,6 +181,7 @@ export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I
  *
  * console.log(fingerprint.outputFileCount) // 4
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -188,11 +204,14 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
 /**
  * Package-local docgen proof manifest written after successful generation.
  *
- * @remarks
+ * **Details**
+ *
  * The manifest is a reuse proof, not a published API contract. Verification
  * treats changes to package inputs, generated outputs, or the docgen tool
  * version as stale.
- * @example
+ *
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import {
  *   DocgenProofManifest,
@@ -226,6 +245,7 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
  * })
  * console.log(manifest.inputs.length) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -251,7 +271,8 @@ export class DocgenProofManifest extends S.Class<DocgenProofManifest>($I`DocgenP
 /**
  * Result of checking a package-local docgen proof manifest.
  *
- * @example
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest"
  *
@@ -265,6 +286,7 @@ export class DocgenProofManifest extends S.Class<DocgenProofManifest>($I`DocgenP
  *
  * console.log(verification.status) // "stale"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -287,7 +309,6 @@ const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const DOCGEN_PROOF_MANIFEST_PATH = ".beep/docgen/proof.json" as const;
 const DOCGEN_PROOF_INPUT_GLOBS = [
   "src/**/*.{ts,tsx,mts,cts,md,mdx}",
-  "dtslint/**/*.{ts,tsx,mts,cts,md,mdx}",
   "docgen.json",
   "package.json",
   "README.md",
@@ -410,14 +431,15 @@ const makeVerification = (options: {
 /**
  * Write the current package's docgen proof manifest after successful generation.
  *
- * @returns The written package-local proof manifest.
- * @remarks
+ * **Details**
+ *
  * The effect fingerprints configured package inputs and generated docs before
  * writing `.beep/docgen/proof.json`. Call it only after docs have been
  * generated; otherwise the output fingerprint records a stale or empty docs
  * directory.
- * @effects Reads package inputs and generated docs, creates the manifest directory, and writes `.beep/docgen/proof.json`.
- * @example
+ *
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest"
  * import { Effect } from "effect"
@@ -426,6 +448,9 @@ const makeVerification = (options: {
  * )
  * console.log(packageName)
  * ```
+ *
+ * @returns The written package-local proof manifest.
+ * @effects Reads package inputs and generated docs, creates the manifest directory, and writes `.beep/docgen/proof.json`.
  * @category workflows
  * @since 0.0.0
  */
@@ -477,15 +502,14 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
 /**
  * Verify whether a package-local docgen proof manifest matches current inputs and outputs.
  *
- * @param packagePath - Absolute package directory.
- * @param packageName - Expected workspace package name.
- * @returns Manifest verification status for reuse decisions.
- * @remarks
+ * **Details**
+ *
  * Missing manifests return `"missing"` instead of failing. Decode errors,
  * unreadable files, and digest collection failures use the typed
  * {@link Domain.DocgenError} channel.
- * @effects Reads `.beep/docgen/proof.json`, fingerprints package inputs and generated docs, and compares digests.
- * @example
+ *
+ * **Example** (Use docgen proof manifests)
+ *
  * ```ts
  * import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest"
  * import { Effect } from "effect"
@@ -495,6 +519,11 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
  * ).pipe(Effect.map((verification) => verification.status))
  * console.log(verificationStatus)
  * ```
+ *
+ * @param packagePath - Absolute package directory.
+ * @param packageName - Expected workspace package name.
+ * @returns Manifest verification status for reuse decisions.
+ * @effects Reads `.beep/docgen/proof.json`, fingerprints package inputs and generated docs, and compares digests.
  * @category workflows
  * @since 0.0.0
  */

@@ -30,7 +30,7 @@ bun run docgen
 bun run lint
 ```
 
-`bun run test` runs both unit tests and integration tests. Integration tests live under `test/integration` and self-skip unless `BEEP_TEST_DATABASE_URL` or `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` is set. Tests and dtslint files import package source through `@beep/postgres` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+`bun run test` runs both unit tests and integration tests. Integration tests live under `test/integration` and self-skip unless `BEEP_TEST_DATABASE_URL` or `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` is set. Tests import package source through `@beep/postgres` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 
