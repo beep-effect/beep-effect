@@ -177,6 +177,28 @@
     // analysis), so fallow can't see the import and reads it as unused.
     "@effect/platform-node"
   ],
+  // Root overrides below intentionally pin transitive packages. The @effect/tsgo
+  // entries cover optional platform binaries; the remaining entries retain the
+  // dependency-update security floors. They therefore have no direct manifest
+  // declaration for Fallow to associate with the override.
+  "ignoreDependencyOverrides": [
+    { "package": "@effect/tsgo-darwin-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-darwin-x64", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-arm", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-x64", "source": "package.json" },
+    { "package": "@effect/tsgo-win32-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-win32-x64", "source": "package.json" },
+    { "package": "@hono/node-server", "source": "package.json" },
+    { "package": "@opentelemetry/propagator-jaeger", "source": "package.json" },
+    { "package": "brace-expansion", "source": "package.json" },
+    { "package": "detailed-xml-validator", "source": "package.json" },
+    { "package": "fast-uri", "source": "package.json" },
+    { "package": "hono", "source": "package.json" },
+    { "package": "js-yaml", "source": "package.json" },
+    { "package": "minimatch", "source": "package.json" },
+    { "package": "postcss", "source": "package.json" }
+  ],
   // `instant` is a Next.js framework config export (blocking-prerender opt-out,
   // see nextjs.org/docs/messages/blocking-prerender-dynamic). The framework
   // consumes it from layout/page modules; fallow's Next plugin does not yet
