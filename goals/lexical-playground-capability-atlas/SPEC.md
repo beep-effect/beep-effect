@@ -171,8 +171,11 @@ checks, not substitutes for stable entry identity.
 
 - Follow schema-first and Effect-first repo law. Frontend state uses the repo's
   Atom/reactivity patterns where shared or reactive state is actually needed.
-- Add focused schema/resolver/command tests and dtslint coverage for public
-  types. Add Storybook proof for both profiles.
+- Add focused runtime, schema encode/decode, resolver, and command tests. Verify
+  the editor package with its existing `check` command; do not recreate the
+  retired dtslint/tstyche surface. Add a new compile-only regression proof only
+  if an actual type-level regression demonstrates the need for one. Add
+  Storybook proof for both profiles.
 - Gesture-bearing UI proof must use `browser-qa-loop`: record, extract, judge,
   fix, and repeat until zero required findings. Cover pointer, keyboard,
   narrow viewport/touch alternative, focus restoration, and accessible names.
@@ -223,7 +226,7 @@ checks, not substitutes for stable entry identity.
 | Packet references | `rg -n "lexical-playground-capability-atlas|GOAL.md|agentLaunchers|packetAnchorDocument" goals/lexical-playground-capability-atlas` | All required surfaces present |
 | Whitespace | `git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor` | Passes |
 | Atlas artifact | `bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts` | `editor-capability-atlas/v1` decodes; files resolve; zero unexplained or unexercised entries without approved waiver |
-| Public types | package dtslint commands recorded during P1 | Green |
+| Editor package check | `bun run --cwd packages/foundation/ui-system/editor check` | Green |
 | Focused behavior | package/app unit and Storybook tests recorded during P1/P2 | Green |
 | Browser QA | `bun run beep qa` evidence inventory under packet history | Zero required findings |
 | Reflection | `bun run beep lint reflection-artifacts` | Green at closeout |

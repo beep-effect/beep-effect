@@ -183,7 +183,7 @@ pagination around explicit page breaks.
 
 ## Settings and feature gates
 
-Source defines 28 settings/config axes. The live panel visibly exposed 21 at
+Source defines 29 settings/config axes. The live panel visibly exposed 21 at
 the audited host, including performance/debug controls, rich/plain text, nested
 tables, limits, link attributes, autocomplete, non-printing characters, TOC,
 context menu, Markdown newline policy, bracket highlighting, retained/block

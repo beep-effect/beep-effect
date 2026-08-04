@@ -47,7 +47,10 @@ Status: `pending`
    `@beep/md` document.
 5. Register the synthetic Professional Desktop panel through the existing
    panel registry and dock model; keep it local/synthetic and box-filling.
-6. Add focused runtime tests, schema encode/decode tests, and dtslint coverage.
+6. Add focused runtime, schema encode/decode, resolver, and command tests; run
+   the editor package's existing `check` and `test` scripts. Do not recreate
+   dtslint/tstyche; add a new compile-only regression proof only if an actual
+   type-level regression demonstrates the need for one.
 7. Document the contract, profile ownership, remount behavior, and Goal B
    consumption path.
 
@@ -101,6 +104,7 @@ jq . goals/lexical-playground-capability-atlas/ops/manifest.json
 rg -n "lexical-playground-capability-atlas|GOAL.md|agentLaunchers|packetAnchorDocument" goals/lexical-playground-capability-atlas
 git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor
 bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts
+bun run --cwd packages/foundation/ui-system/editor check
 bun run beep goals index --check
 bun run beep goals doctor
 bun run beep lint reflection-artifacts

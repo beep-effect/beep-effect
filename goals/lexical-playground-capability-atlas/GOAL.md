@@ -49,8 +49,8 @@ Workflow:
    new product/security decision rather than silently classifying a feature.
 4. Implement only the resolver/projection and representative profiles in the
    spec; preserve existing consumers through compatibility defaults.
-5. Prove with focused tests, dtslint, Storybook, and recorded browser QA; store
-   evidence under packet `history/`.
+5. Prove with focused runtime/schema tests, the editor package check, Storybook,
+   and recorded browser QA; store evidence under packet `history/`.
 6. When authorized, Yeet to mergeable and close with `/reflect`.
 
 Acceptance:
@@ -67,6 +67,7 @@ Verification:
 test "$(wc -m < goals/lexical-playground-capability-atlas/GOAL.md)" -le 4000
 jq . goals/lexical-playground-capability-atlas/ops/manifest.json
 git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor
+bun run --cwd packages/foundation/ui-system/editor check
 bun run beep goals doctor
 bun run beep yeet verify
 ```

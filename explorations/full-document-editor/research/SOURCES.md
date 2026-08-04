@@ -19,6 +19,36 @@ The live audit defines what users can observe. The pinned source audit closes
 hidden/conditional feature coverage and cites exact upstream files. The repo
 inventory decides lawful ownership and existing capability reuse.
 
+### Pinned source anchors
+
+Every Lexical anchor below is against `facebook/lexical` commit
+`a933222c489e7025d87b9217c2489d309fc8a3cf`.
+
+| Source | Repo @ revision | File:line | Evidence | Disposition |
+| --- | --- | --- | --- | --- |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/package.json:1-54` | package identity and direct dependencies | retain license/dependency provenance only |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/App.tsx:210-255` | rich-text extension graph | port behavior with attribution |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/App.tsx:257-307` | always-wired extension graph and root nodes | split into owned capabilities |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/App.tsx:309-350` | editor rebuild boundary | adapt as profile immutability rule |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/appSettings.ts:9-44` | complete 29-axis settings domain and defaults | normalize into capability/option atlas entries |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/Settings.tsx:53-236` | visible and development-only settings surfaces | classify by host and activation path |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/setupEnv.ts:14-27` | query-parameter overrides | classify as Playground-only activation plumbing |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/hooks/useSynchronizeSettings.ts:83-126` | live extension-signal settings | adapt as live option projection |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/nodes/PlaygroundNodes.ts:45-84` | 38-class root node registration | reconcile with extension-local nodes |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/PagesExtension/PagesExtension.ts:64-72`; `src/plugins/RubyExtension/index.ts:228-231` | Page, PageContent, and Ruby registrations | reconcile 41 unique effective node classes |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/Editor.tsx:94-183` | rendered and conditional authoring surfaces | normalize activation paths and host gates |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/ComponentPickerPlugin/index.tsx:117-144`; `:149-420` | slash commands, blocks, and dynamic tables | normalize commands and block insertions |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/ToolbarPlugin/index.tsx:957-1498` | toolbar, formatting, page setup, inserts, and shortcut help | normalize commands and affordances |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/ShortcutsPlugin/shortcuts.ts:15-53` | platform-specific shortcut labels | normalize bindings and generated help |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:56-216`; `:360-372` | Playground transformers and composition | reconcile with canonical Markdown projection |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-markdown/src/MarkdownTransformers.ts:933-960` | standard transformer families | reconcile with canonical Markdown projection |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/ActionsPlugin/index.tsx:94-180`; `:286-407` | source conversion and document actions | classify interchange versus demo actions |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/themes/PlaygroundEditorTheme.css:50-52`; `:621-636`; `:676-679` | highlight, comment, and special-text visuals | preserve distinct semantics |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/TableActionMenuPlugin/index.tsx:468-646` | table editing surface | normalize table commands and capability gates |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/LayoutExtension/InsertLayoutDialog.tsx:18-24` | column presets | record layout options |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/plugins/PagesExtension/constants.ts:10-36`; `src/plugins/PagesReactExtension/PageSetupDropdown.tsx:23-58`; `:104-199` | page sizes, defaults, margins, orientation, and UI | record page-layout options |
+| `lexical-source-a933222` | `facebook/lexical@a933222` | `packages/lexical-playground/src/App.tsx:383-397`; `:421-445`; `src/Editor.tsx:120-124` | collaboration v1/v2 and comment constraints | defer to collaboration-owned later goal |
+
 ## 2. Upstream repositories and licenses
 
 | Repo | License | Port discipline | What we take |

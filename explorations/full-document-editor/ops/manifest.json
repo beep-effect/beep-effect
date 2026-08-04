@@ -14,10 +14,7 @@
     ],
     "links": {
       "goals": ["goals/lexical-playground-capability-atlas"],
-      "docs": [
-        "docs/product/prose-to-proof.md",
-        "docs/product/workspace-substrate.md"
-      ],
+      "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-04",

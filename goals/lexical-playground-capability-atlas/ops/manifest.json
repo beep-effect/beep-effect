@@ -94,6 +94,7 @@
     "rg -n \"lexical-playground-capability-atlas|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lexical-playground-capability-atlas",
     "git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor",
     "bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts",
+    "bun run --cwd packages/foundation/ui-system/editor check",
     "bun run beep goals index --check",
     "bun run beep goals doctor",
     "bun run beep lint reflection-artifacts",
