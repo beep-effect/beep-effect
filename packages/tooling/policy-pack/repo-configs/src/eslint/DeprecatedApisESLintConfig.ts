@@ -111,6 +111,7 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
             "packages/tooling/*/*/scripts/*.ts",
             "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/extra.ts",
             "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts",
+            "packages/tooling/tool/docgen/test/fixtures/section-example/src/index.ts",
           ],
           defaultProject: "tsconfig.json",
           maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 160,
