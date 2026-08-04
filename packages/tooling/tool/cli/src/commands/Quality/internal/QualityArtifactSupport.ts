@@ -614,6 +614,21 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
   return O.none();
 };
 
+const fencedLineState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
+  const match = /^\s*(`{3,}|~{3,})/.exec(line);
+  const fence = match === null ? undefined : match[1];
+  if (openFence === undefined) {
+    return [fence, fence !== undefined];
+  }
+  if (fence === undefined) {
+    return [openFence, true];
+  }
+  if (fence[0] === openFence[0] && fence.length >= openFence.length) {
+    return [undefined, true];
+  }
+  return [openFence, true];
+};
+
 /**
  * Extract tag names from a JSDoc comment block.
  *
@@ -626,15 +641,9 @@ export const tagsFromComment = (commentText: string): ReadonlyArray<string> => {
   const tags: Array<string> = [];
   let openFence: string | undefined;
   for (const line of stripCommentFraming(commentText)) {
-    const fence = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
-    if (openFence !== undefined) {
-      if (fence?.[0] === openFence[0] && fence.length >= openFence.length) {
-        openFence = undefined;
-      }
-      continue;
-    }
-    if (fence !== undefined) {
-      openFence = fence;
+    const [nextOpenFence, isFenced] = fencedLineState(line, openFence);
+    openFence = nextOpenFence;
+    if (isFenced) {
       continue;
     }
     const match = /^\s*@([A-Za-z][\w-]*)\b/.exec(line);
