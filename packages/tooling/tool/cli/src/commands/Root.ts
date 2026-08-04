@@ -21,6 +21,7 @@ import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
 import { imageCommand } from "./Image/index.ts";
+import { knowledgeCommand } from "./Knowledge/index.ts";
 import { lawsCommand } from "./Laws/index.ts";
 import { lintCommand } from "./Lint/index.ts";
 import { purgeCommand } from "./Purge/index.ts";
@@ -36,15 +37,26 @@ import { worktreeCommand } from "./Worktree/index.ts";
 import { yeetCommand } from "./Yeet/index.ts";
 
 /**
- * Top-level CLI command that registers all subcommands.
+ * Top-level CLI command that registers every subcommand.
  *
- * This is the command tree root consumed by `Command.run` in the bin entry point.
+ * **Details**
+ *
+ * This is the command-tree root consumed by `Command.run` in the bin entry point, so registering a
+ * new command group here is what makes it reachable as `beep <group>`.
+ *
+ * **Example** (Confirm a command group is registered)
+ *
+ * ```ts
+ * import { rootCommand } from "@beep/repo-cli/commands/Root"
+ * import * as A from "effect/Array"
+ *
+ * const registered = A.flatMap(rootCommand.subcommands, (group) => group.commands)
+ *
+ * console.log(rootCommand.name) // "beep-cli"
+ * console.log(A.some(registered, (command) => command.name === "knowledge")) // true
+ * ```
  *
  * @internal
- * @example
- * ```ts
- * console.log("rootCommand")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -64,6 +76,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     filesCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
     imageCommand,
+    knowledgeCommand,
     lintCommand,
     lawsCommand,
     qualityCommand,

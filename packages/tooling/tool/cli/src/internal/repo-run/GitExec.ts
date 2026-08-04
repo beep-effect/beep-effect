@@ -16,30 +16,151 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
+import { NonNegativeInt } from "@beep/schema";
 import { Effect, flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { formatCommandLine, repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CapturedStep } from "../process/StepExec.ts";
 
+const $I = $RepoCliId.create("internal/repo-run/GitExec");
+
+/** One parsed entry from `git ls-tree -r -z --full-tree`. @category models @since 0.0.0 */
+export class GitTreeEntry extends S.Class<GitTreeEntry>($I`GitTreeEntry`)(
+  {
+    mode: S.String,
+    objectType: S.String,
+    objectId: S.String,
+    path: S.String,
+  },
+  $I.annote("GitTreeEntry", {
+    description: "Git tree mode, object type, object id, and exact repository-relative path.",
+  })
+) {}
+
+/** One rename from `git diff --name-status -z --find-renames`. @category models @since 0.0.0 */
+export class GitRenameEntry extends S.Class<GitRenameEntry>($I`GitRenameEntry`)(
+  {
+    sourcePath: S.String,
+    targetPath: S.String,
+    score: NonNegativeInt,
+  },
+  $I.annote("GitRenameEntry", {
+    description: "Rename source, target, and similarity score parsed from Git's NUL-delimited output.",
+  })
+) {}
+
+const parseGitTreeEntry = (record: string): O.Option<GitTreeEntry> => {
+  const match = /^([0-9]{6}) ([a-z]+) ([0-9a-f]+)\t([^\0]+)$/u.exec(record);
+  if (
+    match === null ||
+    !P.isString(match[1]) ||
+    !P.isString(match[2]) ||
+    !P.isString(match[3]) ||
+    !P.isString(match[4])
+  ) {
+    return O.none();
+  }
+  return O.some(
+    GitTreeEntry.make({
+      mode: match[1],
+      objectType: match[2],
+      objectId: match[3],
+      path: match[4],
+    })
+  );
+};
+
+/** Parse exact NUL-delimited recursive tree output, failing with `None` on any malformed record. @category parsing @since 0.0.0 */
+export const gitTreeEntriesFromNulOutput = (output: string): O.Option<ReadonlyArray<GitTreeEntry>> => {
+  if (Str.isEmpty(output)) {
+    return O.some(A.empty<GitTreeEntry>());
+  }
+  if (!Str.endsWith("\0")(output)) {
+    return O.none();
+  }
+  const records = A.dropRight(Str.split("\0")(output), 1);
+  const entries = A.getSomes(A.map(records, parseGitTreeEntry));
+  return A.length(entries) === A.length(records) ? O.some(entries) : O.none();
+};
+
+/** Parse rename-only rows from exact NUL-delimited name-status output. Copies are consumed but ignored. @category parsing @since 0.0.0 */
+export const gitRenameEntriesFromNulOutput = (output: string): O.Option<ReadonlyArray<GitRenameEntry>> => {
+  if (Str.isEmpty(output)) {
+    return O.some(A.empty<GitRenameEntry>());
+  }
+  if (!Str.endsWith("\0")(output)) {
+    return O.none();
+  }
+  const fields = A.dropRight(Str.split("\0")(output), 1);
+  let index = 0;
+  let renames = A.empty<GitRenameEntry>();
+
+  while (index < A.length(fields)) {
+    const status = fields[index];
+    if (!P.isString(status)) {
+      return O.none();
+    }
+    index += 1;
+    const renameStatus = /^R([0-9]+)$/u.exec(status);
+    const copyStatus = /^C[0-9]+$/u.test(status);
+    const hasPair = renameStatus !== null || copyStatus;
+    if (!hasPair && !/^[ADMTUXB]$/u.test(status)) {
+      return O.none();
+    }
+    const sourcePath = fields[index];
+    const targetPath = hasPair ? fields[index + 1] : undefined;
+    if (!P.isString(sourcePath) || (hasPair && !P.isString(targetPath))) {
+      return O.none();
+    }
+    index += hasPair ? 2 : 1;
+
+    if (renameStatus === null) {
+      continue;
+    }
+    const score = N.parse(renameStatus[1]);
+    if (O.isNone(score) || score.value < 50 || score.value > 100 || !P.isString(targetPath)) {
+      return O.none();
+    }
+    renames = A.append(
+      renames,
+      GitRenameEntry.make({ sourcePath, targetPath, score: NonNegativeInt.make(score.value) })
+    );
+  }
+
+  return O.some(renames);
+};
+
 /**
  * Maps a git subprocess failure onto a command group's own error type.
  *
- * @example
+ * **Details**
+ *
+ * Leaving `onTruncated` as `O.none()` means bounded output is accepted silently; supplying a handler
+ * turns truncation into a failure, which is what a caller that must see complete output wants.
+ *
+ * **Example** (Adapt git failures to a command group's error)
+ *
  * ```ts
- * import type { GitCommandErrorAdapter } from "@beep/repo-cli/internal/repo-run"
  * import * as O from "effect/Option"
+ * import type { GitCommandErrorAdapter } from "@beep/repo-cli/internal/repo-run"
  *
  * const adapter: GitCommandErrorAdapter<Error> = {
  *   onSpawnFailure: (commandLine) => (cause) => new Error(`spawn ${commandLine}: ${String(cause)}`),
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * }
- * console.log(adapter.onTruncated)
+ *
+ * console.log(O.isNone(adapter.onTruncated)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -54,14 +175,17 @@ export type GitCommandErrorAdapter<E> = {
 };
 
 /**
- * Filter empties, dedupe, and sort a path list into a stable canonical order.
+ * Filters empties, dedupes, and sorts a path list into a stable canonical order.
  *
- * @example
+ * **Example** (Canonicalize a noisy path list)
+ *
  * ```ts
  * import { sortedUniquePaths } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(sortedUniquePaths(["src/z.ts", "src/a.ts", "src/a.ts", ""]))
+ * // [ "src/a.ts", "src/z.ts" ]
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -72,14 +196,22 @@ export const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<
 );
 
 /**
- * Parse NUL-delimited (`-z`) git path output into sorted, unique paths.
+ * Parses NUL-delimited (`-z`) git path output into sorted, unique paths.
  *
- * @example
+ * **Details**
+ *
+ * NUL delimiting is what makes paths containing spaces or quotes survive intact, so every path
+ * reader in this module asks git for `-z` output rather than newline-separated names.
+ *
+ * **Example** (Read a NUL-delimited path list)
+ *
  * ```ts
  * import { gitPathListFromNulOutput } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(gitPathListFromNulOutput("src/z.ts\0src/a.ts\0src/a.ts\0"))
+ * // [ "src/a.ts", "src/z.ts" ]
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -89,19 +221,23 @@ export const gitPathListFromNulOutput: (output: string) => ReadonlyArray<string>
 );
 
 /**
- * Split captured git output into trimmed, non-empty lines.
+ * Splits captured git output into trimmed, non-empty lines.
  *
- * The default line parser for {@link runGitLines}; matches the newline-based
- * readers used by the package-verify and docgen quality scanners.
+ * **Details**
  *
- * @param output - Raw captured stdout.
- * @returns Trimmed, non-empty lines.
- * @example
+ * This is the default line parser for {@link runGitLines}, matching the newline-based readers used
+ * by the package-verify and docgen quality scanners.
+ *
+ * **Example** (Normalize ragged git stdout)
+ *
  * ```ts
  * import { gitLinesFromOutput } from "@beep/repo-cli/internal/repo-run"
  *
- * console.log(gitLinesFromOutput("a\n  b  \n\nc\n"))
+ * console.log(gitLinesFromOutput("a\n  b  \n\nc\n")) // [ "a", "b", "c" ]
  * ```
+ *
+ * @param output - Raw captured stdout.
+ * @returns Trimmed, non-empty lines.
  * @category parsing
  * @since 0.0.0
  */
@@ -123,20 +259,19 @@ const failFromCapture = <E>(
 };
 
 /**
- * Run a git command and return its trimmed, bounded, merged output.
+ * Runs a git command and returns its trimmed, bounded, merged output.
  *
- * Uses the 512 KiB {@link repoRunOutputBound} with merged stdout+stderr, `stdin`
- * inherited, and `extendEnv` on — the profile the yeet and worktree groups rely
- * on. Nonzero exits fail through `adapter.onNonZeroExit`; truncation fails only
- * when `adapter.onTruncated` is set.
+ * **Details**
  *
- * @param cwd - Working directory.
- * @param args - Git arguments (excluding the `git` executable).
- * @param adapter - Error adapter for the calling command group.
- * @returns Trimmed combined output on a zero exit.
- * @example
+ * Uses the 512 KiB {@link repoRunOutputBound} with merged stdout and stderr, `stdin` inherited, and
+ * `extendEnv` on — the profile the yeet and worktree groups rely on. Nonzero exits fail through
+ * `adapter.onNonZeroExit`; truncation fails only when `adapter.onTruncated` is set.
+ *
+ * **Example** (Capture a short status)
+ *
  * ```ts
  * import { runGitOutput } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const status = runGitOutput(process.cwd(), ["status", "--short"], {
@@ -144,8 +279,14 @@ const failFromCapture = <E>(
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(status)
+ *
+ * console.log(Effect.isEffect(status)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param args - Git arguments, excluding the `git` executable.
+ * @param adapter - Error adapter for the calling command group.
+ * @returns Trimmed combined output on a zero exit.
  * @category execution
  * @since 0.0.0
  */
@@ -169,15 +310,13 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
 });
 
 /**
- * Run a git command and parse NUL-delimited path output.
+ * Runs a git command and parses NUL-delimited path output.
  *
- * @param cwd - Working directory.
- * @param args - Git arguments (must include `-z`).
- * @param adapter - Error adapter for the calling command group.
- * @returns Sorted, unique paths on a zero exit.
- * @example
+ * **Example** (List staged paths)
+ *
  * ```ts
  * import { runGitPathList } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const staged = runGitPathList(process.cwd(), ["diff", "--cached", "--name-only", "-z"], {
@@ -185,8 +324,14 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(staged)
+ *
+ * console.log(Effect.isEffect(staged)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param args - Git arguments, which must include `-z`.
+ * @param adapter - Error adapter for the calling command group.
+ * @returns Sorted, unique paths on a zero exit.
  * @category execution
  * @since 0.0.0
  */
@@ -200,20 +345,19 @@ export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
 });
 
 /**
- * Run a git command and parse its stdout into lines.
+ * Runs a git command and parses its stdout into lines.
  *
- * Uses the unbounded stdout-only profile (stderr ignored) the package-verify
- * and docgen scanners rely on. Provide `parseLines` to diverge from the default
- * {@link gitLinesFromOutput} (for example to normalize path separators).
+ * **Details**
  *
- * @param cwd - Working directory.
- * @param args - Git arguments (excluding the `git` executable).
- * @param adapter - Error adapter for the calling command group.
- * @param parseLines - Line parser applied to captured stdout on a zero exit.
- * @returns Parsed lines on a zero exit.
- * @example
+ * Uses the unbounded stdout-only profile — stderr is ignored — that the package-verify and docgen
+ * scanners rely on. Pass `parseLines` to diverge from the default {@link gitLinesFromOutput}, for
+ * example to normalize path separators.
+ *
+ * **Example** (List untracked files)
+ *
  * ```ts
  * import { runGitLines } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const untracked = runGitLines(process.cwd(), ["ls-files", "--others", "--exclude-standard"], {
@@ -221,8 +365,15 @@ export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(untracked)
+ *
+ * console.log(Effect.isEffect(untracked)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param args - Git arguments, excluding the `git` executable.
+ * @param adapter - Error adapter for the calling command group.
+ * @param parseLines - Line parser applied to captured stdout on a zero exit.
+ * @returns Parsed lines on a zero exit.
  * @category execution
  * @since 0.0.0
  */
@@ -243,23 +394,108 @@ export const runGitLines = Effect.fn("GitExec.runGitLines")(function* <E>(
   return parseLines(output);
 });
 
+/** Run a Git command with unbounded, untrimmed combined output. @category execution @since 0.0.0 */
+export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E>(
+  cwd: string,
+  args: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>
+): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
+  const commandLine = formatCommandLine("git", args);
+  const captured = yield* runCaptured({
+    command: "git",
+    args,
+    cwd,
+    stdin: "ignore",
+    source: "all",
+  }).pipe(Effect.mapError(adapter.onSpawnFailure(commandLine)));
+  return yield* failFromCapture(captured, commandLine, adapter);
+});
+
+/** Resolve a ref to a verified commit without allowing option reinterpretation. @category execution @since 0.0.0 */
+export const resolveGitCommit = Effect.fn("GitExec.resolveGitCommit")(function* <E>(
+  cwd: string,
+  ref: string,
+  adapter: GitCommandErrorAdapter<E>
+): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* runGitOutput(cwd, ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`], adapter);
+});
+
+/** Resolve the merge base of two refs without allowing option reinterpretation. @category execution @since 0.0.0 */
+export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(function* <E>(
+  cwd: string,
+  leftRef: string,
+  rightRef: string,
+  adapter: GitCommandErrorAdapter<E>
+): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* runGitOutput(cwd, ["merge-base", "--", leftRef, rightRef], adapter);
+});
+
+/** Write one verified commit as a tar archive. @category execution @since 0.0.0 */
+export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E>(
+  cwd: string,
+  commit: string,
+  archivePath: string,
+  adapter: GitCommandErrorAdapter<E>
+): Effect.fn.Return<void, E, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* runGitRawOutput(cwd, ["archive", "--format=tar", `--output=${archivePath}`, commit], adapter);
+});
+
+/** Read and strictly parse one recursive full Git tree. @category execution @since 0.0.0 */
+export const readGitTree = Effect.fn("GitExec.readGitTree")(function* <E>(
+  cwd: string,
+  commit: string,
+  adapter: GitCommandErrorAdapter<E>,
+  onMalformed: () => E
+): Effect.fn.Return<ReadonlyArray<GitTreeEntry>, E, ChildProcessSpawner.ChildProcessSpawner> {
+  const output = yield* runGitRawOutput(cwd, ["ls-tree", "-r", "-z", "--full-tree", commit], adapter);
+  return yield* O.match(gitTreeEntriesFromNulOutput(output), {
+    onNone: () => Effect.fail(onMalformed()),
+    onSome: Effect.succeed,
+  });
+});
+
+/** Read and strictly parse the rename table for one paired diff and path scope. @category execution @since 0.0.0 */
+export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
+  cwd: string,
+  baseCommit: string,
+  headCommit: string,
+  pathspec: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>,
+  onMalformed: () => E
+): Effect.fn.Return<ReadonlyArray<GitRenameEntry>, E, ChildProcessSpawner.ChildProcessSpawner> {
+  const output = yield* runGitRawOutput(
+    cwd,
+    ["diff", "--name-status", "-z", "--find-renames=50%", baseCommit, headCommit, "--", ...pathspec],
+    adapter
+  );
+  return yield* O.match(gitRenameEntriesFromNulOutput(output), {
+    onNone: () => Effect.fail(onMalformed()),
+    onSome: Effect.succeed,
+  });
+});
+
 /**
- * Collect staged path names (`git diff --cached --name-only -z`).
+ * Collects staged path names via `git diff --cached --name-only -z`.
+ *
+ * **Example** (Read the staged path set)
+ *
+ * ```ts
+ * import { collectStagedPaths } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const staged = collectStagedPaths(process.cwd(), {
+ *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
+ *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
+ *   onTruncated: O.none()
+ * })
+ *
+ * console.log(Effect.isEffect(staged)) // true
+ * ```
  *
  * @param cwd - Working directory.
  * @param adapter - Error adapter for the calling command group.
  * @returns Sorted, unique staged paths.
- * @example
- * ```ts
- * import { collectStagedPaths } from "@beep/repo-cli/internal/repo-run"
- * import * as O from "effect/Option"
- *
- * console.log(collectStagedPaths(process.cwd(), {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * }))
- * ```
  * @category changed-files
  * @since 0.0.0
  */
@@ -271,22 +507,27 @@ export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(functi
 });
 
 /**
- * Collect unstaged tracked path names (`git diff --name-only -z`).
+ * Collects unstaged tracked path names via `git diff --name-only -z`.
+ *
+ * **Example** (Read the unstaged tracked path set)
+ *
+ * ```ts
+ * import { collectUnstagedPaths } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const unstaged = collectUnstagedPaths(process.cwd(), {
+ *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
+ *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
+ *   onTruncated: O.none()
+ * })
+ *
+ * console.log(Effect.isEffect(unstaged)) // true
+ * ```
  *
  * @param cwd - Working directory.
  * @param adapter - Error adapter for the calling command group.
  * @returns Sorted, unique unstaged tracked paths.
- * @example
- * ```ts
- * import { collectUnstagedPaths } from "@beep/repo-cli/internal/repo-run"
- * import * as O from "effect/Option"
- *
- * console.log(collectUnstagedPaths(process.cwd(), {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * }))
- * ```
  * @category changed-files
  * @since 0.0.0
  */
@@ -298,22 +539,32 @@ export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(fu
 });
 
 /**
- * Collect untracked path names (`git ls-files --others --exclude-standard -z`).
+ * Collects untracked path names via `git ls-files --others --exclude-standard -z`.
+ *
+ * **Details**
+ *
+ * `--exclude-standard` applies the repository's ignore rules, so ignored build output never enters
+ * the dirty-path union.
+ *
+ * **Example** (Read the untracked path set)
+ *
+ * ```ts
+ * import { collectUntrackedPaths } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const untracked = collectUntrackedPaths(process.cwd(), {
+ *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
+ *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
+ *   onTruncated: O.none()
+ * })
+ *
+ * console.log(Effect.isEffect(untracked)) // true
+ * ```
  *
  * @param cwd - Working directory.
  * @param adapter - Error adapter for the calling command group.
  * @returns Sorted, unique untracked paths.
- * @example
- * ```ts
- * import { collectUntrackedPaths } from "@beep/repo-cli/internal/repo-run"
- * import * as O from "effect/Option"
- *
- * console.log(collectUntrackedPaths(process.cwd(), {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * }))
- * ```
  * @category changed-files
  * @since 0.0.0
  */
@@ -325,14 +576,17 @@ export const collectUntrackedPaths = Effect.fn("GitExec.collectUntrackedPaths")(
 });
 
 /**
- * Collect the sorted, unique union of staged, unstaged, and untracked paths.
+ * Collects the sorted, unique union of staged, unstaged, and untracked paths.
  *
- * @param cwd - Working directory.
- * @param adapter - Error adapter for the calling command group.
- * @returns The dirty-worktree path union.
- * @example
+ * **When to use**
+ *
+ * Use when a gate must consider everything a commit could pick up, not only what is already staged.
+ *
+ * **Example** (Read the whole dirty-worktree path union)
+ *
  * ```ts
  * import { collectDirtyPaths } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const dirty = collectDirtyPaths(process.cwd(), {
@@ -340,8 +594,13 @@ export const collectUntrackedPaths = Effect.fn("GitExec.collectUntrackedPaths")(
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(dirty)
+ *
+ * console.log(Effect.isEffect(dirty)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param adapter - Error adapter for the calling command group.
+ * @returns The dirty-worktree path union.
  * @category changed-files
  * @since 0.0.0
  */
@@ -356,16 +615,13 @@ export const collectDirtyPaths = Effect.fn("GitExec.collectDirtyPaths")(function
 });
 
 /**
- * Collect changed paths for a diff range (`git diff --name-only -z <range>`).
+ * Collects changed paths for a diff range via `git diff --name-only -z <range>`.
  *
- * @param cwd - Working directory.
- * @param range - A diff range such as `origin/main...HEAD` or `<mergeBase>..HEAD`.
- * @param adapter - Error adapter for the calling command group.
- * @param pathspec - Optional pathspec appended after `--`.
- * @returns Sorted, unique changed paths on a zero exit.
- * @example
+ * **Example** (Restrict a range diff to one path)
+ *
  * ```ts
  * import { collectChangedPathsSinceBase } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const changed = collectChangedPathsSinceBase(process.cwd(), "origin/main...HEAD", {
@@ -373,8 +629,15 @@ export const collectDirtyPaths = Effect.fn("GitExec.collectDirtyPaths")(function
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * }, ["bun.lock"])
- * console.log(changed)
+ *
+ * console.log(Effect.isEffect(changed)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param range - A diff range such as `origin/main...HEAD` or `<mergeBase>..HEAD`.
+ * @param adapter - Error adapter for the calling command group.
+ * @param pathspec - Optional pathspec appended after `--`.
+ * @returns Sorted, unique changed paths on a zero exit.
  * @category changed-files
  * @since 0.0.0
  */
@@ -400,18 +663,19 @@ export const collectChangedPathsSinceBase = Effect.fn("GitExec.collectChangedPat
 export type CurrentBranchRef = "abbrev-ref" | "show-current";
 
 /**
- * Read the current branch name.
+ * Reads the current branch name.
  *
- * `"abbrev-ref"` runs `git rev-parse --abbrev-ref HEAD`; `"show-current"` runs
- * `git branch --show-current` — the two forms the groups use are preserved.
+ * **Details**
  *
- * @param cwd - Working directory.
- * @param adapter - Error adapter for the calling command group.
- * @param ref - Which git incantation to read the branch with.
- * @returns The current branch name on a zero exit.
- * @example
+ * `"abbrev-ref"` runs `git rev-parse --abbrev-ref HEAD` and `"show-current"` runs
+ * `git branch --show-current`. Both forms are kept because they differ on a detached HEAD: the
+ * former reports `HEAD`, the latter reports an empty string.
+ *
+ * **Example** (Read the checked-out branch)
+ *
  * ```ts
  * import { currentBranch } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const branch = currentBranch(process.cwd(), {
@@ -419,8 +683,14 @@ export type CurrentBranchRef = "abbrev-ref" | "show-current";
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(branch)
+ *
+ * console.log(Effect.isEffect(branch)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param adapter - Error adapter for the calling command group.
+ * @param ref - Which git incantation to read the branch with.
+ * @returns The current branch name on a zero exit.
  * @category execution
  * @since 0.0.0
  */
@@ -437,19 +707,20 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
 });
 
 /**
- * Refresh `origin/main`, unshallowing the clone first when needed.
+ * Refreshes `origin/main`, unshallowing the clone first when needed.
  *
- * Runs `git rev-parse --is-shallow-repository`, a conditional
- * `git fetch origin --quiet --unshallow`, then
- * `git fetch origin main:refs/remotes/origin/main --quiet`, all via the bounded
- * capture profile.
+ * **Details**
  *
- * @param cwd - Working directory.
- * @param adapter - Error adapter for the calling command group.
- * @returns Completes once `origin/main` is refreshed.
- * @example
+ * Runs `git rev-parse --is-shallow-repository`, then a conditional
+ * `git fetch origin --quiet --unshallow`, then `git fetch origin main:refs/remotes/origin/main
+ * --quiet`, all through the bounded capture profile. The unshallow step is what makes merge-base
+ * resolution reliable on a CI clone.
+ *
+ * **Example** (Refresh the base ref before a range diff)
+ *
  * ```ts
  * import { ensureOriginMain } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const refreshed = ensureOriginMain(process.cwd(), {
@@ -457,8 +728,13 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
  *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
  *   onTruncated: O.none()
  * })
- * console.log(refreshed)
+ *
+ * console.log(Effect.isEffect(refreshed)) // true
  * ```
+ *
+ * @param cwd - Working directory.
+ * @param adapter - Error adapter for the calling command group.
+ * @effects Fetches from `origin` and updates the local `origin/main` remote-tracking ref.
  * @category execution
  * @since 0.0.0
  */
@@ -483,18 +759,22 @@ const unsafeRefnameChar = /[\s:~^?*[\]\\]/u;
 /**
  * Whether a branch name is a safe plain ref under `origin/`.
  *
- * Rejects option-like names, git refname metacharacters, `..`, and leading /
- * trailing / `.lock` violations, so a caller-supplied base ref cannot be
- * reparsed as a fetch option or refspec.
+ * **Details**
  *
- * @param branch - Branch name (without the `origin/` prefix).
- * @returns Whether the branch is safe to interpolate into a git refspec.
- * @example
+ * Option-like names, git refname metacharacters, `..`, and leading, trailing, or `.lock` violations
+ * are all rejected, so a caller-supplied base ref cannot be reparsed as a fetch option or refspec.
+ *
+ * **Example** (Reject an option-like branch name)
+ *
  * ```ts
  * import { isSafeOriginBranch } from "@beep/repo-cli/internal/repo-run"
  *
- * console.log(isSafeOriginBranch("main"), isSafeOriginBranch("--upload-pack=x"))
+ * console.log(isSafeOriginBranch("main")) // true
+ * console.log(isSafeOriginBranch("--upload-pack=x")) // false
  * ```
+ *
+ * @param branch - Branch name, without the `origin/` prefix.
+ * @returns Whether the branch is safe to interpolate into a git refspec.
  * @category validation
  * @since 0.0.0
  */
@@ -508,16 +788,25 @@ export const isSafeOriginBranch = (branch: string): boolean =>
   !Str.endsWith(".lock")(branch);
 
 /**
- * Extract the branch name from an `origin/<branch>` base ref.
+ * Extracts the branch name from an `origin/<branch>` base ref.
+ *
+ * **Gotchas**
+ *
+ * This performs no safety validation; use {@link safeOriginBranchFromBase} before interpolating the
+ * result into a refspec.
+ *
+ * **Example** (Strip the remote prefix)
+ *
+ * ```ts
+ * import { originBranchFromBase } from "@beep/repo-cli/internal/repo-run"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(originBranchFromBase("origin/main"))) // "main"
+ * console.log(O.isNone(originBranchFromBase("HEAD"))) // true
+ * ```
  *
  * @param base - Base ref such as `origin/main`.
  * @returns The branch name when the base is a non-empty `origin/` ref.
- * @example
- * ```ts
- * import { originBranchFromBase } from "@beep/repo-cli/internal/repo-run"
- *
- * console.log(originBranchFromBase("origin/main"), originBranchFromBase("HEAD"))
- * ```
  * @category validation
  * @since 0.0.0
  */
@@ -530,17 +819,25 @@ export const originBranchFromBase = (base: string): O.Option<string> =>
   );
 
 /**
- * Extract a validated safe branch name from an `origin/<branch>` base ref.
+ * Extracts a validated safe branch name from an `origin/<branch>` base ref.
  *
- * @param base - Base ref such as `origin/main`.
- * @returns The branch name when it is an `origin/` ref that passes
- * {@link isSafeOriginBranch}.
- * @example
+ * **When to use**
+ *
+ * Use whenever a caller-supplied base ref will be interpolated into a fetch refspec, so an
+ * option-like or metacharacter-bearing name is rejected before it reaches git.
+ *
+ * **Example** (Accept a plain branch and reject an unsafe one)
+ *
  * ```ts
  * import { safeOriginBranchFromBase } from "@beep/repo-cli/internal/repo-run"
+ * import * as O from "effect/Option"
  *
- * console.log(safeOriginBranchFromBase("origin/main"), safeOriginBranchFromBase("origin/--x"))
+ * console.log(O.getOrNull(safeOriginBranchFromBase("origin/main"))) // "main"
+ * console.log(O.isNone(safeOriginBranchFromBase("origin/--x"))) // true
  * ```
+ *
+ * @param base - Base ref such as `origin/main`.
+ * @returns The branch name when it is an `origin/` ref that passes {@link isSafeOriginBranch}.
  * @category validation
  * @since 0.0.0
  */
