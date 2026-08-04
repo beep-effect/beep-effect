@@ -1,0 +1,26 @@
+[
+  {
+    "text": "Replace proof-by-tool-execution with proof-carrying patches whose generated derivations are checked by one tiny trusted kernel.",
+    "rationale": "The expensive battery becomes a producer of reusable formal obligations while acceptance reduces to validating a compact certificate."
+  },
+  {
+    "text": "Make the coding agent emit changes through a schema-and-law-constrained AST protocol that cannot represent architecture-illegal programs.",
+    "rationale": "Checks move inside generation, turning whole classes of lint, boundary, documentation, and modeling failures into impossible output states."
+  },
+  {
+    "text": "Turn main into an append-only commit ledger with a computed green projection that automatically excludes incompatible squash commits until repaired.",
+    "rationale": "Integration never blocks on preserving a physically green branch because consumers resolve the maximal compatible projection."
+  },
+  {
+    "text": "Dissolve the monorepo tree into immutable package capsules and make each PR a transactional rewrite of a signed dependency manifest.",
+    "rationale": "Validation targets independently promotable package worlds instead of repeatedly reconstructing one 129-package checkout."
+  },
+  {
+    "text": "Merge every candidate immediately into an isolated shadow-main lineage and define correctness as surviving continuous mutation, replay, and automatic rollback.",
+    "rationale": "Pre-merge gates disappear in favor of many disposable futures where regressions identify and eject their introducing lineage."
+  },
+  {
+    "text": "Certify the agent's research-to-probe-to-ship trace instead of its final diff, accepting only transformations whose evidence chain closes every declared obligation.",
+    "rationale": "CI becomes a verifier of provenance and justified decisions, with tool reruns reserved for adversarial audits rather than every PR."
+  }
+]

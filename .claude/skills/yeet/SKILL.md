@@ -223,9 +223,9 @@ from a real security failure) before shipping such a fix.
    then use normal Yeet publish or the exact-match amend retry when appropriate.
 9. Address failed checks or actionable review comments with follow-up commits
    through the same Yeet publish path.
-10. Mark the PR ready only when checks are green, there are no unresolved
-   actionable review threads, and GitHub reports the branch as mergeable or not
-   conflicted.
+10. Mark the PR ready only when checks are green, there are zero unresolved
+    review threads (including outdated threads until explicitly resolved), and GitHub reports the branch as mergeable or not
+    conflicted.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
 writes Yeet artifacts locally. It posts a Greptile rerun comment only when
@@ -311,8 +311,8 @@ the authoritative gates.
 - Failure packets are written for proof/commit/publish/monitor step failures,
   publish-intent refusals (untracked/unstaged/partially staged paths), and
   stale-base refusals. Intent refusals print a summarized path list on stderr;
-  the full list lives in the packet. Known sub-lane hints cover cspell, typos,
-  terse-effect, dual-arity, docgen, changeset status,
+  the full list lives in the packet. Known sub-lane hints cover typos,
+  terse-effect, docgen, changeset status,
   secrets, SAST, security, and Nix. Hint selection prefers output near the
   actual failure marker before falling back to broad log scanning. Prefer the
   suggested repair command in `yeet status`, the packet, or `verdict.json` over

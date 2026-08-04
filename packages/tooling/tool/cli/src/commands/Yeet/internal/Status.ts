@@ -26,12 +26,14 @@ const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 /**
  * Status of an optional Yeet artifact read.
  *
- * @example
+ * **Example** (Check yeet status artifact state membership)
+ *
  * ```ts
  * import { YeetStatusArtifactState } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetStatusArtifactState.is.present("present"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -52,13 +54,15 @@ export type YeetStatusArtifactState = typeof YeetStatusArtifactState.Type;
 /**
  * Local Git worktree counts used by `yeet status`.
  *
- * @example
+ * **Example** (Construct a yeet status worktree)
+ *
  * ```ts
  * import { YeetStatusWorktree } from "@beep/repo-cli/test/Yeet"
  *
  * const worktree = YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 })
  * console.log(worktree.clean)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,7 +81,8 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
 /**
  * Summary for a Yeet artifact read by status.
  *
- * @example
+ * **Example** (Construct a yeet status artifact)
+ *
  * ```ts
  * import { YeetStatusArtifact } from "@beep/repo-cli/test/Yeet"
  *
@@ -88,6 +93,7 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
  * })
  * console.log(artifact.state)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -110,13 +116,15 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
 /**
  * Optional remote pull request summary for `yeet status --remote`.
  *
- * @example
+ * **Example** (Construct a yeet status remote)
+ *
  * ```ts
  * import { YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
  *
  * const remote = YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" })
  * console.log(remote.checked)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -132,6 +140,10 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
     pendingCheckCount: S.optionalKey(S.Finite),
+    unresolvedReviewThreadCount: S.optionalKey(S.Finite),
+    unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
+    rerunFailedCommand: S.optionalKey(S.String),
+    rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
     state: S.optionalKey(S.String),
     url: S.optionalKey(S.String),
@@ -144,7 +156,8 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
 /**
  * Machine-readable status snapshot emitted by `yeet status`.
  *
- * @example
+ * **Example** (Construct a yeet status snapshot)
+ *
  * ```ts
  * import { YeetStatusSnapshot, YeetStatusWorktree, YeetStatusArtifact, YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
  *
@@ -164,6 +177,7 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
  * })
  * console.log(snapshot.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -189,6 +203,8 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
 
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
+    id: S.String,
+    headRefOid: S.String,
     isDraft: S.Boolean,
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
@@ -200,6 +216,60 @@ class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRe
   $I.annote("GhStatusPullRequest", {
     description: "GitHub pull request payload used by yeet status remote summaries.",
   })
+) {}
+
+class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusReviewThread`)(
+  {
+    id: S.String,
+    isResolved: S.Boolean,
+    isOutdated: S.Boolean,
+    path: S.NullOr(S.String),
+  },
+  $I.annote("GhStatusReviewThread", {
+    description: "Minimal review-thread identity used by Yeet remote status.",
+  })
+) {}
+
+class GhStatusReviewThreadPageInfo extends S.Class<GhStatusReviewThreadPageInfo>($I`GhStatusReviewThreadPageInfo`)(
+  { hasNextPage: S.Boolean },
+  $I.annote("GhStatusReviewThreadPageInfo", {
+    description: "Pagination marker for the single-query Yeet review-thread status check.",
+  })
+) {}
+
+class GhStatusReviewThreadConnection extends S.Class<GhStatusReviewThreadConnection>(
+  $I`GhStatusReviewThreadConnection`
+)(
+  { nodes: S.Array(GhStatusReviewThread), pageInfo: GhStatusReviewThreadPageInfo },
+  $I.annote("GhStatusReviewThreadConnection", {
+    description: "Review threads returned by the single-query Yeet remote status check.",
+  })
+) {}
+
+class GhStatusReviewThreadsNode extends S.Class<GhStatusReviewThreadsNode>($I`GhStatusReviewThreadsNode`)(
+  { reviewThreads: GhStatusReviewThreadConnection },
+  $I.annote("GhStatusReviewThreadsNode", { description: "Pull request review-thread status node." })
+) {}
+
+class GhStatusReviewThreadsData extends S.Class<GhStatusReviewThreadsData>($I`GhStatusReviewThreadsData`)(
+  { node: GhStatusReviewThreadsNode },
+  $I.annote("GhStatusReviewThreadsData", { description: "GraphQL review-thread status data." })
+) {}
+
+class GhStatusReviewThreadsDocument extends S.Class<GhStatusReviewThreadsDocument>($I`GhStatusReviewThreadsDocument`)(
+  { data: GhStatusReviewThreadsData },
+  $I.annote("GhStatusReviewThreadsDocument", { description: "GraphQL review-thread status document." })
+) {}
+
+class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatusWorkflowRun`)(
+  {
+    conclusion: S.NullOr(S.String),
+    databaseId: S.Finite,
+    headSha: S.String,
+    name: S.String,
+    status: S.String,
+  },
+  $I.annote("GhStatusWorkflowRun", { description: "GitHub workflow run used for rerun-failed guidance." })
 ) {}
 
 class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
@@ -216,6 +286,10 @@ class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
 const decodeYeetVerdict = S.decodeUnknownEffect(S.fromJsonString(YeetVerdict));
 const decodePrCloseoutReport = S.decodeUnknownEffect(S.fromJsonString(PrCloseoutReport));
 const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatusPullRequest));
+const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
+const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
+const reviewThreadsQuery =
+  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved isOutdated path} pageInfo{hasNextPage}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 
 const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
@@ -229,7 +303,8 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
 /**
  * Return the status artifact path for a Yeet run context.
  *
- * @example
+ * **Example** (Derive the status path for a context)
+ *
  * ```ts
  * import { yeetStatusPathForTesting } from "@beep/repo-cli/test/Yeet"
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
@@ -247,6 +322,7 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  * })
  * console.log(Effect.isEffect(yeetStatusPathForTesting(context))) // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -405,6 +481,42 @@ const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function
   return yield* decodeGhStatusChecks(result.output).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
 });
 
+const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
+  context: RepoRunContext,
+  pullRequestId: string
+): Effect.fn.Return<GhStatusReviewThreadConnection, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture(
+    "gh",
+    ["api", "graphql", "-f", `query=${reviewThreadsQuery}`, "-F", `id=${pullRequestId}`],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR review threads for yeet status.")));
+  if (result.exitCode !== 0 || result.truncated) {
+    return yield* YeetCommandError.make({
+      message: "Failed to collect the single-query PR review-thread closeout gate.",
+      command: "gh api graphql",
+      exitCode: result.exitCode === 0 ? 1 : result.exitCode,
+    });
+  }
+  return yield* decodeGhStatusReviewThreads(result.output).pipe(
+    Effect.map((document) => document.data.node.reviewThreads),
+    Effect.mapError(YeetCommandError.new("Failed to decode PR review threads for yeet status."))
+  );
+});
+
+const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRuns")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<ReadonlyArray<GhStatusWorkflowRun>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture(
+    "gh",
+    ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
+    context.repoRoot
+  ).pipe(Effect.orElseSucceed(() => ({ exitCode: 1, output: "", truncated: false })));
+  if (result.exitCode !== 0 || result.truncated) {
+    return A.empty();
+  }
+  return yield* decodeGhStatusWorkflowRuns(result.output).pipe(Effect.orElseSucceed(A.empty<GhStatusWorkflowRun>));
+});
+
 const skippedRemote = YeetStatusRemote.make({
   available: false,
   checked: false,
@@ -420,7 +532,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   }
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision"],
+    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR for yeet status.")));
   if (result.exitCode !== 0) {
@@ -441,6 +553,12 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet status."))
   );
   const checks = yield* collectRemoteChecks(context);
+  const reviewThreads = yield* collectRemoteReviewThreads(context, view.id);
+  const unresolvedThreads = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
+  const unresolvedReviewThreads = [
+    ...A.map(unresolvedThreads, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
+    ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
+  ];
   const checkCount = pipe(checks, O.map(A.length));
   const failingCheckCount = pipe(
     checks,
@@ -450,6 +568,24 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     checks,
     O.map((values) => A.length(A.filter(values, checkIsPending)))
   );
+  const workflowRuns = yield* collectRemoteWorkflowRuns(context);
+  const hasFailingCheck = pipe(
+    failingCheckCount,
+    O.exists((count) => count > 0)
+  );
+  // A same-SHA failed run stays in `gh run list` after a rerun turns the checks
+  // green, so rerun guidance is only actionable while a check is still red.
+  const rerunnableFailedRun = pipe(
+    workflowRuns,
+    A.findFirst((run) => run.headSha === view.headRefOid && run.conclusion === "failure"),
+    O.filter(() => hasFailingCheck)
+  );
+  const rerunFailedCommand = O.map(rerunnableFailedRun, (run) => `gh run rerun ${run.databaseId} --failed`);
+  const rerunFailedDecision = pipe(
+    rerunnableFailedRun,
+    O.map((run) => `same-SHA red detected for ${run.name}; suggest rerun-failed before pushing`),
+    O.orElse(() => O.some("no same-SHA failed workflow rerun is currently indicated"))
+  );
   return YeetStatusRemote.make({
     available: true,
     checked: true,
@@ -458,10 +594,14 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     number: view.number,
     state: view.state,
     url: view.url,
+    unresolvedReviewThreadCount: A.length(unresolvedReviewThreads),
+    unresolvedReviewThreads,
     ...O.getSomesStruct({
       checkCount,
       failingCheckCount,
       pendingCheckCount,
+      rerunFailedCommand,
+      rerunFailedDecision,
     }),
     ...O.getSomesStruct({
       mergeStateStatus: O.fromNullishOr(view.mergeStateStatus),
@@ -471,36 +611,59 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   });
 });
 
+const STAGE_AND_PUBLISH_COMMAND =
+  'stage intended files, then run `bun run beep yeet publish --staged-only --pr --monitor --message "..."`';
+const OPEN_PULL_REQUEST_COMMAND =
+  'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
+const MERGE_READY_COMMAND = "confirm GitHub mergeability, then merge the PR";
+const CLOSEOUT_COMMAND =
+  "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
+const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
+
+const remoteIsMergeReady = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
+  remote.unresolvedReviewThreadCount === 0 &&
+  pipe(
+    O.fromUndefinedOr(closeout.issueCount),
+    O.exists((count) => count === 0)
+  );
+
+const nextCommandForRemote = (
+  verdict: YeetStatusArtifact,
+  closeout: YeetStatusArtifact,
+  remote: YeetStatusRemote
+): string => {
+  if (remoteIsMergeReady(closeout, remote)) {
+    return MERGE_READY_COMMAND;
+  }
+  if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
+    return `${remote.rerunFailedCommand} # ${remote.rerunFailedDecision ?? "same-SHA failed workflow"}`;
+  }
+  return CLOSEOUT_COMMAND;
+};
+
 const nextCommandForStatus = (
   worktree: YeetStatusWorktree,
   verdict: YeetStatusArtifact,
   closeout: YeetStatusArtifact,
   remote: YeetStatusRemote
-): string => {
-  const repairCommand = O.fromUndefinedOr(verdict.repairCommand);
-  if (O.isSome(repairCommand)) {
-    return repairCommand.value;
-  }
-  if (!worktree.clean) {
-    return 'stage intended files, then run `bun run beep yeet publish --staged-only --pr --monitor --message "..."`';
-  }
-  if (remote.checked && !remote.available) {
-    return 'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
-  }
-  const closeoutIssueCount = O.fromUndefinedOr(closeout.issueCount);
-  if (remote.available && O.isSome(closeoutIssueCount) && closeoutIssueCount.value === 0) {
-    return "confirm GitHub mergeability, then merge the PR";
-  }
-  if (remote.available) {
-    return "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
-  }
-  return "run `bun run beep yeet verify` or pass `--remote` for PR status";
-};
+): string =>
+  pipe(
+    [
+      O.fromUndefinedOr(verdict.repairCommand),
+      worktree.clean ? O.none<string>() : O.some(STAGE_AND_PUBLISH_COMMAND),
+      remote.checked && !remote.available ? O.some(OPEN_PULL_REQUEST_COMMAND) : O.none<string>(),
+      remote.available ? O.some(nextCommandForRemote(verdict, closeout, remote)) : O.none<string>(),
+    ],
+    A.getSomes,
+    A.head,
+    O.getOrElse(() => VERIFY_OR_REMOTE_COMMAND)
+  );
 
 /**
  * Collect a local-first Yeet operator status snapshot.
  *
- * @example
+ * **Example** (Reference the status collector)
+ *
  * ```ts
  * import { collectYeetStatus } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
@@ -508,6 +671,7 @@ const nextCommandForStatus = (
  * const program = Effect.succeed(collectYeetStatus)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category diagnostics
  * @since 0.0.0
  */
@@ -548,12 +712,28 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
   });
 });
 
+const renderWorktreeLine = (worktree: YeetStatusWorktree): string =>
+  `${worktree.clean ? "clean" : "dirty"} (${worktree.staged} staged, ${worktree.unstaged} unstaged, ${worktree.untracked} untracked)`;
+
+const renderCheckLine = (remote: YeetStatusRemote): string =>
+  remote.checked && O.isSome(O.fromUndefinedOr(remote.checkCount))
+    ? `checks: ${remote.checkCount} total, ${remote.failingCheckCount ?? 0} failing, ${remote.pendingCheckCount ?? 0} pending`
+    : "checks: not checked";
+
+const renderReviewThreadLine = (remote: YeetStatusRemote): string => {
+  if (!remote.checked || !remote.available) {
+    return "review threads: not checked";
+  }
+  const threads = remote.unresolvedReviewThreads ?? A.empty<string>();
+  const listed = A.isReadonlyArrayNonEmpty(threads) ? ` -> ${A.join(threads, ", ")}` : Str.empty;
+  return `review threads: ${remote.unresolvedReviewThreadCount ?? 0} unresolved${listed}`;
+};
+
 /**
  * Render a concise human-readable Yeet status block.
  *
- * @param snapshot - Yeet status snapshot to render.
- * @returns A compact text block for operator-facing status output.
- * @example
+ * **Example** (Render a yeet status summary)
+ *
  * ```ts
  * import { renderYeetStatusSummary, YeetStatusSnapshot, YeetStatusWorktree, YeetStatusArtifact, YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
  *
@@ -573,36 +753,36 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
  * }))
  * console.log(text) // example value
  * ```
+ *
+ * @param snapshot - Yeet status snapshot to render.
+ * @returns A compact text block for operator-facing status output.
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string => {
-  const remoteLine = snapshot.remote.checked ? snapshot.remote.detail : "remote not checked";
-  const checkLine =
-    snapshot.remote.checked && O.isSome(O.fromUndefinedOr(snapshot.remote.checkCount))
-      ? `checks: ${snapshot.remote.checkCount} total, ${snapshot.remote.failingCheckCount ?? 0} failing, ${snapshot.remote.pendingCheckCount ?? 0} pending`
-      : "checks: not checked";
-  return pipe(
+export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
+  pipe(
     [
       "yeet status",
       `- branch: ${snapshot.branch}`,
       `- base/head: ${snapshot.base}...${snapshot.head}`,
-      `- worktree: ${snapshot.worktree.clean ? "clean" : "dirty"} (${snapshot.worktree.staged} staged, ${snapshot.worktree.unstaged} unstaged, ${snapshot.worktree.untracked} untracked)`,
+      `- worktree: ${renderWorktreeLine(snapshot.worktree)}`,
       `- verdict: ${snapshot.verdict.detail}`,
       `- closeout: ${snapshot.closeout.detail}`,
-      `- remote: ${remoteLine}`,
-      `- ${checkLine}`,
+      `- remote: ${snapshot.remote.checked ? snapshot.remote.detail : "remote not checked"}`,
+      `- ${renderCheckLine(snapshot.remote)}`,
+      `- ${renderReviewThreadLine(snapshot.remote)}`,
+      `- rerun-failed: ${snapshot.remote.rerunFailedDecision ?? "not checked"}`,
       `- status artifact: ${snapshot.statusPath}`,
       `- next: ${snapshot.nextCommand}`,
     ],
     A.join("\n")
   );
-};
 
 /**
  * Write a Yeet status snapshot to its status artifact path.
  *
- * @example
+ * **Example** (Reference the snapshot writer)
+ *
  * ```ts
  * import { writeYeetStatusSnapshot } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
@@ -610,6 +790,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
  * const program = Effect.succeed(writeYeetStatusSnapshot)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category diagnostics
  * @since 0.0.0
  */

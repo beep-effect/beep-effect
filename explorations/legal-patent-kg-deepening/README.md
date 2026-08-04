@@ -17,15 +17,17 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Drive the opened first wedge
-[`patent-citation-candor-gate`](../patent-citation-candor-gate/README.md)
-through research → align (its two research lanes and align questions are
-recorded in that packet). This packet itself waits: the remaining P1 wedges
-(`legal-position-relator-runtime` — now also carrying the re-routed
+The first wedge
+[`patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) has
+completed research AND align (2026-08-04: four branches closed, openQuestions
+cleared); its next step is the BRIEF, owned by that packet. For this packet:
+decide with Benjamin whether the queued wedges
+(`legal-position-relator-runtime` — carrying the re-routed
 contradiction-semantics cluster, `patent-drafting-episode-ledger`,
-FunctionalUnit into `uspto-patent-driver-depth`) queue until the candor wedge
-reaches align, per the 2026-08-04 phase-2 grill
-([`DECISIONS.md`](./DECISIONS.md)).
+FunctionalUnit into `uspto-patent-driver-depth`) open now that the candor
+wedge has reached align, or wait for its BRIEF — the phase-shape decision
+([`DECISIONS.md`](./DECISIONS.md), 2026-08-04) queued them "until then"
+without fixing which milestone unblocks them.
 
 ## Read This First
 
@@ -74,3 +76,7 @@ reaches align, per the 2026-08-04 phase-2 grill
   pre-seeded); contradiction-semantics cluster re-routed compose-don't-widen
   to ride with `legal-position-relator-runtime` (both routing-seed forms
   amended); phase shape sequential. Three new DECISIONS entries.
+- 2026-08-04: packet-open PR #550 merged by Benjamin; the candor wedge then
+  completed its research lanes and align session (four branches closed, see
+  that packet's DECISIONS) — the wedge is at stage `align`, BRIEF next; the
+  queued-wedge unblock milestone is this packet's next open question.

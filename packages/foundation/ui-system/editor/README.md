@@ -1,6 +1,5 @@
 # @beep/editor
 
-<!-- cspell:words CSSOM -->
 
 React editor kit on Lexical + `@lexical/react` for schema-first rich text: a
 read-only viewer and composer primitives over the
