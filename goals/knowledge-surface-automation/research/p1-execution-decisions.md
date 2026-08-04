@@ -40,9 +40,12 @@ parallel.
 ## E4. FP-eyeball evidence — committed research report per command
 
 Every report PR ships `research/p1-report-<command>.md` capturing the live-repo run
-(JSON excerpts plus false-positive annotations). Host-absolute paths are redacted to
-`<HOME>`-style placeholders so the packet's host-path verification grep stays green and
-the reports stay clone-agnostic. The committed report is the durable input to the
+(JSON excerpts plus false-positive annotations). A non-command tranche satisfies the
+same contract with its live-corpus proof run: D's artifact is
+`research/p1-report-manifest-capabilities.md`, capturing the evergreen tracked-manifest
+decode census executed by its decode-retention suite. Host-absolute paths are redacted
+to `<HOME>`-style placeholders so the packet's host-path verification grep stays green
+and the reports stay clone-agnostic. The committed report is the durable input to the
 phase-gate eyeball; the reviewer's verdict is recorded before any dependent mutation PR
 starts.
 
