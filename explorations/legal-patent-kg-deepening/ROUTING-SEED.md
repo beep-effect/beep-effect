@@ -22,20 +22,24 @@ dup-skip`.
 |---|---|---|---|---|
 | Legal positions, relators, and authorized transitions (`T1-F1,T1-F2,T1-F7,T1-F9,T4-F6,P100,R25`) | **mixed** | `legal-position-relator-runtime` *(proposed slug, not a path yet)* | P1 | `legal-position-relator-runtime` |
 | Legal rule, time, source identity, and controlled transformation (`T1-F4,T1-F5,T1-F6,T3-F1,T3-F2,T3-F3,T3-F6,T4-F5,P101`) | **new-exploration** | `legal-rule-time-identity` *(proposed slug, not a path yet)* | P2 | `legal-rule-time-identity` |
-| Legal contradiction scope, priority, and correction deltas (`T1-F3,T3-F9,T4-F8`) | **extend-goal** | `goals/epistemic-contradiction-triage` | P1 | — |
+| Legal contradiction scope, priority, and correction deltas (`T1-F3,T3-F9,T4-F8`) | **mixed** *(re-routed 2026-08-04 → rides with `legal-position-relator-runtime`; compose, don't widen)* | `legal-position-relator-runtime` *(proposed slug, not a path yet)* | P1 | — |
 | Semantic registry, qualified mappings, and extraction admission (`T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8`) | **extend-goal** *(grill resolved: schema-first now, M4 SHACL later)* | `goals/semantic-foundation` | P2 | — |
 | Functional patent profiles and drift-safe ingestion (`T2-F1,T2-F8,T2-F9`) | **mixed** | `explorations/uspto-patent-driver-depth` | P1 | — |
-| Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** | `patent-citation-candor-gate` *(proposed slug, not a path yet)* | P1 | `patent-citation-candor-gate` |
+| Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** *(packet OPENED 2026-08-04)* | [`explorations/patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) | P1 | `patent-citation-candor-gate` |
 | Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **merged 2026-08-01** → first rung of `patent-drafting-episode-ledger` | `patent-drafting-episode-ledger` | P1 | — |
 | Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3` + merged `T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** *(grill resolved: remo2 rows-first + in-memory RDF lane; remo3 product-records + Cognee projection)* | `patent-drafting-episode-ledger` *(proposed slug, not a path yet)* | P1 | `patent-drafting-episode-ledger` |
 | Rejected admission and ODRL profile claims (`T4-R1,T4-R2`) | **dup-skip** | `explorations/legal-patent-kg-deepening` | P3 | — |
 
-Route mix (as amended 2026-08-01): mixed×4, extend-goal×2, new-exploration×1,
-dup-skip×1, merged×1. Proposed slug count: **four** after the reconciliation
-grill (`legal-position-relator-runtime`, `legal-rule-time-identity`,
-`patent-citation-candor-gate`, `patent-drafting-episode-ledger`). All three
-grill annotations (`remo1`, `remo2`, `remo3`) are resolved — see
-Reconciliation amendments at the end of this file.
+Route mix (as amended 2026-08-04): mixed×5 (one re-routed 2026-08-04 to ride
+with `legal-position-relator-runtime`), extend-goal×1, new-exploration×1,
+dup-skip×1, merged×1 — matching `routing-seed.json`, where the re-routed
+contradiction cluster is encoded as `mixed`. Proposed slug count: **four** after
+the reconciliation grill (`legal-position-relator-runtime`,
+`legal-rule-time-identity`, `patent-citation-candor-gate` — opened 2026-08-04,
+`patent-drafting-episode-ledger`). All three grill annotations (`remo1`,
+`remo2`, `remo3`) are resolved, and the contradiction-cluster route decision
+landed in the 2026-08-04 phase-2 grill — see the amendment sections at the
+end of this file.
 
 ## Per-cluster detail
 
@@ -82,7 +86,15 @@ Reconciliation amendments at the end of this file.
 
 ### Legal contradiction scope, priority, and correction deltas
 
-- **Route / Wave:** extend-goal · P1
+> **RE-ROUTED 2026-08-04 (phase-2 grill):** compose, don't widen — the legal
+> vocabulary (`LegalScopeContext`, `PriorityBasis`, verdict families,
+> `CorrectionDelta`) rides with `legal-position-relator-runtime` when that
+> wedge opens; `goals/epistemic-contradiction-triage` is composed as substrate
+> and its SPEC is NOT amended (minimal generic extension slots only with
+> fixture evidence — the T4-R2 precedent). The detail below is retained for
+> provenance.
+
+- **Route / Wave:** extend-goal *(pre-amendment)* · P1
 - **Nuggets:** `T1-F3`, `T3-F9`, `T4-F8`
 - **Primary target:** `goals/epistemic-contradiction-triage`
 - **Coordinate with:** `goals/epistemic-bitemporal-edge-core`, `explorations/legal-patent-kg-deepening`
@@ -254,3 +266,21 @@ grill (full Q/A/rationale in [`DECISIONS.md`](./DECISIONS.md)):
    `RuntimeApprovalGate`). Four proposed slugs remain.
 5. **First wedge.** `patent-citation-candor-gate` shapes first; the other P1
    wedges queue behind it. BRIEF/MAP work may now begin, starting there.
+
+## Phase-2 amendments (2026-08-04 grill)
+
+The phase-2 /grill-with-docs session that opened the first wedge (full
+Q/A/rationale in [`DECISIONS.md`](./DECISIONS.md), 2026-08-04 entries):
+
+1. **First wedge OPENED.** `explorations/patent-citation-candor-gate` exists
+   at capture stage, seeded from this matrix's candor cluster; its
+   wedge-scoped decisions (research lanes, dependency posture, orchestration,
+   PR staging) are pre-seeded in that packet's `DECISIONS.md`. Phase shape:
+   sequential — the other wedges start no work until it reaches align.
+2. **Contradiction cluster re-routed — compose, don't widen.** The route
+   decision the 2026-08-01 seed flagged for Benjamin is resolved: the legal
+   vocabulary rides with `legal-position-relator-runtime`;
+   `goals/epistemic-contradiction-triage` keeps its current SPEC and is
+   composed as substrate. Both routing-seed forms carry the amendment; the
+   displaced `extend-goal` rationale is preserved in the cluster detail
+   above.

@@ -230,3 +230,63 @@ duty-of-candor risk without waiting on any other wedge. Rejected as first:
 relator runtime (foundational but blocks nothing), episode ledger (largest
 scope; its limitation-support rung depends on citation-verified-span-substrate
 P0), FunctionalUnit cluster (analysis tooling over risk-retiring capability).
+
+## 2026-08-04 — phase-2 grill: phase shape
+
+**Question:** How many of the queued routes activate now that the routing
+matrix is signed off?
+
+**Answer:** Sequential first wedge only. `explorations/patent-citation-candor-gate`
+opens and walks capture → research → align (BRIEF gated behind align); the
+other wedges (`legal-position-relator-runtime`,
+`patent-drafting-episode-ledger`, FunctionalUnit into
+`explorations/uspto-patent-driver-depth`) start no work until then. The same
+grill also closed the pure route decisions already flagged as awaiting
+Benjamin, so the queued wedges start unblocked.
+
+**Rationale:** Sequential focus matches the signed-off first-wedge intent and
+keeps align judgment concentrated; closing the flagged route decisions now
+costs nothing and avoids a dedicated future grill. Rejected: pipelining all
+P1 wedges in parallel (splits align attention across three packets) and
+deferring every other decision (leaves a known Benjamin-gated route blocking
+the relator wedge's future capture).
+
+## 2026-08-04 — phase-2 grill: contradiction-cluster route
+
+**Question:** How does the "legal contradiction scope, priority, and
+correction deltas" cluster land, given
+`goals/epistemic-contradiction-triage`'s stop condition against scope
+expansion?
+
+**Answer:** Compose, don't widen. The legal vocabulary (`LegalScopeContext`,
+`PriorityBasis`, verdict families, caller-owned `CorrectionDelta`) rides with
+`legal-position-relator-runtime` when that wedge opens; the generic triage
+goal's SPEC is not amended, and minimal generic extension slots may be
+proposed later only with fixture evidence. Both routing-seed forms carry the
+amendment.
+
+**Rationale:** The SPEC's stop condition guards detection-heuristic scope,
+but the cluster's own caution ("keep ODRL and other caller vocabularies out
+of the generic epistemic goal") and the `T4-R2` precedent ("compose the
+existing admission contract rather than widening the completed kernel") both
+route caller semantics to the consumer. Rejected: a scoped SPEC amendment
+(widens an active goal mid-flight with caller vocabulary) and a fifth
+exploration packet (full packet ceremony for three nuggets that are cognate
+with the Hohfeld-position cluster anyway).
+
+## 2026-08-04 — phase-2 grill: wedge-scoped decisions (pointer)
+
+**Question:** What research depth, dependency posture, orchestration mode,
+and PR staging does the candor wedge run with?
+
+**Answer:** Recorded in the wedge packet, links not copies:
+`explorations/patent-citation-candor-gate/DECISIONS.md` (2026-08-04 entries —
+two research lanes with a bounded public-primary-source candor legal frame;
+live-source-plus-SPEC-bound composition against the three active goals;
+codex-only Sol-xhigh research with zero Claude subagents; two-stage PR
+cadence with BRIEF gated behind align).
+
+**Rationale:** The decisions bind the wedge, not the campaign; the campaign
+log records that they exist and where they live. Ownership grounding needed
+no decision: `PatentCitationEvent` and `CandorDisposition` are law-practice
+product language beside `PatentMetadata`/`PriorArtReference`/`Claim`.

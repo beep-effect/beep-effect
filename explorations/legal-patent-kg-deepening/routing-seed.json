@@ -2,6 +2,9 @@
   {
     "cluster": "Legal positions, relators, and authorized transitions",
     "route": "mixed",
+    "carries": [
+      "Legal contradiction scope, priority, and correction deltas (re-routed 2026-08-04)"
+    ],
     "primaryTarget": "legal-position-relator-runtime",
     "targetExists": false,
     "secondaryTargets": [
@@ -29,7 +32,8 @@
     ],
     "newSlug": "legal-position-relator-runtime",
     "nuggetIds": ["T1-F1", "T1-F2", "T1-F7", "T1-F9", "T4-F6", "P100", "R25"],
-    "reconciled": "2026-08-01"
+    "reconciled": "2026-08-01",
+    "amended": "2026-08-04"
   },
   {
     "cluster": "Legal rule, time, source identity, and controlled transformation",
@@ -77,10 +81,11 @@
   },
   {
     "cluster": "Legal contradiction scope, priority, and correction deltas",
-    "route": "extend-goal",
-    "primaryTarget": "goals/epistemic-contradiction-triage",
-    "targetExists": true,
+    "route": "mixed",
+    "primaryTarget": "legal-position-relator-runtime",
+    "targetExists": false,
     "secondaryTargets": [
+      "goals/epistemic-contradiction-triage",
       "goals/epistemic-bitemporal-edge-core",
       "explorations/legal-patent-kg-deepening"
     ],
@@ -94,15 +99,16 @@
       "[T1-F3,T3-F9,T4-F8] The active triage goal already owns durable contradiction candidates, duplicate suppression, unresolved visibility, scoped human disposition, and candidate-to-atomic-supersession flow (goals/epistemic-contradiction-triage/SPEC.md:6-9,49-55,86-95,114-118).",
       "[T4-F8] EdgeAuthority already makes supersession append-only and transactionally separate from detection (packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.ports.ts:3-34)."
     ],
-    "rationale": "`[T1-F3,T3-F9,T4-F8]` are semantic inputs and caller contracts for the existing candidate/adjudication pipeline, not a second triage engine.",
+    "rationale": "`[T1-F3,T3-F9,T4-F8]` are semantic inputs and caller contracts for the existing candidate/adjudication pipeline, not a second triage engine. AMENDED 2026-08-04 (phase-2 grill): compose, don't widen — was extend-goal → goals/epistemic-contradiction-triage; the legal vocabulary (LegalScopeContext, PriorityBasis, verdict families, CorrectionDelta) now rides with legal-position-relator-runtime when that wedge opens, the generic triage SPEC is not amended, and minimal generic extension slots may be proposed later only with fixture evidence (T4-R2 precedent).",
     "cautions": [
-      "[T1-F3] Route decision required: goals/epistemic-contradiction-triage/SPEC.md:137-138 stops work that adds detection heuristics; Benjamin must explicitly approve the semantic re-scope or split it.",
+      "RESOLVED 2026-08-04 (phase-2 grill; retained for provenance): [T1-F3] Route decision required: goals/epistemic-contradiction-triage/SPEC.md:137-138 stops work that adds detection heuristics; Benjamin must explicitly approve the semantic re-scope or split it.",
       "[T4-F8] Keep ODRL and other caller vocabularies out of the generic epistemic goal.",
       "[T3-F9] Temporal overlap creates a candidate only; it never adjudicates truth or supersession."
     ],
     "newSlug": null,
     "nuggetIds": ["T1-F3", "T3-F9", "T4-F8"],
-    "reconciled": "2026-08-01"
+    "reconciled": "2026-08-01",
+    "amended": "2026-08-04"
   },
   {
     "cluster": "Semantic registry, qualified mappings, and extraction admission",
@@ -180,8 +186,8 @@
   {
     "cluster": "Patent citation events and candor disposition",
     "route": "mixed",
-    "primaryTarget": "patent-citation-candor-gate",
-    "targetExists": false,
+    "primaryTarget": "explorations/patent-citation-candor-gate",
+    "targetExists": true,
     "secondaryTargets": [
       "goals/uspto-prosecution-read",
       "goals/citation-extraction-engine",
@@ -201,7 +207,7 @@
       "[T3-F7,ADHD-1] The verified-span goal already owns exact UTF-16 anchors, source digest/version, ambiguity, and fail-closed drift (goals/citation-verified-span-substrate/SPEC.md:44-80,108-123).",
       "[ADHD-1] RuntimeCandidateDraft and RuntimeApprovalGate already expose candidate references, evidence, policy basis, reviewer, and a pending decision (packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts:428-490)."
     ],
-    "rationale": "`[T2-F2,T3-F7,ADHD-1]` compose existing reference, mention, verified-anchor, USPTO observation, and runtime-gate bricks into one law-owned candor workflow; none of those existing bricks owns candor closure.",
+    "rationale": "`[T2-F2,T3-F7,ADHD-1]` compose existing reference, mention, verified-anchor, USPTO observation, and runtime-gate bricks into one law-owned candor workflow; none of those existing bricks owns candor closure. AMENDED 2026-08-04 (phase-2 grill): packet OPENED at explorations/patent-citation-candor-gate (capture stage); wedge-scoped decisions pre-seeded in its DECISIONS.md.",
     "cautions": [
       "[ADHD-1] CandorDisposition records attorney judgment; the system must not compute MPEP materiality or infer closure from missing events.",
       "[T2-F2] Keep face-list presence, citation act, office-action reliance, and model similarity as separate claims.",
@@ -209,7 +215,8 @@
     ],
     "newSlug": "patent-citation-candor-gate",
     "nuggetIds": ["T2-F2", "T3-F7", "ADHD-1"],
-    "reconciled": "2026-08-01"
+    "reconciled": "2026-08-01",
+    "amended": "2026-08-04"
   },
   {
     "cluster": "Drafting episodes, deterministic retrieval, and rebuildable projections + claim-limitation support (merged 2026-08-01)",
