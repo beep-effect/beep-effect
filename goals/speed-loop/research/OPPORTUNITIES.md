@@ -1000,7 +1000,14 @@ durability fixes discovery, not trust.
     A verdict older than the branch tip or contradicted by remote state
     renders as "stale (predates last push)" with the re-derivation
     command, never as current truth — operators must not learn to
-    ignore the verdict line.
+    ignore the verdict line. CONFIRMED on PR #592's own publish: the
+    first attempt failed proof after committing; the second attempt
+    passed all 21 lanes, pushed, and created the PR — and `yeet status`
+    STILL printed `verdict: publish failure: yeet publish proof failed
+    after creating the local commit` directly above `remote: PR #592
+    OPEN`. The verdict was the previous run's, rendered as current
+    truth beside remote state that contradicts it. Exactly the disease
+    this item names, on the branch that was fixing a different one.
 84. **Tree parity: local proof and hosted CI run on DIFFERENT TREES,
     and the stale-base guard is structurally blind to the gap.**
     (Reported by beep-effect5, 2026-08-06 — a plan/manifest phase-id
@@ -1035,6 +1042,16 @@ durability fixes discovery, not trust.
     run ON, and together they close "why wasn't this caught locally" on
     both axes. It is also the third class under #74, whose two classes
     both presuppose the guard fired at all. Vehicle: PR-G with #75.
+    CONFIRMED the same day it was written, on this item's own fix PR
+    (#592): PR #587 (Effect beta.103 catalog bump) merged mid-branch.
+    Measured path overlap between `mergeBase..HEAD` and
+    `mergeBase..origin/main` was EMPTY, so `enforceBaseFreshness` would
+    have returned clean — while #587 migrated repo-cli source
+    (Docgen, Laws, Lint, AgentEffectiveness) to beta.103 without
+    touching any of the four files this branch edits. Publishing
+    without merging would have proven a beta.102 tree against a
+    beta.103 CI. The merge happened because an operator reasoned about
+    it, not because any tool signalled it. That gap IS the item.
 85. **Coverage has TWO hosted-only classes, and collapsing them into
     one "structurally cannot" verdict misroutes the fix.** (Live on PR
     #587, the Effect 4.0.0-beta.103 catalog bump: `Coverage Regression`
@@ -1139,6 +1156,65 @@ durability fixes discovery, not trust.
     while its 9–16 happen to be ledger ids. That is a numbering
     collision sitting inside the only join path. Vehicle: PR-G, ahead
     of #86.
+
+88. **A gate run BEFORE the change it gates is a vacuous proof, and
+    reads identically to one run after.** (Lived on PR #592, 2026-08-06.)
+    I ran `bun run beep quality test-tsgo` → exit 0, THEN wrote the new
+    tests, then never re-ran it. `bunx vitest run` reported 61/61 green
+    because vitest does not typecheck. The publish proof then failed on
+    exactly the new lines: `TS2353: 'mainWorktreePath' does not exist
+    in type 'Partial<{...}>'` — the schema field was optional so
+    `.make()` accepted it, but the test helper's `Partial<typeof
+    mergedFacts>` did not. The generalizable law is NOT "remember to
+    run test-tsgo": it is that a gate's transcript entry carries no
+    evidence of WHICH tree it ran against, so a stale pass is
+    indistinguishable from a real one — the same shape as this
+    session's absence-proof receipts and #86's unverifiable premise.
+    Widget: gate results record the worktree hash they ran against, and
+    `yeet status` / the preflight battery render any result from an
+    earlier hash as STALE rather than green — #83's verdict-staleness
+    contract, applied to gate results instead of verdicts. Cheap
+    version available immediately: the battery re-runs a gate whose
+    recorded hash != current instead of reporting its cached verdict.
+    Vehicle: PR-G with #75.
+89. **The flake quarantine recognizes exactly one signature, so every
+    other environment-only failure is hardened by hand.** (Same run.)
+    `@beep/xai#check` failed exit 2 inside the full proof on a branch
+    that does not touch `packages/drivers/xai`; a standalone
+    `bunx turbo run check --filter=@beep/xai --force` passed 9/9,
+    exit 0. The quarantine declined it explicitly — `failure does not
+    match the no-location TS2589 flake signature; keeping failure
+    hard` — which is correct as written and useless in practice: it
+    knows one fingerprint, and this was a different environment-only
+    failure in the same family (53 bun/node processes older than ~11h
+    were live during the proof, all with real parents, so contention is
+    the likely cause and is not reproducible from the diff). Cheap
+    discriminator the quarantine can apply itself, before hardening any
+    package-scoped failure: if the failing package is OUTSIDE
+    `git diff --name-only origin/main...HEAD`, re-run that one package
+    filtered — seconds, against a full re-proof. Escalate to hard only
+    if the isolated re-run also fails. Ties to #35's attribution
+    fingerprints and #47's log fetcher. Vehicle: PR-G.
+
+Hint-misattribution receipt (PR #592, 2026-08-06) — third instance in
+one day, so it is a pattern and not an accident. The monitor phase
+failed on two Vercel deployment checks reporting `Deployment rate
+limited — retry in 24 hours` (an account-level build cap, and neither
+check is among main's 17 required contexts). Yeet's `next:` line said
+`Inspect the OSV finding and rerun bun run beep quality github-checks
+security`. There was no OSV finding. Same class as the verdict-packet
+`repairCommand` misrouting already recorded against the misattribution
+trifecta: the hint selector matches on lane family rather than on the
+failing check's own payload. Until it is fixed, read the failing
+check's message, never the hint.
+
+Exit-code masking, self-inflicted again (same run): I backgrounded the
+publish as `<cmd> > log 2>&1; echo "PUBLISH-EXIT=$?"`. The harness
+reported the invocation's exit as 0 — because the trailing `echo`
+succeeded — while the real publish exited 1. Same family as the
+`cmd | grep | tail` masking already in the ledger, and it defeated the
+same instinct twice in one session: the wrapper's status is not the
+work's status. Read the marker or the artifact, never the invocation.
 
 PLAN.md drift (2026-08-06, hit independently by two lenses and the
 synthesizer): `goals/speed-loop/PLAN.md` is advertised — in agent briefs
