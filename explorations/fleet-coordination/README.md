@@ -54,6 +54,18 @@ capability this packet is about does not exist yet.
 
 ## Trail
 
+- 2026-08-05: PR #562 review closed — seven findings, **all seven valid**. Three
+  were design defects, now amended: `merge-tree` needs the target *object* and
+  `ls-remote` only supplies its SHA (signal 2 was unavailable exactly when main
+  moves); the PR→checkout join is **one-to-many**, since Git's checkout
+  exclusivity does not span independent clones; and `SessionStart` never implied
+  a clean tree, so D4's directive now comes from `git status`. Those last two
+  amendments (with D5's) generalize to a binding law: **every field is either
+  measured or `unknown`** — nothing inferred from a proxy, nothing defaulting to
+  the safe-sounding value. Also fixed: the hook now serializes with `jq`, and two
+  refuted claims (the 4-of-5 intra-wave count, the MCP Agent Mail *"No broadcast
+  by design"* attribution) are marked refuted in place rather than silently
+  dropped.
 - 2026-08-05: `BRIEF.md` shaped inside the D1–D5 boundaries; appetite is one
   small goal packet, 1–2 focused days, sequenced behind PR-I. Publishing the
   packet produced a **live Mode B specimen**: #551 broke every `yeet publish`

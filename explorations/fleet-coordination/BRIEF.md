@@ -75,12 +75,19 @@ Signals it carries (D3):
 | 2. `git merge-tree --write-tree --name-only` vs ground-truth main | stale checkouts | none |
 | 3. Main moved onto a **measured** policy path | **Mode B** | measured list only |
 
-Delivery and posture (D4): `SessionStart` — tree clean, acting is safe — carries
-facts plus an act-now recommendation. A mid-session re-pulse carries the same
-facts plus an explicit **defer-to-checkpoint** instruction, because a bulletin
-that arrives against a dirty worktree must never say "rebase now". Every bulletin
-is an epoch-stamped fact, because injected context is replayed verbatim on
-`--continue`/`--resume`. Silence when the epoch is unchanged costs zero tokens.
+Delivery and posture (D4, as amended): `SessionStart` is the delivery *moment*,
+but the directive is selected by **measured worktree state** — `git status
+--porcelain -uall` empty means act-now, non-empty means epoch-stamped facts plus
+**defer-to-checkpoint**, and a failed probe means defer. The event itself proves
+nothing about the tree: it fires on `resume`, `clear`, `compact`, and `fork` too.
+Every bulletin is an epoch-stamped fact, because injected context is replayed
+verbatim on `--continue`/`--resume`. Silence when the epoch is unchanged costs
+zero tokens.
+
+**Binding law across every signal (D4 + D5 amendments): each field is either
+measured or `unknown`.** Nothing is inferred from a proxy, and nothing defaults
+to the safe-sounding value — a falsely-`clean` or falsely-`dormant` field is a
+silent miss, which is strictly worse than an absent one.
 
 Liveness (D5) suppresses signal 2 and **labels** signal 1 — a dormant checkout
 holding 57 uncommitted files is not noise, it is the largest uncommitted change
@@ -110,11 +117,24 @@ while a clone held an in-flight branch that never touched the changed file.
   renders as **silence**, never as `dormant` — reporting ignorance as a fact is
   how a suppressed signal 2 becomes a silent miss. The snapshot states its own
   coverage so a partial scan is legible as partial.
+- **`merge-tree` needs the target *object*, not its SHA.** `git ls-remote` gives
+  the SHA only, clones do not share object databases, and the true remote tip was
+  held by **0 of 69 checkouts** at scan time — so signal 2 is unavailable exactly
+  when main has just moved, which is the whole Mode B trigger. Fetch the target
+  once per epoch into a dedicated scanner ODB before predicting anything; report
+  `unknown` until it is materialized.
+- **The PR→checkout join is one-to-many.** Git's checkout exclusivity is scoped
+  to one repository and its linked worktrees, not across independent clones —
+  and independent clones are this fleet. The same branch name can be checked out
+  in several at once (and `git worktree add --force` breaks it even within one).
+  Disambiguate by head-repository identity plus commit SHA; never by branch name
+  alone.
 - **Cross-clone git reads have sharp edges.** `FETCH_HEAD` lives in
   `--git-common-dir`, not `--git-dir`. `status --porcelain` without `-uall`
   collapses a new package's 40 files into one path. `[ -d .git ]` misses every
   linked worktree, and `find -maxdepth 2 -not -path '*/.git/*'` does not exclude
-  `.git` itself — use `-name .git -prune`.
+  `.git` itself — use `-name .git -prune`. `gh api` needs `--paginate` on PR file
+  lists or any PR over 100 files silently reads as touching fewer.
 - **Correlated salience.** Mode A may partly be thirteen agents with identical
   ranking functions reading identical `CLAUDE.md` and identical red CI, not
   collapsed degrees of freedom. A mirror does not fix identical rankings; a

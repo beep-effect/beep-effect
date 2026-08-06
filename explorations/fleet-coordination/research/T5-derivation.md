@@ -275,8 +275,12 @@ prune, the signal is clean and matches reality: `beep-effect` 6 s,
 ```bash
 gh api 'repos/beep-effect/beep-effect/pulls?state=open&per_page=100' \
    --jq '.[] | [.number,.head.ref,.user.login,.updated_at] | @tsv'   # 370 ms
-gh api 'repos/beep-effect/beep-effect/pulls/<n>/files?per_page=100' \
+gh api --paginate 'repos/beep-effect/beep-effect/pulls/<n>/files?per_page=100' \
    --jq '.[].filename'                                              # 440 ms
+# --paginate is REQUIRED, not an optimization: without it the response caps at
+# the first 100 files and the derived PR scope silently omits the rest, so a
+# large PR reads as colliding with nobody. --jq is applied per page, so the
+# filename projection above still works under pagination.
 ```
 
 Rate limit at scan time: **core 4995/5000 remaining, graphql 4992/5000**.
@@ -288,11 +292,21 @@ polled here is REST. Reserve GraphQL for one-shot review-thread queries
 Failure modes:
 - Only signal in the inventory that needs network. Must degrade to
   "PR facts unavailable" rather than fail the scan.
-- Branch → checkout join is by `head.ref`, and a branch can be checked out in
-  at most one worktree — so the join is a clean 1:1 when it matches at all.
-  Right now 2 PRs are open (#557 `docs/candor-wedge-brief` ↔ `beep-effect10`,
-  #556 `knowledge-surface-p1-followup-554` ↔
-  `beep-effect-worktrees/p1-execution-plan`); both join.
+- Branch → checkout join is by `head.ref`. ⚠ **Corrected 2026-08-05.** This
+  originally read *"a branch can be checked out in at most one worktree — so the
+  join is a clean 1:1 when it matches at all."* Git's checkout exclusivity is
+  scoped to **one repository and its linked worktrees**, not across independent
+  clones — and independent clones are this fleet's entire topology, so the same
+  branch name can legitimately be checked out in several of them at once. Even
+  within one repository, `git worktree add --force` exists precisely to
+  "checkout `<branch>` even if already checked out in other worktree."
+  **The join is one-to-many.** Retain every match and disambiguate by head
+  *repository* identity (remote URL) plus head commit SHA; a name-only join
+  attributes PR facts to the wrong checkout. Observed at scan time with 2 PRs
+  open (#557 `docs/candor-wedge-brief` ↔ `beep-effect10`, #556
+  `knowledge-surface-p1-followup-554` ↔
+  `beep-effect-worktrees/p1-execution-plan`), where both happened to be unique —
+  which is why the false 1:1 assumption survived measurement.
 
 ### 2.8 Lockfile / turbo / node_modules staleness — **FREE**
 

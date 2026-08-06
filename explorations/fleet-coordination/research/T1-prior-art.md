@@ -135,8 +135,15 @@ providers. 2,068 stars, pushed today.
   messages addressed to them"* — framed as a feature to avoid context-window spam.
   Information sits in SQLite until an agent calls an MCP tool. Against the brief's
   hard constraint ("LLM agents do not poll"), this is disqualifying as-is.
-- **No broadcast, stated as a design decision.** So Mode B is architecturally
-  excluded, not merely unimplemented.
+- ⚠ **Refuted — do not reuse.** This bullet originally read *"No broadcast,
+  stated as a design decision. So Mode B is architecturally excluded, not merely
+  unimplemented."* Verification found the *"No broadcast by design"* phrasing
+  **absent** from the upstream README, and found that MCP Agent Mail ships a
+  Human Overseer composer with select-all and a contact-policy bypass — so
+  broadcast is not architecturally excluded at all. See the citation-integrity
+  note in [`SOURCES.md`](./SOURCES.md). The defensible, narrower claim is that
+  **nobody wires broadcast to a base-branch-landing event and delivers it by
+  push** — an unbuilt integration, not an excluded capability.
 - **Enormous surface for the value delivered:** a daemon, 38 MCP tools, 25 MCP
   resources, a 16-screen TUI, a web UI, 11 Rust crates. The brief's baseline is
   "a shared local directory + flock is available and free." This does not beat
@@ -230,11 +237,16 @@ which is a licensing consideration the star count hides.
 
 Evidence for the claim, not just absence of evidence:
 
-- **The tools that *could* have built it explicitly chose not to.** MCP Agent
-  Mail documents "**No broadcast by design** … Agents only receive messages
-  addressed to them," justified as context-window hygiene. That is a considered
-  rejection of the Mode-B primitive by the most complete coordination product in
-  the field.
+- ⚠ **Refuted — this bullet's evidence did not survive verification.** It
+  originally claimed the tools that could have built it *"explicitly chose not
+  to,"* citing MCP Agent Mail as documenting *"No broadcast by design."* That
+  phrase is **not in the upstream README**, and the product ships a Human
+  Overseer composer with select-all and a contact-policy bypass — so it is not a
+  considered rejection of the Mode-B primitive. Claude Code's own Agent Teams
+  likewise ships auto-delivered mailboxes. The surviving evidence for the
+  negative result is the remaining bullets, not this one. See
+  [`SYNTHESIS.md` K5](./SYNTHESIS.md) and the citation-integrity note in
+  [`SOURCES.md`](./SOURCES.md).
 - **The dedicated coordination protocols don't model it.** swarm-protocol has
   Intent / Claim / Signal / Context Package — `Signal` is completion/blocking
   notification for *dependent tasks*, not base-state change. Its docs do not

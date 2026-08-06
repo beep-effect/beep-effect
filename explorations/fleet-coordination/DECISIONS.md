@@ -239,3 +239,39 @@ coverage, so a partial scan is legible as partial.
 
 This composes with D4's replay rule: an epoch-stamped fact may say "not observed
 as of 11:04"; it may never say "idle."
+
+---
+
+## 2026-08-05 — Amendment to D4: the directive comes from `git status`, not the event
+
+**Trigger.** PR #562 review (codex connector, `DECISIONS.md:122`).
+
+**Defect.** D4 reads *"`SessionStart` (tree clean, acting is safe)"*. The event
+does not carry that guarantee. Its matcher is
+`startup|resume|clear|compact|fork` — recorded in this packet's own
+[`T3-delivery-vector.md`](./research/T3-delivery-vector.md) §"Event" table — so
+it fires on **resume, clear, compact, and fork**, all of which routinely happen
+in an already-dirty checkout. An act-now directive keyed to the event can
+therefore tell an agent to rebase over uncommitted work: precisely the operation
+D4's mid-session branch exists to prevent.
+
+**Amendment.** The receipt posture is selected by **measured worktree state**,
+never by which hook fired:
+
+- `git status --porcelain -uall` is empty → act-now recommendation.
+- Non-empty → epoch-stamped facts plus the defer-to-checkpoint instruction.
+- The status probe itself fails (`.git/index.lock` contention, unreadable) →
+  **defer**, per the D5 amendment's fail-to-`unknown` rule.
+
+`SessionStart` remains the right *delivery moment* — it is the cheapest ambient
+injection point. It is simply not evidence about the tree. Note `-uall` is
+required: without it untracked directories collapse and a checkout holding a
+whole new package reads as one path (SYNTHESIS load-bearing item 9).
+
+**Standing rule, from two amendments in one day.** Both the D5 and D4 defects are
+the same error — *inferring a fact from a proxy instead of measuring it*
+(`claude agents --json` for liveness; a hook event for cleanliness). Combined
+with the fact/ignorance distinction, this generalizes to a law the build must
+follow: **every field in the fleet snapshot is either measured, or `unknown`.
+Nothing is inferred from a proxy, and nothing defaults to the safe-sounding
+value.**

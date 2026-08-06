@@ -37,7 +37,7 @@ Measured live rather than assumed. Commands and costs recorded in
 | `/proc/<pid>/cwd` scan, `git merge-tree`, `git ls-remote` | Liveness 6.8 ms in Bun (890 ms in bash); conflict oracle ~50–65 ms; ground-truth main ~0.9 s |
 | `gh api` — 30d run history, open PRs, merge history | Main gauntlet pass rate 19% (39/206); ~2 concurrent open PRs; median base drift 1 commit |
 | `.github/workflows/check.yml:599-609,657-681` | `merge_group` degrades commitlint to one commit and gitleaks to `-1` with base-pinned scanner config bypassed |
-| Live collision matrix across 69 checkouts | Top contention: `bun.lock` (20), `goals/INDEX.md` (16), `package.json` (13); 4 of 5 live collisions intra-wave on generated aggregates |
+| Live collision matrix across 69 checkouts | Top contention: `bun.lock` (20), `goals/INDEX.md` (16), `package.json` (13); 4 of 5 live collisions are on **generated aggregates**. ⚠ **Refuted:** the original row read "4 of 5 … intra-wave". Re-reading T5 §4.2 in grill #1 found **only 1 of 5 is intra-wave** — three cross clone boundaries no `WaveManifest` can see, and one is a cross-clone *source* collision. Superseded by [`DECISIONS.md` D1](../DECISIONS.md). The distinction decides `WaveManifest` carve-out vs repo-wide mirror; do not reuse the old count |
 
 ## Secondary — prior art surveyed
 

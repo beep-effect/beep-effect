@@ -326,11 +326,32 @@ merging**. Zero new capability, zero delivery problem, already in the queue.
 
 3. **`beep worktree fleet`** (Option B), with four corrections to T5's spec:
    one `git ls-remote origin refs/heads/main` for ground truth (0.9 s once, not a
-   consensus that is currently wrong for all 69 checkouts); **liveness gating
-   before reporting** (9 live, not 69); `/proc` and the inverted index in-process
-   (6.8 ms, not 890 ms); and **no change-surface pre-filter on `merge-tree`** —
+   consensus that is currently wrong for all 69 checkouts) — ⚠ **but see the
+   object-availability correction below: `ls-remote` alone is not sufficient**;
+   **liveness gating before reporting** (9 live, not 69); `/proc` and the
+   inverted index in-process (6.8 ms, not 890 ms); and **no change-surface
+   pre-filter on `merge-tree`** —
    it is a category error with a 48% false-negative rate. Cache `merge-tree` on
    the immutable `${HEAD}:${target}` pair only.
+
+   ⚠ **Object-availability correction (2026-08-05).** `git ls-remote` returns a
+   **SHA, not the object**, and `git merge-tree` needs the commit and its trees
+   present in the repository it runs in. This synthesis records both halves of
+   the problem without connecting them: §2.2 K9 shows true remote main was held
+   by **0 of 69 checkouts**, and load-bearing item 11 states that cross-clone
+   `merge-tree` needs the target object because clones do not share ODBs. Taken
+   together, signal 2 is **unavailable at exactly the moment it matters** — the
+   instant main moves and nothing has fetched it, which is the whole Mode B
+   trigger. `ls-remote` establishes *what* the target is; it does not make the
+   target usable.
+
+   The scan must therefore materialize the object before predicting anything:
+   fetch the target once into a **dedicated scanner object database** (or fetch
+   into each evaluated clone explicitly), then run `merge-tree` against it. One
+   fetch per epoch amortizes across all checkouts, so this is a startup cost, not
+   a per-checkout one. Until the object is present, signal 2 reports **`unknown`,
+   never `clean`** — the D5-amendment rule, which load-bearing item 12 already
+   demands for transient probe failures.
 4. **`AgentBrief.fleet`** — the field decision 35b already reserved: consensus vs
    my `origin/main`, needs-fetch, my conflict prediction, and the ≤5 **live**
    checkouts intersecting my change surface.
