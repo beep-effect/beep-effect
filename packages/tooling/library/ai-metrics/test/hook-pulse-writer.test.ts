@@ -11,13 +11,12 @@ import {
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { Scope } from "effect";
 
 // The writer is shell, so the only honest conformance test spawns the real
 // script and decodes what it wrote. `HookPulseV1` carries the
@@ -33,6 +32,10 @@ const CANARY = "CANARY-SECRET-VALUE";
 
 const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
+// Fixture payloads are raw harness shapes, not a schema this package owns, so the
+// unknown-shaped encoder is the right rung: it renders stdin without pretending the
+// content-bearing keys we deliberately never model are part of the contract.
+const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
 // a leak or a drift, whichever it turns out to be.
@@ -124,10 +127,6 @@ const runWriter = Effect.fnUntraced(function* (
 
   return { exitCode, stderr, stdout, rows };
 });
-
-const runInSandbox = <A, E>(
-  effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | Scope.Scope>
-): Effect.Effect<A, E> => Effect.provide(Effect.scoped(effect), NodeServices.layer);
 
 const session = "ccd-session-writer";
 const baseFields = {
@@ -301,12 +300,12 @@ const expectSingleRow = (run: WriterRun): string => {
   return `${row}`;
 };
 
-describe("hook-pulse writer conformance", () => {
+layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   A.forEach(measuredPayloads, ({ label, payload, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
-      runInSandbox(
+      Effect.scoped(
         Effect.gen(function* () {
-          const run = yield* runWriter(JSON.stringify(payload));
+          const run = yield* runWriter(encodeJson(payload));
           const row = expectSingleRow(run);
           const decoded = yield* decodeHookPulseRow(row);
 
@@ -327,9 +326,9 @@ describe("hook-pulse writer conformance", () => {
     );
 
     it.effect(`writes no measured content for ${label}`, () =>
-      runInSandbox(
+      Effect.scoped(
         Effect.gen(function* () {
-          const run = yield* runWriter(JSON.stringify(payload));
+          const run = yield* runWriter(encodeJson(payload));
           const row = expectSingleRow(run);
 
           expect(row).not.toContain(CANARY);
@@ -340,9 +339,9 @@ describe("hook-pulse writer conformance", () => {
   });
 
   it.effect("omits notificationType when the raw value is outside the enum", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(JSON.stringify(notificationPayload(O.some("some_future_notification"))));
+        const run = yield* runWriter(encodeJson(notificationPayload(O.some("some_future_notification"))));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         // The spike's jq `capture()` defect dropped exactly this row while still
@@ -356,10 +355,10 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("keeps notificationType when the raw value is inside the enum", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
         const run = yield* runWriter(
-          JSON.stringify(notificationPayload(O.some(HookPulseNotificationType.Enum.permission_prompt)))
+          encodeJson(notificationPayload(O.some(HookPulseNotificationType.Enum.permission_prompt)))
         );
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
@@ -369,10 +368,10 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("carries sessionEndReason only on SessionEnd", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const ended = yield* runWriter(JSON.stringify(sessionEndPayload));
-        const stopped = yield* runWriter(JSON.stringify(stopPayload));
+        const ended = yield* runWriter(encodeJson(sessionEndPayload));
+        const stopped = yield* runWriter(encodeJson(stopPayload));
         const decodedEnd = yield* decodeHookPulseRow(expectSingleRow(ended));
         const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
 
@@ -383,9 +382,9 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("carries durationMs from PostToolUse and pairs tool ids", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(JSON.stringify(postToolUsePayload));
+        const run = yield* runWriter(encodeJson(postToolUsePayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.durationMs).toEqual(O.some(477));
@@ -395,9 +394,9 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("invents no toolUseId for PermissionRequest", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(JSON.stringify(permissionRequestPlanPayload));
+        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         // The two-hop join in P4 depends on this absence being real.
@@ -408,9 +407,9 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("writes nothing and exits 0 when the kill-switch sentinel exists", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(JSON.stringify(permissionRequestPlanPayload), {
+        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), {
           disarmSentinel: '{"disarmedAt":"2026-08-05T00:00:00Z","reason":"test","evidenceTier":"unknown"}',
         });
 
@@ -424,15 +423,15 @@ describe("hook-pulse writer conformance", () => {
     [
       { label: "unparseable stdin", stdin: "not json at all {{{" },
       { label: "empty stdin", stdin: "" },
-      { label: "a payload with no session_id", stdin: JSON.stringify({ ...stopPayload, session_id: undefined }) },
+      { label: "a payload with no session_id", stdin: encodeJson({ ...stopPayload, session_id: undefined }) },
       {
         label: "a payload with an unknown hook_event_name",
-        stdin: JSON.stringify({ ...stopPayload, hook_event_name: "SomeFutureEvent" }),
+        stdin: encodeJson({ ...stopPayload, hook_event_name: "SomeFutureEvent" }),
       },
     ],
     ({ label, stdin }) => {
       it.effect(`writes no partial line for ${label}`, () =>
-        runInSandbox(
+        Effect.scoped(
           Effect.gen(function* () {
             const run = yield* runWriter(stdin);
 
@@ -449,10 +448,10 @@ describe("hook-pulse writer conformance", () => {
   // approved-then-failed wait — a biased loss, since failures are where retry
   // storms live. The closing evidence P4 needs is tool_use_id + durationMs.
   it.effect("carries bracket-closing evidence and isInterrupt on PostToolUseFailure", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
-        const interrupted = yield* runWriter(JSON.stringify(postToolUseFailurePayload(true)));
-        const errored = yield* runWriter(JSON.stringify(postToolUseFailurePayload(false)));
+        const interrupted = yield* runWriter(encodeJson(postToolUseFailurePayload(true)));
+        const errored = yield* runWriter(encodeJson(postToolUseFailurePayload(false)));
         const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
         const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
@@ -467,11 +466,11 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("carries isInterrupt only on PostToolUseFailure", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
         // `is_interrupt` on a foreign event is owned by PostToolUseFailure, so
         // emitting it would fail HookPulseEventOwnedFieldInvariant on decode.
-        const run = yield* runWriter(JSON.stringify({ ...postToolUsePayload, is_interrupt: true }));
+        const run = yield* runWriter(encodeJson({ ...postToolUsePayload, is_interrupt: true }));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
@@ -481,12 +480,12 @@ describe("hook-pulse writer conformance", () => {
   );
 
   it.effect("resolves the ledger path through the XDG fallback rung too", () =>
-    runInSandbox(
+    Effect.scoped(
       Effect.gen(function* () {
         // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
         // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
         // runner reads back from exactly that derived path.
-        const run = yield* runWriter(JSON.stringify(permissionRequestPlanPayload), { viaXdgFallback: true });
+        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), { viaXdgFallback: true });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["plan-approval"]);
