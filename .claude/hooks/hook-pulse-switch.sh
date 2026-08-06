@@ -95,11 +95,33 @@ case "${1:-status}" in
     # once the path is free, a concurrent `disarm` legitimately wins it via `ln`
     # and the instrument really is disarmed.
     claimed="${sentinel}.arming.$$"
-    trap 'rm -f "${claimed}"' EXIT
     if ! mv "${sentinel}" "${claimed}" 2>/dev/null; then
       echo "hook-pulse already armed"
       exit 0
     fi
+    # From here the sentinel is claimed but the window is not yet recorded, so the
+    # instrument is already collecting again while the gap is still unwritten. Any
+    # failure in that span — `mkdir`, jq, a full disk on the append — must put the
+    # sentinel BACK rather than drop it. Deleting it instead (the obvious
+    # `rm -f "${claimed}"` trap) would resume collection *and* destroy the only
+    # record of when the gap began, with no window row written either: the gap
+    # would vanish rather than be recorded as unknown, which is the failure this
+    # ledger exists to make impossible. `set -euo pipefail` makes those aborts
+    # real, not hypothetical.
+    #
+    # So the trap restores, and is cleared only once the append has succeeded.
+    # `arm` is therefore all-or-nothing: either the window is durable and the
+    # sentinel is gone, or nothing moved and the operator can retry.
+    #
+    # The restore is `mv -f`, and overwriting a sentinel that a concurrent
+    # `disarm` published into the freed path is the CORRECT resolution, not a
+    # second race. If this `arm` failed, the instrument never actually re-armed,
+    # so the gap has run continuously since the original `disarmedAt`. Keeping the
+    # newer start would claim coverage over a stretch that was never collected.
+    # Between two candidate starts the earlier one is always the honest choice
+    # here: it over-reports uncertainty, and this ledger exists to mark what is
+    # unknown rather than to look tidy.
+    trap 'mv -f "${claimed}" "${sentinel}" 2>/dev/null || true' EXIT
     mkdir -p "$(dirname "${windows}")"
     # A hand-written or `touch`-created sentinel has no timestamp; record that
     # honestly as an unknown window start instead of inventing one.
@@ -119,6 +141,8 @@ case "${1:-status}" in
            reason: null,
            evidenceTier: "unknown"
          }' >>"${windows}"
+    # The window is durable; the claim can now be dropped rather than restored.
+    trap - EXIT
     rm -f "${claimed}"
     echo "hook-pulse armed; disarm window appended to ${windows}"
     ;;
