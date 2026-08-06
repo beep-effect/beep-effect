@@ -46,30 +46,42 @@ class ApproximateModelPrice extends S.Class<ApproximateModelPrice>($I`Approximat
   $I.annote("ApproximateModelPrice", {
     description: "Static approximate provider-model price used for desktop chat usage attribution.",
   })
-) {}
+) {
+  /**
+   * Small data-only pricing table. Rates are approximate USD per million
+   * tokens; update these literals when the configured production model or
+   * published provider pricing changes.
+   */
+  static readonly table: ReadonlyArray<ApproximateModelPrice> = [
+    ApproximateModelPrice.make({
+      inputPerMillionTokensUsd: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.inputPerMillionTokensUsd,
+      model: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.model,
+      outputPerMillionTokensUsd: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.outputPerMillionTokensUsd,
+      provider: "anthropic",
+    }),
+    ApproximateModelPrice.make({
+      inputPerMillionTokensUsd: 0,
+      model: "fixture",
+      outputPerMillionTokensUsd: 0,
+      provider: "fixture",
+    }),
+  ];
 
-/**
- * Small data-only pricing table. Rates are approximate USD per million tokens;
- * update these literals when the configured production model or published
- * provider pricing changes.
- *
- * @category configuration
- * @since 0.0.0
- */
-const APPROXIMATE_MODEL_PRICES: ReadonlyArray<ApproximateModelPrice> = [
-  ApproximateModelPrice.make({
-    inputPerMillionTokensUsd: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.inputPerMillionTokensUsd,
-    model: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.model,
-    outputPerMillionTokensUsd: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.outputPerMillionTokensUsd,
-    provider: "anthropic",
-  }),
-  ApproximateModelPrice.make({
-    inputPerMillionTokensUsd: 0,
-    model: "fixture",
-    outputPerMillionTokensUsd: 0,
-    provider: "fixture",
-  }),
-];
+  /**
+   * The price row for a `(model, provider)` pair, when one is known.
+   */
+  static readonly forUsage = (usage: {
+    readonly model: string;
+    readonly provider: string;
+  }): O.Option<ApproximateModelPrice> =>
+    A.findFirst(
+      ApproximateModelPrice.table,
+      P.Struct({
+        model: Eq.equals(usage.model),
+        provider: Eq.equals(usage.provider),
+      })
+    );
+}
 
 /**
  * Compute approximate micro-USD cost for provider usage when its exact model
@@ -97,22 +109,14 @@ const APPROXIMATE_MODEL_PRICES: ReadonlyArray<ApproximateModelPrice> = [
  * @since 0.0.0
  */
 export const approximateCostUsdMicros = (usage: ProviderUsageMetadata): O.Option<NonNegativeInt> =>
-  O.map(
-    A.findFirst(
-      APPROXIMATE_MODEL_PRICES,
-      P.Struct({
-        model: Eq.equals(usage.model),
-        provider: Eq.equals(usage.provider),
-      })
-    ),
-    (price) =>
-      NonNegativeInt.make(
-        N.round(
-          N.sum(
-            N.multiply(usage.inputTokens, price.inputPerMillionTokensUsd),
-            N.multiply(usage.outputTokens, price.outputPerMillionTokensUsd)
-          ),
-          0
-        )
+  O.map(ApproximateModelPrice.forUsage(usage), (price) =>
+    NonNegativeInt.make(
+      N.round(
+        N.sum(
+          N.multiply(usage.inputTokens, price.inputPerMillionTokensUsd),
+          N.multiply(usage.outputTokens, price.outputPerMillionTokensUsd)
+        ),
+        0
       )
+    )
   );

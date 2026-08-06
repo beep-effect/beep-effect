@@ -310,6 +310,20 @@ const chatTimeToFirstBlock = Metric.timer("agents_chat_time_to_first_block", {
   boundaries: [25, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
 });
 
+const ChatTurnKind = LiteralKit(["send", "edit"]).pipe(
+  $I.annoteSchema("ChatTurnKind", {
+    description: "Chat turn origins attributed on desktop turn metrics.",
+  })
+);
+type ChatTurnKind = typeof ChatTurnKind.Type;
+
+const ChatTurnFailurePhase = LiteralKit(["kernel", "persist", "prepare"]).pipe(
+  $I.annoteSchema("ChatTurnFailurePhase", {
+    description: "Turn phases attributed on desktop chat turn failure metrics.",
+  })
+);
+type ChatTurnFailurePhase = typeof ChatTurnFailurePhase.Type;
+
 /**
  * Build the assistant-turn stream for a thread: stream the kernel turn,
  * collecting indexed blocks as they pass. Successful completion persists the
@@ -323,14 +337,14 @@ const streamAndPersist = (
   usage: UsageRecordSink["Service"],
   coordinator: ChatCoordinator["Service"],
   threadId: WorkspaceIdentity.ThreadId,
-  kind: "send" | "edit",
+  kind: ChatTurnKind,
   requestId: string,
   requestGeneration: number
 ): Stream.Stream<AssistantBlock, ChatActionError> =>
   Stream.unwrap(
     Effect.gen(function* () {
       const startedAt = yield* Clock.currentTimeMillis;
-      const trackTurnFailure = (phase: "kernel" | "persist" | "prepare") =>
+      const trackTurnFailure = (phase: ChatTurnFailurePhase) =>
         Metric.update(
           Metric.withAttributes(chatTurnFailuresTotal, {
             kind,

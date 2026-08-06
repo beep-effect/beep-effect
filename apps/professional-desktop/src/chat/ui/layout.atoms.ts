@@ -12,7 +12,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { N } from "@beep/utils";
+import { N, O, R } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
@@ -34,6 +34,22 @@ const $I = $ProfessionalDesktopId.create("chat/ui/layout.atoms");
  * @since 0.0.0
  */
 export const SIDEBAR_MIN_PERCENT = 14;
+
+/**
+ * Panel id shared by the chat surface's sidebar `Panel` and the persisted
+ * layout reader, so the layout-record key and the JSX id cannot drift.
+ *
+ * @example
+ * ```ts
+ * import { SIDEBAR_PANE_ID } from "@/chat/ui/layout.atoms"
+ *
+ * console.log(SIDEBAR_PANE_ID) // "sidebar-pane"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SIDEBAR_PANE_ID = "sidebar-pane";
 
 /**
  * Maximum percentage of the chat surface the sidebar may occupy.
@@ -153,9 +169,10 @@ class SidebarLayoutChanged extends S.Class<SidebarLayoutChanged>($I`SidebarLayou
  */
 export const persistSidebarLayoutAtom = professionalStorageRuntime.fn<SidebarLayoutChanged>()(
   Effect.fnUntraced(function* (change, ctx) {
-    const sidebarPercent = change.layout["sidebar-pane"];
-    if (change.isUserInteraction && sidebarPercent !== undefined) {
-      ctx.set(sidebarPercentAtom, clampSidebarPercent(sidebarPercent));
+    if (change.isUserInteraction) {
+      O.map(R.get(change.layout, SIDEBAR_PANE_ID), (percent) =>
+        ctx.set(sidebarPercentAtom, clampSidebarPercent(percent))
+      );
     }
   })
 );

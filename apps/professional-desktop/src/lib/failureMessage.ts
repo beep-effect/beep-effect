@@ -5,15 +5,25 @@
  * @since 0.0.0
  */
 
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { redactCauseForClient } from "@beep/observability";
-import { P } from "@beep/utils";
-import * as Str from "effect/String";
+import * as S from "effect/Schema";
+
+const $I = $ProfessionalDesktopId.create("lib/failureMessage");
+
+const MessageBearing = S.Struct({ message: S.NonEmptyString }).pipe(
+  $I.annoteSchema("MessageBearing", {
+    description: "Any failure object carrying a non-empty user-facing message string.",
+  })
+);
+
+const hasMessage = S.is(MessageBearing);
 
 /**
  * Best-effort human-readable message from an unknown failure cause, falling
- * back to `fallback` when no non-empty `message` string can be read: a real
- * `Error` with a non-empty message, then any object carrying a non-empty
- * `message` string, otherwise `fallback`.
+ * back to `fallback` when no non-empty `message` string can be read: any
+ * object carrying a non-empty `message` string (including `Error`s) yields
+ * its redacted message, otherwise `fallback`.
  *
  * @example
  * ```ts
@@ -30,11 +40,4 @@ import * as Str from "effect/String";
 export const failureMessageOr =
   (fallback: string) =>
   (cause: unknown): string =>
-    P.isError(cause) && P.Struct({ message: Str.isNonEmpty })
-      ? redactCauseForClient(cause).message
-      : P.isObject(cause) &&
-          P.hasProperty(cause, "message") &&
-          P.isString(cause.message) &&
-          Str.isNonEmpty(cause.message)
-        ? redactCauseForClient(cause).message
-        : fallback;
+    hasMessage(cause) ? redactCauseForClient(cause).message : fallback;

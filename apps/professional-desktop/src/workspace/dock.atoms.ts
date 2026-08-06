@@ -52,7 +52,7 @@ import * as O from "effect/Option";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
-import type { DockAtomOperation } from "@beep/dock";
+import type { DockAtomOperation, DockPersistenceOperation } from "@beep/dock";
 import type { DockAtomGraph } from "@beep/dock-react";
 
 /**
@@ -394,7 +394,7 @@ export const makeResetDockSnapshotAtom = (
  */
 export const resetDockSnapshotAtom = makeResetDockSnapshotAtom(Effect.sync(() => globalThis.location.reload()));
 
-const storageFailure = (operation: "load" | "save"): DockPersistenceError =>
+const storageFailure = (operation: DockPersistenceOperation): DockPersistenceError =>
   DockPersistenceError.make({ operation, message: "localStorage is unavailable in this environment." });
 
 // Snapshot store over `window.localStorage` (the `Atom.kvs` persistence
