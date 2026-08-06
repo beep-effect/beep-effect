@@ -33,8 +33,13 @@ list` are **not on main** — so ambient delivery (rung 2) is genuinely blocked 
 but `worktree doctor`, `merge-tree`, and `/proc` all are, so **derivation (rung
 1) is not blocked by anything**. The BRIEF's "starting when PR-I merges" is
 therefore stronger than the evidence requires. That ruling is the last thing
-standing between this packet and graduation; the graduation contract's other
-three conditions are met.
+standing between this packet and graduation, and it is recorded in the manifest's
+`openQuestions` so a session orienting from machine state sees it too.
+
+Graduation contract status: **brief complete ✓**, **map names the work ✓**,
+**capability check ✓** (verified against `main`, not assumed) — and **blocking
+questions ✗**, held open by exactly the ruling above. Graduation is one decision
+away, not zero.
 
 ## Read This First
 
