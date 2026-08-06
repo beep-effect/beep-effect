@@ -303,3 +303,166 @@ soundness defects (P1s 1–2) that would have graduated into an unsound
 SPEC. Benjamin's approval is the exit condition for the shape stage —
 APPROVED by Benjamin 2026-08-06 (same session, over the folded draft).
 Stage align → shape.
+
+## 2026-08-06 — decompose: the two settlements the BRIEF deferred
+
+**Question:** The BRIEF explicitly left two things "settled at decompose" —
+which packet pays the law-practice migration lane's first-mover cost, and
+which lawful shape the candidate handoff takes. What does decompose settle,
+and what must it refuse to settle?
+
+**Answer:** One settles outright; the other splits, with only half settled.
+
+*The migration-lane fork settles in this packet's favour.* The candor goal's
+rung 2 shipped to `main` as PR #575 on 2026-08-06, so the ordering the BRIEF
+made conditional is already satisfied and the first-mover cost is paid by
+another packet. All four links of the lane exist and are clonable: three
+candor tables in `packages/law-practice/tables/src/entities/index.ts`;
+`packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`,
+still the only migration naming `law_practice`, so the slice's schema is in
+the baseline snapshot and a second goal generates a delta migration rather
+than a bootstrap; three `AcceptedProofManifest.ts` entries (`:808`, `:814`,
+`:877`); and an executable append-only PGlite proof to clone. Rung 2's stated
+cost driver re-prices downward — not to zero, since rung 2 still owns the
+transition events, the correction contract, `PriorityBasis`, the handoff, and
+the CQ fixtures. The bust definition is unchanged.
+
+*The handoff shape splits.* Rung 1 crosses no slice boundary at all — the
+scope-overlap-and-opposition check emits typed candidate *inputs* as ordinary
+return values of a law-practice service to its law-practice caller, with no
+epistemic type in its signature or requirement channel — so the BRIEF's
+heaviest rabbit hole has no rung-1 bite. Rung 2's handoff is the real
+crossing, and decompose narrows it to four evaluated shapes without picking:
+emitted events are **unavailable** (zero slice `*.events.ts` /
+`*.event-handlers.ts` / `*.processes.ts` anywhere in `packages/**/src`; no
+bus, no dispatcher); a promoted `shared/use-cases` contract is **unavailable
+without waiving its own bar** (`packages/shared/` holds only `domain/` and
+`tables/`; `02-shared-kernel.md:189` requires ≥2 current importers);
+foundation-mediated port inversion is **available and ratified** 2026-07-25
+with two landed precedents, one already consumed by this slice, **but not
+automatically admissible** (its rationale is a synchronous fail-closed gate,
+whereas this is an asynchronous data submission, and admission condition 1
+requires no product semantics — which triage candidate vocabulary arguably
+carries); and extending the slice's **documented bounded epistemic
+exception** adds no package edge, but that exception's ledger row is scoped
+to the gate/projection composition and its removal condition names exactly
+this situation ("when a third consumer of the epistemic boundary appears"),
+so the handoff is closer to tripping it than to being covered by it. The
+binding pick is a goal-P0 output with an `architecture-guardian` check.
+Binding regardless: no new `law-practice/*` → `epistemic/*` package edge, and
+rung 1's schemas land in the epistemic-free domain tier.
+
+**Rationale:** Decompose's job is to settle what evidence can settle and to
+route what it cannot, not to manufacture a decision. The migration fork was a
+factual question about repo state and a same-day `main` read answered it. The
+handoff is a doctrinal judgment whose inputs — an Exception Ledger row's scope
+and an admission-condition reading — are exactly what the sibling routed to
+P0 (`goals/patent-citation-candor-gate/MAP.md`: "The final binding pick lands
+at goal P0 with an `architecture-guardian` check"), and where the owner then
+ruled to defer the cross-slice half rather than claim an unprovable gate. Two
+drift corrections carried forward: the BRIEF's
+`standards/ARCHITECTURE.md:632-636` citation is line-accurate but doctrinally
+stale (nothing near it references the third mechanism ratified 2026-07-25),
+and the existing law-practice → epistemic surface is wider than the BRIEF
+recorded (13 import sites in 4 files, plus four epistemic packages in
+`packages/law-practice/server/package.json:47-50`). Rejected: picking a shape
+at decompose on the strength of "port inversion is the only one available"
+(availability is not admissibility, and the two admission problems are real),
+and deferring both settlements to P0 (the migration fork needed no judgment,
+only a look at `main`).
+
+## 2026-08-06 — graduate: four-point definition-of-ready
+
+**Question:** Does the packet pass the graduation contract in
+`explorations/README.md`?
+
+**Answer:** All four pass.
+
+1. **Brief complete** — `BRIEF.md` carries a problem narrative, an explicit
+   appetite (one goal packet, two rungs, roughly two focused weeks) with a
+   named circuit-breaker and bust definition, a fat-marker solution sketch
+   split across both rungs, eight rabbit holes, and thirteen no-gos. APPROVED
+   by Benjamin 2026-08-06.
+2. **No unresolved blocking questions** — manifest `openQuestions` is empty;
+   all ten decisions are resolved with rejected options recorded, and none is
+   marked DEFERRED-and-blocking.
+3. **Map names the work** — one candidate goal packet with slug, mission,
+   dependency/sequencing edges, and the chosen first vertical slice (the
+   failing `LegalPositionRelatorPolicy.test.ts` with its four assertion
+   groups and the breaker's interaction with them).
+4. **Capability check** — every major component cites a live capability with
+   a `file:line` anchor re-verified against `main` on 2026-08-06, or is
+   explicitly NET-NEW. The one NET-NEW that smelled like an existing brick —
+   the correlative and opposite derivations — was challenged adversarially
+   rather than asserted; the challenge succeeded in part, surfacing five live
+   inverse-flavoured surfaces (a graph `bimap`, a SPARQL inverse-path
+   expander, a real involution over a two-member tagged union, the fold's
+   directional normalization, and symmetric endpoint ordering). All five are
+   recorded REUSE-REJECTED with the reason each is the wrong shape, and the
+   NET-NEW claim is narrowed to what is actually absent: a schema-level
+   derivation over a closed position domain.
+
+**Rationale:** Point 4 is the point that fails silently if you let it — an
+unchallenged NET-NEW row reads identical to a verified one. Running the
+challenge is what turned a false absence claim into an accurate narrowed one
+and gave the goal a style precedent it would otherwise have missed. Stage
+shape → graduate; status `active` → `graduated`; `links.goals` set to
+`goals/legal-position-relator-runtime`.
+
+## 2026-08-06 — review gate 2: adversarial critique of the graduated SPEC
+
+**Question:** Does the graduated `SPEC.md` survive an adversarial read on
+decision fidelity, research grounding, and packet-standard form?
+
+**Answer:** Yes, after folding four confirmed defects. A three-lens Opus panel
+(Workflow `wf_0b84872d-e19`) returned PASS-WITH-FIXES on all three lenses with
+38 findings; each P1/P2 was then handed to an independent agent instructed to
+**refute** it. Only 5 of 16 survived — and the 11 refutations were as
+load-bearing as the confirmations, because three of them would have written a
+false statement into the SPEC:
+
+- The claim that the Klein-four-group orbit statement was ambiguous proposed
+  "two orbits of eight cells". That is impossible: a group of order 4 has no
+  8-element orbit, and over `(kind, polarity)` the 16 cells fall into four
+  orbits of four. The SPEC's existing wording is correct precisely because it
+  names its carrier ("over the eight positions") — and since `LegalActContent`
+  carries free text, the kind-projection reading is the only one under which
+  "exactly two orbits" is even true.
+- The claim that never-compute row 5 collapses the two align axes missed that
+  rows 5 and 6 *are* those axes (validity/effectiveness and violation); the
+  proposed rider would have invented a `disputed`/`undetermined` determination
+  vocabulary no decision authorizes.
+- The `AcceptedProofManifest` "undercount" was real as a fact (a fourth entry
+  exists at `:724`) but wrong as an inference: `src/migrations/<Name>.ts` is a
+  target-module artifact class, not a per-migration one — 13 migration
+  directories run against 8 modules — and rewriting "three" to "four" would
+  have desynced the SPEC from this file and `MAP.md`.
+
+**Folded (4 confirmed):** (1) the sibling-SPEC anchors `:73-79`/`:204-217` were
+correct at that packet's graduation commit and were silently invalidated when
+PR #575 inserted decisions 9–11 above them — re-anchored to quoted phrases plus
+HEAD ranges, with the failure mode named so it does not recur; (2) `submit` and
+the repository port are reachable **only** through `@beep/epistemic-use-cases/server`
+— `./public` and the root carry the client-safe surface only, so the SPEC's
+"reach it through `./server`, `./public`, or the root" was false; (3) the
+submit command declares eleven fields of which only **four** are epistemic
+vocabulary, not "ten typed from epistemic" — a ratio that directly bears on the
+port-inversion admission-condition-1 judgment P0 must make; (4) the biggest
+one — under the advantage-side canonicalisation **no two stored kinds can ever
+be opposites**, since every advantage-side kind's opposite is burden-side, so a
+stored-vs-stored opposition check is vacuously false and the
+privilege(enter)/duty(enter) fixture cannot be built as two stored relators at
+all. The check must compose both derivations (the opposite view of one against
+the correlative view of the other), and the proof fixture is a stored
+`privilege` plus a stored `claim` whose correlative view supplies the duty.
+
+**Rationale:** Defect (4) is exactly the class of error a graduation gate
+exists to catch: the SPEC was internally consistent, faithful to every
+decision, and still specified a test that could not be written. It surfaced
+only because a reviewer was asked to read as an implementer rather than as an
+auditor. Keeping the refutation step is what made the fold safe — a
+fix-everything pass would have shipped three new errors alongside the four
+real repairs. Rejected: folding P3 polish wholesale (several P3s proposed
+re-adding provenance the packet deliberately links rather than copies), and
+treating lens agreement as proof (all three lenses independently raised the
+stale anchor, but two also independently raised refuted claims).

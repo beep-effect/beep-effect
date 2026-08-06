@@ -17,18 +17,21 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The second wedge is at SHAPE (BRIEF approved):
-[`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md)
-(opened 2026-08-05 on Benjamin's call; research + align record merged via
-PR #573; `BRIEF.md` drafted inside the six align boundaries, hardened by a
-three-lens Opus review, and APPROVED by Benjamin 2026-08-06 — the approved
-BRIEF and this pointer land together, so if you are reading this on main,
-the BRIEF PR is merged). Next: the wedge decomposes (`MAP.md`, the
-four-point gate, then graduation on Benjamin's call), with
-`patent-drafting-episode-ledger` and the FunctionalUnit extension into
-`uspto-patent-driver-depth` queued behind it on Benjamin's call. The first
-wedge is fully landed: graduated 2026-08-04, goal packet active on main
-(graduation PR #560 merged 2026-08-05).
+Both opened wedges are fully landed, so the campaign's next move is a routing
+call, not a stage. The first wedge graduated 2026-08-04 into
+`goals/patent-citation-candor-gate` (graduation PR #560 merged 2026-08-05;
+implementation PR #575 merged 2026-08-06). The second,
+[`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md),
+graduated 2026-08-06 into
+[`goals/legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md)
+after decompose settled the migration-lane fork and narrowed the candidate
+handoff to a goal-P0 decision.
+
+Next: **`patent-drafting-episode-ledger` and the FunctionalUnit extension into
+`uspto-patent-driver-depth` are queued on Benjamin's call** — both are approved
+routing-matrix slugs, so opening either needs only his go-ahead, not new
+routing approval. Goal execution on the two graduated packets is likewise his
+call.
 
 ## Read This First
 
@@ -99,3 +102,9 @@ wedge is fully landed: graduated 2026-08-04, goal packet active on main
   Lane B verdicts (dated single-pass descriptors, recommendation `adopt`;
   R25's Apache/MPL split verified on the real TNO GitLab files; the wedge
   packet added to both rows' targets).
+- 2026-08-06: relator wedge BRIEF approved, then decomposed and GRADUATED
+  into `goals/legal-position-relator-runtime` — the campaign's second and
+  currently last open wedge closes out. Phase 2 has now produced two goal
+  packets from two wedges with no wedge left mid-stage. Both remaining
+  routing-matrix slugs (`patent-drafting-episode-ledger`, the FunctionalUnit
+  extension) stay queued on Benjamin's call.
