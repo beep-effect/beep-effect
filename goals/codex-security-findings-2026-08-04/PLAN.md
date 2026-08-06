@@ -2,8 +2,9 @@
 
 ## Status
 
-Status: `active`. The initial remediation is published as PR #559. The 27th
-finding and actionable review feedback are implemented and undergoing proof.
+Status: `completed-retained`. All 27 findings were remediated in PR #559,
+which merged as `e6c371e1f1`. Hosted checks passed, all six review threads were
+resolved, and the exact 27-ID allowlist was closed as Already fixed.
 
 ## Phases
 
@@ -16,9 +17,9 @@ finding and actionable review feedback are implemented and undergoing proof.
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
 | P5 repo-proof | complete | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
 | P6 publish | complete | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | in progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
-| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 27 IDs resolved. |
-| P9 close | pending | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` in the same closeout PR state. |
+| P7 monitor | complete | Close hosted checks and actionable reviews. | PR green and mergeable. |
+| P8 merge-and-close | complete | Merge and close captured findings. | PR merged; all 27 IDs resolved. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` with closeout evidence. |
 
 ## Execution Rules
 
