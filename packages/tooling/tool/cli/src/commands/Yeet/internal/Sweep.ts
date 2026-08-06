@@ -906,9 +906,15 @@ const runLockfileInstallStep = (
           // "did not move" — the operator re-runs the sweep after fixing
           // whatever blocked the refresh.
           !tipsMatch(localMain, trackingMain)
-            ? Effect.succeed<SweepStepOutcome>(
-                SweepStepSkipped.make({
-                  reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown — re-run the sweep once the refresh succeeds`,
+            ? // needs-operator, not a skip: an unrefreshed main cannot
+              // self-heal on a re-run — the operator must first clear
+              // whatever blocked ff-main (dirty tree, held main), so the
+              // unreconciled dependency state lands in the batched handoff
+              // instead of waiting for someone to read a buried skip.
+              Effect.succeed<SweepStepOutcome>(
+                SweepStepNeedsOperator.make({
+                  reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds`,
+                  operatorCommand: "bun run beep yeet sweep",
                 })
               )
             : captureGit(cwd, [

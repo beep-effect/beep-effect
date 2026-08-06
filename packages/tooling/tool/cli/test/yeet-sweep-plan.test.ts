@@ -575,15 +575,17 @@ describe("executeSweep", () => {
     )
   );
 
-  it.effect("reports an unrefreshed main as unknown lockfile state, never as unchanged", () =>
+  it.effect("hands an unrefreshed main to the operator as unreconciled, never as unchanged", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const report = yield* executeSweep(sweepContext(root));
         const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
-        expect(step.outcome.status).toBe("skipped");
-        const reason = step.outcome.status === "skipped" ? step.outcome.reason : "";
-        expect(reason).toContain("was not refreshed");
-        expect(reason).not.toContain("did not move");
+        expect(step.outcome.status).toBe("needs-operator");
+        if (step.outcome.status === "needs-operator") {
+          expect(step.outcome.reason).toContain("was not refreshed");
+          expect(step.outcome.reason).not.toContain("did not move");
+          expect(step.outcome.operatorCommand).toBe("bun run beep yeet sweep");
+        }
       })
     ).pipe(
       provideScopedLayer(
