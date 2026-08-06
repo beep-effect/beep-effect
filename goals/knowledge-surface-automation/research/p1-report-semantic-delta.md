@@ -73,3 +73,15 @@ scanner strict; speculative trees go in fences per the ratified decoy rule),
 doc fix (recommend: doc fix; keep the normalizer v1), (d) the RESEARCH.md corpus
 boundary, and (e) that nothing else blocks P3 gate wiring
 (`knowledge:semantic-delta` into `rootRepoLintPolicySteps`).
+
+## Review-surfaced constraint for P3 gate wiring
+
+The #563 review pass flagged that `--help` probes and index-script probes execute
+code from the scanned revision's archive (Bun, unsandboxed beyond the hermetic
+env and out-of-archive scratch root). For a locally invoked read-only command
+this is the same trust boundary as running the revision's tests; it becomes a
+real exposure only when P3 wires the gate into hosted CI, where a fork PR on
+this public repository could reach it. Binding constraint recorded for the P3
+grill: the hosted gate must either skip probes for untrusted fork PRs, run them
+in an OS-level sandbox, or restrict the lane to same-repo branches. Do not wire
+the gate without deciding this.
