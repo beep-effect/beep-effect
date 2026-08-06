@@ -85,6 +85,11 @@ workflows in skills.
   public.
 - same-PR packet-state flips: flip goal manifest/lifecycle status and land the
   closeout reflection in the same PR as the final work.
+- Friction is a first-class output: when work is slower, harder, or riskier
+  than it should be, record a receipt — what you were doing, the evidence
+  (command, error text, PR/file), what would have prevented it — in the
+  active packet's ledger (`research/OPPORTUNITIES.md`) at the moment it
+  happens, never saved for closeout.
 
 ## Agent Memory
 
