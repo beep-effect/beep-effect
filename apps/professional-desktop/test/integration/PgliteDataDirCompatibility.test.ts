@@ -115,9 +115,12 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         yield* fs.makeDirectory(extensionTempRoot);
         const isolatedFileSystem = FileSystem.FileSystem.of({
           ...fs,
-          makeTempDirectory: (options) => fs.makeTempDirectory({ ...options, directory: extensionTempRoot }),
-          makeTempDirectoryScoped: (options) =>
-            fs.makeTempDirectoryScoped({ ...options, directory: extensionTempRoot }),
+          makeTempDirectory: Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.makeTempDirectory")((options) =>
+            fs.makeTempDirectory({ ...options, directory: extensionTempRoot })
+          ),
+          makeTempDirectoryScoped: Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.makeTempDirectoryScoped")(
+            (options) => fs.makeTempDirectoryScoped({ ...options, directory: extensionTempRoot })
+          ),
         });
 
         yield* withPgliteSql(dataDir, Effect.void).pipe(
