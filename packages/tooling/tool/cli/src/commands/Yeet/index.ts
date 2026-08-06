@@ -19,14 +19,23 @@ export { YeetRunMode } from "./internal/Planner.ts";
  * @since 0.0.0
  */
 export {
+  collectRemoteWorkflowRuns,
   collectYeetStatus,
+  deriveYeetMergeReady,
+  GhStatusWorkflowRun,
+  renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   writeYeetStatusSnapshot,
   YeetStatusArtifact,
   YeetStatusArtifactState,
   YeetStatusRemote,
+  YeetStatusReviewThread,
   YeetStatusSnapshot,
+  YeetStatusSnapshotJson,
   YeetStatusWorktree,
+  yeetRerunDecisionText,
+  yeetRerunJobListingCommand,
+  yeetReviewThreadExcerpt,
   yeetStatusNextCommandForTesting,
   yeetStatusPathForTesting,
 } from "./internal/Status.ts";

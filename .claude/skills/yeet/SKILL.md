@@ -121,6 +121,35 @@ bun run beep yeet publish --push-only --reuse-verified
 bun run beep yeet monitor
 ```
 
+- Keep monitoring across pushes until the PR merges or closes, instead of
+  re-arming a fresh monitor after every fix wave:
+
+```bash
+bun run beep yeet monitor --until-merged
+```
+
+- Reset the clone after a merge (prune refs, fast-forward `main`, delete the
+  merged branch locally and remotely, reinstall when `bun.lock` moved, end on
+  `main`). Inspect the plan before running it:
+
+```bash
+bun run beep yeet sweep --plan
+bun run beep yeet sweep
+```
+
+- Post and resolve the drafted review-thread replies for this branch's PR:
+
+```bash
+bun run beep yeet reply
+```
+
+- Squash-merge this branch's PR, confirm `MERGED` through the API, then sweep
+  the clone. Operator-authorized only — never run it without being asked:
+
+```bash
+bun run beep yeet merge
+```
+
 - Read the local Yeet operator state before scanning logs. This is local-only
   by default and reads branch/worktree state plus the latest Yeet artifacts:
 
@@ -165,7 +194,12 @@ bun run beep yeet publish --message "type(scope): summary" --plan --json
 bun run beep yeet status --remote --plan --json
 bun run beep yeet monitor --summary --plan --json
 bun run beep yeet closeout --plan --json
+bun run beep yeet sweep --plan --json
 ```
+
+`yeet sweep --plan` is the sweep's own dry run, not the generic yeet plan: it
+prints the branch-deletion and ref-update steps with the git facts behind each
+one.
 
 ## Authoritative Gates (green local must mean green CI)
 
@@ -225,7 +259,12 @@ from a real security failure) before shipping such a fix.
    through the same Yeet publish path.
 10. Mark the PR ready only when checks are green, there are zero unresolved
     review threads (including outdated threads until explicitly resolved), and GitHub reports the branch as mergeable or not
-    conflicted.
+    conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
+    that names the first failing criterion instead of making you read three
+    surfaces.
+11. After the merge lands, run `bun run beep yeet sweep` — or let
+    `monitor --until-merged` run it on merged detection — so the next branch does
+    not start from a stale clone.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
 writes Yeet artifacts locally. It posts a Greptile rerun comment only when
@@ -263,6 +302,51 @@ local proof cycle. If the post-push local proof fails or writes files, fix the
 issue in a follow-up commit and publish again. Treat commit/pre-push hooks as
 local tripwires and proof-reuse adapters; Yeet full proof plus hosted checks are
 the authoritative gates.
+
+## Merge Loop
+
+`yeet monitor --until-merged`, `yeet sweep`, `yeet reply`, and `yeet merge` are
+the merge-loop porcelain. They read the clone and the PR; none of them plan
+turbo work, so they are cheap to run mid-loop.
+
+- `monitor --until-merged` re-reads status every poll, so a push landing
+  mid-session is picked up as the new budget scope. A failed job whose log
+  matches a known flake fingerprint (`ts2589-no-location`, CI timeout) gets
+  exactly one `gh run rerun --job <databaseId>` per job per head SHA — never
+  `--failed`, which would re-execute coexisting genuine reds. Anything else is
+  reported as "needs code fix". The loop ends on MERGED (after the sweep),
+  on CLOSED, or when you interrupt it.
+- **Branch-deletion contract.** `sweep` deletes with `-d` when the branch is an
+  ancestor of `origin/main`. It uses `-D` only when the PR is MERGED **and** the
+  local tip still equals the PR's recorded head SHA **and** no worktree holds the
+  branch; remote deletion needs the same tip match. Any unmet precondition is a
+  skip-and-report, not a failure — unmerged local work is never force-deleted.
+- A sweep exits 0 whether every step ran or every step skipped: "merged, cleanup
+  skipped: `<reason>`" is a success. Steps only the operator can run (a denied
+  `git push origin --delete`) are batched into a handoff block instead of being
+  discovered one failed command at a time.
+- `merge` never passes `--delete-branch`: it merges, confirms `MERGED` by bounded
+  poll, then hands the whole cleanup sequence to the worktree-aware sweep. The
+  sweep may auto-run on monitor's merged detection; the merge never auto-runs.
+
+### Reply drafts flow
+
+1. Read the unresolved threads out of `bun run beep yeet status --remote` — each
+   line carries the GraphQL thread id, the REST comment id, the file location,
+   the author, and a first-line excerpt, so drafts are writable straight from
+   that output without a second REST pass.
+2. Write `.beep/yeet/reply-drafts.json` (`yeet-reply-drafts/v1`): `prNumber`
+   plus one draft per thread with a non-empty `body` and either the GraphQL
+   `threadId` (`PRRT_...`) or the numeric `commentId`; `resolve` defaults to
+   true.
+3. Run `bun run beep yeet reply`. Drafts are validated against the live threads
+   first: an already-resolved or deleted thread is recorded `stale` and nothing
+   is written for it. Each surviving draft is posted and resolved one at a time,
+   and a denied scope or rate limit becomes that draft's `failed` outcome with a
+   retry command rather than aborting the pass.
+4. Read `.beep/yeet/reply-report.json` (`yeet-reply-report/v1`) for the per-draft
+   outcomes. Either party can run the command; when the agent session lacks the
+   write scope, hand the operator the one command instead of pasted bodies.
 
 ## Run Artifacts
 

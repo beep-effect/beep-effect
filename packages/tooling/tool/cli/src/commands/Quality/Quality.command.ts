@@ -269,7 +269,10 @@ const { githubCheckLaneWaves } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const ignoredTestPathSegments = ["/test/fixtures/"] as const;
-const testSearchRoots = ["apps", "packages", "tooling", "infra"] as const;
+// No `tooling` root: tooling workspaces live under `packages/tooling/*`, which
+// the `packages` root already walks. A top-level `tooling/` directory has never
+// existed in this repo, so the entry only cost a wasted existence probe.
+const testSearchRoots = ["apps", "packages", "infra"] as const;
 const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as const;
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
