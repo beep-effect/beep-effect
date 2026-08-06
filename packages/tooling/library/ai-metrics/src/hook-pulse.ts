@@ -730,6 +730,16 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   })
 ) {}
 
+// Deliberately without `isInterrupt`, and the omission is a dating argument
+// rather than an oversight. "Legacy" here means exactly one thing: a row written
+// before private identifiers were pseudonymized. `isInterrupt` and its only
+// owning event `PostToolUseFailure` were both added *after* that change, so no
+// row can be legacy-shaped and carry the field — declaring it would model a
+// combination that cannot exist and would give a future reader the false
+// impression that some legacy corpus distinguishes an interrupt from an error.
+// The raw-identifier fields below stay raw for the mirror-image reason: raw is
+// what a pre-pseudonymization row actually contains, and this codec exists to
+// hash them on the way in.
 const HookPulseLegacyV1Record = S.Struct({
   schemaVersion: S.Literal("hook-pulse/v1"),
   ts: S.String,
@@ -756,7 +766,8 @@ const HookPulseLegacyV1Record = S.Struct({
  * identifiers were pseudonymized. Decoding hashes legacy raw identifiers;
  * encoding emits only the privacy-safe canonical representation.
  *
- * **Example** (Migrate a Legacy Ledger Row)
+ * **Example** (Migrate a legacy ledger row)
+ *
  * ```ts
  * import { HookPulseV1FromLegacyRecord } from "@beep/repo-ai-metrics"
  * import * as S from "effect/Schema"

@@ -10,6 +10,7 @@ import {
   HookPulseSchemaVersion,
   HookPulseV1,
   HookPulseWaitReason,
+  hashPrivateIdentifier,
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
@@ -32,8 +33,29 @@ const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 
 // A distinctive marker planted in every content-bearing raw key measured by the
-// P1 spike. Amendment 6 is only actually enforced if this never reaches disk.
+// P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
+// in the clear *or* hashed. A raw leak is the obvious failure, but a writer that
+// decided to pseudonymize a content field instead of dropping it would still
+// have put content-derived material in the ledger, so both forms are asserted.
 const CANARY = "CANARY-SECRET-VALUE";
+
+// A salt no clone would have configured, used to prove the salt actually enters
+// the preimage. Every default-salt assertion in this file also passes for a
+// writer that ignored the operator salt entirely, because the fallback constant
+// is what such a writer would have used anyway.
+const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
+
+// The cross-implementation oracle. `sessionId`, `cwd`, and `transcriptPath` are
+// `Sha256Hex` on the schema side, so no assertion can compare against a raw
+// value any more — and a shape assertion alone is worthless here, because the
+// most likely way to get this wrong produces a perfectly well-formed digest.
+// Bash cannot hold a NUL in a variable and strips it from a heredoc, so a writer
+// that assembles `salt<NUL>value` as a shell value hashes `saltvalue` instead
+// and emits 64 lowercase hex characters that decode cleanly and are simply
+// wrong. Recomputing the expected digest with the same `hashPrivateIdentifier`
+// the codecs use is what makes the two halves provably agree, exactly as the
+// `HookPulseWaitReasonInvariant` filter does for the wait derivation.
+const privateDigest = (value: string) => hashPrivateIdentifier(value, undefined);
 
 const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
@@ -104,7 +126,11 @@ interface WriterRun {
 // ledger lives.
 const runWriter = Effect.fnUntraced(function* (
   stdin: string,
-  options: { readonly disarmSentinel?: string; readonly viaXdgFallback?: boolean } = {}
+  options: {
+    readonly disarmSentinel?: string;
+    readonly hashSalt?: string;
+    readonly viaXdgFallback?: boolean;
+  } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -131,6 +157,12 @@ const runWriter = Effect.fnUntraced(function* (
       BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
       BEEP_HOOK_PULSE_NOTIFIER_REV: "",
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+      // Both salt rungs are cleared unless a case sets one, so a developer who
+      // exports a real ai-metrics salt cannot change what these digests are.
+      // Cleared, they exercise the insecure-default fallback that keeps an
+      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, undefined)`.
+      BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
+      BEEP_AI_METRICS_HASH_SALT: "",
     },
     stdin: new TextEncoder().encode(stdin),
     stdout: "pipe",
@@ -421,15 +453,17 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           expect(decoded.schemaVersion).toBe(HookPulseSchemaVersion.Enum["hook-pulse/v1"]);
           expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["claude-code"]);
           expect(decoded.instrumentClass).toBe(HookPulseInstrumentClass.Enum.production);
-          expect(decoded.sessionId).toBe(session);
-          expect(decoded.cwd).toBe(baseFields.cwd);
+          // Pseudonymized, not raw: these three carry `Sha256Hex`, so the
+          // expectation is the oracle digest rather than the identifier itself.
+          expect(decoded.sessionId).toBe(yield* privateDigest(session));
+          expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
           expect(decoded.notifierRev).toBe("log-only-0");
           expect(decoded.waitReason).toBe(waitReason);
           // `transcriptPath` is the one forwarded field the codec cannot do
           // without: `HookPulseRawEvent.transcript_path` is required, so a row
           // missing it still decodes but can never be re-encoded — a replay
           // break that only surfaces in P4, long after the evidence is gone.
-          expect(decoded.transcriptPath).toEqual(O.some(baseFields.transcript_path));
+          expect(decoded.transcriptPath).toEqual(O.some(yield* privateDigest(baseFields.transcript_path)));
           expect(decoded.promptId).toEqual(O.some(baseFields.prompt_id));
           expect(decoded.permissionMode).toEqual(permissionMode);
           // Weakest-link: `waitReason` is derived, and the codec's
@@ -447,6 +481,11 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           const row = expectSingleRow(run);
 
           expect(row).not.toContain(CANARY);
+          // Hashing is what the writer now does to the identifiers it cannot
+          // drop, which makes "hash it instead" a newly plausible way to keep a
+          // content field. A digest of the canary is still derived from content
+          // and still belongs nowhere in the ledger.
+          expect(row).not.toContain(yield* privateDigest(CANARY));
           expect(A.difference(R.keys(decodeRowKeys(row)), canonicalRowKeys)).toEqual([]);
         })
       )
@@ -499,18 +538,74 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     })
   );
 
-  it.effect("shards the ledger by UTC day and session id", () =>
+  it.effect("shards the ledger by UTC day and hashed session id", () =>
     Effect.scoped(
       Effect.gen(function* () {
         // The script claims per-session sharding makes cross-session
         // interleaving structurally impossible. The runner globs the whole
         // directory, so dropping the session suffix would keep every other test
-        // green while quietly restoring that hazard.
+        // green while quietly restoring that hazard. The suffix is the digest,
+        // not the raw session id: a filename is as readable as a row, so a
+        // ledger whose rows are pseudonymized while its directory listing spells
+        // out every session UUID has pseudonymized nothing.
         const run = yield* runWriter(encodeJson(preToolUsePayload));
         const row = expectSingleRow(run);
         const ts = decodeRowString(decodeRowKeys(row).ts);
+        const sessionDigest = yield* privateDigest(session);
 
-        expect(run.files).toEqual([`hook-pulse-${ts.slice(0, 10)}-${session}.ndjson`]);
+        // Exact equality against the oracle digest, so the raw session id cannot
+        // reappear in the name under any spelling.
+        expect(run.files).toEqual([`hook-pulse-${ts.slice(0, 10)}-${sessionDigest}.ndjson`]);
+      })
+    )
+  );
+
+  it.effect("hashes private identifiers to the digests the TypeScript oracle computes", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // The shell writer and `hashPrivateIdentifier` are two implementations
+        // of one contract, and every other assertion in this file is satisfied
+        // by any 64-hex string. This is the only one that fails when the shell
+        // hashes the right value the wrong way — the NUL-through-a-variable trap
+        // described above being the way it actually happens.
+        const run = yield* runWriter(encodeJson(preToolUsePayload));
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.sessionId).toBe(yield* privateDigest(session));
+        expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
+        expect(decoded.transcriptPath).toEqual(O.some(yield* privateDigest(baseFields.transcript_path)));
+      })
+    )
+  );
+
+  it.effect("carries an operator salt into every private digest", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // The oracle above still passes for a writer that never reads the salt
+        // at all, because the insecure default is what such a writer would have
+        // used anyway. Only a run under an operator salt separates "resolves the
+        // salt" from "hardcodes the fallback".
+        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: OPERATOR_SALT });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, OPERATOR_SALT));
+        expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, OPERATOR_SALT));
+        expect(decoded.sessionId).not.toBe(yield* privateDigest(session));
+      })
+    )
+  );
+
+  it.effect("treats a whitespace-only salt as unset, exactly as resolveAiMetricsHashSaltValue does", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // `${VAR:-default}` accepts `"   "` as a value while
+        // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
+        // input is where the two halves can disagree with both looking correct,
+        // so the shell trims too and this pins it.
+        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: "   " });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.sessionId).toBe(yield* privateDigest(session));
       })
     )
   );
