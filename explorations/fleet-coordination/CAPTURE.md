@@ -60,6 +60,41 @@ spine of the recommendation. Bet 1's Mode-A framing survived but was
 substantially undercut by measurement: four of five live collisions turned out to
 be intra-wave, not cross-fleet.
 
+## 2026-08-05 — a Mode B specimen, observed live
+
+Publishing this packet tripped one. `bun run beep yeet publish --pr` completed
+fully — full proof green, push landed, PR #562 open — and then exited 1 with
+`Failed to decode pull request number for yeet monitor.`
+
+`runMonitorPhase` is invoked unconditionally (`Handler.ts:662`) while the planner
+emits monitor steps only under `--monitor` (`Planner.ts:595`/`:605`/`:614`). On an
+empty step list the phase decodes `Str.empty` as JSON and hard-fails. The
+regression landed in `aee2664b91` (#551) on **2026-08-04**, one day earlier, from
+a parallel clone. Every `yeet publish` without `--monitor` — the documented
+default — has exited non-zero on success since.
+
+Three properties make it a clean specimen:
+
+- **No textual conflict.** Nothing in this branch touches `Handler.ts`. A
+  conflict-based detector — signal 2, `merge-tree`, a merge queue — sees nothing,
+  which is K8 in the wild and the reason D3 keeps signal 3.
+- **Detection was by collision, not by notice.** It surfaced a day later because
+  someone ran the command, which is the Mode B cost function exactly: the tax is
+  paid by whoever trips it, not by whoever landed it.
+- **The landing session could not have known.** #551 was shipped with
+  `--fast --monitor`, the one flag combination that plans monitor steps and
+  therefore never reaches the failing branch. The change was green on the author's
+  path and broken on everyone else's.
+
+Handed to speed-loop as item 3 of
+[`research/HANDOFF-2-pre-push-and-guard.md`](./research/HANDOFF-2-pre-push-and-guard.md)
+rather than fixed here, per D2.
+
+Also observed while measuring liveness that day: `/proc/<pid>/cwd` is **not**
+universally readable. Root-owned processes return `EACCES` on the symlink read
+even though the entry is listed. D5's scan must degrade on unreadable entries
+rather than throw, and cannot claim completeness across users.
+
 ## Loose threads not yet placed
 
 - Mode A may be **correlated salience** rather than collapsed degrees of freedom:

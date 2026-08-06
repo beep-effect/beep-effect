@@ -99,6 +99,64 @@ sequencing, not for skipping the comparison.
 
 ---
 
+## Item 3 — `yeet publish` without `--monitor` exits 1 on success (regression from #551)
+
+**Found by tripping it**, publishing this packet on 2026-08-05. The publish was
+completely successful — commit `684cd6d9dd`, full proof green, push landed, PR
+#562 created and reported `OPEN` — and then the process exited 1 with
+`Failed to decode pull request number for yeet monitor.`
+
+**Mechanism.** `runPublishMonitorAndResult` calls `runMonitorPhase`
+**unconditionally** (`Handler.ts:662`), from both publish call sites
+(`Handler.ts:451` for `--start-pr-early`, `:496` for the normal path). But the
+planner emits monitor steps **only** under `--monitor` — all three plan variants
+read `...(options.monitor ? monitorSteps(context) : [])`
+(`Planner.ts:595`, `:605`, `:614`). With an empty step list:
+
+| Step | Result |
+|---|---|
+| `A.filter(monitorSteps, id === "monitor:01-pr-context")` (`:630`) | `[]` |
+| `runPhase(context, [], recorder)` (`:632`) | `[]` — `A.some(...)` is false, so the exit-code check passes vacuously |
+| `A.head` → `O.getOrElse(() => Str.empty)` (`:636-641`) | `""` |
+| `S.decodeUnknownEffect(S.fromJsonString(GhPrView))("")` (`:642`) | **fails** |
+
+Verified empirically: no `monitor:*` step appears anywhere in the run log, and
+the failure lands after the `yeet status` block has already printed
+`remote: PR #562 OPEN`.
+
+**Introduced by `aee2664b91` (#551, 2026-08-04).** Before that commit the body of
+`runMonitorPhase` was `yield* runRequiredPhase(context, monitorSteps, recorder,
+failureMessage)` — a harmless no-op on an empty array. #551 replaced it with the
+context/checks split plus a mandatory JSON decode of the first context result and
+did not carry the empty case across. The author knew the array can be empty:
+`Handler.ts:665` guards `printOperatorStatusSummary` on
+`!A.isReadonlyArrayEmpty(monitorSteps)`, three lines below the unguarded call.
+
+**Blast radius.** Every `yeet publish` that does not pass `--monitor` — including
+the plain `publish --message` that `CLAUDE.md` names as the default — now exits
+non-zero after a fully successful commit, push, and PR creation. It has likely
+gone unnoticed because the speed-loop session has been publishing with
+`--fast --monitor`. Anything that branches on yeet's exit status (scripts, hooks,
+an agent reading the return code) currently reads a successful publish as failed.
+
+**Fix.** Early-return from `runMonitorPhase` when `monitorSteps` is empty — or
+move the existing `:665` guard up to cover the `:662` call. Note the guard cannot
+simply move to `contextResults` being empty without also deciding what
+`runPublishMonitorAndResult` should do about the status summary; the two are one
+decision.
+
+**Why you and not us:** same reason as items 1 and 2 — `Yeet/internal/Handler.ts`
+is PR-E's active build surface, and this is #551's own regression.
+
+**It is also a live Mode B specimen.** A repo-wide change landed in a shared file
+on 2026-08-04 and silently broke the default publish path for every other
+checkout in the fleet. No in-flight PR conflicted with it textually, so no
+conflict-based detector could have seen it; it surfaced a day later only because
+someone tripped over it. That is the exact failure this packet exists to catch,
+observed in the session that published the packet.
+
+---
+
 ## Also relevant to your queue
 
 - **`merge_group` degrades two required security-relevant gates.** commitlint

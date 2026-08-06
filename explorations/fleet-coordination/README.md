@@ -26,17 +26,19 @@ checkouts share one filesystem, one kernel, one user.
 
 ## Next Open Question
 
-What is the appetite for `beep worktree fleet`, and does the mirror earn a
-`BRIEF.md` on its own or ride into PR-I as an extension of `beep worktree
-doctor`? All nine align questions are closed ([`DECISIONS.md`](./DECISIONS.md));
-the shape stage decides scope bound, fat-marker sketch, rabbit holes, and no-gos.
+Does [`BRIEF.md`](./BRIEF.md) match the picture in the operator's head? On yes,
+the packet moves to `decompose` and writes `MAP.md` naming the goal packet(s),
+sequenced **behind PR-I** — `AgentBrief.fleet` is the delivery vehicle and that
+field ships there. All nine align questions are closed
+([`DECISIONS.md`](./DECISIONS.md)).
 
 ## Read This First
 
-1. [`ops/manifest.json`](./ops/manifest.json) — machine state, the nine open questions.
-2. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
-3. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
-4. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface.
+1. [`ops/manifest.json`](./ops/manifest.json) — machine state.
+2. [`BRIEF.md`](./BRIEF.md) — the shaped pitch: problem, appetite, sketch, rabbit holes, no-gos.
+3. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
+4. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
+5. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface.
 
 ## Cross-Session Coordination
 
@@ -52,6 +54,14 @@ capability this packet is about does not exist yet.
 
 ## Trail
 
+- 2026-08-05: `BRIEF.md` shaped inside the D1–D5 boundaries; appetite is one
+  small goal packet, 1–2 focused days, sequenced behind PR-I. Publishing the
+  packet produced a **live Mode B specimen**: #551 broke every `yeet publish`
+  without `--monitor` a day earlier from a parallel clone, with no textual
+  conflict and no signal to anyone until it was tripped
+  ([`CAPTURE.md`](./CAPTURE.md); handed off as item 3 of
+  [`HANDOFF-2`](./research/HANDOFF-2-pre-push-and-guard.md)). The `law-pulse.sh`
+  fix was confirmed firing in a live session.
 - 2026-08-04: grill #1 closed all nine questions → `shape`. Five locked (D1–D5),
   four disposed. The load-bearing move was a **correction to the synthesis**:
   only one of five live collisions is intra-wave, not four, so `WaveManifest`'s
