@@ -8,7 +8,6 @@
 "@beep/rdf": patch
 "@beep/data": patch
 "@beep/ai-sync": patch
-"@beep/repo-cli": patch
 "@beep/professional-desktop": patch
 ---
 
