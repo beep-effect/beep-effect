@@ -1,15 +1,23 @@
 # P0 — Policy-surface measurement and schema home
 
 **Date:** 2026-08-06
-**Window:** `be6c67e959..origin/main`, **300 first-parent commits**, 2026-07-01 → 2026-08-06.
+**Window:** `be6c67e959..9d2b12cc67`, **300 first-parent commits**, 2026-07-01 → 2026-08-06.
 **Binding law (SPEC):** no path enters the policy surface unmeasured.
 
-Reproduce:
+Reproduce — **both ends are pinned SHAs on purpose**:
 
 ```sh
-BASE=$(git rev-list --first-parent -n 301 origin/main | tail -1)
-git rev-list --first-parent --count "$BASE"..origin/main -- <pathspec>
+BASE=be6c67e959fa2d1406a606f668c02cbf1237a1f3   # 2026-07-01
+TIP=9d2b12cc67fbcd9787040c0c14cf6dbded17c311    # 2026-08-06, main at measurement time
+git rev-list --first-parent --count "$BASE".."$TIP" -- <pathspec>
 ```
+
+⚠ **Do not float either end against `origin/main`.** The first version of this recipe derived
+both ends from the live ref, so re-running it after main advanced silently measured a
+*different* window and could not reproduce the figures below — a recorded measurement that
+quietly changes meaning as the base moves. Verified: the pinned range reproduces every number
+in §1 and §2 exactly. To measure a *new* window, pin new SHAs and record them; do not reuse
+this section's numbers with a different range.
 
 ⚠ **Measurement pitfall, hit and corrected during this pass.** `git log -n 300 -- <path>`
 applies `-n` **after** path filtering, so it returns "the most recent 300 commits that
@@ -154,6 +162,8 @@ its existing shape. Revisit splitting only if the mirror's derivation service la
   admission rule is "individually low-frequency **and** governs behavior for checkouts that
   never touched it." Any future addition re-runs §1 and §2.
 - Re-run this measurement when the window has moved materially; every number here is a
-  point-in-time fact about a 300-commit window, not a constant.
+  point-in-time fact about the pinned `be6c67e959..9d2b12cc67` window, not a constant. A
+  re-run **records new pinned SHAs alongside its numbers** rather than overwriting these —
+  otherwise the artifact loses the ability to say which window produced which figure.
 - `vitest*` (4.0%) is a defensible addition and was left out only because no specimen
   implicated it; add it if a test-config change ever produces one.
