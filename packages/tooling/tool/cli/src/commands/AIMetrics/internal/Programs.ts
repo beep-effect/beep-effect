@@ -71,6 +71,7 @@ import {
   makeAiMetricsInstallPlan,
   makeAiMetricsInstallSpec,
   makeAiMetricsPrivacyCheckResult,
+  markAiMetricsOtlpTurnsExported,
   otlpExportResultToJson,
   privacyCheckToJson,
   queueAiMetricsLabels,
@@ -258,12 +259,14 @@ const resolveRawArchiveKeySecretRef = Effect.fn("AIMetrics.resolveRawArchiveKeyS
 /**
  * Option schema for the RequireHashSaltForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireHashSaltForTargetOptions schema)
+ *
  * ```ts
  * import { RequireHashSaltForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireHashSaltForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -296,12 +299,14 @@ const requireHashSaltForTarget = Effect.fn("AIMetrics.requireHashSaltForTarget")
 /**
  * Option schema for the RequireHashSaltSecretRefForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireHashSaltSecretRefForTargetOptions schema)
+ *
  * ```ts
  * import { RequireHashSaltSecretRefForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireHashSaltSecretRefForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -338,12 +343,14 @@ const requireHashSaltSecretRefForTarget = Effect.fn("AIMetrics.requireHashSaltSe
 /**
  * Option schema for the RequireRawArchiveKeySecretRefForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireRawArchiveKeySecretRefForTargetOptions schema)
+ *
  * ```ts
  * import { RequireRawArchiveKeySecretRefForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireRawArchiveKeySecretRefForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -423,12 +430,14 @@ const parseOptionalEpochMillis = Effect.fn("AIMetrics.parseOptionalEpochMillis")
 /**
  * Option schema for the ParseWindow AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ParseWindowOptions schema)
+ *
  * ```ts
  * import { ParseWindowOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ParseWindowOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -469,12 +478,14 @@ const parseWindow = Effect.fn("AIMetrics.parseWindow")(function* ({ since, until
 /**
  * Option schema for the ParseRetentionSelector AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ParseRetentionSelectorOptions schema)
+ *
  * ```ts
  * import { ParseRetentionSelectorOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ParseRetentionSelectorOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -536,12 +547,14 @@ const p6aCollectorDataRoot = (dataRoot: O.Option<string>, target: AiMetricsDeplo
 /**
  * Option schema for the MakeCommandInstallInput AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeCommandInstallInputOptions schema)
+ *
  * ```ts
  * import { MakeCommandInstallInputOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeCommandInstallInputOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -586,12 +599,14 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
 /**
  * Option schema for the MakeCommandInstallSpec AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeCommandInstallSpecOptions schema)
+ *
  * ```ts
  * import { MakeCommandInstallSpecOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeCommandInstallSpecOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -693,12 +708,14 @@ const serverObservabilityConfigFor = (
 /**
  * Option schema for the MakeInstallPreviewProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallPreviewProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallPreviewProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallPreviewProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -748,12 +765,14 @@ const makeInstallPreviewProgram = Effect.fn("AIMetrics.makeInstallPreviewProgram
 /**
  * Option schema for the MakeInstallComposeProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallComposeProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallComposeProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallComposeProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -818,12 +837,14 @@ const renderInstallPlan = Effect.fn("AIMetrics.renderInstallPlan")(function* (
 /**
  * Option schema for the MakeInstallPlanProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallPlanProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallPlanProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallPlanProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -876,12 +897,14 @@ const renderInstallDoctor = Effect.fn("AIMetrics.renderInstallDoctor")(function*
 /**
  * Option schema for the MakeInstallDoctorProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallDoctorProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallDoctorProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallDoctorProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -962,12 +985,14 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
 /**
  * Option schema for the MakeInstallApplyProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallApplyProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallApplyProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallApplyProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1026,12 +1051,14 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
 /**
  * Option schema for the MakeIngestProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeIngestProgramOptions schema)
+ *
  * ```ts
  * import { MakeIngestProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeIngestProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1149,12 +1176,14 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
 /**
  * Option schema for the MakeSourcesDiscoverProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeSourcesDiscoverProgramOptions schema)
+ *
  * ```ts
  * import { MakeSourcesDiscoverProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeSourcesDiscoverProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1229,12 +1258,14 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
 /**
  * Option schema for the MakeConfigSnapshotProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeConfigSnapshotProgramOptions schema)
+ *
  * ```ts
  * import { MakeConfigSnapshotProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeConfigSnapshotProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1275,12 +1306,14 @@ const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram
 /**
  * Option schema for the MakePrivacyCheckProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakePrivacyCheckProgramOptions schema)
+ *
  * ```ts
  * import { MakePrivacyCheckProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakePrivacyCheckProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1390,12 +1423,14 @@ const forwarderOtlpExportFailureMessage = "OTLP export did not complete after th
 /**
  * Option schema for the ForwarderOtlpExportFailed AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ForwarderOtlpExportFailedOptions schema)
+ *
  * ```ts
  * import { ForwarderOtlpExportFailedOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ForwarderOtlpExportFailedOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1430,12 +1465,14 @@ const forwarderOtlpExportFailed = ({
 /**
  * Option schema for the ExportForwarderDerivedOtlp AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ExportForwarderDerivedOtlpOptions schema)
+ *
  * ```ts
  * import { ExportForwarderDerivedOtlpOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ExportForwarderDerivedOtlpOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1485,12 +1522,14 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
 /**
  * Option schema for the MakeForwarderRunProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeForwarderRunProgramOptions schema)
+ *
  * ```ts
  * import { MakeForwarderRunProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeForwarderRunProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1674,12 +1713,14 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
 /**
  * Option schema for the MakeForwarderTimerProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeForwarderTimerProgramOptions schema)
+ *
  * ```ts
  * import { MakeForwarderTimerProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeForwarderTimerProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1796,12 +1837,14 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
 /**
  * Option schema for the MakeOtlpExportProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeOtlpExportProgramOptions schema)
+ *
  * ```ts
  * import { MakeOtlpExportProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeOtlpExportProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1867,6 +1910,10 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
       )
     )
   );
+  // Only once the export has actually succeeded. Marking earlier would strand these
+  // turns permanently if the export then failed, which is the failure this watermark
+  // exists to prevent.
+  yield* markAiMetricsOtlpTurnsExported(batch.turnIds).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
     yield* Console.log(yield* otlpExportResultToJson(result));
@@ -1886,12 +1933,14 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
 /**
  * Option schema for the MakeBenchmarkRunProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkRunProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkRunProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkRunProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1980,12 +2029,14 @@ const makeBenchmarkCompareProgram = Effect.fn("AIMetrics.makeBenchmarkComparePro
 /**
  * Option schema for the MakeLabelQueueProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeLabelQueueProgramOptions schema)
+ *
  * ```ts
  * import { MakeLabelQueueProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeLabelQueueProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2049,12 +2100,14 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
 /**
  * Option schema for the MakeLabelAddProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeLabelAddProgramOptions schema)
+ *
  * ```ts
  * import { MakeLabelAddProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeLabelAddProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2125,12 +2178,14 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
 /**
  * Option schema for the MakeBenchmarkCaseAddProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkCaseAddProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkCaseAddProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkCaseAddProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2196,12 +2251,14 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
 /**
  * Option schema for the MakeBenchmarkCaseListProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkCaseListProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkCaseListProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkCaseListProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2249,12 +2306,14 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
 /**
  * Option schema for the MakeWeeklyReportProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeWeeklyReportProgramOptions schema)
+ *
  * ```ts
  * import { MakeWeeklyReportProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeWeeklyReportProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

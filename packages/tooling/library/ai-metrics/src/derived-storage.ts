@@ -39,11 +39,13 @@ const DERIVED_TABLES = [
 /**
  * Parquet export behavior for one derived AI metrics write.
  *
- * @example
+ * **Example** (Read a parquet export mode)
+ *
  * ```ts
  * import { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsParquetExportMode.Enum.snapshot)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -56,12 +58,14 @@ export const AiMetricsParquetExportMode = LiteralKit(["none", "latest", "snapsho
 /**
  * Runtime type for {@link AiMetricsParquetExportMode}.
  *
- * @example
+ * **Example** (Type a parquet export mode)
+ *
  * ```ts
  * import type { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * const mode: AiMetricsParquetExportMode = "latest"
  * console.log(mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -219,6 +223,16 @@ const createTableStatements = [
 ] as const;
 
 const migrationColumns = [
+  {
+    // Explicit OTLP export state. Previously the exporter inferred this from
+    // `ingest_run_id`, which only worked because every run re-minted its rows. Once
+    // ingestion became idempotent that inference broke: a run that committed turns
+    // and then died before exporting left them attached to a run the exporter would
+    // never look at again, so they could never reach Phoenix.
+    columnDefinition: "otlp_exported_at_epoch_ms DOUBLE",
+    columnName: "otlp_exported_at_epoch_ms",
+    tableName: "ai_metrics_turns",
+  },
   {
     columnDefinition: "source_role VARCHAR DEFAULT 'primary'",
     columnName: "source_role",
@@ -461,6 +475,46 @@ type DerivedStorageMigration = {
 
 const derivedStorageMigrations = [
   {
+    // One-time only, and it must stay that way. Existing stores were written under
+    // the old duplicating scheme, so their rows have already been exported, usually
+    // many times over. Left entirely un-backfilled, the first run after the watermark
+    // lands would see millions of NULLs and flush the whole history to Phoenix in one
+    // burst -- the exact backpressure collapse this work exists to prevent.
+    //
+    // The newest ingest run is deliberately excluded. Under the old scheme a run that
+    // committed turns and then died before exporting was rescued by the next run,
+    // which re-minted those rows under a fresh id and exported them -- so the content
+    // did reach Phoenix even though the original rows never did. The one case with no
+    // such rescue is the final run before this migration: if it crashed before
+    // exporting, nothing came after it. Leaving that run's turns unmarked costs at
+    // most one run's worth of re-exported spans if it had in fact succeeded, and
+    // avoids silently burying data if it had not.
+    //
+    // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
+    // applied before the run's inserts, so genuinely new turns are never swept up.
+    migrationId: "ai-metrics-otlp-export-watermark-v1",
+    // Every column the statement touches, including the ingest-run lookup. Very old
+    // stores predate `ingest_run_id` on turns entirely, and the statement must not be
+    // attempted against them -- an unguarded reference fails schema-ensure outright.
+    // A skipped migration is not recorded, so it applies later once the shape catches up.
+    requiredColumns: [
+      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+    ],
+    statements: [
+      `UPDATE ai_metrics_turns
+       SET otlp_exported_at_epoch_ms = 0
+       WHERE otlp_exported_at_epoch_ms IS NULL
+         AND ingest_run_id <> COALESCE(
+           (SELECT ingest_run_id FROM ai_metrics_ingest_runs ORDER BY started_at_epoch_ms DESC LIMIT 1),
+           ''
+         )`,
+    ],
+    transactional: true,
+  },
+  {
     migrationId: "ai-metrics-p6a-default-backfill-v1",
     statements: migrationBackfillStatements,
   },
@@ -492,7 +546,8 @@ const derivedStorageMigrations = [
 /**
  * Error raised by the DuckDB derived storage projection.
  *
- * @example
+ * **Example** (Construct a projection error)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageError } from "@beep/repo-ai-metrics"
  * const error = AiMetricsDerivedStorageError.make({
@@ -501,6 +556,7 @@ const derivedStorageMigrations = [
  * })
  * console.log(error)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -520,7 +576,8 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
 /**
  * One sanitized transcript ready for derived storage projection.
  *
- * @example
+ * **Example** (Build a sanitized transcript record)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedTranscriptRecord,
@@ -566,6 +623,7 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
  * })
  * console.log(record.archiveObject.archiveObjectId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -584,7 +642,8 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
 /**
  * Input for a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Assemble a derived write input)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -614,6 +673,7 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
  * })
  * console.log(input.parquetExportMode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -641,7 +701,8 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
 /**
  * Result of a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Inspect a derived write result)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageWriteResult } from "@beep/repo-ai-metrics"
  *
@@ -656,6 +717,7 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
  * })
  * console.log(result.parquetTables)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -794,8 +856,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
 /**
  * Ensure the AI metrics derived DuckDB schema exists and has P4 columns.
  *
- * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
- * @example
+ * **Example** (Ensure the schema before writing)
+ *
  * ```ts
  * import { ensureAiMetricsDerivedStorage } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
@@ -807,6 +869,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
  * @category services
  * @since 0.0.0
  */
@@ -1172,15 +1236,25 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
   yield* Effect.forEach(
     sanitized.rawEventEnvelopes,
     Effect.fnUntraced(function* (envelope) {
+      // Content-addressed, deliberately excluding input.ingestRunId. With the run id
+      // in the key every run minted a fresh turn_id for identical content, so
+      // INSERT OR REPLACE never collided and the table accumulated one copy per run
+      // (measured: 5.43M rows collapsing to ~516K distinct raw_event_hash across
+      // 1,222 runs). Per the packet's identity rule, ingest runs are lineage, never
+      // identity.
       const turnId = yield* rowId("turn", [
-        input.ingestRunId,
         envelope.sourceKind,
         envelope.sourcePathHash,
         envelope.lineNumber,
         envelope.rawEventHash,
       ]);
+      // OR IGNORE, not OR REPLACE. REPLACE would rewrite ingest_run_id to the
+      // current run, and the OTLP export selects `WHERE ingest_run_id = <this run>`
+      // -- so every previously-seen turn would be re-exported to Phoenix on every
+      // run even though the table itself had stopped growing. Retaining the
+      // first-seen run id is what makes that export incremental.
       yield* duckdb.run(
-        `INSERT OR REPLACE INTO ai_metrics_turns (
+        `INSERT OR IGNORE INTO ai_metrics_turns (
           turn_id,
           ingest_run_id,
           agent_session_id,
@@ -1229,12 +1303,8 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
 /**
  * Project sanitized AI metrics records into DuckDB and export Parquet snapshots.
  *
- * @effects
- * - Creates the derived DuckDB directory when missing.
- * - Runs DuckDB table creation and migrations before writing rows.
- * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
- * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
- * @example
+ * **Example** (Write one derived ingest run)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -1266,6 +1336,12 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
  * const write = writeAiMetricsDerivedStorage(input)
  * console.log(write)
  * ```
+ *
+ * @effects
+ * - Creates the derived DuckDB directory when missing.
+ * - Runs DuckDB table creation and migrations before writing rows.
+ * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
+ * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
  * @category services
  * @since 0.0.0
  */
