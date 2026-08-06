@@ -62,6 +62,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
+import type { YeetMergeReady } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
@@ -694,16 +695,19 @@ interface YeetMonitorUntilMergedOptions {
   readonly pollInterval?: Duration.Duration | undefined;
 }
 
+const renderMergeReadyGateDetail = (mergeReady: YeetMergeReady): string =>
+  O.match(mergeReady.failing, {
+    onNone: () => "[yeet] merge-ready: every hard criterion is green; awaiting the operator's merge",
+    onSome: (failing) => `[yeet] not merge-ready: blocked on ${failing}`,
+  });
+
 const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
   pipe(
     snapshot.mergeReady,
-    O.map((mergeReady) =>
-      O.match(mergeReady.failing, {
-        onNone: () => "[yeet] merge-ready: every hard criterion is green; awaiting the operator's merge",
-        onSome: (failing) => `[yeet] not merge-ready: blocked on ${failing}`,
-      })
-    ),
-    O.getOrElse(() => "[yeet] merge readiness is unknown; the PR could not be read")
+    O.match({
+      onNone: () => "[yeet] merge readiness is unknown; the PR could not be read",
+      onSome: renderMergeReadyGateDetail,
+    })
   );
 
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (

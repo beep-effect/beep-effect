@@ -1124,20 +1124,24 @@ export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string =>
   );
 };
 
+const renderMergeReadyDetail = (mergeReady: YeetMergeReady): string => {
+  const greptile = O.match(mergeReady.criteria.greptileScore, {
+    onNone: () => Str.empty,
+    onSome: (score) => ` (greptile ${score})`,
+  });
+  return O.match(mergeReady.failing, {
+    onNone: () => `merge-ready: yes${greptile}`,
+    onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
+  });
+};
+
 const renderMergeReadyLine = (snapshot: YeetStatusSnapshot): string =>
   pipe(
     snapshot.mergeReady,
-    O.map((mergeReady) => {
-      const greptile = O.match(mergeReady.criteria.greptileScore, {
-        onNone: () => Str.empty,
-        onSome: (score) => ` (greptile ${score})`,
-      });
-      return O.match(mergeReady.failing, {
-        onNone: () => `merge-ready: yes${greptile}`,
-        onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
-      });
-    }),
-    O.getOrElse(() => "merge-ready: not checked")
+    O.match({
+      onNone: () => "merge-ready: not checked",
+      onSome: renderMergeReadyDetail,
+    })
   );
 
 /**
