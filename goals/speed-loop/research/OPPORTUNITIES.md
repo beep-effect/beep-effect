@@ -1346,6 +1346,43 @@ off the merged branch the promised second pass cannot reach it; ratified
 decision 45(d)'s "a re-run completes the deletion" is FALSE as shipped.
 Both route to a fast-follow fix PR (sweep --branch override through
 guardLiteralArg + handoff text; decision 45(d) amended same-PR).
+CLOSED same day: PR #592 shipped `--branch`, and the first real dogfood
+(post-#600, two stale merged branches from the primary clone) deleted
+both correctly. New receipt from that run: when the remote branch was
+already auto-deleted on merge, the remote-deletion skip renders
+"remote branch origin/X exists; remote tip <absent> equals pull request
+head <sha>" — stale local ref state and an absent probe result flowing
+into an equality sentence. Probe-absent needs its own rendered reason;
+same class as the named `*ProbeTruncated` → `!probeSucceeded`
+generalization above.
+
+Owned-runners infra receipts (2026-08-06, ci-runners stack
+implementation, workflow wf_f00a6749-061; fuller detail in the run's
+journal): (a) the generated design packet's own acceptance test
+contradicted its security decision — the config-override test enshrined
+cross-region AZs that the decided region/AZ S.check must reject; spec
+and test drifted within one generated artifact and were reconciled by
+hand. (b) fc-arbitrary schema round-trips are structurally incompatible
+with cross-field checks (independent region/AZ arbitraries ~never
+satisfy starts-with, starving fc's filter) — schemaParity needs a
+seeded/custom-arbitrary variant. (c) The docgen-tsc-stricter-than-tsgo
+class recurred: a JSDoc example comparing two non-overlapping literal
+constants passed turbo check (tsgo) and failed real tsc with TS2367 in
+docgen — caught by the adversarial reviewer running docgen:local, which
+the implement gate set omitted; docgen:local belongs in any new-module
+gate battery. (d) Follow-ups now tracked: promote the AWS primitive
+schemas (AwsRegion/Az/Cidr/AmiId/InstanceType/SsmParameterName) to a
+shared module before the controller stack re-declares them; launcher
+IAM enforcement (delete the retracted runner instance profile, add
+RunInstances condition Denies on metadata/profile/tag overrides) is
+account-state work nothing in-repo enforces yet — pre-deploy blocker;
+an in-repo acceptance-probe script would make the o6 red-team gates
+mechanical at first `pulumi up`; the reaper Lambda handler is an
+untypechecked inline string and graduates to a real source file if it
+grows. (e) `rg -r` bit AGAIN (display-only) despite its ledger entry —
+the receipt alone does not prevent recurrence; candidate habit-level
+fix is a shell alias/wrapper making rg refuse `-r` outside explicit
+`--replace` intent.
 
 beep-effect14 operator-feedback disposition (2026-08-06): new items
 #82–83 above. Amendments — #8 (ship porcelain): third verb gap

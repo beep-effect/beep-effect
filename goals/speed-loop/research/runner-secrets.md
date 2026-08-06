@@ -62,7 +62,19 @@ only for the credentials that must exist at all. Suggested vault: a dedicated
 - AWS account 832907639880, region default us-east-1.
 - S3 cache bucket: `beep-turbo-cache-832907639880` (public-blocked, 14-day expiry).
 - Instance role/profile: `beep-ci-runner-role` / `beep-ci-runner-profile`
-  (inline policy beep-ci-turbo-cache: bucket RW).
+  (inline policy beep-ci-turbo-cache: bucket RW) — **RETRACTED for workers**
+  (o6 security challenge, 2026-08-06): workers carry NO instance profile at
+  all, so the worker security gate is "no AWS credentials discoverable from a
+  guest" (IMDS stays enabled, IMDSv2-only, but its credential endpoint serves
+  nothing). The role/profile should be deleted from the account so a
+  RunInstances override cannot re-attach it; runner cache access, when it
+  arrives, uses pre-signed URLs, not an instance role. The launcher's
+  PassRole grant (below) should be removed with it.
+- Teardown authority: the in-stack reaper in the `beep-ci-runners` Pulumi
+  stack (EventBridge rate(5 minutes) → Lambda terminating any instance tagged
+  beep-ci=runner whose LaunchTime exceeds `ciRunners:reaperTtlMinutes`,
+  default 90). The Lambda's execution role is a service role, not an instance
+  profile on workers. In-guest `shutdown -P` is only a convenience backstop.
 - Launcher: user `beep-ci-runner-launcher` (Describe*, RunInstances,
   CreateTags on RunInstances, Terminate/Stop only where tag beep-ci=runner,
   PassRole → runner role only) → op://BEEP_CI/aws-runner-launcher.
