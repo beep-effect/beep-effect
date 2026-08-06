@@ -1797,8 +1797,8 @@ volumes:
             // run-old was rescued under the old scheme by the runs that followed it, so
             // marking it costs nothing. run-last-with-turns had no such rescue -- if it
             // died before exporting, nothing came after it -- so its turns stay pending.
-            // Scoping the exclusion to the newest run outright let run-empty-latest
-            // shadow it and buried exactly the rows most likely to be unexported.
+            // v1 buries it, because run-empty-latest shadows it; v2 reopens it. The net
+            // effect on a fresh store is the corrected behaviour.
             expect(watermarks).toEqual([
               { exportedAt: null, turnId: "turn-at-risk" },
               { exportedAt: 0, turnId: "turn-old" },
@@ -1807,9 +1807,101 @@ volumes:
             const migrationRows = yield* duckdb.query(
               `SELECT migration_id AS "migrationId"
                FROM ai_metrics_schema_migrations
-               WHERE migration_id = 'ai-metrics-otlp-export-watermark-v1'`
+               WHERE migration_id LIKE 'ai-metrics-otlp-export-watermark-%'
+               ORDER BY migration_id`
             );
-            expect(migrationRows).toEqual([{ migrationId: "ai-metrics-otlp-export-watermark-v1" }]);
+            expect(migrationRows).toEqual([
+              { migrationId: "ai-metrics-otlp-export-watermark-v1" },
+              { migrationId: "ai-metrics-otlp-export-watermark-v2" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "reopens turns a store already buried under the shipped watermark backfill",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            // A store that already ran the watermark backfill as it shipped, and was left
+            // holding the bug: the newest turn-bearing run was marked because a zero-turn
+            // discovery pass shadowed it. The ledger records migration ids, not their SQL,
+            // so rewriting v1 in place could never reach this store -- only a new id can.
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", startedAt: 1 },
+                { ingestRunId: "run-last-with-turns", startedAt: 2 },
+                { ingestRunId: "run-empty-latest", startedAt: 3 },
+              ],
+              Effect.fnUntraced(function* (run) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_ingest_runs VALUES (
+                     $ingestRunId, 'local', 'snapshot', 'hash', $startedAt, $startedAt, 0, 0, 0
+                   )`,
+                  run
+                );
+              }),
+              { discard: true }
+            );
+            // Both already marked with the backfill sentinel, exactly as the shipped v1
+            // would have left them.
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", turnId: "turn-old" },
+                { ingestRunId: "run-last-with-turns", turnId: "turn-buried" },
+              ],
+              Effect.fnUntraced(function* (turn) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp,
+                     otlp_exported_at_epoch_ms
+                   ) VALUES (
+                     $turnId, $ingestRunId, 'session-1', 'codex', 'source-hash',
+                     'primary', 1, 'event', $turnId, NULL, 0
+                   )`,
+                  turn
+                );
+              }),
+              { discard: true }
+            );
+            // v1 stays on the ledger and v2 comes off it: a store upgraded from the
+            // release that shipped v1 alone. v1 is skipped by id from here on no matter
+            // what its SQL says, which is the whole reason a second migration is needed.
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-otlp-export-watermark-v2'`
+            );
+            const beforeUpgrade = yield* duckdb.query(
+              `SELECT migration_id AS "migrationId"
+               FROM ai_metrics_schema_migrations
+               WHERE migration_id LIKE 'ai-metrics-otlp-export-watermark-%'`
+            );
+            expect(beforeUpgrade).toEqual([{ migrationId: "ai-metrics-otlp-export-watermark-v1" }]);
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const watermarks = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", otlp_exported_at_epoch_ms AS "exportedAt"
+               FROM ai_metrics_turns
+               ORDER BY turn_id`
+            );
+
+            // v2 reopens only the newest backfilled run. run-old stays marked: it was
+            // rescued under the old duplicating scheme, so its content did reach Phoenix.
+            expect(watermarks).toEqual([
+              { exportedAt: null, turnId: "turn-buried" },
+              { exportedAt: 0, turnId: "turn-old" },
+            ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
