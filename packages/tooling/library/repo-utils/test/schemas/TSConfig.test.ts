@@ -245,10 +245,10 @@ describe("TSConfig schema", () => {
       });
 
       expect(Exit.isFailure(topLevel)).toBe(true);
-      expect(renderSchemaFailure(topLevel)).toContain("Unexpected key");
+      expect(renderSchemaFailure(topLevel)).toContain("Expected no excess property");
       expect(renderSchemaFailure(topLevel)).toContain('["unexpected"]');
       expect(Exit.isFailure(nested)).toBe(true);
-      expect(renderSchemaFailure(nested)).toContain("Unexpected key");
+      expect(renderSchemaFailure(nested)).toContain("Expected no excess property");
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
 

@@ -633,7 +633,7 @@ export const toolExpression = (path: string): string =>
     A.map((segment) =>
       identifierSegment(segment)
         ? `.${segment}`
-        : `[${S.encodeUnknownSync(S.UnknownFromJsonString)(segment)}]`
+        : `[${S.encodeUnknownSync(S.fromJsonString(S.Unknown))(segment)}]`
     ),
     A.join("")
   )}`;

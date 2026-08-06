@@ -24,7 +24,7 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-numeric-domain":
     "Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional.",
   "SFV4-boundary-codec":
-    "Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
+    "Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
   "SFV4-defaults":
     "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
   "SFV4-equivalence":

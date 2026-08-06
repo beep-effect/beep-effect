@@ -251,7 +251,7 @@ describe("HookPulseV1", () => {
       };
 
       const decoded = yield* decodeHookPulseFromLegacy(legacy);
-      const serialized = yield* S.encodeUnknownEffect(S.UnknownFromJsonString)(yield* encodeHookPulse(decoded));
+      const serialized = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(yield* encodeHookPulse(decoded));
 
       expect(decoded).toBeInstanceOf(HookPulseV1);
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
@@ -323,7 +323,7 @@ describe("HookPulseV1", () => {
         })
       );
       const encoded = yield* encodeHookPulse(decoded);
-      const serialized = yield* S.encodeUnknownEffect(S.UnknownFromJsonString)(encoded);
+      const serialized = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(encoded);
 
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
       expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);

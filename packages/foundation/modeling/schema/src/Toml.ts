@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, flow, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -17,23 +16,12 @@ const $I = $SchemaId.create("Toml");
 
 const decodeUnknownRecord = S.decodeUnknownEffect(UnknownRecord);
 
-const encodeUnsupported = (value: UnknownRecord): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to TOML text is not supported by TomlTextToUnknown.",
     })
   );
-
-const invalidTomlInput: {
-  (content: string, message: string): SchemaIssue.InvalidValue;
-  (message: string): (content: string) => SchemaIssue.InvalidValue;
-} = dual(
-  2,
-  (content: string, message: string): SchemaIssue.InvalidValue =>
-    new SchemaIssue.InvalidValue(O.some(content), {
-      message,
-    })
-);
 
 type TomlParse = (content: string) => unknown;
 
@@ -55,7 +43,7 @@ const getTomlParse = (): O.Option<TomlParse> => {
 };
 
 const decodeTomlUnknown = (content: string) => {
-  const makeInvalid = (message: string) => invalidTomlInput(content, message);
+  const makeInvalid = (message: string) => new SchemaIssue.InvalidValue({ message });
   return getTomlParse().pipe(
     Effect.fromOption,
     Effect.mapError(() => makeInvalid("Bun.TOML.parse is" + " unavailable in the current runtime.")),

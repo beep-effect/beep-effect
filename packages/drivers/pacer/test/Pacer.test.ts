@@ -24,7 +24,7 @@ import { FastCheck as fc } from "effect/testing";
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
 const rotatedToken = Str.repeat(128)("R");
-const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const mockLayer = (options: Parameters<typeof Pacer.makePacerMockHttpClient>[0] = {}) =>
   Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient(options)).full;

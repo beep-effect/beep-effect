@@ -238,18 +238,18 @@ export const DurationInput = S.Union([
  */
 export type DurationInput = typeof DurationInput.Type;
 
-const invalidDurationInputIssue = (input: DurationInput) =>
-  new SchemaIssue.InvalidValue(Option.some(input), {
-    message: "Expected a valid duration input.",
-  });
-
 const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, SchemaIssue.Issue> => {
   const duration = D.fromInput(input);
 
   return pipe(
     duration,
     Option.match({
-      onNone: () => Effect.fail(invalidDurationInputIssue(input)),
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue({
+            message: "Expected a valid duration input.",
+          })
+        ),
       onSome: Effect.succeed,
     })
   );

@@ -199,7 +199,7 @@ interface BeliefCardProps {
   readonly side: "left" | "right";
 }
 
-const encodeFact = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeFact = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const shortDigest = (digest: string): string => `${Str.takeLeft(12)(digest)}…`;
 

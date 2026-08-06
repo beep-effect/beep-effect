@@ -23,7 +23,7 @@ import { ConsoleMethod } from "../Codemode.method-names.ts";
 export { ConsoleMethod };
 
 const MAX_CONSOLE_DEPTH = 32;
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);

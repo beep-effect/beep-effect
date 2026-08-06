@@ -231,9 +231,9 @@ type CommandOutput = {
 };
 
 const UnknownStringRecord = S.Record(S.String, S.Unknown);
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
-const encodeReportJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeReportJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 
 const emptySummary = () =>

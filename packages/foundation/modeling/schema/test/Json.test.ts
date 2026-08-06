@@ -28,7 +28,9 @@ describe("Json", () => {
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
-        expect(Cause.pretty(result.cause)).toMatch(/JSON Parse error|SyntaxError/u);
+        // beta.103 formatters no longer leak the underlying parser text, so the
+        // failure surfaces the static JSON-string decode message instead.
+        expect(Cause.pretty(result.cause)).toMatch(/Expected a valid JSON string/u);
       }
     })
   );

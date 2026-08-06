@@ -335,7 +335,7 @@ const decodeSemverFromString = (value: string): Effect.Effect<Semver, SchemaIssu
     O.match({
       onNone: () =>
         Effect.fail(
-          new SchemaIssue.InvalidValue(O.some(value), {
+          new SchemaIssue.InvalidValue({
             message: "Expected a valid semantic version string",
           })
         ),

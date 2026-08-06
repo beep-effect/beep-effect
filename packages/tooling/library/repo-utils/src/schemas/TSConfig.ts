@@ -327,7 +327,7 @@ const makeCaseInsensitiveLiteralSchema = <const Values extends A.NonEmptyReadonl
           O.match({
             onNone: () =>
               Effect.fail(
-                new SchemaIssue.InvalidValue(O.some(value), {
+                new SchemaIssue.InvalidValue({
                   message: `Expected one of ${expected}.`,
                 })
               ),

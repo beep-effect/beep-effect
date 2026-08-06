@@ -30,6 +30,7 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { A, O } from "@beep/utils";
 import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
@@ -151,9 +152,20 @@ export const makeOntologyMcpTransportLayer = (options: {
 }) => {
   const approvedTools = options.approvedMutationTools ?? [];
   const security = ontologyMcpSecurityMiddleware(options.token);
-  const server = McpServer.layerHttp({ name: "beep-ontology", version: "0.0.0", path: "/mcp" }).pipe(
-    Layer.provide(security.layer)
-  );
+  // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an
+  // empty protocol list, both of which are literals here — so a failure is a
+  // defect, not a startup condition the desktop shell can report.
+  const server = McpServer.layerHttp({
+    name: "beep-ontology",
+    version: "0.0.0",
+    path: "/mcp",
+    protocols: [McpProtocol.v2025_06_18],
+    // `layerHttp` now runs its own DNS-rebinding Origin check and answers 403 to
+    // any request carrying an Origin outside this list. Left unset it rejects
+    // every browser-origin request, so it must mirror the same allowlist the
+    // surrounding origin middleware and CORS layer enforce.
+    allowedOrigins: ontologyMcpAllowedOrigins,
+  }).pipe(Layer.provide(security.layer), Layer.orDie);
   const readOnly = sanitizedToolkit(OntologyReadOnlyToolkit).pipe(Layer.provide(OntologyMcpReadOnlyToolsLive));
   const mutations = sanitizedToolkit(OntologyMutationToolkit).pipe(
     Layer.provide(OntologyMcpMutationToolsLive),
@@ -225,9 +237,11 @@ export const makeOntologyMcpTransportLayer = (options: {
       )
     )
   );
-  const preflight = HttpRouter.add("OPTIONS", "/mcp", HttpServerResponse.empty({ status: 204 })).pipe(
-    Layer.provide(security.layer)
-  );
+  // No explicit OPTIONS route: `McpServer.layerHttp` now declares one itself, and
+  // a second declaration on the same path is a hard router error. Nothing is lost
+  // — `HttpMiddleware.cors` in `security` short-circuits every OPTIONS request
+  // with a 204 plus CORS headers before any route handler is reached, so this
+  // route was already unreachable.
   // The publication tool is registered only when an operator has named at least
   // one destination. An empty allowlist is the default, so the tool does not
   // exist on a stock install — the sink and its control ship together.
@@ -244,5 +258,5 @@ export const makeOntologyMcpTransportLayer = (options: {
   );
   const mcp = registration.pipe(Layer.provide(server));
 
-  return Layer.merge(mcp, preflight);
+  return mcp;
 };

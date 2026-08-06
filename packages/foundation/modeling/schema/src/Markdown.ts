@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, flow, Result, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,23 +27,14 @@ type MarkdownHtmlRender = (content: string, options?: undefined | MarkdownRender
 const MarkdownBrand = S.String.pipe(S.brand("Markdown"));
 const defaultMarkdownRenderOptions = { tagFilter: true } satisfies MarkdownRenderOptions;
 
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding HTML output back into Markdown text is not supported by MarkdownTextToHtml.",
     })
   );
 
-const invalidMarkdownInput: {
-  (content: string, message: string): SchemaIssue.InvalidValue;
-  (message: string): (content: string) => SchemaIssue.InvalidValue;
-} = dual(
-  2,
-  (content: string, message: string): SchemaIssue.InvalidValue =>
-    new SchemaIssue.InvalidValue(O.some(content), {
-      message,
-    })
-);
+const invalidMarkdownInput = (message: string): SchemaIssue.InvalidValue => new SchemaIssue.InvalidValue({ message });
 
 const getMarkdownHtmlRender = (): O.Option<MarkdownHtmlRender> => {
   const bunRuntime = Reflect.get(globalThis, "Bun");
@@ -62,21 +52,19 @@ const makeRenderMarkdownHtml = (options?: undefined | MarkdownRenderOptions) => 
 
   return Effect.fn("Markdown.renderMarkdownHtml")(function* (content: string) {
     const renderMarkdownHtml = yield* O.match(getMarkdownHtmlRender(), {
-      onNone: () =>
-        Effect.fail(invalidMarkdownInput(content, "Bun.markdown.html is unavailable in the current runtime.")),
+      onNone: () => Effect.fail(invalidMarkdownInput("Bun.markdown.html is unavailable in the current runtime.")),
       onSome: Effect.succeed,
     });
     const rendered = yield* Effect.try({
       try: () => renderMarkdownHtml(content, renderOptions),
       catch: (cause) =>
         invalidMarkdownInput(
-          content,
           P.isError(cause) ? `Invalid Markdown input (${cause.message}).` : "Invalid Markdown input."
         ),
     });
 
     return yield* S.decodeUnknownEffect(S.String)(rendered).pipe(
-      Effect.mapError(() => invalidMarkdownInput(content, "Invalid Markdown input (Expected HTML string output)."))
+      Effect.mapError(() => invalidMarkdownInput("Invalid Markdown input (Expected HTML string output)."))
     );
   });
 };
@@ -91,7 +79,7 @@ const decodeMarkdownParseResult = (
 ): ((result: MarkdownParseResult) => Effect.Effect<string, SchemaIssue.InvalidValue>) =>
   Result.match({
     onSuccess: () => Effect.succeed(content),
-    onFailure: (message) => Effect.fail(invalidMarkdownInput(content, message)),
+    onFailure: (message) => Effect.fail(invalidMarkdownInput(message)),
   });
 
 const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (content: string) {

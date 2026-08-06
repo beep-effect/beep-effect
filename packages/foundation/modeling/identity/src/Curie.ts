@@ -156,7 +156,7 @@ export const contractOption: {
   <const V extends VocabShape>(iri: string, vocab: V): ReturnType<typeof contractOptionImpl<V>>;
 } = dual(2, contractOptionImpl);
 
-const schemaIssue = (value: string, message: string) => new SchemaIssue.InvalidValue(O.some(value), { message });
+const schemaIssue = (message: string) => new SchemaIssue.InvalidValue({ message });
 
 const isCoreCurie = (value: unknown): value is CoreCurie =>
   P.isString(value) && O.isSome(expandOption(value, CoreVocab));
@@ -183,7 +183,7 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
       pipe(
         expandOption(curie, vocab),
         O.match({
-          onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+          onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
           onSome: Effect.succeed,
         })
       ),
@@ -191,7 +191,7 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
       pipe(
         contractOption(iri, vocab),
         O.match({
-          onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+          onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
           onSome: Effect.succeed,
         })
       ),
@@ -203,7 +203,7 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
       expandOption(curie, CoreVocab),
       O.filter(isCoreIri),
       O.match({
-        onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+        onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
         onSome: Effect.succeed,
       })
     ),
@@ -212,7 +212,7 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
       contractOption(iri, CoreVocab),
       O.filter(isCoreCurie),
       O.match({
-        onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+        onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
         onSome: Effect.succeed,
       })
     ),

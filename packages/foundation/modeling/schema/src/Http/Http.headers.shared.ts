@@ -150,7 +150,7 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
         Effect.try({
           try: () => new URL(String(input)).toString(),
           catch: (cause) =>
-            new SchemaIssue.InvalidValue(Option.some(input), {
+            new SchemaIssue.InvalidValue({
               message: P.isError(cause) ? cause.message : "Expected a valid absolute URL.",
             }),
         }),
@@ -261,10 +261,10 @@ export class ResponseHeader extends S.Class<ResponseHeader>($I`ResponseHeader`)(
  * @since 0.0.0
  */
 export const makeHeaderEncodeForbidden =
-  <A>(schemaName: string) =>
-  (header: A): Effect.Effect<never, SchemaIssue.Issue> =>
+  <A>(schemaName: string): ((header: A) => Effect.Effect<never, SchemaIssue.Issue>) =>
+  (): Effect.Effect<never, SchemaIssue.Issue> =>
     Effect.fail(
-      new SchemaIssue.Forbidden(Option.some(header), {
+      new SchemaIssue.Forbidden({
         message: `Encoding ${schemaName} back to the original input is not supported`,
       })
     );

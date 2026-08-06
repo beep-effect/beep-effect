@@ -7,7 +7,6 @@
 
 import { Effect, SchemaGetter as Getter, SchemaIssue, Struct } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 type DestructiveTransform<Self extends S.Top, B> = S.decodeTo<
@@ -55,7 +54,7 @@ export const destructiveTransform: {
       return yield* Effect.try({
         try: () => transform(decoded),
         catch: () =>
-          new SchemaIssue.InvalidValue(O.some(decoded), {
+          new SchemaIssue.InvalidValue({
             message: "Error applying transformation",
           }),
       });

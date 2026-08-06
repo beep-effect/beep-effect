@@ -71,7 +71,7 @@ const decodeUsptoApplicationNumberFromText = (
   return applicationNumberPattern.test(candidate)
     ? Effect.succeed(UsptoApplicationNumber.make(candidate))
     : Effect.fail(
-        new SchemaIssue.InvalidValue(O.some(value), {
+        new SchemaIssue.InvalidValue({
           message: "Expected text containing an eight-digit USPTO application number",
         })
       );
@@ -179,7 +179,7 @@ const decodeUsptoPatentNumberFromText = (value: string): Effect.Effect<UsptoPate
   return patentNumberPattern.test(candidate)
     ? Effect.succeed(UsptoPatentNumber.make(candidate))
     : Effect.fail(
-        new SchemaIssue.InvalidValue(O.some(value), {
+        new SchemaIssue.InvalidValue({
           message: "Expected text containing a normalized USPTO patent number",
         })
       );

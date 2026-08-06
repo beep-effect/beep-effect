@@ -11,8 +11,8 @@ import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
 const $I = $RepoCliId.create("internal/cli/Json");
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 /**
  * Default `jsonc.format` options shared by repo-cli pretty JSON renderers.

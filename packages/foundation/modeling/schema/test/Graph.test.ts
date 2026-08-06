@@ -19,11 +19,9 @@ describe("Graph indices", () => {
   });
 
   it("rejects invalid indices", () => {
-    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow(
-      "Expected a value greater than or equal to 0, got -1"
-    );
+    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
     expect(() => S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
-      "Expected a value greater than or equal to 0, got -1"
+      "Expected a value greater than or equal to 0"
     );
   });
 
@@ -79,7 +77,7 @@ describe("Graph edge schemas", () => {
     expect(decoded).toBeInstanceOf(Graph_.Edge);
     expect(decoded.data).toBe(1);
     expect(() => S.decodeUnknownSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: null }))).toThrow(
-      "Expected string, got null"
+      "Expected string"
     );
   });
 
@@ -283,7 +281,7 @@ describe("Graph FromSelf schemas", () => {
       Graph_.addEdge(mutable, a, b, "x");
     });
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(`Expected string, got null
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(`Expected string
   at ["nodes"][1][1]`);
   });
 
@@ -300,9 +298,7 @@ describe("Graph FromSelf schemas", () => {
       })
     );
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(
-      "Expected @beep/schema/Graph/GraphFromSelf, got Graph(directed, 2, 1)"
-    );
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow("Expected @beep/schema/Graph/GraphFromSelf");
   });
 
   it("validates existing mutable directed graphs and preserves mutability", () => {

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { Effect, Match, Option, SchemaIssue, SchemaParser } from "effect";
+import { Effect, Match, SchemaIssue, SchemaParser } from "effect";
 import * as S from "effect/Schema";
 import { GraphEncoded as GraphEncodedSchemaFactory } from "./Graph.encoded.ts";
 import { rebuildImmutableGraph, rebuildMutableGraph } from "./Graph.rebuild.ts";
@@ -202,14 +202,15 @@ const makeImmutableGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(
       const encoded = GraphEncodedSchemaFactory(node, edge);
 
       return (input, ast, parseOptions) => {
+        // fallow-ignore-next-line code-duplication -- mirrors the mutable decoder by design; the guard and rebuild differ, and the narrowing lives in the guard
         if (!isImmutableGraphValue(input) || (expectedType !== undefined && input.type !== expectedType)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
         return Effect.flatMap(
           SchemaParser.decodeUnknownEffect(encoded)(toRawGraphEncoded(input), parseOptions),
           Effect.fnUntraced(function* (graph) {
-            return yield* rebuildImmutableGraph(graph, { actual: input, expectedType });
+            return yield* rebuildImmutableGraph(graph, { expectedType });
           })
         );
       };
@@ -255,14 +256,15 @@ const makeMutableGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(
       const encoded = GraphEncodedSchemaFactory(node, edge);
 
       return (input, ast, parseOptions) => {
+        // fallow-ignore-next-line code-duplication -- mirrors the immutable decoder by design; the guard and rebuild differ, and the narrowing lives in the guard
         if (!isMutableGraphValue(input) || (expectedType !== undefined && input.type !== expectedType)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
         return Effect.flatMap(
           SchemaParser.decodeUnknownEffect(encoded)(toRawGraphEncoded(input), parseOptions),
           Effect.fnUntraced(function* (graph) {
-            return yield* rebuildMutableGraph(graph, { actual: input, expectedType });
+            return yield* rebuildMutableGraph(graph, { expectedType });
           })
         );
       };

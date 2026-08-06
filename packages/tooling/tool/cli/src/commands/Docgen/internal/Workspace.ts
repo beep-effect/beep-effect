@@ -40,7 +40,7 @@ const DOCGEN_CONFIG_SCAN_IGNORES = [
 const isResolveDocgenWorkspacePackageDataFirst = (args: IArguments): boolean =>
   (args.length === 1 && P.isString(args[0])) || args.length === 2;
 
-const parseJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const parseJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const decodeDocgenConfigDocument = S.decodeUnknownEffect(DocgenConfigDocument);
 

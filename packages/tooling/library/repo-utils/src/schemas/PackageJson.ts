@@ -1731,7 +1731,7 @@ export const encodePackageJsonPrettyEffect: (input: unknown) => Effect.Effect<st
     return yield* jsonStringifyPretty(validated);
   });
 
-const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Read a `package.json` file from disk and decode it into a strict `PackageJson`.

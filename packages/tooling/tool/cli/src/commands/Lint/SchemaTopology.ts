@@ -70,7 +70,7 @@ export class SchemaTopologyViolation extends S.Class<SchemaTopologyViolation>($I
   })
 ) {}
 
-const decodeJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const schemaRoleFileTargetPattern = /^\.\/(?:src|dist)\/[A-Z][^/]+\/[^/]+\.[a-z][A-Za-z0-9-]*\.(?:ts|js)$/u;
 const crossConceptIndexExportPattern =
   /^\s*export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s*(?:as\s+[A-Za-z_$][\w$]*\s*)?from\s+["']\.\.\/[^"']+["']/mu;

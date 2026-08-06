@@ -6,7 +6,6 @@
  */
 
 import { Effect, SchemaGetter, SchemaIssue } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -62,9 +61,6 @@ export type ProtobufInt64Input = bigint | number | string | ProtobufLongLike;
 const maximumDecimalLength = 20;
 const decimalIntegerPattern = /^-?(?:0|[1-9]\d*)$/;
 
-const invalidProtobufInt64Input = (input: unknown, message: string) =>
-  new SchemaIssue.InvalidValue(O.some(input), { message });
-
 const isProtobufLongLike = (input: unknown): input is ProtobufLongLike => {
   if (
     !P.isObject(input) ||
@@ -89,9 +85,9 @@ const isSafeIntegerInput = (input: unknown): input is number =>
 const isProtobufInt64Input = (input: unknown): input is ProtobufInt64Input =>
   P.isBigInt(input) || P.isString(input) || isSafeIntegerInput(input) || isProtobufLongLike(input);
 
-const parseDecimalBigInt = (input: unknown, decimal: unknown) => {
+const parseDecimalBigInt = (decimal: unknown) => {
   if (!P.isString(decimal) || Str.length(decimal) > maximumDecimalLength || !decimalIntegerPattern.test(decimal)) {
-    throw invalidProtobufInt64Input(input, "Expected a protobuf 64-bit integer decimal string");
+    throw new SchemaIssue.InvalidValue({ message: "Expected a protobuf 64-bit integer decimal string" });
   }
 
   return BigInt(decimal);
@@ -106,16 +102,18 @@ const decodeProtobufInt64Input = (input: ProtobufInt64Input) =>
 
       if (P.isNumber(input)) {
         if (!globalThis.Number.isSafeInteger(input)) {
-          throw invalidProtobufInt64Input(input, "Expected a safe protobuf 64-bit integer number");
+          throw new SchemaIssue.InvalidValue({ message: "Expected a safe protobuf 64-bit integer number" });
         }
 
         return BigInt(input);
       }
 
-      return parseDecimalBigInt(input, P.isString(input) ? input : input.toString());
+      return parseDecimalBigInt(P.isString(input) ? input : input.toString());
     },
     catch: (cause) =>
-      SchemaIssue.isIssue(cause) ? cause : invalidProtobufInt64Input(input, "Expected a protobuf 64-bit integer value"),
+      SchemaIssue.isIssue(cause)
+        ? cause
+        : new SchemaIssue.InvalidValue({ message: "Expected a protobuf 64-bit integer value" }),
   });
 
 /**

@@ -831,12 +831,12 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
   }
 
   const value = yield* createContentSecurityPolicyValue(input).pipe(
-    Effect.mapError((error) => new SchemaIssue.InvalidValue(O.some(error), { message: error.message }))
+    Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }))
   );
 
   if (O.isNone(value)) {
     return yield* Effect.fail(
-      new SchemaIssue.InvalidValue(O.some(input), {
+      new SchemaIssue.InvalidValue({
         message: "Invalid Content-Security-Policy configuration",
       })
     );

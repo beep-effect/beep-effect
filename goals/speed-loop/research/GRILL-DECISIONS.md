@@ -444,3 +444,21 @@ decisions close them:
     ships before any lane-closing work so the gap is visible while being
     closed; PR-I's AgentBrief is dogfooded by generating briefs for this
     campaign's own waves before any fleet adoption.
+50. **Docs-batch grill (2026-08-06, compound-engineering batch).**
+    (a) Topology: two PRs — the ledger/capture/AGENTS.md batch ships
+    docs-only; the /reflect reframe ships separately (lint-validated
+    surface, own review round). (b) The compound-engineering capture
+    seeds `explorations/compound-engineering/` directly rather than
+    compressing a finished synthesis into an INBOX bullet; buzz and the
+    #friction wire stay workstation doctrine, out of the public repo,
+    until the packet graduates. (c) The sweep-dogfood receipts route to
+    a fast-follow fix PR (sweep `--branch` override + handoff-where;
+    decision 45(d) amended same-PR — its "a re-run completes the
+    deletion" is false as shipped, surfaced by the first real sweep).
+    (d) #81 ships as practice law (ambient via the closeout law) with
+    the closeout assertion designed but deferred to the next
+    Status/closeout touch. (e) The AGENTS.md friction law lands in
+    Docs & Knowledge, receipt-shaped. (f) The reflect reframe carries
+    the three questions AND the distillation contract — closeout
+    reflection is redefined as a distillation of the packet's
+    continuously-captured friction ledger; schema and lint untouched.

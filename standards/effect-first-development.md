@@ -96,7 +96,7 @@ const toDisplayName = (rawName: string | null | undefined) =>
 - Prefer Effect codecs by default: `S.decodeUnknownEffect` / `S.decodeEffect` for decoding, and `S.encodeUnknownEffect` / `S.encodeEffect` for encoding.
 - When schema errors cross a local boundary, immediately map them into the boundary's typed error with `Effect.mapError(...)`.
 - Use `S.decodeUnknownResult` / `S.decodeResult` or `S.decodeUnknownOption` only for deliberately synchronous, non-throwing local paths. Do not use `S.decodeSync`, `S.decodeUnknownSync`, `S.encodeSync`, or `S.encodeUnknownSync` by default.
-- Never use `JSON.parse` / `JSON.stringify`; use schema JSON codecs (`S.UnknownFromJsonString`, `S.fromJsonString`, `S.decodeUnknownEffect`, `S.encodeUnknownEffect`, or the explicit non-throwing Result/Option forms).
+- Never use `JSON.parse` / `JSON.stringify`; use schema JSON codecs (`S.fromJsonString`, `S.decodeUnknownEffect`, `S.encodeUnknownEffect`, or the explicit non-throwing Result/Option forms).
 - Prefer `S.Class` over `S.Struct` for object/domain schemas.
 - Repo-wide outstanding schema-first findings are tracked in `standards/schema-first.inventory.jsonc` and verified by `bun run beep lint schema-first`.
 - Do not name schemas with a `Schema` suffix; schema constants should be named after the domain type.
@@ -381,7 +381,7 @@ export const loadUser = Effect.fn("User.load")(function* (userId: string) {
 })
 
 const parseInternal = Effect.fnUntraced(function* (input: string) {
-  return yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(input)
+  return yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(input)
 })
 ```
 
@@ -483,12 +483,12 @@ const b = pipe("value", addPrefix("p:"))
 
 ### EF-19: JSON parse/stringify must use Schema
 
-- Use `S.UnknownFromJsonString` for unknown JSON payloads.
+- Use `S.fromJsonString(S.Unknown)` for unknown JSON payloads.
 - Use `S.fromJsonString(MySchema)` for typed JSON string boundaries.
 - Avoid direct `JSON.parse` / `JSON.stringify` in Effect-first code.
 - Prefer Effect codecs for JSON boundaries; map schema errors with `Effect.mapError(...)` when returning from a local module or service boundary.
 - Use Result/Option codecs only for intentional non-throwing synchronous helpers.
-- Reference: [UnknownFromJsonString](/home/elpresidank/YeeBois/projects/beep-effect/.repos/effect-v4/packages/effect/SCHEMA.md:4011) and [fromJsonString](/home/elpresidank/YeeBois/projects/beep-effect/.repos/effect-v4/packages/effect/SCHEMA.md:4028).
+- Reference: `fromJsonString` in `.repos/effect/packages/effect/SCHEMA.md`.
 
 Example:
 
