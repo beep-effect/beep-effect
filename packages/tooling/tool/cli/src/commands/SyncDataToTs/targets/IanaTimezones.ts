@@ -141,8 +141,9 @@ const renderIanaTimezonesModule = (
 /**
  * Stable source metadata for the official IANA tzdb data-only distribution.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb feed metadata)
+ *
+ * \`\`\`ts
  * import { TimezoneDataMetadata } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataMetadata.version === ${formatTsLiteral(version)})
@@ -160,8 +161,9 @@ export const TimezoneDataMetadata = ${formatTsLiteral({
 /**
  * IANA tzdb version.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb version)
+ *
+ * \`\`\`ts
  * import { TimezoneDataVersion } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataVersion === ${formatTsLiteral(version)})
@@ -175,8 +177,9 @@ export const TimezoneDataVersion = ${formatTsLiteral(version)} as const;
 /**
  * IANA tzdb data-only source URL.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb source URL)
+ *
+ * \`\`\`ts
  * import { TimezoneDataSourceUrl } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataSourceUrl.endsWith("tzdata-latest.tar.gz"))
@@ -190,8 +193,9 @@ export const TimezoneDataSourceUrl = ${formatTsLiteral(IANA_TZDATA_SOURCE_URL)} 
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb source digest)
+ *
+ * \`\`\`ts
  * import { TimezoneDataSourceSha256 } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataSourceSha256.length === 64)
@@ -205,8 +209,9 @@ export const TimezoneDataSourceSha256 = ${formatTsLiteral(sha256)} as const;
 /**
  * Normalized IANA timezone entries.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a timezone entry by name)
+ *
+ * \`\`\`ts
  * import { TimezoneDataValues } from "@beep/data/generated/iana-timezones"
  *
  * const sample = TimezoneDataValues.find((entry) => entry.name === ${formatTsLiteral(sample.name)})
@@ -221,8 +226,9 @@ export const TimezoneDataValues = ${formatTsLiteral(values)} as const;
 /**
  * Normalized IANA timezone entries keyed by timezone identifier.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a timezone entry by name)
+ *
+ * \`\`\`ts
  * import { TimezoneDataByName } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataByName[${formatTsLiteral(sample.name)}].name === ${formatTsLiteral(sample.name)})
@@ -236,8 +242,9 @@ export const TimezoneDataByName = ${formatTsLiteral(byName(values))} as const;
 /**
  * IANA timezone identifier literals.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Check a timezone identifier literal)
+ *
+ * \`\`\`ts
  * import { TimezoneNameValues } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneNameValues.includes(${formatTsLiteral(sample.name)}))

@@ -75,7 +75,8 @@ const renderTermsModule = (prefix: SharedPrefix): string => {
 /**
  * ${display} namespace IRI generated from the identity \`CoreVocab\` registry.
  *
- * @example
+ * **Example** (Read the ${display} namespace IRI)
+ *
  * \`\`\`ts
  * import { ${constant}_NAMESPACE } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
@@ -90,7 +91,8 @@ export const ${constant}_NAMESPACE = "${CoreVocab[prefix].iri}" as const;
 /**
  * ${display} local-name inventory generated from the identity \`CoreVocab\` registry.
  *
- * @example
+ * **Example** (Read the ${display} term inventory)
+ *
  * \`\`\`ts
  * import { ${constant}_TERMS } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
@@ -117,11 +119,13 @@ const canonicalDocument = (): Record<string, { readonly iri: string; readonly te
 /**
  * Vocabulary term-inventory sync target.
  *
- * @example
+ * **Example** (Inspect the vocab-terms sync target)
+ *
  * ```ts
  * import { vocabTermsTarget } from "@beep/repo-cli/commands/SyncDataToTs"
  * console.log(vocabTermsTarget.id) // "vocab-terms"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

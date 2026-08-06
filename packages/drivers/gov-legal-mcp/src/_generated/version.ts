@@ -8,7 +8,8 @@
 /**
  * Package release version synchronized from package.json.
  *
- * @example
+ * **Example** (Read the gov-legal MCP package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/gov-legal-mcp"
  *

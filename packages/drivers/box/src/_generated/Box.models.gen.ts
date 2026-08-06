@@ -30,7 +30,8 @@ const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unkn
 /**
  * Serialized Box SDK JSON payloads.
  *
- * @example
+ * **Example** (Inspect the BoxSerializedData schema)
+ *
  * ```ts
  * import { BoxSerializedData } from "@beep/box"
  *
@@ -47,7 +48,8 @@ export const BoxSerializedData = S.Unknown.pipe($I.annoteSchema("BoxSerializedDa
 /**
  * Type for {@link BoxSerializedData}.
  *
- * @example
+ * **Example** (Reference the BoxSerializedData type)
+ *
  * ```ts
  * import type { BoxSerializedData } from "@beep/box"
  *
@@ -62,7 +64,8 @@ export type BoxSerializedData = typeof BoxSerializedData.Type;
 /**
  * Box SDK date wrapper or encoded date string.
  *
- * @example
+ * **Example** (Inspect the BoxSdkDate schema)
+ *
  * ```ts
  * import { BoxSdkDate } from "@beep/box"
  *
@@ -82,7 +85,8 @@ export const BoxSdkDate = S.Union([
 /**
  * Type for {@link BoxSdkDate}.
  *
- * @example
+ * **Example** (Reference the BoxSdkDate type)
+ *
  * ```ts
  * import type { BoxSdkDate } from "@beep/box"
  *
@@ -97,7 +101,8 @@ export type BoxSdkDate = typeof BoxSdkDate.Type;
 /**
  * Box SDK date-time wrapper or encoded date-time string.
  *
- * @example
+ * **Example** (Inspect the BoxSdkDateTime schema)
+ *
  * ```ts
  * import { BoxSdkDateTime } from "@beep/box"
  *
@@ -117,7 +122,8 @@ export const BoxSdkDateTime = S.Union([
 /**
  * Type for {@link BoxSdkDateTime}.
  *
- * @example
+ * **Example** (Reference the BoxSdkDateTime type)
+ *
  * ```ts
  * import type { BoxSdkDateTime } from "@beep/box"
  *
@@ -132,7 +138,8 @@ export type BoxSdkDateTime = typeof BoxSdkDateTime.Type;
 /**
  * Generated Box SDK method names wrapped by \@beep/box.
  *
- * @example
+ * **Example** (Guard a generated Box method name)
+ *
  * ```ts
  * import { BoxMethodName } from "@beep/box"
  *
@@ -205,7 +212,8 @@ export const BoxMethodName = LiteralKit([
 /**
  * Type for {@link BoxMethodName}.
  *
- * @example
+ * **Example** (Reference the BoxMethodName type)
+ *
  * ```ts
  * import type { BoxMethodName } from "@beep/box"
  *
@@ -221,7 +229,8 @@ export type BoxMethodName = typeof BoxMethodName.Type;
 /**
  * Generated Box SDK schema for AppItemEventSource.
  *
- * @example
+ * **Example** (Inspect the AppItemEventSource schema)
+ *
  * ```ts
  * import { AppItemEventSource } from "@beep/box"
  *
@@ -247,7 +256,8 @@ export class AppItemEventSource extends S.Class<AppItemEventSource>($I`AppItemEv
 /**
  * Generated Box SDK schema for AppItemEventSourceTypeField.
  *
- * @example
+ * **Example** (Inspect the AppItemEventSourceTypeField schema)
+ *
  * ```ts
  * import { AppItemEventSourceTypeField } from "@beep/box"
  *
@@ -264,7 +274,8 @@ export const AppItemEventSourceTypeField = S.Literal("app_item").pipe($I.annoteS
 /**
  * Type for {@link AppItemEventSourceTypeField}.
  *
- * @example
+ * **Example** (Reference the AppItemEventSourceTypeField type)
+ *
  * ```ts
  * import type { AppItemEventSourceTypeField } from "@beep/box"
  *
@@ -279,7 +290,8 @@ export type AppItemEventSourceTypeField = typeof AppItemEventSourceTypeField.Typ
 /**
  * Generated Box SDK schema for CopyFileHeaders.
  *
- * @example
+ * **Example** (Inspect the CopyFileHeaders schema)
+ *
  * ```ts
  * import { CopyFileHeaders } from "@beep/box"
  *
@@ -301,7 +313,8 @@ export class CopyFileHeaders extends S.Class<CopyFileHeaders>($I`CopyFileHeaders
 /**
  * Generated Box SDK schema for CopyFileOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CopyFileOptionalsInput schema)
+ *
  * ```ts
  * import { CopyFileOptionalsInput } from "@beep/box"
  *
@@ -325,7 +338,8 @@ export class CopyFileOptionalsInput extends S.Class<CopyFileOptionalsInput>($I`C
 /**
  * Generated Box SDK schema for CopyFileQueryParams.
  *
- * @example
+ * **Example** (Inspect the CopyFileQueryParams schema)
+ *
  * ```ts
  * import { CopyFileQueryParams } from "@beep/box"
  *
@@ -347,7 +361,8 @@ export class CopyFileQueryParams extends S.Class<CopyFileQueryParams>($I`CopyFil
 /**
  * Generated Box SDK schema for CopyFileRequestBody.
  *
- * @example
+ * **Example** (Inspect the CopyFileRequestBody schema)
+ *
  * ```ts
  * import { CopyFileRequestBody } from "@beep/box"
  *
@@ -371,7 +386,8 @@ export class CopyFileRequestBody extends S.Class<CopyFileRequestBody>($I`CopyFil
 /**
  * Generated Box SDK schema for CopyFileRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the CopyFileRequestBodyParentField schema)
+ *
  * ```ts
  * import { CopyFileRequestBodyParentField } from "@beep/box"
  *
@@ -393,7 +409,8 @@ export class CopyFileRequestBodyParentField extends S.Class<CopyFileRequestBodyP
 /**
  * Generated Box SDK schema for CopyFolderHeaders.
  *
- * @example
+ * **Example** (Inspect the CopyFolderHeaders schema)
+ *
  * ```ts
  * import { CopyFolderHeaders } from "@beep/box"
  *
@@ -415,7 +432,8 @@ export class CopyFolderHeaders extends S.Class<CopyFolderHeaders>($I`CopyFolderH
 /**
  * Generated Box SDK schema for CopyFolderOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CopyFolderOptionalsInput schema)
+ *
  * ```ts
  * import { CopyFolderOptionalsInput } from "@beep/box"
  *
@@ -439,7 +457,8 @@ export class CopyFolderOptionalsInput extends S.Class<CopyFolderOptionalsInput>(
 /**
  * Generated Box SDK schema for CopyFolderQueryParams.
  *
- * @example
+ * **Example** (Inspect the CopyFolderQueryParams schema)
+ *
  * ```ts
  * import { CopyFolderQueryParams } from "@beep/box"
  *
@@ -461,7 +480,8 @@ export class CopyFolderQueryParams extends S.Class<CopyFolderQueryParams>($I`Cop
 /**
  * Generated Box SDK schema for CopyFolderRequestBody.
  *
- * @example
+ * **Example** (Inspect the CopyFolderRequestBody schema)
+ *
  * ```ts
  * import { CopyFolderRequestBody } from "@beep/box"
  *
@@ -484,7 +504,8 @@ export class CopyFolderRequestBody extends S.Class<CopyFolderRequestBody>($I`Cop
 /**
  * Generated Box SDK schema for CopyFolderRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the CopyFolderRequestBodyParentField schema)
+ *
  * ```ts
  * import { CopyFolderRequestBodyParentField } from "@beep/box"
  *
@@ -506,7 +527,8 @@ export class CopyFolderRequestBodyParentField extends S.Class<CopyFolderRequestB
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitByUrlHeadersInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitByUrlHeadersInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitByUrlHeadersInput } from "@beep/box"
  *
@@ -531,7 +553,8 @@ export class CreateFileUploadSessionCommitByUrlHeadersInput extends S.Class<Crea
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitByUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitByUrlOptionalsInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitByUrlOptionalsInput } from "@beep/box"
  *
@@ -553,7 +576,8 @@ export class CreateFileUploadSessionCommitByUrlOptionalsInput extends S.Class<Cr
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitByUrlRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitByUrlRequestBody schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitByUrlRequestBody } from "@beep/box"
  *
@@ -575,7 +599,8 @@ export class CreateFileUploadSessionCommitByUrlRequestBody extends S.Class<Creat
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitHeadersInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitHeadersInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitHeadersInput } from "@beep/box"
  *
@@ -600,7 +625,8 @@ export class CreateFileUploadSessionCommitHeadersInput extends S.Class<CreateFil
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitOptionalsInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitOptionalsInput } from "@beep/box"
  *
@@ -622,7 +648,8 @@ export class CreateFileUploadSessionCommitOptionalsInput extends S.Class<CreateF
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionCommitRequestBody schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionCommitRequestBody } from "@beep/box"
  *
@@ -644,7 +671,8 @@ export class CreateFileUploadSessionCommitRequestBody extends S.Class<CreateFile
 /**
  * Generated Box SDK schema for CreateFileUploadSessionForExistingFileHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionForExistingFileHeaders schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionForExistingFileHeaders } from "@beep/box"
  *
@@ -666,7 +694,8 @@ export class CreateFileUploadSessionForExistingFileHeaders extends S.Class<Creat
 /**
  * Generated Box SDK schema for CreateFileUploadSessionForExistingFileOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionForExistingFileOptionalsInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionForExistingFileOptionalsInput } from "@beep/box"
  *
@@ -689,7 +718,8 @@ export class CreateFileUploadSessionForExistingFileOptionalsInput extends S.Clas
 /**
  * Generated Box SDK schema for CreateFileUploadSessionForExistingFileRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionForExistingFileRequestBody schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionForExistingFileRequestBody } from "@beep/box"
  *
@@ -712,7 +742,8 @@ export class CreateFileUploadSessionForExistingFileRequestBody extends S.Class<C
 /**
  * Generated Box SDK schema for CreateFileUploadSessionHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionHeaders schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionHeaders } from "@beep/box"
  *
@@ -734,7 +765,8 @@ export class CreateFileUploadSessionHeaders extends S.Class<CreateFileUploadSess
 /**
  * Generated Box SDK schema for CreateFileUploadSessionOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionOptionalsInput schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionOptionalsInput } from "@beep/box"
  *
@@ -757,7 +789,8 @@ export class CreateFileUploadSessionOptionalsInput extends S.Class<CreateFileUpl
 /**
  * Generated Box SDK schema for CreateFileUploadSessionRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateFileUploadSessionRequestBody schema)
+ *
  * ```ts
  * import { CreateFileUploadSessionRequestBody } from "@beep/box"
  *
@@ -781,7 +814,8 @@ export class CreateFileUploadSessionRequestBody extends S.Class<CreateFileUpload
 /**
  * Generated Box SDK schema for CreateFolderHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateFolderHeaders schema)
+ *
  * ```ts
  * import { CreateFolderHeaders } from "@beep/box"
  *
@@ -803,7 +837,8 @@ export class CreateFolderHeaders extends S.Class<CreateFolderHeaders>($I`CreateF
 /**
  * Generated Box SDK schema for CreateFolderOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateFolderOptionalsInput schema)
+ *
  * ```ts
  * import { CreateFolderOptionalsInput } from "@beep/box"
  *
@@ -827,7 +862,8 @@ export class CreateFolderOptionalsInput extends S.Class<CreateFolderOptionalsInp
 /**
  * Generated Box SDK schema for CreateFolderQueryParams.
  *
- * @example
+ * **Example** (Inspect the CreateFolderQueryParams schema)
+ *
  * ```ts
  * import { CreateFolderQueryParams } from "@beep/box"
  *
@@ -849,7 +885,8 @@ export class CreateFolderQueryParams extends S.Class<CreateFolderQueryParams>($I
 /**
  * Generated Box SDK schema for CreateFolderRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateFolderRequestBody schema)
+ *
  * ```ts
  * import { CreateFolderRequestBody } from "@beep/box"
  *
@@ -874,7 +911,8 @@ export class CreateFolderRequestBody extends S.Class<CreateFolderRequestBody>($I
 /**
  * Generated Box SDK schema for CreateFolderRequestBodyFolderUploadEmailAccessField.
  *
- * @example
+ * **Example** (Inspect the CreateFolderRequestBodyFolderUploadEmailAccessField schema)
+ *
  * ```ts
  * import { CreateFolderRequestBodyFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -891,7 +929,8 @@ export const CreateFolderRequestBodyFolderUploadEmailAccessField = S.Union([Lite
 /**
  * Type for {@link CreateFolderRequestBodyFolderUploadEmailAccessField}.
  *
- * @example
+ * **Example** (Reference the CreateFolderRequestBodyFolderUploadEmailAccessField type)
+ *
  * ```ts
  * import type { CreateFolderRequestBodyFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -906,7 +945,8 @@ export type CreateFolderRequestBodyFolderUploadEmailAccessField = typeof CreateF
 /**
  * Generated Box SDK schema for CreateFolderRequestBodyFolderUploadEmailField.
  *
- * @example
+ * **Example** (Inspect the CreateFolderRequestBodyFolderUploadEmailField schema)
+ *
  * ```ts
  * import { CreateFolderRequestBodyFolderUploadEmailField } from "@beep/box"
  *
@@ -928,7 +968,8 @@ export class CreateFolderRequestBodyFolderUploadEmailField extends S.Class<Creat
 /**
  * Generated Box SDK schema for CreateFolderRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the CreateFolderRequestBodyParentField schema)
+ *
  * ```ts
  * import { CreateFolderRequestBodyParentField } from "@beep/box"
  *
@@ -950,7 +991,8 @@ export class CreateFolderRequestBodyParentField extends S.Class<CreateFolderRequ
 /**
  * Generated Box SDK schema for CreateFolderRequestBodySyncStateField.
  *
- * @example
+ * **Example** (Inspect the CreateFolderRequestBodySyncStateField schema)
+ *
  * ```ts
  * import { CreateFolderRequestBodySyncStateField } from "@beep/box"
  *
@@ -967,7 +1009,8 @@ export const CreateFolderRequestBodySyncStateField = S.Union([LiteralKit(["synce
 /**
  * Type for {@link CreateFolderRequestBodySyncStateField}.
  *
- * @example
+ * **Example** (Reference the CreateFolderRequestBodySyncStateField type)
+ *
  * ```ts
  * import type { CreateFolderRequestBodySyncStateField } from "@beep/box"
  *
@@ -982,7 +1025,8 @@ export type CreateFolderRequestBodySyncStateField = typeof CreateFolderRequestBo
 /**
  * Generated Box SDK schema for CreateUserAvatarHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateUserAvatarHeaders schema)
+ *
  * ```ts
  * import { CreateUserAvatarHeaders } from "@beep/box"
  *
@@ -1004,7 +1048,8 @@ export class CreateUserAvatarHeaders extends S.Class<CreateUserAvatarHeaders>($I
 /**
  * Generated Box SDK schema for CreateUserAvatarOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateUserAvatarOptionalsInput schema)
+ *
  * ```ts
  * import { CreateUserAvatarOptionalsInput } from "@beep/box"
  *
@@ -1027,7 +1072,8 @@ export class CreateUserAvatarOptionalsInput extends S.Class<CreateUserAvatarOpti
 /**
  * Generated Box SDK schema for CreateUserHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateUserHeaders schema)
+ *
  * ```ts
  * import { CreateUserHeaders } from "@beep/box"
  *
@@ -1049,7 +1095,8 @@ export class CreateUserHeaders extends S.Class<CreateUserHeaders>($I`CreateUserH
 /**
  * Generated Box SDK schema for CreateUserOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateUserOptionalsInput schema)
+ *
  * ```ts
  * import { CreateUserOptionalsInput } from "@beep/box"
  *
@@ -1073,7 +1120,8 @@ export class CreateUserOptionalsInput extends S.Class<CreateUserOptionalsInput>(
 /**
  * Generated Box SDK schema for CreateUserQueryParams.
  *
- * @example
+ * **Example** (Inspect the CreateUserQueryParams schema)
+ *
  * ```ts
  * import { CreateUserQueryParams } from "@beep/box"
  *
@@ -1095,7 +1143,8 @@ export class CreateUserQueryParams extends S.Class<CreateUserQueryParams>($I`Cre
 /**
  * Generated Box SDK schema for CreateUserRequestBody.
  *
- * @example
+ * **Example** (Inspect the CreateUserRequestBody schema)
+ *
  * ```ts
  * import { CreateUserRequestBody } from "@beep/box"
  *
@@ -1134,7 +1183,8 @@ export class CreateUserRequestBody extends S.Class<CreateUserRequestBody>($I`Cre
 /**
  * Generated Box SDK schema for CreateUserRequestBodyRoleField.
  *
- * @example
+ * **Example** (Inspect the CreateUserRequestBodyRoleField schema)
+ *
  * ```ts
  * import { CreateUserRequestBodyRoleField } from "@beep/box"
  *
@@ -1151,7 +1201,8 @@ export const CreateUserRequestBodyRoleField = S.Union([LiteralKit(["coadmin", "u
 /**
  * Type for {@link CreateUserRequestBodyRoleField}.
  *
- * @example
+ * **Example** (Reference the CreateUserRequestBodyRoleField type)
+ *
  * ```ts
  * import type { CreateUserRequestBodyRoleField } from "@beep/box"
  *
@@ -1166,7 +1217,8 @@ export type CreateUserRequestBodyRoleField = typeof CreateUserRequestBodyRoleFie
 /**
  * Generated Box SDK schema for CreateUserRequestBodyStatusField.
  *
- * @example
+ * **Example** (Inspect the CreateUserRequestBodyStatusField schema)
+ *
  * ```ts
  * import { CreateUserRequestBodyStatusField } from "@beep/box"
  *
@@ -1183,7 +1235,8 @@ export const CreateUserRequestBodyStatusField = S.Union([LiteralKit(["active", "
 /**
  * Type for {@link CreateUserRequestBodyStatusField}.
  *
- * @example
+ * **Example** (Reference the CreateUserRequestBodyStatusField type)
+ *
  * ```ts
  * import type { CreateUserRequestBodyStatusField } from "@beep/box"
  *
@@ -1198,7 +1251,8 @@ export type CreateUserRequestBodyStatusField = typeof CreateUserRequestBodyStatu
 /**
  * Generated Box SDK schema for CreateZipDownloadHeaders.
  *
- * @example
+ * **Example** (Inspect the CreateZipDownloadHeaders schema)
+ *
  * ```ts
  * import { CreateZipDownloadHeaders } from "@beep/box"
  *
@@ -1220,7 +1274,8 @@ export class CreateZipDownloadHeaders extends S.Class<CreateZipDownloadHeaders>(
 /**
  * Generated Box SDK schema for CreateZipDownloadOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the CreateZipDownloadOptionalsInput schema)
+ *
  * ```ts
  * import { CreateZipDownloadOptionalsInput } from "@beep/box"
  *
@@ -1243,7 +1298,8 @@ export class CreateZipDownloadOptionalsInput extends S.Class<CreateZipDownloadOp
 /**
  * Generated Box SDK schema for DeleteFileByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteFileByIdHeaders schema)
+ *
  * ```ts
  * import { DeleteFileByIdHeaders } from "@beep/box"
  *
@@ -1266,7 +1322,8 @@ export class DeleteFileByIdHeaders extends S.Class<DeleteFileByIdHeaders>($I`Del
 /**
  * Generated Box SDK schema for DeleteFileByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteFileByIdOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteFileByIdOptionalsInput } from "@beep/box"
  *
@@ -1289,7 +1346,8 @@ export class DeleteFileByIdOptionalsInput extends S.Class<DeleteFileByIdOptional
 /**
  * Generated Box SDK schema for DeleteFileUploadSessionByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteFileUploadSessionByIdHeaders schema)
+ *
  * ```ts
  * import { DeleteFileUploadSessionByIdHeaders } from "@beep/box"
  *
@@ -1311,7 +1369,8 @@ export class DeleteFileUploadSessionByIdHeaders extends S.Class<DeleteFileUpload
 /**
  * Generated Box SDK schema for DeleteFileUploadSessionByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteFileUploadSessionByIdOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteFileUploadSessionByIdOptionalsInput } from "@beep/box"
  *
@@ -1334,7 +1393,8 @@ export class DeleteFileUploadSessionByIdOptionalsInput extends S.Class<DeleteFil
 /**
  * Generated Box SDK schema for DeleteFileUploadSessionByUrlHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteFileUploadSessionByUrlHeaders schema)
+ *
  * ```ts
  * import { DeleteFileUploadSessionByUrlHeaders } from "@beep/box"
  *
@@ -1356,7 +1416,8 @@ export class DeleteFileUploadSessionByUrlHeaders extends S.Class<DeleteFileUploa
 /**
  * Generated Box SDK schema for DeleteFileUploadSessionByUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteFileUploadSessionByUrlOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteFileUploadSessionByUrlOptionalsInput } from "@beep/box"
  *
@@ -1379,7 +1440,8 @@ export class DeleteFileUploadSessionByUrlOptionalsInput extends S.Class<DeleteFi
 /**
  * Generated Box SDK schema for DeleteFolderByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteFolderByIdHeaders schema)
+ *
  * ```ts
  * import { DeleteFolderByIdHeaders } from "@beep/box"
  *
@@ -1402,7 +1464,8 @@ export class DeleteFolderByIdHeaders extends S.Class<DeleteFolderByIdHeaders>($I
 /**
  * Generated Box SDK schema for DeleteFolderByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteFolderByIdOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteFolderByIdOptionalsInput } from "@beep/box"
  *
@@ -1426,7 +1489,8 @@ export class DeleteFolderByIdOptionalsInput extends S.Class<DeleteFolderByIdOpti
 /**
  * Generated Box SDK schema for DeleteFolderByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the DeleteFolderByIdQueryParams schema)
+ *
  * ```ts
  * import { DeleteFolderByIdQueryParams } from "@beep/box"
  *
@@ -1448,7 +1512,8 @@ export class DeleteFolderByIdQueryParams extends S.Class<DeleteFolderByIdQueryPa
 /**
  * Generated Box SDK schema for DeleteUserAvatarHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteUserAvatarHeaders schema)
+ *
  * ```ts
  * import { DeleteUserAvatarHeaders } from "@beep/box"
  *
@@ -1470,7 +1535,8 @@ export class DeleteUserAvatarHeaders extends S.Class<DeleteUserAvatarHeaders>($I
 /**
  * Generated Box SDK schema for DeleteUserAvatarOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteUserAvatarOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteUserAvatarOptionalsInput } from "@beep/box"
  *
@@ -1493,7 +1559,8 @@ export class DeleteUserAvatarOptionalsInput extends S.Class<DeleteUserAvatarOpti
 /**
  * Generated Box SDK schema for DeleteUserByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the DeleteUserByIdHeaders schema)
+ *
  * ```ts
  * import { DeleteUserByIdHeaders } from "@beep/box"
  *
@@ -1515,7 +1582,8 @@ export class DeleteUserByIdHeaders extends S.Class<DeleteUserByIdHeaders>($I`Del
 /**
  * Generated Box SDK schema for DeleteUserByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DeleteUserByIdOptionalsInput schema)
+ *
  * ```ts
  * import { DeleteUserByIdOptionalsInput } from "@beep/box"
  *
@@ -1539,7 +1607,8 @@ export class DeleteUserByIdOptionalsInput extends S.Class<DeleteUserByIdOptional
 /**
  * Generated Box SDK schema for DeleteUserByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the DeleteUserByIdQueryParams schema)
+ *
  * ```ts
  * import { DeleteUserByIdQueryParams } from "@beep/box"
  *
@@ -1562,7 +1631,8 @@ export class DeleteUserByIdQueryParams extends S.Class<DeleteUserByIdQueryParams
 /**
  * Generated Box SDK schema for DownloadFileHeaders.
  *
- * @example
+ * **Example** (Inspect the DownloadFileHeaders schema)
+ *
  * ```ts
  * import { DownloadFileHeaders } from "@beep/box"
  *
@@ -1586,7 +1656,8 @@ export class DownloadFileHeaders extends S.Class<DownloadFileHeaders>($I`Downloa
 /**
  * Generated Box SDK schema for DownloadFileOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DownloadFileOptionalsInput schema)
+ *
  * ```ts
  * import { DownloadFileOptionalsInput } from "@beep/box"
  *
@@ -1610,7 +1681,8 @@ export class DownloadFileOptionalsInput extends S.Class<DownloadFileOptionalsInp
 /**
  * Generated Box SDK schema for DownloadFileQueryParams.
  *
- * @example
+ * **Example** (Inspect the DownloadFileQueryParams schema)
+ *
  * ```ts
  * import { DownloadFileQueryParams } from "@beep/box"
  *
@@ -1633,7 +1705,8 @@ export class DownloadFileQueryParams extends S.Class<DownloadFileQueryParams>($I
 /**
  * Generated Box SDK schema for DownloadZipHeaders.
  *
- * @example
+ * **Example** (Inspect the DownloadZipHeaders schema)
+ *
  * ```ts
  * import { DownloadZipHeaders } from "@beep/box"
  *
@@ -1655,7 +1728,8 @@ export class DownloadZipHeaders extends S.Class<DownloadZipHeaders>($I`DownloadZ
 /**
  * Generated Box SDK schema for DownloadZipOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the DownloadZipOptionalsInput schema)
+ *
  * ```ts
  * import { DownloadZipOptionalsInput } from "@beep/box"
  *
@@ -1678,7 +1752,8 @@ export class DownloadZipOptionalsInput extends S.Class<DownloadZipOptionalsInput
 /**
  * Generated Box SDK schema for Event.
  *
- * @example
+ * **Example** (Inspect the Event schema)
+ *
  * ```ts
  * import { Event } from "@beep/box"
  *
@@ -1708,7 +1783,8 @@ export class Event extends S.Class<Event>($I`Event`)(
 /**
  * Generated Box SDK schema for EventEventTypeField.
  *
- * @example
+ * **Example** (Inspect the EventEventTypeField schema)
+ *
  * ```ts
  * import { EventEventTypeField } from "@beep/box"
  *
@@ -1725,7 +1801,8 @@ export const EventEventTypeField = S.Union([LiteralKit(["ACCESS_GRANTED", "ACCES
 /**
  * Type for {@link EventEventTypeField}.
  *
- * @example
+ * **Example** (Reference the EventEventTypeField type)
+ *
  * ```ts
  * import type { EventEventTypeField } from "@beep/box"
  *
@@ -1740,7 +1817,8 @@ export type EventEventTypeField = typeof EventEventTypeField.Type;
 /**
  * Generated Box SDK schema for Events.
  *
- * @example
+ * **Example** (Inspect the Events schema)
+ *
  * ```ts
  * import { Events } from "@beep/box"
  *
@@ -1764,7 +1842,8 @@ export class Events extends S.Class<Events>($I`Events`)(
 /**
  * Generated Box SDK schema for EventsNextStreamPositionField.
  *
- * @example
+ * **Example** (Inspect the EventsNextStreamPositionField schema)
+ *
  * ```ts
  * import { EventsNextStreamPositionField } from "@beep/box"
  *
@@ -1781,7 +1860,8 @@ export const EventsNextStreamPositionField = S.Union([S.String, S.Finite]).pipe(
 /**
  * Type for {@link EventsNextStreamPositionField}.
  *
- * @example
+ * **Example** (Reference the EventsNextStreamPositionField type)
+ *
  * ```ts
  * import type { EventsNextStreamPositionField } from "@beep/box"
  *
@@ -1796,7 +1876,8 @@ export type EventsNextStreamPositionField = typeof EventsNextStreamPositionField
 /**
  * Generated Box SDK schema for EventSource.
  *
- * @example
+ * **Example** (Inspect the EventSource schema)
+ *
  * ```ts
  * import { EventSource } from "@beep/box"
  *
@@ -1823,7 +1904,8 @@ export class EventSource extends S.Class<EventSource>($I`EventSource`)(
 /**
  * Generated Box SDK schema for EventSourceClassificationField.
  *
- * @example
+ * **Example** (Inspect the EventSourceClassificationField schema)
+ *
  * ```ts
  * import { EventSourceClassificationField } from "@beep/box"
  *
@@ -1845,7 +1927,8 @@ export class EventSourceClassificationField extends S.Class<EventSourceClassific
 /**
  * Generated Box SDK schema for EventSourceItemTypeField.
  *
- * @example
+ * **Example** (Inspect the EventSourceItemTypeField schema)
+ *
  * ```ts
  * import { EventSourceItemTypeField } from "@beep/box"
  *
@@ -1869,7 +1952,8 @@ export const EventSourceItemTypeField = LiteralKit(["file", "folder"]).pipe(
 /**
  * Type for {@link EventSourceItemTypeField}.
  *
- * @example
+ * **Example** (Reference the EventSourceItemTypeField type)
+ *
  * ```ts
  * import type { EventSourceItemTypeField } from "@beep/box"
  *
@@ -1884,7 +1968,8 @@ export type EventSourceItemTypeField = typeof EventSourceItemTypeField.Type;
 /**
  * Generated Box SDK schema for EventSourceResource.
  *
- * @example
+ * **Example** (Inspect the EventSourceResource schema)
+ *
  * ```ts
  * import { EventSourceResource } from "@beep/box"
  *
@@ -1901,7 +1986,8 @@ export const EventSourceResource = S.Union([S.suspend(() => User), S.suspend(() 
 /**
  * Type for {@link EventSourceResource}.
  *
- * @example
+ * **Example** (Reference the EventSourceResource type)
+ *
  * ```ts
  * import type { EventSourceResource } from "@beep/box"
  *
@@ -1916,7 +2002,8 @@ export type EventSourceResource = typeof EventSourceResource.Type;
 /**
  * Generated Box SDK schema for FileBase.
  *
- * @example
+ * **Example** (Inspect the FileBase schema)
+ *
  * ```ts
  * import { FileBase } from "@beep/box"
  *
@@ -1940,7 +2027,8 @@ export class FileBase extends S.Class<FileBase>($I`FileBase`)(
 /**
  * Generated Box SDK schema for FileMini.
  *
- * @example
+ * **Example** (Inspect the FileMini schema)
+ *
  * ```ts
  * import { FileMini } from "@beep/box"
  *
@@ -1965,7 +2053,8 @@ export class FileMini extends FileBase.extend<FileMini>($I`FileMini`)(
 /**
  * Generated Box SDK schema for File.
  *
- * @example
+ * **Example** (Inspect the File schema)
+ *
  * ```ts
  * import { File } from "@beep/box"
  *
@@ -2001,7 +2090,8 @@ export class File extends FileMini.extend<File>($I`File`)(
 /**
  * Generated Box SDK schema for FileBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the FileBaseTypeField schema)
+ *
  * ```ts
  * import { FileBaseTypeField } from "@beep/box"
  *
@@ -2018,7 +2108,8 @@ export const FileBaseTypeField = S.Literal("file").pipe($I.annoteSchema("FileBas
 /**
  * Type for {@link FileBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the FileBaseTypeField type)
+ *
  * ```ts
  * import type { FileBaseTypeField } from "@beep/box"
  *
@@ -2033,7 +2124,8 @@ export type FileBaseTypeField = typeof FileBaseTypeField.Type;
 /**
  * Generated Box SDK schema for FileFull.
  *
- * @example
+ * **Example** (Inspect the FileFull schema)
+ *
  * ```ts
  * import { FileFull } from "@beep/box"
  *
@@ -2075,7 +2167,8 @@ export class FileFull extends File.extend<FileFull>($I`FileFull`)(
 /**
  * Generated Box SDK schema for FileFullAllowedInviteeRolesField.
  *
- * @example
+ * **Example** (Inspect the FileFullAllowedInviteeRolesField schema)
+ *
  * ```ts
  * import { FileFullAllowedInviteeRolesField } from "@beep/box"
  *
@@ -2092,7 +2185,8 @@ export const FileFullAllowedInviteeRolesField = S.Union([LiteralKit(["editor", "
 /**
  * Type for {@link FileFullAllowedInviteeRolesField}.
  *
- * @example
+ * **Example** (Reference the FileFullAllowedInviteeRolesField type)
+ *
  * ```ts
  * import type { FileFullAllowedInviteeRolesField } from "@beep/box"
  *
@@ -2107,7 +2201,8 @@ export type FileFullAllowedInviteeRolesField = typeof FileFullAllowedInviteeRole
 /**
  * Generated Box SDK schema for FileFullClassificationField.
  *
- * @example
+ * **Example** (Inspect the FileFullClassificationField schema)
+ *
  * ```ts
  * import { FileFullClassificationField } from "@beep/box"
  *
@@ -2131,7 +2226,8 @@ export class FileFullClassificationField extends S.Class<FileFullClassificationF
 /**
  * Generated Box SDK schema for FileFullExpiringEmbedLinkField.
  *
- * @example
+ * **Example** (Inspect the FileFullExpiringEmbedLinkField schema)
+ *
  * ```ts
  * import { FileFullExpiringEmbedLinkField } from "@beep/box"
  *
@@ -2157,7 +2253,8 @@ export class FileFullExpiringEmbedLinkField extends S.Class<FileFullExpiringEmbe
 /**
  * Generated Box SDK schema for FileFullExpiringEmbedLinkTokenTypeField.
  *
- * @example
+ * **Example** (Inspect the FileFullExpiringEmbedLinkTokenTypeField schema)
+ *
  * ```ts
  * import { FileFullExpiringEmbedLinkTokenTypeField } from "@beep/box"
  *
@@ -2174,7 +2271,8 @@ export const FileFullExpiringEmbedLinkTokenTypeField = S.Union([LiteralKit(["bea
 /**
  * Type for {@link FileFullExpiringEmbedLinkTokenTypeField}.
  *
- * @example
+ * **Example** (Reference the FileFullExpiringEmbedLinkTokenTypeField type)
+ *
  * ```ts
  * import type { FileFullExpiringEmbedLinkTokenTypeField } from "@beep/box"
  *
@@ -2189,7 +2287,8 @@ export type FileFullExpiringEmbedLinkTokenTypeField = typeof FileFullExpiringEmb
 /**
  * Generated Box SDK schema for FileFullLockAppTypeField.
  *
- * @example
+ * **Example** (Inspect the FileFullLockAppTypeField schema)
+ *
  * ```ts
  * import { FileFullLockAppTypeField } from "@beep/box"
  *
@@ -2206,7 +2305,8 @@ export const FileFullLockAppTypeField = S.Union([LiteralKit(["gsuite", "office_w
 /**
  * Type for {@link FileFullLockAppTypeField}.
  *
- * @example
+ * **Example** (Reference the FileFullLockAppTypeField type)
+ *
  * ```ts
  * import type { FileFullLockAppTypeField } from "@beep/box"
  *
@@ -2221,7 +2321,8 @@ export type FileFullLockAppTypeField = typeof FileFullLockAppTypeField.Type;
 /**
  * Generated Box SDK schema for FileFullLockField.
  *
- * @example
+ * **Example** (Inspect the FileFullLockField schema)
+ *
  * ```ts
  * import { FileFullLockField } from "@beep/box"
  *
@@ -2249,7 +2350,8 @@ export class FileFullLockField extends S.Class<FileFullLockField>($I`FileFullLoc
 /**
  * Generated Box SDK schema for FileFullLockTypeField.
  *
- * @example
+ * **Example** (Inspect the FileFullLockTypeField schema)
+ *
  * ```ts
  * import { FileFullLockTypeField } from "@beep/box"
  *
@@ -2266,7 +2368,8 @@ export const FileFullLockTypeField = S.Literal("lock").pipe($I.annoteSchema("Fil
 /**
  * Type for {@link FileFullLockTypeField}.
  *
- * @example
+ * **Example** (Reference the FileFullLockTypeField type)
+ *
  * ```ts
  * import type { FileFullLockTypeField } from "@beep/box"
  *
@@ -2281,7 +2384,8 @@ export type FileFullLockTypeField = typeof FileFullLockTypeField.Type;
 /**
  * Generated Box SDK schema for FileFullMetadataField.
  *
- * @example
+ * **Example** (Inspect the FileFullMetadataField schema)
+ *
  * ```ts
  * import { FileFullMetadataField } from "@beep/box"
  *
@@ -2303,7 +2407,8 @@ export class FileFullMetadataField extends S.Class<FileFullMetadataField>($I`Fil
 /**
  * Generated Box SDK schema for FileFullPermissionsField.
  *
- * @example
+ * **Example** (Inspect the FileFullPermissionsField schema)
+ *
  * ```ts
  * import { FileFullPermissionsField } from "@beep/box"
  *
@@ -2337,7 +2442,8 @@ export class FileFullPermissionsField extends S.Class<FileFullPermissionsField>(
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesContentField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesContentField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesContentField } from "@beep/box"
  *
@@ -2359,7 +2465,8 @@ export class FileFullRepresentationsEntriesContentField extends S.Class<FileFull
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesField } from "@beep/box"
  *
@@ -2385,7 +2492,8 @@ export class FileFullRepresentationsEntriesField extends S.Class<FileFullReprese
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesInfoField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesInfoField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesInfoField } from "@beep/box"
  *
@@ -2407,7 +2515,8 @@ export class FileFullRepresentationsEntriesInfoField extends S.Class<FileFullRep
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesPropertiesField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesPropertiesField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesPropertiesField } from "@beep/box"
  *
@@ -2431,7 +2540,8 @@ export class FileFullRepresentationsEntriesPropertiesField extends S.Class<FileF
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesStatusField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesStatusField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesStatusField } from "@beep/box"
  *
@@ -2453,7 +2563,8 @@ export class FileFullRepresentationsEntriesStatusField extends S.Class<FileFullR
 /**
  * Generated Box SDK schema for FileFullRepresentationsEntriesStatusStateField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsEntriesStatusStateField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsEntriesStatusStateField } from "@beep/box"
  *
@@ -2470,7 +2581,8 @@ export const FileFullRepresentationsEntriesStatusStateField = S.Union([LiteralKi
 /**
  * Type for {@link FileFullRepresentationsEntriesStatusStateField}.
  *
- * @example
+ * **Example** (Reference the FileFullRepresentationsEntriesStatusStateField type)
+ *
  * ```ts
  * import type { FileFullRepresentationsEntriesStatusStateField } from "@beep/box"
  *
@@ -2485,7 +2597,8 @@ export type FileFullRepresentationsEntriesStatusStateField = typeof FileFullRepr
 /**
  * Generated Box SDK schema for FileFullRepresentationsField.
  *
- * @example
+ * **Example** (Inspect the FileFullRepresentationsField schema)
+ *
  * ```ts
  * import { FileFullRepresentationsField } from "@beep/box"
  *
@@ -2507,7 +2620,8 @@ export class FileFullRepresentationsField extends S.Class<FileFullRepresentation
 /**
  * Generated Box SDK schema for FileFullSharedLinkPermissionOptionsField.
  *
- * @example
+ * **Example** (Inspect the FileFullSharedLinkPermissionOptionsField schema)
+ *
  * ```ts
  * import { FileFullSharedLinkPermissionOptionsField } from "@beep/box"
  *
@@ -2524,7 +2638,8 @@ export const FileFullSharedLinkPermissionOptionsField = S.Union([LiteralKit(["ca
 /**
  * Type for {@link FileFullSharedLinkPermissionOptionsField}.
  *
- * @example
+ * **Example** (Reference the FileFullSharedLinkPermissionOptionsField type)
+ *
  * ```ts
  * import type { FileFullSharedLinkPermissionOptionsField } from "@beep/box"
  *
@@ -2539,7 +2654,8 @@ export type FileFullSharedLinkPermissionOptionsField = typeof FileFullSharedLink
 /**
  * Generated Box SDK schema for FileFullWatermarkInfoField.
  *
- * @example
+ * **Example** (Inspect the FileFullWatermarkInfoField schema)
+ *
  * ```ts
  * import { FileFullWatermarkInfoField } from "@beep/box"
  *
@@ -2563,7 +2679,8 @@ export class FileFullWatermarkInfoField extends S.Class<FileFullWatermarkInfoFie
 /**
  * Generated Box SDK schema for FileItemStatusField.
  *
- * @example
+ * **Example** (Inspect the FileItemStatusField schema)
+ *
  * ```ts
  * import { FileItemStatusField } from "@beep/box"
  *
@@ -2580,7 +2697,8 @@ export const FileItemStatusField = S.Union([LiteralKit(["active", "trashed", "de
 /**
  * Type for {@link FileItemStatusField}.
  *
- * @example
+ * **Example** (Reference the FileItemStatusField type)
+ *
  * ```ts
  * import type { FileItemStatusField } from "@beep/box"
  *
@@ -2595,7 +2713,8 @@ export type FileItemStatusField = typeof FileItemStatusField.Type;
 /**
  * Generated Box SDK schema for FilePathCollectionField.
  *
- * @example
+ * **Example** (Inspect the FilePathCollectionField schema)
+ *
  * ```ts
  * import { FilePathCollectionField } from "@beep/box"
  *
@@ -2618,7 +2737,8 @@ export class FilePathCollectionField extends S.Class<FilePathCollectionField>($I
 /**
  * Generated Box SDK schema for Files.
  *
- * @example
+ * **Example** (Inspect the Files schema)
+ *
  * ```ts
  * import { Files } from "@beep/box"
  *
@@ -2641,7 +2761,8 @@ export class Files extends S.Class<Files>($I`Files`)(
 /**
  * Generated Box SDK schema for FileSharedLinkAccessField.
  *
- * @example
+ * **Example** (Inspect the FileSharedLinkAccessField schema)
+ *
  * ```ts
  * import { FileSharedLinkAccessField } from "@beep/box"
  *
@@ -2658,7 +2779,8 @@ export const FileSharedLinkAccessField = S.Union([LiteralKit(["open", "company",
 /**
  * Type for {@link FileSharedLinkAccessField}.
  *
- * @example
+ * **Example** (Reference the FileSharedLinkAccessField type)
+ *
  * ```ts
  * import type { FileSharedLinkAccessField } from "@beep/box"
  *
@@ -2673,7 +2795,8 @@ export type FileSharedLinkAccessField = typeof FileSharedLinkAccessField.Type;
 /**
  * Generated Box SDK schema for FileSharedLinkEffectiveAccessField.
  *
- * @example
+ * **Example** (Inspect the FileSharedLinkEffectiveAccessField schema)
+ *
  * ```ts
  * import { FileSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -2690,7 +2813,8 @@ export const FileSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open", "
 /**
  * Type for {@link FileSharedLinkEffectiveAccessField}.
  *
- * @example
+ * **Example** (Reference the FileSharedLinkEffectiveAccessField type)
+ *
  * ```ts
  * import type { FileSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -2705,7 +2829,8 @@ export type FileSharedLinkEffectiveAccessField = typeof FileSharedLinkEffectiveA
 /**
  * Generated Box SDK schema for FileSharedLinkEffectivePermissionField.
  *
- * @example
+ * **Example** (Inspect the FileSharedLinkEffectivePermissionField schema)
+ *
  * ```ts
  * import { FileSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -2722,7 +2847,8 @@ export const FileSharedLinkEffectivePermissionField = S.Union([LiteralKit(["can_
 /**
  * Type for {@link FileSharedLinkEffectivePermissionField}.
  *
- * @example
+ * **Example** (Reference the FileSharedLinkEffectivePermissionField type)
+ *
  * ```ts
  * import type { FileSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -2737,7 +2863,8 @@ export type FileSharedLinkEffectivePermissionField = typeof FileSharedLinkEffect
 /**
  * Generated Box SDK schema for FileSharedLinkField.
  *
- * @example
+ * **Example** (Inspect the FileSharedLinkField schema)
+ *
  * ```ts
  * import { FileSharedLinkField } from "@beep/box"
  *
@@ -2770,7 +2897,8 @@ export class FileSharedLinkField extends S.Class<FileSharedLinkField>($I`FileSha
 /**
  * Generated Box SDK schema for FileSharedLinkPermissionsField.
  *
- * @example
+ * **Example** (Inspect the FileSharedLinkPermissionsField schema)
+ *
  * ```ts
  * import { FileSharedLinkPermissionsField } from "@beep/box"
  *
@@ -2794,7 +2922,8 @@ export class FileSharedLinkPermissionsField extends S.Class<FileSharedLinkPermis
 /**
  * Generated Box SDK schema for FileVersionBase.
  *
- * @example
+ * **Example** (Inspect the FileVersionBase schema)
+ *
  * ```ts
  * import { FileVersionBase } from "@beep/box"
  *
@@ -2817,7 +2946,8 @@ export class FileVersionBase extends S.Class<FileVersionBase>($I`FileVersionBase
 /**
  * Generated Box SDK schema for FileVersionMini.
  *
- * @example
+ * **Example** (Inspect the FileVersionMini schema)
+ *
  * ```ts
  * import { FileVersionMini } from "@beep/box"
  *
@@ -2839,7 +2969,8 @@ export class FileVersionMini extends FileVersionBase.extend<FileVersionMini>($I`
 /**
  * Generated Box SDK schema for FileVersionBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the FileVersionBaseTypeField schema)
+ *
  * ```ts
  * import { FileVersionBaseTypeField } from "@beep/box"
  *
@@ -2856,7 +2987,8 @@ export const FileVersionBaseTypeField = S.Literal("file_version").pipe($I.annote
 /**
  * Type for {@link FileVersionBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the FileVersionBaseTypeField type)
+ *
  * ```ts
  * import type { FileVersionBaseTypeField } from "@beep/box"
  *
@@ -2871,7 +3003,8 @@ export type FileVersionBaseTypeField = typeof FileVersionBaseTypeField.Type;
 /**
  * Generated Box SDK schema for FolderBase.
  *
- * @example
+ * **Example** (Inspect the FolderBase schema)
+ *
  * ```ts
  * import { FolderBase } from "@beep/box"
  *
@@ -2895,7 +3028,8 @@ export class FolderBase extends S.Class<FolderBase>($I`FolderBase`)(
 /**
  * Generated Box SDK schema for FolderMini.
  *
- * @example
+ * **Example** (Inspect the FolderMini schema)
+ *
  * ```ts
  * import { FolderMini } from "@beep/box"
  *
@@ -2918,7 +3052,8 @@ export class FolderMini extends FolderBase.extend<FolderMini>($I`FolderMini`)(
 /**
  * Generated Box SDK schema for Folder.
  *
- * @example
+ * **Example** (Inspect the Folder schema)
+ *
  * ```ts
  * import { Folder } from "@beep/box"
  *
@@ -2956,7 +3091,8 @@ export class Folder extends FolderMini.extend<Folder>($I`Folder`)(
 /**
  * Generated Box SDK schema for FolderBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the FolderBaseTypeField schema)
+ *
  * ```ts
  * import { FolderBaseTypeField } from "@beep/box"
  *
@@ -2973,7 +3109,8 @@ export const FolderBaseTypeField = S.Literal("folder").pipe($I.annoteSchema("Fol
 /**
  * Type for {@link FolderBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the FolderBaseTypeField type)
+ *
  * ```ts
  * import type { FolderBaseTypeField } from "@beep/box"
  *
@@ -2988,7 +3125,8 @@ export type FolderBaseTypeField = typeof FolderBaseTypeField.Type;
 /**
  * Generated Box SDK schema for FolderFolderUploadEmailAccessField.
  *
- * @example
+ * **Example** (Inspect the FolderFolderUploadEmailAccessField schema)
+ *
  * ```ts
  * import { FolderFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -3005,7 +3143,8 @@ export const FolderFolderUploadEmailAccessField = S.Union([LiteralKit(["open", "
 /**
  * Type for {@link FolderFolderUploadEmailAccessField}.
  *
- * @example
+ * **Example** (Reference the FolderFolderUploadEmailAccessField type)
+ *
  * ```ts
  * import type { FolderFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -3020,7 +3159,8 @@ export type FolderFolderUploadEmailAccessField = typeof FolderFolderUploadEmailA
 /**
  * Generated Box SDK schema for FolderFolderUploadEmailField.
  *
- * @example
+ * **Example** (Inspect the FolderFolderUploadEmailField schema)
+ *
  * ```ts
  * import { FolderFolderUploadEmailField } from "@beep/box"
  *
@@ -3043,7 +3183,8 @@ export class FolderFolderUploadEmailField extends S.Class<FolderFolderUploadEmai
 /**
  * Generated Box SDK schema for FolderFull.
  *
- * @example
+ * **Example** (Inspect the FolderFull schema)
+ *
  * ```ts
  * import { FolderFull } from "@beep/box"
  *
@@ -3079,7 +3220,8 @@ export class FolderFull extends Folder.extend<FolderFull>($I`FolderFull`)(
 /**
  * Generated Box SDK schema for FolderFullAllowedInviteeRolesField.
  *
- * @example
+ * **Example** (Inspect the FolderFullAllowedInviteeRolesField schema)
+ *
  * ```ts
  * import { FolderFullAllowedInviteeRolesField } from "@beep/box"
  *
@@ -3096,7 +3238,8 @@ export const FolderFullAllowedInviteeRolesField = S.Union([LiteralKit(["editor",
 /**
  * Type for {@link FolderFullAllowedInviteeRolesField}.
  *
- * @example
+ * **Example** (Reference the FolderFullAllowedInviteeRolesField type)
+ *
  * ```ts
  * import type { FolderFullAllowedInviteeRolesField } from "@beep/box"
  *
@@ -3111,7 +3254,8 @@ export type FolderFullAllowedInviteeRolesField = typeof FolderFullAllowedInvitee
 /**
  * Generated Box SDK schema for FolderFullAllowedSharedLinkAccessLevelsField.
  *
- * @example
+ * **Example** (Inspect the FolderFullAllowedSharedLinkAccessLevelsField schema)
+ *
  * ```ts
  * import { FolderFullAllowedSharedLinkAccessLevelsField } from "@beep/box"
  *
@@ -3128,7 +3272,8 @@ export const FolderFullAllowedSharedLinkAccessLevelsField = S.Union([LiteralKit(
 /**
  * Type for {@link FolderFullAllowedSharedLinkAccessLevelsField}.
  *
- * @example
+ * **Example** (Reference the FolderFullAllowedSharedLinkAccessLevelsField type)
+ *
  * ```ts
  * import type { FolderFullAllowedSharedLinkAccessLevelsField } from "@beep/box"
  *
@@ -3143,7 +3288,8 @@ export type FolderFullAllowedSharedLinkAccessLevelsField = typeof FolderFullAllo
 /**
  * Generated Box SDK schema for FolderFullClassificationField.
  *
- * @example
+ * **Example** (Inspect the FolderFullClassificationField schema)
+ *
  * ```ts
  * import { FolderFullClassificationField } from "@beep/box"
  *
@@ -3167,7 +3313,8 @@ export class FolderFullClassificationField extends S.Class<FolderFullClassificat
 /**
  * Generated Box SDK schema for FolderFullMetadataField.
  *
- * @example
+ * **Example** (Inspect the FolderFullMetadataField schema)
+ *
  * ```ts
  * import { FolderFullMetadataField } from "@beep/box"
  *
@@ -3189,7 +3336,8 @@ export class FolderFullMetadataField extends S.Class<FolderFullMetadataField>($I
 /**
  * Generated Box SDK schema for FolderFullPermissionsField.
  *
- * @example
+ * **Example** (Inspect the FolderFullPermissionsField schema)
+ *
  * ```ts
  * import { FolderFullPermissionsField } from "@beep/box"
  *
@@ -3218,7 +3366,8 @@ export class FolderFullPermissionsField extends S.Class<FolderFullPermissionsFie
 /**
  * Generated Box SDK schema for FolderFullSyncStateField.
  *
- * @example
+ * **Example** (Inspect the FolderFullSyncStateField schema)
+ *
  * ```ts
  * import { FolderFullSyncStateField } from "@beep/box"
  *
@@ -3235,7 +3384,8 @@ export const FolderFullSyncStateField = S.Union([LiteralKit(["synced", "not_sync
 /**
  * Type for {@link FolderFullSyncStateField}.
  *
- * @example
+ * **Example** (Reference the FolderFullSyncStateField type)
+ *
  * ```ts
  * import type { FolderFullSyncStateField } from "@beep/box"
  *
@@ -3250,7 +3400,8 @@ export type FolderFullSyncStateField = typeof FolderFullSyncStateField.Type;
 /**
  * Generated Box SDK schema for FolderFullWatermarkInfoField.
  *
- * @example
+ * **Example** (Inspect the FolderFullWatermarkInfoField schema)
+ *
  * ```ts
  * import { FolderFullWatermarkInfoField } from "@beep/box"
  *
@@ -3274,7 +3425,8 @@ export class FolderFullWatermarkInfoField extends S.Class<FolderFullWatermarkInf
 /**
  * Generated Box SDK schema for FolderItemStatusField.
  *
- * @example
+ * **Example** (Inspect the FolderItemStatusField schema)
+ *
  * ```ts
  * import { FolderItemStatusField } from "@beep/box"
  *
@@ -3291,7 +3443,8 @@ export const FolderItemStatusField = S.Union([LiteralKit(["active", "trashed", "
 /**
  * Type for {@link FolderItemStatusField}.
  *
- * @example
+ * **Example** (Reference the FolderItemStatusField type)
+ *
  * ```ts
  * import type { FolderItemStatusField } from "@beep/box"
  *
@@ -3306,7 +3459,8 @@ export type FolderItemStatusField = typeof FolderItemStatusField.Type;
 /**
  * Generated Box SDK schema for FolderPathCollectionField.
  *
- * @example
+ * **Example** (Inspect the FolderPathCollectionField schema)
+ *
  * ```ts
  * import { FolderPathCollectionField } from "@beep/box"
  *
@@ -3329,7 +3483,8 @@ export class FolderPathCollectionField extends S.Class<FolderPathCollectionField
 /**
  * Generated Box SDK schema for FolderSharedLinkAccessField.
  *
- * @example
+ * **Example** (Inspect the FolderSharedLinkAccessField schema)
+ *
  * ```ts
  * import { FolderSharedLinkAccessField } from "@beep/box"
  *
@@ -3346,7 +3501,8 @@ export const FolderSharedLinkAccessField = S.Union([LiteralKit(["open", "company
 /**
  * Type for {@link FolderSharedLinkAccessField}.
  *
- * @example
+ * **Example** (Reference the FolderSharedLinkAccessField type)
+ *
  * ```ts
  * import type { FolderSharedLinkAccessField } from "@beep/box"
  *
@@ -3361,7 +3517,8 @@ export type FolderSharedLinkAccessField = typeof FolderSharedLinkAccessField.Typ
 /**
  * Generated Box SDK schema for FolderSharedLinkEffectiveAccessField.
  *
- * @example
+ * **Example** (Inspect the FolderSharedLinkEffectiveAccessField schema)
+ *
  * ```ts
  * import { FolderSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -3378,7 +3535,8 @@ export const FolderSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open",
 /**
  * Type for {@link FolderSharedLinkEffectiveAccessField}.
  *
- * @example
+ * **Example** (Reference the FolderSharedLinkEffectiveAccessField type)
+ *
  * ```ts
  * import type { FolderSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -3393,7 +3551,8 @@ export type FolderSharedLinkEffectiveAccessField = typeof FolderSharedLinkEffect
 /**
  * Generated Box SDK schema for FolderSharedLinkEffectivePermissionField.
  *
- * @example
+ * **Example** (Inspect the FolderSharedLinkEffectivePermissionField schema)
+ *
  * ```ts
  * import { FolderSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -3410,7 +3569,8 @@ export const FolderSharedLinkEffectivePermissionField = S.Union([LiteralKit(["ca
 /**
  * Type for {@link FolderSharedLinkEffectivePermissionField}.
  *
- * @example
+ * **Example** (Reference the FolderSharedLinkEffectivePermissionField type)
+ *
  * ```ts
  * import type { FolderSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -3425,7 +3585,8 @@ export type FolderSharedLinkEffectivePermissionField = typeof FolderSharedLinkEf
 /**
  * Generated Box SDK schema for FolderSharedLinkField.
  *
- * @example
+ * **Example** (Inspect the FolderSharedLinkField schema)
+ *
  * ```ts
  * import { FolderSharedLinkField } from "@beep/box"
  *
@@ -3458,7 +3619,8 @@ export class FolderSharedLinkField extends S.Class<FolderSharedLinkField>($I`Fol
 /**
  * Generated Box SDK schema for FolderSharedLinkPermissionsField.
  *
- * @example
+ * **Example** (Inspect the FolderSharedLinkPermissionsField schema)
+ *
  * ```ts
  * import { FolderSharedLinkPermissionsField } from "@beep/box"
  *
@@ -3482,7 +3644,8 @@ export class FolderSharedLinkPermissionsField extends S.Class<FolderSharedLinkPe
 /**
  * Generated Box SDK schema for GenericSource.
  *
- * @example
+ * **Example** (Inspect the GenericSource schema)
+ *
  * ```ts
  * import { GenericSource } from "@beep/box"
  *
@@ -3499,7 +3662,8 @@ export const GenericSource = S.Record(S.String, S.Unknown).pipe($I.annoteSchema(
 /**
  * Type for {@link GenericSource}.
  *
- * @example
+ * **Example** (Reference the GenericSource type)
+ *
  * ```ts
  * import type { GenericSource } from "@beep/box"
  *
@@ -3514,7 +3678,8 @@ export type GenericSource = typeof GenericSource.Type;
 /**
  * Generated Box SDK schema for GetDownloadFileUrlHeaders.
  *
- * @example
+ * **Example** (Inspect the GetDownloadFileUrlHeaders schema)
+ *
  * ```ts
  * import { GetDownloadFileUrlHeaders } from "@beep/box"
  *
@@ -3538,7 +3703,8 @@ export class GetDownloadFileUrlHeaders extends S.Class<GetDownloadFileUrlHeaders
 /**
  * Generated Box SDK schema for GetDownloadFileUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetDownloadFileUrlOptionalsInput schema)
+ *
  * ```ts
  * import { GetDownloadFileUrlOptionalsInput } from "@beep/box"
  *
@@ -3562,7 +3728,8 @@ export class GetDownloadFileUrlOptionalsInput extends S.Class<GetDownloadFileUrl
 /**
  * Generated Box SDK schema for GetDownloadFileUrlQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetDownloadFileUrlQueryParams schema)
+ *
  * ```ts
  * import { GetDownloadFileUrlQueryParams } from "@beep/box"
  *
@@ -3585,7 +3752,8 @@ export class GetDownloadFileUrlQueryParams extends S.Class<GetDownloadFileUrlQue
 /**
  * Generated Box SDK schema for GetEventsHeadersInput.
  *
- * @example
+ * **Example** (Inspect the GetEventsHeadersInput schema)
+ *
  * ```ts
  * import { GetEventsHeadersInput } from "@beep/box"
  *
@@ -3607,7 +3775,8 @@ export class GetEventsHeadersInput extends S.Class<GetEventsHeadersInput>($I`Get
 /**
  * Generated Box SDK schema for GetEventsQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetEventsQueryParams schema)
+ *
  * ```ts
  * import { GetEventsQueryParams } from "@beep/box"
  *
@@ -3634,7 +3803,8 @@ export class GetEventsQueryParams extends S.Class<GetEventsQueryParams>($I`GetEv
 /**
  * Generated Box SDK schema for GetEventsQueryParamsEventTypeField.
  *
- * @example
+ * **Example** (Inspect the GetEventsQueryParamsEventTypeField schema)
+ *
  * ```ts
  * import { GetEventsQueryParamsEventTypeField } from "@beep/box"
  *
@@ -3651,7 +3821,8 @@ export const GetEventsQueryParamsEventTypeField = S.Union([LiteralKit(["ACCESS_G
 /**
  * Type for {@link GetEventsQueryParamsEventTypeField}.
  *
- * @example
+ * **Example** (Reference the GetEventsQueryParamsEventTypeField type)
+ *
  * ```ts
  * import type { GetEventsQueryParamsEventTypeField } from "@beep/box"
  *
@@ -3666,7 +3837,8 @@ export type GetEventsQueryParamsEventTypeField = typeof GetEventsQueryParamsEven
 /**
  * Generated Box SDK schema for GetEventsQueryParamsStreamTypeField.
  *
- * @example
+ * **Example** (Inspect the GetEventsQueryParamsStreamTypeField schema)
+ *
  * ```ts
  * import { GetEventsQueryParamsStreamTypeField } from "@beep/box"
  *
@@ -3683,7 +3855,8 @@ export const GetEventsQueryParamsStreamTypeField = S.Union([LiteralKit(["all", "
 /**
  * Type for {@link GetEventsQueryParamsStreamTypeField}.
  *
- * @example
+ * **Example** (Reference the GetEventsQueryParamsStreamTypeField type)
+ *
  * ```ts
  * import type { GetEventsQueryParamsStreamTypeField } from "@beep/box"
  *
@@ -3698,7 +3871,8 @@ export type GetEventsQueryParamsStreamTypeField = typeof GetEventsQueryParamsStr
 /**
  * Generated Box SDK schema for GetEventStreamHeadersInput.
  *
- * @example
+ * **Example** (Inspect the GetEventStreamHeadersInput schema)
+ *
  * ```ts
  * import { GetEventStreamHeadersInput } from "@beep/box"
  *
@@ -3720,7 +3894,8 @@ export class GetEventStreamHeadersInput extends S.Class<GetEventStreamHeadersInp
 /**
  * Generated Box SDK schema for GetEventStreamQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetEventStreamQueryParams schema)
+ *
  * ```ts
  * import { GetEventStreamQueryParams } from "@beep/box"
  *
@@ -3747,7 +3922,8 @@ export class GetEventStreamQueryParams extends S.Class<GetEventStreamQueryParams
 /**
  * Generated Box SDK schema for GetEventStreamQueryParamsEventTypeField.
  *
- * @example
+ * **Example** (Inspect the GetEventStreamQueryParamsEventTypeField schema)
+ *
  * ```ts
  * import { GetEventStreamQueryParamsEventTypeField } from "@beep/box"
  *
@@ -3764,7 +3940,8 @@ export const GetEventStreamQueryParamsEventTypeField = S.Union([LiteralKit(["ACC
 /**
  * Type for {@link GetEventStreamQueryParamsEventTypeField}.
  *
- * @example
+ * **Example** (Reference the GetEventStreamQueryParamsEventTypeField type)
+ *
  * ```ts
  * import type { GetEventStreamQueryParamsEventTypeField } from "@beep/box"
  *
@@ -3779,7 +3956,8 @@ export type GetEventStreamQueryParamsEventTypeField = typeof GetEventStreamQuery
 /**
  * Generated Box SDK schema for GetEventStreamQueryParamsStreamTypeField.
  *
- * @example
+ * **Example** (Inspect the GetEventStreamQueryParamsStreamTypeField schema)
+ *
  * ```ts
  * import { GetEventStreamQueryParamsStreamTypeField } from "@beep/box"
  *
@@ -3796,7 +3974,8 @@ export const GetEventStreamQueryParamsStreamTypeField = S.Union([LiteralKit(["al
 /**
  * Type for {@link GetEventStreamQueryParamsStreamTypeField}.
  *
- * @example
+ * **Example** (Reference the GetEventStreamQueryParamsStreamTypeField type)
+ *
  * ```ts
  * import type { GetEventStreamQueryParamsStreamTypeField } from "@beep/box"
  *
@@ -3811,7 +3990,8 @@ export type GetEventStreamQueryParamsStreamTypeField = typeof GetEventStreamQuer
 /**
  * Generated Box SDK schema for GetEventsWithLongPollingHeadersInput.
  *
- * @example
+ * **Example** (Inspect the GetEventsWithLongPollingHeadersInput schema)
+ *
  * ```ts
  * import { GetEventsWithLongPollingHeadersInput } from "@beep/box"
  *
@@ -3833,7 +4013,8 @@ export class GetEventsWithLongPollingHeadersInput extends S.Class<GetEventsWithL
 /**
  * Generated Box SDK schema for GetFileByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileByIdHeaders schema)
+ *
  * ```ts
  * import { GetFileByIdHeaders } from "@beep/box"
  *
@@ -3858,7 +4039,8 @@ export class GetFileByIdHeaders extends S.Class<GetFileByIdHeaders>($I`GetFileBy
 /**
  * Generated Box SDK schema for GetFileByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileByIdOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileByIdOptionalsInput } from "@beep/box"
  *
@@ -3882,7 +4064,8 @@ export class GetFileByIdOptionalsInput extends S.Class<GetFileByIdOptionalsInput
 /**
  * Generated Box SDK schema for GetFileByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFileByIdQueryParams schema)
+ *
  * ```ts
  * import { GetFileByIdQueryParams } from "@beep/box"
  *
@@ -3904,7 +4087,8 @@ export class GetFileByIdQueryParams extends S.Class<GetFileByIdQueryParams>($I`G
 /**
  * Generated Box SDK schema for GetFileThumbnailByIdExtension.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailByIdExtension schema)
+ *
  * ```ts
  * import { GetFileThumbnailByIdExtension } from "@beep/box"
  *
@@ -3921,7 +4105,8 @@ export const GetFileThumbnailByIdExtension = S.Union([LiteralKit(["png", "jpg"])
 /**
  * Type for {@link GetFileThumbnailByIdExtension}.
  *
- * @example
+ * **Example** (Reference the GetFileThumbnailByIdExtension type)
+ *
  * ```ts
  * import type { GetFileThumbnailByIdExtension } from "@beep/box"
  *
@@ -3936,7 +4121,8 @@ export type GetFileThumbnailByIdExtension = typeof GetFileThumbnailByIdExtension
 /**
  * Generated Box SDK schema for GetFileThumbnailByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailByIdHeaders schema)
+ *
  * ```ts
  * import { GetFileThumbnailByIdHeaders } from "@beep/box"
  *
@@ -3958,7 +4144,8 @@ export class GetFileThumbnailByIdHeaders extends S.Class<GetFileThumbnailByIdHea
 /**
  * Generated Box SDK schema for GetFileThumbnailByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailByIdOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileThumbnailByIdOptionalsInput } from "@beep/box"
  *
@@ -3982,7 +4169,8 @@ export class GetFileThumbnailByIdOptionalsInput extends S.Class<GetFileThumbnail
 /**
  * Generated Box SDK schema for GetFileThumbnailByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailByIdQueryParams schema)
+ *
  * ```ts
  * import { GetFileThumbnailByIdQueryParams } from "@beep/box"
  *
@@ -4007,7 +4195,8 @@ export class GetFileThumbnailByIdQueryParams extends S.Class<GetFileThumbnailByI
 /**
  * Generated Box SDK schema for GetFileThumbnailUrlExtension.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailUrlExtension schema)
+ *
  * ```ts
  * import { GetFileThumbnailUrlExtension } from "@beep/box"
  *
@@ -4024,7 +4213,8 @@ export const GetFileThumbnailUrlExtension = S.Union([LiteralKit(["png", "jpg"]),
 /**
  * Type for {@link GetFileThumbnailUrlExtension}.
  *
- * @example
+ * **Example** (Reference the GetFileThumbnailUrlExtension type)
+ *
  * ```ts
  * import type { GetFileThumbnailUrlExtension } from "@beep/box"
  *
@@ -4039,7 +4229,8 @@ export type GetFileThumbnailUrlExtension = typeof GetFileThumbnailUrlExtension.T
 /**
  * Generated Box SDK schema for GetFileThumbnailUrlHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailUrlHeaders schema)
+ *
  * ```ts
  * import { GetFileThumbnailUrlHeaders } from "@beep/box"
  *
@@ -4061,7 +4252,8 @@ export class GetFileThumbnailUrlHeaders extends S.Class<GetFileThumbnailUrlHeade
 /**
  * Generated Box SDK schema for GetFileThumbnailUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailUrlOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileThumbnailUrlOptionalsInput } from "@beep/box"
  *
@@ -4085,7 +4277,8 @@ export class GetFileThumbnailUrlOptionalsInput extends S.Class<GetFileThumbnailU
 /**
  * Generated Box SDK schema for GetFileThumbnailUrlQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFileThumbnailUrlQueryParams schema)
+ *
  * ```ts
  * import { GetFileThumbnailUrlQueryParams } from "@beep/box"
  *
@@ -4110,7 +4303,8 @@ export class GetFileThumbnailUrlQueryParams extends S.Class<GetFileThumbnailUrlQ
 /**
  * Generated Box SDK schema for GetFileUploadSessionByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionByIdHeaders schema)
+ *
  * ```ts
  * import { GetFileUploadSessionByIdHeaders } from "@beep/box"
  *
@@ -4132,7 +4326,8 @@ export class GetFileUploadSessionByIdHeaders extends S.Class<GetFileUploadSessio
 /**
  * Generated Box SDK schema for GetFileUploadSessionByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionByIdOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileUploadSessionByIdOptionalsInput } from "@beep/box"
  *
@@ -4155,7 +4350,8 @@ export class GetFileUploadSessionByIdOptionalsInput extends S.Class<GetFileUploa
 /**
  * Generated Box SDK schema for GetFileUploadSessionByUrlHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionByUrlHeaders schema)
+ *
  * ```ts
  * import { GetFileUploadSessionByUrlHeaders } from "@beep/box"
  *
@@ -4177,7 +4373,8 @@ export class GetFileUploadSessionByUrlHeaders extends S.Class<GetFileUploadSessi
 /**
  * Generated Box SDK schema for GetFileUploadSessionByUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionByUrlOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileUploadSessionByUrlOptionalsInput } from "@beep/box"
  *
@@ -4200,7 +4397,8 @@ export class GetFileUploadSessionByUrlOptionalsInput extends S.Class<GetFileUplo
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsByUrlHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsByUrlHeaders schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsByUrlHeaders } from "@beep/box"
  *
@@ -4222,7 +4420,8 @@ export class GetFileUploadSessionPartsByUrlHeaders extends S.Class<GetFileUpload
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsByUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsByUrlOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsByUrlOptionalsInput } from "@beep/box"
  *
@@ -4246,7 +4445,8 @@ export class GetFileUploadSessionPartsByUrlOptionalsInput extends S.Class<GetFil
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsByUrlQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsByUrlQueryParams schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsByUrlQueryParams } from "@beep/box"
  *
@@ -4269,7 +4469,8 @@ export class GetFileUploadSessionPartsByUrlQueryParams extends S.Class<GetFileUp
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsHeaders schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsHeaders } from "@beep/box"
  *
@@ -4291,7 +4492,8 @@ export class GetFileUploadSessionPartsHeaders extends S.Class<GetFileUploadSessi
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsOptionalsInput schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsOptionalsInput } from "@beep/box"
  *
@@ -4315,7 +4517,8 @@ export class GetFileUploadSessionPartsOptionalsInput extends S.Class<GetFileUplo
 /**
  * Generated Box SDK schema for GetFileUploadSessionPartsQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFileUploadSessionPartsQueryParams schema)
+ *
  * ```ts
  * import { GetFileUploadSessionPartsQueryParams } from "@beep/box"
  *
@@ -4338,7 +4541,8 @@ export class GetFileUploadSessionPartsQueryParams extends S.Class<GetFileUploadS
 /**
  * Generated Box SDK schema for GetFolderByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFolderByIdHeaders schema)
+ *
  * ```ts
  * import { GetFolderByIdHeaders } from "@beep/box"
  *
@@ -4362,7 +4566,8 @@ export class GetFolderByIdHeaders extends S.Class<GetFolderByIdHeaders>($I`GetFo
 /**
  * Generated Box SDK schema for GetFolderByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFolderByIdOptionalsInput schema)
+ *
  * ```ts
  * import { GetFolderByIdOptionalsInput } from "@beep/box"
  *
@@ -4386,7 +4591,8 @@ export class GetFolderByIdOptionalsInput extends S.Class<GetFolderByIdOptionalsI
 /**
  * Generated Box SDK schema for GetFolderByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFolderByIdQueryParams schema)
+ *
  * ```ts
  * import { GetFolderByIdQueryParams } from "@beep/box"
  *
@@ -4412,7 +4618,8 @@ export class GetFolderByIdQueryParams extends S.Class<GetFolderByIdQueryParams>(
 /**
  * Generated Box SDK schema for GetFolderByIdQueryParamsDirectionField.
  *
- * @example
+ * **Example** (Inspect the GetFolderByIdQueryParamsDirectionField schema)
+ *
  * ```ts
  * import { GetFolderByIdQueryParamsDirectionField } from "@beep/box"
  *
@@ -4429,7 +4636,8 @@ export const GetFolderByIdQueryParamsDirectionField = S.Union([LiteralKit(["ASC"
 /**
  * Type for {@link GetFolderByIdQueryParamsDirectionField}.
  *
- * @example
+ * **Example** (Reference the GetFolderByIdQueryParamsDirectionField type)
+ *
  * ```ts
  * import type { GetFolderByIdQueryParamsDirectionField } from "@beep/box"
  *
@@ -4444,7 +4652,8 @@ export type GetFolderByIdQueryParamsDirectionField = typeof GetFolderByIdQueryPa
 /**
  * Generated Box SDK schema for GetFolderByIdQueryParamsSortField.
  *
- * @example
+ * **Example** (Inspect the GetFolderByIdQueryParamsSortField schema)
+ *
  * ```ts
  * import { GetFolderByIdQueryParamsSortField } from "@beep/box"
  *
@@ -4461,7 +4670,8 @@ export const GetFolderByIdQueryParamsSortField = S.Union([LiteralKit(["id", "nam
 /**
  * Type for {@link GetFolderByIdQueryParamsSortField}.
  *
- * @example
+ * **Example** (Reference the GetFolderByIdQueryParamsSortField type)
+ *
  * ```ts
  * import type { GetFolderByIdQueryParamsSortField } from "@beep/box"
  *
@@ -4476,7 +4686,8 @@ export type GetFolderByIdQueryParamsSortField = typeof GetFolderByIdQueryParamsS
 /**
  * Generated Box SDK schema for GetFolderItemsHeaders.
  *
- * @example
+ * **Example** (Inspect the GetFolderItemsHeaders schema)
+ *
  * ```ts
  * import { GetFolderItemsHeaders } from "@beep/box"
  *
@@ -4499,7 +4710,8 @@ export class GetFolderItemsHeaders extends S.Class<GetFolderItemsHeaders>($I`Get
 /**
  * Generated Box SDK schema for GetFolderItemsOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetFolderItemsOptionalsInput schema)
+ *
  * ```ts
  * import { GetFolderItemsOptionalsInput } from "@beep/box"
  *
@@ -4523,7 +4735,8 @@ export class GetFolderItemsOptionalsInput extends S.Class<GetFolderItemsOptional
 /**
  * Generated Box SDK schema for GetFolderItemsQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetFolderItemsQueryParams schema)
+ *
  * ```ts
  * import { GetFolderItemsQueryParams } from "@beep/box"
  *
@@ -4551,7 +4764,8 @@ export class GetFolderItemsQueryParams extends S.Class<GetFolderItemsQueryParams
 /**
  * Generated Box SDK schema for GetFolderItemsQueryParamsDirectionField.
  *
- * @example
+ * **Example** (Inspect the GetFolderItemsQueryParamsDirectionField schema)
+ *
  * ```ts
  * import { GetFolderItemsQueryParamsDirectionField } from "@beep/box"
  *
@@ -4568,7 +4782,8 @@ export const GetFolderItemsQueryParamsDirectionField = S.Union([LiteralKit(["ASC
 /**
  * Type for {@link GetFolderItemsQueryParamsDirectionField}.
  *
- * @example
+ * **Example** (Reference the GetFolderItemsQueryParamsDirectionField type)
+ *
  * ```ts
  * import type { GetFolderItemsQueryParamsDirectionField } from "@beep/box"
  *
@@ -4583,7 +4798,8 @@ export type GetFolderItemsQueryParamsDirectionField = typeof GetFolderItemsQuery
 /**
  * Generated Box SDK schema for GetFolderItemsQueryParamsSortField.
  *
- * @example
+ * **Example** (Inspect the GetFolderItemsQueryParamsSortField schema)
+ *
  * ```ts
  * import { GetFolderItemsQueryParamsSortField } from "@beep/box"
  *
@@ -4600,7 +4816,8 @@ export const GetFolderItemsQueryParamsSortField = S.Union([LiteralKit(["id", "na
 /**
  * Type for {@link GetFolderItemsQueryParamsSortField}.
  *
- * @example
+ * **Example** (Reference the GetFolderItemsQueryParamsSortField type)
+ *
  * ```ts
  * import type { GetFolderItemsQueryParamsSortField } from "@beep/box"
  *
@@ -4615,7 +4832,8 @@ export type GetFolderItemsQueryParamsSortField = typeof GetFolderItemsQueryParam
 /**
  * Generated Box SDK schema for GetUserAvatarHeaders.
  *
- * @example
+ * **Example** (Inspect the GetUserAvatarHeaders schema)
+ *
  * ```ts
  * import { GetUserAvatarHeaders } from "@beep/box"
  *
@@ -4637,7 +4855,8 @@ export class GetUserAvatarHeaders extends S.Class<GetUserAvatarHeaders>($I`GetUs
 /**
  * Generated Box SDK schema for GetUserAvatarOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetUserAvatarOptionalsInput schema)
+ *
  * ```ts
  * import { GetUserAvatarOptionalsInput } from "@beep/box"
  *
@@ -4660,7 +4879,8 @@ export class GetUserAvatarOptionalsInput extends S.Class<GetUserAvatarOptionalsI
 /**
  * Generated Box SDK schema for GetUserByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the GetUserByIdHeaders schema)
+ *
  * ```ts
  * import { GetUserByIdHeaders } from "@beep/box"
  *
@@ -4682,7 +4902,8 @@ export class GetUserByIdHeaders extends S.Class<GetUserByIdHeaders>($I`GetUserBy
 /**
  * Generated Box SDK schema for GetUserByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetUserByIdOptionalsInput schema)
+ *
  * ```ts
  * import { GetUserByIdOptionalsInput } from "@beep/box"
  *
@@ -4706,7 +4927,8 @@ export class GetUserByIdOptionalsInput extends S.Class<GetUserByIdOptionalsInput
 /**
  * Generated Box SDK schema for GetUserByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetUserByIdQueryParams schema)
+ *
  * ```ts
  * import { GetUserByIdQueryParams } from "@beep/box"
  *
@@ -4728,7 +4950,8 @@ export class GetUserByIdQueryParams extends S.Class<GetUserByIdQueryParams>($I`G
 /**
  * Generated Box SDK schema for GetUserMeHeadersInput.
  *
- * @example
+ * **Example** (Inspect the GetUserMeHeadersInput schema)
+ *
  * ```ts
  * import { GetUserMeHeadersInput } from "@beep/box"
  *
@@ -4750,7 +4973,8 @@ export class GetUserMeHeadersInput extends S.Class<GetUserMeHeadersInput>($I`Get
 /**
  * Generated Box SDK schema for GetUserMeQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetUserMeQueryParams schema)
+ *
  * ```ts
  * import { GetUserMeQueryParams } from "@beep/box"
  *
@@ -4772,7 +4996,8 @@ export class GetUserMeQueryParams extends S.Class<GetUserMeQueryParams>($I`GetUs
 /**
  * Generated Box SDK schema for GetUsersHeadersInput.
  *
- * @example
+ * **Example** (Inspect the GetUsersHeadersInput schema)
+ *
  * ```ts
  * import { GetUsersHeadersInput } from "@beep/box"
  *
@@ -4794,7 +5019,8 @@ export class GetUsersHeadersInput extends S.Class<GetUsersHeadersInput>($I`GetUs
 /**
  * Generated Box SDK schema for GetUsersQueryParams.
  *
- * @example
+ * **Example** (Inspect the GetUsersQueryParams schema)
+ *
  * ```ts
  * import { GetUsersQueryParams } from "@beep/box"
  *
@@ -4823,7 +5049,8 @@ export class GetUsersQueryParams extends S.Class<GetUsersQueryParams>($I`GetUser
 /**
  * Generated Box SDK schema for GetUsersQueryParamsUserTypeField.
  *
- * @example
+ * **Example** (Inspect the GetUsersQueryParamsUserTypeField schema)
+ *
  * ```ts
  * import { GetUsersQueryParamsUserTypeField } from "@beep/box"
  *
@@ -4840,7 +5067,8 @@ export const GetUsersQueryParamsUserTypeField = S.Union([LiteralKit(["all", "man
 /**
  * Type for {@link GetUsersQueryParamsUserTypeField}.
  *
- * @example
+ * **Example** (Reference the GetUsersQueryParamsUserTypeField type)
+ *
  * ```ts
  * import type { GetUsersQueryParamsUserTypeField } from "@beep/box"
  *
@@ -4855,7 +5083,8 @@ export type GetUsersQueryParamsUserTypeField = typeof GetUsersQueryParamsUserTyp
 /**
  * Generated Box SDK schema for GetZipDownloadContentHeaders.
  *
- * @example
+ * **Example** (Inspect the GetZipDownloadContentHeaders schema)
+ *
  * ```ts
  * import { GetZipDownloadContentHeaders } from "@beep/box"
  *
@@ -4877,7 +5106,8 @@ export class GetZipDownloadContentHeaders extends S.Class<GetZipDownloadContentH
 /**
  * Generated Box SDK schema for GetZipDownloadContentOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetZipDownloadContentOptionalsInput schema)
+ *
  * ```ts
  * import { GetZipDownloadContentOptionalsInput } from "@beep/box"
  *
@@ -4900,7 +5130,8 @@ export class GetZipDownloadContentOptionalsInput extends S.Class<GetZipDownloadC
 /**
  * Generated Box SDK schema for GetZipDownloadStatusHeaders.
  *
- * @example
+ * **Example** (Inspect the GetZipDownloadStatusHeaders schema)
+ *
  * ```ts
  * import { GetZipDownloadStatusHeaders } from "@beep/box"
  *
@@ -4922,7 +5153,8 @@ export class GetZipDownloadStatusHeaders extends S.Class<GetZipDownloadStatusHea
 /**
  * Generated Box SDK schema for GetZipDownloadStatusOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the GetZipDownloadStatusOptionalsInput schema)
+ *
  * ```ts
  * import { GetZipDownloadStatusOptionalsInput } from "@beep/box"
  *
@@ -4945,7 +5177,8 @@ export class GetZipDownloadStatusOptionalsInput extends S.Class<GetZipDownloadSt
 /**
  * Generated Box SDK schema for GroupBase.
  *
- * @example
+ * **Example** (Inspect the GroupBase schema)
+ *
  * ```ts
  * import { GroupBase } from "@beep/box"
  *
@@ -4968,7 +5201,8 @@ export class GroupBase extends S.Class<GroupBase>($I`GroupBase`)(
 /**
  * Generated Box SDK schema for GroupMini.
  *
- * @example
+ * **Example** (Inspect the GroupMini schema)
+ *
  * ```ts
  * import { GroupMini } from "@beep/box"
  *
@@ -4991,7 +5225,8 @@ export class GroupMini extends GroupBase.extend<GroupMini>($I`GroupMini`)(
 /**
  * Generated Box SDK schema for GroupBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the GroupBaseTypeField schema)
+ *
  * ```ts
  * import { GroupBaseTypeField } from "@beep/box"
  *
@@ -5008,7 +5243,8 @@ export const GroupBaseTypeField = S.Literal("group").pipe($I.annoteSchema("Group
 /**
  * Type for {@link GroupBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the GroupBaseTypeField type)
+ *
  * ```ts
  * import type { GroupBaseTypeField } from "@beep/box"
  *
@@ -5023,7 +5259,8 @@ export type GroupBaseTypeField = typeof GroupBaseTypeField.Type;
 /**
  * Generated Box SDK schema for GroupMiniGroupTypeField.
  *
- * @example
+ * **Example** (Inspect the GroupMiniGroupTypeField schema)
+ *
  * ```ts
  * import { GroupMiniGroupTypeField } from "@beep/box"
  *
@@ -5040,7 +5277,8 @@ export const GroupMiniGroupTypeField = S.Union([LiteralKit(["managed_group", "al
 /**
  * Type for {@link GroupMiniGroupTypeField}.
  *
- * @example
+ * **Example** (Reference the GroupMiniGroupTypeField type)
+ *
  * ```ts
  * import type { GroupMiniGroupTypeField } from "@beep/box"
  *
@@ -5055,7 +5293,8 @@ export type GroupMiniGroupTypeField = typeof GroupMiniGroupTypeField.Type;
 /**
  * Generated Box SDK schema for Item.
  *
- * @example
+ * **Example** (Inspect the Item schema)
+ *
  * ```ts
  * import { Item } from "@beep/box"
  *
@@ -5072,7 +5311,8 @@ export const Item = S.Union([S.suspend(() => FileFull), S.suspend(() => FolderMi
 /**
  * Type for {@link Item}.
  *
- * @example
+ * **Example** (Reference the Item type)
+ *
  * ```ts
  * import type { Item } from "@beep/box"
  *
@@ -5087,7 +5327,8 @@ export type Item = typeof Item.Type;
 /**
  * Generated Box SDK schema for Items.
  *
- * @example
+ * **Example** (Inspect the Items schema)
+ *
  * ```ts
  * import { Items } from "@beep/box"
  *
@@ -5115,7 +5356,8 @@ export class Items extends S.Class<Items>($I`Items`)(
 /**
  * Generated Box SDK schema for ItemsOrderDirectionField.
  *
- * @example
+ * **Example** (Inspect the ItemsOrderDirectionField schema)
+ *
  * ```ts
  * import { ItemsOrderDirectionField } from "@beep/box"
  *
@@ -5132,7 +5374,8 @@ export const ItemsOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.
 /**
  * Type for {@link ItemsOrderDirectionField}.
  *
- * @example
+ * **Example** (Reference the ItemsOrderDirectionField type)
+ *
  * ```ts
  * import type { ItemsOrderDirectionField } from "@beep/box"
  *
@@ -5147,7 +5390,8 @@ export type ItemsOrderDirectionField = typeof ItemsOrderDirectionField.Type;
 /**
  * Generated Box SDK schema for ItemsOrderField.
  *
- * @example
+ * **Example** (Inspect the ItemsOrderField schema)
+ *
  * ```ts
  * import { ItemsOrderField } from "@beep/box"
  *
@@ -5170,7 +5414,8 @@ export class ItemsOrderField extends S.Class<ItemsOrderField>($I`ItemsOrderField
 /**
  * Generated Box SDK schema for MetadataFull.
  *
- * @example
+ * **Example** (Inspect the MetadataFull schema)
+ *
  * ```ts
  * import { MetadataFull } from "@beep/box"
  *
@@ -5187,7 +5432,8 @@ export const MetadataFull = S.Unknown.pipe($I.annoteSchema("MetadataFull", {
 /**
  * Type for {@link MetadataFull}.
  *
- * @example
+ * **Example** (Reference the MetadataFull type)
+ *
  * ```ts
  * import type { MetadataFull } from "@beep/box"
  *
@@ -5202,7 +5448,8 @@ export type MetadataFull = typeof MetadataFull.Type;
 /**
  * Generated Box SDK schema for PreflightFileUploadCheckHeadersInput.
  *
- * @example
+ * **Example** (Inspect the PreflightFileUploadCheckHeadersInput schema)
+ *
  * ```ts
  * import { PreflightFileUploadCheckHeadersInput } from "@beep/box"
  *
@@ -5224,7 +5471,8 @@ export class PreflightFileUploadCheckHeadersInput extends S.Class<PreflightFileU
 /**
  * Generated Box SDK schema for PreflightFileUploadCheckRequestBody.
  *
- * @example
+ * **Example** (Inspect the PreflightFileUploadCheckRequestBody schema)
+ *
  * ```ts
  * import { PreflightFileUploadCheckRequestBody } from "@beep/box"
  *
@@ -5248,7 +5496,8 @@ export class PreflightFileUploadCheckRequestBody extends S.Class<PreflightFileUp
 /**
  * Generated Box SDK schema for PreflightFileUploadCheckRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the PreflightFileUploadCheckRequestBodyParentField schema)
+ *
  * ```ts
  * import { PreflightFileUploadCheckRequestBodyParentField } from "@beep/box"
  *
@@ -5270,7 +5519,8 @@ export class PreflightFileUploadCheckRequestBodyParentField extends S.Class<Pref
 /**
  * Generated Box SDK schema for RealtimeServer.
  *
- * @example
+ * **Example** (Inspect the RealtimeServer schema)
+ *
  * ```ts
  * import { RealtimeServer } from "@beep/box"
  *
@@ -5296,7 +5546,8 @@ export class RealtimeServer extends S.Class<RealtimeServer>($I`RealtimeServer`)(
 /**
  * Generated Box SDK schema for RealtimeServers.
  *
- * @example
+ * **Example** (Inspect the RealtimeServers schema)
+ *
  * ```ts
  * import { RealtimeServers } from "@beep/box"
  *
@@ -5319,7 +5570,8 @@ export class RealtimeServers extends S.Class<RealtimeServers>($I`RealtimeServers
 /**
  * Generated Box SDK schema for Resource.
  *
- * @example
+ * **Example** (Inspect the Resource schema)
+ *
  * ```ts
  * import { Resource } from "@beep/box"
  *
@@ -5336,7 +5588,8 @@ export const Resource = S.Union([S.suspend(() => FolderMini), S.suspend(() => Fi
 /**
  * Type for {@link Resource}.
  *
- * @example
+ * **Example** (Reference the Resource type)
+ *
  * ```ts
  * import type { Resource } from "@beep/box"
  *
@@ -5351,7 +5604,8 @@ export type Resource = typeof Resource.Type;
 /**
  * Generated Box SDK schema for ResourceScope.
  *
- * @example
+ * **Example** (Inspect the ResourceScope schema)
+ *
  * ```ts
  * import { ResourceScope } from "@beep/box"
  *
@@ -5374,7 +5628,8 @@ export class ResourceScope extends S.Class<ResourceScope>($I`ResourceScope`)(
 /**
  * Generated Box SDK schema for ResourceScopeScopeField.
  *
- * @example
+ * **Example** (Inspect the ResourceScopeScopeField schema)
+ *
  * ```ts
  * import { ResourceScopeScopeField } from "@beep/box"
  *
@@ -5391,7 +5646,8 @@ export const ResourceScopeScopeField = S.Union([LiteralKit(["annotation_edit", "
 /**
  * Type for {@link ResourceScopeScopeField}.
  *
- * @example
+ * **Example** (Reference the ResourceScopeScopeField type)
+ *
  * ```ts
  * import type { ResourceScopeScopeField } from "@beep/box"
  *
@@ -5406,7 +5662,8 @@ export type ResourceScopeScopeField = typeof ResourceScopeScopeField.Type;
 /**
  * Generated Box SDK schema for TrackingCode.
  *
- * @example
+ * **Example** (Inspect the TrackingCode schema)
+ *
  * ```ts
  * import { TrackingCode } from "@beep/box"
  *
@@ -5430,7 +5687,8 @@ export class TrackingCode extends S.Class<TrackingCode>($I`TrackingCode`)(
 /**
  * Generated Box SDK schema for TrackingCodeTypeField.
  *
- * @example
+ * **Example** (Inspect the TrackingCodeTypeField schema)
+ *
  * ```ts
  * import { TrackingCodeTypeField } from "@beep/box"
  *
@@ -5447,7 +5705,8 @@ export const TrackingCodeTypeField = S.Literal("tracking_code").pipe($I.annoteSc
 /**
  * Type for {@link TrackingCodeTypeField}.
  *
- * @example
+ * **Example** (Reference the TrackingCodeTypeField type)
+ *
  * ```ts
  * import type { TrackingCodeTypeField } from "@beep/box"
  *
@@ -5462,7 +5721,8 @@ export type TrackingCodeTypeField = typeof TrackingCodeTypeField.Type;
 /**
  * Generated Box SDK schema for UpdateFileByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdHeaders schema)
+ *
  * ```ts
  * import { UpdateFileByIdHeaders } from "@beep/box"
  *
@@ -5485,7 +5745,8 @@ export class UpdateFileByIdHeaders extends S.Class<UpdateFileByIdHeaders>($I`Upd
 /**
  * Generated Box SDK schema for UpdateFileByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdOptionalsInput schema)
+ *
  * ```ts
  * import { UpdateFileByIdOptionalsInput } from "@beep/box"
  *
@@ -5510,7 +5771,8 @@ export class UpdateFileByIdOptionalsInput extends S.Class<UpdateFileByIdOptional
 /**
  * Generated Box SDK schema for UpdateFileByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdQueryParams schema)
+ *
  * ```ts
  * import { UpdateFileByIdQueryParams } from "@beep/box"
  *
@@ -5532,7 +5794,8 @@ export class UpdateFileByIdQueryParams extends S.Class<UpdateFileByIdQueryParams
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBody.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBody schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBody } from "@beep/box"
  *
@@ -5562,7 +5825,8 @@ export class UpdateFileByIdRequestBody extends S.Class<UpdateFileByIdRequestBody
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyCollectionsField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyCollectionsField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyCollectionsField } from "@beep/box"
  *
@@ -5585,7 +5849,8 @@ export class UpdateFileByIdRequestBodyCollectionsField extends S.Class<UpdateFil
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyLockAccessField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyLockAccessField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyLockAccessField } from "@beep/box"
  *
@@ -5602,7 +5867,8 @@ export const UpdateFileByIdRequestBodyLockAccessField = S.Union([LiteralKit(["lo
 /**
  * Type for {@link UpdateFileByIdRequestBodyLockAccessField}.
  *
- * @example
+ * **Example** (Reference the UpdateFileByIdRequestBodyLockAccessField type)
+ *
  * ```ts
  * import type { UpdateFileByIdRequestBodyLockAccessField } from "@beep/box"
  *
@@ -5617,7 +5883,8 @@ export type UpdateFileByIdRequestBodyLockAccessField = typeof UpdateFileByIdRequ
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyLockField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyLockField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyLockField } from "@beep/box"
  *
@@ -5641,7 +5908,8 @@ export class UpdateFileByIdRequestBodyLockField extends S.Class<UpdateFileByIdRe
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyParentField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyParentField } from "@beep/box"
  *
@@ -5664,7 +5932,8 @@ export class UpdateFileByIdRequestBodyParentField extends S.Class<UpdateFileById
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyPermissionsCanDownloadField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyPermissionsCanDownloadField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyPermissionsCanDownloadField } from "@beep/box"
  *
@@ -5681,7 +5950,8 @@ export const UpdateFileByIdRequestBodyPermissionsCanDownloadField = S.Union([Lit
 /**
  * Type for {@link UpdateFileByIdRequestBodyPermissionsCanDownloadField}.
  *
- * @example
+ * **Example** (Reference the UpdateFileByIdRequestBodyPermissionsCanDownloadField type)
+ *
  * ```ts
  * import type { UpdateFileByIdRequestBodyPermissionsCanDownloadField } from "@beep/box"
  *
@@ -5696,7 +5966,8 @@ export type UpdateFileByIdRequestBodyPermissionsCanDownloadField = typeof Update
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodyPermissionsField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodyPermissionsField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodyPermissionsField } from "@beep/box"
  *
@@ -5718,7 +5989,8 @@ export class UpdateFileByIdRequestBodyPermissionsField extends S.Class<UpdateFil
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodySharedLinkAccessField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodySharedLinkAccessField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodySharedLinkAccessField } from "@beep/box"
  *
@@ -5735,7 +6007,8 @@ export const UpdateFileByIdRequestBodySharedLinkAccessField = S.Union([LiteralKi
 /**
  * Type for {@link UpdateFileByIdRequestBodySharedLinkAccessField}.
  *
- * @example
+ * **Example** (Reference the UpdateFileByIdRequestBodySharedLinkAccessField type)
+ *
  * ```ts
  * import type { UpdateFileByIdRequestBodySharedLinkAccessField } from "@beep/box"
  *
@@ -5750,7 +6023,8 @@ export type UpdateFileByIdRequestBodySharedLinkAccessField = typeof UpdateFileBy
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodySharedLinkField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodySharedLinkField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodySharedLinkField } from "@beep/box"
  *
@@ -5776,7 +6050,8 @@ export class UpdateFileByIdRequestBodySharedLinkField extends S.Class<UpdateFile
 /**
  * Generated Box SDK schema for UpdateFileByIdRequestBodySharedLinkPermissionsField.
  *
- * @example
+ * **Example** (Inspect the UpdateFileByIdRequestBodySharedLinkPermissionsField schema)
+ *
  * ```ts
  * import { UpdateFileByIdRequestBodySharedLinkPermissionsField } from "@beep/box"
  *
@@ -5798,7 +6073,8 @@ export class UpdateFileByIdRequestBodySharedLinkPermissionsField extends S.Class
 /**
  * Generated Box SDK schema for UpdateFolderByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdHeaders schema)
+ *
  * ```ts
  * import { UpdateFolderByIdHeaders } from "@beep/box"
  *
@@ -5821,7 +6097,8 @@ export class UpdateFolderByIdHeaders extends S.Class<UpdateFolderByIdHeaders>($I
 /**
  * Generated Box SDK schema for UpdateFolderByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdOptionalsInput schema)
+ *
  * ```ts
  * import { UpdateFolderByIdOptionalsInput } from "@beep/box"
  *
@@ -5846,7 +6123,8 @@ export class UpdateFolderByIdOptionalsInput extends S.Class<UpdateFolderByIdOpti
 /**
  * Generated Box SDK schema for UpdateFolderByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdQueryParams schema)
+ *
  * ```ts
  * import { UpdateFolderByIdQueryParams } from "@beep/box"
  *
@@ -5868,7 +6146,8 @@ export class UpdateFolderByIdQueryParams extends S.Class<UpdateFolderByIdQueryPa
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBody.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBody schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBody } from "@beep/box"
  *
@@ -5900,7 +6179,8 @@ export class UpdateFolderByIdRequestBody extends S.Class<UpdateFolderByIdRequest
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodyCollectionsField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodyCollectionsField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodyCollectionsField } from "@beep/box"
  *
@@ -5923,7 +6203,8 @@ export class UpdateFolderByIdRequestBodyCollectionsField extends S.Class<UpdateF
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodyFolderUploadEmailAccessField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodyFolderUploadEmailAccessField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodyFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -5940,7 +6221,8 @@ export const UpdateFolderByIdRequestBodyFolderUploadEmailAccessField = S.Union([
 /**
  * Type for {@link UpdateFolderByIdRequestBodyFolderUploadEmailAccessField}.
  *
- * @example
+ * **Example** (Reference the UpdateFolderByIdRequestBodyFolderUploadEmailAccessField type)
+ *
  * ```ts
  * import type { UpdateFolderByIdRequestBodyFolderUploadEmailAccessField } from "@beep/box"
  *
@@ -5955,7 +6237,8 @@ export type UpdateFolderByIdRequestBodyFolderUploadEmailAccessField = typeof Upd
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodyFolderUploadEmailField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodyFolderUploadEmailField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodyFolderUploadEmailField } from "@beep/box"
  *
@@ -5977,7 +6260,8 @@ export class UpdateFolderByIdRequestBodyFolderUploadEmailField extends S.Class<U
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodyParentField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodyParentField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodyParentField } from "@beep/box"
  *
@@ -6000,7 +6284,8 @@ export class UpdateFolderByIdRequestBodyParentField extends S.Class<UpdateFolder
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodySharedLinkAccessField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodySharedLinkAccessField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodySharedLinkAccessField } from "@beep/box"
  *
@@ -6017,7 +6302,8 @@ export const UpdateFolderByIdRequestBodySharedLinkAccessField = S.Union([Literal
 /**
  * Type for {@link UpdateFolderByIdRequestBodySharedLinkAccessField}.
  *
- * @example
+ * **Example** (Reference the UpdateFolderByIdRequestBodySharedLinkAccessField type)
+ *
  * ```ts
  * import type { UpdateFolderByIdRequestBodySharedLinkAccessField } from "@beep/box"
  *
@@ -6032,7 +6318,8 @@ export type UpdateFolderByIdRequestBodySharedLinkAccessField = typeof UpdateFold
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodySharedLinkField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodySharedLinkField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodySharedLinkField } from "@beep/box"
  *
@@ -6058,7 +6345,8 @@ export class UpdateFolderByIdRequestBodySharedLinkField extends S.Class<UpdateFo
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodySharedLinkPermissionsField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodySharedLinkPermissionsField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodySharedLinkPermissionsField } from "@beep/box"
  *
@@ -6080,7 +6368,8 @@ export class UpdateFolderByIdRequestBodySharedLinkPermissionsField extends S.Cla
 /**
  * Generated Box SDK schema for UpdateFolderByIdRequestBodySyncStateField.
  *
- * @example
+ * **Example** (Inspect the UpdateFolderByIdRequestBodySyncStateField schema)
+ *
  * ```ts
  * import { UpdateFolderByIdRequestBodySyncStateField } from "@beep/box"
  *
@@ -6097,7 +6386,8 @@ export const UpdateFolderByIdRequestBodySyncStateField = S.Union([LiteralKit(["s
 /**
  * Type for {@link UpdateFolderByIdRequestBodySyncStateField}.
  *
- * @example
+ * **Example** (Reference the UpdateFolderByIdRequestBodySyncStateField type)
+ *
  * ```ts
  * import type { UpdateFolderByIdRequestBodySyncStateField } from "@beep/box"
  *
@@ -6112,7 +6402,8 @@ export type UpdateFolderByIdRequestBodySyncStateField = typeof UpdateFolderByIdR
 /**
  * Generated Box SDK schema for UpdateUserByIdHeaders.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdHeaders schema)
+ *
  * ```ts
  * import { UpdateUserByIdHeaders } from "@beep/box"
  *
@@ -6134,7 +6425,8 @@ export class UpdateUserByIdHeaders extends S.Class<UpdateUserByIdHeaders>($I`Upd
 /**
  * Generated Box SDK schema for UpdateUserByIdOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdOptionalsInput schema)
+ *
  * ```ts
  * import { UpdateUserByIdOptionalsInput } from "@beep/box"
  *
@@ -6159,7 +6451,8 @@ export class UpdateUserByIdOptionalsInput extends S.Class<UpdateUserByIdOptional
 /**
  * Generated Box SDK schema for UpdateUserByIdQueryParams.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdQueryParams schema)
+ *
  * ```ts
  * import { UpdateUserByIdQueryParams } from "@beep/box"
  *
@@ -6181,7 +6474,8 @@ export class UpdateUserByIdQueryParams extends S.Class<UpdateUserByIdQueryParams
 /**
  * Generated Box SDK schema for UpdateUserByIdRequestBody.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdRequestBody schema)
+ *
  * ```ts
  * import { UpdateUserByIdRequestBody } from "@beep/box"
  *
@@ -6223,7 +6517,8 @@ export class UpdateUserByIdRequestBody extends S.Class<UpdateUserByIdRequestBody
 /**
  * Generated Box SDK schema for UpdateUserByIdRequestBodyNotificationEmailField.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdRequestBodyNotificationEmailField schema)
+ *
  * ```ts
  * import { UpdateUserByIdRequestBodyNotificationEmailField } from "@beep/box"
  *
@@ -6245,7 +6540,8 @@ export class UpdateUserByIdRequestBodyNotificationEmailField extends S.Class<Upd
 /**
  * Generated Box SDK schema for UpdateUserByIdRequestBodyRoleField.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdRequestBodyRoleField schema)
+ *
  * ```ts
  * import { UpdateUserByIdRequestBodyRoleField } from "@beep/box"
  *
@@ -6262,7 +6558,8 @@ export const UpdateUserByIdRequestBodyRoleField = S.Union([LiteralKit(["coadmin"
 /**
  * Type for {@link UpdateUserByIdRequestBodyRoleField}.
  *
- * @example
+ * **Example** (Reference the UpdateUserByIdRequestBodyRoleField type)
+ *
  * ```ts
  * import type { UpdateUserByIdRequestBodyRoleField } from "@beep/box"
  *
@@ -6277,7 +6574,8 @@ export type UpdateUserByIdRequestBodyRoleField = typeof UpdateUserByIdRequestBod
 /**
  * Generated Box SDK schema for UpdateUserByIdRequestBodyStatusField.
  *
- * @example
+ * **Example** (Inspect the UpdateUserByIdRequestBodyStatusField schema)
+ *
  * ```ts
  * import { UpdateUserByIdRequestBodyStatusField } from "@beep/box"
  *
@@ -6294,7 +6592,8 @@ export const UpdateUserByIdRequestBodyStatusField = S.Union([LiteralKit(["active
 /**
  * Type for {@link UpdateUserByIdRequestBodyStatusField}.
  *
- * @example
+ * **Example** (Reference the UpdateUserByIdRequestBodyStatusField type)
+ *
  * ```ts
  * import type { UpdateUserByIdRequestBodyStatusField } from "@beep/box"
  *
@@ -6309,7 +6608,8 @@ export type UpdateUserByIdRequestBodyStatusField = typeof UpdateUserByIdRequestB
 /**
  * Generated Box SDK schema for UploadedPart.
  *
- * @example
+ * **Example** (Inspect the UploadedPart schema)
+ *
  * ```ts
  * import { UploadedPart } from "@beep/box"
  *
@@ -6331,7 +6631,8 @@ export class UploadedPart extends S.Class<UploadedPart>($I`UploadedPart`)(
 /**
  * Generated Box SDK schema for UploadFileHeaders.
  *
- * @example
+ * **Example** (Inspect the UploadFileHeaders schema)
+ *
  * ```ts
  * import { UploadFileHeaders } from "@beep/box"
  *
@@ -6354,7 +6655,8 @@ export class UploadFileHeaders extends S.Class<UploadFileHeaders>($I`UploadFileH
 /**
  * Generated Box SDK schema for UploadFileOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UploadFileOptionalsInput schema)
+ *
  * ```ts
  * import { UploadFileOptionalsInput } from "@beep/box"
  *
@@ -6378,7 +6680,8 @@ export class UploadFileOptionalsInput extends S.Class<UploadFileOptionalsInput>(
 /**
  * Generated Box SDK schema for UploadFilePartByUrlHeadersInput.
  *
- * @example
+ * **Example** (Inspect the UploadFilePartByUrlHeadersInput schema)
+ *
  * ```ts
  * import { UploadFilePartByUrlHeadersInput } from "@beep/box"
  *
@@ -6402,7 +6705,8 @@ export class UploadFilePartByUrlHeadersInput extends S.Class<UploadFilePartByUrl
 /**
  * Generated Box SDK schema for UploadFilePartByUrlOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UploadFilePartByUrlOptionalsInput schema)
+ *
  * ```ts
  * import { UploadFilePartByUrlOptionalsInput } from "@beep/box"
  *
@@ -6424,7 +6728,8 @@ export class UploadFilePartByUrlOptionalsInput extends S.Class<UploadFilePartByU
 /**
  * Generated Box SDK schema for UploadFilePartHeadersInput.
  *
- * @example
+ * **Example** (Inspect the UploadFilePartHeadersInput schema)
+ *
  * ```ts
  * import { UploadFilePartHeadersInput } from "@beep/box"
  *
@@ -6448,7 +6753,8 @@ export class UploadFilePartHeadersInput extends S.Class<UploadFilePartHeadersInp
 /**
  * Generated Box SDK schema for UploadFilePartOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UploadFilePartOptionalsInput schema)
+ *
  * ```ts
  * import { UploadFilePartOptionalsInput } from "@beep/box"
  *
@@ -6470,7 +6776,8 @@ export class UploadFilePartOptionalsInput extends S.Class<UploadFilePartOptional
 /**
  * Generated Box SDK schema for UploadFileQueryParams.
  *
- * @example
+ * **Example** (Inspect the UploadFileQueryParams schema)
+ *
  * ```ts
  * import { UploadFileQueryParams } from "@beep/box"
  *
@@ -6492,7 +6799,8 @@ export class UploadFileQueryParams extends S.Class<UploadFileQueryParams>($I`Upl
 /**
  * Generated Box SDK schema for UploadFileRequestBodyAttributesField.
  *
- * @example
+ * **Example** (Inspect the UploadFileRequestBodyAttributesField schema)
+ *
  * ```ts
  * import { UploadFileRequestBodyAttributesField } from "@beep/box"
  *
@@ -6517,7 +6825,8 @@ export class UploadFileRequestBodyAttributesField extends S.Class<UploadFileRequ
 /**
  * Generated Box SDK schema for UploadFileRequestBodyAttributesParentField.
  *
- * @example
+ * **Example** (Inspect the UploadFileRequestBodyAttributesParentField schema)
+ *
  * ```ts
  * import { UploadFileRequestBodyAttributesParentField } from "@beep/box"
  *
@@ -6539,7 +6848,8 @@ export class UploadFileRequestBodyAttributesParentField extends S.Class<UploadFi
 /**
  * Generated Box SDK schema for UploadFileVersionHeaders.
  *
- * @example
+ * **Example** (Inspect the UploadFileVersionHeaders schema)
+ *
  * ```ts
  * import { UploadFileVersionHeaders } from "@beep/box"
  *
@@ -6563,7 +6873,8 @@ export class UploadFileVersionHeaders extends S.Class<UploadFileVersionHeaders>(
 /**
  * Generated Box SDK schema for UploadFileVersionOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UploadFileVersionOptionalsInput schema)
+ *
  * ```ts
  * import { UploadFileVersionOptionalsInput } from "@beep/box"
  *
@@ -6587,7 +6898,8 @@ export class UploadFileVersionOptionalsInput extends S.Class<UploadFileVersionOp
 /**
  * Generated Box SDK schema for UploadFileVersionQueryParams.
  *
- * @example
+ * **Example** (Inspect the UploadFileVersionQueryParams schema)
+ *
  * ```ts
  * import { UploadFileVersionQueryParams } from "@beep/box"
  *
@@ -6609,7 +6921,8 @@ export class UploadFileVersionQueryParams extends S.Class<UploadFileVersionQuery
 /**
  * Generated Box SDK schema for UploadFileVersionRequestBodyAttributesField.
  *
- * @example
+ * **Example** (Inspect the UploadFileVersionRequestBodyAttributesField schema)
+ *
  * ```ts
  * import { UploadFileVersionRequestBodyAttributesField } from "@beep/box"
  *
@@ -6632,7 +6945,8 @@ export class UploadFileVersionRequestBodyAttributesField extends S.Class<UploadF
 /**
  * Generated Box SDK schema for UploadPart.
  *
- * @example
+ * **Example** (Inspect the UploadPart schema)
+ *
  * ```ts
  * import { UploadPart } from "@beep/box"
  *
@@ -6649,7 +6963,8 @@ export const UploadPart = S.Unknown.pipe($I.annoteSchema("UploadPart", {
 /**
  * Type for {@link UploadPart}.
  *
- * @example
+ * **Example** (Reference the UploadPart type)
+ *
  * ```ts
  * import type { UploadPart } from "@beep/box"
  *
@@ -6664,7 +6979,8 @@ export type UploadPart = typeof UploadPart.Type;
 /**
  * Generated Box SDK schema for UploadParts.
  *
- * @example
+ * **Example** (Inspect the UploadParts schema)
+ *
  * ```ts
  * import { UploadParts } from "@beep/box"
  *
@@ -6690,7 +7006,8 @@ export class UploadParts extends S.Class<UploadParts>($I`UploadParts`)(
 /**
  * Generated Box SDK schema for UploadPartsOrderDirectionField.
  *
- * @example
+ * **Example** (Inspect the UploadPartsOrderDirectionField schema)
+ *
  * ```ts
  * import { UploadPartsOrderDirectionField } from "@beep/box"
  *
@@ -6707,7 +7024,8 @@ export const UploadPartsOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"
 /**
  * Type for {@link UploadPartsOrderDirectionField}.
  *
- * @example
+ * **Example** (Reference the UploadPartsOrderDirectionField type)
+ *
  * ```ts
  * import type { UploadPartsOrderDirectionField } from "@beep/box"
  *
@@ -6722,7 +7040,8 @@ export type UploadPartsOrderDirectionField = typeof UploadPartsOrderDirectionFie
 /**
  * Generated Box SDK schema for UploadPartsOrderField.
  *
- * @example
+ * **Example** (Inspect the UploadPartsOrderField schema)
+ *
  * ```ts
  * import { UploadPartsOrderField } from "@beep/box"
  *
@@ -6745,7 +7064,8 @@ export class UploadPartsOrderField extends S.Class<UploadPartsOrderField>($I`Upl
 /**
  * Generated Box SDK schema for UploadSession.
  *
- * @example
+ * **Example** (Inspect the UploadSession schema)
+ *
  * ```ts
  * import { UploadSession } from "@beep/box"
  *
@@ -6773,7 +7093,8 @@ export class UploadSession extends S.Class<UploadSession>($I`UploadSession`)(
 /**
  * Generated Box SDK schema for UploadSessionSessionEndpointsField.
  *
- * @example
+ * **Example** (Inspect the UploadSessionSessionEndpointsField schema)
+ *
  * ```ts
  * import { UploadSessionSessionEndpointsField } from "@beep/box"
  *
@@ -6800,7 +7121,8 @@ export class UploadSessionSessionEndpointsField extends S.Class<UploadSessionSes
 /**
  * Generated Box SDK schema for UploadSessionTypeField.
  *
- * @example
+ * **Example** (Inspect the UploadSessionTypeField schema)
+ *
  * ```ts
  * import { UploadSessionTypeField } from "@beep/box"
  *
@@ -6817,7 +7139,8 @@ export const UploadSessionTypeField = S.Literal("upload_session").pipe($I.annote
 /**
  * Type for {@link UploadSessionTypeField}.
  *
- * @example
+ * **Example** (Reference the UploadSessionTypeField type)
+ *
  * ```ts
  * import type { UploadSessionTypeField } from "@beep/box"
  *
@@ -6832,7 +7155,8 @@ export type UploadSessionTypeField = typeof UploadSessionTypeField.Type;
 /**
  * Generated Box SDK schema for UploadUrl.
  *
- * @example
+ * **Example** (Inspect the UploadUrl schema)
+ *
  * ```ts
  * import { UploadUrl } from "@beep/box"
  *
@@ -6855,7 +7179,8 @@ export class UploadUrl extends S.Class<UploadUrl>($I`UploadUrl`)(
 /**
  * Generated Box SDK schema for UploadWithPreflightCheckHeaders.
  *
- * @example
+ * **Example** (Inspect the UploadWithPreflightCheckHeaders schema)
+ *
  * ```ts
  * import { UploadWithPreflightCheckHeaders } from "@beep/box"
  *
@@ -6878,7 +7203,8 @@ export class UploadWithPreflightCheckHeaders extends S.Class<UploadWithPreflight
 /**
  * Generated Box SDK schema for UploadWithPreflightCheckOptionalsInput.
  *
- * @example
+ * **Example** (Inspect the UploadWithPreflightCheckOptionalsInput schema)
+ *
  * ```ts
  * import { UploadWithPreflightCheckOptionalsInput } from "@beep/box"
  *
@@ -6902,7 +7228,8 @@ export class UploadWithPreflightCheckOptionalsInput extends S.Class<UploadWithPr
 /**
  * Generated Box SDK schema for UploadWithPreflightCheckQueryParams.
  *
- * @example
+ * **Example** (Inspect the UploadWithPreflightCheckQueryParams schema)
+ *
  * ```ts
  * import { UploadWithPreflightCheckQueryParams } from "@beep/box"
  *
@@ -6924,7 +7251,8 @@ export class UploadWithPreflightCheckQueryParams extends S.Class<UploadWithPrefl
 /**
  * Generated Box SDK schema for UploadWithPreflightCheckRequestBodyAttributesField.
  *
- * @example
+ * **Example** (Inspect the UploadWithPreflightCheckRequestBodyAttributesField schema)
+ *
  * ```ts
  * import { UploadWithPreflightCheckRequestBodyAttributesField } from "@beep/box"
  *
@@ -6950,7 +7278,8 @@ export class UploadWithPreflightCheckRequestBodyAttributesField extends S.Class<
 /**
  * Generated Box SDK schema for UploadWithPreflightCheckRequestBodyAttributesParentField.
  *
- * @example
+ * **Example** (Inspect the UploadWithPreflightCheckRequestBodyAttributesParentField schema)
+ *
  * ```ts
  * import { UploadWithPreflightCheckRequestBodyAttributesParentField } from "@beep/box"
  *
@@ -6972,7 +7301,8 @@ export class UploadWithPreflightCheckRequestBodyAttributesParentField extends S.
 /**
  * Generated Box SDK schema for UserBase.
  *
- * @example
+ * **Example** (Inspect the UserBase schema)
+ *
  * ```ts
  * import { UserBase } from "@beep/box"
  *
@@ -6995,7 +7325,8 @@ export class UserBase extends S.Class<UserBase>($I`UserBase`)(
 /**
  * Generated Box SDK schema for UserMini.
  *
- * @example
+ * **Example** (Inspect the UserMini schema)
+ *
  * ```ts
  * import { UserMini } from "@beep/box"
  *
@@ -7018,7 +7349,8 @@ export class UserMini extends UserBase.extend<UserMini>($I`UserMini`)(
 /**
  * Generated Box SDK schema for User.
  *
- * @example
+ * **Example** (Inspect the User schema)
+ *
  * ```ts
  * import { User } from "@beep/box"
  *
@@ -7052,7 +7384,8 @@ export class User extends UserMini.extend<User>($I`User`)(
 /**
  * Generated Box SDK schema for UserAvatar.
  *
- * @example
+ * **Example** (Inspect the UserAvatar schema)
+ *
  * ```ts
  * import { UserAvatar } from "@beep/box"
  *
@@ -7074,7 +7407,8 @@ export class UserAvatar extends S.Class<UserAvatar>($I`UserAvatar`)(
 /**
  * Generated Box SDK schema for UserAvatarPicUrlsField.
  *
- * @example
+ * **Example** (Inspect the UserAvatarPicUrlsField schema)
+ *
  * ```ts
  * import { UserAvatarPicUrlsField } from "@beep/box"
  *
@@ -7098,7 +7432,8 @@ export class UserAvatarPicUrlsField extends S.Class<UserAvatarPicUrlsField>($I`U
 /**
  * Generated Box SDK schema for UserBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the UserBaseTypeField schema)
+ *
  * ```ts
  * import { UserBaseTypeField } from "@beep/box"
  *
@@ -7115,7 +7450,8 @@ export const UserBaseTypeField = S.Literal("user").pipe($I.annoteSchema("UserBas
 /**
  * Type for {@link UserBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the UserBaseTypeField type)
+ *
  * ```ts
  * import type { UserBaseTypeField } from "@beep/box"
  *
@@ -7130,7 +7466,8 @@ export type UserBaseTypeField = typeof UserBaseTypeField.Type;
 /**
  * Generated Box SDK schema for UserFull.
  *
- * @example
+ * **Example** (Inspect the UserFull schema)
+ *
  * ```ts
  * import { UserFull } from "@beep/box"
  *
@@ -7163,7 +7500,8 @@ export class UserFull extends User.extend<UserFull>($I`UserFull`)(
 /**
  * Generated Box SDK schema for UserFullEnterpriseField.
  *
- * @example
+ * **Example** (Inspect the UserFullEnterpriseField schema)
+ *
  * ```ts
  * import { UserFullEnterpriseField } from "@beep/box"
  *
@@ -7187,7 +7525,8 @@ export class UserFullEnterpriseField extends S.Class<UserFullEnterpriseField>($I
 /**
  * Generated Box SDK schema for UserFullEnterpriseTypeField.
  *
- * @example
+ * **Example** (Inspect the UserFullEnterpriseTypeField schema)
+ *
  * ```ts
  * import { UserFullEnterpriseTypeField } from "@beep/box"
  *
@@ -7204,7 +7543,8 @@ export const UserFullEnterpriseTypeField = S.Literal("enterprise").pipe($I.annot
 /**
  * Type for {@link UserFullEnterpriseTypeField}.
  *
- * @example
+ * **Example** (Reference the UserFullEnterpriseTypeField type)
+ *
  * ```ts
  * import type { UserFullEnterpriseTypeField } from "@beep/box"
  *
@@ -7219,7 +7559,8 @@ export type UserFullEnterpriseTypeField = typeof UserFullEnterpriseTypeField.Typ
 /**
  * Generated Box SDK schema for UserFullRoleField.
  *
- * @example
+ * **Example** (Inspect the UserFullRoleField schema)
+ *
  * ```ts
  * import { UserFullRoleField } from "@beep/box"
  *
@@ -7236,7 +7577,8 @@ export const UserFullRoleField = S.Union([LiteralKit(["admin", "coadmin", "user"
 /**
  * Type for {@link UserFullRoleField}.
  *
- * @example
+ * **Example** (Reference the UserFullRoleField type)
+ *
  * ```ts
  * import type { UserFullRoleField } from "@beep/box"
  *
@@ -7251,7 +7593,8 @@ export type UserFullRoleField = typeof UserFullRoleField.Type;
 /**
  * Generated Box SDK schema for UserNotificationEmailField.
  *
- * @example
+ * **Example** (Inspect the UserNotificationEmailField schema)
+ *
  * ```ts
  * import { UserNotificationEmailField } from "@beep/box"
  *
@@ -7274,7 +7617,8 @@ export class UserNotificationEmailField extends S.Class<UserNotificationEmailFie
 /**
  * Generated Box SDK schema for Users.
  *
- * @example
+ * **Example** (Inspect the Users schema)
+ *
  * ```ts
  * import { Users } from "@beep/box"
  *
@@ -7302,7 +7646,8 @@ export class Users extends S.Class<Users>($I`Users`)(
 /**
  * Generated Box SDK schema for UsersOrderDirectionField.
  *
- * @example
+ * **Example** (Inspect the UsersOrderDirectionField schema)
+ *
  * ```ts
  * import { UsersOrderDirectionField } from "@beep/box"
  *
@@ -7319,7 +7664,8 @@ export const UsersOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.
 /**
  * Type for {@link UsersOrderDirectionField}.
  *
- * @example
+ * **Example** (Reference the UsersOrderDirectionField type)
+ *
  * ```ts
  * import type { UsersOrderDirectionField } from "@beep/box"
  *
@@ -7334,7 +7680,8 @@ export type UsersOrderDirectionField = typeof UsersOrderDirectionField.Type;
 /**
  * Generated Box SDK schema for UsersOrderField.
  *
- * @example
+ * **Example** (Inspect the UsersOrderField schema)
+ *
  * ```ts
  * import { UsersOrderField } from "@beep/box"
  *
@@ -7357,7 +7704,8 @@ export class UsersOrderField extends S.Class<UsersOrderField>($I`UsersOrderField
 /**
  * Generated Box SDK schema for UserStatusField.
  *
- * @example
+ * **Example** (Inspect the UserStatusField schema)
+ *
  * ```ts
  * import { UserStatusField } from "@beep/box"
  *
@@ -7374,7 +7722,8 @@ export const UserStatusField = S.Union([LiteralKit(["active", "inactive", "canno
 /**
  * Type for {@link UserStatusField}.
  *
- * @example
+ * **Example** (Reference the UserStatusField type)
+ *
  * ```ts
  * import type { UserStatusField } from "@beep/box"
  *
@@ -7389,7 +7738,8 @@ export type UserStatusField = typeof UserStatusField.Type;
 /**
  * Generated Box SDK schema for WebLinkBase.
  *
- * @example
+ * **Example** (Inspect the WebLinkBase schema)
+ *
  * ```ts
  * import { WebLinkBase } from "@beep/box"
  *
@@ -7413,7 +7763,8 @@ export class WebLinkBase extends S.Class<WebLinkBase>($I`WebLinkBase`)(
 /**
  * Generated Box SDK schema for WebLinkMini.
  *
- * @example
+ * **Example** (Inspect the WebLinkMini schema)
+ *
  * ```ts
  * import { WebLinkMini } from "@beep/box"
  *
@@ -7437,7 +7788,8 @@ export class WebLinkMini extends WebLinkBase.extend<WebLinkMini>($I`WebLinkMini`
 /**
  * Generated Box SDK schema for WebLink.
  *
- * @example
+ * **Example** (Inspect the WebLink schema)
+ *
  * ```ts
  * import { WebLink } from "@beep/box"
  *
@@ -7470,7 +7822,8 @@ export class WebLink extends WebLinkMini.extend<WebLink>($I`WebLink`)(
 /**
  * Generated Box SDK schema for WebLinkBaseTypeField.
  *
- * @example
+ * **Example** (Inspect the WebLinkBaseTypeField schema)
+ *
  * ```ts
  * import { WebLinkBaseTypeField } from "@beep/box"
  *
@@ -7487,7 +7840,8 @@ export const WebLinkBaseTypeField = S.Literal("web_link").pipe($I.annoteSchema("
 /**
  * Type for {@link WebLinkBaseTypeField}.
  *
- * @example
+ * **Example** (Reference the WebLinkBaseTypeField type)
+ *
  * ```ts
  * import type { WebLinkBaseTypeField } from "@beep/box"
  *
@@ -7502,7 +7856,8 @@ export type WebLinkBaseTypeField = typeof WebLinkBaseTypeField.Type;
 /**
  * Generated Box SDK schema for WebLinkItemStatusField.
  *
- * @example
+ * **Example** (Inspect the WebLinkItemStatusField schema)
+ *
  * ```ts
  * import { WebLinkItemStatusField } from "@beep/box"
  *
@@ -7519,7 +7874,8 @@ export const WebLinkItemStatusField = S.Union([LiteralKit(["active", "trashed", 
 /**
  * Type for {@link WebLinkItemStatusField}.
  *
- * @example
+ * **Example** (Reference the WebLinkItemStatusField type)
+ *
  * ```ts
  * import type { WebLinkItemStatusField } from "@beep/box"
  *
@@ -7534,7 +7890,8 @@ export type WebLinkItemStatusField = typeof WebLinkItemStatusField.Type;
 /**
  * Generated Box SDK schema for WebLinkPathCollectionField.
  *
- * @example
+ * **Example** (Inspect the WebLinkPathCollectionField schema)
+ *
  * ```ts
  * import { WebLinkPathCollectionField } from "@beep/box"
  *
@@ -7557,7 +7914,8 @@ export class WebLinkPathCollectionField extends S.Class<WebLinkPathCollectionFie
 /**
  * Generated Box SDK schema for WebLinkSharedLinkAccessField.
  *
- * @example
+ * **Example** (Inspect the WebLinkSharedLinkAccessField schema)
+ *
  * ```ts
  * import { WebLinkSharedLinkAccessField } from "@beep/box"
  *
@@ -7574,7 +7932,8 @@ export const WebLinkSharedLinkAccessField = S.Union([LiteralKit(["open", "compan
 /**
  * Type for {@link WebLinkSharedLinkAccessField}.
  *
- * @example
+ * **Example** (Reference the WebLinkSharedLinkAccessField type)
+ *
  * ```ts
  * import type { WebLinkSharedLinkAccessField } from "@beep/box"
  *
@@ -7589,7 +7948,8 @@ export type WebLinkSharedLinkAccessField = typeof WebLinkSharedLinkAccessField.T
 /**
  * Generated Box SDK schema for WebLinkSharedLinkEffectiveAccessField.
  *
- * @example
+ * **Example** (Inspect the WebLinkSharedLinkEffectiveAccessField schema)
+ *
  * ```ts
  * import { WebLinkSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -7606,7 +7966,8 @@ export const WebLinkSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open"
 /**
  * Type for {@link WebLinkSharedLinkEffectiveAccessField}.
  *
- * @example
+ * **Example** (Reference the WebLinkSharedLinkEffectiveAccessField type)
+ *
  * ```ts
  * import type { WebLinkSharedLinkEffectiveAccessField } from "@beep/box"
  *
@@ -7621,7 +7982,8 @@ export type WebLinkSharedLinkEffectiveAccessField = typeof WebLinkSharedLinkEffe
 /**
  * Generated Box SDK schema for WebLinkSharedLinkEffectivePermissionField.
  *
- * @example
+ * **Example** (Inspect the WebLinkSharedLinkEffectivePermissionField schema)
+ *
  * ```ts
  * import { WebLinkSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -7638,7 +8000,8 @@ export const WebLinkSharedLinkEffectivePermissionField = S.Union([LiteralKit(["c
 /**
  * Type for {@link WebLinkSharedLinkEffectivePermissionField}.
  *
- * @example
+ * **Example** (Reference the WebLinkSharedLinkEffectivePermissionField type)
+ *
  * ```ts
  * import type { WebLinkSharedLinkEffectivePermissionField } from "@beep/box"
  *
@@ -7653,7 +8016,8 @@ export type WebLinkSharedLinkEffectivePermissionField = typeof WebLinkSharedLink
 /**
  * Generated Box SDK schema for WebLinkSharedLinkField.
  *
- * @example
+ * **Example** (Inspect the WebLinkSharedLinkField schema)
+ *
  * ```ts
  * import { WebLinkSharedLinkField } from "@beep/box"
  *
@@ -7686,7 +8050,8 @@ export class WebLinkSharedLinkField extends S.Class<WebLinkSharedLinkField>($I`W
 /**
  * Generated Box SDK schema for WebLinkSharedLinkPermissionsField.
  *
- * @example
+ * **Example** (Inspect the WebLinkSharedLinkPermissionsField schema)
+ *
  * ```ts
  * import { WebLinkSharedLinkPermissionsField } from "@beep/box"
  *
@@ -7710,7 +8075,8 @@ export class WebLinkSharedLinkPermissionsField extends S.Class<WebLinkSharedLink
 /**
  * Generated Box SDK schema for ZipDownload.
  *
- * @example
+ * **Example** (Inspect the ZipDownload schema)
+ *
  * ```ts
  * import { ZipDownload } from "@beep/box"
  *
@@ -7735,7 +8101,8 @@ export class ZipDownload extends S.Class<ZipDownload>($I`ZipDownload`)(
 /**
  * Generated Box SDK schema for ZipDownloadNameConflictsField.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadNameConflictsField schema)
+ *
  * ```ts
  * import { ZipDownloadNameConflictsField } from "@beep/box"
  *
@@ -7760,7 +8127,8 @@ export class ZipDownloadNameConflictsField extends S.Class<ZipDownloadNameConfli
 /**
  * Generated Box SDK schema for ZipDownloadNameConflictsTypeField.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadNameConflictsTypeField schema)
+ *
  * ```ts
  * import { ZipDownloadNameConflictsTypeField } from "@beep/box"
  *
@@ -7784,7 +8152,8 @@ export const ZipDownloadNameConflictsTypeField = LiteralKit(["file", "folder"]).
 /**
  * Type for {@link ZipDownloadNameConflictsTypeField}.
  *
- * @example
+ * **Example** (Reference the ZipDownloadNameConflictsTypeField type)
+ *
  * ```ts
  * import type { ZipDownloadNameConflictsTypeField } from "@beep/box"
  *
@@ -7799,7 +8168,8 @@ export type ZipDownloadNameConflictsTypeField = typeof ZipDownloadNameConflictsT
 /**
  * Generated Box SDK schema for ZipDownloadRequest.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadRequest schema)
+ *
  * ```ts
  * import { ZipDownloadRequest } from "@beep/box"
  *
@@ -7822,7 +8192,8 @@ export class ZipDownloadRequest extends S.Class<ZipDownloadRequest>($I`ZipDownlo
 /**
  * Generated Box SDK schema for ZipDownloadRequestItemsField.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadRequestItemsField schema)
+ *
  * ```ts
  * import { ZipDownloadRequestItemsField } from "@beep/box"
  *
@@ -7845,7 +8216,8 @@ export class ZipDownloadRequestItemsField extends S.Class<ZipDownloadRequestItem
 /**
  * Generated Box SDK schema for ZipDownloadRequestItemsTypeField.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadRequestItemsTypeField schema)
+ *
  * ```ts
  * import { ZipDownloadRequestItemsTypeField } from "@beep/box"
  *
@@ -7869,7 +8241,8 @@ export const ZipDownloadRequestItemsTypeField = LiteralKit(["file", "folder"]).p
 /**
  * Type for {@link ZipDownloadRequestItemsTypeField}.
  *
- * @example
+ * **Example** (Reference the ZipDownloadRequestItemsTypeField type)
+ *
  * ```ts
  * import type { ZipDownloadRequestItemsTypeField } from "@beep/box"
  *
@@ -7884,7 +8257,8 @@ export type ZipDownloadRequestItemsTypeField = typeof ZipDownloadRequestItemsTyp
 /**
  * Generated Box SDK schema for ZipDownloadStatus.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadStatus schema)
+ *
  * ```ts
  * import { ZipDownloadStatus } from "@beep/box"
  *
@@ -7910,7 +8284,8 @@ export class ZipDownloadStatus extends S.Class<ZipDownloadStatus>($I`ZipDownload
 /**
  * Generated Box SDK schema for ZipDownloadStatusStateField.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadStatusStateField schema)
+ *
  * ```ts
  * import { ZipDownloadStatusStateField } from "@beep/box"
  *
@@ -7927,7 +8302,8 @@ export const ZipDownloadStatusStateField = S.Union([LiteralKit(["in_progress", "
 /**
  * Type for {@link ZipDownloadStatusStateField}.
  *
- * @example
+ * **Example** (Reference the ZipDownloadStatusStateField type)
+ *
  * ```ts
  * import type { ZipDownloadStatusStateField } from "@beep/box"
  *
@@ -7942,7 +8318,8 @@ export type ZipDownloadStatusStateField = typeof ZipDownloadStatusStateField.Typ
 /**
  * Payload for Box SDK method avatars.deleteUserAvatar.
  *
- * @example
+ * **Example** (Inspect the AvatarsDeleteUserAvatarPayload schema)
+ *
  * ```ts
  * import { AvatarsDeleteUserAvatarPayload } from "@beep/box"
  *
@@ -7965,7 +8342,8 @@ export class AvatarsDeleteUserAvatarPayload extends S.Class<AvatarsDeleteUserAva
 /**
  * Payload for Box SDK method chunkedUploads.createFileUploadSession.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionPayload } from "@beep/box"
  *
@@ -7988,7 +8366,8 @@ export class ChunkedUploadsCreateFileUploadSessionPayload extends S.Class<Chunke
 /**
  * Payload for Box SDK method chunkedUploads.createFileUploadSessionCommit.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionCommitPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionCommitPayload } from "@beep/box"
  *
@@ -8013,7 +8392,8 @@ export class ChunkedUploadsCreateFileUploadSessionCommitPayload extends S.Class<
 /**
  * Payload for Box SDK method chunkedUploads.createFileUploadSessionCommitByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionCommitByUrlPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionCommitByUrlPayload } from "@beep/box"
  *
@@ -8038,7 +8418,8 @@ export class ChunkedUploadsCreateFileUploadSessionCommitByUrlPayload extends S.C
 /**
  * Payload for Box SDK method chunkedUploads.createFileUploadSessionForExistingFile.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionForExistingFilePayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionForExistingFilePayload } from "@beep/box"
  *
@@ -8062,7 +8443,8 @@ export class ChunkedUploadsCreateFileUploadSessionForExistingFilePayload extends
 /**
  * Payload for Box SDK method chunkedUploads.deleteFileUploadSessionById.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsDeleteFileUploadSessionByIdPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsDeleteFileUploadSessionByIdPayload } from "@beep/box"
  *
@@ -8085,7 +8467,8 @@ export class ChunkedUploadsDeleteFileUploadSessionByIdPayload extends S.Class<Ch
 /**
  * Payload for Box SDK method chunkedUploads.deleteFileUploadSessionByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsDeleteFileUploadSessionByUrlPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsDeleteFileUploadSessionByUrlPayload } from "@beep/box"
  *
@@ -8108,7 +8491,8 @@ export class ChunkedUploadsDeleteFileUploadSessionByUrlPayload extends S.Class<C
 /**
  * Payload for Box SDK method chunkedUploads.getFileUploadSessionById.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionByIdPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionByIdPayload } from "@beep/box"
  *
@@ -8131,7 +8515,8 @@ export class ChunkedUploadsGetFileUploadSessionByIdPayload extends S.Class<Chunk
 /**
  * Payload for Box SDK method chunkedUploads.getFileUploadSessionByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionByUrlPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionByUrlPayload } from "@beep/box"
  *
@@ -8154,7 +8539,8 @@ export class ChunkedUploadsGetFileUploadSessionByUrlPayload extends S.Class<Chun
 /**
  * Payload for Box SDK method chunkedUploads.getFileUploadSessionParts.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionPartsPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionPartsPayload } from "@beep/box"
  *
@@ -8177,7 +8563,8 @@ export class ChunkedUploadsGetFileUploadSessionPartsPayload extends S.Class<Chun
 /**
  * Payload for Box SDK method chunkedUploads.getFileUploadSessionPartsByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionPartsByUrlPayload schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionPartsByUrlPayload } from "@beep/box"
  *
@@ -8200,7 +8587,8 @@ export class ChunkedUploadsGetFileUploadSessionPartsByUrlPayload extends S.Class
 /**
  * Payload for Box SDK method downloads.getDownloadFileUrl.
  *
- * @example
+ * **Example** (Inspect the DownloadsGetDownloadFileUrlPayload schema)
+ *
  * ```ts
  * import { DownloadsGetDownloadFileUrlPayload } from "@beep/box"
  *
@@ -8223,7 +8611,8 @@ export class DownloadsGetDownloadFileUrlPayload extends S.Class<DownloadsGetDown
 /**
  * Payload for Box SDK method events.getEvents.
  *
- * @example
+ * **Example** (Inspect the EventsGetEventsPayload schema)
+ *
  * ```ts
  * import { EventsGetEventsPayload } from "@beep/box"
  *
@@ -8247,7 +8636,8 @@ export class EventsGetEventsPayload extends S.Class<EventsGetEventsPayload>($I`E
 /**
  * Payload for Box SDK method events.getEventsWithLongPolling.
  *
- * @example
+ * **Example** (Inspect the EventsGetEventsWithLongPollingPayload schema)
+ *
  * ```ts
  * import { EventsGetEventsWithLongPollingPayload } from "@beep/box"
  *
@@ -8270,7 +8660,8 @@ export class EventsGetEventsWithLongPollingPayload extends S.Class<EventsGetEven
 /**
  * Payload for Box SDK method files.copyFile.
  *
- * @example
+ * **Example** (Inspect the FilesCopyFilePayload schema)
+ *
  * ```ts
  * import { FilesCopyFilePayload } from "@beep/box"
  *
@@ -8294,7 +8685,8 @@ export class FilesCopyFilePayload extends S.Class<FilesCopyFilePayload>($I`Files
 /**
  * Payload for Box SDK method files.deleteFileById.
  *
- * @example
+ * **Example** (Inspect the FilesDeleteFileByIdPayload schema)
+ *
  * ```ts
  * import { FilesDeleteFileByIdPayload } from "@beep/box"
  *
@@ -8317,7 +8709,8 @@ export class FilesDeleteFileByIdPayload extends S.Class<FilesDeleteFileByIdPaylo
 /**
  * Payload for Box SDK method files.getFileById.
  *
- * @example
+ * **Example** (Inspect the FilesGetFileByIdPayload schema)
+ *
  * ```ts
  * import { FilesGetFileByIdPayload } from "@beep/box"
  *
@@ -8340,7 +8733,8 @@ export class FilesGetFileByIdPayload extends S.Class<FilesGetFileByIdPayload>($I
 /**
  * Payload for Box SDK method files.getFileThumbnailUrl.
  *
- * @example
+ * **Example** (Inspect the FilesGetFileThumbnailUrlPayload schema)
+ *
  * ```ts
  * import { FilesGetFileThumbnailUrlPayload } from "@beep/box"
  *
@@ -8364,7 +8758,8 @@ export class FilesGetFileThumbnailUrlPayload extends S.Class<FilesGetFileThumbna
 /**
  * Payload for Box SDK method files.updateFileById.
  *
- * @example
+ * **Example** (Inspect the FilesUpdateFileByIdPayload schema)
+ *
  * ```ts
  * import { FilesUpdateFileByIdPayload } from "@beep/box"
  *
@@ -8387,7 +8782,8 @@ export class FilesUpdateFileByIdPayload extends S.Class<FilesUpdateFileByIdPaylo
 /**
  * Payload for Box SDK method folders.copyFolder.
  *
- * @example
+ * **Example** (Inspect the FoldersCopyFolderPayload schema)
+ *
  * ```ts
  * import { FoldersCopyFolderPayload } from "@beep/box"
  *
@@ -8411,7 +8807,8 @@ export class FoldersCopyFolderPayload extends S.Class<FoldersCopyFolderPayload>(
 /**
  * Payload for Box SDK method folders.createFolder.
  *
- * @example
+ * **Example** (Inspect the FoldersCreateFolderPayload schema)
+ *
  * ```ts
  * import { FoldersCreateFolderPayload } from "@beep/box"
  *
@@ -8434,7 +8831,8 @@ export class FoldersCreateFolderPayload extends S.Class<FoldersCreateFolderPaylo
 /**
  * Payload for Box SDK method folders.deleteFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersDeleteFolderByIdPayload schema)
+ *
  * ```ts
  * import { FoldersDeleteFolderByIdPayload } from "@beep/box"
  *
@@ -8457,7 +8855,8 @@ export class FoldersDeleteFolderByIdPayload extends S.Class<FoldersDeleteFolderB
 /**
  * Payload for Box SDK method folders.getFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersGetFolderByIdPayload schema)
+ *
  * ```ts
  * import { FoldersGetFolderByIdPayload } from "@beep/box"
  *
@@ -8480,7 +8879,8 @@ export class FoldersGetFolderByIdPayload extends S.Class<FoldersGetFolderByIdPay
 /**
  * Payload for Box SDK method folders.getFolderItems.
  *
- * @example
+ * **Example** (Inspect the FoldersGetFolderItemsPayload schema)
+ *
  * ```ts
  * import { FoldersGetFolderItemsPayload } from "@beep/box"
  *
@@ -8503,7 +8903,8 @@ export class FoldersGetFolderItemsPayload extends S.Class<FoldersGetFolderItemsP
 /**
  * Payload for Box SDK method folders.updateFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersUpdateFolderByIdPayload schema)
+ *
  * ```ts
  * import { FoldersUpdateFolderByIdPayload } from "@beep/box"
  *
@@ -8526,7 +8927,8 @@ export class FoldersUpdateFolderByIdPayload extends S.Class<FoldersUpdateFolderB
 /**
  * Payload for Box SDK method uploads.preflightFileUploadCheck.
  *
- * @example
+ * **Example** (Inspect the UploadsPreflightFileUploadCheckPayload schema)
+ *
  * ```ts
  * import { UploadsPreflightFileUploadCheckPayload } from "@beep/box"
  *
@@ -8550,7 +8952,8 @@ export class UploadsPreflightFileUploadCheckPayload extends S.Class<UploadsPrefl
 /**
  * Payload for Box SDK method users.createUser.
  *
- * @example
+ * **Example** (Inspect the UsersCreateUserPayload schema)
+ *
  * ```ts
  * import { UsersCreateUserPayload } from "@beep/box"
  *
@@ -8573,7 +8976,8 @@ export class UsersCreateUserPayload extends S.Class<UsersCreateUserPayload>($I`U
 /**
  * Payload for Box SDK method users.deleteUserById.
  *
- * @example
+ * **Example** (Inspect the UsersDeleteUserByIdPayload schema)
+ *
  * ```ts
  * import { UsersDeleteUserByIdPayload } from "@beep/box"
  *
@@ -8596,7 +9000,8 @@ export class UsersDeleteUserByIdPayload extends S.Class<UsersDeleteUserByIdPaylo
 /**
  * Payload for Box SDK method users.getUserById.
  *
- * @example
+ * **Example** (Inspect the UsersGetUserByIdPayload schema)
+ *
  * ```ts
  * import { UsersGetUserByIdPayload } from "@beep/box"
  *
@@ -8619,7 +9024,8 @@ export class UsersGetUserByIdPayload extends S.Class<UsersGetUserByIdPayload>($I
 /**
  * Payload for Box SDK method users.getUserMe.
  *
- * @example
+ * **Example** (Inspect the UsersGetUserMePayload schema)
+ *
  * ```ts
  * import { UsersGetUserMePayload } from "@beep/box"
  *
@@ -8643,7 +9049,8 @@ export class UsersGetUserMePayload extends S.Class<UsersGetUserMePayload>($I`Use
 /**
  * Payload for Box SDK method users.getUsers.
  *
- * @example
+ * **Example** (Inspect the UsersGetUsersPayload schema)
+ *
  * ```ts
  * import { UsersGetUsersPayload } from "@beep/box"
  *
@@ -8667,7 +9074,8 @@ export class UsersGetUsersPayload extends S.Class<UsersGetUsersPayload>($I`Users
 /**
  * Payload for Box SDK method users.updateUserById.
  *
- * @example
+ * **Example** (Inspect the UsersUpdateUserByIdPayload schema)
+ *
  * ```ts
  * import { UsersUpdateUserByIdPayload } from "@beep/box"
  *
@@ -8690,7 +9098,8 @@ export class UsersUpdateUserByIdPayload extends S.Class<UsersUpdateUserByIdPaylo
 /**
  * Payload for Box SDK method zipDownloads.createZipDownload.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadsCreateZipDownloadPayload schema)
+ *
  * ```ts
  * import { ZipDownloadsCreateZipDownloadPayload } from "@beep/box"
  *
@@ -8713,7 +9122,8 @@ export class ZipDownloadsCreateZipDownloadPayload extends S.Class<ZipDownloadsCr
 /**
  * Payload for Box SDK method zipDownloads.getZipDownloadStatus.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadsGetZipDownloadStatusPayload schema)
+ *
  * ```ts
  * import { ZipDownloadsGetZipDownloadStatusPayload } from "@beep/box"
  *
@@ -8736,7 +9146,8 @@ export class ZipDownloadsGetZipDownloadStatusPayload extends S.Class<ZipDownload
 /**
  * Decoded success value for Box SDK method avatars.deleteUserAvatar.
  *
- * @example
+ * **Example** (Inspect the AvatarsDeleteUserAvatarSuccess schema)
+ *
  * ```ts
  * import { AvatarsDeleteUserAvatarSuccess } from "@beep/box"
  *
@@ -8753,7 +9164,8 @@ export const AvatarsDeleteUserAvatarSuccess = S.Undefined.pipe($I.annoteSchema("
 /**
  * Type for {@link AvatarsDeleteUserAvatarSuccess}.
  *
- * @example
+ * **Example** (Reference the AvatarsDeleteUserAvatarSuccess type)
+ *
  * ```ts
  * import type { AvatarsDeleteUserAvatarSuccess } from "@beep/box"
  *
@@ -8768,7 +9180,8 @@ export type AvatarsDeleteUserAvatarSuccess = typeof AvatarsDeleteUserAvatarSucce
 /**
  * Decoded success value for Box SDK method chunkedUploads.createFileUploadSession.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionSuccess } from "@beep/box"
  *
@@ -8785,7 +9198,8 @@ export const ChunkedUploadsCreateFileUploadSessionSuccess = S.suspend(() => Uplo
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsCreateFileUploadSessionSuccess } from "@beep/box"
  *
@@ -8800,7 +9214,8 @@ export type ChunkedUploadsCreateFileUploadSessionSuccess = typeof ChunkedUploads
 /**
  * Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionCommit.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionCommitSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionCommitSuccess } from "@beep/box"
  *
@@ -8817,7 +9232,8 @@ export const ChunkedUploadsCreateFileUploadSessionCommitSuccess = S.suspend(() =
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionCommitSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionCommitSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsCreateFileUploadSessionCommitSuccess } from "@beep/box"
  *
@@ -8832,7 +9248,8 @@ export type ChunkedUploadsCreateFileUploadSessionCommitSuccess = typeof ChunkedU
 /**
  * Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionCommitByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess } from "@beep/box"
  *
@@ -8849,7 +9266,8 @@ export const ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess = S.suspend
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess } from "@beep/box"
  *
@@ -8864,7 +9282,8 @@ export type ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess = typeof Chu
 /**
  * Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionForExistingFile.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess } from "@beep/box"
  *
@@ -8881,7 +9300,8 @@ export const ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = S.sus
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess } from "@beep/box"
  *
@@ -8896,7 +9316,8 @@ export type ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = typeof
 /**
  * Decoded success value for Box SDK method chunkedUploads.deleteFileUploadSessionById.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsDeleteFileUploadSessionByIdSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsDeleteFileUploadSessionByIdSuccess } from "@beep/box"
  *
@@ -8913,7 +9334,8 @@ export const ChunkedUploadsDeleteFileUploadSessionByIdSuccess = S.Undefined.pipe
 /**
  * Type for {@link ChunkedUploadsDeleteFileUploadSessionByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsDeleteFileUploadSessionByIdSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsDeleteFileUploadSessionByIdSuccess } from "@beep/box"
  *
@@ -8928,7 +9350,8 @@ export type ChunkedUploadsDeleteFileUploadSessionByIdSuccess = typeof ChunkedUpl
 /**
  * Decoded success value for Box SDK method chunkedUploads.deleteFileUploadSessionByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsDeleteFileUploadSessionByUrlSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsDeleteFileUploadSessionByUrlSuccess } from "@beep/box"
  *
@@ -8945,7 +9368,8 @@ export const ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = S.Undefined.pip
 /**
  * Type for {@link ChunkedUploadsDeleteFileUploadSessionByUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsDeleteFileUploadSessionByUrlSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsDeleteFileUploadSessionByUrlSuccess } from "@beep/box"
  *
@@ -8960,7 +9384,8 @@ export type ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = typeof ChunkedUp
 /**
  * Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionById.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionByIdSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionByIdSuccess } from "@beep/box"
  *
@@ -8977,7 +9402,8 @@ export const ChunkedUploadsGetFileUploadSessionByIdSuccess = S.suspend(() => Upl
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsGetFileUploadSessionByIdSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsGetFileUploadSessionByIdSuccess } from "@beep/box"
  *
@@ -8992,7 +9418,8 @@ export type ChunkedUploadsGetFileUploadSessionByIdSuccess = typeof ChunkedUpload
 /**
  * Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionByUrlSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionByUrlSuccess } from "@beep/box"
  *
@@ -9009,7 +9436,8 @@ export const ChunkedUploadsGetFileUploadSessionByUrlSuccess = S.suspend(() => Up
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionByUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsGetFileUploadSessionByUrlSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsGetFileUploadSessionByUrlSuccess } from "@beep/box"
  *
@@ -9024,7 +9452,8 @@ export type ChunkedUploadsGetFileUploadSessionByUrlSuccess = typeof ChunkedUploa
 /**
  * Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionParts.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionPartsSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionPartsSuccess } from "@beep/box"
  *
@@ -9041,7 +9470,8 @@ export const ChunkedUploadsGetFileUploadSessionPartsSuccess = S.suspend(() => Up
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionPartsSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsGetFileUploadSessionPartsSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsGetFileUploadSessionPartsSuccess } from "@beep/box"
  *
@@ -9056,7 +9486,8 @@ export type ChunkedUploadsGetFileUploadSessionPartsSuccess = typeof ChunkedUploa
 /**
  * Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionPartsByUrl.
  *
- * @example
+ * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess schema)
+ *
  * ```ts
  * import { ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess } from "@beep/box"
  *
@@ -9073,7 +9504,8 @@ export const ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess = S.suspend(() 
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess type)
+ *
  * ```ts
  * import type { ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess } from "@beep/box"
  *
@@ -9088,7 +9520,8 @@ export type ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess = typeof Chunked
 /**
  * Decoded success value for Box SDK method downloads.getDownloadFileUrl.
  *
- * @example
+ * **Example** (Inspect the DownloadsGetDownloadFileUrlSuccess schema)
+ *
  * ```ts
  * import { DownloadsGetDownloadFileUrlSuccess } from "@beep/box"
  *
@@ -9105,7 +9538,8 @@ export const DownloadsGetDownloadFileUrlSuccess = S.String.pipe($I.annoteSchema(
 /**
  * Type for {@link DownloadsGetDownloadFileUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the DownloadsGetDownloadFileUrlSuccess type)
+ *
  * ```ts
  * import type { DownloadsGetDownloadFileUrlSuccess } from "@beep/box"
  *
@@ -9120,7 +9554,8 @@ export type DownloadsGetDownloadFileUrlSuccess = typeof DownloadsGetDownloadFile
 /**
  * Decoded success value for Box SDK method events.getEvents.
  *
- * @example
+ * **Example** (Inspect the EventsGetEventsSuccess schema)
+ *
  * ```ts
  * import { EventsGetEventsSuccess } from "@beep/box"
  *
@@ -9137,7 +9572,8 @@ export const EventsGetEventsSuccess = S.suspend(() => Events).pipe($I.annoteSche
 /**
  * Type for {@link EventsGetEventsSuccess}.
  *
- * @example
+ * **Example** (Reference the EventsGetEventsSuccess type)
+ *
  * ```ts
  * import type { EventsGetEventsSuccess } from "@beep/box"
  *
@@ -9152,7 +9588,8 @@ export type EventsGetEventsSuccess = typeof EventsGetEventsSuccess.Type;
 /**
  * Decoded success value for Box SDK method events.getEventsWithLongPolling.
  *
- * @example
+ * **Example** (Inspect the EventsGetEventsWithLongPollingSuccess schema)
+ *
  * ```ts
  * import { EventsGetEventsWithLongPollingSuccess } from "@beep/box"
  *
@@ -9169,7 +9606,8 @@ export const EventsGetEventsWithLongPollingSuccess = S.suspend(() => RealtimeSer
 /**
  * Type for {@link EventsGetEventsWithLongPollingSuccess}.
  *
- * @example
+ * **Example** (Reference the EventsGetEventsWithLongPollingSuccess type)
+ *
  * ```ts
  * import type { EventsGetEventsWithLongPollingSuccess } from "@beep/box"
  *
@@ -9184,7 +9622,8 @@ export type EventsGetEventsWithLongPollingSuccess = typeof EventsGetEventsWithLo
 /**
  * Decoded success value for Box SDK method files.copyFile.
  *
- * @example
+ * **Example** (Inspect the FilesCopyFileSuccess schema)
+ *
  * ```ts
  * import { FilesCopyFileSuccess } from "@beep/box"
  *
@@ -9201,7 +9640,8 @@ export const FilesCopyFileSuccess = S.suspend(() => FileFull).pipe($I.annoteSche
 /**
  * Type for {@link FilesCopyFileSuccess}.
  *
- * @example
+ * **Example** (Reference the FilesCopyFileSuccess type)
+ *
  * ```ts
  * import type { FilesCopyFileSuccess } from "@beep/box"
  *
@@ -9216,7 +9656,8 @@ export type FilesCopyFileSuccess = typeof FilesCopyFileSuccess.Type;
 /**
  * Decoded success value for Box SDK method files.deleteFileById.
  *
- * @example
+ * **Example** (Inspect the FilesDeleteFileByIdSuccess schema)
+ *
  * ```ts
  * import { FilesDeleteFileByIdSuccess } from "@beep/box"
  *
@@ -9233,7 +9674,8 @@ export const FilesDeleteFileByIdSuccess = S.Undefined.pipe($I.annoteSchema("File
 /**
  * Type for {@link FilesDeleteFileByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FilesDeleteFileByIdSuccess type)
+ *
  * ```ts
  * import type { FilesDeleteFileByIdSuccess } from "@beep/box"
  *
@@ -9248,7 +9690,8 @@ export type FilesDeleteFileByIdSuccess = typeof FilesDeleteFileByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method files.getFileById.
  *
- * @example
+ * **Example** (Inspect the FilesGetFileByIdSuccess schema)
+ *
  * ```ts
  * import { FilesGetFileByIdSuccess } from "@beep/box"
  *
@@ -9265,7 +9708,8 @@ export const FilesGetFileByIdSuccess = S.suspend(() => FileFull).pipe($I.annoteS
 /**
  * Type for {@link FilesGetFileByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FilesGetFileByIdSuccess type)
+ *
  * ```ts
  * import type { FilesGetFileByIdSuccess } from "@beep/box"
  *
@@ -9280,7 +9724,8 @@ export type FilesGetFileByIdSuccess = typeof FilesGetFileByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method files.getFileThumbnailUrl.
  *
- * @example
+ * **Example** (Inspect the FilesGetFileThumbnailUrlSuccess schema)
+ *
  * ```ts
  * import { FilesGetFileThumbnailUrlSuccess } from "@beep/box"
  *
@@ -9297,7 +9742,8 @@ export const FilesGetFileThumbnailUrlSuccess = S.String.pipe($I.annoteSchema("Fi
 /**
  * Type for {@link FilesGetFileThumbnailUrlSuccess}.
  *
- * @example
+ * **Example** (Reference the FilesGetFileThumbnailUrlSuccess type)
+ *
  * ```ts
  * import type { FilesGetFileThumbnailUrlSuccess } from "@beep/box"
  *
@@ -9312,7 +9758,8 @@ export type FilesGetFileThumbnailUrlSuccess = typeof FilesGetFileThumbnailUrlSuc
 /**
  * Decoded success value for Box SDK method files.updateFileById.
  *
- * @example
+ * **Example** (Inspect the FilesUpdateFileByIdSuccess schema)
+ *
  * ```ts
  * import { FilesUpdateFileByIdSuccess } from "@beep/box"
  *
@@ -9329,7 +9776,8 @@ export const FilesUpdateFileByIdSuccess = S.suspend(() => FileFull).pipe($I.anno
 /**
  * Type for {@link FilesUpdateFileByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FilesUpdateFileByIdSuccess type)
+ *
  * ```ts
  * import type { FilesUpdateFileByIdSuccess } from "@beep/box"
  *
@@ -9344,7 +9792,8 @@ export type FilesUpdateFileByIdSuccess = typeof FilesUpdateFileByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method folders.copyFolder.
  *
- * @example
+ * **Example** (Inspect the FoldersCopyFolderSuccess schema)
+ *
  * ```ts
  * import { FoldersCopyFolderSuccess } from "@beep/box"
  *
@@ -9361,7 +9810,8 @@ export const FoldersCopyFolderSuccess = S.suspend(() => FolderFull).pipe($I.anno
 /**
  * Type for {@link FoldersCopyFolderSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersCopyFolderSuccess type)
+ *
  * ```ts
  * import type { FoldersCopyFolderSuccess } from "@beep/box"
  *
@@ -9376,7 +9826,8 @@ export type FoldersCopyFolderSuccess = typeof FoldersCopyFolderSuccess.Type;
 /**
  * Decoded success value for Box SDK method folders.createFolder.
  *
- * @example
+ * **Example** (Inspect the FoldersCreateFolderSuccess schema)
+ *
  * ```ts
  * import { FoldersCreateFolderSuccess } from "@beep/box"
  *
@@ -9393,7 +9844,8 @@ export const FoldersCreateFolderSuccess = S.suspend(() => FolderFull).pipe($I.an
 /**
  * Type for {@link FoldersCreateFolderSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersCreateFolderSuccess type)
+ *
  * ```ts
  * import type { FoldersCreateFolderSuccess } from "@beep/box"
  *
@@ -9408,7 +9860,8 @@ export type FoldersCreateFolderSuccess = typeof FoldersCreateFolderSuccess.Type;
 /**
  * Decoded success value for Box SDK method folders.deleteFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersDeleteFolderByIdSuccess schema)
+ *
  * ```ts
  * import { FoldersDeleteFolderByIdSuccess } from "@beep/box"
  *
@@ -9425,7 +9878,8 @@ export const FoldersDeleteFolderByIdSuccess = S.Undefined.pipe($I.annoteSchema("
 /**
  * Type for {@link FoldersDeleteFolderByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersDeleteFolderByIdSuccess type)
+ *
  * ```ts
  * import type { FoldersDeleteFolderByIdSuccess } from "@beep/box"
  *
@@ -9440,7 +9894,8 @@ export type FoldersDeleteFolderByIdSuccess = typeof FoldersDeleteFolderByIdSucce
 /**
  * Decoded success value for Box SDK method folders.getFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersGetFolderByIdSuccess schema)
+ *
  * ```ts
  * import { FoldersGetFolderByIdSuccess } from "@beep/box"
  *
@@ -9457,7 +9912,8 @@ export const FoldersGetFolderByIdSuccess = S.suspend(() => FolderFull).pipe($I.a
 /**
  * Type for {@link FoldersGetFolderByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersGetFolderByIdSuccess type)
+ *
  * ```ts
  * import type { FoldersGetFolderByIdSuccess } from "@beep/box"
  *
@@ -9472,7 +9928,8 @@ export type FoldersGetFolderByIdSuccess = typeof FoldersGetFolderByIdSuccess.Typ
 /**
  * Decoded success value for Box SDK method folders.getFolderItems.
  *
- * @example
+ * **Example** (Inspect the FoldersGetFolderItemsSuccess schema)
+ *
  * ```ts
  * import { FoldersGetFolderItemsSuccess } from "@beep/box"
  *
@@ -9489,7 +9946,8 @@ export const FoldersGetFolderItemsSuccess = S.suspend(() => Items).pipe($I.annot
 /**
  * Type for {@link FoldersGetFolderItemsSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersGetFolderItemsSuccess type)
+ *
  * ```ts
  * import type { FoldersGetFolderItemsSuccess } from "@beep/box"
  *
@@ -9504,7 +9962,8 @@ export type FoldersGetFolderItemsSuccess = typeof FoldersGetFolderItemsSuccess.T
 /**
  * Decoded success value for Box SDK method folders.updateFolderById.
  *
- * @example
+ * **Example** (Inspect the FoldersUpdateFolderByIdSuccess schema)
+ *
  * ```ts
  * import { FoldersUpdateFolderByIdSuccess } from "@beep/box"
  *
@@ -9521,7 +9980,8 @@ export const FoldersUpdateFolderByIdSuccess = S.suspend(() => FolderFull).pipe($
 /**
  * Type for {@link FoldersUpdateFolderByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the FoldersUpdateFolderByIdSuccess type)
+ *
  * ```ts
  * import type { FoldersUpdateFolderByIdSuccess } from "@beep/box"
  *
@@ -9536,7 +9996,8 @@ export type FoldersUpdateFolderByIdSuccess = typeof FoldersUpdateFolderByIdSucce
 /**
  * Decoded success value for Box SDK method uploads.preflightFileUploadCheck.
  *
- * @example
+ * **Example** (Inspect the UploadsPreflightFileUploadCheckSuccess schema)
+ *
  * ```ts
  * import { UploadsPreflightFileUploadCheckSuccess } from "@beep/box"
  *
@@ -9553,7 +10014,8 @@ export const UploadsPreflightFileUploadCheckSuccess = S.suspend(() => UploadUrl)
 /**
  * Type for {@link UploadsPreflightFileUploadCheckSuccess}.
  *
- * @example
+ * **Example** (Reference the UploadsPreflightFileUploadCheckSuccess type)
+ *
  * ```ts
  * import type { UploadsPreflightFileUploadCheckSuccess } from "@beep/box"
  *
@@ -9568,7 +10030,8 @@ export type UploadsPreflightFileUploadCheckSuccess = typeof UploadsPreflightFile
 /**
  * Decoded success value for Box SDK method users.createUser.
  *
- * @example
+ * **Example** (Inspect the UsersCreateUserSuccess schema)
+ *
  * ```ts
  * import { UsersCreateUserSuccess } from "@beep/box"
  *
@@ -9585,7 +10048,8 @@ export const UsersCreateUserSuccess = S.suspend(() => UserFull).pipe($I.annoteSc
 /**
  * Type for {@link UsersCreateUserSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersCreateUserSuccess type)
+ *
  * ```ts
  * import type { UsersCreateUserSuccess } from "@beep/box"
  *
@@ -9600,7 +10064,8 @@ export type UsersCreateUserSuccess = typeof UsersCreateUserSuccess.Type;
 /**
  * Decoded success value for Box SDK method users.deleteUserById.
  *
- * @example
+ * **Example** (Inspect the UsersDeleteUserByIdSuccess schema)
+ *
  * ```ts
  * import { UsersDeleteUserByIdSuccess } from "@beep/box"
  *
@@ -9617,7 +10082,8 @@ export const UsersDeleteUserByIdSuccess = S.Undefined.pipe($I.annoteSchema("User
 /**
  * Type for {@link UsersDeleteUserByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersDeleteUserByIdSuccess type)
+ *
  * ```ts
  * import type { UsersDeleteUserByIdSuccess } from "@beep/box"
  *
@@ -9632,7 +10098,8 @@ export type UsersDeleteUserByIdSuccess = typeof UsersDeleteUserByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method users.getUserById.
  *
- * @example
+ * **Example** (Inspect the UsersGetUserByIdSuccess schema)
+ *
  * ```ts
  * import { UsersGetUserByIdSuccess } from "@beep/box"
  *
@@ -9649,7 +10116,8 @@ export const UsersGetUserByIdSuccess = S.suspend(() => UserFull).pipe($I.annoteS
 /**
  * Type for {@link UsersGetUserByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersGetUserByIdSuccess type)
+ *
  * ```ts
  * import type { UsersGetUserByIdSuccess } from "@beep/box"
  *
@@ -9664,7 +10132,8 @@ export type UsersGetUserByIdSuccess = typeof UsersGetUserByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method users.getUserMe.
  *
- * @example
+ * **Example** (Inspect the UsersGetUserMeSuccess schema)
+ *
  * ```ts
  * import { UsersGetUserMeSuccess } from "@beep/box"
  *
@@ -9681,7 +10150,8 @@ export const UsersGetUserMeSuccess = S.suspend(() => UserFull).pipe($I.annoteSch
 /**
  * Type for {@link UsersGetUserMeSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersGetUserMeSuccess type)
+ *
  * ```ts
  * import type { UsersGetUserMeSuccess } from "@beep/box"
  *
@@ -9696,7 +10166,8 @@ export type UsersGetUserMeSuccess = typeof UsersGetUserMeSuccess.Type;
 /**
  * Decoded success value for Box SDK method users.getUsers.
  *
- * @example
+ * **Example** (Inspect the UsersGetUsersSuccess schema)
+ *
  * ```ts
  * import { UsersGetUsersSuccess } from "@beep/box"
  *
@@ -9713,7 +10184,8 @@ export const UsersGetUsersSuccess = S.suspend(() => Users).pipe($I.annoteSchema(
 /**
  * Type for {@link UsersGetUsersSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersGetUsersSuccess type)
+ *
  * ```ts
  * import type { UsersGetUsersSuccess } from "@beep/box"
  *
@@ -9728,7 +10200,8 @@ export type UsersGetUsersSuccess = typeof UsersGetUsersSuccess.Type;
 /**
  * Decoded success value for Box SDK method users.updateUserById.
  *
- * @example
+ * **Example** (Inspect the UsersUpdateUserByIdSuccess schema)
+ *
  * ```ts
  * import { UsersUpdateUserByIdSuccess } from "@beep/box"
  *
@@ -9745,7 +10218,8 @@ export const UsersUpdateUserByIdSuccess = S.suspend(() => UserFull).pipe($I.anno
 /**
  * Type for {@link UsersUpdateUserByIdSuccess}.
  *
- * @example
+ * **Example** (Reference the UsersUpdateUserByIdSuccess type)
+ *
  * ```ts
  * import type { UsersUpdateUserByIdSuccess } from "@beep/box"
  *
@@ -9760,7 +10234,8 @@ export type UsersUpdateUserByIdSuccess = typeof UsersUpdateUserByIdSuccess.Type;
 /**
  * Decoded success value for Box SDK method zipDownloads.createZipDownload.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadsCreateZipDownloadSuccess schema)
+ *
  * ```ts
  * import { ZipDownloadsCreateZipDownloadSuccess } from "@beep/box"
  *
@@ -9777,7 +10252,8 @@ export const ZipDownloadsCreateZipDownloadSuccess = S.suspend(() => ZipDownload)
 /**
  * Type for {@link ZipDownloadsCreateZipDownloadSuccess}.
  *
- * @example
+ * **Example** (Reference the ZipDownloadsCreateZipDownloadSuccess type)
+ *
  * ```ts
  * import type { ZipDownloadsCreateZipDownloadSuccess } from "@beep/box"
  *
@@ -9792,7 +10268,8 @@ export type ZipDownloadsCreateZipDownloadSuccess = typeof ZipDownloadsCreateZipD
 /**
  * Decoded success value for Box SDK method zipDownloads.getZipDownloadStatus.
  *
- * @example
+ * **Example** (Inspect the ZipDownloadsGetZipDownloadStatusSuccess schema)
+ *
  * ```ts
  * import { ZipDownloadsGetZipDownloadStatusSuccess } from "@beep/box"
  *
@@ -9809,7 +10286,8 @@ export const ZipDownloadsGetZipDownloadStatusSuccess = S.suspend(() => ZipDownlo
 /**
  * Type for {@link ZipDownloadsGetZipDownloadStatusSuccess}.
  *
- * @example
+ * **Example** (Reference the ZipDownloadsGetZipDownloadStatusSuccess type)
+ *
  * ```ts
  * import type { ZipDownloadsGetZipDownloadStatusSuccess } from "@beep/box"
  *

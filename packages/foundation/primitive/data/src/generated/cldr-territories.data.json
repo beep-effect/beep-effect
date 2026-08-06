@@ -8,7 +8,7 @@
       {
         "id": "cldr-latest-release",
         "url": "https://api.github.com/repos/unicode-org/cldr-json/releases/latest",
-        "sha256": "d20d3ed71a13291f3327c22a36f3e5e73b30c61d59733064fa762cba29cedce3",
+        "sha256": "6a8717fc1e4823c2d98911695435e96113ab3bb4f9ef53912c65e408fd33e285",
         "version": "48.2.0",
         "published": "2026-03-17T00:27:05Z"
       },

@@ -75,7 +75,8 @@ const taggedUnion = <A extends Tagged, E extends Tagged>(
 /**
  * Recursive list of nodes that may occur as element or fragment children.
  *
- * @example
+ * **Example** (Check an empty HtmlChildren list)
+ *
  * ```ts
  * import { HtmlChildren } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -92,7 +93,8 @@ export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlChild.Type, HtmlCh
 /**
  * Decoded type of {@link HtmlChildren}.
  *
- * @example
+ * **Example** (Annotate an HtmlChildren value)
+ *
  * ```ts
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
@@ -107,7 +109,8 @@ export type HtmlChildren = typeof HtmlChildren.Type;
 /**
  * Companion namespace for {@link HtmlChildren}.
  *
- * @example
+ * **Example** (Annotate an HtmlChildren.Type value)
+ *
  * ```ts
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
@@ -128,7 +131,8 @@ export declare namespace HtmlChildren {
 /**
  * A document fragment node (a detached group of children).
  *
- * @example
+ * **Example** (Construct the Fragment node)
+ *
  * ```ts
  * import { Fragment } from "@beep/html/Html.model"
  *
@@ -147,7 +151,8 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
 /**
  * Companion namespace for {@link Fragment}.
  *
- * @example
+ * **Example** (Encoded shape of Fragment)
+ *
  * ```ts
  * import { Fragment } from "@beep/html/Html.model"
  *
@@ -168,7 +173,8 @@ export declare namespace Fragment {
 /**
  * An HTML document root with an optional doctype and child nodes.
  *
- * @example
+ * **Example** (Construct a Document)
+ *
  * ```ts
  * import { Document } from "@beep/html/Html.model"
  *
@@ -191,7 +197,8 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
 /**
  * Companion namespace for {@link Document}.
  *
- * @example
+ * **Example** (Encoded shape of Document)
+ *
  * ```ts
  * import type { Document } from "@beep/html/Html.model"
  *
@@ -220,7 +227,8 @@ export declare namespace Document {
 /**
  * Namespace of a foreign-content element embedded in HTML.
  *
- * @example
+ * **Example** (Check a ForeignNamespace value)
+ *
  * ```ts
  * import { ForeignNamespace } from "@beep/html/Html.model"
  *
@@ -237,7 +245,8 @@ export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
 /**
  * Decoded type of {@link ForeignNamespace}.
  *
- * @example
+ * **Example** (Annotate a ForeignNamespace value)
+ *
  * ```ts
  * import type { ForeignNamespace } from "@beep/html/Html.model"
  *
@@ -253,11 +262,13 @@ export type ForeignNamespace = typeof ForeignNamespace.Type;
 /**
  * An opaque SVG or MathML element carried inside the HTML AST.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This package validates the foreign node's serializable shape but does not
  * model the complete SVG or MathML vocabularies.
  *
- * @example
+ * **Example** (Construct a ForeignElement)
+ *
  * ```ts
  * import { ForeignElement } from "@beep/html/Html.model"
  *
@@ -282,7 +293,8 @@ export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElem
 /**
  * Companion namespace for {@link ForeignElement}.
  *
- * @example
+ * **Example** (Encoded shape of ForeignElement)
+ *
  * ```ts
  * import type { ForeignElement } from "@beep/html/Html.model"
  *
@@ -320,7 +332,8 @@ export declare namespace ForeignElement {
 /**
  * The <a> element.
  *
- * @example
+ * **Example** (Construct the A node)
+ *
  * ```ts
  * import { A } from "@beep/html/Html.model"
  *
@@ -357,7 +370,8 @@ export class A extends S.TaggedClass<A>($I`A`)(
 /**
  * Companion namespace for {@link A}.
  *
- * @example
+ * **Example** (Encoded shape of A)
+ *
  * ```ts
  * import { A } from "@beep/html/Html.model"
  *
@@ -424,7 +438,8 @@ export declare namespace A {
 /**
  * The <abbr> element.
  *
- * @example
+ * **Example** (Construct the Abbr node)
+ *
  * ```ts
  * import { Abbr } from "@beep/html/Html.model"
  *
@@ -446,7 +461,8 @@ export class Abbr extends S.TaggedClass<Abbr>($I`Abbr`)(
 /**
  * Companion namespace for {@link Abbr}.
  *
- * @example
+ * **Example** (Encoded shape of Abbr)
+ *
  * ```ts
  * import { Abbr } from "@beep/html/Html.model"
  *
@@ -473,7 +489,8 @@ export declare namespace Abbr {
 /**
  * The <acronym> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Acronym node)
+ *
  * ```ts
  * import { Acronym } from "@beep/html/Html.model"
  *
@@ -495,7 +512,8 @@ export class Acronym extends S.TaggedClass<Acronym>($I`Acronym`)(
 /**
  * Companion namespace for {@link Acronym}.
  *
- * @example
+ * **Example** (Encoded shape of Acronym)
+ *
  * ```ts
  * import { Acronym } from "@beep/html/Html.model"
  *
@@ -522,7 +540,8 @@ export declare namespace Acronym {
 /**
  * The <address> element.
  *
- * @example
+ * **Example** (Construct the Address node)
+ *
  * ```ts
  * import { Address } from "@beep/html/Html.model"
  *
@@ -544,7 +563,8 @@ export class Address extends S.TaggedClass<Address>($I`Address`)(
 /**
  * Companion namespace for {@link Address}.
  *
- * @example
+ * **Example** (Encoded shape of Address)
+ *
  * ```ts
  * import { Address } from "@beep/html/Html.model"
  *
@@ -571,7 +591,8 @@ export declare namespace Address {
 /**
  * The <applet> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Applet node)
+ *
  * ```ts
  * import { Applet } from "@beep/html/Html.model"
  *
@@ -593,7 +614,8 @@ export class Applet extends S.TaggedClass<Applet>($I`Applet`)(
 /**
  * Companion namespace for {@link Applet}.
  *
- * @example
+ * **Example** (Encoded shape of Applet)
+ *
  * ```ts
  * import { Applet } from "@beep/html/Html.model"
  *
@@ -620,7 +642,8 @@ export declare namespace Applet {
 /**
  * The <area> element.
  *
- * @example
+ * **Example** (Construct the Area node)
+ *
  * ```ts
  * import { Area } from "@beep/html/Html.model"
  *
@@ -655,7 +678,8 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
 /**
  * Companion namespace for {@link Area}.
  *
- * @example
+ * **Example** (Encoded shape of Area)
+ *
  * ```ts
  * import { Area } from "@beep/html/Html.model"
  *
@@ -714,7 +738,8 @@ export declare namespace Area {
 /**
  * The <article> element.
  *
- * @example
+ * **Example** (Construct the Article node)
+ *
  * ```ts
  * import { Article } from "@beep/html/Html.model"
  *
@@ -736,7 +761,8 @@ export class Article extends S.TaggedClass<Article>($I`Article`)(
 /**
  * Companion namespace for {@link Article}.
  *
- * @example
+ * **Example** (Encoded shape of Article)
+ *
  * ```ts
  * import { Article } from "@beep/html/Html.model"
  *
@@ -763,7 +789,8 @@ export declare namespace Article {
 /**
  * The <aside> element.
  *
- * @example
+ * **Example** (Construct the Aside node)
+ *
  * ```ts
  * import { Aside } from "@beep/html/Html.model"
  *
@@ -785,7 +812,8 @@ export class Aside extends S.TaggedClass<Aside>($I`Aside`)(
 /**
  * Companion namespace for {@link Aside}.
  *
- * @example
+ * **Example** (Encoded shape of Aside)
+ *
  * ```ts
  * import { Aside } from "@beep/html/Html.model"
  *
@@ -812,7 +840,8 @@ export declare namespace Aside {
 /**
  * The <audio> element.
  *
- * @example
+ * **Example** (Construct the Audio node)
+ *
  * ```ts
  * import { Audio } from "@beep/html/Html.model"
  *
@@ -846,7 +875,8 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
 /**
  * Companion namespace for {@link Audio}.
  *
- * @example
+ * **Example** (Encoded shape of Audio)
+ *
  * ```ts
  * import { Audio } from "@beep/html/Html.model"
  *
@@ -889,7 +919,8 @@ export declare namespace Audio {
 /**
  * The <b> element.
  *
- * @example
+ * **Example** (Construct the B node)
+ *
  * ```ts
  * import { B } from "@beep/html/Html.model"
  *
@@ -911,7 +942,8 @@ export class B extends S.TaggedClass<B>($I`B`)(
 /**
  * Companion namespace for {@link B}.
  *
- * @example
+ * **Example** (Encoded shape of B)
+ *
  * ```ts
  * import { B } from "@beep/html/Html.model"
  *
@@ -938,7 +970,8 @@ export declare namespace B {
 /**
  * The <base> element.
  *
- * @example
+ * **Example** (Construct the Base node)
+ *
  * ```ts
  * import { Base } from "@beep/html/Html.model"
  *
@@ -961,7 +994,8 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
 /**
  * Companion namespace for {@link Base}.
  *
- * @example
+ * **Example** (Encoded shape of Base)
+ *
  * ```ts
  * import { Base } from "@beep/html/Html.model"
  *
@@ -990,7 +1024,8 @@ export declare namespace Base {
 /**
  * The <basefont> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Basefont node)
+ *
  * ```ts
  * import { Basefont } from "@beep/html/Html.model"
  *
@@ -1011,7 +1046,8 @@ export class Basefont extends S.TaggedClass<Basefont>($I`Basefont`)(
 /**
  * Companion namespace for {@link Basefont}.
  *
- * @example
+ * **Example** (Encoded shape of Basefont)
+ *
  * ```ts
  * import { Basefont } from "@beep/html/Html.model"
  *
@@ -1036,7 +1072,8 @@ export declare namespace Basefont {
 /**
  * The <bdi> element.
  *
- * @example
+ * **Example** (Construct the Bdi node)
+ *
  * ```ts
  * import { Bdi } from "@beep/html/Html.model"
  *
@@ -1058,7 +1095,8 @@ export class Bdi extends S.TaggedClass<Bdi>($I`Bdi`)(
 /**
  * Companion namespace for {@link Bdi}.
  *
- * @example
+ * **Example** (Encoded shape of Bdi)
+ *
  * ```ts
  * import { Bdi } from "@beep/html/Html.model"
  *
@@ -1085,7 +1123,8 @@ export declare namespace Bdi {
 /**
  * The <bdo> element.
  *
- * @example
+ * **Example** (Construct the Bdo node)
+ *
  * ```ts
  * import { Bdo } from "@beep/html/Html.model"
  *
@@ -1107,7 +1146,8 @@ export class Bdo extends S.TaggedClass<Bdo>($I`Bdo`)(
 /**
  * Companion namespace for {@link Bdo}.
  *
- * @example
+ * **Example** (Encoded shape of Bdo)
+ *
  * ```ts
  * import { Bdo } from "@beep/html/Html.model"
  *
@@ -1134,7 +1174,8 @@ export declare namespace Bdo {
 /**
  * The <bgsound> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Bgsound node)
+ *
  * ```ts
  * import { Bgsound } from "@beep/html/Html.model"
  *
@@ -1155,7 +1196,8 @@ export class Bgsound extends S.TaggedClass<Bgsound>($I`Bgsound`)(
 /**
  * Companion namespace for {@link Bgsound}.
  *
- * @example
+ * **Example** (Encoded shape of Bgsound)
+ *
  * ```ts
  * import { Bgsound } from "@beep/html/Html.model"
  *
@@ -1180,7 +1222,8 @@ export declare namespace Bgsound {
 /**
  * The <big> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Big node)
+ *
  * ```ts
  * import { Big } from "@beep/html/Html.model"
  *
@@ -1202,7 +1245,8 @@ export class Big extends S.TaggedClass<Big>($I`Big`)(
 /**
  * Companion namespace for {@link Big}.
  *
- * @example
+ * **Example** (Encoded shape of Big)
+ *
  * ```ts
  * import { Big } from "@beep/html/Html.model"
  *
@@ -1229,7 +1273,8 @@ export declare namespace Big {
 /**
  * The <blink> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Blink node)
+ *
  * ```ts
  * import { Blink } from "@beep/html/Html.model"
  *
@@ -1251,7 +1296,8 @@ export class Blink extends S.TaggedClass<Blink>($I`Blink`)(
 /**
  * Companion namespace for {@link Blink}.
  *
- * @example
+ * **Example** (Encoded shape of Blink)
+ *
  * ```ts
  * import { Blink } from "@beep/html/Html.model"
  *
@@ -1278,7 +1324,8 @@ export declare namespace Blink {
 /**
  * The <blockquote> element.
  *
- * @example
+ * **Example** (Construct the Blockquote node)
+ *
  * ```ts
  * import { Blockquote } from "@beep/html/Html.model"
  *
@@ -1301,7 +1348,8 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
 /**
  * Companion namespace for {@link Blockquote}.
  *
- * @example
+ * **Example** (Encoded shape of Blockquote)
+ *
  * ```ts
  * import { Blockquote } from "@beep/html/Html.model"
  *
@@ -1330,7 +1378,8 @@ export declare namespace Blockquote {
 /**
  * The <body> element.
  *
- * @example
+ * **Example** (Construct the Body node)
+ *
  * ```ts
  * import { Body } from "@beep/html/Html.model"
  *
@@ -1381,7 +1430,8 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
 /**
  * Companion namespace for {@link Body}.
  *
- * @example
+ * **Example** (Encoded shape of Body)
+ *
  * ```ts
  * import { Body } from "@beep/html/Html.model"
  *
@@ -1466,7 +1516,8 @@ export declare namespace Body {
 /**
  * The <br> element.
  *
- * @example
+ * **Example** (Construct the Br node)
+ *
  * ```ts
  * import { Br } from "@beep/html/Html.model"
  *
@@ -1488,7 +1539,8 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
 /**
  * Companion namespace for {@link Br}.
  *
- * @example
+ * **Example** (Encoded shape of Br)
+ *
  * ```ts
  * import { Br } from "@beep/html/Html.model"
  *
@@ -1515,7 +1567,8 @@ export declare namespace Br {
 /**
  * The <button> element.
  *
- * @example
+ * **Example** (Construct the Button node)
+ *
  * ```ts
  * import { Button } from "@beep/html/Html.model"
  *
@@ -1565,7 +1618,8 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
 /**
  * Companion namespace for {@link Button}.
  *
- * @example
+ * **Example** (Encoded shape of Button)
+ *
  * ```ts
  * import { Button } from "@beep/html/Html.model"
  *
@@ -1632,7 +1686,8 @@ export declare namespace Button {
 /**
  * The <canvas> element.
  *
- * @example
+ * **Example** (Construct the Canvas node)
+ *
  * ```ts
  * import { Canvas } from "@beep/html/Html.model"
  *
@@ -1656,7 +1711,8 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
 /**
  * Companion namespace for {@link Canvas}.
  *
- * @example
+ * **Example** (Encoded shape of Canvas)
+ *
  * ```ts
  * import { Canvas } from "@beep/html/Html.model"
  *
@@ -1687,7 +1743,8 @@ export declare namespace Canvas {
 /**
  * The <caption> element.
  *
- * @example
+ * **Example** (Construct the Caption node)
+ *
  * ```ts
  * import { Caption } from "@beep/html/Html.model"
  *
@@ -1710,7 +1767,8 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
 /**
  * Companion namespace for {@link Caption}.
  *
- * @example
+ * **Example** (Encoded shape of Caption)
+ *
  * ```ts
  * import { Caption } from "@beep/html/Html.model"
  *
@@ -1739,7 +1797,8 @@ export declare namespace Caption {
 /**
  * The <center> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Center node)
+ *
  * ```ts
  * import { Center } from "@beep/html/Html.model"
  *
@@ -1761,7 +1820,8 @@ export class Center extends S.TaggedClass<Center>($I`Center`)(
 /**
  * Companion namespace for {@link Center}.
  *
- * @example
+ * **Example** (Encoded shape of Center)
+ *
  * ```ts
  * import { Center } from "@beep/html/Html.model"
  *
@@ -1788,7 +1848,8 @@ export declare namespace Center {
 /**
  * The <cite> element.
  *
- * @example
+ * **Example** (Construct the Cite node)
+ *
  * ```ts
  * import { Cite } from "@beep/html/Html.model"
  *
@@ -1810,7 +1871,8 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
 /**
  * Companion namespace for {@link Cite}.
  *
- * @example
+ * **Example** (Encoded shape of Cite)
+ *
  * ```ts
  * import { Cite } from "@beep/html/Html.model"
  *
@@ -1837,7 +1899,8 @@ export declare namespace Cite {
 /**
  * The <code> element.
  *
- * @example
+ * **Example** (Construct the Code node)
+ *
  * ```ts
  * import { Code } from "@beep/html/Html.model"
  *
@@ -1859,7 +1922,8 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
- * @example
+ * **Example** (Encoded shape of Code)
+ *
  * ```ts
  * import { Code } from "@beep/html/Html.model"
  *
@@ -1886,7 +1950,8 @@ export declare namespace Code {
 /**
  * The <col> element.
  *
- * @example
+ * **Example** (Construct the Col node)
+ *
  * ```ts
  * import { Col } from "@beep/html/Html.model"
  *
@@ -1913,7 +1978,8 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
 /**
  * Companion namespace for {@link Col}.
  *
- * @example
+ * **Example** (Encoded shape of Col)
+ *
  * ```ts
  * import { Col } from "@beep/html/Html.model"
  *
@@ -1950,7 +2016,8 @@ export declare namespace Col {
 /**
  * The <colgroup> element.
  *
- * @example
+ * **Example** (Construct the Colgroup node)
+ *
  * ```ts
  * import { Colgroup } from "@beep/html/Html.model"
  *
@@ -1973,7 +2040,8 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
 /**
  * Companion namespace for {@link Colgroup}.
  *
- * @example
+ * **Example** (Encoded shape of Colgroup)
+ *
  * ```ts
  * import { Colgroup } from "@beep/html/Html.model"
  *
@@ -2002,7 +2070,8 @@ export declare namespace Colgroup {
 /**
  * The <data> element.
  *
- * @example
+ * **Example** (Construct the Data node)
+ *
  * ```ts
  * import { Data } from "@beep/html/Html.model"
  *
@@ -2025,7 +2094,8 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
 /**
  * Companion namespace for {@link Data}.
  *
- * @example
+ * **Example** (Encoded shape of Data)
+ *
  * ```ts
  * import { Data } from "@beep/html/Html.model"
  *
@@ -2054,7 +2124,8 @@ export declare namespace Data {
 /**
  * The <datalist> element.
  *
- * @example
+ * **Example** (Construct the Datalist node)
+ *
  * ```ts
  * import { Datalist } from "@beep/html/Html.model"
  *
@@ -2076,7 +2147,8 @@ export class Datalist extends S.TaggedClass<Datalist>($I`Datalist`)(
 /**
  * Companion namespace for {@link Datalist}.
  *
- * @example
+ * **Example** (Encoded shape of Datalist)
+ *
  * ```ts
  * import { Datalist } from "@beep/html/Html.model"
  *
@@ -2103,7 +2175,8 @@ export declare namespace Datalist {
 /**
  * The <dd> element.
  *
- * @example
+ * **Example** (Construct the Dd node)
+ *
  * ```ts
  * import { Dd } from "@beep/html/Html.model"
  *
@@ -2125,7 +2198,8 @@ export class Dd extends S.TaggedClass<Dd>($I`Dd`)(
 /**
  * Companion namespace for {@link Dd}.
  *
- * @example
+ * **Example** (Encoded shape of Dd)
+ *
  * ```ts
  * import { Dd } from "@beep/html/Html.model"
  *
@@ -2152,7 +2226,8 @@ export declare namespace Dd {
 /**
  * The <del> element.
  *
- * @example
+ * **Example** (Construct the Del node)
+ *
  * ```ts
  * import { Del } from "@beep/html/Html.model"
  *
@@ -2176,7 +2251,8 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
 /**
  * Companion namespace for {@link Del}.
  *
- * @example
+ * **Example** (Encoded shape of Del)
+ *
  * ```ts
  * import { Del } from "@beep/html/Html.model"
  *
@@ -2207,7 +2283,8 @@ export declare namespace Del {
 /**
  * The <details> element.
  *
- * @example
+ * **Example** (Construct the Details node)
+ *
  * ```ts
  * import { Details } from "@beep/html/Html.model"
  *
@@ -2231,7 +2308,8 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
 /**
  * Companion namespace for {@link Details}.
  *
- * @example
+ * **Example** (Encoded shape of Details)
+ *
  * ```ts
  * import { Details } from "@beep/html/Html.model"
  *
@@ -2262,7 +2340,8 @@ export declare namespace Details {
 /**
  * The <dfn> element.
  *
- * @example
+ * **Example** (Construct the Dfn node)
+ *
  * ```ts
  * import { Dfn } from "@beep/html/Html.model"
  *
@@ -2284,7 +2363,8 @@ export class Dfn extends S.TaggedClass<Dfn>($I`Dfn`)(
 /**
  * Companion namespace for {@link Dfn}.
  *
- * @example
+ * **Example** (Encoded shape of Dfn)
+ *
  * ```ts
  * import { Dfn } from "@beep/html/Html.model"
  *
@@ -2311,7 +2391,8 @@ export declare namespace Dfn {
 /**
  * The <dialog> element.
  *
- * @example
+ * **Example** (Construct the Dialog node)
+ *
  * ```ts
  * import { Dialog } from "@beep/html/Html.model"
  *
@@ -2337,7 +2418,8 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
 /**
  * Companion namespace for {@link Dialog}.
  *
- * @example
+ * **Example** (Encoded shape of Dialog)
+ *
  * ```ts
  * import { Dialog } from "@beep/html/Html.model"
  *
@@ -2368,7 +2450,8 @@ export declare namespace Dialog {
 /**
  * The <dir> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the DirElement node)
+ *
  * ```ts
  * import { DirElement } from "@beep/html/Html.model"
  *
@@ -2390,7 +2473,8 @@ export class DirElement extends S.TaggedClass<DirElement>($I`DirElement`)(
 /**
  * Companion namespace for {@link DirElement}.
  *
- * @example
+ * **Example** (Encoded shape of DirElement)
+ *
  * ```ts
  * import { DirElement } from "@beep/html/Html.model"
  *
@@ -2417,7 +2501,8 @@ export declare namespace DirElement {
 /**
  * The <div> element.
  *
- * @example
+ * **Example** (Construct the Div node)
+ *
  * ```ts
  * import { Div } from "@beep/html/Html.model"
  *
@@ -2440,7 +2525,8 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 /**
  * Companion namespace for {@link Div}.
  *
- * @example
+ * **Example** (Encoded shape of Div)
+ *
  * ```ts
  * import { Div } from "@beep/html/Html.model"
  *
@@ -2469,7 +2555,8 @@ export declare namespace Div {
 /**
  * The <dl> element.
  *
- * @example
+ * **Example** (Construct the Dl node)
+ *
  * ```ts
  * import { Dl } from "@beep/html/Html.model"
  *
@@ -2492,7 +2579,8 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
 /**
  * Companion namespace for {@link Dl}.
  *
- * @example
+ * **Example** (Encoded shape of Dl)
+ *
  * ```ts
  * import { Dl } from "@beep/html/Html.model"
  *
@@ -2521,7 +2609,8 @@ export declare namespace Dl {
 /**
  * The <dt> element.
  *
- * @example
+ * **Example** (Construct the Dt node)
+ *
  * ```ts
  * import { Dt } from "@beep/html/Html.model"
  *
@@ -2543,7 +2632,8 @@ export class Dt extends S.TaggedClass<Dt>($I`Dt`)(
 /**
  * Companion namespace for {@link Dt}.
  *
- * @example
+ * **Example** (Encoded shape of Dt)
+ *
  * ```ts
  * import { Dt } from "@beep/html/Html.model"
  *
@@ -2570,7 +2660,8 @@ export declare namespace Dt {
 /**
  * The <em> element.
  *
- * @example
+ * **Example** (Construct the Em node)
+ *
  * ```ts
  * import { Em } from "@beep/html/Html.model"
  *
@@ -2592,7 +2683,8 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
 /**
  * Companion namespace for {@link Em}.
  *
- * @example
+ * **Example** (Encoded shape of Em)
+ *
  * ```ts
  * import { Em } from "@beep/html/Html.model"
  *
@@ -2619,7 +2711,8 @@ export declare namespace Em {
 /**
  * The <embed> element.
  *
- * @example
+ * **Example** (Construct the Embed node)
+ *
  * ```ts
  * import { Embed } from "@beep/html/Html.model"
  *
@@ -2648,7 +2741,8 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
 /**
  * Companion namespace for {@link Embed}.
  *
- * @example
+ * **Example** (Encoded shape of Embed)
+ *
  * ```ts
  * import { Embed } from "@beep/html/Html.model"
  *
@@ -2689,7 +2783,8 @@ export declare namespace Embed {
 /**
  * The <fieldset> element.
  *
- * @example
+ * **Example** (Construct the Fieldset node)
+ *
  * ```ts
  * import { Fieldset } from "@beep/html/Html.model"
  *
@@ -2715,7 +2810,8 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
 /**
  * Companion namespace for {@link Fieldset}.
  *
- * @example
+ * **Example** (Encoded shape of Fieldset)
+ *
  * ```ts
  * import { Fieldset } from "@beep/html/Html.model"
  *
@@ -2750,7 +2846,8 @@ export declare namespace Fieldset {
 /**
  * The <figcaption> element.
  *
- * @example
+ * **Example** (Construct the Figcaption node)
+ *
  * ```ts
  * import { Figcaption } from "@beep/html/Html.model"
  *
@@ -2772,7 +2869,8 @@ export class Figcaption extends S.TaggedClass<Figcaption>($I`Figcaption`)(
 /**
  * Companion namespace for {@link Figcaption}.
  *
- * @example
+ * **Example** (Encoded shape of Figcaption)
+ *
  * ```ts
  * import { Figcaption } from "@beep/html/Html.model"
  *
@@ -2799,7 +2897,8 @@ export declare namespace Figcaption {
 /**
  * The <figure> element.
  *
- * @example
+ * **Example** (Construct the Figure node)
+ *
  * ```ts
  * import { Figure } from "@beep/html/Html.model"
  *
@@ -2821,7 +2920,8 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
 /**
  * Companion namespace for {@link Figure}.
  *
- * @example
+ * **Example** (Encoded shape of Figure)
+ *
  * ```ts
  * import { Figure } from "@beep/html/Html.model"
  *
@@ -2848,7 +2948,8 @@ export declare namespace Figure {
 /**
  * The <font> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Font node)
+ *
  * ```ts
  * import { Font } from "@beep/html/Html.model"
  *
@@ -2870,7 +2971,8 @@ export class Font extends S.TaggedClass<Font>($I`Font`)(
 /**
  * Companion namespace for {@link Font}.
  *
- * @example
+ * **Example** (Encoded shape of Font)
+ *
  * ```ts
  * import { Font } from "@beep/html/Html.model"
  *
@@ -2897,7 +2999,8 @@ export declare namespace Font {
 /**
  * The <footer> element.
  *
- * @example
+ * **Example** (Construct the Footer node)
+ *
  * ```ts
  * import { Footer } from "@beep/html/Html.model"
  *
@@ -2919,7 +3022,8 @@ export class Footer extends S.TaggedClass<Footer>($I`Footer`)(
 /**
  * Companion namespace for {@link Footer}.
  *
- * @example
+ * **Example** (Encoded shape of Footer)
+ *
  * ```ts
  * import { Footer } from "@beep/html/Html.model"
  *
@@ -2946,7 +3050,8 @@ export declare namespace Footer {
 /**
  * The <form> element.
  *
- * @example
+ * **Example** (Construct the Form node)
+ *
  * ```ts
  * import { Form } from "@beep/html/Html.model"
  *
@@ -2987,7 +3092,8 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
 /**
  * Companion namespace for {@link Form}.
  *
- * @example
+ * **Example** (Encoded shape of Form)
+ *
  * ```ts
  * import { Form } from "@beep/html/Html.model"
  *
@@ -3044,7 +3150,8 @@ export declare namespace Form {
 /**
  * The <frame> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Frame node)
+ *
  * ```ts
  * import { Frame } from "@beep/html/Html.model"
  *
@@ -3065,7 +3172,8 @@ export class Frame extends S.TaggedClass<Frame>($I`Frame`)(
 /**
  * Companion namespace for {@link Frame}.
  *
- * @example
+ * **Example** (Encoded shape of Frame)
+ *
  * ```ts
  * import { Frame } from "@beep/html/Html.model"
  *
@@ -3090,7 +3198,8 @@ export declare namespace Frame {
 /**
  * The <frameset> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Frameset node)
+ *
  * ```ts
  * import { Frameset } from "@beep/html/Html.model"
  *
@@ -3112,7 +3221,8 @@ export class Frameset extends S.TaggedClass<Frameset>($I`Frameset`)(
 /**
  * Companion namespace for {@link Frameset}.
  *
- * @example
+ * **Example** (Encoded shape of Frameset)
+ *
  * ```ts
  * import { Frameset } from "@beep/html/Html.model"
  *
@@ -3139,7 +3249,8 @@ export declare namespace Frameset {
 /**
  * The <h1> element.
  *
- * @example
+ * **Example** (Construct the H1 node)
+ *
  * ```ts
  * import { H1 } from "@beep/html/Html.model"
  *
@@ -3162,7 +3273,8 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
 /**
  * Companion namespace for {@link H1}.
  *
- * @example
+ * **Example** (Encoded shape of H1)
+ *
  * ```ts
  * import { H1 } from "@beep/html/Html.model"
  *
@@ -3191,7 +3303,8 @@ export declare namespace H1 {
 /**
  * The <h2> element.
  *
- * @example
+ * **Example** (Construct the H2 node)
+ *
  * ```ts
  * import { H2 } from "@beep/html/Html.model"
  *
@@ -3214,7 +3327,8 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
 /**
  * Companion namespace for {@link H2}.
  *
- * @example
+ * **Example** (Encoded shape of H2)
+ *
  * ```ts
  * import { H2 } from "@beep/html/Html.model"
  *
@@ -3243,7 +3357,8 @@ export declare namespace H2 {
 /**
  * The <h3> element.
  *
- * @example
+ * **Example** (Construct the H3 node)
+ *
  * ```ts
  * import { H3 } from "@beep/html/Html.model"
  *
@@ -3266,7 +3381,8 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
 /**
  * Companion namespace for {@link H3}.
  *
- * @example
+ * **Example** (Encoded shape of H3)
+ *
  * ```ts
  * import { H3 } from "@beep/html/Html.model"
  *
@@ -3295,7 +3411,8 @@ export declare namespace H3 {
 /**
  * The <h4> element.
  *
- * @example
+ * **Example** (Construct the H4 node)
+ *
  * ```ts
  * import { H4 } from "@beep/html/Html.model"
  *
@@ -3318,7 +3435,8 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
 /**
  * Companion namespace for {@link H4}.
  *
- * @example
+ * **Example** (Encoded shape of H4)
+ *
  * ```ts
  * import { H4 } from "@beep/html/Html.model"
  *
@@ -3347,7 +3465,8 @@ export declare namespace H4 {
 /**
  * The <h5> element.
  *
- * @example
+ * **Example** (Construct the H5 node)
+ *
  * ```ts
  * import { H5 } from "@beep/html/Html.model"
  *
@@ -3370,7 +3489,8 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
 /**
  * Companion namespace for {@link H5}.
  *
- * @example
+ * **Example** (Encoded shape of H5)
+ *
  * ```ts
  * import { H5 } from "@beep/html/Html.model"
  *
@@ -3399,7 +3519,8 @@ export declare namespace H5 {
 /**
  * The <h6> element.
  *
- * @example
+ * **Example** (Construct the H6 node)
+ *
  * ```ts
  * import { H6 } from "@beep/html/Html.model"
  *
@@ -3422,7 +3543,8 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
 /**
  * Companion namespace for {@link H6}.
  *
- * @example
+ * **Example** (Encoded shape of H6)
+ *
  * ```ts
  * import { H6 } from "@beep/html/Html.model"
  *
@@ -3451,7 +3573,8 @@ export declare namespace H6 {
 /**
  * The <head> element.
  *
- * @example
+ * **Example** (Construct the Head node)
+ *
  * ```ts
  * import { Head } from "@beep/html/Html.model"
  *
@@ -3474,7 +3597,8 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
 /**
  * Companion namespace for {@link Head}.
  *
- * @example
+ * **Example** (Encoded shape of Head)
+ *
  * ```ts
  * import { Head } from "@beep/html/Html.model"
  *
@@ -3503,7 +3627,8 @@ export declare namespace Head {
 /**
  * The <header> element.
  *
- * @example
+ * **Example** (Construct the Header node)
+ *
  * ```ts
  * import { Header } from "@beep/html/Html.model"
  *
@@ -3525,7 +3650,8 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 /**
  * Companion namespace for {@link Header}.
  *
- * @example
+ * **Example** (Encoded shape of Header)
+ *
  * ```ts
  * import { Header } from "@beep/html/Html.model"
  *
@@ -3552,7 +3678,8 @@ export declare namespace Header {
 /**
  * The <hgroup> element.
  *
- * @example
+ * **Example** (Construct the Hgroup node)
+ *
  * ```ts
  * import { Hgroup } from "@beep/html/Html.model"
  *
@@ -3574,7 +3701,8 @@ export class Hgroup extends S.TaggedClass<Hgroup>($I`Hgroup`)(
 /**
  * Companion namespace for {@link Hgroup}.
  *
- * @example
+ * **Example** (Encoded shape of Hgroup)
+ *
  * ```ts
  * import { Hgroup } from "@beep/html/Html.model"
  *
@@ -3601,7 +3729,8 @@ export declare namespace Hgroup {
 /**
  * The <hr> element.
  *
- * @example
+ * **Example** (Construct the Hr node)
+ *
  * ```ts
  * import { Hr } from "@beep/html/Html.model"
  *
@@ -3627,7 +3756,8 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
 /**
  * Companion namespace for {@link Hr}.
  *
- * @example
+ * **Example** (Encoded shape of Hr)
+ *
  * ```ts
  * import { Hr } from "@beep/html/Html.model"
  *
@@ -3662,7 +3792,8 @@ export declare namespace Hr {
 /**
  * The <html> element.
  *
- * @example
+ * **Example** (Construct the Html node)
+ *
  * ```ts
  * import { Html } from "@beep/html/Html.model"
  *
@@ -3686,7 +3817,8 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
 /**
  * Companion namespace for {@link Html}.
  *
- * @example
+ * **Example** (Encoded shape of Html)
+ *
  * ```ts
  * import { Html } from "@beep/html/Html.model"
  *
@@ -3717,7 +3849,8 @@ export declare namespace Html {
 /**
  * The <i> element.
  *
- * @example
+ * **Example** (Construct the I node)
+ *
  * ```ts
  * import { I } from "@beep/html/Html.model"
  *
@@ -3739,7 +3872,8 @@ export class I extends S.TaggedClass<I>($I`I`)(
 /**
  * Companion namespace for {@link I}.
  *
- * @example
+ * **Example** (Encoded shape of I)
+ *
  * ```ts
  * import { I } from "@beep/html/Html.model"
  *
@@ -3766,7 +3900,8 @@ export declare namespace I {
 /**
  * The <iframe> element.
  *
- * @example
+ * **Example** (Construct the Iframe node)
+ *
  * ```ts
  * import { Iframe } from "@beep/html/Html.model"
  *
@@ -3826,7 +3961,8 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
 /**
  * Companion namespace for {@link Iframe}.
  *
- * @example
+ * **Example** (Encoded shape of Iframe)
+ *
  * ```ts
  * import { Iframe } from "@beep/html/Html.model"
  *
@@ -3903,7 +4039,8 @@ export declare namespace Iframe {
 /**
  * The <img> element.
  *
- * @example
+ * **Example** (Construct the Img node)
+ *
  * ```ts
  * import { Img } from "@beep/html/Html.model"
  *
@@ -3951,7 +4088,8 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
 /**
  * Companion namespace for {@link Img}.
  *
- * @example
+ * **Example** (Encoded shape of Img)
+ *
  * ```ts
  * import { Img } from "@beep/html/Html.model"
  *
@@ -4028,7 +4166,8 @@ export declare namespace Img {
 /**
  * The <input> element.
  *
- * @example
+ * **Example** (Construct the Input node)
+ *
  * ```ts
  * import { Input } from "@beep/html/Html.model"
  *
@@ -4120,7 +4259,8 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
 /**
  * Companion namespace for {@link Input}.
  *
- * @example
+ * **Example** (Encoded shape of Input)
+ *
  * ```ts
  * import { Input } from "@beep/html/Html.model"
  *
@@ -4248,7 +4388,8 @@ export declare namespace Input {
 /**
  * The <ins> element.
  *
- * @example
+ * **Example** (Construct the Ins node)
+ *
  * ```ts
  * import { Ins } from "@beep/html/Html.model"
  *
@@ -4272,7 +4413,8 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
 /**
  * Companion namespace for {@link Ins}.
  *
- * @example
+ * **Example** (Encoded shape of Ins)
+ *
  * ```ts
  * import { Ins } from "@beep/html/Html.model"
  *
@@ -4303,7 +4445,8 @@ export declare namespace Ins {
 /**
  * The <isindex> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Isindex node)
+ *
  * ```ts
  * import { Isindex } from "@beep/html/Html.model"
  *
@@ -4324,7 +4467,8 @@ export class Isindex extends S.TaggedClass<Isindex>($I`Isindex`)(
 /**
  * Companion namespace for {@link Isindex}.
  *
- * @example
+ * **Example** (Encoded shape of Isindex)
+ *
  * ```ts
  * import { Isindex } from "@beep/html/Html.model"
  *
@@ -4349,7 +4493,8 @@ export declare namespace Isindex {
 /**
  * The <kbd> element.
  *
- * @example
+ * **Example** (Construct the Kbd node)
+ *
  * ```ts
  * import { Kbd } from "@beep/html/Html.model"
  *
@@ -4371,7 +4516,8 @@ export class Kbd extends S.TaggedClass<Kbd>($I`Kbd`)(
 /**
  * Companion namespace for {@link Kbd}.
  *
- * @example
+ * **Example** (Encoded shape of Kbd)
+ *
  * ```ts
  * import { Kbd } from "@beep/html/Html.model"
  *
@@ -4398,7 +4544,8 @@ export declare namespace Kbd {
 /**
  * The <keygen> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Keygen node)
+ *
  * ```ts
  * import { Keygen } from "@beep/html/Html.model"
  *
@@ -4419,7 +4566,8 @@ export class Keygen extends S.TaggedClass<Keygen>($I`Keygen`)(
 /**
  * Companion namespace for {@link Keygen}.
  *
- * @example
+ * **Example** (Encoded shape of Keygen)
+ *
  * ```ts
  * import { Keygen } from "@beep/html/Html.model"
  *
@@ -4444,7 +4592,8 @@ export declare namespace Keygen {
 /**
  * The <label> element.
  *
- * @example
+ * **Example** (Construct the Label node)
+ *
  * ```ts
  * import { Label } from "@beep/html/Html.model"
  *
@@ -4467,7 +4616,8 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
 /**
  * Companion namespace for {@link Label}.
  *
- * @example
+ * **Example** (Encoded shape of Label)
+ *
  * ```ts
  * import { Label } from "@beep/html/Html.model"
  *
@@ -4496,7 +4646,8 @@ export declare namespace Label {
 /**
  * The <legend> element.
  *
- * @example
+ * **Example** (Construct the Legend node)
+ *
  * ```ts
  * import { Legend } from "@beep/html/Html.model"
  *
@@ -4519,7 +4670,8 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
 /**
  * Companion namespace for {@link Legend}.
  *
- * @example
+ * **Example** (Encoded shape of Legend)
+ *
  * ```ts
  * import { Legend } from "@beep/html/Html.model"
  *
@@ -4548,7 +4700,8 @@ export declare namespace Legend {
 /**
  * The <li> element.
  *
- * @example
+ * **Example** (Construct the Li node)
+ *
  * ```ts
  * import { Li } from "@beep/html/Html.model"
  *
@@ -4572,7 +4725,8 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
 /**
  * Companion namespace for {@link Li}.
  *
- * @example
+ * **Example** (Encoded shape of Li)
+ *
  * ```ts
  * import { Li } from "@beep/html/Html.model"
  *
@@ -4603,7 +4757,8 @@ export declare namespace Li {
 /**
  * The <link> element.
  *
- * @example
+ * **Example** (Construct the Link node)
+ *
  * ```ts
  * import { Link } from "@beep/html/Html.model"
  *
@@ -4663,7 +4818,8 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 /**
  * Companion namespace for {@link Link}.
  *
- * @example
+ * **Example** (Encoded shape of Link)
+ *
  * ```ts
  * import { Link } from "@beep/html/Html.model"
  *
@@ -4754,7 +4910,8 @@ export declare namespace Link {
 /**
  * The <listing> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Listing node)
+ *
  * ```ts
  * import { Listing } from "@beep/html/Html.model"
  *
@@ -4776,7 +4933,8 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
 /**
  * Companion namespace for {@link Listing}.
  *
- * @example
+ * **Example** (Encoded shape of Listing)
+ *
  * ```ts
  * import { Listing } from "@beep/html/Html.model"
  *
@@ -4803,7 +4961,8 @@ export declare namespace Listing {
 /**
  * The <main> element.
  *
- * @example
+ * **Example** (Construct the Main node)
+ *
  * ```ts
  * import { Main } from "@beep/html/Html.model"
  *
@@ -4825,7 +4984,8 @@ export class Main extends S.TaggedClass<Main>($I`Main`)(
 /**
  * Companion namespace for {@link Main}.
  *
- * @example
+ * **Example** (Encoded shape of Main)
+ *
  * ```ts
  * import { Main } from "@beep/html/Html.model"
  *
@@ -4852,7 +5012,8 @@ export declare namespace Main {
 /**
  * The <map> element.
  *
- * @example
+ * **Example** (Construct the MapElement node)
+ *
  * ```ts
  * import { MapElement } from "@beep/html/Html.model"
  *
@@ -4875,7 +5036,8 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
 /**
  * Companion namespace for {@link MapElement}.
  *
- * @example
+ * **Example** (Encoded shape of MapElement)
+ *
  * ```ts
  * import { MapElement } from "@beep/html/Html.model"
  *
@@ -4904,7 +5066,8 @@ export declare namespace MapElement {
 /**
  * The <mark> element.
  *
- * @example
+ * **Example** (Construct the Mark node)
+ *
  * ```ts
  * import { Mark } from "@beep/html/Html.model"
  *
@@ -4926,7 +5089,8 @@ export class Mark extends S.TaggedClass<Mark>($I`Mark`)(
 /**
  * Companion namespace for {@link Mark}.
  *
- * @example
+ * **Example** (Encoded shape of Mark)
+ *
  * ```ts
  * import { Mark } from "@beep/html/Html.model"
  *
@@ -4953,7 +5117,8 @@ export declare namespace Mark {
 /**
  * The <marquee> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Marquee node)
+ *
  * ```ts
  * import { Marquee } from "@beep/html/Html.model"
  *
@@ -4979,7 +5144,8 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
 /**
  * Companion namespace for {@link Marquee}.
  *
- * @example
+ * **Example** (Encoded shape of Marquee)
+ *
  * ```ts
  * import { Marquee } from "@beep/html/Html.model"
  *
@@ -5014,7 +5180,8 @@ export declare namespace Marquee {
 /**
  * The <menu> element.
  *
- * @example
+ * **Example** (Construct the Menu node)
+ *
  * ```ts
  * import { Menu } from "@beep/html/Html.model"
  *
@@ -5039,7 +5206,8 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
 /**
  * Companion namespace for {@link Menu}.
  *
- * @example
+ * **Example** (Encoded shape of Menu)
+ *
  * ```ts
  * import { Menu } from "@beep/html/Html.model"
  *
@@ -5072,7 +5240,8 @@ export declare namespace Menu {
 /**
  * The <menuitem> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Menuitem node)
+ *
  * ```ts
  * import { Menuitem } from "@beep/html/Html.model"
  *
@@ -5094,7 +5263,8 @@ export class Menuitem extends S.TaggedClass<Menuitem>($I`Menuitem`)(
 /**
  * Companion namespace for {@link Menuitem}.
  *
- * @example
+ * **Example** (Encoded shape of Menuitem)
+ *
  * ```ts
  * import { Menuitem } from "@beep/html/Html.model"
  *
@@ -5121,7 +5291,8 @@ export declare namespace Menuitem {
 /**
  * The <meta> element.
  *
- * @example
+ * **Example** (Construct the Meta node)
+ *
  * ```ts
  * import { Meta } from "@beep/html/Html.model"
  *
@@ -5156,7 +5327,8 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
 /**
  * Companion namespace for {@link Meta}.
  *
- * @example
+ * **Example** (Encoded shape of Meta)
+ *
  * ```ts
  * import { Meta } from "@beep/html/Html.model"
  *
@@ -5195,7 +5367,8 @@ export declare namespace Meta {
 /**
  * The <meter> element.
  *
- * @example
+ * **Example** (Construct the Meter node)
+ *
  * ```ts
  * import { Meter } from "@beep/html/Html.model"
  *
@@ -5223,7 +5396,8 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
 /**
  * Companion namespace for {@link Meter}.
  *
- * @example
+ * **Example** (Encoded shape of Meter)
+ *
  * ```ts
  * import { Meter } from "@beep/html/Html.model"
  *
@@ -5262,7 +5436,8 @@ export declare namespace Meter {
 /**
  * The <multicol> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Multicol node)
+ *
  * ```ts
  * import { Multicol } from "@beep/html/Html.model"
  *
@@ -5284,7 +5459,8 @@ export class Multicol extends S.TaggedClass<Multicol>($I`Multicol`)(
 /**
  * Companion namespace for {@link Multicol}.
  *
- * @example
+ * **Example** (Encoded shape of Multicol)
+ *
  * ```ts
  * import { Multicol } from "@beep/html/Html.model"
  *
@@ -5311,7 +5487,8 @@ export declare namespace Multicol {
 /**
  * The <nav> element.
  *
- * @example
+ * **Example** (Construct the Nav node)
+ *
  * ```ts
  * import { Nav } from "@beep/html/Html.model"
  *
@@ -5333,7 +5510,8 @@ export class Nav extends S.TaggedClass<Nav>($I`Nav`)(
 /**
  * Companion namespace for {@link Nav}.
  *
- * @example
+ * **Example** (Encoded shape of Nav)
+ *
  * ```ts
  * import { Nav } from "@beep/html/Html.model"
  *
@@ -5360,7 +5538,8 @@ export declare namespace Nav {
 /**
  * The <nextid> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Nextid node)
+ *
  * ```ts
  * import { Nextid } from "@beep/html/Html.model"
  *
@@ -5381,7 +5560,8 @@ export class Nextid extends S.TaggedClass<Nextid>($I`Nextid`)(
 /**
  * Companion namespace for {@link Nextid}.
  *
- * @example
+ * **Example** (Encoded shape of Nextid)
+ *
  * ```ts
  * import { Nextid } from "@beep/html/Html.model"
  *
@@ -5406,7 +5586,8 @@ export declare namespace Nextid {
 /**
  * The <nobr> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Nobr node)
+ *
  * ```ts
  * import { Nobr } from "@beep/html/Html.model"
  *
@@ -5428,7 +5609,8 @@ export class Nobr extends S.TaggedClass<Nobr>($I`Nobr`)(
 /**
  * Companion namespace for {@link Nobr}.
  *
- * @example
+ * **Example** (Encoded shape of Nobr)
+ *
  * ```ts
  * import { Nobr } from "@beep/html/Html.model"
  *
@@ -5455,7 +5637,8 @@ export declare namespace Nobr {
 /**
  * The <noembed> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Noembed node)
+ *
  * ```ts
  * import { Noembed } from "@beep/html/Html.model"
  *
@@ -5477,7 +5660,8 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
 /**
  * Companion namespace for {@link Noembed}.
  *
- * @example
+ * **Example** (Encoded shape of Noembed)
+ *
  * ```ts
  * import { Noembed } from "@beep/html/Html.model"
  *
@@ -5504,7 +5688,8 @@ export declare namespace Noembed {
 /**
  * The <noframes> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Noframes node)
+ *
  * ```ts
  * import { Noframes } from "@beep/html/Html.model"
  *
@@ -5526,7 +5711,8 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
 /**
  * Companion namespace for {@link Noframes}.
  *
- * @example
+ * **Example** (Encoded shape of Noframes)
+ *
  * ```ts
  * import { Noframes } from "@beep/html/Html.model"
  *
@@ -5553,7 +5739,8 @@ export declare namespace Noframes {
 /**
  * The <noscript> element.
  *
- * @example
+ * **Example** (Construct the Noscript node)
+ *
  * ```ts
  * import { Noscript } from "@beep/html/Html.model"
  *
@@ -5575,7 +5762,8 @@ export class Noscript extends S.TaggedClass<Noscript>($I`Noscript`)(
 /**
  * Companion namespace for {@link Noscript}.
  *
- * @example
+ * **Example** (Encoded shape of Noscript)
+ *
  * ```ts
  * import { Noscript } from "@beep/html/Html.model"
  *
@@ -5602,7 +5790,8 @@ export declare namespace Noscript {
 /**
  * The <object> element.
  *
- * @example
+ * **Example** (Construct the ObjectElement node)
+ *
  * ```ts
  * import { ObjectElement } from "@beep/html/Html.model"
  *
@@ -5645,7 +5834,8 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
 /**
  * Companion namespace for {@link ObjectElement}.
  *
- * @example
+ * **Example** (Encoded shape of ObjectElement)
+ *
  * ```ts
  * import { ObjectElement } from "@beep/html/Html.model"
  *
@@ -5714,7 +5904,8 @@ export declare namespace ObjectElement {
 /**
  * The <ol> element.
  *
- * @example
+ * **Example** (Construct the Ol node)
+ *
  * ```ts
  * import { Ol } from "@beep/html/Html.model"
  *
@@ -5740,7 +5931,8 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
 /**
  * Companion namespace for {@link Ol}.
  *
- * @example
+ * **Example** (Encoded shape of Ol)
+ *
  * ```ts
  * import { Ol } from "@beep/html/Html.model"
  *
@@ -5775,7 +5967,8 @@ export declare namespace Ol {
 /**
  * The <optgroup> element.
  *
- * @example
+ * **Example** (Construct the Optgroup node)
+ *
  * ```ts
  * import { Optgroup } from "@beep/html/Html.model"
  *
@@ -5799,7 +5992,8 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
 /**
  * Companion namespace for {@link Optgroup}.
  *
- * @example
+ * **Example** (Encoded shape of Optgroup)
+ *
  * ```ts
  * import { Optgroup } from "@beep/html/Html.model"
  *
@@ -5830,7 +6024,8 @@ export declare namespace Optgroup {
 /**
  * The <option> element.
  *
- * @example
+ * **Example** (Construct the Option node)
+ *
  * ```ts
  * import { Option } from "@beep/html/Html.model"
  *
@@ -5857,7 +6052,8 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
 /**
  * Companion namespace for {@link Option}.
  *
- * @example
+ * **Example** (Encoded shape of Option)
+ *
  * ```ts
  * import { Option } from "@beep/html/Html.model"
  *
@@ -5894,7 +6090,8 @@ export declare namespace Option {
 /**
  * The <output> element.
  *
- * @example
+ * **Example** (Construct the Output node)
+ *
  * ```ts
  * import { Output } from "@beep/html/Html.model"
  *
@@ -5921,7 +6118,8 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
 /**
  * Companion namespace for {@link Output}.
  *
- * @example
+ * **Example** (Encoded shape of Output)
+ *
  * ```ts
  * import { Output } from "@beep/html/Html.model"
  *
@@ -5958,7 +6156,8 @@ export declare namespace Output {
 /**
  * The <p> element.
  *
- * @example
+ * **Example** (Construct the P node)
+ *
  * ```ts
  * import { P } from "@beep/html/Html.model"
  *
@@ -5981,7 +6180,8 @@ export class P extends S.TaggedClass<P>($I`P`)(
 /**
  * Companion namespace for {@link P}.
  *
- * @example
+ * **Example** (Encoded shape of P)
+ *
  * ```ts
  * import { P } from "@beep/html/Html.model"
  *
@@ -6010,7 +6210,8 @@ export declare namespace P {
 /**
  * The <param> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Param node)
+ *
  * ```ts
  * import { Param } from "@beep/html/Html.model"
  *
@@ -6031,7 +6232,8 @@ export class Param extends S.TaggedClass<Param>($I`Param`)(
 /**
  * Companion namespace for {@link Param}.
  *
- * @example
+ * **Example** (Encoded shape of Param)
+ *
  * ```ts
  * import { Param } from "@beep/html/Html.model"
  *
@@ -6056,7 +6258,8 @@ export declare namespace Param {
 /**
  * The <picture> element.
  *
- * @example
+ * **Example** (Construct the Picture node)
+ *
  * ```ts
  * import { Picture } from "@beep/html/Html.model"
  *
@@ -6078,7 +6281,8 @@ export class Picture extends S.TaggedClass<Picture>($I`Picture`)(
 /**
  * Companion namespace for {@link Picture}.
  *
- * @example
+ * **Example** (Encoded shape of Picture)
+ *
  * ```ts
  * import { Picture } from "@beep/html/Html.model"
  *
@@ -6105,7 +6309,8 @@ export declare namespace Picture {
 /**
  * The <plaintext> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Plaintext node)
+ *
  * ```ts
  * import { Plaintext } from "@beep/html/Html.model"
  *
@@ -6127,7 +6332,8 @@ export class Plaintext extends S.TaggedClass<Plaintext>($I`Plaintext`)(
 /**
  * Companion namespace for {@link Plaintext}.
  *
- * @example
+ * **Example** (Encoded shape of Plaintext)
+ *
  * ```ts
  * import { Plaintext } from "@beep/html/Html.model"
  *
@@ -6154,7 +6360,8 @@ export declare namespace Plaintext {
 /**
  * The <pre> element.
  *
- * @example
+ * **Example** (Construct the Pre node)
+ *
  * ```ts
  * import { Pre } from "@beep/html/Html.model"
  *
@@ -6177,7 +6384,8 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
 /**
  * Companion namespace for {@link Pre}.
  *
- * @example
+ * **Example** (Encoded shape of Pre)
+ *
  * ```ts
  * import { Pre } from "@beep/html/Html.model"
  *
@@ -6206,7 +6414,8 @@ export declare namespace Pre {
 /**
  * The <progress> element.
  *
- * @example
+ * **Example** (Construct the Progress node)
+ *
  * ```ts
  * import { Progress } from "@beep/html/Html.model"
  *
@@ -6230,7 +6439,8 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
 /**
  * Companion namespace for {@link Progress}.
  *
- * @example
+ * **Example** (Encoded shape of Progress)
+ *
  * ```ts
  * import { Progress } from "@beep/html/Html.model"
  *
@@ -6261,7 +6471,8 @@ export declare namespace Progress {
 /**
  * The <q> element.
  *
- * @example
+ * **Example** (Construct the Q node)
+ *
  * ```ts
  * import { Q } from "@beep/html/Html.model"
  *
@@ -6284,7 +6495,8 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
 /**
  * Companion namespace for {@link Q}.
  *
- * @example
+ * **Example** (Encoded shape of Q)
+ *
  * ```ts
  * import { Q } from "@beep/html/Html.model"
  *
@@ -6313,7 +6525,8 @@ export declare namespace Q {
 /**
  * The <rb> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Rb node)
+ *
  * ```ts
  * import { Rb } from "@beep/html/Html.model"
  *
@@ -6335,7 +6548,8 @@ export class Rb extends S.TaggedClass<Rb>($I`Rb`)(
 /**
  * Companion namespace for {@link Rb}.
  *
- * @example
+ * **Example** (Encoded shape of Rb)
+ *
  * ```ts
  * import { Rb } from "@beep/html/Html.model"
  *
@@ -6362,7 +6576,8 @@ export declare namespace Rb {
 /**
  * The <rp> element.
  *
- * @example
+ * **Example** (Construct the Rp node)
+ *
  * ```ts
  * import { Rp } from "@beep/html/Html.model"
  *
@@ -6384,7 +6599,8 @@ export class Rp extends S.TaggedClass<Rp>($I`Rp`)(
 /**
  * Companion namespace for {@link Rp}.
  *
- * @example
+ * **Example** (Encoded shape of Rp)
+ *
  * ```ts
  * import { Rp } from "@beep/html/Html.model"
  *
@@ -6411,7 +6627,8 @@ export declare namespace Rp {
 /**
  * The <rt> element.
  *
- * @example
+ * **Example** (Construct the Rt node)
+ *
  * ```ts
  * import { Rt } from "@beep/html/Html.model"
  *
@@ -6433,7 +6650,8 @@ export class Rt extends S.TaggedClass<Rt>($I`Rt`)(
 /**
  * Companion namespace for {@link Rt}.
  *
- * @example
+ * **Example** (Encoded shape of Rt)
+ *
  * ```ts
  * import { Rt } from "@beep/html/Html.model"
  *
@@ -6460,7 +6678,8 @@ export declare namespace Rt {
 /**
  * The <rtc> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Rtc node)
+ *
  * ```ts
  * import { Rtc } from "@beep/html/Html.model"
  *
@@ -6482,7 +6701,8 @@ export class Rtc extends S.TaggedClass<Rtc>($I`Rtc`)(
 /**
  * Companion namespace for {@link Rtc}.
  *
- * @example
+ * **Example** (Encoded shape of Rtc)
+ *
  * ```ts
  * import { Rtc } from "@beep/html/Html.model"
  *
@@ -6509,7 +6729,8 @@ export declare namespace Rtc {
 /**
  * The <ruby> element.
  *
- * @example
+ * **Example** (Construct the Ruby node)
+ *
  * ```ts
  * import { Ruby } from "@beep/html/Html.model"
  *
@@ -6531,7 +6752,8 @@ export class Ruby extends S.TaggedClass<Ruby>($I`Ruby`)(
 /**
  * Companion namespace for {@link Ruby}.
  *
- * @example
+ * **Example** (Encoded shape of Ruby)
+ *
  * ```ts
  * import { Ruby } from "@beep/html/Html.model"
  *
@@ -6558,7 +6780,8 @@ export declare namespace Ruby {
 /**
  * The <s> element.
  *
- * @example
+ * **Example** (Construct the SElement node)
+ *
  * ```ts
  * import { SElement } from "@beep/html/Html.model"
  *
@@ -6580,7 +6803,8 @@ export class SElement extends S.TaggedClass<SElement>($I`SElement`)(
 /**
  * Companion namespace for {@link SElement}.
  *
- * @example
+ * **Example** (Encoded shape of SElement)
+ *
  * ```ts
  * import { SElement } from "@beep/html/Html.model"
  *
@@ -6607,7 +6831,8 @@ export declare namespace SElement {
 /**
  * The <samp> element.
  *
- * @example
+ * **Example** (Construct the Samp node)
+ *
  * ```ts
  * import { Samp } from "@beep/html/Html.model"
  *
@@ -6629,7 +6854,8 @@ export class Samp extends S.TaggedClass<Samp>($I`Samp`)(
 /**
  * Companion namespace for {@link Samp}.
  *
- * @example
+ * **Example** (Encoded shape of Samp)
+ *
  * ```ts
  * import { Samp } from "@beep/html/Html.model"
  *
@@ -6656,7 +6882,8 @@ export declare namespace Samp {
 /**
  * The <script> element.
  *
- * @example
+ * **Example** (Construct the Script node)
+ *
  * ```ts
  * import { Script } from "@beep/html/Html.model"
  *
@@ -6694,7 +6921,8 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
 /**
  * Companion namespace for {@link Script}.
  *
- * @example
+ * **Example** (Encoded shape of Script)
+ *
  * ```ts
  * import { Script } from "@beep/html/Html.model"
  *
@@ -6759,7 +6987,8 @@ export declare namespace Script {
 /**
  * The <search> element.
  *
- * @example
+ * **Example** (Construct the Search node)
+ *
  * ```ts
  * import { Search } from "@beep/html/Html.model"
  *
@@ -6781,7 +7010,8 @@ export class Search extends S.TaggedClass<Search>($I`Search`)(
 /**
  * Companion namespace for {@link Search}.
  *
- * @example
+ * **Example** (Encoded shape of Search)
+ *
  * ```ts
  * import { Search } from "@beep/html/Html.model"
  *
@@ -6808,7 +7038,8 @@ export declare namespace Search {
 /**
  * The <section> element.
  *
- * @example
+ * **Example** (Construct the Section node)
+ *
  * ```ts
  * import { Section } from "@beep/html/Html.model"
  *
@@ -6830,7 +7061,8 @@ export class Section extends S.TaggedClass<Section>($I`Section`)(
 /**
  * Companion namespace for {@link Section}.
  *
- * @example
+ * **Example** (Encoded shape of Section)
+ *
  * ```ts
  * import { Section } from "@beep/html/Html.model"
  *
@@ -6857,7 +7089,8 @@ export declare namespace Section {
 /**
  * The <select> element.
  *
- * @example
+ * **Example** (Construct the Select node)
+ *
  * ```ts
  * import { Select } from "@beep/html/Html.model"
  *
@@ -6886,7 +7119,8 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
 /**
  * Companion namespace for {@link Select}.
  *
- * @example
+ * **Example** (Encoded shape of Select)
+ *
  * ```ts
  * import { Select } from "@beep/html/Html.model"
  *
@@ -6927,7 +7161,8 @@ export declare namespace Select {
 /**
  * The <selectedcontent> element.
  *
- * @example
+ * **Example** (Construct the Selectedcontent node)
+ *
  * ```ts
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
@@ -6949,7 +7184,8 @@ export class Selectedcontent extends S.TaggedClass<Selectedcontent>($I`Selectedc
 /**
  * Companion namespace for {@link Selectedcontent}.
  *
- * @example
+ * **Example** (Encoded shape of Selectedcontent)
+ *
  * ```ts
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
@@ -6976,7 +7212,8 @@ export declare namespace Selectedcontent {
 /**
  * The <slot> element.
  *
- * @example
+ * **Example** (Construct the Slot node)
+ *
  * ```ts
  * import { Slot } from "@beep/html/Html.model"
  *
@@ -6999,7 +7236,8 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
 /**
  * Companion namespace for {@link Slot}.
  *
- * @example
+ * **Example** (Encoded shape of Slot)
+ *
  * ```ts
  * import { Slot } from "@beep/html/Html.model"
  *
@@ -7028,7 +7266,8 @@ export declare namespace Slot {
 /**
  * The <small> element.
  *
- * @example
+ * **Example** (Construct the Small node)
+ *
  * ```ts
  * import { Small } from "@beep/html/Html.model"
  *
@@ -7050,7 +7289,8 @@ export class Small extends S.TaggedClass<Small>($I`Small`)(
 /**
  * Companion namespace for {@link Small}.
  *
- * @example
+ * **Example** (Encoded shape of Small)
+ *
  * ```ts
  * import { Small } from "@beep/html/Html.model"
  *
@@ -7077,7 +7317,8 @@ export declare namespace Small {
 /**
  * The <source> element.
  *
- * @example
+ * **Example** (Construct the Source node)
+ *
  * ```ts
  * import { Source } from "@beep/html/Html.model"
  *
@@ -7105,7 +7346,8 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
 /**
  * Companion namespace for {@link Source}.
  *
- * @example
+ * **Example** (Encoded shape of Source)
+ *
  * ```ts
  * import { Source } from "@beep/html/Html.model"
  *
@@ -7144,7 +7386,8 @@ export declare namespace Source {
 /**
  * The <spacer> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Spacer node)
+ *
  * ```ts
  * import { Spacer } from "@beep/html/Html.model"
  *
@@ -7165,7 +7408,8 @@ export class Spacer extends S.TaggedClass<Spacer>($I`Spacer`)(
 /**
  * Companion namespace for {@link Spacer}.
  *
- * @example
+ * **Example** (Encoded shape of Spacer)
+ *
  * ```ts
  * import { Spacer } from "@beep/html/Html.model"
  *
@@ -7190,7 +7434,8 @@ export declare namespace Spacer {
 /**
  * The <span> element.
  *
- * @example
+ * **Example** (Construct the Span node)
+ *
  * ```ts
  * import { Span } from "@beep/html/Html.model"
  *
@@ -7212,7 +7457,8 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 /**
  * Companion namespace for {@link Span}.
  *
- * @example
+ * **Example** (Encoded shape of Span)
+ *
  * ```ts
  * import { Span } from "@beep/html/Html.model"
  *
@@ -7239,7 +7485,8 @@ export declare namespace Span {
 /**
  * The <strike> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Strike node)
+ *
  * ```ts
  * import { Strike } from "@beep/html/Html.model"
  *
@@ -7261,7 +7508,8 @@ export class Strike extends S.TaggedClass<Strike>($I`Strike`)(
 /**
  * Companion namespace for {@link Strike}.
  *
- * @example
+ * **Example** (Encoded shape of Strike)
+ *
  * ```ts
  * import { Strike } from "@beep/html/Html.model"
  *
@@ -7288,7 +7536,8 @@ export declare namespace Strike {
 /**
  * The <strong> element.
  *
- * @example
+ * **Example** (Construct the Strong node)
+ *
  * ```ts
  * import { Strong } from "@beep/html/Html.model"
  *
@@ -7310,7 +7559,8 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 /**
  * Companion namespace for {@link Strong}.
  *
- * @example
+ * **Example** (Encoded shape of Strong)
+ *
  * ```ts
  * import { Strong } from "@beep/html/Html.model"
  *
@@ -7337,7 +7587,8 @@ export declare namespace Strong {
 /**
  * The <style> element.
  *
- * @example
+ * **Example** (Construct the Style node)
+ *
  * ```ts
  * import { Style } from "@beep/html/Html.model"
  *
@@ -7362,7 +7613,8 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
 /**
  * Companion namespace for {@link Style}.
  *
- * @example
+ * **Example** (Encoded shape of Style)
+ *
  * ```ts
  * import { Style } from "@beep/html/Html.model"
  *
@@ -7395,7 +7647,8 @@ export declare namespace Style {
 /**
  * The <sub> element.
  *
- * @example
+ * **Example** (Construct the Sub node)
+ *
  * ```ts
  * import { Sub } from "@beep/html/Html.model"
  *
@@ -7417,7 +7670,8 @@ export class Sub extends S.TaggedClass<Sub>($I`Sub`)(
 /**
  * Companion namespace for {@link Sub}.
  *
- * @example
+ * **Example** (Encoded shape of Sub)
+ *
  * ```ts
  * import { Sub } from "@beep/html/Html.model"
  *
@@ -7444,7 +7698,8 @@ export declare namespace Sub {
 /**
  * The <summary> element.
  *
- * @example
+ * **Example** (Construct the Summary node)
+ *
  * ```ts
  * import { Summary } from "@beep/html/Html.model"
  *
@@ -7466,7 +7721,8 @@ export class Summary extends S.TaggedClass<Summary>($I`Summary`)(
 /**
  * Companion namespace for {@link Summary}.
  *
- * @example
+ * **Example** (Encoded shape of Summary)
+ *
  * ```ts
  * import { Summary } from "@beep/html/Html.model"
  *
@@ -7493,7 +7749,8 @@ export declare namespace Summary {
 /**
  * The <sup> element.
  *
- * @example
+ * **Example** (Construct the Sup node)
+ *
  * ```ts
  * import { Sup } from "@beep/html/Html.model"
  *
@@ -7515,7 +7772,8 @@ export class Sup extends S.TaggedClass<Sup>($I`Sup`)(
 /**
  * Companion namespace for {@link Sup}.
  *
- * @example
+ * **Example** (Encoded shape of Sup)
+ *
  * ```ts
  * import { Sup } from "@beep/html/Html.model"
  *
@@ -7542,7 +7800,8 @@ export declare namespace Sup {
 /**
  * The <table> element.
  *
- * @example
+ * **Example** (Construct the Table node)
+ *
  * ```ts
  * import { Table } from "@beep/html/Html.model"
  *
@@ -7576,7 +7835,8 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 /**
  * Companion namespace for {@link Table}.
  *
- * @example
+ * **Example** (Encoded shape of Table)
+ *
  * ```ts
  * import { Table } from "@beep/html/Html.model"
  *
@@ -7627,7 +7887,8 @@ export declare namespace Table {
 /**
  * The <tbody> element.
  *
- * @example
+ * **Example** (Construct the Tbody node)
+ *
  * ```ts
  * import { Tbody } from "@beep/html/Html.model"
  *
@@ -7654,7 +7915,8 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
 /**
  * Companion namespace for {@link Tbody}.
  *
- * @example
+ * **Example** (Encoded shape of Tbody)
+ *
  * ```ts
  * import { Tbody } from "@beep/html/Html.model"
  *
@@ -7691,7 +7953,8 @@ export declare namespace Tbody {
 /**
  * The <td> element.
  *
- * @example
+ * **Example** (Construct the Td node)
+ *
  * ```ts
  * import { Td } from "@beep/html/Html.model"
  *
@@ -7731,7 +7994,8 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
 /**
  * Companion namespace for {@link Td}.
  *
- * @example
+ * **Example** (Encoded shape of Td)
+ *
  * ```ts
  * import { Td } from "@beep/html/Html.model"
  *
@@ -7786,7 +8050,8 @@ export declare namespace Td {
 /**
  * The <template> element.
  *
- * @example
+ * **Example** (Construct the Template node)
+ *
  * ```ts
  * import { Template } from "@beep/html/Html.model"
  *
@@ -7818,7 +8083,8 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
 /**
  * Companion namespace for {@link Template}.
  *
- * @example
+ * **Example** (Encoded shape of Template)
+ *
  * ```ts
  * import { Template } from "@beep/html/Html.model"
  *
@@ -7857,7 +8123,8 @@ export declare namespace Template {
 /**
  * The <textarea> element.
  *
- * @example
+ * **Example** (Construct the Textarea node)
+ *
  * ```ts
  * import { Textarea } from "@beep/html/Html.model"
  *
@@ -7894,7 +8161,8 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
 /**
  * Companion namespace for {@link Textarea}.
  *
- * @example
+ * **Example** (Encoded shape of Textarea)
+ *
  * ```ts
  * import { Textarea } from "@beep/html/Html.model"
  *
@@ -7947,7 +8215,8 @@ export declare namespace Textarea {
 /**
  * The <tfoot> element.
  *
- * @example
+ * **Example** (Construct the Tfoot node)
+ *
  * ```ts
  * import { Tfoot } from "@beep/html/Html.model"
  *
@@ -7969,7 +8238,8 @@ export class Tfoot extends S.TaggedClass<Tfoot>($I`Tfoot`)(
 /**
  * Companion namespace for {@link Tfoot}.
  *
- * @example
+ * **Example** (Encoded shape of Tfoot)
+ *
  * ```ts
  * import { Tfoot } from "@beep/html/Html.model"
  *
@@ -7996,7 +8266,8 @@ export declare namespace Tfoot {
 /**
  * The <th> element.
  *
- * @example
+ * **Example** (Construct the Th node)
+ *
  * ```ts
  * import { Th } from "@beep/html/Html.model"
  *
@@ -8038,7 +8309,8 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
 /**
  * Companion namespace for {@link Th}.
  *
- * @example
+ * **Example** (Encoded shape of Th)
+ *
  * ```ts
  * import { Th } from "@beep/html/Html.model"
  *
@@ -8093,7 +8365,8 @@ export declare namespace Th {
 /**
  * The <thead> element.
  *
- * @example
+ * **Example** (Construct the Thead node)
+ *
  * ```ts
  * import { Thead } from "@beep/html/Html.model"
  *
@@ -8115,7 +8388,8 @@ export class Thead extends S.TaggedClass<Thead>($I`Thead`)(
 /**
  * Companion namespace for {@link Thead}.
  *
- * @example
+ * **Example** (Encoded shape of Thead)
+ *
  * ```ts
  * import { Thead } from "@beep/html/Html.model"
  *
@@ -8142,7 +8416,8 @@ export declare namespace Thead {
 /**
  * The <time> element.
  *
- * @example
+ * **Example** (Construct the Time node)
+ *
  * ```ts
  * import { Time } from "@beep/html/Html.model"
  *
@@ -8165,7 +8440,8 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
 /**
  * Companion namespace for {@link Time}.
  *
- * @example
+ * **Example** (Encoded shape of Time)
+ *
  * ```ts
  * import { Time } from "@beep/html/Html.model"
  *
@@ -8194,7 +8470,8 @@ export declare namespace Time {
 /**
  * The <title> element.
  *
- * @example
+ * **Example** (Construct the Title node)
+ *
  * ```ts
  * import { Title } from "@beep/html/Html.model"
  *
@@ -8216,7 +8493,8 @@ export class Title extends S.TaggedClass<Title>($I`Title`)(
 /**
  * Companion namespace for {@link Title}.
  *
- * @example
+ * **Example** (Encoded shape of Title)
+ *
  * ```ts
  * import { Title } from "@beep/html/Html.model"
  *
@@ -8243,7 +8521,8 @@ export declare namespace Title {
 /**
  * The <tr> element.
  *
- * @example
+ * **Example** (Construct the Tr node)
+ *
  * ```ts
  * import { Tr } from "@beep/html/Html.model"
  *
@@ -8271,7 +8550,8 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
 /**
  * Companion namespace for {@link Tr}.
  *
- * @example
+ * **Example** (Encoded shape of Tr)
+ *
  * ```ts
  * import { Tr } from "@beep/html/Html.model"
  *
@@ -8310,7 +8590,8 @@ export declare namespace Tr {
 /**
  * The <track> element.
  *
- * @example
+ * **Example** (Construct the Track node)
+ *
  * ```ts
  * import { Track } from "@beep/html/Html.model"
  *
@@ -8338,7 +8619,8 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
 /**
  * Companion namespace for {@link Track}.
  *
- * @example
+ * **Example** (Encoded shape of Track)
+ *
  * ```ts
  * import { Track } from "@beep/html/Html.model"
  *
@@ -8373,7 +8655,8 @@ export declare namespace Track {
 /**
  * The <tt> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Tt node)
+ *
  * ```ts
  * import { Tt } from "@beep/html/Html.model"
  *
@@ -8395,7 +8678,8 @@ export class Tt extends S.TaggedClass<Tt>($I`Tt`)(
 /**
  * Companion namespace for {@link Tt}.
  *
- * @example
+ * **Example** (Encoded shape of Tt)
+ *
  * ```ts
  * import { Tt } from "@beep/html/Html.model"
  *
@@ -8422,7 +8706,8 @@ export declare namespace Tt {
 /**
  * The <u> element.
  *
- * @example
+ * **Example** (Construct the U node)
+ *
  * ```ts
  * import { U } from "@beep/html/Html.model"
  *
@@ -8444,7 +8729,8 @@ export class U extends S.TaggedClass<U>($I`U`)(
 /**
  * Companion namespace for {@link U}.
  *
- * @example
+ * **Example** (Encoded shape of U)
+ *
  * ```ts
  * import { U } from "@beep/html/Html.model"
  *
@@ -8471,7 +8757,8 @@ export declare namespace U {
 /**
  * The <ul> element.
  *
- * @example
+ * **Example** (Construct the Ul node)
+ *
  * ```ts
  * import { Ul } from "@beep/html/Html.model"
  *
@@ -8495,7 +8782,8 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
 /**
  * Companion namespace for {@link Ul}.
  *
- * @example
+ * **Example** (Encoded shape of Ul)
+ *
  * ```ts
  * import { Ul } from "@beep/html/Html.model"
  *
@@ -8526,7 +8814,8 @@ export declare namespace Ul {
 /**
  * The <var> element.
  *
- * @example
+ * **Example** (Construct the Var node)
+ *
  * ```ts
  * import { Var } from "@beep/html/Html.model"
  *
@@ -8548,7 +8837,8 @@ export class Var extends S.TaggedClass<Var>($I`Var`)(
 /**
  * Companion namespace for {@link Var}.
  *
- * @example
+ * **Example** (Encoded shape of Var)
+ *
  * ```ts
  * import { Var } from "@beep/html/Html.model"
  *
@@ -8575,7 +8865,8 @@ export declare namespace Var {
 /**
  * The <video> element.
  *
- * @example
+ * **Example** (Construct the Video node)
+ *
  * ```ts
  * import { Video } from "@beep/html/Html.model"
  *
@@ -8613,7 +8904,8 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
 /**
  * Companion namespace for {@link Video}.
  *
- * @example
+ * **Example** (Encoded shape of Video)
+ *
  * ```ts
  * import { Video } from "@beep/html/Html.model"
  *
@@ -8664,7 +8956,8 @@ export declare namespace Video {
 /**
  * The <wbr> element.
  *
- * @example
+ * **Example** (Construct the Wbr node)
+ *
  * ```ts
  * import { Wbr } from "@beep/html/Html.model"
  *
@@ -8685,7 +8978,8 @@ export class Wbr extends S.TaggedClass<Wbr>($I`Wbr`)(
 /**
  * Companion namespace for {@link Wbr}.
  *
- * @example
+ * **Example** (Encoded shape of Wbr)
+ *
  * ```ts
  * import { Wbr } from "@beep/html/Html.model"
  *
@@ -8710,7 +9004,8 @@ export declare namespace Wbr {
 /**
  * The <xmp> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
+ * **Example** (Construct the Xmp node)
+ *
  * ```ts
  * import { Xmp } from "@beep/html/Html.model"
  *
@@ -8732,7 +9027,8 @@ export class Xmp extends S.TaggedClass<Xmp>($I`Xmp`)(
 /**
  * Companion namespace for {@link Xmp}.
  *
- * @example
+ * **Example** (Encoded shape of Xmp)
+ *
  * ```ts
  * import { Xmp } from "@beep/html/Html.model"
  *
@@ -8759,7 +9055,8 @@ export declare namespace Xmp {
 /**
  * Discriminated union of nodes valid as element or fragment children.
  *
- * @example
+ * **Example** (Match a text node against HtmlChild)
+ *
  * ```ts
  * import { HtmlChild } from "@beep/html/Html.model"
  * import { Text } from "@beep/html/Html.nodes"
@@ -8926,7 +9223,8 @@ export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
 /**
  * Companion namespace for {@link HtmlChild}.
  *
- * @example
+ * **Example** (Encoded shape of HtmlChild)
+ *
  * ```ts
  * import type { HtmlChild } from "@beep/html/Html.model"
  *
@@ -9237,7 +9535,8 @@ export declare namespace HtmlChild {
 /**
  * Discriminated union of serializable HTML roots.
  *
- * @example
+ * **Example** (Match a fragment against HtmlRoot)
+ *
  * ```ts
  * import { Fragment, HtmlRoot } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -9405,7 +9704,8 @@ export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
 /**
  * Companion namespace for {@link HtmlRoot}.
  *
- * @example
+ * **Example** (Encoded shape of HtmlRoot)
+ *
  * ```ts
  * import type { HtmlRoot } from "@beep/html/Html.model"
  *
@@ -9721,7 +10021,8 @@ export declare namespace HtmlRoot {
  * Discriminated union of every HTML AST node — all 142 elements plus the
  * text, comment, foreign, doctype, document, and fragment node kinds.
  *
- * @example
+ * **Example** (Match an anchor against HtmlNode)
+ *
  * ```ts
  * import { A, HtmlNode } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -9889,7 +10190,8 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
 /**
  * Companion namespace for {@link HtmlNode}.
  *
- * @example
+ * **Example** (Build an HtmlNode.Type value)
+ *
  * ```ts
  * import { A } from "@beep/html/Html.model"
  * import type { HtmlNode } from "@beep/html/Html.model"
@@ -10208,7 +10510,8 @@ export declare namespace HtmlNode {
  * Advisory sub-union of elements in the "metadata" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match Base against Metadata)
+ *
  * ```ts
  * import { Base, Metadata } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10235,7 +10538,8 @@ export const Metadata = taggedUnion<
  * Advisory sub-union of elements in the "flow" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match A against Flow)
+ *
  * ```ts
  * import { A, Flow } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10509,7 +10813,8 @@ export const Flow = taggedUnion<
  * Advisory sub-union of elements in the "sectioning" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match Article against Sectioning)
+ *
  * ```ts
  * import { Article, Sectioning } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10529,7 +10834,8 @@ export const Sectioning = taggedUnion<
  * Advisory sub-union of elements in the "heading" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match H1 against Heading)
+ *
  * ```ts
  * import { H1, Heading } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10549,7 +10855,8 @@ export const Heading = taggedUnion<
  * Advisory sub-union of elements in the "phrasing" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match A against Phrasing)
+ *
  * ```ts
  * import { A, Phrasing } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10730,7 +11037,8 @@ export const Phrasing = taggedUnion<
  * Advisory sub-union of elements in the "embedded" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match Audio against Embedded)
+ *
  * ```ts
  * import { Audio, Embedded } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10766,7 +11074,8 @@ export const Embedded = taggedUnion<
  * Advisory sub-union of elements in the "interactive" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match A against Interactive)
+ *
  * ```ts
  * import { A, Interactive } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -10827,7 +11136,8 @@ export const Interactive = taggedUnion<
  * Advisory sub-union of elements in the "palpable" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match A against Palpable)
+ *
  * ```ts
  * import { A, Palpable } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
@@ -11065,7 +11375,8 @@ export const Palpable = taggedUnion<
  * Advisory sub-union of elements in the "script-supporting" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
+ * **Example** (Match Script against ScriptSupporting)
+ *
  * ```ts
  * import { Script, ScriptSupporting } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
