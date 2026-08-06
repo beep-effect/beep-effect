@@ -321,8 +321,10 @@ candor tables in `packages/law-practice/tables/src/entities/index.ts`;
 `packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`,
 still the only migration naming `law_practice`, so the slice's schema is in
 the baseline snapshot and a second goal generates a delta migration rather
-than a bootstrap; three `AcceptedProofManifest.ts` entries (`:808`, `:814`,
-`:877`); and an executable append-only PGlite proof to clone. Rung 2's stated
+than a bootstrap; three `AcceptedProofManifest.ts` entries for that lane
+(`:808`, `:814`, `:874` — entry-open lines; the migration *target module* at
+`:724` is a separate artifact class a delta migration need not add); and an
+executable append-only PGlite proof to clone. Rung 2's stated
 cost driver re-prices downward — not to zero, since rung 2 still owns the
 transition events, the correction contract, `PriorityBasis`, the handoff, and
 the CQ fixtures. The bust definition is unchanged.
