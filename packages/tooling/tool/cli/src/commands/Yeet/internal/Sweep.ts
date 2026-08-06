@@ -743,6 +743,11 @@ const runCommandStep = (
 // fall through to the skip that carries the failure text verbatim.
 const isStaleLease = (output: string): boolean => Str.includes("stale info")(Str.toLowerCase(output));
 
+// Outcome boundary (review-hardened on #571): the ONLY benign rejection is
+// git's own stale-lease phrase — a concurrent update the re-run absorbs.
+// Every other failure is one the sweep cannot fix by re-running, so it hands
+// the operator the exact leased command instead of burying the failure in a
+// skip; the permission-marker list refines the reason text, never the routing.
 const runRemoteDeletionStep = (
   state: SweepGitState,
   cwd: string,
@@ -753,18 +758,17 @@ const runRemoteDeletionStep = (
       if (probe.exitCode === 0) {
         return executedFrom(probe);
       }
-      if (isPermissionDenial(probe.output)) {
-        return SweepStepNeedsOperator.make({
-          reason: `deleting origin/${state.branch} was denied by permission: ${probeFailureText(probe)}`,
-          operatorCommand: action,
-        });
-      }
       if (isStaleLease(probe.output)) {
         return SweepStepSkipped.make({
           reason: `origin/${state.branch} moved after planning; the leased deletion was rejected: ${probeFailureText(probe)}`,
         });
       }
-      return skippedFromFailure(action, probe);
+      return SweepStepNeedsOperator.make({
+        reason: isPermissionDenial(probe.output)
+          ? `deleting origin/${state.branch} was denied by permission: ${probeFailureText(probe)}`
+          : `deleting origin/${state.branch} failed (exit ${probe.exitCode}): ${probeFailureText(probe)}`,
+        operatorCommand: action,
+      });
     })
   );
 

@@ -550,15 +550,17 @@ describe("executeSweep", () => {
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
   );
 
-  it.effect("keeps a generic remote rejection as a failure report, never a stale lease", () =>
+  it.effect("hands a generic remote rejection to the operator with its own words, never a stale lease", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const report = yield* executeSweep(sweepContext(root));
         const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
-        expect(remoteStep.outcome.status).toBe("skipped");
-        const reason = remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "";
-        expect(reason).not.toContain("moved after planning");
-        expect(reason).toContain("custom hook said no");
+        expect(remoteStep.outcome.status).toBe("needs-operator");
+        if (remoteStep.outcome.status === "needs-operator") {
+          expect(remoteStep.outcome.reason).not.toContain("moved after planning");
+          expect(remoteStep.outcome.reason).toContain("custom hook said no");
+          expect(remoteStep.outcome.operatorCommand).toContain("--force-with-lease");
+        }
       })
     ).pipe(
       provideScopedLayer(
