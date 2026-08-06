@@ -5,12 +5,12 @@
     "title": "Patent Citation Candor Gate",
     "status": "active",
     "created": "2026-08-04",
-    "updated": "2026-08-04",
+    "updated": "2026-08-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-citation-candor-gate",
   "lifecycle": "active",
-  "mission": "Block filing promotion until every current AI-discovered PatentCitationEvent carries an attorney CandorDisposition bound to its exact observation version — fail closed, no computed legal judgment, no stored closure.",
+  "mission": "Block filing promotion until every current AI-discovered PatentCitationEvent carries an attorney CandorDisposition bound to its exact observation version \u2014 fail closed, no computed legal judgment, no stored closure.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -33,7 +33,12 @@
     "goals/patent-citation-candor-gate/GOAL.md",
     "goals/patent-citation-candor-gate/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/01-gate-shape-check.md",
+    "research/02-surface-reverification.md",
+    "research/03-durability-lane.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -47,27 +52,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Rung 1: domain proof",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rung 2: durability + live gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

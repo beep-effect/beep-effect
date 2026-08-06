@@ -84,13 +84,14 @@ Original Phase 1 steps (retained for provenance):
 The first wedge is COMPLETE: `explorations/patent-citation-candor-gate`
 walked capture → research → align → shape → decompose and GRADUATED
 2026-08-04 into `goals/patent-citation-candor-gate` (graduation PR #560
-merged 2026-08-05). The second wedge is at ALIGN-COMPLETE:
+merged 2026-08-05). The second wedge is at SHAPE with an approved BRIEF:
 `explorations/legal-position-relator-runtime` (opened 2026-08-05 on
 Benjamin's call), seeded from the positions/relators cluster plus the
 carried contradiction-semantics cluster (re-routed 2026-08-04 — compose,
 don't widen; see [`ROUTING-SEED.md`](./ROUTING-SEED.md) § Phase-2
-amendments); its research lanes, synthesis, review gate 1, and all six
-align branches closed by 2026-08-06, with the record landed via PR #573.
+amendments); research + align landed via PR #573, and the `BRIEF.md` —
+shaped inside the six align boundaries and hardened by a three-lens Opus
+review — was APPROVED by Benjamin 2026-08-06.
 Phase shape remains sequential: `patent-drafting-episode-ledger` and the
 FunctionalUnit extension into `explorations/uspto-patent-driver-depth` stay
 queued on Benjamin's call.
@@ -137,9 +138,10 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 Phase 1 is complete and signed off (2026-08-01 reconciliation grill), the
 first Phase 2 wedge is GRADUATED (goal packet live on main), and the second
-wedge is at ALIGN-COMPLETE (2026-08-06, record landed via PR #573). First
-action is now to RESUME `explorations/legal-position-relator-runtime` where
-its `README.md` Next Open Question points: draft `BRIEF.md` inside the six
-closed align boundaries and iterate it with Benjamin to approval. Do not
-re-scaffold the packet or re-run its completed research/align stages. Goal
-graduation and merges still require Benjamin's explicit ask.
+wedge is at SHAPE with its BRIEF APPROVED (2026-08-06). First action is now
+to RESUME `explorations/legal-position-relator-runtime` where its
+`README.md` Next Open Question points: decompose — author `MAP.md` inside
+the approved BRIEF, run the four-point graduation gate, and graduate on
+Benjamin's call. Do not re-scaffold the packet or re-run its completed
+research/align/shape stages. Goal graduation and merges still require
+Benjamin's explicit ask.

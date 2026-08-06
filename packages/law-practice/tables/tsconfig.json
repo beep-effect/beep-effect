@@ -9,10 +9,16 @@
   },
   "references": [
     {
+      "path": "../../drivers/drizzle/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
       "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

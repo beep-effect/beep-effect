@@ -40,7 +40,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, FileSystem, HashSet, Match, Path, pipe, Result } from "effect";
+import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -381,7 +381,7 @@ export const ReplyAction = S.Union([ReplyPostAction, ReplySettledAction]).pipe(
  */
 export type ReplyAction = typeof ReplyAction.Type;
 
-const compactWhitespace = (value: string): string => pipe(value, Str.replace(/\s+/gu, " "), Str.trim);
+const compactWhitespace: (value: string) => string = flow(Str.replace(/\s+/gu, " "), Str.trim);
 
 const excerpt = (value: string): string => {
   const normalized = compactWhitespace(value);

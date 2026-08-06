@@ -76,11 +76,12 @@ phase's critical path.
      (`ExitPlanMode` ⇒ plan approval, any other tool ⇒ tool permission),
      never from Notification message text — `notification_type` is
      `permission_prompt` for both. Unmatched shapes yield `unknown`.
-  3. **Wait duration subtracts execution time.** `PostToolUse` marks
-     execution completion, not approval, so the true wait is
-     `PostToolUse.ts − PermissionRequest.ts − PostToolUse.duration_ms`.
-     Omitting the subtraction systematically inflates permission waits by
-     the tool's own runtime.
+  3. **Wait duration subtracts execution time.** The **terminal tool event**
+     (`PostToolUse` on success, `PostToolUseFailure` on failure — see
+     amendment 8) marks execution completion, not approval, so the true wait
+     is `terminal.ts − PermissionRequest.ts − terminal.duration_ms`. Both
+     terminal events carry `duration_ms`. Omitting the subtraction
+     systematically inflates permission waits by the tool's own runtime.
   4. Wait spans model **open brackets** as first-class state: a rejected
      plan, a denied permission (no `PermissionDenied` observed on 2.1.220),
      or a crash yields a start with no end. An open bracket is closed only
@@ -92,12 +93,14 @@ phase's critical path.
      `tool_use_id`, so each one claims the **nearest preceding unpaired**
      `PreToolUse` in the same session with the same `tool_name`, and each
      `PreToolUse` may be claimed at most once. The bracket then closes
-     **only** on the `PostToolUse` carrying that exact `tool_use_id`, and
-     each `tool_use_id` closes at most one bracket.
+     **only** on the **terminal tool event** carrying that exact
+     `tool_use_id` — `PostToolUse` *or* `PostToolUseFailure`, whichever the
+     harness emits (amendment 8) — and each `tool_use_id` closes at most one
+     bracket.
      This is load-bearing because the same tool can be requested repeatedly:
-     a denied request stays open forever (no `PostToolUse` is ever emitted
-     for it), so a looser join would let a later attempt's `PostToolUse`
-     close the earlier open bracket — recording a fabricated multi-minute
+     a denied request stays open forever (no terminal tool event is ever
+     emitted for it), so a looser join would let a later attempt's terminal
+     event close the earlier open bracket — recording a fabricated multi-minute
      wait, silently swallowing the later real one, and leaving stale
      escalation state. An open bracket is therefore never closed by a
      different attempt's evidence; it is tombstoned at session terminal
@@ -119,6 +122,33 @@ phase's critical path.
      `notifierRev` identifies notifier state, not row layout; without a
      version discriminator a shared append store can hold multiple layouts
      that P4 replay cannot decode or quarantine deterministically.
+  8. **A tool call ends in `PostToolUse` *or* `PostToolUseFailure`, never
+     both** — added 2026-08-05 from harness 2.1.223, after amendments 1–7
+     were ratified against 2.1.220. The success dispatcher emits
+     `PostToolUse`; a separate failure dispatcher, invoked from `catch`
+     paths and from the branch that builds `tool_result` with
+     `is_error: true`, emits `PostToolUseFailure` with
+     `{tool_name, tool_use_id, error, is_interrupt, duration_ms}`.
+     Amendments 3 and 4 above are corrected accordingly: the bracket closes
+     on the **terminal tool event**, not on `PostToolUse` specifically.
+     This is load-bearing and not an edge case. Closing only on
+     `PostToolUse` would leave every approved-then-failed call's bracket
+     open forever and tombstone it as "human never responded", when the
+     human in fact approved promptly and the tool errored. The loss is
+     **biased, not merely lossy**: waits ending in failure are dropped while
+     waits ending in success are kept, and failed calls are exactly where
+     retry storms live — including the 1Password 56/58 identical-retry storm
+     this packet targets. A baseline collected under the uncorrected rule
+     would understate failure waits and skew the headline p95.
+     `error` is content and is never retained; `is_interrupt` is, because it
+     separates "the human hit escape" (a human action, in scope for a
+     human-wait instrument) from "the tool errored" (not).
+     Caveat: the failure dispatcher is gated by an internal feature check and
+     returns early when disabled, in which case a failed call emits no
+     closing event at all. The correction holds either way — the gate only
+     decides whether the bracket closes or is tombstoned honestly. Which
+     applies here is a **day-1 empirical check** against the first real rows,
+     not an assumption.
 - `hook-pulse`: one script appending schema-versioned NDJSON
   (`HookPulseV1`: schemaVersion, sessionId, clone cwd, agent kind, hookEvent,
   toolName, waitReason, durationMs, notifierRev, ts) to

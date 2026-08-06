@@ -14,7 +14,8 @@ const make = EntityId.factory("law_practice", $I);
 /**
  * Legal client entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -31,19 +32,7 @@ export const LegalClientId = make("legal_client", {
 /**
  * Runtime type for {@link LegalClientId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.LegalClientId = yield* S.decodeUnknownEffect(LawPractice.LegalClientId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link LegalClientId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -52,7 +41,8 @@ export type LegalClientId = typeof LegalClientId.Type;
 /**
  * Legal contact entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -69,19 +59,7 @@ export const LegalContactId = make("legal_contact", {
 /**
  * Runtime type for {@link LegalContactId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.LegalContactId = yield* S.decodeUnknownEffect(LawPractice.LegalContactId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link LegalContactId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -90,7 +68,8 @@ export type LegalContactId = typeof LegalContactId.Type;
 /**
  * Matter entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -107,19 +86,7 @@ export const MatterId = make("matter", {
 /**
  * Runtime type for {@link MatterId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.MatterId = yield* S.decodeUnknownEffect(LawPractice.MatterId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link MatterId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -128,7 +95,8 @@ export type MatterId = typeof MatterId.Type;
 /**
  * Patent asset entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -145,19 +113,7 @@ export const PatentAssetId = make("patent_asset", {
 /**
  * Runtime type for {@link PatentAssetId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.PatentAssetId = yield* S.decodeUnknownEffect(LawPractice.PatentAssetId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link PatentAssetId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -166,7 +122,8 @@ export type PatentAssetId = typeof PatentAssetId.Type;
 /**
  * Office action entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -183,19 +140,7 @@ export const OfficeActionId = make("office_action", {
 /**
  * Runtime type for {@link OfficeActionId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.OfficeActionId = yield* S.decodeUnknownEffect(LawPractice.OfficeActionId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link OfficeActionId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -204,7 +149,8 @@ export type OfficeActionId = typeof OfficeActionId.Type;
 /**
  * Claim entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -221,19 +167,7 @@ export const ClaimId = make("claim", {
 /**
  * Runtime type for {@link ClaimId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.ClaimId = yield* S.decodeUnknownEffect(LawPractice.ClaimId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link ClaimId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -242,7 +176,8 @@ export type ClaimId = typeof ClaimId.Type;
 /**
  * Rejection entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -259,19 +194,7 @@ export const RejectionId = make("rejection", {
 /**
  * Runtime type for {@link RejectionId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.RejectionId = yield* S.decodeUnknownEffect(LawPractice.RejectionId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link RejectionId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -280,7 +203,8 @@ export type RejectionId = typeof RejectionId.Type;
 /**
  * Prior art reference entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -297,19 +221,7 @@ export const PriorArtReferenceId = make("prior_art_reference", {
 /**
  * Runtime type for {@link PriorArtReferenceId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.PriorArtReferenceId = yield* S.decodeUnknownEffect(LawPractice.PriorArtReferenceId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link PriorArtReferenceId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -318,7 +230,8 @@ export type PriorArtReferenceId = typeof PriorArtReferenceId.Type;
 /**
  * Distinction entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -335,19 +248,7 @@ export const DistinctionId = make("distinction", {
 /**
  * Runtime type for {@link DistinctionId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
- *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.DistinctionId = yield* S.decodeUnknownEffect(LawPractice.DistinctionId)(1)
- *   return id
- * })
- * console.log(program)
- * ```
- *
+ * @see {@link DistinctionId} for the runtime schema and entity-type metadata.
  * @category entity-ids
  * @since 0.0.0
  */
@@ -356,7 +257,8 @@ export type DistinctionId = typeof DistinctionId.Type;
 /**
  * Citation entity identifier.
  *
- * @example
+ * **Example** (Read the registered entity type)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -373,20 +275,108 @@ export const CitationId = make("citation", {
 /**
  * Runtime type for {@link CitationId}.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
- * import * as S from "effect/Schema"
+ * @see {@link CitationId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type CitationId = typeof CitationId.Type;
+
+/**
+ * Patent citation event entity identifier.
  *
- * const program = Effect.gen(function* () {
- *   const id: LawPractice.CitationId = yield* S.decodeUnknownEffect(LawPractice.CitationId)(1)
- *   return id
- * })
- * console.log(program)
+ * **Details**
+ *
+ * A patent citation event records one observed occurrence of a patent
+ * reference against a filing. Events are append-only, so an id always names
+ * one exact observation rather than a mutable current state.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.PatentCitationEventId.entityType)
  * ```
  *
  * @category entity-ids
  * @since 0.0.0
  */
-export type CitationId = typeof CitationId.Type;
+export const PatentCitationEventId = make("patent_citation_event", {
+  description: "Identifier for a law-practice patent citation event entity.",
+});
+
+/**
+ * Runtime type for {@link PatentCitationEventId}.
+ *
+ * @see {@link PatentCitationEventId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type PatentCitationEventId = typeof PatentCitationEventId.Type;
+
+/**
+ * Candor disposition entity identifier.
+ *
+ * **Details**
+ *
+ * A candor disposition records one dated attorney judgment about one exact
+ * patent citation event. Dispositions are append-only, so revision and
+ * withdrawal append a new record that names the prior id rather than editing
+ * what was decided at filing time.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.CandorDispositionId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const CandorDispositionId = make("candor_disposition", {
+  description: "Identifier for a law-practice candor disposition entity.",
+});
+
+/**
+ * Runtime type for {@link CandorDispositionId}.
+ *
+ * @see {@link CandorDispositionId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type CandorDispositionId = typeof CandorDispositionId.Type;
+
+/**
+ * Information-disclosure submission fact entity identifier.
+ *
+ * **Details**
+ *
+ * Each submission act is its own append-only record with its own operative
+ * date, so an id names one act rather than a running state of "the IDS".
+ * Supplemental and correcting submissions take fresh ids.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.IdsSubmissionFactId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const IdsSubmissionFactId = make("ids_submission_fact", {
+  description: "Identifier for a law-practice information-disclosure submission fact entity.",
+});
+
+/**
+ * Runtime type for {@link IdsSubmissionFactId}.
+ *
+ * @see {@link IdsSubmissionFactId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type IdsSubmissionFactId = typeof IdsSubmissionFactId.Type;

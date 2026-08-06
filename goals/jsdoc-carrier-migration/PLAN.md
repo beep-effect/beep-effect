@@ -27,8 +27,11 @@ Ship `beep quality jsdoc-migrate` with `extract`, `titles`, `apply`, `verify` in
 
 1. Export `documentationShapeViolations` within the package.
 2. `extract` — ts-morph walks the corpus, emits one `extract.jsonl` record per affected block
-   with `path#symbol` anchor, symbol kind, lead, and fence bodies.
-3. Conservation law and quarantine path (SPEC §5.3), with the schema-versioned proof manifest.
+   with `path#symbol#ordinal` anchor, symbol kind, lead, and fence bodies. Fail loudly on any
+   duplicate anchor — `path#symbol` alone collides on overloads, merged declarations, default
+   exports, and same-name type companions for runtime schemas.
+3. Both clauses of the conservation law and the quarantine path (SPEC §5.3) — content conservation
+   plus the closed tag-rewrite allowlist — with the schema-versioned proof manifest.
 4. `apply` — text-surgical rewrite by byte offset. Never let ts-morph reformat a block.
 5. `titles` — `effect/unstable/http` against `http://127.0.0.1:8317`, model `grok-4.5`,
    append-only with per-anchor resume and retry only on schema-invalid returns.

@@ -19,6 +19,7 @@
 import { DbSchema as ArchitectureLabDbSchema } from "@beep/architecture-lab-tables/tables";
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
+import { DbSchema as LawPracticeDbSchema } from "@beep/law-practice-tables";
 import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
 
 /**
@@ -50,7 +51,8 @@ export { ArchitectureLabDbSchema, DocumentsDbSchema, EpistemicDbSchema, Workspac
 /**
  * Architecture lab work item table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the architecture lab work item table)
+ *
  * ```ts
  * import { architectureLabWorkItemTable } from "@beep/db-admin/schema"
  *
@@ -65,7 +67,8 @@ export const architectureLabWorkItemTable: typeof ArchitectureLabDbSchema.workIt
 /**
  * Architecture lab worker table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the architecture lab worker table)
+ *
  * ```ts
  * import { architectureLabWorkerTable } from "@beep/db-admin/schema"
  *
@@ -80,7 +83,8 @@ export const architectureLabWorkerTable: typeof ArchitectureLabDbSchema.worker =
 /**
  * Workspace workspace table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the workspace table)
+ *
  * ```ts
  * import { workspaceWorkspaceTable } from "@beep/db-admin/schema"
  *
@@ -95,7 +99,8 @@ export const workspaceWorkspaceTable: typeof WorkspaceDbSchema.workspace = Works
 /**
  * Workspace thread table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the workspace thread table)
+ *
  * ```ts
  * import { workspaceThreadTable } from "@beep/db-admin/schema"
  *
@@ -110,7 +115,8 @@ export const workspaceThreadTable: typeof WorkspaceDbSchema.thread = WorkspaceDb
 /**
  * Workspace turn table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the workspace turn table)
+ *
  * ```ts
  * import { workspaceTurnTable } from "@beep/db-admin/schema"
  *
@@ -125,7 +131,8 @@ export const workspaceTurnTable: typeof WorkspaceDbSchema.turn = WorkspaceDbSche
 /**
  * Workspace message table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the workspace message table)
+ *
  * ```ts
  * import { workspaceMessageTable } from "@beep/db-admin/schema"
  *
@@ -140,7 +147,8 @@ export const workspaceMessageTable: typeof WorkspaceDbSchema.message = Workspace
 /**
  * Epistemic usage record table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the epistemic usage record table)
+ *
  * ```ts
  * import { epistemicUsageRecordTable } from "@beep/db-admin/schema"
  *
@@ -155,7 +163,8 @@ export const epistemicUsageRecordTable: typeof EpistemicDbSchema.usageRecord = E
 /**
  * Epistemic contradiction candidate table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Read the contradiction candidate table name)
+ *
  * ```ts
  * import { epistemicContradictionCandidateTable } from "@beep/db-admin/schema"
  *
@@ -172,7 +181,8 @@ export const epistemicContradictionCandidateTable: typeof EpistemicDbSchema.cont
 /**
  * Epistemic contradiction receipt table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Read the contradiction receipt table name)
+ *
  * ```ts
  * import { epistemicContradictionReceiptTable } from "@beep/db-admin/schema"
  *
@@ -189,7 +199,8 @@ export const epistemicContradictionReceiptTable: typeof EpistemicDbSchema.contra
 /**
  * Epistemic contradiction disposition table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Read the contradiction disposition table name)
+ *
  * ```ts
  * import { epistemicContradictionDispositionTable } from "@beep/db-admin/schema"
  *
@@ -206,7 +217,8 @@ export const epistemicContradictionDispositionTable: typeof EpistemicDbSchema.co
 /**
  * Epistemic evidence-verification table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Read the evidence verification table name)
+ *
  * ```ts
  * import { epistemicEvidenceVerificationTable } from "@beep/db-admin/schema"
  *
@@ -223,7 +235,8 @@ export const epistemicEvidenceVerificationTable: typeof EpistemicDbSchema.eviden
 /**
  * Documents sync item table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the documents sync item table)
+ *
  * ```ts
  * import { documentsSyncItemTable } from "@beep/db-admin/schema"
  *
@@ -238,7 +251,8 @@ export const documentsSyncItemTable: typeof DocumentsDbSchema.syncItem = Documen
 /**
  * Documents sync operation table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the documents sync operation table)
+ *
  * ```ts
  * import { documentsSyncOperationTable } from "@beep/db-admin/schema"
  *
@@ -253,7 +267,8 @@ export const documentsSyncOperationTable: typeof DocumentsDbSchema.syncOperation
 /**
  * Documents sync cursor table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the documents sync cursor table)
+ *
  * ```ts
  * import { documentsSyncCursorTable } from "@beep/db-admin/schema"
  *
@@ -268,7 +283,8 @@ export const documentsSyncCursorTable: typeof DocumentsDbSchema.syncCursor = Doc
 /**
  * Documents sync conflict table (drizzle-kit generate surface).
  *
- * @example
+ * **Example** (Reference the documents sync conflict table)
+ *
  * ```ts
  * import { documentsSyncConflictTable } from "@beep/db-admin/schema"
  *
@@ -279,3 +295,57 @@ export const documentsSyncCursorTable: typeof DocumentsDbSchema.syncCursor = Doc
  * @since 0.0.0
  */
 export const documentsSyncConflictTable: typeof DocumentsDbSchema.syncConflict = DocumentsDbSchema.syncConflict;
+
+/**
+ * Law-practice patent citation event table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the patent citation event table name)
+ *
+ * ```ts
+ * import { lawPracticePatentCitationEventTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticePatentCitationEventTable.definition.tableName)
+ * // "law_practice_patent_citation_event"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticePatentCitationEventTable: typeof LawPracticeDbSchema.patentCitationEvent =
+  LawPracticeDbSchema.patentCitationEvent;
+
+/**
+ * Law-practice candor disposition table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the candor disposition table name)
+ *
+ * ```ts
+ * import { lawPracticeCandorDispositionTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeCandorDispositionTable.definition.tableName)
+ * // "law_practice_candor_disposition"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeCandorDispositionTable: typeof LawPracticeDbSchema.candorDisposition =
+  LawPracticeDbSchema.candorDisposition;
+
+/**
+ * Law-practice information-disclosure submission fact table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the IDS submission fact table name)
+ *
+ * ```ts
+ * import { lawPracticeIdsSubmissionFactTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeIdsSubmissionFactTable.definition.tableName)
+ * // "law_practice_ids_submission_fact"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeIdsSubmissionFactTable: typeof LawPracticeDbSchema.idsSubmissionFact =
+  LawPracticeDbSchema.idsSubmissionFact;
