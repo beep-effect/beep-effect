@@ -835,4 +835,44 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       expect(error.reason._tag).toBe("InvalidOutputError");
     })
   );
+
+  it.effect(
+    "maps SSE decoding failures to typed AiError",
+    Effect.fnUntraced(function* () {
+      const request = OpenAiCompatChatCompletionRequest.make({
+        messages: [userMessage()],
+        model: "compat-model",
+      });
+
+      // `Sse.decode` fails only when a pending event outgrows its 10 MiB
+      // `maxEventSize`, so the body is a single `data:` field past that bound
+      // with no blank line to flush it.
+      const oversizedEvent = `data: ${"x".repeat(10 * 1024 * 1024)}`;
+
+      const error = yield* pipe(
+        Effect.gen(function* () {
+          const client = yield* OpenAiCompatClient;
+          return yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
+        }),
+        provideScopedLayer(
+          makeOpenAiCompatClientLayer(() =>
+            Effect.succeed(
+              new Response(oversizedEvent, {
+                headers: {
+                  "content-type": "text/event-stream",
+                },
+              })
+            )
+          )
+        )
+      );
+
+      expect(AiError.isAiError(error)).toBe(true);
+      expect(error.method).toBe("streamChatCompletion");
+      expect(error.reason._tag).toBe("InvalidOutputError");
+      // Proves the decoding reason survives the mapping rather than being
+      // flattened into a generic stream failure.
+      expect(String(error)).toContain("EventTooLarge");
+    })
+  );
 });
