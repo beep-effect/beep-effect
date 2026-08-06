@@ -162,6 +162,15 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
   })
 ) {
   /**
+   * Structural equivalence over the span's offsets, quote, and confidence,
+   * derived from the schema so consumers never re-derive it.
+   *
+   * @category comparisons
+   * @since 0.0.0
+   */
+  static readonly equivalence = S.toEquivalence(EvidenceSpan);
+
+  /**
    * Whether the span is internally consistent before source-text re-slicing:
    * non-empty range, non-empty quote, and quote length matching the range width.
    *
