@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 Record repo-quality throughput implementation, CI setup instrumentation, Yeet

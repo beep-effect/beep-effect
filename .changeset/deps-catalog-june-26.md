@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 Dependency catalog refresh: effect 4.0.0-beta.90 (and all `@effect/*` packages),

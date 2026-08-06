@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 Intentionally version-neutral: adds the `explorations/` fuzzy-front-end
