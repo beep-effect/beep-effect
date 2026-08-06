@@ -130,6 +130,13 @@ interface ProcessSourceOutcome {
   readonly text: O.Option<readonly [string, string]>;
 }
 
+interface ProcessSourceResult {
+  readonly engineWarningCount: number;
+  readonly failure: O.Option<FileProcessingFailureRecord>;
+  readonly sourceRecord: SourceProcessingRecord;
+  readonly strategy: SelectedStrategy;
+}
+
 const processPathSeparators = Str.replace(/\\/gu, "/");
 const processExtensionWithoutDot = flow(Str.replace(/^\./u, ""), Str.toLowerCase);
 const processUtf8Encoder = new TextEncoder();
@@ -1069,10 +1076,38 @@ const writeProcessStringFile = Effect.fn("Files.writeProcessStringFile")(functio
     .pipe(Effect.mapError((cause) => formatPlatformError("Failed to write process output", outputPath, { cause })));
 });
 
+const writeProcessOutcomeArtifacts = Effect.fn("Files.writeProcessOutcomeArtifacts")(function* (
+  outputDirectory: string,
+  outcome: ProcessSourceOutcome
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+
+  if (O.isSome(outcome.text)) {
+    yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
+  }
+
+  if (A.length(outcome.childRecords) > 0) {
+    const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
+      encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
+    );
+    yield* writeProcessStringFile(
+      path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
+      A.join("")(childLines)
+    );
+  }
+});
+
+const releaseProcessOutcomePayload = (outcome: ProcessSourceOutcome): ProcessSourceResult => ({
+  engineWarningCount: outcome.engineWarningCount,
+  failure: outcome.failure,
+  sourceRecord: outcome.sourceRecord,
+  strategy: outcome.strategy,
+});
+
 const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(function* (
   outputDirectory: string,
   options: ProcessFilesOptions,
-  outcomes: ReadonlyArray<ProcessSourceOutcome>,
+  outcomes: ReadonlyArray<ProcessSourceResult>,
   coverage: FileProcessingCoverageSummary
 ): Effect.fn.Return<
   void,
@@ -1111,22 +1146,6 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
   yield* writeProcessStringFile(path.join(outputDirectory, "coverage.json"), `${coverageJson}\n`);
   yield* writeProcessStringFile(path.join(outputDirectory, "sources.jsonl"), A.join("")(sourceLines));
   yield* writeProcessStringFile(path.join(outputDirectory, "failures.jsonl"), A.join("")(failureLines));
-
-  for (const outcome of outcomes) {
-    if (O.isSome(outcome.text)) {
-      yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
-    }
-
-    if (A.length(outcome.childRecords) > 0) {
-      const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
-        encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
-      );
-      yield* writeProcessStringFile(
-        path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
-        A.join("")(childLines)
-      );
-    }
-  }
 });
 
 // SPEC exit policy: configuration, output preparation, and engine discovery
@@ -1156,18 +1175,23 @@ const processSourceDispatches = (options: ProcessFilesOptions, format: FileForma
   return true;
 };
 
-// Read, hash, and process bounded chunks rather than retaining source bytes
-// for the complete corpus. Representative identities omit bytes, preserving
-// deterministic cross-chunk deduplication while each immutable source-byte
-// snapshot becomes collectible as soon as its chunk is processed.
+// Read, hash, and process bounded chunks rather than retaining source bytes or
+// extracted payloads for the complete corpus. Representative identities omit
+// bytes, and each outcome writes its text and child manifest before only its
+// lightweight records are retained for the run summaries.
 const processCollectedSources = Effect.fn("Files.processCollectedSources")(function* (
   files: ReadonlyArray<ProcessCollectedFile>,
+  outputDirectory: string,
   options: ProcessFilesOptions,
   engineFor: ProcessEngineResolver
-): Effect.fn.Return<ReadonlyArray<ProcessSourceOutcome>, FilesCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  ReadonlyArray<ProcessSourceResult>,
+  FilesCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const processState = yield* Ref.make({
     byId: R.empty<string, ProcessSourceIdentity>(),
-    outcomes: A.empty<ProcessSourceOutcome>(),
+    outcomes: A.empty<ProcessSourceResult>(),
   });
   for (const chunk of A.chunksOf(files, FilesConcurrency.scan)) {
     const preparedChunk = yield* Effect.forEach(
@@ -1179,15 +1203,18 @@ const processCollectedSources = Effect.fn("Files.processCollectedSources")(funct
       const state = yield* Ref.get(processState);
       const representative = R.get(state.byId, source.artifactId);
       if (O.isSome(representative)) {
+        const outcome = processDuplicateOutcome(options, source, representative.value);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
         yield* Ref.set(processState, {
           ...state,
-          outcomes: A.append(state.outcomes, processDuplicateOutcome(options, source, representative.value)),
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
         });
       } else {
         const outcome = yield* processPreparedSource(source, options, engineFor);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
         yield* Ref.set(processState, {
           byId: R.set(state.byId, source.artifactId, processSourceIdentity(source)),
-          outcomes: A.append(state.outcomes, outcome),
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
         });
       }
     }
@@ -1230,7 +1257,7 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
     { discard: true }
   );
 
-  const outcomes = yield* processCollectedSources(collection.files, options, engineFor);
+  const outcomes = yield* processCollectedSources(collection.files, outputDirectory, options, engineFor);
 
   const { sourceRecords } = collectSourceOutcomeRecords(outcomes);
   const coverage = makeProcessCoverage(sourceRecords);
