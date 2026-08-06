@@ -81,14 +81,29 @@ case "${1:-status}" in
     exit 0
     ;;
   arm)
-    if [ ! -e "${sentinel}" ]; then
+    # Take the sentinel by RENAMING it, in one atomic step, rather than reading it
+    # and unlinking later. `rename(2)` either moves the file or does not; there is
+    # no interval in which the path still resolves but is already committed to
+    # deletion.
+    #
+    # The read-then-`rm` form this replaces had the worst race in the switch. A
+    # `disarm` landing between the read and the `rm` would find the sentinel
+    # present, report "already disarmed", and exit 0 — and then `arm` would delete
+    # the very sentinel it had just been told about. The operator is told the
+    # instrument is off while collection is running, which is the one direction a
+    # kill switch must never fail in. Claiming first makes that unrepresentable:
+    # once the path is free, a concurrent `disarm` legitimately wins it via `ln`
+    # and the instrument really is disarmed.
+    claimed="${sentinel}.arming.$$"
+    trap 'rm -f "${claimed}"' EXIT
+    if ! mv "${sentinel}" "${claimed}" 2>/dev/null; then
       echo "hook-pulse already armed"
       exit 0
     fi
     mkdir -p "$(dirname "${windows}")"
     # A hand-written or `touch`-created sentinel has no timestamp; record that
     # honestly as an unknown window start instead of inventing one.
-    jq -c -n --slurpfile sentinelDoc "${sentinel}" --arg rearmedAt "$(now)" \
+    jq -c -n --slurpfile sentinelDoc "${claimed}" --arg rearmedAt "$(now)" \
       '{
          schemaVersion: "hook-pulse-disarm-window/v1",
          disarmedAt: ($sentinelDoc[0].disarmedAt? // null),
@@ -104,7 +119,7 @@ case "${1:-status}" in
            reason: null,
            evidenceTier: "unknown"
          }' >>"${windows}"
-    rm -f "${sentinel}"
+    rm -f "${claimed}"
     echo "hook-pulse armed; disarm window appended to ${windows}"
     ;;
   status)
