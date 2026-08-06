@@ -135,6 +135,45 @@ pass through untouched, and nothing outside `hook-pulse.ts` consumes the codec's
 raw-event path today, so this is latent for the baseline. It must be resolved
 before P4 replay reconciles v2 wait spans against this ledger.
 
+## Sampling power: a day-1 risk to the baseline's value
+
+Measured over the full v1 production corpus at 14:18Z — 6,106 rows spanning
+`12:13:31Z`–`14:18:47Z`, 22 distinct sessions:
+
+| Fact | Value |
+| --- | --- |
+| Sessions reporting `bypassPermissions` | 20 of 22 |
+| Sessions reporting `plan` | 1 (the induced approval below) |
+| `plan-approval` rows | 1, **deliberately induced** |
+| Organic `plan-approval` rows | **0** |
+| `tool-permission` rows | 5, **all** `AskUserQuestion` |
+
+**The one `plan-approval` sample is synthetic.** It was produced on purpose to
+close the gate, so it proves the instrument fires and contributes *nothing* to
+rate estimation. No organically-occurring plan approval has been observed.
+
+**Under `bypassPermissions`, ordinary tool gates emit no `PermissionRequest` at
+all.** That is why every organic `tool-permission` row is `AskUserQuestion` — the
+one tool that asks the human regardless of mode. So in this operator's normal
+configuration the instrument can observe exactly two things: plan approvals and
+`AskUserQuestion`. The broad permission-gate population is absent **by
+construction, not by chance**, and no amount of collection time will surface it
+while sessions run in bypass mode.
+
+Two consequences the baseline cannot fix by running longer:
+
+1. The corpus measures a much narrower slice than "agent waits". Any p95 derived
+   from it is a p95 *of plan approvals and AskUserQuestion*, and must be labelled
+   that way rather than compared directly against the audit's headline figure.
+2. The audit's p95 105-minute number came from a different source. Nothing has
+   yet reconciled the two, so it remains an unvalidated import into this packet.
+
+**Mid-week checkpoint, 2026-08-09.** If organic `plan-approval` count is still at
+or near zero, the week will not be able to estimate a plan-approval p95, and the
+choice is an extended window, a deliberate change in how often plan mode is used,
+or reconciling against whatever produced the original 105-minute figure. Deciding
+that on day 3 is cheap; discovering it on day 7 wastes the week.
+
 ## Baseline: open
 
 Both pre-baseline gates closed on 2026-08-06, so the ~1 week log-only baseline is

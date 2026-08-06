@@ -76,6 +76,14 @@ validated), payload shapes hold. Then the two blockers were cleared:
    cut over globally at `2026-08-06T13:12:20Z`. Pre-cutover rows are verification
    data in a different pseudonym namespace and are not baseline data.
 
+**Open risk — sampling power, checkpoint 2026-08-09.** 20 of 22 observed sessions
+run `bypassPermissions`, where ordinary tool gates emit no `PermissionRequest` at
+all. Zero *organic* plan approvals have been seen (the one captured was induced),
+and all organic `tool-permission` rows are `AskUserQuestion`. The baseline
+therefore measures plan approvals and `AskUserQuestion` only — a narrower slice
+than "agent waits", by construction rather than by chance. Re-check at mid-week
+before assuming the window can produce a p95.
+
 ## Latest Evidence
 
 [`research/2026-08-01-p1-hook-semantics-spike.md`](./research/2026-08-01-p1-hook-semantics-spike.md),
