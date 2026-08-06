@@ -220,10 +220,10 @@
     },
     "@beep/documents-server": {
       "path": "packages/documents/server",
-      "lines": 84.11,
-      "statements": 84.17,
+      "lines": 84.07,
+      "statements": 84.13,
       "branches": 74.52,
-      "functions": 77.82
+      "functions": 77.77
     },
     "@beep/documents-tables": {
       "path": "packages/documents/tables",
@@ -255,10 +255,10 @@
     },
     "@beep/duckdb": {
       "path": "packages/drivers/duckdb",
-      "lines": 93.62,
-      "statements": 92.48,
+      "lines": 93.6,
+      "statements": 92.45,
       "branches": 84.48,
-      "functions": 87.9
+      "functions": 87.8
     },
     "@beep/ecfr": {
       "path": "packages/drivers/ecfr",
@@ -486,7 +486,7 @@
     },
     "@beep/nlp": {
       "path": "packages/foundation/modeling/nlp",
-      "lines": 86.23,
+      "lines": 86.21,
       "statements": 82.47,
       "branches": 53.02,
       "functions": 71.67
