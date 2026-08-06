@@ -891,15 +891,39 @@ const runLockfileInstallStep = (
   O.match(state.mainTip, {
     onNone: () => runCommandStep("bun", ["install"], cwd, action),
     onSome: (observedTip) =>
-      captureGit(cwd, ["diff", "--name-only", `${observedTip}..refs/heads/${state.mainBranch}`, "--", "bun.lock"]).pipe(
-        Effect.flatMap((probe) =>
-          !probeUnreliable(probe) && Str.isEmpty(probe.output)
+      Effect.all([
+        observeSha(cwd, `refs/heads/${state.mainBranch}`),
+        observeSha(cwd, `refs/remotes/origin/${state.mainBranch}`),
+      ]).pipe(
+        Effect.flatMap(([localMain, trackingMain]) =>
+          // An earlier step may have skipped the refresh (dirty tree, held
+          // main, failed fetch). An unrefreshed main proves nothing about
+          // bun.lock, so the skip reason must say "not refreshed", never
+          // "did not move" — the operator re-runs the sweep after fixing
+          // whatever blocked the refresh.
+          !tipsMatch(localMain, trackingMain)
             ? Effect.succeed<SweepStepOutcome>(
                 SweepStepSkipped.make({
-                  reason: `bun.lock did not move in the ${state.mainBranch} update (${observedTip}..${state.mainBranch})`,
+                  reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown — re-run the sweep once the refresh succeeds`,
                 })
               )
-            : runCommandStep("bun", ["install"], cwd, action)
+            : captureGit(cwd, [
+                "diff",
+                "--name-only",
+                `${observedTip}..refs/heads/${state.mainBranch}`,
+                "--",
+                "bun.lock",
+              ]).pipe(
+                Effect.flatMap((probe) =>
+                  !probeUnreliable(probe) && Str.isEmpty(probe.output)
+                    ? Effect.succeed<SweepStepOutcome>(
+                        SweepStepSkipped.make({
+                          reason: `bun.lock did not move in the ${state.mainBranch} update (${observedTip}..${state.mainBranch})`,
+                        })
+                      )
+                    : runCommandStep("bun", ["install"], cwd, action)
+                )
+              )
         )
       ),
   });

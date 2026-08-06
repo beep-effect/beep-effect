@@ -440,6 +440,7 @@ const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git rev-parse --abbrev-ref HEAD", ok("main")],
   ["git rev-parse --show-toplevel", ok("/repo")],
   ["git rev-parse --verify --quiet refs/heads/main", ok(mainTipBeforeUpdate)],
+  ["git rev-parse --verify --quiet refs/remotes/origin/main", ok(mainTipBeforeUpdate)],
   ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", ok(mergedTip)],
   ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", ok(mergedTip)],
   ["git status --porcelain", ok("")],
@@ -547,6 +548,26 @@ describe("executeSweep", () => {
         ]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("reports an unrefreshed main as unknown lockfile state, never as unchanged", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+        expect(step.outcome.status).toBe("skipped");
+        const reason = step.outcome.status === "skipped" ? step.outcome.reason : "";
+        expect(reason).toContain("was not refreshed");
+        expect(reason).not.toContain("did not move");
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          ["git rev-parse --verify --quiet refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
   );
 
   it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
