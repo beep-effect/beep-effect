@@ -493,12 +493,35 @@ export const decodeCodexTriageLedger = S.decodeUnknownEffect(CodexTriageLedger);
 /**
  * Encode a ledger to its JSON wire shape.
  *
- * **Example** (Encoding for disk)
+ * **Details**
+ *
+ * Encoding drops absent judgment fields rather than writing them as `null`, so
+ * a freshly captured ledger round-trips to exactly the shape a triage agent
+ * expects to fill in.
+ *
+ * **Example** (Encoding a capture-time ledger for disk)
  *
  * ```ts
- * import { encodeCodexTriageLedger } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
+ * import { CodexTriageLedger, CodexTriageMeta, encodeCodexTriageLedger } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
  *
- * console.log(typeof encodeCodexTriageLedger) // "function"
+ * const encoded = encodeCodexTriageLedger(
+ *   CodexTriageLedger.make({
+ *     meta: CodexTriageMeta.make({
+ *       schemaVersion: "codex-triage/v1",
+ *       repository: "kriegcloud/beep-effect",
+ *       findingsView: "repo-scoped, status=open",
+ *       branch: "security/codex-findings-2026-08-04",
+ *       expectedCount: 0,
+ *       capturedCount: 0,
+ *       capturedAt: "2026-08-04",
+ *       captureMethod: "signed-in-csv-export",
+ *     }),
+ *     lanes: {},
+ *     findings: [],
+ *   })
+ * )
+ *
+ * console.log(JSON.stringify(encoded).includes("codex-triage/v1")) // true
  * ```
  *
  * @category encoding
