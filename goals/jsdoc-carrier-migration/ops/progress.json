@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "jsdoc-carrier-migration/progress/v1",
+  "generatedOn": "2026-08-06",
+  "legend": {
+    "statuses": ["pending", "in_progress", "done", "wont_fix"],
+    "wontFixRule": "Every wont_fix item requires a rationale string and a trigger that would reopen it."
+  },
+  "phases": {
+    "P0_law_and_packet": "in_progress",
+    "P1_codemod": "pending",
+    "P2_generators": "pending",
+    "P3_migration": "pending",
+    "P4_close": "pending"
+  },
+  "coreItems": {
+    "C1_law_contradiction_fix": { "status": "done" },
+    "C2_codemod_extract_apply_verify": { "status": "pending" },
+    "C3_conservation_law_and_proof_manifest": { "status": "pending" },
+    "C4_title_pass_via_proxy": { "status": "pending" },
+    "C5_generator_templates": { "status": "pending" },
+    "C6_residue_overrides": { "status": "pending" },
+    "C7_gate_swap_repo_wide_zero": { "status": "pending" },
+    "C8_baseline_rewrite": { "status": "pending" }
+  },
+  "measurements": {
+    "affectedFiles": 1965,
+    "affectedBlocks": 13605,
+    "legacyExamplesInBlocks": 13590,
+    "unfencedExamples": 114,
+    "generatedFiles": 18,
+    "generatedExamples": 1065,
+    "residueCount": null,
+    "residueNote": "Unknown until P1 dry-run. The 114 unfenced examples auto-quarantine by construction; additional conservation-law quarantines are unmeasured."
+  }
+}
