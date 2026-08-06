@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `align`
+Stage: `shape`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -26,15 +26,14 @@ matrix (2026-08-01 reconciliation grill; 2026-08-04 phase-2 grill; opened
 
 ## Next Open Question
 
-Align is done — all six branches closed with Benjamin 2026-08-06 (V1 scope =
-scheme + simple relator; package home = `law-practice/domain` with a
-promotion gate; Party–Role split + shared `Principal` composition; the full
-Lane B `CorrectionDelta` shape; two-axis void-vs-penalised; typed
-`LegalActContent` with required polarity — see [`DECISIONS.md`](./DECISIONS.md)).
-`openQuestions` is empty, and PR 2 — research artifacts, align outcomes,
-and the parent-ledger P100/R25 promotions — is PR #573, the PR that carries
-this text. Next: draft `BRIEF.md` inside the six decision boundaries (stage
-align → shape) and iterate it with Benjamin to approval.
+The BRIEF is APPROVED (Benjamin, 2026-08-06): drafted inside the six align
+boundaries, hardened by a three-lens Opus review (39 findings folded, 5 P1
+— see the shape entry in [`DECISIONS.md`](./DECISIONS.md)), and landed
+together with this pointer — if you are reading this on main, the BRIEF PR
+is merged. Next: **decompose** — author `MAP.md` (candidate goal packet(s)
+per the BRIEF appetite, sequencing, the first vertical slice, and the
+capability check with file-grounded cites), then run the four-point
+graduation definition-of-ready and graduate on Benjamin's call.
 
 ## Read This First
 
@@ -82,3 +81,13 @@ align → shape) and iterate it with Benjamin to approval.
   `LegalActContent` with required polarity. Stage research → align;
   `openQuestions` cleared. Next: PR 2 (research + align + parent-ledger
   promotions), then BRIEF.
+- 2026-08-06: PR 2 (#573) certified and merged (four fold rounds: P100
+  claim rewrite, resume-pointer post-merge phrasing, parent HANDOFF
+  advancement, plus an inherited hosted-commitlint fix via merging main).
+  BRIEF drafted inside the six align boundaries, hardened by a three-lens
+  adversarial Opus review (decision fidelity / research grounding /
+  Shape-Up form — 39 findings folded, 5 P1: scope-overlap rename,
+  both-axes opposite bimap, advantage-side `positionKind`, the lawful
+  cross-slice rabbit hole, breaker/proof consistency), and APPROVED by
+  Benjamin. Stage align → shape. Next: decompose (`MAP.md`), the
+  four-point gate, then graduation on Benjamin's call.

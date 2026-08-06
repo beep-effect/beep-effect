@@ -888,11 +888,16 @@ const checksAreGreen = (remote: YeetStatusRemote): boolean =>
     O.exists(() => (remote.failingCheckCount ?? 0) === 0 && (remote.pendingCheckCount ?? 0) === 0)
   );
 
+// The live remote thread count is the authoritative surface; the closeout
+// artifact is a prior run's record and only blocks when it EXISTS and still
+// reports open issues. Requiring its presence would conflate "closeout has
+// not run yet" with "threads are unresolved" — a missing artifact is
+// unknown, and unknown must not masquerade as a named blocker.
 const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
   (remote.unresolvedReviewThreadCount ?? 0) === 0 &&
-  pipe(
+  !pipe(
     O.fromUndefinedOr(closeout.issueCount),
-    O.exists((count) => count === 0)
+    O.exists((count) => count > 0)
   );
 
 /**

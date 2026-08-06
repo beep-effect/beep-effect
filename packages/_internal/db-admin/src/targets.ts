@@ -13,6 +13,7 @@ import { EpistemicContradictionTriageMigrationTarget } from "./migrations/Episte
 import { EpistemicEdgeMigrationTarget } from "./migrations/EpistemicEdge.ts";
 import { EpistemicExecutionLedgerMigrationTarget } from "./migrations/EpistemicExecutionLedger.ts";
 import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
+import { LawPracticeCandorGateMigrationTarget } from "./migrations/LawPracticeCandorGate.ts";
 import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts";
 import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 
@@ -29,13 +30,15 @@ export {
   EpistemicEdgeMigrationTarget,
   EpistemicExecutionLedgerMigrationTarget,
   EpistemicUsageMigrationTarget,
+  LawPracticeCandorGateMigrationTarget,
   WorkspaceThreadMigrationTarget,
 };
 
 /**
  * All db-admin migration targets owned by the current repo.
  *
- * @example
+ * **Example** (List the registered target names)
+ *
  * ```ts
  * import { DbAdminMigrationTargets } from "@beep/db-admin/targets"
  *
@@ -54,12 +57,14 @@ export const DbAdminMigrationTargets = [
   EpistemicEdgeMigrationTarget,
   EpistemicContradictionTriageMigrationTarget,
   EpistemicExecutionLedgerMigrationTarget,
+  LawPracticeCandorGateMigrationTarget,
 ] as const;
 
 /**
  * List registered db-admin migration targets.
  *
- * @example
+ * **Example** (Run the registry query and read the target names)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { listDbAdminMigrationTargets } from "@beep/db-admin/targets"

@@ -6,6 +6,19 @@
  * @since 0.0.0
  */
 
+/**
+ * Candor disposition entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./CandorDisposition/index.ts";
+/**
+ * Patent claim entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
 export * from "./Claim/index.ts";
 /**
  * Distinction entity and value-object exports.
@@ -14,6 +27,13 @@ export * from "./Claim/index.ts";
  * @since 0.0.0
  */
 export * from "./Distinction/index.ts";
+/**
+ * Information-disclosure submission fact entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./IdsSubmissionFact/index.ts";
 /**
  * Shared law-practice entity field schemas.
  *
@@ -56,6 +76,13 @@ export * from "./OfficeAction/index.ts";
  * @since 0.0.0
  */
 export * from "./PatentAsset/index.ts";
+/**
+ * Patent citation event entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./PatentCitationEvent/index.ts";
 /**
  * Prior-art reference entity export surface.
  *

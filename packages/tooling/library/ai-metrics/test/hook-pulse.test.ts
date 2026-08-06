@@ -181,6 +181,48 @@ const permissionDenied = rawInput("2026-08-01T08:46:00.000Z", {
   reason: "User denied permission",
 });
 
+// Harness 2.1.223 ends a tool call with PostToolUse *or* PostToolUseFailure,
+// never both, so this is the terminal event for an approved-then-failed call —
+// the case that would otherwise leave its wait bracket open forever.
+const postToolUseFailure = rawInput("2026-08-01T08:47:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUseFailure,
+  tool_name: "Bash",
+  tool_use_id: "tool-failed-1",
+  duration_ms: 12,
+  is_interrupt: true,
+});
+
+// The other half of the only distinction `isInterrupt` exists to draw: this call
+// errored on its own rather than being interrupted by a human.
+const postToolUseFailureErrored = rawInput("2026-08-01T08:47:30.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUseFailure,
+  tool_name: "Bash",
+  tool_use_id: "tool-failed-2",
+  duration_ms: 8,
+  is_interrupt: false,
+});
+
+// A raw event carrying a field owned by a different hook event. Decode must drop
+// it exactly as encode does; forwarding it would hand
+// `HookPulseEventOwnedFieldInvariant` a record it must reject and fail the whole
+// decode, losing a legitimate `Stop` row over a field the ledger never wanted.
+const misownedNotificationTypeOnStop = rawInput("2026-08-01T08:48:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.Stop,
+  notification_type: HookPulseNotificationType.Enum.idle_prompt,
+});
+
+// Same class, other two owned fields: a `reason` outside SessionEnd and an
+// `is_interrupt` outside PostToolUseFailure.
+const misownedReasonOnStop = rawInput("2026-08-01T08:48:30.000Z", {
+  hook_event_name: HookPulseEvent.Enum.Stop,
+  reason: "prompt_input_exit",
+});
+
+const misownedIsInterruptOnStop = rawInput("2026-08-01T08:49:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.Stop,
+  is_interrupt: true,
+});
+
 const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
 const encodeRawHookPulse = S.encodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
@@ -443,6 +485,86 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
+    "attributes isInterrupt only to PostToolUseFailure events",
+    Effect.fn("HookPulseTest.attributesOnlyPostToolUseFailureInterrupts")(function* () {
+      const decoded = yield* Effect.all(
+        {
+          postToolUse: decodeHookPulseFromRaw(autoApprovedPostToolUse),
+          postToolUseFailure: decodeHookPulseFromRaw(postToolUseFailure),
+          erroredFailure: decodeHookPulseFromRaw(postToolUseFailureErrored),
+        },
+        { concurrency: 1 }
+      );
+      const reencoded = yield* Effect.all(
+        {
+          interrupted: encodeHookPulseToRaw(decoded.postToolUseFailure),
+          errored: encodeHookPulseToRaw(decoded.erroredFailure),
+        },
+        { concurrency: 1 }
+      );
+
+      expect(decoded.postToolUse.isInterrupt).toEqual(O.none());
+      expect(decoded.postToolUseFailure.isInterrupt).toEqual(O.some(true));
+      expect(decoded.erroredFailure.isInterrupt).toEqual(O.some(false));
+      expect(reencoded.interrupted.event.is_interrupt).toBe(true);
+      // `false` must survive the encode path as a value. A regression to a
+      // truthiness check would drop the key and erase every "the tool errored"
+      // row's distinction from "the human hit escape" — and the loss is
+      // invisible, because the resulting row still decodes cleanly.
+      expect(reencoded.errored.event.is_interrupt).toBe(false);
+      // A failed call is a bracket *end*, not a human wait.
+      expect(decoded.postToolUseFailure.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      // The closing evidence the two-hop join needs: without both of these a
+      // failed call's wait is unmeasurable rather than merely unrecorded.
+      expect(decoded.postToolUseFailure.toolUseId).toEqual(O.some("tool-failed-1"));
+      expect(decoded.postToolUseFailure.durationMs).toEqual(O.some(12));
+    })
+  );
+
+  it.effect(
+    "drops every event-owned field arriving on a foreign raw event",
+    Effect.fn("HookPulseTest.dropsMisownedRawFields")(function* () {
+      // Decode must agree with encode here. Encode already drops all three; a
+      // decode that forwarded any of them would fail
+      // `HookPulseEventOwnedFieldInvariant` and lose the whole row.
+      const decoded = yield* Effect.all(
+        {
+          notificationType: decodeHookPulseFromRaw(misownedNotificationTypeOnStop),
+          reason: decodeHookPulseFromRaw(misownedReasonOnStop),
+          isInterrupt: decodeHookPulseFromRaw(misownedIsInterruptOnStop),
+        },
+        { concurrency: 1 }
+      );
+
+      expect(decoded.notificationType.hookEvent).toBe(HookPulseEvent.Enum.Stop);
+      expect(decoded.notificationType.notificationType).toEqual(O.none());
+      expect(decoded.notificationType.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      expect(decoded.reason.sessionEndReason).toEqual(O.none());
+      expect(decoded.isInterrupt.isInterrupt).toEqual(O.none());
+    })
+  );
+
+  it.effect(
+    "rejects isInterrupt on a non-PostToolUseFailure event",
+    Effect.fn("HookPulseTest.rejectsMisownedIsInterrupt")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPostToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          isInterrupt: true,
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("isInterrupt");
+      // Asserting the whole clause: "PostToolUse" alone is a substring of
+      // "PostToolUseFailure" and would pass vacuously.
+      expect(failure.message).toContain("belongs to PostToolUseFailure, not hookEvent PostToolUse");
+    })
+  );
+
+  it.effect(
     "round-trips fields owned by SessionEnd and Notification events",
     Effect.fn("HookPulseTest.roundTripsEventOwnedFields")(function* () {
       const canonical = yield* Effect.all(
@@ -536,12 +658,13 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "round-trips all eight hook events and all three observed wait classes after derivation",
+    "round-trips all nine hook events and all three observed wait classes after derivation",
     Effect.fn("HookPulseTest.roundTripsDerivedEvents")(function* () {
       const fixtures = [
         autoApprovedPreToolUse,
         approvedToolPermissionRequest,
         autoApprovedPostToolUse,
+        postToolUseFailure,
         idleNotification,
         userPromptSubmit,
         stop,
@@ -561,6 +684,7 @@ describe("HookPulseV1", () => {
         "PreToolUse",
         "PermissionRequest",
         "PostToolUse",
+        "PostToolUseFailure",
         "Notification",
         "UserPromptSubmit",
         "Stop",
@@ -568,9 +692,14 @@ describe("HookPulseV1", () => {
         "PermissionDenied",
         "PermissionRequest",
       ]);
+      // Every member of `HookPulseEvent` survives derivation and both round-trip
+      // hops; a member added to the literal domain without a fixture here would
+      // otherwise ride along untested.
+      expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.Options.length);
       expect(A.map(roundTripped, (record) => record.waitReason)).toEqual([
         "none",
         "tool-permission",
+        "none",
         "none",
         "idle-input",
         "none",
