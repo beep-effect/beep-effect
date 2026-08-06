@@ -128,26 +128,38 @@ const mcpSessionClientLayer = Layer.effect(
   HttpClient.HttpClient,
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
+    // `initialize` negotiates both a session id and a protocol version, and the
+    // streamable HTTP transport answers 400 to any later request that fails to
+    // echo them back. Capture whatever the server returns rather than pinning a
+    // literal, so the harness follows the negotiated revision.
     const sessionId = yield* Ref.make(O.none<string>());
+    const protocolVersion = yield* Ref.make(O.none<string>());
+    const replay = (header: string, ref: Ref.Ref<O.Option<string>>) => (request: HttpClientRequest.HttpClientRequest) =>
+      Effect.map(
+        Ref.get(ref),
+        O.match({
+          onNone: () => request,
+          onSome: (value) => HttpClientRequest.setHeader(request, header, value),
+        })
+      );
+    const capture = (header: string, ref: Ref.Ref<O.Option<string>>) => (headers: Record<string, string | undefined>) =>
+      O.match(O.fromUndefinedOr(headers[header]), {
+        onNone: () => Effect.void,
+        onSome: (value) => Ref.set(ref, O.some(value)),
+      });
     return client.pipe(
       HttpClient.mapRequestEffect((request) =>
-        Ref.get(sessionId).pipe(
-          Effect.map(
-            O.match({
-              onNone: () => request,
-              onSome: (value) => HttpClientRequest.setHeader(request, "mcp-session-id", value),
-            })
-          )
-        )
+        replay(
+          "mcp-session-id",
+          sessionId
+        )(request).pipe(Effect.flatMap(replay("mcp-protocol-version", protocolVersion)))
       ),
       HttpClient.transformResponse(
         Effect.tap((response) =>
-          O.fromUndefinedOr(response.headers["mcp-session-id"]).pipe(
-            O.match({
-              onNone: () => Effect.void,
-              onSome: (value) => Ref.set(sessionId, O.some(value)),
-            })
-          )
+          capture(
+            "mcp-session-id",
+            sessionId
+          )(response.headers).pipe(Effect.andThen(capture("mcp-protocol-version", protocolVersion)(response.headers)))
         )
       )
     );
@@ -161,6 +173,9 @@ const makeMcpClientProtocol = (useSocketTransport: boolean) =>
       request.pipe(
         HttpClientRequest.appendUrl("/mcp"),
         HttpClientRequest.setHeaders({
+          // The streamable HTTP transport answers 406 unless the client accepts
+          // both media types, since any response may upgrade to an SSE stream.
+          accept: "application/json, text/event-stream",
           authorization: rpcSessionAuthorizationHeader(token),
           origin: allowedOrigin,
         })

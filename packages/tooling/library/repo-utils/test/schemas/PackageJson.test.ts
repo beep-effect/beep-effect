@@ -853,7 +853,7 @@ describe("PackageJson schema", () => {
       const packageJsonDefinitionName = decodeJsonPointerSegment(packageJsonSchema.$ref.slice("#/$defs/".length));
       const packageJsonDefinition = packageJsonJsonSchema.definitions[packageJsonDefinitionName];
 
-      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJsonJsonEncoding$/);
+      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJsonEncoded$/);
       expect(packageJsonDefinition?.additionalProperties).toBe(false);
     });
 
