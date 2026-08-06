@@ -65,6 +65,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
 import { Clock, DateTime, Effect, flow, Path, pipe } from "effect";
@@ -635,7 +636,7 @@ const refuseUnsafeName = (value: string, role: string) =>
  * @param context - The hydrated run context to re-aim.
  * @param branch - The branch name the sweep should plan against.
  * @returns The context with its branch coordinate replaced.
- * @category planning
+ * @category constructors
  * @since 0.0.0
  */
 export const overrideSweepBranch = Effect.fn("Yeet.overrideSweepBranch")(function* (
@@ -980,7 +981,7 @@ const guardedDeletion = (
  * @param localMain - The local `main` tip observed after the refresh step.
  * @param trackingMain - The `origin/main` tip observed after the refresh step.
  * @returns The operator handoff outcome for the lockfile step.
- * @category execution
+ * @category constructors
  * @since 0.0.0
  */
 export const refreshNotCompletedHandoff = (
@@ -997,9 +998,13 @@ export const refreshNotCompletedHandoff = (
         onSome: (holder) => `. ${holder} holds ${state.mainBranch}, so only that worktree can refresh it`,
       }
     )}`,
+    // Both interpolations are POSIX-quoted because this string is COPIED into
+    // a shell: worktree paths routinely contain whitespace, and
+    // `guardLiteralArg` only refuses option-like values — it does not escape
+    // metacharacters, so it is not a substitute for quoting here.
     operatorCommand: O.match(state.mainWorktreePath, {
       onNone: () => "bun run beep yeet sweep",
-      onSome: (holder) => `cd ${holder} && bun run beep yeet sweep --branch ${state.branch}`,
+      onSome: (holder) => `cd ${shellQuote(holder)} && bun run beep yeet sweep --branch ${shellQuote(state.branch)}`,
     }),
   });
 

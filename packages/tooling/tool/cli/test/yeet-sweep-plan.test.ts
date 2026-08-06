@@ -763,9 +763,29 @@ describe("refresh handoff addressing", () => {
       trackingMain
     );
     expect(handoff.operatorCommand).toBe(
-      "cd /home/dev/beep-effect && bun run beep yeet sweep --branch feat/merge-loop"
+      "cd '/home/dev/beep-effect' && bun run beep yeet sweep --branch 'feat/merge-loop'"
     );
     expect(handoff.reason).toContain("/home/dev/beep-effect holds main");
+  });
+
+  // guardLiteralArg refuses option-like values; it does not escape whitespace,
+  // and worktree paths routinely contain spaces.
+  it("quotes a worktree path containing whitespace so the copied command still cds there", () => {
+    const handoff = refreshNotCompletedHandoff(
+      stateWith({ mainCheckedOutElsewhere: true, mainWorktreePath: O.some("/home/dev/beep effect/main") }),
+      localMain,
+      trackingMain
+    );
+    expect(handoff.operatorCommand).toContain("cd '/home/dev/beep effect/main'");
+  });
+
+  it("escapes an embedded single quote instead of ending the quoted string early", () => {
+    const handoff = refreshNotCompletedHandoff(
+      stateWith({ mainCheckedOutElsewhere: true, mainWorktreePath: O.some("/home/dev/o'brien") }),
+      localMain,
+      trackingMain
+    );
+    expect(handoff.operatorCommand).toContain(`cd '/home/dev/o'\\''brien'`);
   });
 
   it("never tells the operator to re-run in place, which is the loop that was shipped", () => {
