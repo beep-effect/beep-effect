@@ -356,7 +356,7 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
       },
     }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
 
-    const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
+    const rpcSessionToken = yield* O.match(transport.rpcSessionToken, {
       onNone: () =>
         Effect.fail(
           SidecarSendError.make({

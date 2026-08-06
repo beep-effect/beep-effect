@@ -51,7 +51,7 @@ import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
-import { reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
+import { BrowserFailureSource, reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
@@ -69,7 +69,7 @@ import {
   panelOperation,
   resetDockSnapshotAtom,
 } from "./workspace/dock.atoms.ts";
-import { dockAtomBridge, focusedDockGroupAtom } from "./workspace/dock-react.atoms.ts";
+import { dockApiAtom, dockAtomBridge, focusedDockGroupAtom } from "./workspace/dock-react.atoms.ts";
 import type { GroupId } from "@beep/dock";
 import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react";
 import type { JSX, ReactNode } from "react";
@@ -100,7 +100,6 @@ const Graph3DSpike = lazy(() =>
 );
 
 type AppRegistry = DesktopDockGraph["registry"];
-type BrowserFailureSource = Parameters<typeof reportedBrowserFailureAtoms>[0];
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -115,20 +114,16 @@ const isDevMode = (): boolean => {
 // the full desktop RPC group over HTTP (the shell normally injects this through
 // the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
 // builds never embed a token; without it browser HTTP stays chat-only.
-const devRpcSessionToken = (): string | undefined => {
+const devRpcSessionToken = (): O.Option<string> => {
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
-  return isDevMode() && P.isString(token) && token.length > 0 ? token : undefined;
+  return O.liftPredicate(token, (value): value is string => isDevMode() && P.isString(value) && value.length > 0);
 };
 
-const browserSidecarTransport = (): SidecarTransport => {
-  const token = devRpcSessionToken();
-  return P.isUndefined(token)
-    ? SidecarTransport.make({ ipc: false })
-    : SidecarTransport.make({ ipc: false, rpcSessionToken: token });
-};
+const browserSidecarTransport = (): SidecarTransport =>
+  SidecarTransport.make({ ipc: false, rpcSessionToken: devRpcSessionToken() });
 
 const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
-  transport.ipc || P.isNotUndefined(transport.rpcSessionToken);
+  transport.ipc || O.isSome(transport.rpcSessionToken);
 
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
@@ -176,6 +171,40 @@ const BrowserFailureReporter = ({
   return null;
 };
 
+// The toast portals every shell state renders, exactly once per state.
+const ShellChrome = ({ children }: { readonly children: ReactNode }): JSX.Element => (
+  <>
+    {children}
+    <ChatTurnErrorToasts />
+    <Toaster richColors />
+  </>
+);
+
+// One redacted failure card for every bootstrap failure surface.
+const ShellFailureCard = ({
+  cause,
+  heading,
+  source,
+}: {
+  readonly cause: unknown;
+  readonly heading: string;
+  readonly source: BrowserFailureSource;
+}): JSX.Element => {
+  const redacted = redactCauseForClient(cause);
+  return (
+    <>
+      <BrowserFailureReporter cause={cause} source={source} />
+      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+        <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+          <h1 className="text-base font-semibold">{heading}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
 // binding rather than a useEffect; `chatProtocolLayerAtom` already defaults to
@@ -183,7 +212,7 @@ const BrowserFailureReporter = ({
 const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
   Effect.fnUntraced(function* (get) {
     const transport = yield* get.result(sidecarTransportAtom);
-    const sessionToken = O.fromUndefinedOr(transport.rpcSessionToken);
+    const sessionToken = transport.rpcSessionToken;
     const protocolLayer = transport.ipc
       ? IpcChatProtocolLive
       : O.match(sessionToken, {
@@ -226,14 +255,14 @@ const ShellLoading = ({ label }: { readonly label: string }): JSX.Element => (
 // a visual no-op (and "current page" would not follow the click).
 const focusPanelGroup = (
   graph: DesktopDockGraph,
-  api: DockviewAdapterApi | undefined,
+  api: O.Option<DockviewAdapterApi>,
   workspace: DockWorkspace,
   key: DesktopPanelKey
 ): void =>
   O.match(DockWorkspace.findTabsForPanel(workspace, desktopPanelId(key)), {
     onNone: thunkUndefined,
     onSome: (tabs) => {
-      if (P.isNotUndefined(api)) graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId));
+      O.map(api, (adapterApi) => graph.registry.set(adapterApi.atoms.focusedGroup, O.some(tabs.groupId)));
     },
   });
 
@@ -257,20 +286,13 @@ const HOME_TILES = [
   },
 ] as const;
 
-// atom-first: the adapter api handed to `onReady` lives in an atom in the
-// app registry, not a useState/useRef pair — every reader (shell, Home
-// tiles) sees it reactively through the same registry.
-const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pipe(Atom.keepAlive);
-
-interface DesktopPanelNavigation {
-  readonly api: DockviewAdapterApi | undefined;
-  readonly graph: DesktopDockGraph;
-  readonly key: DesktopPanelKey;
-  readonly workspace: DockWorkspace;
-}
-
-const navigateDesktopPanelAtom = professionalBrowserRuntime.fn<DesktopPanelNavigation>()(
-  Effect.fn("professional_desktop.workspace.navigate_panel")(function* ({ api, graph, key, workspace }) {
+// The navigation action's real input is one panel key; the dock graph, the
+// adapter api, and the workspace are registry state the action reads itself.
+const navigateDesktopPanelAtom = professionalBrowserRuntime.fn<DesktopPanelKey>()(
+  Effect.fn("professional_desktop.workspace.navigate_panel")(function* (key, ctx) {
+    const graph = yield* ctx.result(desktopDockGraphAtom);
+    const workspace = ctx(dockAtomBridge(graph, graph.workspaceAtom));
+    const api = ctx(dockApiAtom);
     yield* Effect.sync(() => {
       focusPanelGroup(graph, api, workspace, key);
       graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
@@ -305,9 +327,7 @@ const initializeDockApiAtom = professionalBrowserRuntime.fn<InitializeDockApi>()
   })
 );
 
-const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
-  const workspace = useAtomValue(dockAtomBridge(graph, graph.workspaceAtom));
-  const dockApi = useAtomValue(dockApiAtom);
+const HomeSurface = (): JSX.Element => {
   const navigate = useAtomSet(navigateDesktopPanelAtom);
   return (
     <main className="h-full overflow-y-auto p-6">
@@ -322,14 +342,7 @@ const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Eleme
             <button
               key={item.key}
               type="button"
-              onClick={() =>
-                navigate({
-                  api: O.getOrUndefined(dockApi),
-                  graph,
-                  key: item.key,
-                  workspace,
-                })
-              }
+              onClick={() => navigate(item.key)}
               className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
             >
               <h2 className="font-semibold">{item.label}</h2>
@@ -506,10 +519,7 @@ export const SurfaceBoundary = ({
   readonly label: string;
 }): JSX.Element => <RecoveryBoundary label={label}>{children}</RecoveryBoundary>;
 
-const makePanelRenderers = (
-  graph: DesktopDockGraph,
-  appRegistry: AppRegistry
-): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
+const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
   const wrap = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
       <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
@@ -532,7 +542,7 @@ const makePanelRenderers = (
   // the old monolith, so a region docked anywhere (or floated) stays wired
   // to the same session.
   return {
-    home: () => wrap("Home", <HomeSurface graph={graph} />),
+    home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
     "contradiction-triage": () => wrap("Contradiction Triage", <ContradictionTriageSurface />),
@@ -550,10 +560,8 @@ const makePanelRenderers = (
 
 // The family owns one renderer map per graph. Reading the professional registry
 // inside the atom keeps renderer identity stable without module-global state.
-const panelRendererAtoms = Atom.family((graph: DesktopDockGraph) =>
-  Atom.readable((get) =>
-    AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) => makePanelRenderers(graph, appRegistry))
-  )
+const panelRendererAtoms = Atom.family((_graph: DesktopDockGraph) =>
+  Atom.readable((get) => AsyncResult.map(get(professionalAtomRegistryAtom), makePanelRenderers))
 );
 
 // atom-first: the menu's open flag is an atom, not useState — shell chrome
@@ -613,15 +621,14 @@ const ontologyMenuDismissBindingAtom = professionalBrowserRuntime.atom((get) =>
 // atoms, so opening and closing the menu scopes the listener lifecycle.
 const OntologyMenu = ({
   isCurrent,
-  onSelect,
   workspace,
 }: {
   readonly isCurrent: (key: DesktopPanelKey) => boolean;
-  readonly onSelect: (key: DesktopPanelKey) => void;
   readonly workspace: DockWorkspace;
 }): JSX.Element => {
   const open = useAtomValue(ontologyMenuOpenAtom);
   const close = useAtomSet(closeOntologyMenuAtom);
+  const navigate = useAtomSet(navigateDesktopPanelAtom);
   const setElement = useAtomSet(setOntologyMenuElementAtom);
   const toggle = useAtomSet(toggleOntologyMenuAtom);
   useAtomMount(ontologyMenuDismissBindingAtom);
@@ -660,7 +667,7 @@ const OntologyMenu = ({
               aria-current={isCurrent(panel.key) ? "page" : undefined}
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
               onClick={() => {
-                onSelect(panel.key);
+                navigate(panel.key);
                 close(void 0);
               }}
             >
@@ -691,10 +698,8 @@ const DesktopShell = ({
   readonly transport: SidecarTransport;
 }): JSX.Element => {
   const workspace = useAtomValue(dockAtomBridge(graph, graph.workspaceAtom));
-  const dockApi = useAtomValue(dockApiAtom).pipe(O.getOrUndefined);
   const initializeDockApi = useAtomSet(initializeDockApiAtom);
-  const navigatePanel = useAtomSet(navigateDesktopPanelAtom);
-  const focusedGroup = useAtomValue(focusedDockGroupAtom(graph)(dockApi));
+  const focusedGroup = useAtomValue(focusedDockGroupAtom(graph));
   const desktopRpcAvailable = hasDesktopRpcAccess(transport);
   const shellNavPanels = A.filter(SHELL_NAV_PANELS, ({ key }) => key !== "contradiction-triage" || desktopRpcAvailable);
   // One current page: the panel active in the FOCUSED group. Before any
@@ -707,9 +712,7 @@ const DesktopShell = ({
           PanelId.equals(tabs.active.id, desktopPanelId(key))
         ),
     });
-  const navigate = (key: DesktopPanelKey): void => {
-    navigatePanel({ api: dockApi, graph, key, workspace });
-  };
+  const navigate = useAtomSet(navigateDesktopPanelAtom);
   const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)));
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
@@ -738,7 +741,7 @@ const DesktopShell = ({
                 {item.label}
               </Button>
             ))}
-            <OntologyMenu isCurrent={isPanelCurrent} onSelect={navigate} workspace={workspace} />
+            <OntologyMenu isCurrent={isPanelCurrent} workspace={workspace} />
             {/* Theming belongs to the shell, not to one surface. It used to live in
                 the chat header, so Home, Ontology and Vault sync had no way to reach
                 it at all. */}
@@ -776,97 +779,83 @@ const DesktopShell = ({
   );
 };
 
+// The shell's bootstrap decision as data: registry, then transport probe,
+// then protocol binding, folded in order so an earlier failure short-circuits.
+const DesktopBootstrapState = LiteralKit(["preparing", "connecting", "binding", "failed", "ready"]).toTaggedUnion(
+  "kind"
+)({
+  preparing: {},
+  connecting: {},
+  binding: {},
+  failed: {
+    cause: S.Unknown,
+    heading: S.String,
+    source: BrowserFailureSource,
+  },
+  ready: { transport: SidecarTransport },
+});
+
+const desktopBootstrapAtom = Atom.make((get): typeof DesktopBootstrapState.Type =>
+  AsyncResult.match(get(professionalAtomRegistryAtom), {
+    onInitial: () => DesktopBootstrapState.cases.preparing.make({}),
+    onFailure: (failure) =>
+      DesktopBootstrapState.cases.failed.make({
+        cause: failure.cause,
+        heading: "Application state unavailable",
+        source: "app_registry",
+      }),
+    onSuccess: () =>
+      AsyncResult.match(get(sidecarTransportAtom), {
+        onInitial: () => DesktopBootstrapState.cases.connecting.make({}),
+        onFailure: (failure) =>
+          DesktopBootstrapState.cases.failed.make({
+            cause: failure.cause,
+            heading: "Desktop transport unavailable",
+            source: "desktop_transport",
+          }),
+        onSuccess: ({ value: transport }) =>
+          AsyncResult.match(get(protocolLayerBindingAtom), {
+            onInitial: () => DesktopBootstrapState.cases.binding.make({}),
+            onFailure: (failure) =>
+              DesktopBootstrapState.cases.failed.make({
+                cause: failure.cause,
+                heading: "Desktop transport unavailable",
+                source: "desktop_transport",
+              }),
+            onSuccess: () => DesktopBootstrapState.cases.ready.make({ transport }),
+          }),
+      }),
+  })
+);
+
 // Inside the graph-registry provider: probe the transport, bind the protocol
 // layers into the SAME registry the panel content reads from, and gate the
 // shell on the probe. One registry for the whole app — a second one would let
 // panels read protocol atoms the bindings never wrote.
-const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
-  const appRegistry = useAtomValue(professionalAtomRegistryAtom);
-  const protocolLayerBinding = useAtomValue(protocolLayerBindingAtom);
-  const transport = useAtomValue(sidecarTransportAtom);
-
-  return AsyncResult.match(appRegistry, {
-    onInitial: () => (
-      <>
+const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element =>
+  DesktopBootstrapState.match(useAtomValue(desktopBootstrapAtom), {
+    preparing: () => (
+      <ShellChrome>
         <ShellLoading label="Preparing application state" />
-        <ChatTurnErrorToasts />
-        <Toaster richColors />
-      </>
+      </ShellChrome>
     ),
-    onFailure: (failure) => {
-      const redacted = redactCauseForClient(failure.cause);
-      return (
-        <>
-          <BrowserFailureReporter cause={failure.cause} source="app_registry" />
-          <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-            <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-              <h1 className="text-base font-semibold">Application state unavailable</h1>
-              <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
-            </div>
-          </div>
-          <ChatTurnErrorToasts />
-          <Toaster richColors />
-        </>
-      );
-    },
-    onSuccess: () =>
-      AsyncResult.match(transport, {
-        onInitial: () => (
-          <>
-            <ShellLoading label="Connecting desktop transport" />
-            <ChatTurnErrorToasts />
-            <Toaster richColors />
-          </>
-        ),
-        onFailure: (failure) => {
-          const redacted = redactCauseForClient(failure.cause);
-          return (
-            <>
-              <BrowserFailureReporter cause={failure.cause} source="desktop_transport" />
-              <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-                <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-                  <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
-                  <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
-                </div>
-              </div>
-              <ChatTurnErrorToasts />
-              <Toaster richColors />
-            </>
-          );
-        },
-        onSuccess: ({ value: transport }) =>
-          AsyncResult.match(protocolLayerBinding, {
-            onInitial: () => (
-              <>
-                <ShellLoading label="Binding desktop transport" />
-                <ChatTurnErrorToasts />
-                <Toaster richColors />
-              </>
-            ),
-            onFailure: (failure) => {
-              const redacted = redactCauseForClient(failure.cause);
-              return (
-                <>
-                  <BrowserFailureReporter cause={failure.cause} source="desktop_transport" />
-                  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-                    <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-                      <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
-                      <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
-                    </div>
-                  </div>
-                  <ChatTurnErrorToasts />
-                  <Toaster richColors />
-                </>
-              );
-            },
-            onSuccess: () => <DesktopShell graph={graph} transport={transport} />,
-          }),
-      }),
+    connecting: () => (
+      <ShellChrome>
+        <ShellLoading label="Connecting desktop transport" />
+      </ShellChrome>
+    ),
+    binding: () => (
+      <ShellChrome>
+        <ShellLoading label="Binding desktop transport" />
+      </ShellChrome>
+    ),
+    failed: (failed) => (
+      <ShellChrome>
+        <ShellFailureCard cause={failed.cause} heading={failed.heading} source={failed.source} />
+      </ShellChrome>
+    ),
+    ready: (ready) => <DesktopShell graph={graph} transport={ready.transport} />,
   });
-};
 
 /**
  * The desktop application root: builds the dock workspace graph (with any
@@ -905,21 +894,9 @@ export function App(): JSX.Element {
 
   return AsyncResult.match(graphResult, {
     onInitial: () => <ShellLoading label="Preparing workspace" />,
-    onFailure: (failure) => {
-      const redacted = redactCauseForClient(failure.cause);
-      return (
-        <>
-          <BrowserFailureReporter cause={failure.cause} source="workspace" />
-          <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-            <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-              <h1 className="text-base font-semibold">Workspace unavailable</h1>
-              <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
-            </div>
-          </div>
-        </>
-      );
-    },
+    onFailure: (failure) => (
+      <ShellFailureCard cause={failure.cause} heading="Workspace unavailable" source="workspace" />
+    ),
     onSuccess: (success) => <TransportGate graph={success.value} />,
   });
 }
