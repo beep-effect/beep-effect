@@ -19,8 +19,12 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
+      # Same secret posture as check.yml's verify matrix: this job executes
+      # PR-authored turbo tasks, so the remote-cache write token stays on
+      # trusted push events only; PR runs get local cache.
+      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -32,7 +36,8 @@ jobs:
       # exhaust the runner's disk ("No space left on device"). Mirror the
       # cleanup that check.yml already performs for its verification lanes.
       - name: Free runner disk
-        if: runner.os == 'Linux'
+        # Destructive image cleanup only on ephemeral Blacksmith VMs.
+        if: runner.os == 'Linux' && startsWith(runner.name, 'blacksmith-')
         shell: bash
         run: |
           set -euo pipefail
