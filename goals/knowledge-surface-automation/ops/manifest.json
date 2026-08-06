@@ -46,7 +46,9 @@
     "research/p1-manifest-capability-extension-design.md",
     "research/p2-grill-decisions.md",
     "research/p1-execution-decisions.md",
-    "research/p1-report-manifest-capabilities.md"
+    "research/p1-report-manifest-capabilities.md",
+    "research/p1-refs-tree-design.md",
+    "research/p1-bootstrap-adopt-plan-design.md"
   ],
   "agentLaunchers": [
     {
