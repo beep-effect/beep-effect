@@ -299,6 +299,15 @@ class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCe
   })
 ) {}
 
+class EffectTsgoLinkedRuleCell extends S.Class<EffectTsgoLinkedRuleCell>($I`EffectTsgoLinkedRuleCell`)(
+  {
+    a: EffectTsgoRuleCell,
+  },
+  $I.annote("EffectTsgoLinkedRuleCell", {
+    description: "Diagnostics table cell whose rule code is wrapped in a link to that rule's doc page.",
+  })
+) {}
+
 class EffectTsgoRuleRow extends S.Class<EffectTsgoRuleRow>($I`EffectTsgoRuleRow`)(
   {
     td: S.Array(S.Unknown),
@@ -347,6 +356,7 @@ class EffectTsgoDiagnosticsTable extends S.Class<EffectTsgoDiagnosticsTable>($I`
 ) {}
 
 const decodeEffectTsgoRuleCellOption = S.decodeUnknownOption(EffectTsgoRuleCell);
+const decodeEffectTsgoLinkedRuleCellOption = S.decodeUnknownOption(EffectTsgoLinkedRuleCell);
 const decodeEffectTsgoRuleRowOption = S.decodeUnknownOption(EffectTsgoRuleRow);
 const decodeEffectTsgoDiagnosticsTableOption = S.decodeUnknownOption(EffectTsgoDiagnosticsTable);
 
@@ -1332,11 +1342,21 @@ const extractEffectTsgoDiagnosticsTableFragment = (readme: string): O.Option<str
     : O.some(Str.slice(tableStart + effectTsgoDiagnosticsTableStartMarker.length, tableEnd)(readme));
 };
 
+// 0.19 wrote the code bare (`<td><code>name</code></td>`); 0.33 wraps it in a
+// link to the rule's doc page, which nests it one level deeper. Accept both so
+// the lane keeps reading the table across upgrades instead of silently
+// discovering zero rules.
+const extractEffectTsgoRuleCellCode = (cell: unknown): O.Option<string> =>
+  pipe(
+    decodeEffectTsgoRuleCellOption(cell),
+    O.orElse(() => O.map(decodeEffectTsgoLinkedRuleCellOption(cell), (linked) => linked.a)),
+    O.map((decoded) => decoded.code)
+  );
+
 const extractEffectTsgoRuleNameFromRow = flow(
   decodeEffectTsgoRuleRowOption,
   O.flatMap((decodedRow) => A.head(decodedRow.td)),
-  O.flatMap(decodeEffectTsgoRuleCellOption),
-  O.map((cell) => cell.code)
+  O.flatMap(extractEffectTsgoRuleCellCode)
 );
 
 const extractEffectTsgoReadmeRuleNames = flow(
