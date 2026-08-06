@@ -51,21 +51,38 @@ Rules for all sections:
 Sections are opt-in except where an Example is required by symbol kind. Do not add
 empty or formulaic sections merely to fill out the shape.
 
-## Transitional carrier policy
+## Carrier policy
 
-`**Example** (Title)` is the canonical carrier for all new or touched code. A
-legacy `@example` tag remains grandfathered: for inventory presence, either a valid
-Example section or a legacy tag counts. When a source file's documentation is
-touched, migrate its legacy tags; do not mass-migrate untouched files.
+`**Example** (Title)` is the canonical carrier. `@example` and `@remarks` are
+retired; `AGENTS.md` states that rule without qualification and the quality gate
+enforces it.
 
-The same cleanup-on-touch policy retires existing `@remarks`: move non-obvious
-semantics into Details or Gotchas across a file whose documentation is touched.
-Today the quality gate compares repo-wide fail-on-growth totals, so it prevents
-aggregate regression but does not directly prove every touched file was cleaned.
-Phase P2 of
-`goals/effect-jsdoc-quality/` adds the changed-files check that enforces this policy
-per touched file. Until then, cleanup-on-touch is review law, not a claim about the
-current gate's granularity.
+Enforcement is per touched file and is not advisory. The cleanup-on-touch check in
+`bun run beep quality jsdoc-ratchet` fails when any changed non-generated
+`packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`. It inspects
+the whole file rather than the diff hunk, across `origin/main...HEAD` plus dirty
+paths. A legacy carrier anywhere in a file you touch is a hard CI failure, so
+migrate every legacy carrier in that file and not only the block you edited. Move
+`@remarks` semantics into Details or Gotchas as part of the same pass.
+
+For inventory presence the totals ratchet still counts either a valid Example
+section or a legacy tag. That is a scoring detail of the fail-on-growth comparison,
+not permission to author a legacy carrier.
+
+## Carrier retirement migration
+
+`goals/jsdoc-carrier-migration/` is authorized to migrate every remaining legacy
+carrier in one deterministic pass, including files that no other work has touched.
+This is a single sanctioned exception to the cleanup-on-touch scope above, granted
+because the legacy corpus is both what makes the gate fire on unrelated changes and
+what teaches agents the retired pattern.
+
+Outside that packet, do not mass-migrate untouched files. Migrate what you touch.
+
+When the packet lands, the corpus reaches zero legacy carriers and this policy
+collapses to its target state: `@example` and `@remarks` forbidden repo-wide,
+cleanup-on-touch replaced by a repo-wide zero-legacy check, and these two sections
+deleted.
 
 ## Kind-split Example law
 
