@@ -11,9 +11,10 @@ Status: `pending`
 | P0 Research | pending | Derive the initial native patent-prosecution task set from Tom's real matters; design the time-entry, explicit-timer-duration, candidate, approval-history, evidence, and export-boundary model schema-first; design one deletion contract covering content, metadata, projections, audit history, source revocation, and narrow tombstones. | Tom has supplied representative real matters; the bounded native task set and schema contracts are recorded; retention clocks, revocation behavior, deletion propagation, idempotency ownership, and privilege boundaries are testable before implementation begins. |
 | P1 Implement | pending | Build the smallest Effect-first manual vertical: visible start/stop timer, explicit matter/task association, candidate duration and purpose-bounded narrative, evidence inspection, attorney edit/approve/reject/delete with approval history, and vendor-neutral approved-entry CSV/prebill preview. | Hourly, flat-fee, and nonbillable fixtures traverse the complete local lifecycle; only approved entries reach previews; repeated preview generation is duplicate-safe; no network or vendor adapter is required. |
 | P2 Verify | pending | Run focused package/integration/restart/deletion/idempotency proof and a two-week Tom pilot against the ratified capture, matter-accuracy, approval, narrative-edit, approval-firewall, duplicate, retention, and revocation criteria. | Every `SPEC.md` acceptance criterion is green, or blockers and pilot evidence are archived reproducibly without weakening the firewall or privacy contract. |
-| P3 Close | pending | Run repo proof, prepare and drive the PR to mergeable through Yeet, write the closeout reflection, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
+| P3 Yeet: PR to mergeable | pending | Run repo proof, then prepare and drive the PR to mergeable through Yeet. | Yeet/GitHub reports the PR mergeable; required checks green and review threads resolved. |
+| P4 Close | pending | Write the closeout reflection and synchronize packet evidence/status. | A schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (`status` to `completed-retained` / `complete`):
 
