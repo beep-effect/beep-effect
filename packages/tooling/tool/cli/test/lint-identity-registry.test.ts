@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

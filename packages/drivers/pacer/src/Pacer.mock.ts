@@ -39,8 +39,8 @@ const $I = $PacerId.create("pacer/transport/Mock");
 type MockRequest = Parameters<Parameters<typeof HttpClient.make>[0]>[0];
 
 const MockIntFromString = S.FiniteFromString.pipe(S.check(S.isInt()), SchemaUtils.withCodecStatics);
-const encodeJsonString = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const decodeJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeLogoutRequestJson = S.decodeUnknownEffect(S.fromJsonString(CsoLogoutRequest));
 
 /**

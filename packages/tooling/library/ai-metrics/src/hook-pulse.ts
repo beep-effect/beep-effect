@@ -533,7 +533,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
         O.match(O.fromUndefinedOr(input.transcriptPath), {
           onNone: () =>
             Effect.fail(
-              new SchemaIssue.InvalidValue(O.some(input), {
+              new SchemaIssue.InvalidValue({
                 message: "Expected transcriptPath when encoding a canonical hook pulse as a raw hook event",
               })
             ),
@@ -570,7 +570,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               {
                 onFalse: () =>
                   Effect.fail(
-                    new SchemaIssue.InvalidValue(O.some(input), {
+                    new SchemaIssue.InvalidValue({
                       message: "Expected waitReason to match the value derived from the encoded raw hook event",
                     })
                   ),

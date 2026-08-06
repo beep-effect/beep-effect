@@ -109,7 +109,7 @@ const decodeNumberInputFiniteText = (value: string): Effect.Effect<number, Schem
     O.match({
       onNone: () =>
         Effect.fail(
-          new SchemaIssue.InvalidValue(O.some(value), {
+          new SchemaIssue.InvalidValue({
             message: "Number input text must contain a parseable finite number.",
           })
         ),

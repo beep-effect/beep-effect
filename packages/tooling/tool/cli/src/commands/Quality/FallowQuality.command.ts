@@ -80,7 +80,7 @@ const fallbackSourceRef = "standards/fallow.pilot.inventory.jsonc";
 // maximum while still surfacing that the lane has saturated findings.
 const maxFindingsPerCount = 10_000;
 
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeFallowEnvelopeJson = S.encodeUnknownEffect(S.fromJsonString(FallowReportEnvelope));
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));

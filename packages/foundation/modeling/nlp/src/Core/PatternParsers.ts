@@ -27,8 +27,7 @@ import type { PatternElement as PatternElementType } from "./Pattern.ts";
 const $I = $NlpId.create("Core/PatternParsers");
 type NonEmptyChoices<A> = readonly [A, ...A[]];
 
-const invalidBracketString = (input: string, message: string): SchemaIssue.InvalidValue =>
-  new SchemaIssue.InvalidValue(O.some(input), { message });
+const invalidBracketString = (message: string): SchemaIssue.InvalidValue => new SchemaIssue.InvalidValue({ message });
 
 const ensureNonEmpty = <A>(values: ReadonlyArray<A>): O.Option<NonEmptyChoices<A>> =>
   A.match(values, {
@@ -76,7 +75,6 @@ const decodePatternElement = (input: string) =>
       onNone: () =>
         Effect.fail(
           invalidBracketString(
-            input,
             "Pattern element must be bracketed and contain valid POS, entity, or non-empty literal choices."
           )
         ),
@@ -104,7 +102,7 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
     decode: SchemaGetter.transformOrFail((input) =>
       O.match(decodePOSPatternElement(input), {
         onNone: () =>
-          Effect.fail(invalidBracketString(input, "POS pattern must be bracketed and contain valid wink POS tags.")),
+          Effect.fail(invalidBracketString("POS pattern must be bracketed and contain valid wink POS tags.")),
         onSome: Effect.succeed,
       })
     ),
@@ -150,9 +148,7 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
     decode: SchemaGetter.transformOrFail((input) =>
       O.match(decodeEntityPatternElement(input), {
         onNone: () =>
-          Effect.fail(
-            invalidBracketString(input, "Entity pattern must be bracketed and contain valid wink entity types.")
-          ),
+          Effect.fail(invalidBracketString("Entity pattern must be bracketed and contain valid wink entity types.")),
         onSome: Effect.succeed,
       })
     ),
@@ -198,9 +194,7 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
     decode: SchemaGetter.transformOrFail((input) =>
       O.match(decodeLiteralPatternElement(input), {
         onNone: () =>
-          Effect.fail(
-            invalidBracketString(input, "Literal pattern must be bracketed and contain non-empty literal choices.")
-          ),
+          Effect.fail(invalidBracketString("Literal pattern must be bracketed and contain non-empty literal choices.")),
         onSome: Effect.succeed,
       })
     ),

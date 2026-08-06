@@ -33,6 +33,7 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { A, O } from "@beep/utils";
 import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
@@ -161,9 +162,15 @@ export const makeOntologyMcpTransportLayer = (options: {
 }) => {
   const approvedTools = options.approvedMutationTools ?? approvedOntologyMutationTools;
   const security = ontologyMcpSecurityMiddleware(options.token);
-  const server = McpServer.layerHttp({ name: "beep-ontology", version: "0.0.0", path: "/mcp" }).pipe(
-    Layer.provide(security.layer)
-  );
+  // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an
+  // empty protocol list, both of which are literals here — so a failure is a
+  // defect, not a startup condition the desktop shell can report.
+  const server = McpServer.layerHttp({
+    name: "beep-ontology",
+    version: "0.0.0",
+    path: "/mcp",
+    protocols: [McpProtocol.v2025_06_18],
+  }).pipe(Layer.provide(security.layer), Layer.orDie);
   const readOnly = sanitizedToolkit(OntologyReadOnlyToolkit).pipe(Layer.provide(OntologyMcpReadOnlyToolsLive));
   const mutations = sanitizedToolkit(OntologyMutationToolkit).pipe(
     Layer.provide(OntologyMcpMutationToolsLive),

@@ -23,7 +23,7 @@ const provideScopedLayer =
 const encoder = new TextEncoder();
 
 // TODO(effect-native-migration): model schema
-const exiftoolJson = S.encodeUnknownSync(S.UnknownFromJsonString)([
+const exiftoolJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))([
   {
     SourceFile: "frame.png",
     "System:FileName": "frame.png",

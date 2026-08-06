@@ -248,7 +248,7 @@ export const readExtractionPlan = Effect.fn("QaExtract.readExtractionPlan")(func
   return yield* fs
     .readFileString(planPath)
     .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.UnknownFromJsonString)),
+      Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Unknown))),
       Effect.flatMap(decodeExtractionPlan),
       Effect.map(O.some),
       Effect.orElseSucceed(O.none<ExtractionPlan>)

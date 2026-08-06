@@ -54,7 +54,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
 };
 
 // TODO(effect-native-migration): model schema
-const ffprobeJson = S.encodeUnknownSync(S.UnknownFromJsonString)({
+const ffprobeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))({
   format: { duration: "2.0" },
   streams: [
     {

@@ -129,7 +129,19 @@ const config = {
       // its own remediation campaign. Platform binaries stay independently
       // pinned to the build matching the installed native compiler.
       label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
-      dependencies: ["typescript", "fast-xml-validator", "detailed-xml-validator", "@effect/tsgo"],
+      dependencies: [
+        "typescript",
+        "fast-xml-validator",
+        "detailed-xml-validator",
+        "@effect/tsgo",
+        "@effect/tsgo-darwin-arm64",
+        "@effect/tsgo-darwin-x64",
+        "@effect/tsgo-linux-arm",
+        "@effect/tsgo-linux-arm64",
+        "@effect/tsgo-linux-x64",
+        "@effect/tsgo-win32-arm64",
+        "@effect/tsgo-win32-x64",
+      ],
       isIgnored: true,
     },
   ],

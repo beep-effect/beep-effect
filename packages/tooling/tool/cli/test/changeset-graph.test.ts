@@ -20,7 +20,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const runGit = Effect.fn("ChangesetGraphTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {

@@ -26,8 +26,8 @@ interface DispatchResult {
   readonly succeeded: boolean;
 }
 
-const decodeJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const runDispatchWithMockStdin = (
   hooks: DispatchMap<never, never>,

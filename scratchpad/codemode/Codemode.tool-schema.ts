@@ -19,7 +19,7 @@ type SubSchema = JSONSchema.SubSchema.Type;
 type Definitions = Readonly<Record<string, SubSchema>>;
 
 const decodeNode = S.decodeUnknownResult(JSONSchema.NodeCodec);
-const encodeJsonString = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const renderLiteral = (value: unknown): string =>
   pipe(

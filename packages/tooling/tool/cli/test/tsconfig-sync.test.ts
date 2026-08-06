@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 const runTsconfigSyncCommand = Command.runWith(tsconfigSyncCommand, { version: "0.0.0" });
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeServices.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer)));
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const TsconfigReferences = S.Struct({

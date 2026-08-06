@@ -84,7 +84,7 @@ import {
   type SyncIteratorRunner
 } from "./Interpreter.iterator.ts";
 
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 export type CallbackRunner<R> = {
   readonly invokeFunction: (fn: CodeModeFunction, args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>

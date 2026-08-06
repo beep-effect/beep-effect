@@ -95,7 +95,7 @@ const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   O.getOrThrow(
-    pipe(Result.getOrThrow(S.decodeUnknownResult(S.UnknownFromJsonString)(json)), O.liftPredicate(P.isObject))
+    pipe(Result.getOrThrow(S.decodeUnknownResult(S.fromJsonString(S.Unknown))(json)), O.liftPredicate(P.isObject))
   );
 
 /**

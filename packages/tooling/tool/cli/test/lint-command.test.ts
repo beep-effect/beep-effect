@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
@@ -687,14 +687,14 @@ describe("schema-first lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines).toContain("[schema-first] untracked live findings:");
             expect(errorLines).toContain(
-              "- packages/example/src/Example.ts :: parseConfig.JSON.parse [schema-policy-advisory] Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned."
+              "- packages/example/src/Example.ts :: parseConfig.JSON.parse [schema-policy-advisory] Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned."
             );
             const structuredIssueLine =
               '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-boundary-codec",' +
               '"severity":"warning","file":"packages/example/src/Example.ts","line":2,' +
               '"symbol":"parseConfig.JSON.parse",' +
-              '"message":"Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned.",' +
-              '"remediation":"Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard."}';
+              '"message":"Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned.",' +
+              '"remediation":"Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -710,7 +710,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
           Effect.gen(function* () {
             yield* writeSchemaFirstSourceFixture([
               'import * as S from "effect/Schema";',
-              "export const decodeConfig = S.decodeUnknownEffect(S.UnknownFromJsonString);",
+              "export const decodeConfig = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));",
               "",
             ]);
 

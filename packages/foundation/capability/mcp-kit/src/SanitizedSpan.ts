@@ -295,7 +295,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
               readonly isFailure: boolean;
               readonly result: unknown;
             }) =>
-              S.encodeUnknownEffect(S.UnknownFromJsonString)(result.encodedResult).pipe(
+              S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(result.encodedResult).pipe(
                 Effect.tapCause(Effect.log),
                 Effect.matchCause({
                   onFailure: () =>

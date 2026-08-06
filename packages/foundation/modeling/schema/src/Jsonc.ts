@@ -8,7 +8,6 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { isNonNegative } from "./Number.ts";
@@ -41,9 +40,9 @@ export class JsoncParseDiagnostic extends S.Class<JsoncParseDiagnostic>($I`Jsonc
   })
 ) {}
 
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to JSONC text is not supported by JsoncTextToUnknown.",
     })
   );
@@ -59,7 +58,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
     onEmpty: () => Effect.succeed(parsed),
     onNonEmpty: (errors) =>
       Effect.fail(
-        new SchemaIssue.InvalidValue(O.some(content), {
+        new SchemaIssue.InvalidValue({
           message: pipe(
             errors,
             A.map((error) => `${jsonc.printParseErrorCode(error.error)}@${error.offset}:${error.length}`),

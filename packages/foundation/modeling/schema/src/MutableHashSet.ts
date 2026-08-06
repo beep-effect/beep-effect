@@ -11,7 +11,6 @@ import * as O from "@beep/utils/Option";
 import {
   Effect,
   MutableHashSet as MutableHashSet_,
-  Option,
   pipe,
   SchemaIssue,
   SchemaParser,
@@ -166,13 +165,12 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
 
       return (input, ast, options) => {
         if (!MutableHashSet_.isMutableHashSet(input)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
         return Effect.mapBothEager(SchemaParser.decodeUnknownEffect(values)(A.fromIterable(input), options), {
           onSuccess: MutableHashSet_.fromIterable,
-          onFailure: (issue) =>
-            new SchemaIssue.Composite(ast, Option.some(input), [new SchemaIssue.Pointer(["values"], issue)]),
+          onFailure: (issue) => new SchemaIssue.Composite(ast, [new SchemaIssue.Pointer(["values"], issue)]),
         });
       };
     },

@@ -608,7 +608,7 @@ const boundaryCodecEntryFromJsonParse = (
     line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
     owner,
     reason:
-      "Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned.",
+      "Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned.",
   });
 
 /**

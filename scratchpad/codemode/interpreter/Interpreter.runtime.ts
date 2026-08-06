@@ -172,7 +172,7 @@ import {
 } from "../Codemode.values.ts";
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const StatementNodeType = LiteralKit([
   "ExpressionStatement",

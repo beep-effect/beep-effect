@@ -110,7 +110,7 @@ const layoutFor = (root: string): RoundLayout =>
     videoDir: `${root}/video`,
   });
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const clock = ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 4, slope: 1 });
 

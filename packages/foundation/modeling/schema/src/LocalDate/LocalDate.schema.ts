@@ -160,15 +160,6 @@ const daysInNonFebruaryMonth: (month: number) => number = Match.type<number>().p
 const getDaysInMonth = (year: number, month: number): number =>
   month === 2 ? (isLeapYearInternal(year) ? 29 : 28) : daysInNonFebruaryMonth(month);
 
-const makeInvalidLocalDateError: {
-  (message: string): (dateString: string) => S.SchemaError;
-  (dateString: string, message: string): S.SchemaError;
-} = dual(
-  2,
-  (dateString: string, message: string): S.SchemaError =>
-    new S.SchemaError(new SchemaIssue.InvalidValue(O.some(dateString), { message }))
-);
-
 const isValidCalendarDate = ({ year, month, day }: { year: number; month: number; day: number }): boolean =>
   month >= 1 && month <= 12 && day >= 1 && day <= getDaysInMonth(year, month);
 
@@ -181,7 +172,7 @@ const decodeLocalDateFromString: (
 ) {
   const match = Str.match(ISO_DATE_PATTERN)(dateString);
   if (O.isNone(match)) {
-    return yield* Effect.fail(new SchemaIssue.InvalidValue(O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidValue());
   }
   const [, yearStr, monthStr, dayStr] = match.value;
   const year = Number.parseInt(yearStr, 10);
@@ -189,18 +180,18 @@ const decodeLocalDateFromString: (
   const day = Number.parseInt(dayStr, 10);
 
   if (year < 1 || year > 9999) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   // Validate month range
   if (month < 1 || month > 12) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   // Validate day range for the given month
   const maxDays = daysInMonth(year, month);
   if (day < 1 || day > maxDays) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   return LocalDate.make({
@@ -243,7 +234,11 @@ const encodeLocalDateFromString = (localDate: {
 export const fromString = (dateString: string): Effect.Effect<LocalDate, S.SchemaError> =>
   O.match(Str.match(ISO_DATE_PATTERN)(dateString), {
     onNone: () =>
-      Effect.fail(makeInvalidLocalDateError(dateString, "Expected an ISO 8601 local date in YYYY-MM-DD format")),
+      Effect.fail(
+        new S.SchemaError(
+          new SchemaIssue.InvalidValue({ message: "Expected an ISO 8601 local date in YYYY-MM-DD format" })
+        )
+      ),
     onSome: ([, yearString, monthString, dayString]) => {
       const parts = {
         year: Number.parseInt(yearString, 10),
@@ -253,7 +248,7 @@ export const fromString = (dateString: string): Effect.Effect<LocalDate, S.Schem
 
       return isValidCalendarDate(parts)
         ? LocalDate.decodeEffect(parts)
-        : Effect.fail(makeInvalidLocalDateError(dateString, "Invalid calendar date"));
+        : Effect.fail(new S.SchemaError(new SchemaIssue.InvalidValue({ message: "Invalid calendar date" })));
     },
   });
 

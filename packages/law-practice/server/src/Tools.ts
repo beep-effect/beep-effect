@@ -10,6 +10,7 @@ import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
 import { composeGatedLayers, gatedLayer, SourceAuthRegistration, sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
@@ -123,6 +124,8 @@ export const makePracticeKgServerLayer = (
   config: PracticeKgMcpServerConfig
 ): Layer.Layer<never, never, DuckDb | Path.Path | PracticeKgBundle | SqlClient | Stdio> =>
   PracticeKgToolkitLayer.pipe(
-    Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })),
+    Layer.provide(
+      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+    ),
     Layer.orDie
   );

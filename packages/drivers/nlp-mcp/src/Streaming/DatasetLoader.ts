@@ -5,7 +5,7 @@
  * {@link TextStream}) or a remote `http(s)` URL (via the {@link HttpClient}
  * service, provided at the entrypoint). Remote reads are bounded by
  * {@link Effect.timeout}; JSON payloads are parsed with
- * {@link S.UnknownFromJsonString} rather than raw `JSON.parse`. Each loader
+ * {@link S.fromJsonString} rather than raw `JSON.parse`. Each loader
  * returns the data alongside a {@link DatasetMeta} record describing provenance,
  * and the load timestamp comes from {@link Clock.currentTimeMillis}.
  *
@@ -368,7 +368,7 @@ const LinesDatasetResult = DatasetResult(S.String.pipe(S.Array));
 const JsonDatasetResult = DatasetResult(S.Unknown);
 const JsonlDatasetResult = DatasetResult(S.Unknown.pipe(S.Array));
 
-const decodeJson = S.decodeEffect(S.UnknownFromJsonString);
+const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).length;
 

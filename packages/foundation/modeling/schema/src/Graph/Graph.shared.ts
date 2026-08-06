@@ -6,7 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { flow, Graph as Graph_, Number as Num, Option, Order, pipe, SchemaIssue } from "effect";
+import { flow, Graph as Graph_, Number as Num, Order, pipe, SchemaIssue } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -129,18 +129,17 @@ const edgeEntryOrder = Order.mapInput(Num.Order, (edge: { readonly index: number
  *
  * @example
  * ```ts
- * import * as O from "effect/Option"
  * import { makeInvalidGraphIssue } from "../../src/Graph/Graph.shared.ts"
  *
- * const issue = makeInvalidGraphIssue({ nodes: [] }, "Expected at least one node.")
- * console.log(issue._tag, O.isSome(issue.actual))
+ * const issue = makeInvalidGraphIssue("Expected at least one node.")
+ * console.log(issue._tag, String(issue))
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeInvalidGraphIssue = (actual: unknown, message: string): SchemaIssue.InvalidValue =>
-  new SchemaIssue.InvalidValue(Option.some(actual), { message });
+export const makeInvalidGraphIssue = (message: string): SchemaIssue.InvalidValue =>
+  new SchemaIssue.InvalidValue({ message });
 
 /** @internal */
 /**
@@ -151,7 +150,7 @@ export const makeInvalidGraphIssue = (actual: unknown, message: string): SchemaI
  * ```ts
  * import { makeGraphConstructionIssue } from "../../src/Graph/Graph.shared.ts"
  *
- * const issue = makeGraphConstructionIssue({ nodes: [] }, "node", 0, 1)
+ * const issue = makeGraphConstructionIssue("node", 0, 1)
  * console.log(issue._tag)
  * ```
  *
@@ -159,11 +158,10 @@ export const makeInvalidGraphIssue = (actual: unknown, message: string): SchemaI
  * @since 0.0.0
  */
 export const makeGraphConstructionIssue = (
-  actual: unknown,
   entity: "node" | "edge",
   expected: number,
   received: number
-): SchemaIssue.InvalidValue => makeInvalidGraphIssue(actual, `Expected ${entity} index ${expected}, got ${received}`);
+): SchemaIssue.InvalidValue => makeInvalidGraphIssue(`Expected ${entity} index ${expected}, got ${received}`);
 
 /** @internal */
 /**

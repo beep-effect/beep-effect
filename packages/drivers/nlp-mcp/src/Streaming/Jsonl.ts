@@ -139,7 +139,7 @@ export class JsonlValidationResult extends S.Class<JsonlValidationResult>($I`Jso
   })
 ) {}
 
-const decodeJsonLine = S.decodeResult(S.UnknownFromJsonString);
+const decodeJsonLine = S.decodeResult(S.fromJsonString(S.Unknown));
 
 const parseLine = (line: string, lineNumber: number): Result.Result<unknown, JsonlLineError> =>
   Result.mapError(

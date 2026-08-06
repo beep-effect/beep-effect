@@ -18,6 +18,7 @@ import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit"
 import { Uspto } from "@beep/uspto";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { UsptoToolkitHandlersLive } from "./UsptoHandlers.ts";
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
@@ -87,7 +88,9 @@ export const makeServerLayer = (config: UsptoMcpServerConfig): Layer.Layer<never
   );
 
   return composeGatedLayers(gatedLayer(UsptoSourceAuthRegistration, usptoToolkitLayer)).pipe(
-    Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })),
+    Layer.provide(
+      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+    ),
     Layer.orDie
   );
 };

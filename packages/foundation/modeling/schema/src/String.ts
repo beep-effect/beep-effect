@@ -11,7 +11,7 @@ import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("String");
-const encodeUnknownAsJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownAsJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const isError = S.is(S.Error());
 
 const stringifyFallback = (value: unknown): string => {

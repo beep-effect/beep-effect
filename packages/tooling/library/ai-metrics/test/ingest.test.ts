@@ -1633,7 +1633,7 @@ volumes:
           yield* writeText(
             path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
             // TODO(effect-native-migration): model schema
-            yield* S.encodeUnknownEffect(S.UnknownFromJsonString)({
+            yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({
               excludedDirectoryNames: [],
               fileCount: 1,
               files: [{ contentHash: "legacy-hash", relativePath: "AGENTS.md", sizeBytes: 18 }],

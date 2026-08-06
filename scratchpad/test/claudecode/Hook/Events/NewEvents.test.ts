@@ -22,7 +22,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 // ---------------------------------------------------------------------------
 // Setup

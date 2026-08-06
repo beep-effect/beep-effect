@@ -21,7 +21,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Status");
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Status of an optional Yeet artifact read.

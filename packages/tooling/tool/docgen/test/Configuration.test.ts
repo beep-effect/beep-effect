@@ -7,7 +7,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
   projectHomepage: O.none(),

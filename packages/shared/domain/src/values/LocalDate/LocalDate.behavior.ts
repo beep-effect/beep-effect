@@ -129,7 +129,7 @@ const decodeLocalDateFromString: (
   const parts = yield* O.match(Str.match(ISO_DATE_PATTERN)(dateString), {
     onNone: () =>
       Effect.fail(
-        new SchemaIssue.InvalidValue(O.some(dateString), {
+        new SchemaIssue.InvalidValue({
           message: "Expected an ISO 8601 local date in YYYY-MM-DD format",
         })
       ),
@@ -137,15 +137,15 @@ const decodeLocalDateFromString: (
   });
 
   if (parts.year < 1) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   if (parts.month < 1 || parts.month > 12) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   if (parts.day < 1 || parts.day > daysInGregorianMonth(parts.year, parts.month)) {
-    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
+    return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
   }
 
   return LocalDate.Model.make(parts);
