@@ -215,6 +215,47 @@ const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFiles")(fu
     });
   }
 
+  // `stat` resolves links and the FileSystem service exposes no `lstat`, so a successful
+  // `readLink` is the only way to see the link itself. Recording it the way Git does —
+  // mode 120000 over the target text — keeps a correct local symlink equal to its upstream
+  // entry. A real I/O failure is not swallowed here; it resurfaces from the caller's `stat`.
+  const readSymlinkEntry = Effect.fn("SkillsProvenance.readLocalSkillFiles.readSymlinkEntry")(function* (
+    absoluteEntry: string
+  ): Effect.fn.Return<O.Option<SkillUpstreamContentFile>, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+    const linkTarget = yield* Effect.option(fs.readLink(absoluteEntry));
+    if (O.isNone(linkTarget)) {
+      return O.none();
+    }
+    const linkPath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
+    return O.some(
+      SkillUpstreamContentFile.make({
+        path: linkPath,
+        mode: "120000",
+        bytes: textEncoder.encode(linkTarget.value),
+      })
+    );
+  });
+
+  const readLeafEntries = Effect.fn("SkillsProvenance.readLocalSkillFiles.readLeafEntries")(function* (
+    absoluteEntry: string,
+    stat: FileSystem.File.Info
+  ): Effect.fn.Return<ReadonlyArray<SkillUpstreamContentFile>, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+    if (!Str.Equivalence(stat.type, "File")) {
+      return A.empty<SkillUpstreamContentFile>();
+    }
+    const relativePath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
+    const bytes = yield* fs
+      .readFile(absoluteEntry)
+      .pipe(SkillsCommandError.mapError(`Failed to read installed skill file ${absoluteEntry}.`, absoluteEntry, skill));
+    return A.of(
+      SkillUpstreamContentFile.make({
+        path: relativePath,
+        mode: (stat.mode & 0o111) === 0 ? "100644" : "100755",
+        bytes,
+      })
+    );
+  });
+
   const walk = Effect.fn("SkillsProvenance.readLocalSkillFiles.walk")(function* (
     currentDir: string
   ): Effect.fn.Return<ReadonlyArray<SkillUpstreamContentFile>, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
@@ -225,21 +266,9 @@ const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFiles")(fu
 
     for (const entry of A.sort(entries, Str.Order)) {
       const absoluteEntry = path.join(currentDir, entry);
-      // `stat` resolves links and the FileSystem service exposes no `lstat`, so a successful
-      // `readLink` is the only way to see the link itself. Recording it the way Git does —
-      // mode 120000 over the target text — keeps a correct local symlink equal to its upstream
-      // entry. A real I/O failure is not swallowed here; it resurfaces from the `stat` below.
-      const linkTarget = yield* Effect.option(fs.readLink(absoluteEntry));
-      if (O.isSome(linkTarget)) {
-        const linkPath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
-        files = A.append(
-          files,
-          SkillUpstreamContentFile.make({
-            path: linkPath,
-            mode: "120000",
-            bytes: textEncoder.encode(linkTarget.value),
-          })
-        );
+      const symlink = yield* readSymlinkEntry(absoluteEntry);
+      if (O.isSome(symlink)) {
+        files = A.append(files, symlink.value);
         continue;
       }
 
@@ -248,28 +277,9 @@ const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFiles")(fu
         .pipe(
           SkillsCommandError.mapError(`Failed to stat installed skill path ${absoluteEntry}.`, absoluteEntry, skill)
         );
-      if (Str.Equivalence(stat.type, "Directory")) {
-        files = A.appendAll(files, yield* walk(absoluteEntry));
-        continue;
-      }
-      if (!Str.Equivalence(stat.type, "File")) {
-        continue;
-      }
-
-      const relativePath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
-      const bytes = yield* fs
-        .readFile(absoluteEntry)
-        .pipe(
-          SkillsCommandError.mapError(`Failed to read installed skill file ${absoluteEntry}.`, absoluteEntry, skill)
-        );
-      files = A.append(
-        files,
-        SkillUpstreamContentFile.make({
-          path: relativePath,
-          mode: (stat.mode & 0o111) === 0 ? "100644" : "100755",
-          bytes,
-        })
-      );
+      files = Str.Equivalence(stat.type, "Directory")
+        ? A.appendAll(files, yield* walk(absoluteEntry))
+        : A.appendAll(files, yield* readLeafEntries(absoluteEntry, stat));
     }
     return files;
   });
