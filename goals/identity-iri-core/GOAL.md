@@ -46,7 +46,7 @@ Workflow:
 5. Measure compile blast radius before/after (record in `history/`);
    module-boundary the vocab machinery if hot.
 6. Preserve unrelated user/worktree changes.
-7. At P3 Close, write a closeout reflection to
+7. At P4 Close, write a closeout reflection to
    `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill;
    `bun run beep lint reflection-artifacts` must pass.
 

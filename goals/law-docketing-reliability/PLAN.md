@@ -11,9 +11,10 @@ Status: `pending`
 | P0 Research | pending | Consume the patent spine lifecycle/records contract; refresh ODP rate/cadence facts; select an external heartbeat vendor/path whose alert remains operational with the app and desktop off; define the acceptance harness and bounded-recovery evidence. | Dependency contract, monitor independence, alert channel, operational assumptions, costs/credentials, and the kill/restore proof procedure are recorded without weakening the 20-minute staleness requirement. |
 | P1 Implement | pending | Add sequential 15-minute polling/reconciliation heartbeats, the T-90/30/14/7/3/1 acknowledgment ladder, independent alerts, durable cursor state, bounded backfill, reconciliation, and attorney-visible recovery reporting. | The reliability flow composes the spine records without owning legal computation; failures and acknowledgments are auditable; recovery resumes the external heartbeat only after reconciliation proof. |
 | P2 Verify | pending | Exercise cadence, staleness, ladder/repeats, complete-daily-sweep, kill-app alert, bounded backfill, Outlook/open-deadline reconciliation, recovery report, and resumed-heartbeat tests. | The app can be killed while the independent alert still arrives; restoration produces complete recovery evidence; all SPEC acceptance criteria are green or blockers are archived. |
-| P3 Close | pending | Run repo proof, prepare and drive the PR to mergeable through Yeet, write the closeout reflection, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
+| P3 Yeet: PR to mergeable | pending | Run repo proof, then prepare and drive the PR to mergeable through Yeet. | Yeet/GitHub reports the PR mergeable; required checks green and review threads resolved. |
+| P4 Close | pending | Write the closeout reflection and synchronize packet evidence/status. | A schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (`status` to `completed-retained` / `complete`):
 

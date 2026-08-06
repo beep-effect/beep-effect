@@ -19,8 +19,16 @@ Phase ids MUST match ops/manifest.json `phases[]` exactly. Until 2026-08-06 this
 table listed four phases ending at `P3 Close` while the manifest listed five
 (P3 Yeet, P4 Close), so every packet scaffolded from it inherited a plan that
 disagreed with its own machine state — an executor following both could close
-out before the PR was mergeable, or skip P4 entirely. 40 of 113 existing packets
-carry some form of this drift; they are not fixed here.
+out before the PR was mergeable, or skip P4 entirely.
+
+Audited 2026-08-06 across all 112 packets carrying both files: exactly **four**
+had inherited this contradiction (identity-iri-core, law-docketing-patent-spine,
+law-docketing-reliability, law-time-capture-spine) and all four are now fixed.
+A packet may legitimately use its own scheme — M1–M4 milestones, P1a/P1b
+sub-phases, bolded ids, or prose instead of a table — so equality of phase-id
+sequences is NOT the rule; the rule is that a plan must not contradict its own
+manifest. A naive id-sequence comparison flags 8 packets, half of them false
+positives, which is why this is a review concern rather than an automated gate.
 -->
 
 ## P4 Closeout Checklist
