@@ -18,6 +18,61 @@ import { hashPrivateIdentifier } from "./privacy.ts";
 const $I = $RepoAiMetricsId.create("hook-pulse");
 
 /**
+ * Resolve the shared agent-evidence root beneath an XDG state home.
+ *
+ * **Details**
+ *
+ * `.claude/hooks/hook-pulse.sh` resolves the same root as
+ * `${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence}`.
+ * This helper is the TypeScript half of that one convention, not a second
+ * definition of it: a shell writer and a replay reader that each hardcode the
+ * path can drift silently, which is exactly the failure class the hook-pulse
+ * ledger exists to rule out.
+ *
+ * **Example** (Resolving the root from an XDG state home)
+ *
+ * ```ts
+ * import { agentEvidenceRoot } from "@beep/repo-ai-metrics"
+ *
+ * console.log(agentEvidenceRoot("/home/dev/.local/state"))
+ * // /home/dev/.local/state/beep/agent-evidence
+ * ```
+ *
+ * @param stateHome - XDG state home, i.e. `XDG_STATE_HOME` or `$HOME/.local/state`.
+ * @returns The `beep/agent-evidence` root shared by every telemetry writer.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const agentEvidenceRoot = (stateHome: string): string => `${stateHome}/beep/agent-evidence`;
+
+/**
+ * Resolve the hook-pulse NDJSON ledger directory under an agent-evidence root.
+ *
+ * **Details**
+ *
+ * The writer shards one file per UTC day per session inside this directory, so
+ * concurrent sessions in sibling worktrees can never interleave lines. Every
+ * file in it decodes as {@link HookPulseV1}; sibling non-`HookPulseV1` state such
+ * as the kill-switch disarm-window log lives beside this directory rather than
+ * inside it, which keeps replay able to treat the whole directory as one schema.
+ *
+ * **Example** (Locating the ledger under a resolved evidence root)
+ *
+ * ```ts
+ * import { agentEvidenceRoot, hookPulseLedgerDir } from "@beep/repo-ai-metrics"
+ *
+ * console.log(hookPulseLedgerDir(agentEvidenceRoot("/home/dev/.local/state")))
+ * // /home/dev/.local/state/beep/agent-evidence/hook-events
+ * ```
+ *
+ * @param evidenceRoot - Agent-evidence root, e.g. from {@link agentEvidenceRoot}.
+ * @returns The `hook-events` directory holding the sharded hook-pulse ledger.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hookPulseLedgerDir = (evidenceRoot: string): string => `${evidenceRoot}/hook-events`;
+
+/**
  * Version identifier for hook-pulse ledger records.
  *
  * **Example** (Usage)
@@ -99,6 +154,7 @@ export const HookPulseEvent = LiteralKit([
   "PreToolUse",
   "PermissionRequest",
   "PostToolUse",
+  "PostToolUseFailure",
   "Notification",
   "UserPromptSubmit",
   "Stop",
@@ -297,6 +353,7 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     notification_type: S.OptionFromOptionalKey(S.String),
     duration_ms: S.OptionFromOptionalKey(NonNegNum),
     reason: S.OptionFromOptionalKey(S.String),
+    is_interrupt: S.OptionFromOptionalKey(S.Boolean),
   },
   $I.annote("HookPulseRawEvent", {
     description: "Whitelisted non-content fields forwarded from a coding-agent hook payload.",
@@ -336,6 +393,9 @@ const deriveWaitReason = (
     PreToolUse: HookPulseWaitReason.thunk.none,
     PermissionRequest: () => derivePermissionWaitReason(toolName),
     PostToolUse: HookPulseWaitReason.thunk.none,
+    // A bracket *end*, not a human wait: the harness emits either PostToolUse or
+    // PostToolUseFailure for a tool call, never both.
+    PostToolUseFailure: HookPulseWaitReason.thunk.none,
     Notification: () =>
       Bool.match(O.exists(notificationType, HookPulseNotificationType.is.idle_prompt), {
         onFalse: HookPulseWaitReason.thunk.unknown,
@@ -370,7 +430,7 @@ const privateReference = (value: string) =>
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
-const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason"]).pipe(
+const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason", "isInterrupt"]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
   })
@@ -380,6 +440,7 @@ type HookPulseEventOwnedField = typeof HookPulseEventOwnedField.Type;
 const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
   notificationType: HookPulseEvent.thunk.Notification,
   sessionEndReason: HookPulseEvent.thunk.SessionEnd,
+  isInterrupt: HookPulseEvent.thunk.PostToolUseFailure,
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -390,6 +451,18 @@ const filterHookPulseEventOwnedField = <A>(
   hookEvent: HookPulseEvent,
   value: O.Option<A>
 ): O.Option<A> => O.filter(value, () => doesHookPulseEventOwnField(field, hookEvent));
+
+// Owned fields no longer share one payload type — `isInterrupt` is boolean while
+// its siblings are strings — so indexing by a union key yields a union of
+// `Option`s that will not unify. The invariant below only asks whether a value is
+// present, so it reads through this presence-only accessor rather than widening
+// the union at each call site.
+type HookPulseEventOwnedFieldValues = { readonly [Field in HookPulseEventOwnedField]: O.Option<unknown> };
+
+const hookPulseEventOwnedFieldValue = (
+  input: HookPulseEventOwnedFieldValues,
+  field: HookPulseEventOwnedField
+): O.Option<unknown> => input[field];
 
 /**
  * Privacy-safe, schema-versioned record emitted once per coding-agent hook event.
@@ -438,6 +511,10 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
     durationMs: S.OptionFromOptionalKey(NonNegNum),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
+    // Separates "the human hit escape" from "the tool errored". The first is a
+    // human action and belongs in a human-wait instrument; the raw `error`
+    // string is content and is never represented here.
+    isInterrupt: S.OptionFromOptionalKey(S.Boolean),
   }).check(
     S.makeFilterGroup(
       [
@@ -445,7 +522,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
           (input) =>
             A.getSomes(
               A.map(HookPulseEventOwnedField.Options, (field) =>
-                O.match(input[field], {
+                O.match(hookPulseEventOwnedFieldValue(input, field), {
                   onNone: O.none,
                   onSome: () =>
                     Bool.match(doesHookPulseEventOwnField(field, input.hookEvent), {
@@ -634,16 +711,32 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               input.event.tool_name,
               input.event.notification_type
             ),
+            // All three event-owned fields route through the ownership table so it is
+            // the single source of truth in both directions. `notificationType`
+            // previously carried only the enum filter, so a `notification_type` on a
+            // non-Notification event failed the whole decode while its siblings
+            // dropped the field — the codec's two directions disagreed.
             ...O.getSomesStruct({
               toolName: input.event.tool_name,
               toolUseId: input.event.tool_use_id,
               promptId: input.event.prompt_id,
               transcriptPath: O.some(privateRefs.transcriptPath),
               permissionMode: input.event.permission_mode,
-              notificationType: O.filter(input.event.notification_type, isHookPulseNotificationType),
+              notificationType: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.notificationType,
+                input.event.hook_event_name,
+                O.filter(input.event.notification_type, isHookPulseNotificationType)
+              ),
               durationMs: input.event.duration_ms,
-              sessionEndReason: O.filter(input.event.reason, () =>
-                HookPulseEvent.is.SessionEnd(input.event.hook_event_name)
+              sessionEndReason: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.sessionEndReason,
+                input.event.hook_event_name,
+                input.event.reason
+              ),
+              isInterrupt: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.isInterrupt,
+                input.event.hook_event_name,
+                input.event.is_interrupt
               ),
             }),
           }))
@@ -678,6 +771,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 HookPulseEventOwnedField.Enum.sessionEndReason,
                 input.hookEvent,
                 O.fromUndefinedOr(input.sessionEndReason)
+              ),
+              is_interrupt: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.isInterrupt,
+                input.hookEvent,
+                O.fromUndefinedOr(input.isInterrupt)
               ),
             });
 

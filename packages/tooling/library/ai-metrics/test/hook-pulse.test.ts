@@ -181,6 +181,17 @@ const permissionDenied = rawInput("2026-08-01T08:46:00.000Z", {
   reason: "User denied permission",
 });
 
+// Harness 2.1.223 ends a tool call with PostToolUse *or* PostToolUseFailure,
+// never both, so this is the terminal event for an approved-then-failed call —
+// the case that would otherwise leave its wait bracket open forever.
+const postToolUseFailure = rawInput("2026-08-01T08:47:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUseFailure,
+  tool_name: "Bash",
+  tool_use_id: "tool-failed-1",
+  duration_ms: 12,
+  is_interrupt: true,
+});
+
 const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
 const encodeRawHookPulse = S.encodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
@@ -439,6 +450,50 @@ describe("HookPulseV1", () => {
       expect(failure.message).toContain("notificationType");
       expect(failure.message).toContain("Notification");
       expect(failure.message).toContain("PostToolUse");
+    })
+  );
+
+  it.effect(
+    "attributes isInterrupt only to PostToolUseFailure events",
+    Effect.fn("HookPulseTest.attributesOnlyPostToolUseFailureInterrupts")(function* () {
+      const decoded = yield* Effect.all(
+        {
+          postToolUse: decodeHookPulseFromRaw(autoApprovedPostToolUse),
+          postToolUseFailure: decodeHookPulseFromRaw(postToolUseFailure),
+        },
+        { concurrency: 1 }
+      );
+      const reencoded = yield* encodeHookPulseToRaw(decoded.postToolUseFailure);
+
+      expect(decoded.postToolUse.isInterrupt).toEqual(O.none());
+      expect(decoded.postToolUseFailure.isInterrupt).toEqual(O.some(true));
+      expect(reencoded.event.is_interrupt).toBe(true);
+      // A failed call is a bracket *end*, not a human wait.
+      expect(decoded.postToolUseFailure.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      // The closing evidence the two-hop join needs: without both of these a
+      // failed call's wait is unmeasurable rather than merely unrecorded.
+      expect(decoded.postToolUseFailure.toolUseId).toEqual(O.some("tool-failed-1"));
+      expect(decoded.postToolUseFailure.durationMs).toEqual(O.some(12));
+    })
+  );
+
+  it.effect(
+    "rejects isInterrupt on a non-PostToolUseFailure event",
+    Effect.fn("HookPulseTest.rejectsMisownedIsInterrupt")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPostToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          isInterrupt: true,
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("isInterrupt");
+      // Asserting the whole clause: "PostToolUse" alone is a substring of
+      // "PostToolUseFailure" and would pass vacuously.
+      expect(failure.message).toContain("belongs to PostToolUseFailure, not hookEvent PostToolUse");
     })
   );
 
