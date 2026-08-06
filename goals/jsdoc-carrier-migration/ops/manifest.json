@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "jsdoc-carrier-migration",
+    "title": "JSDoc Legacy Carrier Migration",
+    "status": "active",
+    "created": "2026-08-06",
+    "updated": "2026-08-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/jsdoc-carrier-migration",
+  "lifecycle": "active",
+  "mission": "Retire the legacy @example/@remarks carriers across every affected source file via a deterministic codemod with a per-block byte conservation law, using Grok 4.5 as a data-only title and section-routing service, then swap the cleanup-on-touch gate for a repo-wide zero-legacy check.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "",
+    "note": "Graduated from the JSDOC_CODEMOD grill session (2026-08-06). Root cause established from PR #563 run 31067721557: the Check / JSDoc Ratchet failures are enforceTouchedFileCleanup, not totals growth. Not graduated from an explorations/ packet."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".patterns/jsdoc-documentation.md",
+    "goals/jsdoc-carrier-migration/README.md",
+    "goals/jsdoc-carrier-migration/SPEC.md",
+    "goals/jsdoc-carrier-migration/PLAN.md",
+    "goals/jsdoc-carrier-migration/GOAL.md",
+    "goals/jsdoc-carrier-migration/research/SOURCES.md",
+    "goals/jsdoc-carrier-migration/research/decisions-locked.md",
+    "goals/jsdoc-carrier-migration/research/corpus-census.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/decisions-locked.md",
+    "research/corpus-census.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/jsdoc-carrier-migration/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Law + packet (docs-only PR)",
+      "status": "in-progress",
+      "exit": ".patterns/jsdoc-documentation.md no longer contradicts the gate and explicitly authorizes the one-time mass migration; this packet is on main."
+    },
+    {
+      "id": "P1",
+      "name": "Codemod (beep quality jsdoc-migrate)",
+      "status": "pending",
+      "exit": "extract/titles/apply/verify ship with the per-block conservation law and a schema-versioned proof manifest; dry-run over the full corpus reports a residue count."
+    },
+    {
+      "id": "P2",
+      "name": "Generator templates",
+      "status": "pending",
+      "exit": "All 9 repo-owned emitters produce **Example** (Title) sections; the 18 generated files are regenerated and law-compliant."
+    },
+    {
+      "id": "P3",
+      "name": "Migration mega-PR",
+      "status": "pending",
+      "exit": "Zero legacy carriers in non-generated packages/**/src; gate swapped to repo-wide zero-legacy; totals baseline rewritten; law transitional section deleted."
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending",
+      "exit": "Reflection landed and manifest flipped to completed-retained in the same PR as the final work."
+    }
+  ],
+  "provides": ["jsdoc/carrier-retirement"],
+  "requires": []
+}
