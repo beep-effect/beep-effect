@@ -871,16 +871,17 @@
         "findingId": "P100",
         "distillates": ["P100"]
       },
-      "claim": "FLINT models normative change through n-ary Act and Fact frames whose preconditioned acts create or terminate state facts. It may supply transition semantics over Hohfeldian relators, but it has not passed campaign verification.",
+      "claim": "FLINT models normative change through n-ary Act and Fact frames whose preconditioned acts create or terminate state facts, verified 2026-08-05 (relator-wedge Lane B) with a correction: it does not supply transition semantics over Hohfeldian relators - FLINT models act frames instead of positions, with two of four correlative pairs and omissions out of its own scope - so adoption covers the frame/slot/precondition machinery only. Original pre-verification wording is preserved in research/14-addendum-new-items.md.",
       "theme": "legal-position-authority",
       "targets": [
         "explorations/legal-patent-kg-deepening",
-        "explorations/agent-governance-control-plane"
+        "explorations/agent-governance-control-plane",
+        "explorations/legal-position-relator-runtime"
       ],
       "gapStatus": "partial",
-      "recommendation": "study",
+      "recommendation": "adopt",
       "priority": "P2",
-      "verification": "unverified-addendum"
+      "verification": "verified-with-correction 2026-08-05 (relator-wedge Lane B single pass: frames and precondition semantics verbatim; the transition-semantics-over-Hohfeldian-relators claim is false as written; beep-fit partial - eFLINT execution semantics excluded)"
     },
     {
       "id": "P101",
@@ -913,12 +914,13 @@
       "theme": "legal-position-authority",
       "targets": [
         "explorations/legal-patent-kg-deepening",
-        "goals/semantic-foundation"
+        "goals/semantic-foundation",
+        "explorations/legal-position-relator-runtime"
       ],
       "gapStatus": "gap",
-      "recommendation": "study",
+      "recommendation": "adopt",
       "priority": "P3",
-      "verification": "unverified-addendum"
+      "verification": "verified 2026-08-05 (relator-wedge Lane B single pass, all four gates on the real TNO GitLab repo: top-level Apache-2.0 port-with-attribution, shacl/ MPL-2.0 clean-room-only regardless of novelty)"
     },
     {
       "id": "ADHD-1",

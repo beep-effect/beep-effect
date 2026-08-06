@@ -6,21 +6,25 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GhActor } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
 import { PrCloseoutReport } from "./Closeout.ts";
-import { YeetVerdict } from "./Verdict.ts";
+import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetMergeReady, YeetMergeReadyCriteria, YeetMergeReadyCriterion, YeetVerdict } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Status");
+const threadExcerptLength = 140;
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
@@ -107,9 +111,56 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
     outcome: S.optionalKey(S.String),
     repairCommand: S.optionalKey(S.String),
     schemaVersion: S.optionalKey(S.String),
+    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetStatusArtifact", {
     description: "Compact summary for a Yeet artifact read by status.",
+  })
+) {}
+
+/**
+ * One unresolved review thread, carried with enough context to triage it.
+ *
+ * **Details**
+ *
+ * Status used to list threads as bare GraphQL node ids plus a file path, which
+ * is the least actionable form of the data: triaging a wave meant a second REST
+ * pass and hand-mapping thread ids to comment ids by file. Author, first-line
+ * excerpt, and the numeric REST `commentDatabaseId` are exactly the fields that
+ * turn the listing into something a reply drafts file can be written from
+ * directly — `yeet reply` accepts either identifier.
+ *
+ * **Example** (Describe one unresolved thread)
+ *
+ * ```ts
+ * import { YeetStatusReviewThread } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = YeetStatusReviewThread.make({
+ *   threadId: "PRRT_kwDO",
+ *   author: "greptile-apps[bot]",
+ *   excerpt: "logic: the rerun budget never resets across SHAs",
+ *   path: O.some("src/commands/Yeet/internal/MonitorLoop.ts"),
+ *   line: O.some(88),
+ *   commentDatabaseId: O.some(2412551122),
+ * })
+ * console.log(thread.author)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetStatusReviewThread extends S.Class<YeetStatusReviewThread>($I`YeetStatusReviewThread`)(
+  {
+    threadId: S.String,
+    author: S.String,
+    excerpt: S.String,
+    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    commentDatabaseId: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("YeetStatusReviewThread", {
+    description: "One unresolved pull request review thread with the context needed to triage and reply to it.",
   })
 ) {}
 
@@ -142,6 +193,8 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     pendingCheckCount: S.optionalKey(S.Finite),
     unresolvedReviewThreadCount: S.optionalKey(S.Finite),
     unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
+    unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    headSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     rerunFailedCommand: S.optionalKey(S.String),
     rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
@@ -195,11 +248,35 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     statusPath: S.String,
     verdict: YeetStatusArtifact,
     worktree: YeetStatusWorktree,
+    mergeReady: YeetMergeReady.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
   })
 ) {}
+
+/**
+ * JSON-string codec for the `status.json` artifact.
+ *
+ * **Gotchas**
+ *
+ * The status writer must go through this codec. Rendering the decoded snapshot
+ * with a generic JSON encoder serializes `Option` fields as their runtime shape
+ * (`{"_id":"Option","_tag":"Some","value":…}`), producing an artifact that no
+ * longer decodes — the same trap the verdict artifact already fell into.
+ *
+ * **Example** (Encode a snapshot)
+ *
+ * ```ts
+ * import { YeetStatusSnapshotJson } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof YeetStatusSnapshotJson.encode)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const YeetStatusSnapshotJson = JsonStringCodec(YeetStatusSnapshot);
 
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
@@ -218,15 +295,37 @@ class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRe
   })
 ) {}
 
+class GhStatusThreadComment extends S.Class<GhStatusThreadComment>($I`GhStatusThreadComment`)(
+  {
+    author: S.NullOr(GhActor),
+    body: S.NullOr(S.String),
+    databaseId: S.NullOr(S.Finite),
+  },
+  $I.annote("GhStatusThreadComment", {
+    description: "The opening comment of a review thread, used for status thread triage.",
+  })
+) {}
+
+class GhStatusThreadCommentConnection extends S.Class<GhStatusThreadCommentConnection>(
+  $I`GhStatusThreadCommentConnection`
+)(
+  { nodes: S.Array(GhStatusThreadComment) },
+  $I.annote("GhStatusThreadCommentConnection", {
+    description: "First-comment connection of a review thread returned by Yeet remote status.",
+  })
+) {}
+
 class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusReviewThread`)(
   {
     id: S.String,
     isResolved: S.Boolean,
     isOutdated: S.Boolean,
     path: S.NullOr(S.String),
+    line: S.NullOr(S.Finite),
+    comments: GhStatusThreadCommentConnection,
   },
   $I.annote("GhStatusReviewThread", {
-    description: "Minimal review-thread identity used by Yeet remote status.",
+    description: "Review-thread identity plus opening-comment triage context used by Yeet remote status.",
   })
 ) {}
 
@@ -261,7 +360,28 @@ class GhStatusReviewThreadsDocument extends S.Class<GhStatusReviewThreadsDocumen
   $I.annote("GhStatusReviewThreadsDocument", { description: "GraphQL review-thread status document." })
 ) {}
 
-class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatusWorkflowRun`)(
+/**
+ * A branch workflow run as returned by `gh run list`.
+ *
+ * **Example** (Construct a workflow run row)
+ *
+ * ```ts
+ * import { GhStatusWorkflowRun } from "@beep/repo-cli/test/Yeet"
+ *
+ * const run = GhStatusWorkflowRun.make({
+ *   conclusion: "failure",
+ *   databaseId: 42,
+ *   headSha: "abc123",
+ *   name: "check",
+ *   status: "completed",
+ * })
+ * console.log(run.conclusion)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatusWorkflowRun`)(
   {
     conclusion: S.NullOr(S.String),
     databaseId: S.Finite,
@@ -289,7 +409,7 @@ const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatu
 const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
 const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
 const reviewThreadsQuery =
-  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved isOutdated path} pageInfo{hasNextPage}}}}}";
+  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved isOutdated path line comments(first:1){nodes{author{login} body databaseId}}} pageInfo{hasNextPage}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 
 const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
@@ -397,6 +517,7 @@ const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatu
     path,
     schemaVersion: report.schemaVersion,
     state: "present",
+    greptileScore: O.fromUndefinedOr(report.greptile.score),
   });
 
 const readJsonArtifact = Effect.fn("YeetStatus.readJsonArtifact")(function* <Value>(
@@ -503,7 +624,29 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
   );
 });
 
-const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRuns")(function* (
+/**
+ * Fetch the branch's recent workflow runs, tolerating any `gh` failure.
+ *
+ * **Details**
+ *
+ * Shared with the `--until-merged` merge loop, which needs the same run list to
+ * find the failed runs at the current head SHA before drilling into their jobs.
+ *
+ * **Example** (Reference the workflow-run collector)
+ *
+ * ```ts
+ * import { collectRemoteWorkflowRuns } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(collectRemoteWorkflowRuns))) // true
+ * ```
+ *
+ * @param context - Yeet run context naming the branch and repo root.
+ * @returns The branch's most recent workflow runs, or an empty list.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRuns")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<ReadonlyArray<GhStatusWorkflowRun>, never, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture(
@@ -517,11 +660,130 @@ const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRun
   return yield* decodeGhStatusWorkflowRuns(result.output).pipe(Effect.orElseSucceed(A.empty<GhStatusWorkflowRun>));
 });
 
+const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu;
+const MARKDOWN_IMAGE_PATTERN = /!\[[^\]]*\]\([^)]*\)/gu;
+const HTML_TAG_PATTERN = /<[^>]*>/gu;
+const MARKDOWN_LINK_PATTERN = /\[([^\]]*)\]\([^)]*\)/gu;
+const MARKDOWN_LINE_PREFIX_PATTERN = /^[\s>#*\-+]+/u;
+const MARKDOWN_EMPHASIS_PATTERN = /[*_`]/gu;
+
+/**
+ * Reduce a review-comment body to one plain first line.
+ *
+ * **Details**
+ *
+ * Bot review bodies open with machine markers rather than prose — an HTML
+ * comment, a shields.io severity badge image, then bolded category text — so a
+ * naive first line is empty or a URL. Stripping comments, images, tags, and
+ * link syntax first makes the first non-empty line the sentence a human would
+ * read.
+ *
+ * **Example** (Strip a badge-prefixed bot comment)
+ *
+ * ```ts
+ * import { yeetReviewThreadExcerpt } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetReviewThreadExcerpt("<!-- greptile -->\n![](https://img/badge.svg) **logic**: off by one"))
+ * ```
+ *
+ * @param body - Raw review-comment markdown.
+ * @returns A single-line, badge-free excerpt bounded for operator output.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const yeetReviewThreadExcerpt = (body: string): string =>
+  pipe(
+    body,
+    Str.replace(HTML_COMMENT_PATTERN, " "),
+    Str.replace(MARKDOWN_IMAGE_PATTERN, " "),
+    Str.replace(HTML_TAG_PATTERN, " "),
+    Str.replace(MARKDOWN_LINK_PATTERN, "$1"),
+    Str.split(/\r?\n/u),
+    A.map(flow(Str.replace(MARKDOWN_LINE_PREFIX_PATTERN, ""), Str.replace(MARKDOWN_EMPHASIS_PATTERN, ""), Str.trim)),
+    A.findFirst(Str.isNonEmpty),
+    O.map((line) => yeetCommentExcerpt(line, threadExcerptLength)),
+    O.getOrElse(() => "(no comment body)")
+  );
+
+const reviewThreadTriage = (thread: GhStatusReviewThread): YeetStatusReviewThread => {
+  const opening = A.head(thread.comments.nodes);
+  return YeetStatusReviewThread.make({
+    threadId: thread.id,
+    author: pipe(
+      opening,
+      O.flatMap((comment) => O.fromNullishOr(comment.author)),
+      O.map((author) => author.login),
+      O.getOrElse(() => "unknown")
+    ),
+    excerpt: pipe(
+      opening,
+      O.flatMap((comment) => O.fromNullishOr(comment.body)),
+      O.map(yeetReviewThreadExcerpt),
+      O.getOrElse(() => "(no comment body)")
+    ),
+    path: O.fromNullishOr(thread.path),
+    line: O.fromNullishOr(thread.line),
+    commentDatabaseId: pipe(
+      opening,
+      O.flatMap((comment) => O.fromNullishOr(comment.databaseId))
+    ),
+  });
+};
+
 const skippedRemote = YeetStatusRemote.make({
   available: false,
   checked: false,
   detail: "pass --remote to include live GitHub PR data",
 });
+
+/**
+ * Build the read-only failed-job listing suggested when a same-SHA red run is
+ * rerunnable.
+ *
+ * **Details**
+ *
+ * Job-scoped on purpose, matching the merge loop's rerun command. A run-level
+ * `--failed` rerun re-executes every failed job in the run, so a genuine red
+ * sharing the run with a flake gets re-run as a side effect of the flake —
+ * the exact behaviour the merge loop bans. Status has only the run-level
+ * record at this seam, so it suggests the listing that surfaces
+ * each failed job's `databaseId` and lets the decision text name the
+ * job-scoped rerun form.
+ *
+ * **Example** (Suggest the failed-job listing for a run)
+ *
+ * ```ts
+ * import { yeetRerunJobListingCommand } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetRerunJobListingCommand(123).startsWith("gh run view 123")) // true
+ * ```
+ *
+ * @param runId - Workflow run database id from `gh run list`.
+ * @returns The read-only `gh run view` job listing command.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const yeetRerunJobListingCommand = (runId: number): string =>
+  `gh run view ${runId} --json jobs --jq '.jobs[] | select(.conclusion == "failure") | [.databaseId, .name] | @tsv'`;
+
+/**
+ * Render the same-SHA rerun decision line that teaches the job-scoped form.
+ *
+ * **Example** (Name the job-scoped rerun for a red run)
+ *
+ * ```ts
+ * import { yeetRerunDecisionText } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetRerunDecisionText("check").includes("--job")) // true
+ * ```
+ *
+ * @param runName - Workflow run name from `gh run list`.
+ * @returns Operator guidance naming `gh run rerun --job`, never `--failed`.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const yeetRerunDecisionText = (runName: string): string =>
+  `same-SHA red detected for ${runName}; rerun one job with \`gh run rerun --job <databaseId>\`, never \`--failed\``;
 
 const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function* (
   context: RepoRunContext,
@@ -554,9 +816,10 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   );
   const checks = yield* collectRemoteChecks(context);
   const reviewThreads = yield* collectRemoteReviewThreads(context, view.id);
-  const unresolvedThreads = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
+  const unresolved = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
+  const unresolvedThreads = A.map(unresolved, reviewThreadTriage);
   const unresolvedReviewThreads = [
-    ...A.map(unresolvedThreads, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
+    ...A.map(unresolved, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
     ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
   ];
   const checkCount = pipe(checks, O.map(A.length));
@@ -580,10 +843,10 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     A.findFirst((run) => run.headSha === view.headRefOid && run.conclusion === "failure"),
     O.filter(() => hasFailingCheck)
   );
-  const rerunFailedCommand = O.map(rerunnableFailedRun, (run) => `gh run rerun ${run.databaseId} --failed`);
+  const rerunFailedCommand = O.map(rerunnableFailedRun, (run) => yeetRerunJobListingCommand(run.databaseId));
   const rerunFailedDecision = pipe(
     rerunnableFailedRun,
-    O.map((run) => `same-SHA red detected for ${run.name}; suggest rerun-failed before pushing`),
+    O.map((run) => yeetRerunDecisionText(run.name)),
     O.orElse(() => O.some("no same-SHA failed workflow rerun is currently indicated"))
   );
   return YeetStatusRemote.make({
@@ -596,6 +859,8 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     url: view.url,
     unresolvedReviewThreadCount: A.length(unresolvedReviewThreads),
     unresolvedReviewThreads,
+    unresolvedThreads: O.some(unresolvedThreads),
+    headSha: O.some(view.headRefOid),
     ...O.getSomesStruct({
       checkCount,
       failingCheckCount,
@@ -620,19 +885,98 @@ const CLOSEOUT_COMMAND =
   "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
 const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
 
-const remoteIsMergeReady = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
-  remote.unresolvedReviewThreadCount === 0 &&
+const checksAreGreen = (remote: YeetStatusRemote): boolean =>
+  pipe(
+    O.fromUndefinedOr(remote.checkCount),
+    O.exists(() => (remote.failingCheckCount ?? 0) === 0 && (remote.pendingCheckCount ?? 0) === 0)
+  );
+
+const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
+  (remote.unresolvedReviewThreadCount ?? 0) === 0 &&
   pipe(
     O.fromUndefinedOr(closeout.issueCount),
     O.exists((count) => count === 0)
   );
+
+/**
+ * Fold the merge protocol's three surfaces into one merge-readiness verdict.
+ *
+ * **Details**
+ *
+ * Status already fetches everything the protocol asks a human to read, so the
+ * only thing missing was a name for the answer. `checks-green` and
+ * `threads-resolved` are the hard criteria and are reported in that order —
+ * a red pipeline is the blocker worth acting on first even when threads are
+ * also open. The Greptile score rides along as display-only: it is a target the
+ * operator judges, not a gate this verdict enforces.
+ *
+ * **Gotchas**
+ *
+ * Returns `None` when the pull request was not read at all (`yeet status`
+ * without `--remote`, or no PR for the branch). Unknown is not the same as
+ * blocked, and callers that flatten it to `false` would announce a failing
+ * criterion that was never observed. Unread *checks*, by contrast, are treated
+ * as not-green: the criterion is hard, so absence of proof blocks.
+ *
+ * **Example** (Name the blocking criterion)
+ *
+ * ```ts
+ * import { deriveYeetMergeReady, YeetStatusArtifact, YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
+ *
+ * const mergeReady = deriveYeetMergeReady(
+ *   YeetStatusArtifact.make({ detail: "closed", issueCount: 0, path: "pr-closeout.json", state: "present" }),
+ *   YeetStatusRemote.make({
+ *     available: true,
+ *     checked: true,
+ *     detail: "PR #42 OPEN",
+ *     checkCount: 24,
+ *     failingCheckCount: 1,
+ *     pendingCheckCount: 0,
+ *     unresolvedReviewThreadCount: 0,
+ *   })
+ * )
+ * console.log(mergeReady)
+ * ```
+ *
+ * @param closeout - Closeout artifact summary for the branch.
+ * @param remote - Live pull request summary, checked or not.
+ * @returns The merge-readiness verdict, or `None` when the PR was not read.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const deriveYeetMergeReady = (
+  closeout: YeetStatusArtifact,
+  remote: YeetStatusRemote
+): O.Option<YeetMergeReady> => {
+  if (!remote.checked || !remote.available) {
+    return O.none();
+  }
+  const checksGreen = checksAreGreen(remote);
+  const threadsResolved = threadsAreResolved(closeout, remote);
+  const failing = !checksGreen
+    ? O.some(YeetMergeReadyCriterion.Enum["checks-green"])
+    : threadsResolved
+      ? O.none<YeetMergeReadyCriterion>()
+      : O.some(YeetMergeReadyCriterion.Enum["threads-resolved"]);
+  return O.some(
+    YeetMergeReady.make({
+      ready: O.isNone(failing),
+      failing,
+      criteria: YeetMergeReadyCriteria.make({
+        checksGreen,
+        threadsResolved,
+        greptileScore: closeout.greptileScore,
+      }),
+    })
+  );
+};
 
 const nextCommandForRemote = (
   verdict: YeetStatusArtifact,
   closeout: YeetStatusArtifact,
   remote: YeetStatusRemote
 ): string => {
-  if (remoteIsMergeReady(closeout, remote)) {
+  if (O.exists(deriveYeetMergeReady(closeout, remote), (mergeReady) => mergeReady.ready)) {
     return MERGE_READY_COMMAND;
   }
   if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
@@ -709,6 +1053,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
     statusPath,
     verdict,
     worktree,
+    mergeReady: deriveYeetMergeReady(closeout, remoteStatus),
   });
 });
 
@@ -720,14 +1065,80 @@ const renderCheckLine = (remote: YeetStatusRemote): string =>
     ? `checks: ${remote.checkCount} total, ${remote.failingCheckCount ?? 0} failing, ${remote.pendingCheckCount ?? 0} pending`
     : "checks: not checked";
 
-const renderReviewThreadLine = (remote: YeetStatusRemote): string => {
+const renderThreadTriageLine = (thread: YeetStatusReviewThread): string => {
+  const location = pipe(
+    thread.path,
+    O.map((path) => ` ${path}${O.match(thread.line, { onNone: () => Str.empty, onSome: (line) => `:${line}` })}`),
+    O.getOrElse(() => Str.empty)
+  );
+  const commentId = O.match(thread.commentDatabaseId, {
+    onNone: () => Str.empty,
+    onSome: (id) => ` comment ${id}`,
+  });
+  return `  - ${thread.threadId}${commentId}${location} @${thread.author}: ${thread.excerpt}`;
+};
+
+/**
+ * Render the unresolved-thread block of a status summary.
+ *
+ * **Details**
+ *
+ * When triage context is available each thread gets its own line carrying the
+ * GraphQL thread id, the REST comment `databaseId`, the location, the author,
+ * and a plain first-line excerpt — the exact columns a reply drafts file needs.
+ * Snapshots written before that context existed fall back to the original
+ * inline id list rather than losing the count.
+ *
+ * **Example** (Render an unchecked remote)
+ *
+ * ```ts
+ * import { renderYeetReviewThreadBlock, YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetReviewThreadBlock(
+ *   YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" })
+ * ))
+ * ```
+ *
+ * @param remote - Live pull request summary, checked or not.
+ * @returns The `review threads:` line plus one indented line per thread.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string => {
   if (!remote.checked || !remote.available) {
     return "review threads: not checked";
   }
-  const threads = remote.unresolvedReviewThreads ?? A.empty<string>();
-  const listed = A.isReadonlyArrayNonEmpty(threads) ? ` -> ${A.join(threads, ", ")}` : Str.empty;
-  return `review threads: ${remote.unresolvedReviewThreadCount ?? 0} unresolved${listed}`;
+  const header = `review threads: ${remote.unresolvedReviewThreadCount ?? 0} unresolved`;
+  return pipe(
+    remote.unresolvedThreads,
+    O.filter(A.isReadonlyArrayNonEmpty),
+    O.match({
+      onNone: () => {
+        const threads = remote.unresolvedReviewThreads ?? A.empty<string>();
+        return A.isReadonlyArrayNonEmpty(threads) ? `${header} -> ${A.join(threads, ", ")}` : header;
+      },
+      onSome: (threads) => A.join([header, ...A.map(threads, renderThreadTriageLine)], "\n"),
+    })
+  );
 };
+
+const renderMergeReadyLine = (snapshot: YeetStatusSnapshot): string =>
+  pipe(
+    snapshot.mergeReady,
+    O.match({
+      onNone: () => "merge-ready: not checked",
+      onSome: (mergeReady) => {
+        const greptile = O.match(mergeReady.criteria.greptileScore, {
+          onNone: () => Str.empty,
+          onSome: (score) => ` (greptile ${score})`,
+        });
+        return O.match(mergeReady.failing, {
+          onNone: () => `merge-ready: yes${greptile}`,
+          onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
+        });
+      },
+    })
+  );
 
 /**
  * Render a concise human-readable Yeet status block.
@@ -770,7 +1181,8 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- closeout: ${snapshot.closeout.detail}`,
       `- remote: ${snapshot.remote.checked ? snapshot.remote.detail : "remote not checked"}`,
       `- ${renderCheckLine(snapshot.remote)}`,
-      `- ${renderReviewThreadLine(snapshot.remote)}`,
+      `- ${renderYeetReviewThreadBlock(snapshot.remote)}`,
+      `- ${renderMergeReadyLine(snapshot)}`,
       `- rerun-failed: ${snapshot.remote.rerunFailedDecision ?? "not checked"}`,
       `- status artifact: ${snapshot.statusPath}`,
       `- next: ${snapshot.nextCommand}`,
@@ -799,7 +1211,7 @@ export const writeYeetStatusSnapshot = Effect.fn("YeetStatus.writeYeetStatusSnap
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const json = yield* encodeJson(snapshot).pipe(
+  const json = yield* YeetStatusSnapshotJson.encode(snapshot).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode yeet status JSON."))
   );
   yield* fs

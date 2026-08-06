@@ -6,6 +6,7 @@
  */
 
 export * from "@beep/repo-cli/commands/Yeet/index";
+export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";
 export * from "../commands/Yeet/internal/closeout/Closeout.schemas.ts";
@@ -32,12 +33,19 @@ export * from "../commands/Yeet/internal/Handler.ts";
 export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";
+export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
+export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
+export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";
 export * from "../commands/Yeet/internal/PullRequest.ts";
 export * from "../commands/Yeet/internal/QualityIssueIndex.ts";
+export * from "../commands/Yeet/internal/Reply.schemas.ts";
+export * from "../commands/Yeet/internal/Reply.ts";
+export * from "../commands/Yeet/internal/Sweep.schemas.ts";
+export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";
 export * from "../commands/Yeet/internal/Verdict.ts";
 export * from "../commands/Yeet/Yeet.render.ts";

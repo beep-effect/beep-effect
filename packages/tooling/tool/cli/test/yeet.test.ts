@@ -85,6 +85,8 @@ import {
   YeetStatusSnapshot,
   YeetStatusWorktree,
   YeetVerdict,
+  yeetRerunDecisionText,
+  yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
@@ -1272,7 +1274,10 @@ describe("yeet quality issue index", () => {
       )
     ));
 
-  it("rejects advisory Fallow envelopes older than the Yeet run start", () =>
+  // Ledger #55 / decision 25: advisory Fallow envelopes older than the Yeet run
+  // start are gitignored leftovers, so the phase purges them and skips instead of
+  // failing the publish. Behavioral detail lives in yeet-fallow-self-heal.test.ts.
+  it("purges advisory Fallow envelopes older than the Yeet run start", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -1280,6 +1285,7 @@ describe("yeet quality issue index", () => {
           const path = yield* Path.Path;
           const fromDir = path.join(tmpDir, ".beep", "fallow");
           const emitPath = path.join(tmpDir, ".beep", "yeet", "fallow-quality-issues.json");
+          const envelopePath = path.join(fromDir, "health.advisory.json");
           const healthText = yield* encodeJson(
             fallowOkEnvelope({
               advisory: true,
@@ -1289,16 +1295,19 @@ describe("yeet quality issue index", () => {
             })
           );
           yield* fs.makeDirectory(fromDir, { recursive: true });
-          yield* fs.writeFileString(path.join(fromDir, "health.advisory.json"), `${healthText}\n`);
-          const error = yield* runYeetFallowFeedbackForTesting({
+          yield* fs.writeFileString(envelopePath, `${healthText}\n`);
+          yield* runYeetFallowFeedbackForTesting({
             advisory: true,
             emit: emitPath,
             from: fromDir,
             runStartedAt: "2026-06-16T00:00:00.000Z",
-          }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)), Effect.flip);
+          }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
 
-          expect(error.message).toContain("older than the Yeet run start");
-          expect(error.message).toContain("health");
+          expect(yield* fs.exists(envelopePath)).toBe(false);
+
+          const emittedText = yield* fs.readFileString(emitPath);
+          const index = yield* S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          expect(index.issues).toEqual([]);
         })
       )
     ));
@@ -1749,7 +1758,7 @@ describe("yeet status helpers", () => {
           available: true,
           checked: true,
           detail: "PR #42 OPEN",
-          rerunFailedCommand: "gh run rerun 123 --failed",
+          rerunFailedCommand: yeetRerunJobListingCommand(123),
           rerunFailedDecision: "same-SHA red candidate",
           unresolvedReviewThreadCount: 1,
           unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
@@ -1758,7 +1767,7 @@ describe("yeet status helpers", () => {
         const decoded = yield* S.decodeUnknownEffect(YeetStatusRemote)(encoded);
 
         expect(decoded.unresolvedReviewThreadCount).toBe(1);
-        expect(decoded.rerunFailedCommand).toBe("gh run rerun 123 --failed");
+        expect(decoded.rerunFailedCommand).toBe(yeetRerunJobListingCommand(123));
       })
     ));
 
@@ -1820,8 +1829,8 @@ describe("yeet status helpers", () => {
       available: true,
       checked: true,
       detail: "PR #42 OPEN",
-      rerunFailedCommand: "gh run rerun 123 --failed",
-      rerunFailedDecision: "same-SHA red detected; suggest rerun-failed before pushing",
+      rerunFailedCommand: yeetRerunJobListingCommand(123),
+      rerunFailedDecision: yeetRerunDecisionText("check"),
       unresolvedReviewThreadCount: 1,
       unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
     });
@@ -1832,8 +1841,17 @@ describe("yeet status helpers", () => {
       remote
     );
 
-    expect(command).toContain("gh run rerun 123 --failed");
+    expect(command).toContain(yeetRerunJobListingCommand(123));
     expect(command).not.toContain("merge the PR");
+  });
+
+  it("teaches only the job-scoped rerun form, never --failed", () => {
+    const listing = yeetRerunJobListingCommand(123);
+    expect(listing).toContain("gh run view 123 --json jobs");
+    expect(listing).not.toContain("--failed");
+    const decision = yeetRerunDecisionText("check");
+    expect(decision).toContain("gh run rerun --job <databaseId>");
+    expect(decision).toContain("never");
   });
 });
 

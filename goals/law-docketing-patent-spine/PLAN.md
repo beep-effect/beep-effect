@@ -11,9 +11,10 @@ Status: `pending`
 | P0 Research | pending | Refresh the governing legal authorities and their effective dates; derive the attorney-reviewable office-action, maintenance-fee, and exceptional-date rule fixtures; confirm the ODP office-action and optional e-Office Action ingestion paths. Treat external heartbeat vendor selection as owned by `law-docketing-reliability`, not this packet. | The authority ledger and bounded fixture set are freshness-dated; ODP/e-OA path facts and gaps are recorded; the lifecycle/records contract needed by reliability is explicit. |
 | P1 Implement | pending | Build the smallest schema-first US Patent Office-Action Approval Spine: evidenced intake, versioned rules, candidate comparison, attorney approvals, durable records, reconciliation, one-way Outlook scheduling, and sequential ODP polling. | The office-action, maintenance-fee, and exceptional-date fixtures traverse the complete approved lifecycle and persist across restart; disagreement escalates and no unapproved date becomes operative. |
 | P2 Verify | pending | Exercise the fixture, restart, provenance, escalation, approval, reconciliation, Outlook, T-ladder, and sequential-polling proof matrix; consume the sibling reliability packet's kill-app alert and recovery evidence. | All SPEC acceptance criteria are green, including paired reliability acceptance, or blockers are archived with reproducible evidence. |
-| P3 Close | pending | Run repo proof, prepare and drive the PR to mergeable through Yeet, write the closeout reflection, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
+| P3 Yeet: PR to mergeable | pending | Run repo proof, then prepare and drive the PR to mergeable through Yeet. | Yeet/GitHub reports the PR mergeable; required checks green and review threads resolved. |
+| P4 Close | pending | Write the closeout reflection and synchronize packet evidence/status. | A schema-valid reflection exists; README, PLAN, and manifest state match the evidence. |
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (`status` to `completed-retained` / `complete`):
 

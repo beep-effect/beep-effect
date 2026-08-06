@@ -596,3 +596,241 @@ audited), #50 (ratcheted-advisory contract). All 55 items now covered.
     skip with a note), never exit 1. Candidate vehicle: PR-E rider (it's the
     yeet surface); also a #50 exhibit — the failure output taught neither
     the fix nor the one command to run.
+
+61. **Yeet publish flag-path regression matrix.** (From the #551 monitor
+    regression, found by beep-effect5 tripping it publishing PR #562.)
+    `publish`'s terminal behavior differs per flag combination (default
+    `--message`, `--monitor`, `--fast --monitor`, `--start-pr-early`,
+    `--staged-only`), and #551 shipped green on the author's combination
+    (`--fast --monitor`) while breaking the default path for every other
+    checkout — the exit-1-on-success went unnoticed for a day because this
+    session also ships `--fast --monitor`. A stubbed-step test matrix
+    asserting exit code + terminal phase behavior for each supported flag
+    combination makes "green on my flags" insufficient to ship. Vehicle:
+    PR-E rider (the tests colocate with the publish/monitor code being
+    rebuilt there); the decision-39 regression test is its first row.
+62. **merge_group parity for required security gates.** Under merge_group
+    events commitlint depth degrades to one commit (check.yml:599-609) and
+    gitleaks runs `-1` with the base-pinned scanner-config hardening
+    bypassed (:657-681) — both required gates pass vacuously. Gate
+    contracts must hold under every trigger event, independent of whether
+    #22 merge queue is ever adopted. Vehicle: small hosted-CI PR; natural
+    rider on PR-G parity work.
+
+63. **Effect v4 `A.filterMap` takes `Result`, not `Option` — a wave-scale
+    trap.** Three independent hits in one build wave (Sweep ×2, Reply ×1):
+    the v3 muscle-memory shape compiles into silently-empty arrays under
+    vitest (one suite went 31/32 green while broken — vitest does not
+    typecheck) and tsgo rejects it with a TS2375
+    `exactOptionalPropertyTypes` wall that names neither `filterMap` nor
+    the fix. Correct v4 shape: `A.map(...)` + `A.getSomes`. Actions:
+    effect-v4-imports skill note; memory line (done); candidate upstream
+    `effect(outdatedApi)`-style one-liner diagnostic (the plugin already
+    special-cases `Effect.iterate`). Wave law: run the tsgo overlay BEFORE
+    the test pass — a green vitest run is not evidence of v4 API shape.
+64. **Wave gate attribution and own-scope gates.** One worktree, four
+    agents: concurrent full-package `vitest run` has no lock (two runs
+    contended and both starved, ~15 min no output); failures in a full run
+    include other agents' mid-edit files (two agents each burned two full
+    runs distinguishing "mine" from "someone else's half-written file");
+    no streaming totals when redirected, so alive-vs-hung needs `pgrep`.
+    Actions: wave-brief law "own test files during the loop, one full
+    package run at integration"; a `beep test` lane wrapper with an
+    advisory lock that attaches to an in-flight run instead of starting a
+    second; per-suite progress lines for background monitorability;
+    file-scoped verdicts derived from wave-manifest claim globs (#46/#41
+    kin, #49's missing gate-attribution half).
+65. **Budget/dedupe keys must be built from fields documented stable
+    across retries (.patterns/ law).** The merge-loop rerun budget keyed
+    on `${headSha}#${databaseId}` — but job databaseIds are per-attempt
+    records, so the budget reset itself on every rerun (unbounded reruns
+    at one SHA; caught by adversarial verify, fixed to key on `job.name`).
+    The class is mechanically detectable whenever the schema carries a
+    stable sibling of the unstable field.
+66. **Writer-level artifact coverage + mechanical S.encode-law
+    enforcement.** All four PR-E artifact producers were initially tested
+    only at the codec layer — reverting the writer fix left 1004 tests
+    green (the codec is the layer that was never broken). Fix wave adds
+    per-writer round-trips. Remaining: three yeet writers still on
+    schema-agnostic `renderJson` (pr-closeout.json — now READ by the
+    greptileScore path, proof lock/state ×2, quality issue index); no live
+    Option bug today, but the first `OptionFromOptionalKey` field on
+    `PrCloseoutReport` reproduces the verdict bug on a hotter path. Widget:
+    a lint — "`writeTextFile` whose payload derives from a decoded
+    `S.Class` must flow through a `JsonStringCodec`" — plus routing the
+    three stragglers. #34 family, fast-follow PR.
+67. **Adversarial-review harness (`beep review claims` + `beep yeet
+    diff`).** Both reviewers hand-built evidence bundles (grep sweeps for
+    `--failed`/`git add -A`/`--force`/`.git` probes, `git show
+    origin/main:` for new-vs-preexisting attribution), and both hit `git
+    diff origin/main...HEAD` returning EMPTY on uncommitted work — an
+    agent trusting the prompt's diff command would have reported HOLDS on
+    a 2,500-line change it never read. Widgets: a claims→evidence-bundle
+    command with pre-existing-vs-new attribution; a `yeet diff` that
+    unions staged + unstaged + untracked against the merge base; a
+    prompt-side `status --porcelain -uall` sanity check before any
+    review-by-diff (decision 42c's law, same reason).
+68. **Binding-contract block colocated with schemas.** The sweep
+    implementer spent ~20 minutes cross-referencing GRILL-DECISIONS 14(b)
+    (the -D trio), ledger #39 (FF-refusal evidence), decision 36 (worktree
+    law), and the step-id set that lives only in `Sweep.schemas.ts` JSDoc.
+    A one-paragraph block colocated with the schema naming which decisions
+    constrain it removes the scavenger hunt. #50 teach family.
+69. **Fixture corpus for hosted CI payloads (`test/fixtures/gh/`).** The
+    monitor classifier's `<job>\t<step>\t<timestamp>` shapes and
+    `--log-failed` output were hand-authored from memory; one captured
+    payload per fingerprint class + one genuine red + one bot review body
+    per bot makes every future classifier change provable instead of
+    plausible. #47's `beep ci logs` is the harvesting tool.
+70. **Append-optional lint (#34) must distinguish artifact schemas from
+    input DTOs.** `buildYeetVerdict` takes a positional object literal, so
+    adding a field as `S.OptionFromOptionalKey` (the artifact law) BREAKS
+    every call site while `S.optional` does not — on input DTOs the law
+    would cause exactly the failure it exists to prevent. The lint needs
+    the schemaVersion-literal discriminator (artifact) vs constructor-input
+    shape (DTO) built in.
+
+PR-E build-wave reflection harvest (2026-08-05, #54 ritual; 7 agents,
+run wf_da334d69-0b9): new items #63–70 above. Evidence mapped onto
+existing items — #43/#19: the brief's overlay recipe was broken as
+written (missing `"rootDir": "."` → TS6059 ×65) and the shared
+`tsconfig.overlay.json` filename collided (one agent deleted another's
+mid-typecheck; a third created a content-identical sibling to avoid
+exactly that) — the generator must emit per-scope overlays into
+gitignored `.beep/overlays/` and the fix must reach the wave-brief
+template; #49: test-kit barrels and overlays need shared-bucket manifest
+entries like changesets/lockfile (every engine agent must append one line
+to the same 45-line barrel — the hottest conflict in the wave), and the
+drift detector must run DURING the wave to help the integrator, not
+after; #52: "both gates green" (vitest+tsgo) let 19 biome + 6
+schema-first + 6 tsdoc failures land on the integrator — the brief must
+emit the complete per-package gate set (`bunx biome check --write` costs
+~10s per agent); #50: the brief contained a nonexistent command (`beep
+lint effect-fn`) whose args fell through to the full repo lint battery —
+minutes of misleading failures; `beep lint`/`beep laws` should reject
+unknown trailing args; #59 shipped: status threads now carry author,
+excerpt, path, line, and commentDatabaseId.
+
+71. **Mutation proof as a first-class gate.** Two of seven "fixed"
+    findings in the PR-E fix wave (`mergeReady` threading, rerun-teaching
+    reshape) survived full reversion with the entire suite green — both
+    fixers reported FIXED in good faith; only the re-verifier's
+    revert-and-rerun caught it (~15s per finding). Widget: a `beep`
+    quality lane that takes a finding's changed expression, neuters it,
+    and asserts some named test goes red — converting "I wrote a test"
+    into "I wrote a test that binds". Same family as the memory'd
+    vacuous-test-pattern; review-checklist line meanwhile: "if the fix is
+    a write, name the test that reads it back."
+72. **Yeet test-kit import tax: 224s of a 278s full run is imports.** The
+    53-line `export *` barrel pulls ~17k lines of source into every test
+    file; 69 files × barrel import = 6:1 import-to-execution ratio, the
+    single largest wall-clock tax on every fix loop (and the reason
+    single-file runs still cost ~5s each). Candidates: per-domain
+    test-kit splits (sweep/reply/monitor/status), and a shared
+    `stubSpawnerLayer(table)` in `@beep/test-utils` — four packages
+    hand-roll the same ~35-line ChildProcessSpawner stub today, and the
+    fix wave copy-pasted it twice more because file ownership forbade a
+    shared helper.
+
+73. **Yeet's push step should detect an already-MERGED PR.** (Lived,
+    2026-08-06: PR #569 was merged while the leased-deletion commit's
+    publish was mid-proof; the publish then pushed a proven commit onto a
+    branch whose PR was closed — landing it in no PR. GitHub had even
+    auto-deleted the branch; the push silently recreated it.) Before
+    pushing, publish should read the branch PR's state: MERGED → stop and
+    route to a fresh `gh pr create` for the unmerged tail (same branch is
+    fine — the second PR carries exactly the unmerged commits). Recovery
+    that worked: let the proof finish, `gh pr create` from the same
+    branch (#571). Kin to #61 (flag-path semantics) and the merge loop's
+    own CAS family.
+74. **Stale-base overlap has two classes; the guard should name which.**
+    (Both lived 2026-08-06, opposite verdicts.) Class A — self-overlap
+    from a continuation branch's own squash merge (#571 second commit):
+    the "changed on origin/main" files were changed by THIS branch's own
+    #569 merge; bypass-safe, `--allow-stale-base` correct, and a rebase
+    rewrites history for zero content change. Widget: patch-id
+    comparison (or resolving the overlapping main commits to this
+    branch's merged PR) auto-exempts it. Class B — overlap in whole-repo
+    generated aggregates (parallel session, same day): goals/INDEX.md
+    predated two new packets on main, and bypassing would have REVERTED
+    their entries; the correct move is rebase + regenerate on the merged
+    tree — ledger #60's doctrine, whose first evidence arrived through
+    the stale-base guard rather than a merge conflict. Discriminator:
+    is the overlapping path in #60's generated-path → regenerate-command
+    map? Generated → regenerate, never bypass; self-squash source overlap
+    → bypass.
+75. **Fail-fast preflight lane battery, ordered by empirical failure
+    frequency.** Three independent datasets in one week show the same
+    shape: (a) a parallel checkout burned 4 of 5 ~17-minute proof cycles
+    on repo-level gates package checks cannot see (test-file effect
+    laws, goals-doctor reflection validation, jsdoc cleanup-on-touch,
+    schema-first inventory); (b) this session's #569/#571 gauntlet — five
+    serial publish failures (fallow introduced-duplication, schema-first
+    exported-interface, eslint jsdoc warnings, jsdoc-ratchet
+    cleanup-on-touch, stale base), each discovered at 7–15 minutes;
+    (c) the PR-E fix wave's "vitest+tsgo+biome green" leaving 31 lint
+    findings for the integrator. Doctrine: package-level
+    `check && lint && test` is structurally weak here — the quality
+    surface is repo-level. Widget: a `beep preflight` battery running the
+    historically-failing cheap lanes fail-fast-first (schema-first, jsdoc
+    family, effect laws incl. test files, goals-doctor, fallow audit —
+    seconds-to-a-minute each), ordered by these observed frequencies
+    (decision 41's measure-first law, now with real measurements).
+    Vehicle: PR-G — and it reshapes decision 40: the pre-push hook's fast
+    tier should BE this battery, which is what makes fail-closed wiring
+    affordable. Ordering (amended on the parallel session's per-cycle
+    data): observed failure frequency decides which lanes are IN the
+    battery; COST ASCENDING decides the order — their cheapest gates
+    (goals-doctor, changeset-status) were discovered in cycles 4 and 1,
+    so a cost-ascending battery surfaces them in its first seconds.
+    Confirmed additional member: `beep quality test-tsgo` — package
+    tsconfigs `include: ["src"]`, so a package's own check never
+    typechecks its tests; their TS2551 (`Order.string` vs `Order.String`)
+    left sort comparators undefined at runtime while 19 tests passed —
+    the silent-vacuity class, structurally invisible at package level
+    (fix pattern on record: per-package tsconfig.test.json +
+    beep:check:tests). Riders: #52 briefs must name repo-level lanes,
+    never package scripts; interim doctrine = run the specific lanes
+    before any full verify.
+
+PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
+wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
+findings should anchor on SYMBOL NAMES, not line numbers — three of four
+line anchors handed to one fixer were stale/wrong the moment a concurrent
+fixer edited above them (#67 rider); the `zsh -ic` wrapper emits ~12
+lines of gitstatus/zle noise per gate call across every agent (a
+mise-only non-interactive shim would pay for itself in one wave); the
+overlay-tsconfig ritual should be one command (`beep quality typecheck
+--isolated`, #43 rider) — five agents hand-wrote the same JSON with a
+load-bearing `rootDir` and a cleanup obligation; `SchemaUtils.
+withConstantDefault` cannot type a boolean default (literal-widening
+trap — `withConstantDefault<boolean>(false)` is the workaround, worth a
+JSDoc gotcha); test-harness laws (`provideScopedLayer` never
+`Effect.provide(Layer)` under strictEffectProvide; `Effect.fn`-wrapped
+temp-dir helpers) are discoverable only by reading neighbors — one
+paragraph in the effect-first skill closes it; fixture builders for
+filename-addressed artifacts must derive filenames from the producer
+helper (the fallow fix's discriminating test was unwritable until the
+builder was refactored); nonzero-exit probes are the same inference gap
+as truncated probes in the sweep's certainty model (named follow-up:
+generalize `*ProbeTruncated` to `!probeSucceeded`, ~10 lines); JSDoc
+example import paths are not reachability proof — docgen validating that
+each example's import specifier resolves would catch stale examples
+generally.
+
+Fleet handoff #2 (2026-08-05; beep-effect5
+explorations/fleet-coordination/research/HANDOFF-2-pre-push-and-guard.md,
+PR #562; GRILL-DECISIONS.md #39–44): #551 monitor regression → PR-E triage
+must-fix (decision 39; Mode B specimen → #61); pre-push wiring → PR-G with
+the reuse marker riding earlyPushStep, passthrough consumer, caller-aware
+failure text, blocking-vs-advisory + emergency-push carve-out queued for
+grill #5 (decision 40); Q7 staleness guard sequenced behind the #21/#25
+comparison under the fleet's measure-first law (decision 41); decision-36
+worktree refinements — `-name .git -prune`, FETCH_HEAD via
+`--git-common-dir`, `status --porcelain -uall` — become sweep-engine triage
+audit items (decision 42); PR-I awareness surfaces build on
+`hookSpecificOutput.additionalContext`, plain hook stdout being a silent
+no-op outside UserPromptSubmit/UserPromptExpansion/SessionStart (decision
+43); merge_group vacuous gates → #62 and
+`strict_required_status_checks_policy` re-opened at its true ~8 runs/day
+cost (decision 44).
