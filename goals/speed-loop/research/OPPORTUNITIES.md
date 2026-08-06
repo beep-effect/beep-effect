@@ -1269,6 +1269,16 @@ post-#595 branch switch is what detonated it. `bunx changeset add
 --empty` still emits the bare form, so every new empty changeset
 re-plants the mine. Repair shipped in this PR: `{}` frontmatter (the
 form the tree already used elsewhere), valid under both js-yaml majors.
+Re-planting bound: with 5.2.2 now materialized, the
+`quality:changeset-status` preflight and the hosted parity lane fail a
+bare empty changeset at its author's OWN publish, before merge — so
+the mine survives only the compound case of a stale-install worktree
+(js-yaml 4 still physically present, passing locally) paired with a
+checks-bypassed merge, which is exactly today's window. Named
+follow-up, tracked hard rather than assumed closed: either a wrapper
+that emits `{}` for the empty-changeset path or a repo-sanity lint
+that parses every `.changeset/*.md` with the pinned resolver; rides
+the lint family with #88's gate-staleness work, not this docs PR.
 Context receipt for the same hour: #595 merged with Test Unit and Knip
 FAILURE and most contexts CANCELLED while the required-checks rule was
 temporarily removed from the ruleset during the GitHub Actions outage —
