@@ -61,14 +61,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   contradiction-semantics cluster re-routed to ride with
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
-  day); next: open `legal-position-relator-runtime` when Benjamin calls it.
-- [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
-  shape-stage: first wedge of the `legal-patent-kg-deepening` routing
-  matrix — a law-owned `PatentCitationEvent` + attorney `CandorDisposition`
-  gate that blocks filing promotion while AI-discovered patent references
-  lack a current disposition; research done, four align branches closed, and
-  the BRIEF APPROVED 2026-08-04 (one goal packet, two phases; hardened by a
-  three-lens Opus review); next: decompose (`MAP.md`) toward graduation.
+  day), and the first wedge fully GRADUATED 2026-08-04 into
+  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md);
+  next: open `legal-position-relator-runtime` when Benjamin calls it.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
@@ -319,6 +314,20 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
+  graduated 2026-08-04 (opened, researched, aligned, shaped, and graduated in
+  one day) into
+  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md):
+  first wedge of the `legal-patent-kg-deepening` routing matrix — a law-owned
+  `PatentCitationEvent` + attorney `CandorDisposition` gate whose derived,
+  fail-closed `CandorPolicy` predicate blocks filing promotion while any
+  current AI-discovered patent reference lacks a disposition bound to its
+  exact observation version; no legal judgment ever computed. Two research
+  lanes (repo surfaces; 37 CFR 1.56/1.97/1.98 + MPEP 2001/609 + Therasense
+  never-compute boundary), four align branches + deferrals, a twice-hardened
+  BRIEF (three-lens Opus review, 24 findings; four PR #557 refinements), and
+  a one-packet/two-rung MAP with follow-ons named-not-graduated
+  ([`MAP.md`](./patent-citation-candor-gate/MAP.md)).
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — fully
   graduated 2026-07-31 (opened 2026-07-14). A data-driven pulse on repo agent
   friendliness/effectiveness: pipeline revived same-day (backfill + 1.0M spans
@@ -405,9 +414,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`gov-legal-mcp`](../goals/gov-legal-mcp/README.md).
 - [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) — research
   complete; [`semantic-foundation`](../goals/semantic-foundation/README.md)
-  owns active M1 execution, while
-  [`trademark-docketing-domain`](../goals/trademark-docketing-domain/README.md)
-  remains a paused stub behind M3.
+  owns active M1 execution, while `trademark-docketing-domain` remains a
+  paused stub behind M3 (packet no longer in the working tree; history in
+  git).
 - [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
   — graduated 2026-07-14 on its shipped auth leg,
   [`llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md).
