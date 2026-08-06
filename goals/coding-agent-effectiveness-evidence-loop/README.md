@@ -38,14 +38,38 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. Its instrument-verification first step passed on
-2026-08-01: all three wait classes (tool permission, plan approval, 60s
-idle) emit distinguishable, sessionId-bearing hook events. Next concrete
-action: author `HookPulseV1` in effect/Schema under the seven binding spike
-amendments in [`PLAN.md`](./PLAN.md) — most importantly a seven-event hook
-set in which **`PermissionRequest`** (not `PreToolUse`) is the wait-start
-marker and `waitReason` derives from `PermissionRequest.tool_name`. P0
-storage-cutover preparation may proceed in parallel by a separate actor.
+P1 is in progress. Two of its three instrument steps are done:
+
+1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
+   distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
+   `PreToolUse`, not `Notification`) is the wait-start marker.
+2. **`HookPulseV1` schema landed** (2026-08-01, PR #535) — the canonical
+   row, its derivation, and the raw-event codec.
+3. **Writer landed** (2026-08-05) — `.claude/hooks/hook-pulse.sh` emits the
+   rows for nine registered hook events, with the privacy whitelist applied
+   in the writer (amendment 6) and a kill switch that disarms the instrument
+   before any parsing. `notifierRev` is `log-only-0`: notifications stay
+   **off** by design.
+
+Next concrete action: **collect the ~1 week log-only baseline.** This is
+wall-clock, not work — the instrument-before-treat method in
+[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so
+nothing downstream (notifications, escalation ladder, the P8 paired trial)
+can start until it accrues. P0 storage-cutover preparation may proceed in
+parallel by a separate actor.
+
+**Day-1 empirical checks against the first real rows** — these were derived
+statically from harness 2.1.223 and are not yet confirmed against live data:
+
+- Does `PostToolUseFailure` actually fire? Its dispatcher sits behind an
+  internal feature gate (amendment 8). If it is disabled, approved-then-
+  failed calls emit no closing event at all and their brackets must be
+  tombstoned rather than closed.
+- Does `PermissionDenied` fire on 2.1.223? It never did on 2.1.220. If it
+  does, denials become closeable instead of permanently open.
+- Do the 2.1.220 payload shapes still hold three patch versions on? The
+  conformance fixtures are frozen 2.1.220 ground truth and cannot detect
+  harness drift by construction.
 
 ## Latest Evidence
 
