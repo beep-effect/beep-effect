@@ -279,6 +279,86 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
     })
   );
 
+  it.effect("fence inside a blockquote hides its decoys and still closes", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "No fence.\n" },
+          {
+            "docs/guide.md": [
+              "> Quoted note:",
+              "> ```bash beep:exec",
+              "> `docs/decoy.md`",
+              "> `bun run beep goals doctro`",
+              "> <!-- beep:assert path-exists docs/decoy.md -->",
+              "> ```",
+              "",
+              "Back in prose, `docs/missing.md` is real.",
+              "",
+            ].join("\n"),
+          }
+        )
+      );
+      expect(introducedIds(report)).toEqual([
+        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+      ]);
+    })
+  );
+
+  it.effect("fence inside a nested list item hides its decoys and still closes", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "No fence.\n" },
+          {
+            "docs/guide.md": [
+              "- outer item",
+              "    - inner item",
+              "        ```bash",
+              "        `docs/decoy.md`",
+              "        `bun run beep goals doctro`",
+              "        ```",
+              "",
+              "Back in prose, `docs/missing.md` is real.",
+              "",
+            ].join("\n"),
+          }
+        )
+      );
+      expect(introducedIds(report)).toEqual([
+        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+      ]);
+    })
+  );
+
+  it.effect("double-backtick inline span yields the same broken tracked path", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "Use ``docs/existing.md``.\n", "docs/existing.md": "ok\n" },
+          { "docs/guide.md": "Use ``docs/missing.md``.\n", "docs/existing.md": "ok\n" }
+        )
+      );
+      expect(introducedIds(report)).toEqual([
+        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+      ]);
+    })
+  );
+
+  it.effect("padded triple-backtick inline span still probes the beep command", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "Run ``` bun run beep goals doctor ``` today.\n" },
+          { "docs/guide.md": "Run ``` bun run beep goals doctro ``` today.\n" }
+        )
+      );
+      expect(introducedIds(report)).toEqual([
+        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
+      ]);
+    })
+  );
+
   it.effect("alternate path spelling preserves the normalized finding id", () =>
     Effect.gen(function* () {
       const report = yield* scan(

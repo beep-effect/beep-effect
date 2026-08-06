@@ -137,7 +137,7 @@ export class CapturedStep extends S.Class<CapturedStep>($I`CapturedStep`)(
  * ```ts
  * import { CapturedStreams } from "@beep/repo-cli/internal/process"
  *
- * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "" })
+ * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "", truncated: false })
  * console.log(result.stdout)
  * ```
  * @category models
@@ -148,9 +148,11 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
     exitCode: S.Finite,
     stdout: S.String,
     stderr: S.String,
+    truncated: S.Boolean,
   },
   $I.annote("CapturedStreams", {
-    description: "Captured subprocess result with stdout and stderr kept separate.",
+    description:
+      "Captured subprocess result with stdout and stderr kept separate, flagged when either stream hit the bound.",
   })
 ) {}
 
@@ -538,11 +540,13 @@ export type RunCapturedStreamsOptions = SpawnFields & {
  * Spawn a command and capture stdout and stderr as separate strings.
  *
  * Used by call sites that need to keep the two streams apart (for example
- * distinct error excerpts). Nonzero exit codes are represented in the result,
- * and stdin defaults to `"ignore"`.
+ * distinct error excerpts, or structured stdout a parser reads while stderr
+ * stays diagnostic). Nonzero exit codes are represented in the result, stdin
+ * defaults to `"ignore"`, and `truncated` reports whether `bound` clipped
+ * either stream.
  *
  * @param options - Command, spawn fields, and capture configuration.
- * @returns Captured stdout, stderr, and exit code.
+ * @returns Captured stdout, stderr, exit code, and truncation flag.
  * @example
  * ```ts
  * import { runCapturedStreams } from "@beep/repo-cli/internal/process"
@@ -581,6 +585,7 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
         exitCode,
         stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
         stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
+        truncated: stdout.truncated || stderr.truncated,
       });
     })
   );

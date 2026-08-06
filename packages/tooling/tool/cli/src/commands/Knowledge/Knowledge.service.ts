@@ -470,17 +470,29 @@ const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray
   return matches;
 };
 
-/** An inline code span and the 1-based column its content starts at. */
+/** An inline code span and the 1-based column its opening backtick run starts at. */
 type InlineSpan = {
   readonly span: string;
   readonly column: number;
 };
 
+/**
+ * Removes CommonMark inline-code padding: one leading and one trailing space, stripped only when both
+ * are present and the content is not entirely spaces.
+ *
+ * @param content - Raw text between the opening and closing backtick runs.
+ * @returns The span content a path or command reader sees.
+ */
+const stripInlineCodePadding = (content: string): string =>
+  Str.startsWith(" ")(content) && Str.endsWith(" ")(content) && !/^ +$/u.test(content)
+    ? Str.slice(1, -1)(content)
+    : content;
+
 const inlineSpanOf = (match: RegExpExecArray): O.Option<InlineSpan> => {
   const prefix = match[1];
-  const span = match[2];
-  return P.isString(prefix) && P.isString(span)
-    ? O.some({ span, column: match.index + Str.length(prefix) + 1 })
+  const content = match[3];
+  return P.isString(prefix) && P.isString(content)
+    ? O.some({ span: stripInlineCodePadding(content), column: match.index + Str.length(prefix) + 1 })
     : O.none();
 };
 
@@ -561,7 +573,9 @@ const extractLineFindings = (
   entries: ReadonlyArray<KnowledgeTrackedEntry>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
   const assertions = matchesOf(/<!-- beep:assert path-exists ([^\s]+) -->/gu, lineText);
-  const inlines = matchesOf(/(^|[^`\\])`([^`\r\n]+)`(?!`)/gu, lineText);
+  // Equal-length backtick runs: an opening run of N closes on the next run of N, so `` `x` `` and
+  // ```` ```x``` ```` are extracted the same way a single-backtick span is.
+  const inlines = matchesOf(/(^|[^`\\])(`+)([^\r\n]*?)\2(?!`)/gu, lineText);
   const candidates = A.appendAll(
     A.getSomes(A.map(assertions, (match) => assertionCandidate(match, lineNumber, documentPath, documentId, entries))),
     A.getSomes(A.map(inlines, (match) => inlinePathCandidate(match, lineNumber, documentPath, documentId, entries)))
@@ -573,28 +587,62 @@ const extractLineFindings = (
   return [candidates, commands];
 };
 
-const FENCE_PATTERN = /^[ \t]{0,3}(`{3,}|~{3,})(.*)$/u;
+const FENCE_PATTERN = /^(`{3,}|~{3,})(.*)$/u;
+const QUOTE_PREFIX_PATTERN = /^(?:[ \t]*>[ \t]?)+/u;
+const LIST_PREFIX_PATTERN = /^[ \t]*(?:(?:[-+*]|[0-9]{1,9}[.)])[ \t]+)?/u;
+const stripListPrefix = Str.replace(LIST_PREFIX_PATTERN, "");
 
-/** The open fence a line is inside: its marker character and the run length that must be matched to close it. */
+/** One line split into the Markdown container it sits in and the body a fence delimiter is read from. */
+type ContainerLine = {
+  readonly depth: number;
+  readonly body: string;
+};
+
+/**
+ * Strips the Markdown container prefix so a fence nested in a blockquote or a list item is still
+ * recognized as a fence.
+ *
+ * **Details**
+ *
+ * Blockquote markers are removed first and counted, then list-item indentation and an optional
+ * bullet or ordered marker. Indentation is stripped without a depth limit, which is what makes a
+ * fence inside a deeply nested list item visible; the trade is that a four-space indented code block
+ * showing a literal fence now opens one, suppressing scanning rather than inventing findings.
+ *
+ * @param line - Raw document line.
+ * @returns The blockquote depth the prefix carried and the body the fence matcher reads.
+ */
+const containerLine = (line: string): ContainerLine => {
+  const quote = QUOTE_PREFIX_PATTERN.exec(line);
+  const quoted = quote === null ? "" : quote[0];
+  return {
+    depth: A.length(Str.split(">")(quoted)) - 1,
+    body: stripListPrefix(Str.slice(Str.length(quoted))(line)),
+  };
+};
+
+/** The open fence a line is inside: its container depth, marker character, and closing run length. */
 type OpenFence = {
   readonly marker: string;
   readonly length: number;
+  readonly depth: number;
 };
 
-const openedFence = (line: string): O.Option<OpenFence> => {
-  const fence = FENCE_PATTERN.exec(line);
+const openedFence = (line: ContainerLine): O.Option<OpenFence> => {
+  const fence = FENCE_PATTERN.exec(line.body);
   if (fence === null || !P.isString(fence[1]) || !P.isString(fence[1][0])) {
     return O.none();
   }
-  return O.some({ marker: fence[1][0], length: Str.length(fence[1]) });
+  return O.some({ marker: fence[1][0], length: Str.length(fence[1]), depth: line.depth });
 };
 
-const closesFence = (line: string, open: OpenFence): boolean => {
-  const fence = FENCE_PATTERN.exec(line);
+const closesFence = (line: ContainerLine, open: OpenFence): boolean => {
+  const fence = FENCE_PATTERN.exec(line.body);
   return (
     fence !== null &&
     P.isString(fence[1]) &&
     P.isString(fence[2]) &&
+    line.depth === open.depth &&
     fence[1][0] === open.marker &&
     Str.length(fence[1]) >= open.length &&
     /^\s*$/u.test(fence[2])
@@ -605,10 +653,10 @@ const closesFence = (line: string, open: OpenFence): boolean => {
  * Fence state after one line: `O.none()` outside a fence, `O.some` while inside one.
  *
  * @param fence - Fence state carried in from the preceding line.
- * @param line - Raw line whose delimiter may open or close the surrounding fenced block.
+ * @param line - Container-stripped line whose delimiter may open or close the surrounding block.
  * @returns The fence state the next line starts from.
  */
-const advanceFence = (fence: O.Option<OpenFence>, line: string): O.Option<OpenFence> =>
+const advanceFence = (fence: O.Option<OpenFence>, line: ContainerLine): O.Option<OpenFence> =>
   O.match(fence, {
     onNone: () => openedFence(line),
     onSome: (open) => (closesFence(line, open) ? O.none() : O.some(open)),
@@ -630,7 +678,7 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
     if (!P.isString(line)) {
       continue;
     }
-    const nextFence = advanceFence(fence, line);
+    const nextFence = advanceFence(fence, containerLine(line));
     // Prose only: fence delimiters and fenced content alike stay out of the scan.
     const scannable = O.isNone(fence) && O.isNone(nextFence);
     fence = nextFence;
@@ -857,13 +905,27 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
   onTruncated: O.none(),
 };
 
-const COMMAND_PROBE_SOURCE = `
+const ROOT_COMMAND_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
+const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
+
+/**
+ * Command-probe program text, bound to absolute paths.
+ *
+ * The probe module and its input live in the scratch root, never in the archive, so a scanned branch
+ * that tracks a symlink at a scratch file name cannot redirect a write out of the sandbox. Only the
+ * archive module it imports is read from `archiveRoot`.
+ *
+ * @param rootCommandModule - Absolute path of the archive-local root command module.
+ * @param inputPath - Absolute path of the tab-delimited command input file.
+ * @returns Probe source ready to write into the scratch root.
+ */
+const commandProbeSource = (rootCommandModule: string, inputPath: string): string => `
 import { BunRuntime, BunServices } from "@effect/platform-bun"
 import { Console, Effect, Result } from "effect"
 import { Command } from "effect/unstable/cli"
-import { rootCommand } from "./packages/tooling/tool/cli/src/commands/Root.ts"
+import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
-const input = await Bun.file(".beep-knowledge-command-input").text()
+const input = await Bun.file(${JSON.stringify(inputPath)}).text()
 const commands = input.split("\\n").map((line) => line === "" ? [] : line.split("\\t"))
 const children = (command) => command.subcommands.flatMap((group) => group.commands)
 const resolve = (words) => {
@@ -899,18 +961,27 @@ const program = Effect.gen(function*() {
 BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
 `;
 
-const INDEX_PROBE_SOURCE = `
+/**
+ * Index-probe program text, bound to an absolute path.
+ *
+ * The projection still runs with the archive root as its working directory, so `"."` resolves to the
+ * archive; only the module specifier and the probe file itself are absolute.
+ *
+ * @param portfolioIndexModule - Absolute path of the archive-local portfolio index module.
+ * @returns Probe source ready to write into the scratch root.
+ */
+const indexProbeSource = (portfolioIndexModule: string): string => `
 import { BunRuntime, BunServices } from "@effect/platform-bun"
 import { Effect } from "effect"
-import { buildPortfolioIndexContent } from "./packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts"
+import { buildPortfolioIndexContent } from ${JSON.stringify(portfolioIndexModule)}
 const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) => Effect.sync(() => process.stdout.write(content)))
 BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
 `;
 
-const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (archiveRoot: string) {
+const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratchRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const envRoot = path.join(archiveRoot, ".beep-knowledge-env");
+  const envRoot = path.join(scratchRoot, "env");
   const directories = {
     HOME: path.join(envRoot, "home"),
     XDG_CONFIG_HOME: path.join(envRoot, "config"),
@@ -982,15 +1053,22 @@ const decodeCommandProbeOutput = (
 const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(function* (
   repoRoot: string,
   archiveRoot: string,
+  scratchRoot: string,
   trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner>();
-  const env = yield* makeHermeticEnv(archiveRoot);
+  yield* fs
+    .makeDirectory(scratchRoot, { recursive: true })
+    .pipe(KnowledgeOperationalError.mapError("Failed to create an archive scratch root."));
+  const env = yield* makeHermeticEnv(scratchRoot);
   yield* fs
     .symlink(path.join(repoRoot, "node_modules"), path.join(archiveRoot, "node_modules"))
     .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive root."));
+  yield* fs
+    .symlink(path.join(repoRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
+    .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive scratch root."));
   const readBytes = Effect.fn("Knowledge.archiveReadBytes")(function* (repoPath: string) {
     return yield* fs
       .readFile(path.join(archiveRoot, repoPath))
@@ -1003,8 +1081,8 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
     if (A.isReadonlyArrayEmpty(commands)) {
       return A.empty<KnowledgeCommandProbeResult>();
     }
-    const inputPath = path.join(archiveRoot, ".beep-knowledge-command-input");
-    const scriptPath = path.join(archiveRoot, ".beep-knowledge-command-probe.ts");
+    const inputPath = path.join(scratchRoot, "command-input");
+    const scriptPath = path.join(scratchRoot, "command-probe.ts");
     yield* fs
       .writeFileString(
         inputPath,
@@ -1015,16 +1093,16 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
       )
       .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe input."));
     yield* fs
-      .writeFileString(scriptPath, COMMAND_PROBE_SOURCE)
+      .writeFileString(scriptPath, commandProbeSource(path.join(archiveRoot, ROOT_COMMAND_MODULE), inputPath))
       .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe."));
     const output = yield* runArchiveProcess(archiveRoot, env, scriptPath);
     return yield* decodeCommandProbeOutput(output, A.length(commands));
   });
 
   const indexBytes = Effect.gen(function* () {
-    const scriptPath = path.join(archiveRoot, ".beep-knowledge-index-probe.ts");
+    const scriptPath = path.join(scratchRoot, "index-probe.ts");
     yield* fs
-      .writeFileString(scriptPath, INDEX_PROBE_SOURCE)
+      .writeFileString(scriptPath, indexProbeSource(path.join(archiveRoot, PORTFOLIO_INDEX_MODULE)))
       .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local index probe."));
     const expected = textEncoder.encode(yield* runArchiveProcess(archiveRoot, env, scriptPath));
     const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
@@ -1099,8 +1177,8 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
           score: rename.score,
         })
       );
-      const base = yield* makeLiveArchiveOracle(repoRoot, baseRoot, baseEntries);
-      const head = yield* makeLiveArchiveOracle(repoRoot, headRoot, headEntries);
+      const base = yield* makeLiveArchiveOracle(repoRoot, baseRoot, path.join(tempRoot, "base-scratch"), baseEntries);
+      const head = yield* makeLiveArchiveOracle(repoRoot, headRoot, path.join(tempRoot, "head-scratch"), headEntries);
       return yield* scanKnowledgePair({ base, head, renames });
     })
   );

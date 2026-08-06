@@ -25,9 +25,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatCommandLine, repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
+import { formatCommandLine, repoRunOutputBound, runCaptured, runCapturedStreams } from "../process/StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CapturedStep, RunCapturedOptions } from "../process/StepExec.ts";
+import type { RunCapturedOptions, RunCapturedStreamsOptions } from "../process/StepExec.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/GitExec");
 
@@ -277,10 +277,18 @@ export const gitPathListFromNulOutput: (output: string) => ReadonlyArray<string>
 export const gitLinesFromOutput = (output: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(output), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
+/** One captured git invocation reduced to the fields the shared failure policy reads. */
+type GitCaptureOutcome = {
+  readonly exitCode: number;
+  readonly parsed: string;
+  readonly failureOutput: string;
+  readonly truncated: boolean;
+};
+
 /**
- * Shared spawn-capture-then-adapt path behind every runner in this module: only the capture profile
- * differs between them, so the command line, spawn-failure mapping, and exit/truncation handling live
- * here once.
+ * Shared spawn-capture-then-adapt path behind every combined-output runner in this module: only the
+ * capture profile differs between them, so the command line, spawn-failure mapping, and
+ * exit/truncation handling live here once.
  */
 const runGitCaptured = <E>(
   args: ReadonlyArray<string>,
@@ -290,21 +298,72 @@ const runGitCaptured = <E>(
   const commandLine = formatCommandLine("git", args);
   return runCaptured({ command: "git", args, ...capture }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine)),
-    Effect.flatMap((captured) => failFromCapture(captured, commandLine, adapter))
+    Effect.flatMap((captured) =>
+      failFromOutcome(
+        {
+          exitCode: captured.exitCode,
+          parsed: captured.output,
+          failureOutput: captured.output,
+          truncated: captured.truncated,
+        },
+        commandLine,
+        adapter
+      )
+    )
   );
 };
 
-const failFromCapture = <E>(
-  captured: CapturedStep,
+/**
+ * Same path for runners whose output is machine-read: stdout and stderr are captured separately and
+ * only stdout is returned, so a zero-exit git diagnostic (`GIT_TRACE`, hook or advice notices,
+ * `warning:` lines) can never be folded into NUL-delimited records or a single-token ref. stderr is
+ * kept solely for the nonzero-exit message.
+ */
+const runGitStructured = <E>(
+  args: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>,
+  capture: Omit<RunCapturedStreamsOptions, "command" | "args">
+): Effect.Effect<string, E, ChildProcessSpawner.ChildProcessSpawner> => {
+  const commandLine = formatCommandLine("git", args);
+  return runCapturedStreams({ command: "git", args, ...capture }).pipe(
+    Effect.mapError(adapter.onSpawnFailure(commandLine)),
+    Effect.flatMap((captured) =>
+      failFromOutcome(
+        {
+          exitCode: captured.exitCode,
+          parsed: captured.stdout,
+          failureOutput: `${captured.stdout}${captured.stderr}`,
+          truncated: captured.truncated,
+        },
+        commandLine,
+        adapter
+      )
+    )
+  );
+};
+
+/** The bounded, trimmed, stdin-inheriting profile every structured reader shares with {@link runGitOutput}. */
+const structuredCapture = (cwd: string): Omit<RunCapturedStreamsOptions, "command" | "args"> => ({
+  cwd,
+  extendEnv: true,
+  stdin: "inherit",
+  bound: repoRunOutputBound,
+  trim: true,
+});
+
+const failFromOutcome = <E>(
+  outcome: GitCaptureOutcome,
   commandLine: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.Effect<string, E> => {
-  if (captured.exitCode !== 0) {
-    return Effect.fail(adapter.onNonZeroExit({ commandLine, exitCode: captured.exitCode, output: captured.output }));
+  if (outcome.exitCode !== 0) {
+    return Effect.fail(
+      adapter.onNonZeroExit({ commandLine, exitCode: outcome.exitCode, output: outcome.failureOutput })
+    );
   }
   return O.match(adapter.onTruncated, {
-    onNone: () => Effect.succeed(captured.output),
-    onSome: (toError) => (captured.truncated ? Effect.fail(toError(commandLine)) : Effect.succeed(captured.output)),
+    onNone: () => Effect.succeed(outcome.parsed),
+    onSome: (toError) => (outcome.truncated ? Effect.fail(toError(commandLine)) : Effect.succeed(outcome.parsed)),
   });
 };
 
@@ -358,6 +417,11 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
 /**
  * Runs a git command and parses NUL-delimited path output.
  *
+ * **Details**
+ *
+ * Reads stdout alone. `-z` records are machine-read, so a zero-exit diagnostic on stderr must not
+ * become a phantom path; stderr surfaces only in the nonzero-exit message.
+ *
  * **Example** (List staged paths)
  *
  * ```ts
@@ -386,7 +450,7 @@ export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<ReadonlyArray<string>, E, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runGitOutput(cwd, args, adapter);
+  const output = yield* runGitStructured(args, adapter, structuredCapture(cwd));
   return gitPathListFromNulOutput(output);
 });
 
@@ -433,13 +497,13 @@ export const runGitLines = Effect.fn("GitExec.runGitLines")(function* <E>(
   return parseLines(output);
 });
 
-/** Run a Git command with unbounded, untrimmed combined output. @category execution @since 0.0.0 */
+/** Run a Git command with unbounded, untrimmed stdout, keeping stderr out of the parsed text. @category execution @since 0.0.0 */
 export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E>(
   cwd: string,
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitCaptured(args, adapter, { cwd, stdin: "ignore", source: "all" });
+  return yield* runGitStructured(args, adapter, { cwd, stdin: "ignore" });
 });
 
 /** Resolve a ref to a verified commit without allowing option reinterpretation. @category execution @since 0.0.0 */
@@ -448,7 +512,11 @@ export const resolveGitCommit = Effect.fn("GitExec.resolveGitCommit")(function* 
   ref: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitOutput(cwd, ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`], adapter);
+  return yield* runGitStructured(
+    ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`],
+    adapter,
+    structuredCapture(cwd)
+  );
 });
 
 /** Resolve the merge base of two refs without allowing option reinterpretation. @category execution @since 0.0.0 */
@@ -458,7 +526,7 @@ export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(func
   rightRef: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitOutput(cwd, ["merge-base", "--", leftRef, rightRef], adapter);
+  return yield* runGitStructured(["merge-base", "--", leftRef, rightRef], adapter, structuredCapture(cwd));
 });
 
 /** Write one verified commit as a tar archive. @category execution @since 0.0.0 */
