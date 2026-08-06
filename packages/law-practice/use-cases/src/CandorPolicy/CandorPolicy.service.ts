@@ -167,6 +167,22 @@ const dispositionReason = (
  * never releases the gate and disposing the newer observation releases the
  * whole group at once. A group without exactly one head is ambiguous, and
  * ambiguity blocks.
+ *
+ * **Gotchas**
+ *
+ * The head's coverage is read WITHOUT regard to its discovery kind, so when an
+ * examiner-observed observation supersedes an AI-discovered one the group is
+ * cleared by dispositioning that examiner-observed head. This looks wrong and
+ * is not: "examiner events record without gating" (SPEC decision 4) means an
+ * examiner event never *initiates* gating — an examiner-only source has no
+ * AI-discovered event and returns early above — not that an examiner
+ * observation can never be the subject of a judgment. Once it supersedes an AI
+ * finding it IS the current observation of that source, and whether candor is
+ * still owed on that history is a legal question this package must never
+ * compute, so it blocks until a human decides. Narrowing the head lookup to
+ * AI-discovered events would leave no unsuperseded head at all and trip
+ * `ambiguous-lineage` with no way to clear it. Pinned in both directions by the
+ * "an examiner-observed head is dispositionable" suite in `CandorPolicy.test.ts`.
  */
 const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   group: ReadonlyArray<PatentCitationEvent>,
