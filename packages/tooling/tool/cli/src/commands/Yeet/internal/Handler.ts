@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
-import { Clock, Console, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
+import { Clock, Console, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref, Struct } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -642,9 +642,8 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
 > {
   const snapshot = yield* printOperatorStatusSummary(context, true);
   return yield* YeetCommandError.make({
+    ...Struct.pick(error, ["command", "exitCode"]),
     message: `${error.message}${rerunGuidanceSuffix(snapshot)}`,
-    ...(error.command === undefined ? {} : { command: error.command }),
-    ...(error.exitCode === undefined ? {} : { exitCode: error.exitCode }),
   });
 });
 

@@ -1031,7 +1031,7 @@ const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProb
     Match.value(status).pipe(
       Match.when("resolved", () => O.some(KnowledgeCommandResolved.make({ canonicalPath }))),
       Match.when("unknown", () => O.some(KnowledgeCommandUnknown.make({ canonicalPath }))),
-      Match.orElse(() => O.none<KnowledgeCommandProbeResult>())
+      Match.orElse(O.none<KnowledgeCommandProbeResult>)
     )
   );
 };
