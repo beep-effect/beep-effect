@@ -11,6 +11,7 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { SafeDocument } from "@beep/md/Md.safe";
+import { LiteralKit } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Thread } from "@beep/workspace-domain";
 import { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
@@ -104,12 +105,12 @@ export const GetTimelineRpc = Rpc.make("GetTimeline", {
  * @example
  * ```ts
  * import { TurnRequestStatus } from "@beep/agents-use-cases/public"
- * console.log(TurnRequestStatus.literals.includes("persisted"))
+ * console.log(TurnRequestStatus.Options.includes("persisted"))
  * ```
  * @category models
  * @since 0.0.0
  */
-export const TurnRequestStatus = S.Literals([
+export const TurnRequestStatus = LiteralKit([
   "pending",
   "accepted",
   "persisted",

@@ -28,6 +28,7 @@ import {
   ChatRpcs,
   ProviderUsageMetadata,
   TurnGenerationError,
+  TurnRequestStatus,
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
@@ -712,13 +713,9 @@ class NotPersistedTurnRequestReceipt extends S.Class<NotPersistedTurnRequestRece
   })
 ) {}
 
-const TurnRequestReceiptStatus = LiteralKit([
-  "pending",
-  "accepted",
-  "persisted",
-  "user_persisted",
-  "not_persisted",
-]).pipe(
+// Derived from the shared rpc literal family so the two can never drift;
+// `omitOptions` returns a literal array (not a schema), so it is re-wrapped.
+const TurnRequestReceiptStatus = LiteralKit(TurnRequestStatus.omitOptions(["unknown"])).pipe(
   $I.annoteSchema("TurnRequestReceiptStatus", {
     description: "Lifecycle variants for generation-scoped chat persistence receipts.",
   })
@@ -733,14 +730,14 @@ const TurnRequestReceipts = TurnRequestReceiptStatus.mapMembers(
     () => NotPersistedTurnRequestReceipt,
   ])
 ).pipe(
+  S.toTaggedUnion("status"),
   $I.annoteSchema("TurnRequestReceipts", {
     description: "Generation-scoped persistence receipts for chat turn requests.",
-  }),
-  S.toTaggedUnion("status")
+  })
 );
 
 type TurnRequestReceipt = typeof TurnRequestReceipts.Type;
-type TurnRequestQueryStatus = typeof TurnRequestReceiptStatus.Type | "unknown";
+type TurnRequestQueryStatus = typeof TurnRequestStatus.Type;
 const TURN_REQUEST_STATUS_TTL_MILLIS = Duration.toMillis(Duration.minutes(5));
 
 class TrackedTurnRequestReceipt extends S.Class<TrackedTurnRequestReceipt>($I`TrackedTurnRequestReceipt`)(

@@ -29,11 +29,11 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, Eq, N, O, P, thunkNull } from "@beep/utils";
-import { Thread as ThreadProjections, Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
+import { A, O, P, thunkNull } from "@beep/utils";
+import { MessageRole } from "@beep/workspace-domain/entities/Message";
+import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import * as S from "effect/Schema";
-import { AsyncResult } from "effect/unstable/reactivity";
+import * as HashSet from "effect/HashSet";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import {
@@ -42,9 +42,11 @@ import {
   scrollThreadAtoms,
   setThreadBottomAtoms,
   setThreadViewportAtoms,
+  visibleThreadTurnsAtoms,
 } from "./Thread.atoms.ts";
 import type { StreamingTurn } from "@beep/agents-client/Chat.atoms";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import type { JSX } from "react";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
@@ -58,19 +60,16 @@ const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
 );
 
 const TimelineItemRow = ({ item }: { readonly item: TimelineItem }): JSX.Element =>
-  S.is(ThreadUseCases.TimelineMessageItem)(item) ? (
-    <MessageView content={item.content} />
-  ) : (
-    <ToolCallChip name={item.name} />
-  );
-
-const turnRole = (turn: TimelineTurn): string => {
-  const first = A.findFirst(turn.items, (item) => item.kind === "message");
-  return O.match(first, {
-    onNone: () => "assistant",
-    onSome: (item) => (item.kind === "message" ? item.role : "assistant"),
+  ThreadProjections.TimelineItem.match(item, {
+    message: (message) => <MessageView content={message.content} />,
+    tool_call: (toolCall) => <ToolCallChip name={toolCall.name} />,
   });
-};
+
+const turnRole = (turn: TimelineTurn): string =>
+  O.match(A.findFirst(turn.items, ThreadProjections.TimelineItem.guards.message), {
+    onNone: () => "assistant",
+    onSome: (item) => item.role,
+  });
 
 const CostRollup = ({ costMicros }: { readonly costMicros: number }): JSX.Element | null =>
   costMicros > 0 ? (
@@ -88,7 +87,10 @@ const TurnRow = ({
 }): JSX.Element => {
   const editTurn = useAtomSet(editThreadTurnAtom);
   const role = turnRole(turn);
-  const userMessage = A.findFirst(turn.items, (item) => item.kind === "message" && item.role === "user");
+  const userMessage = A.findFirst(
+    turn.items,
+    P.and(ThreadProjections.TimelineItem.guards.message, (item) => MessageRole.is.user(item.role))
+  );
 
   return (
     <div className={`mb-4 flex flex-col ${role === "user" ? "items-end" : "items-start"}`} data-testid={`turn-${role}`}>
@@ -100,26 +102,23 @@ const TurnRow = ({
         <div className="mt-1 flex items-center gap-2">
           {O.match(userMessage, {
             onNone: thunkNull,
-            onSome: ThreadProjections.TimelineItem.match({
-              message: (item) => (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  title="Edit — rewrites the thread from here"
-                  onClick={() =>
-                    editTurn({
-                      threadId,
-                      turnId: turn.turnId,
-                      content: item.content,
-                    })
-                  }
-                  data-testid="turn-edit"
-                >
-                  Edit
-                </Button>
-              ),
-              tool_call: thunkNull,
-            }),
+            onSome: (item) => (
+              <Button
+                variant="ghost"
+                size="xs"
+                title="Edit — rewrites the thread from here"
+                onClick={() =>
+                  editTurn({
+                    threadId,
+                    turnId: turn.turnId,
+                    content: item.content,
+                  })
+                }
+                data-testid="turn-edit"
+              >
+                Edit
+              </Button>
+            ),
           })}
           {/* version selector affordance — only when this turn participates in
               a branch point created by an edit. */}
@@ -133,32 +132,6 @@ const TurnRow = ({
     </div>
   );
 };
-
-// Only an existing, earlier parent describes an edit edge. Self, forward,
-// equal-index, and missing parents are corrupt and mirror activeBranchTurns by
-// leaving the linear conversation untouched.
-const resolvableParentTurnId = (
-  allTurns: ReadonlyArray<TimelineTurn>,
-  turn: TimelineTurn
-): O.Option<WorkspaceIdentity.TurnId> =>
-  turn.parentTurnId.pipe(
-    O.filter(P.not(Eq.equals(turn.turnId))),
-    O.filter((parentTurnId) =>
-      A.some(
-        allTurns,
-        P.Struct({
-          turnId: Eq.equals(parentTurnId),
-          turnIndex: N.isLessThan(turn.turnIndex),
-        })
-      )
-    )
-  );
-
-// A resolvable parent covers both replacements and same-parent siblings.
-// Looking for a turn that validly points here also marks the turn it replaced.
-const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTurn): boolean =>
-  O.isSome(resolvableParentTurnId(allTurns, turn)) ||
-  A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId));
 
 const ThreadLoadState = ({ failed, loading }: { readonly failed: boolean; readonly loading: boolean }): JSX.Element => (
   <>
@@ -252,11 +225,7 @@ const StreamingTurnView = ({
  * @since 0.0.0
  */
 export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
-  const timelineAtom = threadTimelineAtoms(threadId);
-  const timeline = useAtomValue(timelineAtom);
-  const streaming = useAtomValue(streamingTurnAtom);
-  const unreconciledAtom = unreconciledTurnAtoms(threadId);
-  const unreconciled = useAtomValue(unreconciledAtom);
+  const view = useAtomValue(visibleThreadTurnsAtoms(threadId));
   const turnActive = useAtomValue(turnActiveAtom);
   const reconcileTimeline = useAtomSet(reconcileThreadTimelineAtoms(threadId));
   const scrollThread = useAtomSet(scrollThreadAtoms(threadId));
@@ -265,73 +234,26 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   // the turn fiber must stay subscribed for the lifetime of the thread view,
   // otherwise the registry releases the fn atom and interrupts the stream.
   useAtomMount(runTurnAtom);
-  useAtomSubscribe(timelineAtom, reconcileTimeline, { immediate: true });
+  useAtomSubscribe(threadTimelineAtoms(threadId), reconcileTimeline, { immediate: true });
   useAtomSubscribe(streamingTurnAtom, scrollThread);
-  useAtomSubscribe(unreconciledAtom, scrollThread);
-
-  // a turn keeps streaming in its own thread when the user navigates away.
-  const streamingHere = O.filter(streaming, P.Struct({ threadId: Eq.equals(threadId) }));
-  // A success is authoritative for timeline fallbacks, but it cannot identify
-  // an exact request whose receipt RPC stayed unavailable. Keep those prompts
-  // visible and non-sendable until exact persistence evidence resolves.
-  const displayedUnreconciled = AsyncResult.isSuccess(timeline)
-    ? A.filter(unreconciled, P.Struct({ reconciliation: Eq.equals("receipt") }))
-    : unreconciled;
-
-  // The conversation as it now stands: an edited turn and the exchange it
-  // produced are gone for good, not merely hidden while the replacement streams.
-  // (The transcript used to fall back to every turn once streaming finished, so
-  // the tail the rewrite banner promised to discard came straight back.)
-  const timelineTurns = O.match(AsyncResult.value(timeline), {
-    onNone: A.empty<never>,
-    onSome: (value) => value.turns,
-  });
-  const allTurns = ThreadProjections.activeBranchTurns(timelineTurns);
-  // While the replacement streams, its predecessor is already on its way out.
-  const localTurns = A.appendAll(displayedUnreconciled, O.toArray(streamingHere));
-  const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
-    O.match(
-      O.flatMap(localTurn.truncateFrom, (truncateFrom) =>
-        A.findFirstIndex(allTurns, P.Struct({ turnId: Eq.equals(truncateFrom) }))
-      ),
-      {
-        onNone: () => earliest,
-        onSome: (index) =>
-          O.some(
-            earliest.pipe(
-              O.map(N.min(index)),
-              O.getOrElse(() => index)
-            )
-          ),
-      }
-    )
-  );
-  const turns = truncateIndex.pipe(
-    O.map((index) => A.take(allTurns, index)),
-    O.getOrElse(() => allTurns)
-  );
+  useAtomSubscribe(unreconciledTurnAtoms(threadId), scrollThread);
 
   return (
     <div ref={setViewport} className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="thread">
-      <ThreadLoadState
-        failed={AsyncResult.isFailure(timeline)}
-        loading={AsyncResult.isInitial(timeline) && timeline.waiting}
-      />
-      <EmptyThread
-        visible={
-          A.isReadonlyArrayEmpty(turns) &&
-          A.isReadonlyArrayEmpty(displayedUnreconciled) &&
-          AsyncResult.isSuccess(timeline) &&
-          O.isNone(streamingHere)
-        }
-      />
+      <ThreadLoadState failed={view.failed} loading={view.loading} />
+      <EmptyThread visible={view.empty} />
 
-      {A.map(turns, (turn) => (
-        <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(timelineTurns, turn)} />
+      {A.map(view.turns, (turn) => (
+        <TurnRow
+          key={turn.turnId}
+          threadId={threadId}
+          turn={turn}
+          hasSiblings={HashSet.has(view.siblingTurnIds, turn.turnId)}
+        />
       ))}
 
-      <UnreconciledTurns turns={displayedUnreconciled} />
-      <StreamingTurnView streaming={streamingHere} turnActive={turnActive} />
+      <UnreconciledTurns turns={view.unreconciled} />
+      <StreamingTurnView streaming={view.streaming} turnActive={turnActive} />
       <div ref={setBottom} />
     </div>
   );
