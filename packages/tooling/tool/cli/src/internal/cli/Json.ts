@@ -171,6 +171,12 @@ export const renderPrettyCommandJson = (
  * The encode failure is rethrown instead of being surfaced on an error channel;
  * pass values the JSON codec accepts, or reach for {@link encodeCommandJson}.
  *
+ * No length cap is applied, deliberately: the callers write checked-in
+ * artifacts (generated data modules, lock files) where a multi-megabyte payload
+ * must still be diffable. Terminal renderers that would rather not print a huge
+ * pretty document call {@link renderPrettyCommandJson} with an explicit
+ * `maxLength` instead.
+ *
  * **Example** (Render a canonical lock-file body)
  *
  * ```ts

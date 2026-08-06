@@ -225,6 +225,24 @@ const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFiles")(fu
 
     for (const entry of A.sort(entries, Str.Order)) {
       const absoluteEntry = path.join(currentDir, entry);
+      // `stat` resolves links and the FileSystem service exposes no `lstat`, so a successful
+      // `readLink` is the only way to see the link itself. Recording it the way Git does —
+      // mode 120000 over the target text — keeps a correct local symlink equal to its upstream
+      // entry. A real I/O failure is not swallowed here; it resurfaces from the `stat` below.
+      const linkTarget = yield* Effect.option(fs.readLink(absoluteEntry));
+      if (O.isSome(linkTarget)) {
+        const linkPath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
+        files = A.append(
+          files,
+          SkillUpstreamContentFile.make({
+            path: linkPath,
+            mode: "120000",
+            bytes: textEncoder.encode(linkTarget.value),
+          })
+        );
+        continue;
+      }
+
       const stat = yield* fs
         .stat(absoluteEntry)
         .pipe(
@@ -308,19 +326,22 @@ const renderAddedFilePatch = Effect.fn("SkillsProvenance.renderAddedFilePatch")(
   local: HashedSkillFile
 ): Effect.fn.Return<string, SkillsCommandError> {
   const after = yield* decodeTextFile(local, skill);
-  return A.join(
-    [
-      patchHeader(filePath),
-      `new file mode ${local.mode}`,
-      `index 000000000000..${abbreviatedSha(local.sha256)}`,
-      "--- /dev/null",
-      `+++ b/${filePath}`,
-      `@@ -0,0 +${hunkRange(contentLines(after).length)} @@`,
-      ...prefixedLines("+", after),
-      "",
-    ],
-    "\n"
-  );
+  const headerLines = [
+    patchHeader(filePath),
+    `new file mode ${local.mode}`,
+    `index 000000000000..${abbreviatedSha(local.sha256)}`,
+  ];
+  // A zero-byte add carries no hunk at all in `git diff`; emitting `@@ -0,0 +0,0 @@`
+  // with no lines under it would be a patch no applier accepts.
+  const bodyLines = Str.isEmpty(after)
+    ? A.empty<string>()
+    : [
+        "--- /dev/null",
+        `+++ b/${filePath}`,
+        `@@ -0,0 +${hunkRange(contentLines(after).length)} @@`,
+        ...prefixedLines("+", after),
+      ];
+  return A.join(A.append(A.appendAll(headerLines, bodyLines), ""), "\n");
 });
 
 const renderDeletedFilePatch = Effect.fn("SkillsProvenance.renderDeletedFilePatch")(function* (
@@ -329,19 +350,21 @@ const renderDeletedFilePatch = Effect.fn("SkillsProvenance.renderDeletedFilePatc
   upstream: HashedSkillFile
 ): Effect.fn.Return<string, SkillsCommandError> {
   const before = yield* decodeTextFile(upstream, skill);
-  return A.join(
-    [
-      patchHeader(filePath),
-      `deleted file mode ${upstream.mode}`,
-      `index ${abbreviatedSha(upstream.sha256)}..000000000000`,
-      `--- a/${filePath}`,
-      "+++ /dev/null",
-      `@@ -${hunkRange(contentLines(before).length)} +0,0 @@`,
-      ...prefixedLines("-", before),
-      "",
-    ],
-    "\n"
-  );
+  const headerLines = [
+    patchHeader(filePath),
+    `deleted file mode ${upstream.mode}`,
+    `index ${abbreviatedSha(upstream.sha256)}..000000000000`,
+  ];
+  // Deleting a zero-byte upstream file is header-only for the same reason an empty add is.
+  const bodyLines = Str.isEmpty(before)
+    ? A.empty<string>()
+    : [
+        `--- a/${filePath}`,
+        "+++ /dev/null",
+        `@@ -${hunkRange(contentLines(before).length)} +0,0 @@`,
+        ...prefixedLines("-", before),
+      ];
+  return A.join(A.append(A.appendAll(headerLines, bodyLines), ""), "\n");
 });
 
 const renderModifiedFilePatch = Effect.fn("SkillsProvenance.renderModifiedFilePatch")(function* (

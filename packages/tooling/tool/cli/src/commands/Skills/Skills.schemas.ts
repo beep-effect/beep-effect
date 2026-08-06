@@ -484,6 +484,17 @@ export class SkillSnapshotFile extends S.Class<SkillSnapshotFile>($I`SkillSnapsh
   })
 ) {}
 
+const SkillSnapshotFileCountCheck = S.makeFilter(
+  (snapshot: { readonly fileCount: number; readonly manifest: ReadonlyArray<SkillSnapshotFile> }) =>
+    snapshot.fileCount === snapshot.manifest.length,
+  {
+    identifier: $I`SkillSnapshotFileCountCheck`,
+    title: "Skill Snapshot File Count",
+    description: "A snapshot's fileCount must equal the number of entries in its manifest.",
+    message: "Expected fileCount to equal the number of manifest entries",
+  }
+);
+
 /**
  * Complete pristine upstream tree snapshot at the pinned source revision.
  *
@@ -492,6 +503,12 @@ export class SkillSnapshotFile extends S.Class<SkillSnapshotFile>($I`SkillSnapsh
  * `treeHash` covers the file contents while `manifestHash` covers the ordered
  * path-and-mode listing, so a pure rename or mode flip is still detected even
  * though the content digests are unchanged.
+ *
+ * **Gotchas**
+ *
+ * `fileCount` is checked against `manifest.length` at the struct level, so a
+ * hand-edited lock entry claiming more or fewer files than it lists is rejected
+ * at decode rather than being read as a smaller snapshot than it really is.
  *
  * **Example** (Decode a single-file snapshot)
  *
@@ -511,17 +528,36 @@ export class SkillSnapshotFile extends S.Class<SkillSnapshotFile>($I`SkillSnapsh
  * console.log(snapshot.manifest.length) // 1
  * ```
  *
+ * **Example** (Reject a manifest that disagrees with its count)
+ *
+ * ```ts
+ * import { SkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * const decoded = S.decodeUnknownResult(SkillSnapshot)({
+ *   algorithm: "sha256",
+ *   treeHash: digest,
+ *   fileCount: 0,
+ *   manifestHash: digest,
+ *   manifest: [{ path: "SKILL.md", mode: "100644", sha256: digest }],
+ * })
+ *
+ * console.log(Result.isFailure(decoded)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class SkillSnapshot extends S.Class<SkillSnapshot>($I`SkillSnapshot`)(
-  {
+  S.Struct({
     algorithm: SkillSnapshotAlgorithm,
     treeHash: Sha256Hex,
     fileCount: NonNegativeInt,
     manifestHash: Sha256Hex,
     manifest: S.Array(SkillSnapshotFile),
-  },
+  }).check(SkillSnapshotFileCountCheck),
   $I.annote("SkillSnapshot", {
     description: "Mode-aware ordered upstream tree manifest and its canonical aggregate hashes.",
   })
