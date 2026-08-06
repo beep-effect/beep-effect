@@ -26,12 +26,14 @@ const writeIn = Effect.fn("writeIn")(function* (options: {
   readonly slug?: string;
   readonly documents?: ReadonlyArray<PacketDocument>;
   readonly dryRun?: boolean;
+  readonly force?: boolean;
 }) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.makeDirectory("goals", { recursive: true });
   return yield* writePacket({
     documents: options.documents ?? sampleDocuments,
     dryRun: options.dryRun ?? false,
+    force: options.force ?? false,
     repoRoot: process.cwd(),
     slug: options.slug ?? SLUG,
   });
@@ -100,6 +102,69 @@ describe("codex findings packet promotion", () => {
         expect(outcome).toBe("staging-failed");
         expect(yield* fs.exists(`goals/${SLUG}`)).toBe(false);
         expect(A.filter(yield* fs.readDirectory("goals"), (entry) => entry.startsWith(".tmp-"))).toEqual([]);
+      })
+    ));
+});
+
+describe("codex findings packet forced replacement", () => {
+  it("replaces an existing packet when force is set", () =>
+    run(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(`goals/${SLUG}/findings`, { recursive: true });
+        yield* fs.writeFileString(`goals/${SLUG}/README.md`, "hand written\n");
+        yield* fs.writeFileString(`goals/${SLUG}/findings/CSF-999.md`, "stale finding\n");
+
+        const outcome = yield* writeIn({ force: true });
+
+        expect(outcome.committed).toBe(true);
+        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe(sampleDocuments[0]?.contents);
+        // A replacement is a replacement: files the new packet does not declare
+        // must not survive from the packet it replaced.
+        expect(yield* fs.exists(`goals/${SLUG}/findings/CSF-999.md`)).toBe(false);
+      })
+    ));
+
+  // The removal is deliberately staged behind the scan. If it ever moves ahead
+  // of it, a refused capture would destroy a packet full of hand-written triage
+  // prose and write nothing in its place — this is the test that catches that.
+  it("leaves the existing packet intact when a forced run is refused by the scan", () =>
+    run(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(`goals/${SLUG}`, { recursive: true });
+        yield* fs.writeFileString(`goals/${SLUG}/README.md`, "hand written\n");
+
+        const outcome = yield* writeIn({
+          documents: [doc("raw/payload.json", '{"note":"op://Private/OpenAI/credential"}', false)],
+          force: true,
+        }).pipe(
+          Effect.map(() => "written"),
+          Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
+        );
+
+        expect(outcome).toBe("refused");
+        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe("hand written\n");
+      })
+    ));
+
+  it("leaves the existing packet intact when a forced run fails mid-staging", () =>
+    run(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(`goals/${SLUG}`, { recursive: true });
+        yield* fs.writeFileString(`goals/${SLUG}/README.md`, "hand written\n");
+
+        const outcome = yield* writeIn({
+          documents: [doc("README.md", "# ok\n"), doc("ops", "not a directory\n"), doc("ops/manifest.json", "{}\n")],
+          force: true,
+        }).pipe(
+          Effect.map(() => "written"),
+          Effect.catchTag("CodexPacketWriteError", (error) => Effect.succeed(error.reason))
+        );
+
+        expect(outcome).toBe("staging-failed");
+        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe("hand written\n");
       })
     ));
 });
