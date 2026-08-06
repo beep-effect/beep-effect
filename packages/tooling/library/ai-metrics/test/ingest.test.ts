@@ -600,6 +600,9 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             );
             const sessionRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_sessions");
             const turnRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_turns");
+            const turnLineage = yield* duckdb.query(
+              "SELECT DISTINCT ingest_run_id AS ingestRunId FROM ai_metrics_turns"
+            );
 
             expect(runRows).toEqual([{ count: "3" }]);
             expect(runArchiveCounts).toEqual([
@@ -611,7 +614,16 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             expect(archiveRows).toEqual([{ count: "3" }]);
             expect(agentTaskRows).toEqual([{ configSnapshotCount: 2, count: "2" }]);
             expect(sessionRows).toEqual([{ count: "3" }]);
-            expect(turnRows).toEqual([{ count: "3" }]);
+            // Three runs over byte-identical content must yield ONE turn row. This
+            // previously asserted "3", encoding the duplication that grew the store to
+            // 5.43M rows over ~516K distinct raw_event_hash across 1,222 runs.
+            expect(turnRows).toEqual([{ count: "1" }]);
+            // ...and it must retain the FIRST run's id. The OTLP export selects
+            // `WHERE ingest_run_id = <this run>`, so if a re-ingest rewrote this to the
+            // current run, every previously-seen turn would be re-exported to Phoenix
+            // on every run even though the table had stopped growing. Retaining
+            // first-seen lineage is what makes the export incremental.
+            expect(turnLineage).toEqual([{ ingestRunId: "forwarder-1" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));

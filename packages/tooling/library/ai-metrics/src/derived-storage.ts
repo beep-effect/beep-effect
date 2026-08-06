@@ -1172,15 +1172,25 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
   yield* Effect.forEach(
     sanitized.rawEventEnvelopes,
     Effect.fnUntraced(function* (envelope) {
+      // Content-addressed, deliberately excluding input.ingestRunId. With the run id
+      // in the key every run minted a fresh turn_id for identical content, so
+      // INSERT OR REPLACE never collided and the table accumulated one copy per run
+      // (measured: 5.43M rows collapsing to ~516K distinct raw_event_hash across
+      // 1,222 runs). Per the packet's identity rule, ingest runs are lineage, never
+      // identity.
       const turnId = yield* rowId("turn", [
-        input.ingestRunId,
         envelope.sourceKind,
         envelope.sourcePathHash,
         envelope.lineNumber,
         envelope.rawEventHash,
       ]);
+      // OR IGNORE, not OR REPLACE. REPLACE would rewrite ingest_run_id to the
+      // current run, and the OTLP export selects `WHERE ingest_run_id = <this run>`
+      // -- so every previously-seen turn would be re-exported to Phoenix on every
+      // run even though the table itself had stopped growing. Retaining the
+      // first-seen run id is what makes that export incremental.
       yield* duckdb.run(
-        `INSERT OR REPLACE INTO ai_metrics_turns (
+        `INSERT OR IGNORE INTO ai_metrics_turns (
           turn_id,
           ingest_run_id,
           agent_session_id,
