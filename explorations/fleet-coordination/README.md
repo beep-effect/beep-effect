@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `decompose`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -26,20 +26,14 @@ checkouts share one filesystem, one kernel, one user.
 
 ## Next Open Question
 
-**Does rung 1 start now, or does the whole packet wait for PR-I?**
-[`MAP.md`](./MAP.md) verified the capability surface against `main` and found the
-split the BRIEF did not: `AgentBrief`, `OwnershipClaim`, and `beep agent report
-list` are **not on main** — so ambient delivery (rung 2) is genuinely blocked —
-but `worktree doctor`, `merge-tree`, and `/proc` all are, so **derivation (rung
-1) is not blocked by anything**. The BRIEF's "starting when PR-I merges" is
-therefore stronger than the evidence requires. That ruling is the last thing
-standing between this packet and graduation, and it is recorded in the manifest's
-`openQuestions` so a session orienting from machine state sees it too.
+**Rung 2 only, and not blocking.** When speed-loop PR-I lands
+`AgentBrief.fleet`, does ambient delivery ride into
+[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) as a second phase, or
+open its own packet? Nothing waits on the answer.
 
-Graduation contract status: **brief complete ✓**, **map names the work ✓**,
-**capability check ✓** (verified against `main`, not assumed) — and **blocking
-questions ✗**, held open by exactly the ruling above. Graduation is one decision
-away, not zero.
+**Rung 1 graduated 2026-08-06** as `goals/fleet-mirror` (D6) — derivation only,
+executable today. This exploration stays `active` because rung 2 remains
+unbuilt.
 
 ## Read This First
 
@@ -64,6 +58,14 @@ capability this packet is about does not exist yet.
 
 ## Trail
 
+- 2026-08-06: **rung 1 graduated** into
+  [`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) (D6) — derivation
+  only; rung 2 stays here until PR-I lands `AgentBrief.fleet`. Same day, PR-E
+  landed as #569 and closed the #551 regression with the guard and the regression
+  test A6 promised — **which was itself a second Mode B specimen**: `main` moved
+  under this clone's in-flight packet, rotting one factual claim and staling a
+  capability pin, with no textual conflict and no signal, learned only because
+  the operator mentioned the merge in passing.
 - 2026-08-05: operator approved `BRIEF.md` → `decompose`. [`MAP.md`](./MAP.md)
   names one goal packet (`fleet-mirror`) and verifies every cited capability
   against `main` at `680a862a8e` rather than against the research. That check

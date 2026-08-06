@@ -257,3 +257,49 @@ match basis; polarity outside content re-opens the unsoundness) and a full
 act ontology in V1 (pulls the function-verb-scheme question owned by
 `goals/semantic-foundation` into this wedge — a scope departure needing its
 own routing approval).
+
+## 2026-08-06 — shape: BRIEF drafted and hardened
+
+**Question:** Does the drafted `BRIEF.md` faithfully carry the six align
+decisions, the research record, and Shape-Up form?
+
+**Answer:** After one adversarial pass, yes. The draft was reviewed by a
+three-lens Opus panel (decision fidelity / research grounding / Shape-Up
+form; Workflow `wf_cc695f5f-ca6`) — all three lenses returned
+PASS-WITH-FIXES with 39 findings (5 P1), every one folded. The P1s:
+(1) the rung-1 service was named "comparability check" — the exact cell
+Lane B §6.2's never-compute column forbids proxying; renamed to the
+scope-overlap-and-opposition check answering two set-theoretic facts, and
+"legal comparability of two positions" added to the never-compute No-Go;
+(2) the opposite bimap was stated as polarity-negation only — it maps kind
+through the opposite pairs AND negates polarity in one step, with a new
+No-Go banning polarity-only derivations; (3) the stored relator lacked
+`positionKind` and the advantage-side canonicalisation that makes
+one-stored-relation unique — both added, canonicalisation recorded as a
+modelling decision; (4) the sibling's heaviest rabbit hole (lawful
+cross-slice shape, `standards/ARCHITECTURE.md:632-636`) had no counterpart
+despite the candidate handoff crossing the same class of boundary — added,
+naming the three lawful shapes and forbidding a new
+`law-practice/*` → `epistemic/*` edge; (5) the circuit-breaker silently
+deleted two of five proof assertions — the breaker now names what drops
+and the surviving reduced proof set, and gained a second degradation
+(opaque party reference id) so it cuts the rung's largest unknown. Notable
+P2 folds: the two-axis outcome lands in the relator's rung-1 event
+vocabulary (the align "now" reading made explicit); `result` moves off the
+relator to the required rung-2 exercise-event field; `derivationKind` is a
+set, never a three-way enum; preconditions must express negative operative
+facts; commutation joins the exhaustion proof; forum/proof-standard/
+viewpoint are explicitly rung-2 (`PriorityBasis`, plus sourcePrecedence
+and specificity); the CQ acceptance set is UFO-L's table plus FLINT's
+in-scope subset only; `RuntimeApprovalGate` is named unconsumable
+(single-member placeholder); the M4/remo1 boundary gets its own No-Go;
+closing the position domain at eight is recorded as a stance against the
+FLINT/Kocourek reduction.
+
+**Rationale:** The candor sibling's cadence (draft → three-lens adversarial
+review → fold → Benjamin approval) produced a BRIEF that survived two
+further review panels downstream; the same gate applied here caught two
+soundness defects (P1s 1–2) that would have graduated into an unsound
+SPEC. Benjamin's approval is the exit condition for the shape stage —
+APPROVED by Benjamin 2026-08-06 (same session, over the folded draft).
+Stage align → shape.

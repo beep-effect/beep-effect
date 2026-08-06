@@ -172,6 +172,7 @@ export class SweepGitState extends S.Class<SweepGitState>($I`SweepGitState`)(
     lockfileMovedOnMainUpdate: S.Boolean,
     statusProbeUnreliable: S.Boolean,
     worktreeProbeUnreliable: S.Boolean,
+    mainTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -343,18 +344,40 @@ const deleteRemoteBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
   ];
   return SweepPlanStep.make({
     id: "delete-remote-branch",
-    action: `git push origin --delete ${state.branch}`,
+    action: leasedRemoteDeletionCommand(state),
     preconditions,
     requiresOperator: A.isReadonlyArrayEmpty(unsatisfied(preconditions)),
   });
 };
+
+// Deleting a ref is pushing an empty source; the lease pins the server-side
+// update to the planned tip, so the deletion is a compare-and-swap — a push
+// landing after planning rejects the delete instead of losing its commit.
+const leasedRemoteDeletionArgs = (state: SweepGitState): ReadonlyArray<string> => [
+  "push",
+  "origin",
+  `--force-with-lease=refs/heads/${state.branch}:${O.getOrElse(state.remoteTip, () => "<unknown>")}`,
+  `:refs/heads/${state.branch}`,
+];
+
+const leasedRemoteDeletionCommand = (state: SweepGitState): string =>
+  A.join(["git", ...leasedRemoteDeletionArgs(state)], " ");
 
 const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
   SweepPlanStep.make({
     id: "lockfile-install",
     action: "bun install",
     preconditions: [
-      precondition(`bun.lock moved in the ${state.mainBranch} update`, state.lockfileMovedOnMainUpdate),
+      // Always satisfied at plan time: the observation happens before the
+      // sweep's own fetch/fast-forward refresh the refs, so the real decision
+      // is re-derived at execution against the post-refresh update window.
+      // The forecast is still shown so `--plan` says what observation saw.
+      precondition(
+        `bun.lock movement is re-checked after the refresh (pre-refresh forecast: ${
+          state.lockfileMovedOnMainUpdate ? "moved" : "unchanged"
+        })`,
+        true
+      ),
       cleanWorktreePrecondition(state),
     ],
     requiresOperator: false,
@@ -611,6 +634,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   const status = yield* captureGit(repoRoot, ["status", "--porcelain"]);
   const toplevel = yield* captureGit(repoRoot, ["rev-parse", "--show-toplevel"]);
   const worktreeList = yield* captureGit(repoRoot, ["worktree", "list", "--porcelain"]);
+  const mainTip = yield* observeSha(repoRoot, `refs/heads/${mainBranch}`);
   const localTip = yield* observeSha(repoRoot, `refs/heads/${branch}`);
   const remoteTip = yield* observeSha(repoRoot, `refs/remotes/origin/${branch}`);
   const ancestry = yield* captureGit(repoRoot, [
@@ -644,6 +668,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     lockfileMovedOnMainUpdate: lockfile.exitCode === 0 && Str.isNonEmpty(lockfile.output),
     statusProbeUnreliable: probeUnreliable(status),
     worktreeProbeUnreliable: probeUnreliable(worktreeList),
+    mainTip,
     localTip,
     remoteTip,
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
@@ -708,23 +733,39 @@ const runCommandStep = (
     Effect.map((probe) => (probe.exitCode === 0 ? executedFrom(probe) : skippedFromFailure(action, probe)))
   );
 
+// "stale info" is git's own force-with-lease rejection phrase and the ONLY
+// marker here on purpose: a bare "[rejected]"/"[remote rejected]" can come
+// from any server policy or hook, and classifying those as a benign
+// concurrent update would hide the real failure from the operator — they
+// fall through to the skip that carries the failure text verbatim.
+const isStaleLease = (output: string): boolean => Str.includes("stale info")(Str.toLowerCase(output));
+
+// Outcome boundary (review-hardened on #571): the ONLY benign rejection is
+// git's own stale-lease phrase — a concurrent update the re-run absorbs.
+// Every other failure is one the sweep cannot fix by re-running, so it hands
+// the operator the exact leased command instead of burying the failure in a
+// skip; the permission-marker list refines the reason text, never the routing.
 const runRemoteDeletionStep = (
   state: SweepGitState,
   cwd: string,
   action: string
 ): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  captureGit(cwd, ["push", "origin", "--delete", state.branch]).pipe(
+  captureGit(cwd, leasedRemoteDeletionArgs(state)).pipe(
     Effect.map((probe) => {
       if (probe.exitCode === 0) {
         return executedFrom(probe);
       }
-      if (isPermissionDenial(probe.output)) {
-        return SweepStepNeedsOperator.make({
-          reason: `deleting origin/${state.branch} was denied by permission: ${probeFailureText(probe)}`,
-          operatorCommand: action,
+      if (isStaleLease(probe.output)) {
+        return SweepStepSkipped.make({
+          reason: `origin/${state.branch} moved after planning; the leased deletion was rejected: ${probeFailureText(probe)}`,
         });
       }
-      return skippedFromFailure(action, probe);
+      return SweepStepNeedsOperator.make({
+        reason: isPermissionDenial(probe.output)
+          ? `deleting origin/${state.branch} was denied by permission: ${probeFailureText(probe)}`
+          : `deleting origin/${state.branch} failed (exit ${probe.exitCode}): ${probeFailureText(probe)}`,
+        operatorCommand: action,
+      });
     })
   );
 
@@ -779,7 +820,11 @@ export const revalidateLocalDeletion = (
  * after observation would advance the real remote while the tracking ref stays
  * stale, and deleting would make the new commit unreachable from that ref. This
  * asks the server directly via `git ls-remote origin refs/heads/<branch>` — an
- * unreadable answer or any drift refuses the deletion.
+ * unreadable answer or any drift refuses the deletion with a reason naming it.
+ * The deletion itself is additionally leased (`--force-with-lease` pinned to the
+ * planned tip), so a push landing even after this re-check is rejected by the
+ * server rather than losing its commit — this precheck exists for the clean
+ * skip reasons, the lease for atomicity.
  *
  * **Example** (Refuse when the remote cannot be re-verified)
  *
@@ -834,6 +879,62 @@ const guardedDeletion = (
     )
   );
 
+// The observed lockfile forecast predates the sweep's own fetch/fast-forward,
+// so the executed decision re-diffs the actual update window: the main tip
+// recorded at observation against post-refresh local main. An unreadable
+// re-check or an unknown starting tip errs toward installing — `bun install`
+// on a clean tree is safe; a silently stale node_modules is not.
+const runLockfileInstallStep = (
+  state: SweepGitState,
+  cwd: string,
+  action: string
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  O.match(state.mainTip, {
+    onNone: () => runCommandStep("bun", ["install"], cwd, action),
+    onSome: (observedTip) =>
+      Effect.all([
+        observeSha(cwd, `refs/heads/${state.mainBranch}`),
+        observeSha(cwd, `refs/remotes/origin/${state.mainBranch}`),
+      ]).pipe(
+        Effect.flatMap(([localMain, trackingMain]) =>
+          // An earlier step may have skipped the refresh (dirty tree, held
+          // main, failed fetch). An unrefreshed main proves nothing about
+          // bun.lock, so the skip reason must say "not refreshed", never
+          // "did not move" — the operator re-runs the sweep after fixing
+          // whatever blocked the refresh.
+          !tipsMatch(localMain, trackingMain)
+            ? // needs-operator, not a skip: an unrefreshed main cannot
+              // self-heal on a re-run — the operator must first clear
+              // whatever blocked ff-main (dirty tree, held main), so the
+              // unreconciled dependency state lands in the batched handoff
+              // instead of waiting for someone to read a buried skip.
+              Effect.succeed<SweepStepOutcome>(
+                SweepStepNeedsOperator.make({
+                  reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds`,
+                  operatorCommand: "bun run beep yeet sweep",
+                })
+              )
+            : captureGit(cwd, [
+                "diff",
+                "--name-only",
+                `${observedTip}..refs/heads/${state.mainBranch}`,
+                "--",
+                "bun.lock",
+              ]).pipe(
+                Effect.flatMap((probe) =>
+                  !probeUnreliable(probe) && Str.isEmpty(probe.output)
+                    ? Effect.succeed<SweepStepOutcome>(
+                        SweepStepSkipped.make({
+                          reason: `bun.lock did not move in the ${state.mainBranch} update (${observedTip}..${state.mainBranch})`,
+                        })
+                      )
+                    : runCommandStep("bun", ["install"], cwd, action)
+                )
+              )
+        )
+      ),
+  });
+
 const runEndStateStep = (
   state: SweepGitState,
   cwd: string,
@@ -885,7 +986,7 @@ const performSweepStep = (
         revalidateRemoteDeletion(context.repoRoot, state),
         runRemoteDeletionStep(state, context.repoRoot, planStep.action)
       ),
-    "lockfile-install": () => runCommandStep("bun", ["install"], context.repoRoot, planStep.action),
+    "lockfile-install": () => runLockfileInstallStep(state, context.repoRoot, planStep.action),
     "end-state": () => runEndStateStep(state, context.repoRoot, planStep.action),
   });
 

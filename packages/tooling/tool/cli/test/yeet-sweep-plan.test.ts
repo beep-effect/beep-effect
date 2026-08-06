@@ -31,6 +31,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
 const mergedTip = "aaaa1111bbbb2222";
+const mainTipBeforeUpdate = "eeee5555ffff6666";
 const createdAt = "2026-08-04T00:00:00.000Z";
 const endedAt = "2026-08-04T00:00:01.000Z";
 
@@ -51,6 +52,7 @@ const mergedFacts = {
   lockfileMovedOnMainUpdate: true,
   statusProbeUnreliable: false,
   worktreeProbeUnreliable: false,
+  mainTip: O.some(mainTipBeforeUpdate),
   localTip: O.some(mergedTip),
   remoteTip: O.some(mergedTip),
   pullRequestState: O.some("MERGED"),
@@ -233,7 +235,9 @@ describe("truncated probe rail", () => {
 describe("remote branch deletion contract", () => {
   it("flags the authorized deletion as an operator handoff with the exact command", () => {
     const step = stepFor(mergedState, "delete-remote-branch");
-    expect(step.action).toBe("git push origin --delete feat/merge-loop");
+    expect(step.action).toBe(
+      "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+    );
     expect(step.requiresOperator).toBe(true);
   });
 
@@ -306,10 +310,16 @@ describe("dirty worktree rail", () => {
     expect(blockerText(dirty, "delete-remote-branch")).toEqual([]);
   });
 
-  it("skips the install when the main update did not move bun.lock", () => {
-    expect(blockerText(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install")).toEqual([
-      "bun.lock moved in the main update",
-    ]);
+  it("plans the install as an execution-time re-check, carrying the pre-refresh forecast", () => {
+    expect(blockerText(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install")).toEqual([]);
+    const forecastUnchanged = stepFor(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install");
+    expect(A.map(forecastUnchanged.preconditions, (observed) => observed.description)).toContain(
+      "bun.lock movement is re-checked after the refresh (pre-refresh forecast: unchanged)"
+    );
+    const forecastMoved = stepFor(mergedState, "lockfile-install");
+    expect(A.map(forecastMoved.preconditions, (observed) => observed.description)).toContain(
+      "bun.lock movement is re-checked after the refresh (pre-refresh forecast: moved)"
+    );
   });
 });
 
@@ -340,7 +350,8 @@ describe("renderSweepReport", () => {
       id: "delete-remote-branch",
       outcome: SweepStepNeedsOperator.make({
         reason: "deleting origin/feat/merge-loop was denied by permission: 403",
-        operatorCommand: "git push origin --delete feat/merge-loop",
+        operatorCommand:
+          "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop",
       }),
     }),
   ]);
@@ -355,7 +366,9 @@ describe("renderSweepReport", () => {
   it("batches every needs-operator command into one handoff block", () => {
     const rendered = renderSweepReport(handoffReport);
     expect(rendered).toContain("operator handoff (1 command(s) only you can run):");
-    expect(rendered).toContain("    git push origin --delete feat/merge-loop");
+    expect(rendered).toContain(
+      "    git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+    );
   });
 
   it("omits the handoff block when nothing needs the operator", () => {
@@ -426,6 +439,8 @@ const prViewJson = `{"number":559,"headRefName":"feat/merge-loop","state":"MERGE
 const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git rev-parse --abbrev-ref HEAD", ok("main")],
   ["git rev-parse --show-toplevel", ok("/repo")],
+  ["git rev-parse --verify --quiet refs/heads/main", ok(mainTipBeforeUpdate)],
+  ["git rev-parse --verify --quiet refs/remotes/origin/main", ok(mainTipBeforeUpdate)],
   ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", ok(mergedTip)],
   ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", ok(mergedTip)],
   ["git status --porcelain", ok("")],
@@ -533,6 +548,89 @@ describe("executeSweep", () => {
         ]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("hands a generic remote rejection to the operator with its own words, never a stale lease", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+        expect(remoteStep.outcome.status).toBe("needs-operator");
+        if (remoteStep.outcome.status === "needs-operator") {
+          expect(remoteStep.outcome.reason).not.toContain("moved after planning");
+          expect(remoteStep.outcome.reason).toContain("custom hook said no");
+          expect(remoteStep.outcome.operatorCommand).toContain("--force-with-lease");
+        }
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          [
+            "git push origin --force-with-lease",
+            { exitCode: 1, output: " ! [remote rejected] refs/heads/feat/merge-loop (custom hook said no)" },
+          ],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
+  );
+
+  it.effect("hands an unrefreshed main to the operator as unreconciled, never as unchanged", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+        expect(step.outcome.status).toBe("needs-operator");
+        if (step.outcome.status === "needs-operator") {
+          expect(step.outcome.reason).toContain("was not refreshed");
+          expect(step.outcome.reason).not.toContain("did not move");
+          expect(step.outcome.operatorCommand).toBe("bun run beep yeet sweep");
+        }
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          ["git rev-parse --verify --quiet refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
+  );
+
+  it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+        expect(step.outcome.status).toBe("skipped");
+        expect(step.outcome.status === "skipped" ? step.outcome.reason : "").toContain("did not move");
+      })
+    ).pipe(
+      provideScopedLayer(sweepTestLayer([[`git diff --name-only ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]))
+    )
+  );
+
+  it.effect("classifies a rejected lease as moved-after-planning, not as a plain failure", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+        expect(remoteStep.outcome.status).toBe("skipped");
+        expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
+          "moved after planning"
+        );
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          [
+            "git push origin --force-with-lease",
+            { exitCode: 1, output: " ! [rejected] refs/heads/feat/merge-loop (stale info)" },
+          ],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
   );
 
   it.effect("skips remote deletion when the live remote tip moved since planning", () =>

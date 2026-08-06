@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "fleet-mirror",
+    "title": "Fleet Mirror",
+    "status": "active",
+    "created": "2026-08-06",
+    "updated": "2026-08-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/fleet-mirror",
+  "lifecycle": "active",
+  "mission": "Derive a read-only view of every checkout sharing this origin - duplicate work, stale bases, and moved policy paths - so an agent learns about a collision before it pays for one, without any agent posting anything.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/fleet-coordination",
+    "graduated": "2026-08-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/fleet-mirror/README.md",
+    "goals/fleet-mirror/SPEC.md",
+    "goals/fleet-mirror/PLAN.md",
+    "goals/fleet-mirror/GOAL.md",
+    "goals/fleet-mirror/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/fleet-mirror/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/fleet-mirror/GOAL.md)\" -le 4000",
+    "jq . goals/fleet-mirror/ops/manifest.json",
+    "rg -n \"fleet-mirror|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/fleet-mirror",
+    "git diff --check -- goals/fleet-mirror",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope - in particular any pull toward claims, enforcement, or ambient delivery.",
+    "A signal cannot be made correct without inferring a field from a proxy. Report rather than infer.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -69,12 +69,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `patent-drafting-episode-ledger` and the FunctionalUnit extension on
   Benjamin's call.
 - [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
-  align-stage second wedge of the `legal-patent-kg-deepening` routing
+  shape-stage second wedge of the `legal-patent-kg-deepening` routing
   matrix (opened 2026-08-05, after the candor wedge graduated; research
   lanes + synthesis landed same-day; all six align branches closed
   2026-08-06 — scheme + simple relator V1, `law-practice/domain` home with
   a promotion gate, Party–Role split, full `CorrectionDelta` shape,
-  two-axis void-vs-penalised, typed content with polarity): a closed
+  two-axis void-vs-penalised, typed content with polarity; BRIEF hardened
+  by a three-lens Opus review and APPROVED 2026-08-06 — decompose next): a
+  closed
   `HohfeldPosition` domain whose correlative pairs are one stored directed
   relation with a derived opposite view, an identity-bearing n-ary
   `LegalPositionRelator` aggregate over the live taxonomy /
@@ -103,14 +105,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
-- [`fleet-coordination`](./fleet-coordination/README.md) — decompose-stage: ~13
+- [`fleet-coordination`](./fleet-coordination/README.md) — graduate-stage: ~13
   agent checkouts on one workstation duplicating each other’s fixes and rotting
   each other’s in-flight PRs. Research verdict is a derived **mirror**, not a
   message board — derive early, deliver ambiently, enforce late — shipped
-  through the reserved `AgentBrief.fleet` field. `MAP.md` names one packet
-  (`fleet-mirror`) and splits it into a derivation rung that is unblocked today
-  and a delivery rung gated on PR-I, after verifying against `main` that
-  `AgentBrief`/`OwnershipClaim` do not exist yet. Grill #1
+  through the reserved `AgentBrief.fleet` field. First goal graduated 2026-08-06:
+  [`fleet-mirror`](../goals/fleet-mirror/README.md) (D6), scoped to the
+  **derivation rung**, which the capability check proved depends on nothing
+  unmerged; the **delivery rung** stays here, gated on PR-I landing
+  `AgentBrief`/`OwnershipClaim`. Grill #1
   locked D1–D5 and disposed four questions; en route it killed `law-pulse.sh`
   ever reaching the model (fixed here), `beep yeet` being a gate, `flock`
   releasing on holder death, and merge queue at this repo’s measured shape (19%
