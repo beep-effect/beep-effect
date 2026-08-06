@@ -185,10 +185,13 @@ these two share), while a genuine opposite pair under overlapping
   cases. The agents runtime's `RuntimeApprovalGate` is a single-member
   placeholder this wedge cannot widen and does not consume.
 - `CorrectionDelta` (caller-owned, append-only event) in the full align
-  shape: two-severity validator report (hard/advisory — a recorded field,
-  see the no-go on executable shapes; whether it composes or narrows the
-  live three-member `ShaclSeverity` in `@beep/semantic-web` is goal-packet
-  latitude), a stage tag from the interpretation → qualification →
+  shape: two-severity validator report (hard/advisory — the contract
+  vocabulary is align-locked at exactly these two members and never adopts
+  the three-member `ShaclSeverity` model; whether the implementation
+  internally narrows the live `ShaclSeverity` machinery in
+  `@beep/semantic-web` to *produce* the two-member field is goal-packet
+  latitude; a recorded field, see the no-go on executable shapes), a stage
+  tag from the interpretation → qualification →
   assessment triple, per-element source pointers, a reviewer-action
   vocabulary including `undetermined`, and unresolved differences
   defaulting into contradiction candidates through the **live** triage
