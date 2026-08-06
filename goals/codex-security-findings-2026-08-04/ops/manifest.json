@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-08-04",
     "title": "Codex Security Findings (2026-08-04)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-04",
     "updated": "2026-08-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-04",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Remediate and close the 27 Codex Cloud security findings captured on 2026-08-04.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -68,7 +68,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All findings are confirmed and remediated; the initial 26-finding batch has green local Yeet proof, and combined follow-up proof for the 27th finding is pending."
+    "note": "COMPLETE. All 27 findings were remediated in PR #559, merged as e6c371e1f1, and closed as Already fixed after exact-ID verification. The live open inventory is 0-0 of 0."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -76,6 +76,22 @@
     "dismissedInvalid": "False positive",
     "outOfScope": "False positive",
     "acceptedRisk": "not allowed"
+  },
+  "closeoutEvidence": {
+    "closedAt": "2026-08-05",
+    "closedCount": 27,
+    "closeReason": "Already fixed",
+    "exactIdAllowlistVerified": true,
+    "liveOpenInventory": "0-0 of 0",
+    "mergedPullRequest": {
+      "number": 559,
+      "mergeCommit": "e6c371e1f101d4b19fdba7604ece35f844a7c33d"
+    },
+    "reviewThreads": {
+      "total": 6,
+      "unresolved": 0
+    },
+    "history": "history/2026-08-05-closeout.md"
   },
   "dispositionPolicy": {
     "default": "remediate",
@@ -129,17 +145,17 @@
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

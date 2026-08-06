@@ -17,7 +17,8 @@ make the budget.
 | P0 Research | pending | Confirm the `Worktree` schema family and **measure** the policy surface against recent first-parent `main` commits. | The surface is a measured list with per-path frequencies recorded in `research/`; `FleetCheckout`'s home is decided. |
 | P1 Implement | pending | Schema → `Context.Service` → subcommand, in that order. | Acceptance criteria in `SPEC.md` are met. |
 | P2 Verify | pending | The #551-shape proof test plus the two `unknown`-path tests; full repo proof. | The proof test fails before signal 3 and passes after; `beep yeet verify` green. |
-| P3 Close | pending | PR to mergeable via yeet, review response, closeout reflection. | Packet status and evidence updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence updated; a closeout reflection exists and lints. |
 
 ## P1 Implementation Order
 
@@ -40,7 +41,7 @@ Design order is law: **schema → `Context.Service` contract → implementation.
      only Mode B detector; signals 1 and 2 are structurally blind to it.
 4. **`beep worktree fleet`** renders it read-only.
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (and `status` → `completed-retained` /
 `complete`):
@@ -56,6 +57,10 @@ Before marking the packet closed (and `status` → `completed-retained` /
    statuses + `initiative.status`.
 4. Flip the exploration packet's manifest if this closes it out — the exploration
    stays `active` while rung 2 remains unbuilt.
+
+Phase ids here match `ops/manifest.json` exactly (P0–P4). The template they were
+scaffolded from disagreed with its own manifest; see the note in
+`goals/_template/PLAN.md`.
 
 ## Execution Notes
 

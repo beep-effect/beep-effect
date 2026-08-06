@@ -46,7 +46,7 @@ Workflow:
 3. Make the smallest change that satisfies `SPEC.md`.
 4. Preserve unrelated user/worktree changes; never `git add -A`.
 5. Keep decisions tied to evidence from files, tests, docs, or command output.
-6. At P3 Close, write a closeout reflection to
+6. At P4 Close, write a closeout reflection to
    `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill (see
    `PLAN.md`); `bun run beep lint reflection-artifacts` must pass.
 
