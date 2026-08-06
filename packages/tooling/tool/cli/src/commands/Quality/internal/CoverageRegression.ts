@@ -414,26 +414,36 @@ export const mergeCoverageBaselinePackagesForTesting = (
 ): Record<string, CoveragePackageBaseline> => ({ ...previous, ...snapshotPackages(entries) });
 
 /**
- * Whether writing this snapshot would silently delete committed entries.
+ * Committed entries an unscoped replacement would delete without meaning to.
  *
- * Only an unscoped run replaces the document, so only an unscoped run can drop
- * entries. Measuring fewer packages than the baseline records means the run did
- * not cover what an unscoped run claims to — a partially failed run, or a filter
- * the caller forgot to declare — and the missing entries would vanish without a
- * word.
+ * **Details**
  *
- * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
- * @param measuredCount - Packages this run produced a summary for.
- * @param previousCount - Packages the committed baseline records.
- * @returns `true` when writing would delete committed entries.
+ * A replacement legitimately prunes packages that no longer exist — that is how
+ * a deleted package leaves the baseline. What it must not do is drop an entry
+ * for a package that is still in the workspace and simply was not measured,
+ * which is what a partially failed run or an undeclared filter produces.
+ *
+ * Comparing names rather than counts matters: a run that drops one package and
+ * gains another measures the same number while still deleting an entry, so a
+ * count check waves it through.
+ *
+ * @param previousNames - Packages the committed baseline records.
+ * @param measuredNames - Packages this run produced a summary for.
+ * @param workspaceNames - Packages that currently exist and run coverage.
+ * @returns Baseline entries that are still live packages but went unmeasured.
  * @category testing
  * @since 0.0.0
  */
-export const baselineReplacementDropsEntries = (
-  scoped: boolean,
-  measuredCount: number,
-  previousCount: number
-): boolean => !scoped && measuredCount < previousCount;
+export const baselineEntriesLostByReplacement = (
+  previousNames: ReadonlyArray<string>,
+  measuredNames: ReadonlyArray<string>,
+  workspaceNames: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  pipe(
+    previousNames,
+    A.filter((name) => !A.contains(measuredNames, name) && A.contains(workspaceNames, name)),
+    A.sort(Order.String)
+  );
 
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
   repoRoot: string,
@@ -484,6 +494,30 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
         `Failed to parse ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
       ),
   });
+});
+
+/**
+ * Read the committed baseline, distinguishing "not there yet" from "unreadable".
+ *
+ * A missing file is the legitimate first-write case and yields `None`. A file
+ * that exists but fails to read or decode is an error and stays one — treating
+ * it as absent would let a scoped write fall through to the snapshot-only branch
+ * and overwrite a baseline whose only problem was that it did not parse.
+ */
+const readPreviousBaseline = Effect.fn("CoverageRegression.readPreviousBaseline")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  O.Option<CoverageRegressionBaseline>,
+  QualityTaskConfigurationError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const exists = yield* fs
+    .exists(path.join(repoRoot, coverageRegressionBaselinePath))
+    .pipe(Effect.orElseSucceed(thunkFalse));
+
+  return exists ? O.some(yield* readBaseline(repoRoot)) : O.none();
 });
 
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
@@ -545,13 +579,27 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
       return yield* QualityTaskConfigurationError.new("No coverage summaries were generated; cannot write baseline.");
     }
 
-    const previous = yield* readBaseline(repoRoot).pipe(Effect.option);
-    const previousCount = pipe(previous, O.match({ onNone: () => 0, onSome: (document) => R.size(document.packages) }));
+    // Absent and unreadable are different answers. Collapsing a read or decode
+    // failure into "no previous document" would take the snapshot-only branch
+    // and overwrite a baseline that merely failed to parse, so only a genuinely
+    // missing file yields `None`; anything else propagates.
+    const previous = yield* readPreviousBaseline(repoRoot);
 
-    if (baselineReplacementDropsEntries(scoped, A.length(entries), previousCount)) {
-      return yield* QualityTaskConfigurationError.new(
-        `Refusing to write ${coverageRegressionBaselinePath}: this run measured ${A.length(entries)} package(s) but the committed baseline records ${previousCount}. An unscoped regeneration replaces the document, so writing it would drop the ${previousCount - A.length(entries)} unmeasured entry(ies). Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead.`
+    if (!scoped) {
+      const workspaceNames = yield* workspaceCoveragePackages(repoRoot, path).pipe(
+        Effect.map(A.map((info) => info.name))
       );
+      const lost = baselineEntriesLostByReplacement(
+        pipe(previous, O.match({ onNone: A.empty<string>, onSome: (document) => R.keys(document.packages) })),
+        A.map(entries, (entry) => entry.packageName),
+        workspaceNames
+      );
+
+      if (A.isReadonlyArrayNonEmpty(lost)) {
+        return yield* QualityTaskConfigurationError.new(
+          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration replaces the document, and ${A.length(lost)} package(s) it records are still in the workspace but produced no coverage summary in this run, so their entries would be deleted: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
+        );
+      }
     }
 
     const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, scoped ? previous : O.none());
@@ -584,6 +632,17 @@ const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
  * apart: deleting covered code leaves it flat, losing coverage raises it. When
  * either side predates the count the percentage rule stands alone, which keeps
  * the stricter behaviour for baselines that have not been rewritten yet.
+ *
+ * Known blind spot. When the total does not shrink this is exact — coverage can
+ * only be lost by raising the uncovered count. When the total does shrink, a
+ * real regression can hide behind an exactly offsetting deletion: losing tests
+ * on five covered units while five unrelated uncovered units are deleted moves
+ * 60/100 to 55/95, which is byte-identical to simply deleting five covered
+ * units. Package-level totals cannot separate those two histories at all, so
+ * catching it would need per-file counts, which would grow the committed
+ * baseline by roughly the size of the repo. The trade is deliberate: a rare miss
+ * that needs a coincidental offset, in exchange for not failing every change
+ * that deletes tested code.
  *
  * @param metric - Metric being compared.
  * @param baseline - Committed entry for the package.

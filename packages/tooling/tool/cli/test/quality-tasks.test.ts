@@ -7,7 +7,7 @@ import {
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
-  baselineReplacementDropsEntries,
+  baselineEntriesLostByReplacement,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
   CoverageUncoveredCounts,
@@ -1441,16 +1441,27 @@ describe("quality task adapter", () => {
     expect(merged["@beep/untouched"]?.lines).toBe(70);
   });
 
-  it("refuses an unscoped baseline write that measured fewer packages than it would replace", () => {
-    // A scoped run merges, so a short snapshot is expected and harmless.
-    expect(baselineReplacementDropsEntries(true, 1, 121)).toBe(false);
-    // An unscoped run replaces, so a short snapshot deletes the difference.
-    expect(baselineReplacementDropsEntries(false, 1, 121)).toBe(true);
-    // A full run that covers everything, or a repo gaining packages, is fine.
-    expect(baselineReplacementDropsEntries(false, 121, 121)).toBe(false);
-    expect(baselineReplacementDropsEntries(false, 122, 121)).toBe(false);
+  it("names the live baseline entries an unscoped replacement would delete", () => {
+    const previous = ["@beep/a", "@beep/b", "@beep/c"];
+
+    // Unmeasured but still in the workspace: replacing would delete them.
+    expect(baselineEntriesLostByReplacement(previous, ["@beep/a"], previous)).toEqual(["@beep/b", "@beep/c"]);
+
+    // A full run loses nothing.
+    expect(baselineEntriesLostByReplacement(previous, previous, previous)).toEqual([]);
+
+    // @beep/c was deleted from the workspace, so pruning its entry is the point
+    // of an unscoped regeneration, not an accident.
+    expect(baselineEntriesLostByReplacement(previous, ["@beep/a", "@beep/b"], ["@beep/a", "@beep/b"])).toEqual([]);
+
+    // Equal counts are not equal sets: swapping one package for another measures
+    // the same number while still deleting @beep/c's entry.
+    expect(
+      baselineEntriesLostByReplacement(previous, ["@beep/a", "@beep/b", "@beep/d"], [...previous, "@beep/d"])
+    ).toEqual(["@beep/c"]);
+
     // First write, with nothing committed yet.
-    expect(baselineReplacementDropsEntries(false, 1, 0)).toBe(false);
+    expect(baselineEntriesLostByReplacement([], ["@beep/a"], ["@beep/a"])).toEqual([]);
   });
 
   it("builds the integration lane command with shared SQL environment", () => {
