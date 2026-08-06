@@ -49,7 +49,11 @@
     "research/p1-report-manifest-capabilities.md",
     "research/p1-report-skills-provenance.md",
     "research/p1-report-semantic-delta.md",
-    "research/p1-context-pruning-analysis.md"
+    "research/p1-context-pruning-analysis.md",
+    "research/p1-refs-tree-design.md",
+    "research/p1-bootstrap-adopt-plan-design.md",
+    "research/p1-fp-eyeball-verdicts.md",
+    "research/p1-t2-mini-grill-decisions.md"
   ],
   "agentLaunchers": [
     {
