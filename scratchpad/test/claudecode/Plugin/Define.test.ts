@@ -368,6 +368,27 @@ describe("Plugin.write — directory layout", () => {
 // ---------------------------------------------------------------------------
 
 describe("Plugin.write — errors", () => {
+  it.effect("rejects explicit entry paths that escape the plugin root", () =>
+    Effect.gen(function* () {
+      const fileSystem = Testing.makeMockFileSystem();
+      const def = Define.define({
+        manifest: { name: "p" },
+        commands: [
+          Define.command({
+            name: "escape",
+            path: "../outside.md",
+            body: "must stay contained\n",
+          }),
+        ],
+      });
+
+      const raised = yield* Effect.flip(Define.write(def, "/dest").pipe(Effect.provide(fileSystem.layer)));
+
+      expect(raised).toBeInstanceOf(PluginWriteError);
+      expect(fileSystem.snapshot().files.has("/outside.md")).toBe(false);
+    })
+  );
+
   it.effect("wraps FileSystem errors in PluginWriteError", () =>
     Effect.gen(function* () {
       const fileSystem = Testing.makeMockFileSystem(

@@ -91,6 +91,7 @@ const grant = S.decodeUnknownSync(ExecutionGrant)({
 const requestInput = {
   destination: "https://registry.example",
   operation: "ontology_publish_provenance",
+  principal: { component: "Runtime", kind: "System" },
   resolvedAudience: "external-network",
   sinkClass: "network-egress",
 } as const;
@@ -163,6 +164,11 @@ describe("ExecutionAuthority", () => {
           evaluationOptions(now, revision)
         ),
         "policy-revision-mismatch": evaluateExecutionRequest(frozen, request(), evaluationOptions(now, otherRevision)),
+        "principal-not-granted": evaluateExecutionRequest(
+          frozen,
+          request({ principal: { component: "Policy", kind: "System" } }),
+          evaluationOptions(now, revision)
+        ),
         "operation-not-granted": evaluateExecutionRequest(
           frozen,
           request({ operation: "ontology_delete_everything" }),
@@ -186,15 +192,18 @@ describe("ExecutionAuthority", () => {
         "grant-expired": evaluateExecutionRequest(frozen, request(), evaluationOptions(afterExpiry, revision)),
       };
 
-      expect(evaluatorDenialReasons.length).toBe(7);
+      expect(evaluatorDenialReasons.length).toBe(8);
       for (const reason of evaluatorDenialReasons) {
         expectDenied(verdictsByReason[reason], reason);
       }
     });
 
     it("fails closed: an operation absent from the set denies, never allows", () => {
-      const emptyFrozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0));
-      const verdict = evaluateExecutionRequest(emptyFrozen, request(), evaluationOptions(now, revision));
+      const verdict = evaluateExecutionRequest(
+        frozen,
+        request({ operation: "ontology_delete_everything" }),
+        evaluationOptions(now, revision)
+      );
 
       expectDenied(verdict, "operation-not-granted");
     });

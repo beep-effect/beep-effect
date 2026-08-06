@@ -45,7 +45,8 @@ const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
 /**
  * Normalizes a manifest-relative path to its unprefixed, untrailed form.
  *
- * @example
+ * **Example** (Normalize a component path)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -65,7 +66,8 @@ export const normalizeManifestPath = (value: string): string => {
 /**
  * Converts a normalized path into Claude Code's manifest-relative form.
  *
- * @example
+ * **Example** (Prefix a manifest path)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -209,7 +211,8 @@ const normalizedExperimentalSpec = (spec: O.Option<ExperimentalSpec>): O.Option<
 /**
  * Expands an optional manifest path specification into a path list.
  *
- * @example
+ * **Example** (Expand a path specification)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Plugin } from "effect-claudecode"
@@ -224,13 +227,40 @@ const normalizedExperimentalSpec = (spec: O.Option<ExperimentalSpec>): O.Option<
 export const pathSpecs = (spec: O.Option<string | ReadonlyArray<string>>): ReadonlyArray<string> =>
   O.match(spec, {
     onNone: () => [],
-    onSome: (specValue) => (typeof specValue === "string" ? [specValue] : specValue),
+    onSome: (specValue) => A.filter(typeof specValue === "string" ? [specValue] : specValue, isSafePluginPath),
   });
+
+/**
+ * Tests whether a plugin manifest path remains within the plugin root.
+ *
+ * **Example** (Reject path traversal)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * console.log(Plugin.Layout.isSafePluginPath("commands/review.md")) // true
+ * console.log(Plugin.Layout.isSafePluginPath("../secrets.txt")) // false
+ * ```
+ *
+ * @internal
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSafePluginPath = (value: string): boolean => {
+  const normalized = Str.replaceAll("\\", "/")(value);
+  return (
+    Str.isNonEmpty(normalized) &&
+    !Str.startsWith("/")(normalized) &&
+    !/^[A-Za-z]:\//u.test(normalized) &&
+    A.every(Str.split("/")(normalized), (segment) => segment !== "..")
+  );
+};
 
 /**
  * Tests whether a path names a Markdown file.
  *
- * @example
+ * **Example** (Recognize Markdown paths)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -246,7 +276,8 @@ export const isMarkdownFilePath = (path: string): boolean => Str.endsWith(".md")
 /**
  * Tests whether a path names a JSON file.
  *
- * @example
+ * **Example** (Recognize JSON paths)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -262,7 +293,8 @@ export const isJsonFilePath = (path: string): boolean => Str.endsWith(".json")(p
 /**
  * Tests whether a path names a canonical skill entry file.
  *
- * @example
+ * **Example** (Recognize skill entry paths)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -278,7 +310,8 @@ export const isSkillFilePath = (path: string): boolean => path === "SKILL.md" ||
 /**
  * Synchronizes manifest path fields with a plugin definition's materialized components.
  *
- * @example
+ * **Example** (Synchronize a manifest)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *

@@ -7,6 +7,7 @@ import {
   HookPulseNotificationType,
   HookPulseRawEvent,
   HookPulseV1,
+  HookPulseV1FromLegacyRecord,
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
 } from "@beep/repo-ai-metrics";
@@ -181,7 +182,9 @@ const permissionDenied = rawInput("2026-08-01T08:46:00.000Z", {
 });
 
 const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
+const encodeRawHookPulse = S.encodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
+const decodeHookPulseFromLegacy = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const decodeHookPulse = S.decodeUnknownEffect(HookPulseV1);
 const encodeHookPulse = S.encodeUnknownEffect(HookPulseV1);
 const encodeHookPulseToRaw = S.encodeUnknownEffect(HookPulseV1FromRawEvent);
@@ -189,6 +192,35 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
+  it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
+    Effect.gen(function* () {
+      const legacy = {
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T08:00:00.000Z",
+        sessionId: "legacy-session-id",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/legacy-checkout",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+        transcriptPath: "/tmp/legacy-session.jsonl",
+      };
+
+      const decoded = yield* decodeHookPulseFromLegacy(legacy);
+      const serialized = yield* S.encodeUnknownEffect(S.UnknownFromJsonString)(yield* encodeHookPulse(decoded));
+
+      expect(decoded).toBeInstanceOf(HookPulseV1);
+      expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
+      expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);
+      expect(O.getOrThrow(decoded.transcriptPath)).toMatch(/^[0-9a-f]{64}$/u);
+      expect(serialized).not.toContain(legacy.sessionId);
+      expect(serialized).not.toContain(legacy.cwd);
+      expect(serialized).not.toContain(legacy.transcriptPath);
+    })
+  );
+
   it("round-trips schema-derived arbitrary values", () => {
     const encode = S.encodeResult(HookPulseV1);
     const decode = S.decodeUnknownResult(HookPulseV1);
@@ -223,26 +255,42 @@ describe("HookPulseV1", () => {
     );
   });
 
-  it("derives a total wait reason for arbitrary raw events", () => {
-    const encodeRawEvent = S.encodeResult(HookPulseRawEvent);
-    const decodeFromRaw = S.decodeUnknownResult(HookPulseV1FromRawEvent);
-
-    fc.assert(
-      fc.property(S.toArbitrary(HookPulseRawEvent), (event) => {
-        const decoded = Result.getOrThrow(
-          decodeFromRaw({
-            ...baseRawInputFixture,
-            ts: "2026-08-01T08:00:00.000Z",
-            event: Result.getOrThrow(encodeRawEvent(event)),
-          })
-        );
+  it.effect("derives a total wait reason for arbitrary raw events", () =>
+    Effect.forEach(
+      fc.sample(S.toArbitrary(HookPulseRawEvent), { numRuns: 50, seed: 804 }),
+      Effect.fnUntraced(function* (event) {
+        const encodedEvent = yield* encodeRawHookPulse(event);
+        const decoded = yield* decodeHookPulseFromRaw({
+          ...baseRawInputFixture,
+          ts: "2026-08-01T08:00:00.000Z",
+          event: encodedEvent,
+        });
 
         expect(decoded.waitReason).toBeDefined();
         expect(isHookPulseWaitReason(decoded.waitReason)).toBe(true);
       }),
-      fcRuns(50)
-    );
-  });
+      { discard: true }
+    )
+  );
+
+  it.effect("pseudonymizes raw session and filesystem identifiers", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeHookPulseFromRaw(
+        rawInput("2026-08-01T08:00:00.000Z", {
+          hook_event_name: HookPulseEvent.Enum.Stop,
+        })
+      );
+      const encoded = yield* encodeHookPulse(decoded);
+      const serialized = yield* S.encodeUnknownEffect(S.UnknownFromJsonString)(encoded);
+
+      expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
+      expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);
+      expect(O.getOrThrow(decoded.transcriptPath)).toMatch(/^[0-9a-f]{64}$/u);
+      expect(serialized).not.toContain(baseRawEventFixture.session_id);
+      expect(serialized).not.toContain(baseRawEventFixture.cwd);
+      expect(serialized).not.toContain(baseRawEventFixture.transcript_path);
+    })
+  );
 
   it.effect(
     "derives the auto-approved control as none, never tool-permission",

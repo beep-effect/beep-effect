@@ -91,6 +91,7 @@ const proofSkillName = "beep-proof-ping";
 const proofSkillSource = "repo-local:infra/src/OpenClawArtifacts.ts";
 const proofSkillVersion = "1.0.0";
 const loopbackProviderBaseUrlPattern = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/.*)?$/u;
+const hostedProviderBaseUrlPattern = /^https:\/\/\S+$/u;
 
 const backupPassphraseEnvVar = "OPENCLAW_BACKUP_PASSPHRASE";
 const configFileName = "openclaw.json";
@@ -482,7 +483,14 @@ export class OpenClawHostedProviderConfig extends S.Class<OpenClawHostedProvider
 )(
   {
     apiKeyRef: OpenclawSecretReference,
-    baseUrl: S.NonEmptyString,
+    baseUrl: S.NonEmptyString.check(
+      S.isPattern(hostedProviderBaseUrlPattern, {
+        identifier: "OpenClawHostedProviderBaseUrl",
+        title: "OpenClaw hosted provider base URL",
+        description: "An HTTPS URL for a hosted provider endpoint.",
+        message: "Expected an HTTPS URL",
+      })
+    ),
     modelId: S.NonEmptyString,
     modelName: S.NonEmptyString,
     providerId: S.NonEmptyString,

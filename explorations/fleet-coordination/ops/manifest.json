@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "fleet-coordination",
+    "title": "Fleet Coordination For Parallel Agent Checkouts",
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "Does the derivation rung start now, or does the whole fleet-mirror packet wait for PR-I? MAP.md verified against main that AgentBrief, OwnershipClaim, and beep agent report list have zero source references, so ambient delivery (rung 2) is genuinely blocked — but worktree doctor, merge-tree, and /proc are all present, so derivation (rung 1) is not blocked by anything. This makes BRIEF.md's 'starting when PR-I merges' stronger than the evidence requires. Operator ruling required; it is the last condition standing between this packet and graduation."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-04",
+    "updated": "2026-08-05"
+  }
+}

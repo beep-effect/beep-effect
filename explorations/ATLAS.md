@@ -62,8 +62,26 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
   day), and the first wedge fully GRADUATED 2026-08-04 into
-  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md);
-  next: open `legal-position-relator-runtime` when Benjamin calls it.
+  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
+  (graduation PR #560 merged 2026-08-05); second wedge opened 2026-08-05
+  ([`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md),
+  carrying the contradiction-semantics cluster); next:
+  `patent-drafting-episode-ledger` and the FunctionalUnit extension on
+  Benjamin's call.
+- [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
+  capture-stage second wedge of the `legal-patent-kg-deepening` routing
+  matrix (opened 2026-08-05, after the candor wedge graduated): a closed
+  `HohfeldPosition` domain whose correlative pairs are one stored directed
+  relation with a derived opposite view, an identity-bearing n-ary
+  `LegalPositionRelator` aggregate over the live taxonomy /
+  bitemporal-edge / approval foundations, and authority-gated
+  `PowerExercise`/`ActFrame` transition events that keep attempted or
+  ineffective acts on record — carrying the re-routed legal-contradiction
+  vocabulary (`LegalScopeContext`, typed `PriorityBasis`, verdict families,
+  caller-owned `CorrectionDelta`) composed over
+  `goals/epistemic-contradiction-triage` without widening it; FLINT/UFO-L
+  donors (`P100`/`R25`) stay study-only until the research lane verifies
+  them.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
@@ -80,6 +98,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
+- [`fleet-coordination`](./fleet-coordination/README.md) — decompose-stage: ~13
+  agent checkouts on one workstation duplicating each other’s fixes and rotting
+  each other’s in-flight PRs. Research verdict is a derived **mirror**, not a
+  message board — derive early, deliver ambiently, enforce late — shipped
+  through the reserved `AgentBrief.fleet` field. `MAP.md` names one packet
+  (`fleet-mirror`) and splits it into a derivation rung that is unblocked today
+  and a delivery rung gated on PR-I, after verifying against `main` that
+  `AgentBrief`/`OwnershipClaim` do not exist yet. Grill #1
+  locked D1–D5 and disposed four questions; en route it killed `law-pulse.sh`
+  ever reaching the model (fixed here), `beep yeet` being a gate, `flock`
+  releasing on holder death, and merge queue at this repo’s measured shape (19%
+  main gauntlet pass rate).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   capture-stage: bind model qualification to the exact model, adapter,
   modality, prompt, wrapper, decoding configuration, and artifact digest —

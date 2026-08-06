@@ -5,11 +5,13 @@
  * @since 0.0.0
  */
 
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -472,19 +474,34 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const canonicalRepoRoot = yield* fs
+    .realPath(repoRoot)
+    .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Failed to resolve repository root.")));
   const changedSinceBase = yield* collectChangedPathsSinceBase(repoRoot, "origin/main...HEAD", jsdocGitErrorAdapter);
   const dirty = yield* collectDirtyPaths(repoRoot, jsdocGitErrorAdapter);
   const touchedSourceFiles = A.filter(sortedUniquePaths(A.appendAll(changedSinceBase, dirty)), isPackageSourceFile);
-  const existingSourceFiles = yield* Effect.filter(touchedSourceFiles, (filePath) =>
-    fs
-      .exists(path.join(repoRoot, filePath))
-      .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to inspect ${filePath}.`)))
-  );
+  const existingSourceFiles = yield* Effect.filter(touchedSourceFiles, (filePath) => {
+    const candidate = path.resolve(canonicalRepoRoot, filePath);
+    return resolvePathWithinCanonicalRoot({ canonicalRoot: canonicalRepoRoot, candidate: filePath }).pipe(
+      Effect.filterOrFail(
+        (canonical) => Eq.equals(candidate, canonical),
+        () =>
+          QualityScriptCommandError.make({
+            message: `Refused linked changed source path ${filePath}.`,
+            command: "bun run beep quality jsdoc-ratchet",
+            exitCode: 1,
+          })
+      ),
+      Effect.flatMap((canonical) => fs.stat(canonical)),
+      Effect.map((info) => Eq.equals(info.type, "File")),
+      Effect.orElseSucceed(() => false)
+    );
+  });
 
   return yield* Effect.forEach(
     existingSourceFiles,
     (filePath) =>
-      fs.readFileString(path.join(repoRoot, filePath)).pipe(
+      fs.readFileString(path.join(canonicalRepoRoot, filePath)).pipe(
         Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
         Effect.map((sourceText) => {
           if (hasGeneratedFileHeader(sourceText)) {

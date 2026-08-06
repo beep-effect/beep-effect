@@ -882,6 +882,51 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
+  it("dedupes sources across bounded preparation chunks", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+
+          yield* Effect.forEach(A.range(0, 15), (index) =>
+            fs.writeFileString(path.join(datasetDir, `${Str.padStart(2, "0")(`${index}`)}.txt`), `source-${index}`)
+          );
+          yield* fs.writeFileString(path.join(datasetDir, "16.txt"), "source-0");
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "test",
+            "--failure-policy",
+            "continue",
+          ]);
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter(Str.isNonEmpty)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const representative = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "00.txt"));
+          const duplicate = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "16.txt"));
+
+          expect(sourceRecords).toHaveLength(17);
+          expect(representative.status).toBe("succeeded");
+          expect(duplicate.status).toBe("skipped");
+          expect(duplicate.artifactId).toBe(representative.artifactId);
+        })
+      )
+    ));
+
   it("translates an unreachable Tika Server into skipped engine-unavailable records", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>

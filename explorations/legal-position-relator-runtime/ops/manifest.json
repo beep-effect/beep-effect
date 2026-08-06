@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "legal-position-relator-runtime",
+    "title": "Legal Position Relator Runtime",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "[T1-F1,T1-F2,T1-F9] Full Hohfeld scheme + correlative bimap + n-ary relator in V1, or scheme-first? (parent HANDOFF align question 1)",
+      "Where does the Hohfeld position/relator vocabulary live - packages/law-practice/domain beside the patent entities, or a separate legal consumer core package? (campaign constraint: legal vocabulary stays in a legal consumer domain)",
+      "[T4-F6] Which Party-Role/position states remain generic in the agents runtime vs legal-owned? (parent HANDOFF align question 17, this wedge's half)",
+      "[T4-F8] What generic CorrectionDelta emission shape keeps ODRL and other caller vocabularies caller-owned? (parent HANDOFF align question 18)",
+      "[P100,R25] Do FLINT act/fact frames and SlotCorrespondence pass verification for adoption, and what does the MPL-2.0 clean-room boundary permit? (research-stage gate, not align)"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-05",
+    "updated": "2026-08-05"
+  }
+}

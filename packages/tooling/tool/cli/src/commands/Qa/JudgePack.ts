@@ -16,11 +16,13 @@
  */
 
 import { FFmpeg, ProbeVideoRequest } from "@beep/ffmpeg";
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ClockSync, END_SEEK_GUARD_SECONDS, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, Match, Number as N, Order, Path, pipe } from "effect";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -34,12 +36,13 @@ const $I = $RepoCliId.create("commands/Qa/JudgePack");
 /**
  * Total byte budget of one judge evidence bundle.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JUDGE_TOTAL_BUDGET_BYTES } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * console.log(JUDGE_TOTAL_BUDGET_BYTES) // 8388608
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -48,12 +51,13 @@ export const JUDGE_TOTAL_BUDGET_BYTES = 8 * 1024 * 1024;
 /**
  * Per-file byte ceiling of one judge evidence bundle.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JUDGE_PER_FILE_BUDGET_BYTES } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * console.log(JUDGE_PER_FILE_BUDGET_BYTES) // 409600
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -62,12 +66,13 @@ export const JUDGE_PER_FILE_BUDGET_BYTES = 400 * 1024;
 /**
  * Repo-relative path of the committed judge prompt template.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JUDGE_PROMPT_TEMPLATE } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * console.log(JUDGE_PROMPT_TEMPLATE.endsWith("judge-prompt.md")) // true
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -76,12 +81,13 @@ export const JUDGE_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/resources/j
 /**
  * Evidence classes a judge bundle can list, in descending keep priority.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeEvidenceKind } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * console.log(JudgeEvidenceKind.Options.length) // 3
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -94,13 +100,14 @@ export const JudgeEvidenceKind = LiteralKit(["frame", "screenshot", "sheet"]).pi
 /**
  * Evidence class of one bundled file.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { JudgeEvidenceKind } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * const kind: JudgeEvidenceKind = "sheet"
  * console.log(kind)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -109,13 +116,14 @@ export type JudgeEvidenceKind = typeof JudgeEvidenceKind.Type;
 /**
  * One file the judge is instructed to open.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeEvidenceFile } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * const file = JudgeEvidenceFile.make({ bytes: 180_000, kind: "frame", path: "frames/drag-w0-0001.png" })
  * console.log(file.path)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -145,7 +153,7 @@ export class JudgeEvidenceFile extends S.Class<JudgeEvidenceFile>($I`JudgeEviden
 /**
  * One file omitted from the bundle, with the budget rule that omitted it.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeDroppedFile } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
@@ -156,6 +164,7 @@ export class JudgeEvidenceFile extends S.Class<JudgeEvidenceFile>($I`JudgeEviden
  * })
  * console.log(dropped.reason)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -185,13 +194,14 @@ export class JudgeDroppedFile extends S.Class<JudgeDroppedFile>($I`JudgeDroppedF
 /**
  * Outcome of fitting evidence candidates into the judge byte budget.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeEvidenceSelection } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
  * const selection = JudgeEvidenceSelection.make({ dropped: [], files: [] })
  * console.log(selection.files.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -216,7 +226,7 @@ export class JudgeEvidenceSelection extends S.Class<JudgeEvidenceSelection>($I`J
 /**
  * Placeholder values substituted into the committed judge prompt template.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgePromptValues } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
@@ -228,6 +238,7 @@ export class JudgeEvidenceSelection extends S.Class<JudgeEvidenceSelection>($I`J
  * })
  * console.log(values.surface) // "dock"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -262,7 +273,7 @@ export class JudgePromptValues extends S.Class<JudgePromptValues>($I`JudgePrompt
 /**
  * The exact evidence set handed to one judge run.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeManifest } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
@@ -275,6 +286,7 @@ export class JudgePromptValues extends S.Class<JudgePromptValues>($I`JudgePrompt
  * })
  * console.log(manifest.round) // 3
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -335,13 +347,14 @@ const LegacyManifestJson = S.fromJsonString(LegacyManifest);
 /**
  * Legacy screenshot-harness manifest, when the round produced one.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { readLegacyManifest } from "@beep/repo-cli/commands/Qa/JudgePack"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readLegacyManifest("/repo/.beep/qa/round-1/manifest.json"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -399,7 +412,7 @@ const eventLine = (event: ActionEvent, toVideo: (epochMs: number) => number): st
 /**
  * Everything {@link renderTimeline} needs to place one round on the video clock.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ClockSync } from "@beep/qa-capture"
  * import { RenderTimelineOptions } from "@beep/repo-cli/commands/Qa/JudgePack"
@@ -421,6 +434,7 @@ const eventLine = (event: ActionEvent, toVideo: (epochMs: number) => number): st
  * })
  * console.log(options.round) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -494,9 +508,8 @@ const scenarioNotesFor = (name: string, legacy: O.Option<typeof LegacyManifest.T
  * timeline segments exactly the way the harness did — no re-derivation, no
  * guessing.
  *
- * @param options - Round number, witness events, clock sync, video duration, and legacy manifest.
- * @returns Markdown body of the round timeline in video seconds.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { ClockSync } from "@beep/qa-capture"
  * import { renderTimeline } from "@beep/repo-cli/commands/Qa/JudgePack"
@@ -519,6 +532,9 @@ const scenarioNotesFor = (name: string, legacy: O.Option<typeof LegacyManifest.T
  * })
  * console.log(timeline.startsWith("# Round 2 timeline")) // true
  * ```
+ *
+ * @param options - Round number, witness events, clock sync, video duration, and legacy manifest.
+ * @returns Markdown body of the round timeline in video seconds.
  * @category formatting
  * @since 0.0.0
  */
@@ -564,7 +580,7 @@ export const renderTimeline = (options: RenderTimelineOptions): string => {
 /**
  * Render `judge/prompt.md` from the committed template.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { renderJudgePrompt } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
@@ -576,6 +592,7 @@ export const renderTimeline = (options: RenderTimelineOptions): string => {
  * })
  * console.log(rendered.includes("{{ROUND}}")) // false
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -608,7 +625,7 @@ const keepPriority = (kind: JudgeEvidenceKind, green: boolean): number =>
  * passing static shot proves the least about motion; nothing under `clips/` or
  * `video/` is ever a candidate.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { JudgeEvidenceFile, selectJudgeEvidence } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
@@ -618,6 +635,7 @@ const keepPriority = (kind: JudgeEvidenceKind, green: boolean): number =>
  * )
  * console.log(selection.dropped[0].reason) // "per-file-budget"
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -677,13 +695,27 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
 ): Effect.fn.Return<ReadonlyArray<JudgeEvidenceFile>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // fallow-ignore-next-line code-duplication -- judge-pack assembles typed image evidence while judge-check resolves cited paths after the same mandatory root guard
+  const canonicalRoot = yield* fs.realPath(layout.root).pipe(Effect.orElseSucceed(() => path.resolve(layout.root)));
 
   const listImages = Effect.fn("QaJudgePack.listImages")(function* (dir: string, kind: JudgeEvidenceKind) {
     const entries = yield* fs.readDirectory(dir).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []));
     const images = A.filter(entries, (entry) => A.contains(IMAGE_EXTENSIONS, Str.toLowerCase(path.extname(entry))));
     return yield* Effect.forEach(images, (entry) => {
       const absolute = path.join(dir, entry);
-      return fs.stat(absolute).pipe(
+      return resolvePathWithinCanonicalRoot({
+        canonicalRoot,
+        candidate: path.relative(canonicalRoot, absolute),
+      }).pipe(
+        Effect.filterOrFail(
+          (canonical) => Eq.equals(path.resolve(absolute), canonical),
+          () => QaCommandError.make({ message: `qa judge-pack refused linked evidence path "${absolute}".` })
+        ),
+        Effect.flatMap((canonical) => fs.stat(canonical)),
+        Effect.filterOrFail(
+          (info) => Eq.equals(info.type, "File"),
+          () => QaCommandError.make({ message: `qa judge-pack refused non-file evidence path "${absolute}".` })
+        ),
         Effect.map((info) =>
           O.some(
             JudgeEvidenceFile.make({
@@ -797,7 +829,7 @@ const requireClockSync = (manifest: SessionManifest): Effect.Effect<ClockSync, Q
 /**
  * Build a round's `judge/` bundle.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { runQaJudgePack } from "@beep/repo-cli/commands/Qa/JudgePack"
  * import { QaJudgePackOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -807,6 +839,7 @@ const requireClockSync = (manifest: SessionManifest): Effect.Effect<ClockSync, Q
  * const options = QaJudgePackOptions.make({ round: 3, surface: O.none() })
  * console.log(Effect.isEffect(runQaJudgePack("/repo", options))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

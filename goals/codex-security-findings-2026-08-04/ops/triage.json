@@ -1,0 +1,789 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=open",
+    "branch": "security/codex-findings-2026-08-04",
+    "expectedCount": 27,
+    "capturedCount": 27,
+    "capturedAt": "2026-08-04",
+    "captureMethod": "signed-in-chrome-control-and-csv-export",
+    "note": "All 27 findings confirmed at current HEAD and remediated; combined follow-up Yeet proof is pending."
+  },
+  "lanes": {
+    "L1-bounded-file-ingestion": {
+      "status": "implemented",
+      "findings": [
+        "CSF-001",
+        "CSF-002",
+        "CSF-005",
+        "CSF-006",
+        "CSF-008",
+        "CSF-010",
+        "CSF-012",
+        "CSF-019",
+        "CSF-022"
+      ]
+    },
+    "L2-openclaw-boundaries": {
+      "status": "implemented",
+      "findings": ["CSF-003", "CSF-004"]
+    },
+    "L3-ontology-governance": {
+      "status": "implemented",
+      "findings": ["CSF-007", "CSF-011", "CSF-016", "CSF-020"]
+    },
+    "L4-privacy-and-provenance": {
+      "status": "implemented",
+      "findings": ["CSF-015", "CSF-017", "CSF-018", "CSF-025"]
+    },
+    "L5-tooling-and-config": {
+      "status": "implemented",
+      "findings": [
+        "CSF-009",
+        "CSF-013",
+        "CSF-014",
+        "CSF-021",
+        "CSF-023",
+        "CSF-024",
+        "CSF-026",
+        "CSF-027"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "d2b9e11e8550819193516057a336ff90",
+      "title": "Unbounded source resolution enables sidecar memory DoS",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "244529aa4f560421cd096c2a4a4cb3cd21923070",
+      "ownerArea": "epistemic contradiction source paging / workspace source resolver",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts",
+          "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "af5e596282f08191a31e5dc24d6fb1a8",
+      "title": "QA judge manifests can follow symlinks outside the round",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "c21fb7bb6a5a93fa3e4e917b872f169a8e7ef0a4",
+      "ownerArea": "repo-cli QA judge pack/check",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+          "packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "3319c83663408191ac6a0a2b09d5e187",
+      "title": "Hosted provider URLs allow plaintext HTTP",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "c83514a0f9a97c4155aa792e8fb493ff3441f4dd",
+      "ownerArea": "OpenClaw hosted provider configuration",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L2-openclaw-boundaries",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "infra/src/OpenClaw.ts",
+          "packages/drivers/openclaw/src/OpenclawIntent.models.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "831a0b829e3081919caf4168528af1a9",
+      "title": "Agent prompts and session keys exposed via process argv",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "3dbf2d277b2c2a7b82f7c901cb95e5826af67af5",
+      "ownerArea": "OpenClaw CLI process boundary",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L2-openclaw-boundaries",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/drivers/openclaw/src/Openclaw.models.ts",
+          "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+          "packages/drivers/openclaw/src/internal/spawn.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "f72e298b753081919b7a2760ed5754f9",
+      "title": "Claims batch follows symlinks and can leak local files",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "bc322e025719899d1e63d1893586dffc21b58929",
+      "ownerArea": "practice KG claims batch",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/server/src/PracticeKg.claims.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "99db98d3666481919207438e60321619",
+      "title": "KG build follows corpus symlinks into local files",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "09500f41acfdf46c2b7fea4acd5396fb306f4486",
+      "ownerArea": "practice KG email corpus ingestion",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/server/src/PracticeKg.emails.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "8b302540f72881919dc8173b2153eaa7",
+      "title": "Mutation-off MCP can publish workspace TTL files",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "fb2185154f66285ab5ae27a99bd0093dbec13e27",
+      "ownerArea": "professional desktop ontology MCP publication",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-ontology-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "apps/professional-desktop/server/OntologyMcpTransport.ts",
+          "packages/ontology/use-cases/src/tools/OntologyToolkit.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "0baee9d15f7c8191b3057ebfb17a436f",
+      "title": "Digest-to-extraction TOCTOU in files process",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "8ac2d956b50c742bf59c15763cf0580acf75d866",
+      "ownerArea": "repo-cli files process / Tika / libpff",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/Process.ts",
+          "packages/drivers/tika/src/Tika.tikaapp.ts",
+          "packages/drivers/libpff/src/Libpff.pffexport.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "5ea0535e568c8191a8d1919b5fd90a24",
+      "title": "Gitleaks allowlist can hide 64-hex API tokens",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "44b0c974556ae08936a41e77f914a9a6cd1ec893",
+      "ownerArea": "gitleaks configuration",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [".gitleaks.toml"],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "ef1d789bde688191bfb2b03e5d78a8ce",
+      "title": "Image audit can be DoSed by large image sets",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "b87809a6f092b3ba9e6bf42698f4de96f601bb05",
+      "ownerArea": "repo-cli image curation",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "1763c86c9618819197a6903bb278f397",
+      "title": "MCP mutation tools are auto-approved when registered",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "d2c2bc29ca4fbfd898c6a2e6c18a31e0952751d5",
+      "ownerArea": "professional desktop ontology MCP approval policy",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-ontology-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "apps/professional-desktop/server/OntologyMcpTransport.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "16f4c5222e84819197116842375028a9",
+      "title": "Tika Server engine trusts arbitrary file locators",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "a8a2ea56fd338e7d34ffa18285815b0fd05a52df",
+      "ownerArea": "Tika Server driver file boundary",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": ["packages/drivers/tika/src/Tika.server.ts"],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "053d6b3fc3648191adb2270241662919",
+      "title": "PGlite extension loaded from poisonable temp path",
+      "severity": "Medium",
+      "codexStatus": "Open",
+      "commit": "d117ecf26d9aca68f5e9e32536b852df64e940cf",
+      "ownerArea": "professional desktop PGlite extension materialization",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": ["apps/professional-desktop/src/runtime/Pglite.ts"],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-014",
+      "codexId": "e9b33d85f22c81919c908fa58c0d8ac3",
+      "title": "Changed-file JSDoc ratchet follows untrusted symlinks",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "c93cf5ccf74f90b80bda673989f61f6a4b038411",
+      "ownerArea": "repo-cli JSDoc ratchet",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-015",
+      "codexId": "65eee18a4bc881919ebf910a265e43ed",
+      "title": "Hook-pulse schema leaks raw local paths",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "d711f6353bf24c63c77459d937432a2c170fe930",
+      "ownerArea": "AI metrics hook-pulse telemetry",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-privacy-and-provenance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/library/ai-metrics/src/hook-pulse.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-016",
+      "codexId": "0913c3d234e481918df4ee2751dcc549",
+      "title": "Unvalidated language tags allow Turtle triple injection",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "d24237344ba2dfd596159eb8dd517de8d0d14a5d",
+      "ownerArea": "ontology fold Turtle projection",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-ontology-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/foundation/modeling/ontology/src/Fold.models.ts",
+          "packages/foundation/modeling/ontology/src/Fold.assembly.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-017",
+      "codexId": "7b0609d3c9548191a4d84c3971ea8643",
+      "title": "Migration erases usage Activity provenance",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "cbd8df46b3ffce94d1b52807c169383c09bbf841",
+      "ownerArea": "professional desktop generated migrations",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-privacy-and-provenance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/_internal/db-admin/drizzle/20260801021411_usage_record_optional_activity/migration.sql",
+          "apps/professional-desktop/src/runtime/Migrations.gen.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-018",
+      "codexId": "7924950d073081919e5e056be406d46f",
+      "title": "kg_provenance leaks local bundle filesystem path",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "d8c3370c3a1665befe14ea7ab46c5fc0e1df6988",
+      "ownerArea": "practice KG MCP provenance projection",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-privacy-and-provenance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/server/src/PracticeKg.tool-handlers.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-019",
+      "codexId": "f24f047643048191a333623641ef7895",
+      "title": "Unbounded PST EML assembly can exhaust memory",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "ad0f7ab3d3eba05fea901199f4a72e2ee570d69d",
+      "ownerArea": "libpff materialization",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": ["packages/drivers/libpff/src/Libpff.pffexport.ts"],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-020",
+      "codexId": "65d01b70a1cc81919b4f00cc7d744755",
+      "title": "Execution grants ignore principal during authorization",
+      "severity": "Low",
+      "codexStatus": "Open",
+      "commit": "8c022633c942c29f4c8740d1285e6f2ed956a69c",
+      "ownerArea": "epistemic execution authority evaluator",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-ontology-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts",
+          "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-021",
+      "codexId": "90b96433d96c81918c7e867e6e9d78c7",
+      "title": "CodeMode sparse arrays can bypass execution bounds",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "f9b8aaac15e5c02bf609b278936d44594ff024e3",
+      "ownerArea": "scratchpad CodeMode result normalization",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": ["scratchpad/codemode/Codemode.tool-runtime.ts"],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-022",
+      "codexId": "e00ccb2a1044819196ebb84bafa91c0f",
+      "title": "Claims batch can falsely succeed with zero extractions",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "2c3e146dfb1dc03f07a31b1546b6c9d717252bba",
+      "ownerArea": "practice KG claims batch outcome",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-bounded-file-ingestion",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/server/src/PracticeKg.claims.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-023",
+      "codexId": "6ffbd2b6fd208191bd3140d99ffee6b8",
+      "title": "Script text can spoof the new test-typecheck lint",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "fec4e680357f74bcdd578fce4df060d43bd49b51",
+      "ownerArea": "repo-cli package test typecheck lint",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-024",
+      "codexId": "04117d2666c48191b50db02f4b0b9da3",
+      "title": "Plugin writer allows manifest path traversal",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "70938f4f697c83c52e6976d8f799364c70d6fb9f",
+      "ownerArea": "scratchpad Claude plugin loader/writer",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "scratchpad/claudecode/Plugin/Layout.ts",
+          "scratchpad/claudecode/Plugin/Define.ts"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-025",
+      "codexId": "bb50ed3b1e808191aa2efaa6225c3ae3",
+      "title": "Absolute local paths leaked in research catalog",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "183b3b8aaee446c589bb9b6d9125f447c04a2e49",
+      "ownerArea": "academia corpus research catalog",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-privacy-and-provenance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "explorations/academia-corpus-mining/research/paper-catalog.jsonl"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-026",
+      "codexId": "514fe6ca4290819185d59a0b38b0a33e",
+      "title": "Goal packet verification fails on trailing whitespace",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "20f4f600844cc38952685a9feb4020ade4f21a0b",
+      "ownerArea": "openclaw workstation goal packet",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "goals/openclaw-workstation-agent/history/2026-07-25-adversarial-packet-review.md"
+        ],
+        "verificationCommands": [
+          "targeted package check",
+          "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-027",
+      "codexId": "cbe85d133e408191bc0ca9e0643905d9",
+      "title": "Unescaped PR comments printed to terminal",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "aee2664b91d163cd7481eb16b0c5a485c092f5c2",
+      "ownerArea": "repo-cli Yeet monitor comment renderer",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+          "packages/tooling/tool/cli/test/yeet.test.ts"
+        ],
+        "verificationCommands": [
+          "targeted Yeet monitor regression test",
+          "targeted repo-cli check",
+          "repo-cli coverage ratchet",
+          "bun run beep yeet verify"
+        ]
+      }
+    }
+  ]
+}

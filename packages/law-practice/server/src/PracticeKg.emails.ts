@@ -5,11 +5,13 @@
  * @since 0.0.0
  */
 
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { parseOutlookHeaders, rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as Str from "effect/String";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { stripPrefix } from "./PracticeKg.rows.ts";
@@ -53,7 +55,8 @@ const archiveDigestFromDirectory = flow(
 );
 
 const walkForHeaderFiles = Effect.fn("PracticeKg.walkForHeaderFiles")(function* (
-  root: string
+  root: string,
+  canonicalRoot: string
 ): Effect.fn.Return<ReadonlyArray<string>, PracticeKgProjectionError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -64,13 +67,20 @@ const walkForHeaderFiles = Effect.fn("PracticeKg.walkForHeaderFiles")(function* 
     A.sort(entries, Order.String),
     Effect.fnUntraced(function* (entry) {
       const absolute = path.join(root, entry);
+      const canonical = yield* resolvePathWithinCanonicalRoot({
+        canonicalRoot,
+        candidate: path.relative(canonicalRoot, absolute),
+      }).pipe(PracticeKgProjectionError.mapError(`Failed resolving "${absolute}".`));
+      if (!Eq.equals(path.resolve(absolute), canonical)) {
+        return A.empty<string>();
+      }
       const info = yield* fs
-        .stat(absolute)
+        .stat(canonical)
         .pipe(PracticeKgProjectionError.mapError(`Failed inspecting "${absolute}".`));
       if (info.type === "Directory") {
-        return yield* walkForHeaderFiles(absolute);
+        return yield* walkForHeaderFiles(canonical, canonicalRoot);
       }
-      return entry === "OutlookHeaders.txt" ? A.of(absolute) : A.empty<string>();
+      return info.type === "File" && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
     })
   );
   return A.flatten(children);
@@ -92,7 +102,10 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
   if (archiveInfo.type !== "Directory") {
     return A.empty();
   }
-  const headerPaths = yield* walkForHeaderFiles(archiveRoot);
+  const canonicalArchiveRoot = yield* fs
+    .realPath(archiveRoot)
+    .pipe(PracticeKgProjectionError.mapError(`Failed resolving email archive export "${archiveRoot}".`));
+  const headerPaths = yield* walkForHeaderFiles(canonicalArchiveRoot, canonicalArchiveRoot);
   return yield* Effect.forEach(
     A.sort(headerPaths, Order.String),
     Effect.fnUntraced(function* (headersPath) {
@@ -103,7 +116,17 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
         .readFileString(headersPath)
         .pipe(PracticeKgProjectionError.mapError(`Failed reading "${headersPath}".`));
       const recipientsPath = path.join(messageDir, "Recipients.txt");
-      const recipientsText = yield* fs.readFileString(recipientsPath).pipe(Effect.orElseSucceed(() => ""));
+      const recipientsText = yield* resolvePathWithinCanonicalRoot({
+        canonicalRoot: canonicalArchiveRoot,
+        candidate: path.relative(canonicalArchiveRoot, recipientsPath),
+      }).pipe(
+        Effect.filterOrFail(
+          (canonical) => Eq.equals(path.resolve(recipientsPath), canonical),
+          () => PracticeKgProjectionError.make({ message: `Refused linked recipients file "${recipientsPath}".` })
+        ),
+        Effect.flatMap((canonical) => fs.readFileString(canonical)),
+        Effect.orElseSucceed(() => "")
+      );
       const headers = parseOutlookHeaders(headersText);
       return PracticeKgEmailHeaderRow.make({
         archiveDigest,
@@ -127,13 +150,14 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
 /**
  * Parse all pffexport message directories into deterministic headers-only rows.
  *
- * @remarks
+ * **Details**
+ *
  * A missing `childrenRoot` yields an empty array rather than a failure, so a
  * corpus with no mail archives needs no special-casing at the call site. Message
  * bodies are never opened — only headers — which is what keeps the pass cheap
  * and its output stable across reruns.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import * as BunServices from "@effect/platform-bun/BunServices"
  * import { Effect } from "effect"
