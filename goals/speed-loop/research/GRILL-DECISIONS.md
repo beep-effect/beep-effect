@@ -363,8 +363,13 @@ decisions close them:
     moving HEAD ahead of the plan's safety facts would violate the rails,
     and no 7th step id is added for single-pass. (e) Failed commands
     report as `skipped` with the failure text — `SweepStepOutcome` has no
-    failure member by design; only permission-denial remote deletions
-    become `needs-operator`.
+    failure member by design. Review-hardened on #571 (round 5): for the
+    REMOTE deletion specifically, the only benign rejection is git's
+    stale-lease phrase (a concurrent update the re-run absorbs); every
+    other failure routes to `needs-operator` carrying the exact leased
+    command — the sweep cannot fix a server-side refusal by re-running,
+    and burying it in a skip bypassed the #53a batched handoff. The
+    permission-marker list refines the reason text, never the routing.
 46. **Reply engine design calls — RATIFIED (all seven).** `isOutdated` is
     NOT stale — an outdated thread is still open and still blocks merge;
     only `isResolved` settles as stale (schema JSDoc narrowed to match in

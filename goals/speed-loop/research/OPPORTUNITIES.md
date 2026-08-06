@@ -732,6 +732,67 @@ excerpt, path, line, and commentDatabaseId.
     fix wave copy-pasted it twice more because file ownership forbade a
     shared helper.
 
+73. **Yeet's push step should detect an already-MERGED PR.** (Lived,
+    2026-08-06: PR #569 was merged while the leased-deletion commit's
+    publish was mid-proof; the publish then pushed a proven commit onto a
+    branch whose PR was closed — landing it in no PR. GitHub had even
+    auto-deleted the branch; the push silently recreated it.) Before
+    pushing, publish should read the branch PR's state: MERGED → stop and
+    route to a fresh `gh pr create` for the unmerged tail (same branch is
+    fine — the second PR carries exactly the unmerged commits). Recovery
+    that worked: let the proof finish, `gh pr create` from the same
+    branch (#571). Kin to #61 (flag-path semantics) and the merge loop's
+    own CAS family.
+74. **Stale-base overlap has two classes; the guard should name which.**
+    (Both lived 2026-08-06, opposite verdicts.) Class A — self-overlap
+    from a continuation branch's own squash merge (#571 second commit):
+    the "changed on origin/main" files were changed by THIS branch's own
+    #569 merge; bypass-safe, `--allow-stale-base` correct, and a rebase
+    rewrites history for zero content change. Widget: patch-id
+    comparison (or resolving the overlapping main commits to this
+    branch's merged PR) auto-exempts it. Class B — overlap in whole-repo
+    generated aggregates (parallel session, same day): goals/INDEX.md
+    predated two new packets on main, and bypassing would have REVERTED
+    their entries; the correct move is rebase + regenerate on the merged
+    tree — ledger #60's doctrine, whose first evidence arrived through
+    the stale-base guard rather than a merge conflict. Discriminator:
+    is the overlapping path in #60's generated-path → regenerate-command
+    map? Generated → regenerate, never bypass; self-squash source overlap
+    → bypass.
+75. **Fail-fast preflight lane battery, ordered by empirical failure
+    frequency.** Three independent datasets in one week show the same
+    shape: (a) a parallel checkout burned 4 of 5 ~17-minute proof cycles
+    on repo-level gates package checks cannot see (test-file effect
+    laws, goals-doctor reflection validation, jsdoc cleanup-on-touch,
+    schema-first inventory); (b) this session's #569/#571 gauntlet — five
+    serial publish failures (fallow introduced-duplication, schema-first
+    exported-interface, eslint jsdoc warnings, jsdoc-ratchet
+    cleanup-on-touch, stale base), each discovered at 7–15 minutes;
+    (c) the PR-E fix wave's "vitest+tsgo+biome green" leaving 31 lint
+    findings for the integrator. Doctrine: package-level
+    `check && lint && test` is structurally weak here — the quality
+    surface is repo-level. Widget: a `beep preflight` battery running the
+    historically-failing cheap lanes fail-fast-first (schema-first, jsdoc
+    family, effect laws incl. test files, goals-doctor, fallow audit —
+    seconds-to-a-minute each), ordered by these observed frequencies
+    (decision 41's measure-first law, now with real measurements).
+    Vehicle: PR-G — and it reshapes decision 40: the pre-push hook's fast
+    tier should BE this battery, which is what makes fail-closed wiring
+    affordable. Ordering (amended on the parallel session's per-cycle
+    data): observed failure frequency decides which lanes are IN the
+    battery; COST ASCENDING decides the order — their cheapest gates
+    (goals-doctor, changeset-status) were discovered in cycles 4 and 1,
+    so a cost-ascending battery surfaces them in its first seconds.
+    Confirmed additional member: `beep quality test-tsgo` — package
+    tsconfigs `include: ["src"]`, so a package's own check never
+    typechecks its tests; their TS2551 (`Order.string` vs `Order.String`)
+    left sort comparators undefined at runtime while 19 tests passed —
+    the silent-vacuity class, structurally invisible at package level
+    (fix pattern on record: per-package tsconfig.test.json +
+    beep:check:tests). Riders: #52 briefs must name repo-level lanes,
+    never package scripts; interim doctrine = run the specific lanes
+    before any full verify.
+
 PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
 wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
 findings should anchor on SYMBOL NAMES, not line numbers — three of four
