@@ -116,6 +116,40 @@ applied to the wrong block is well-formed prose in a valid section and passes ev
 §5.3. That is why SPEC §7 gained a dedicated verification row: `extract` must fail loudly on a
 duplicate anchor rather than resolving it silently.
 
+### Amendment 2026-08-06 — ordinals are not stable under reorder
+
+The first version of D5b said ordinals shift only when a same-named declaration is added or
+removed ahead of a block. **Reordering** shifts them too, and it is the worst case: the anchor set
+is unchanged and the record count still matches, so nothing about the data's shape looks wrong
+while a frozen title binds to a different block. Both reviewers on PR #581 caught it (Greptile P2,
+clawhole `reliability`) within an hour of D5b landing.
+
+Because `titles.jsonl` and `overrides.jsonl` freeze when P3 opens, a later `extract` renumber can
+mis-bind silently. Anchor uniqueness alone is therefore not sufficient — it makes each anchor
+resolve to one block within a single `extract`, but says nothing about whether a *frozen* record
+still belongs to the block its anchor now names.
+
+**Resolution:** records carry `sourceHash` (hash of the original block bytes at extract time) and
+`kind`, and `apply`/`verify` fail closed unless frozen records biject with `extract`, every
+`sourceHash` matches, and every `kind` agrees. Bijection catches add/remove via count divergence;
+the hash catches reorder and in-place edits where counts still match.
+
+**The distinction that makes this work:** an anchor is for *addressing* and must stay stable, so
+it can never be a content hash. A `sourceHash` is for *verification* and must be exact. Using a
+hash to address would destroy re-derivability; using one to verify is what makes freezing safe.
+The two are not in tension once separated.
+
+This also composes with D3's regeneration model instead of fighting it: re-deriving P3 against a
+newer `main` fails the identity check exactly on blocks whose documentation changed upstream,
+which get re-titled, while everything untouched reuses its frozen record.
+
+**Pattern worth noticing.** This is the third defect in the same family — the first was
+conservation-vs-grammar, the second was anchor collision, this is anchor drift. All three share a
+shape: a check that passes while the underlying binding is wrong, because the output is
+*well-formed*. Well-formedness is not correctness, and no amount of shape validation substitutes
+for verifying identity. Assume the next defect in this packet has the same shape and look for it
+there first.
+
 ## D6 — Placement: `packages/tooling/tool/cli`, `beep quality jsdoc-migrate`
 
 Decided rather than asked; reversible.

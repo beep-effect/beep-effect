@@ -112,19 +112,22 @@ The only non-code inputs. Frozen and versioned once P3 opens.
 
 ```jsonc
 // titles.jsonl — one record per block
-{ "anchor":  "packages/x/src/Y.ts#decodeUserName",
-  "title":   "Decode a user name",
-  "remarks": "details" | "gotchas",   // routing for the 501 @remarks blocks
-  "leadEnd": 1 }                      // paragraphs 2..n -> Details, for the 872
+{ "anchor":     "packages/x/src/Y.ts#decodeUserName#0",
+  "sourceHash": "sha256:1f3a…",       // hash of the ORIGINAL block bytes at extract time
+  "kind":       "value",              // value | type-level, from ts-morph
+  "title":      "Decode a user name",
+  "remarks":    "details" | "gotchas", // routing for the 501 @remarks blocks
+  "leadEnd":    1 }                    // paragraphs 2..n -> Details, for the 872
 
 // overrides.jsonl — full replacement block text for quarantined blocks
-{ "anchor": "packages/x/src/Y.ts#thing#0", "block": "/** ... */" }
+{ "anchor": "packages/x/src/Y.ts#thing#0", "sourceHash": "sha256:9c02…",
+  "block": "/** ... */" }
 ```
 
 #### Anchor format
 
-`path#symbol#ordinal`. **Never content hashes and never line numbers** — anchor stability across
-upstream edits is what makes the P3 branch re-derivable.
+`path#symbol#ordinal`. The **anchor** is never a content hash and never a line number — anchor
+stability across upstream edits is what makes the P3 branch re-derivable.
 
 `path#symbol` alone is **not unique**. Overloads, declaration merging, default exports, and —
 most commonly in this repo — same-name type companions for runtime schemas all produce multiple
@@ -133,15 +136,40 @@ explicitly, so `export const Foo` and `export type Foo` in one file would both a
 `path#Foo`.
 
 `ordinal` is the 0-based index among blocks resolving to the same `path#symbol`, in source order.
-It is `0` for the overwhelmingly common unique case. It stays stable under edits elsewhere in the
-file, unlike a line number, and under edits to the block itself, unlike a content hash. It only
-shifts when a same-named declaration is added or removed ahead of it, which `extract` re-derives
-on the next run.
+It is `0` for the overwhelmingly common unique case, and it is stable under edits elsewhere in
+the file (unlike a line number) and under edits to the block itself (unlike a content hash).
 
-Collision handling is not optional: `extract` must fail loudly if two blocks would produce the
-same anchor. A silently colliding anchor applies one block's title to a different block, and the
-conservation law below **cannot catch that** — a wrong-but-well-formed title passes every
-assertion.
+**Ordinals are not stable under every edit.** They shift when a same-named declaration is added
+ahead of a block, removed from ahead of it, **or reordered relative to it**. Reordering is the
+nastiest case: the anchor set is unchanged and the record count still matches, so nothing about
+the shape of the data looks wrong — the frozen title simply binds to a different block.
+
+#### Binding rule: fail closed, never guess
+
+`titles.jsonl` and `overrides.jsonl` are frozen once P3 opens, so any later `extract` renumber can
+mis-bind a frozen record. The conservation law **cannot detect this** — a title applied to the
+wrong block is well-formed prose in a valid section and passes every assertion in §5.3. The
+binding therefore has to be checked directly, not inferred.
+
+`extract` must fail loudly if two blocks produce the same anchor. `apply` and `verify` must fail
+closed unless **all** of the following hold:
+
+1. **Bijection.** Every `extract` anchor has exactly one record, and every record matches exactly
+   one `extract` anchor. Orphans on either side are a hard failure, never a skip. This catches
+   additions and removals, where counts diverge.
+2. **Identity.** Each record's `sourceHash` equals the hash of the block currently at that anchor.
+   This catches reordering and in-place edits, where counts still match. A mismatch means the
+   record is stale for that block — re-title it rather than applying the frozen value.
+3. **Kind agreement.** The record's `kind` matches what ts-morph reports for the block, so a
+   value-level title never lands on a type-level companion.
+
+`sourceHash` is a *verification* field, not an addressing one. Anchors stay stable so records can
+be found; hashes stay exact so a found record can be proved to belong. Using a hash to address
+would break re-derivability; using one to verify is what makes freezing safe.
+
+This composes with the regeneration model rather than fighting it: when P3 is re-derived against a
+newer `main`, blocks whose documentation changed upstream fail the identity check, get re-titled,
+and everything untouched reuses its frozen record.
 
 ### 5.3 Conservation law
 
@@ -211,7 +239,8 @@ per run and one call per file is 1,935.
 2. All 18 generated files law-compliant, proved by regenerating and scanning them in
    generated-inclusive scope — not by re-running the non-generated check.
 3. Conservation proof manifest covers all blocks with zero unexplained quarantines.
-4. `extract` reports zero anchor collisions.
+4. `extract` reports zero anchor collisions, and every frozen record binds to its intended block:
+   bijection with `extract`, `sourceHash` match, and `kind` agreement — no orphans, no skips.
 5. `cleanup-on-touch` replaced by a repo-wide zero-legacy check with both scopes available.
 6. `standards/jsdoc-totals.regression-baseline.jsonc` rewritten to the new floor.
 7. `.patterns/jsdoc-documentation.md` transitional carrier section deleted.
@@ -228,15 +257,18 @@ per run and one call per file is 1,935.
 | 5 | Totals did not regress | `beep quality jsdoc-ratchet` against the rewritten baseline |
 | 6 | Generated output stays compliant | Regenerate all 18, then zero-legacy check in **`--include-generated` scope** |
 | 7 | No anchor collided | `extract` reports zero duplicate anchors across the corpus |
-| 8 | The branch is re-derivable | Re-run codemod on fresh `main`, diff against branch: empty |
+| 8 | Every frozen record bound to its intended block | Bijection with `extract`, `sourceHash` match, `kind` agreement — all three, fail closed |
+| 9 | The branch is re-derivable | Re-run codemod on fresh `main`, diff against branch: empty |
 
 Row 6 must not be proved by re-running row 4. Row 4's check is scoped to non-generated files by
 construction, so re-running it after regeneration cannot observe a carrier in a generated file and
 would pass vacuously. The zero-legacy check therefore needs an explicit generated-inclusive mode,
 and row 6 is the only place it is used.
 
-Row 7 exists because the conservation law cannot detect an anchor collision: a title applied to
-the wrong block is well-formed and passes every assertion in §5.3.
+Rows 7 and 8 exist because the conservation law cannot detect a mis-binding: a title applied to
+the wrong block is well-formed prose in a valid section and passes every assertion in §5.3. Row 7
+covers collisions within a single `extract`; row 8 covers drift between a frozen record set and a
+later `extract`, including the reorder case where anchors and counts both still look correct.
 
 ## 8. Hazards
 

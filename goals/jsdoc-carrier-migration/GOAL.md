@@ -34,26 +34,26 @@ baseline rewrite.
 1. **P3 is regenerated, never rebased.** It must remain
    `f(main, codemod, titles.jsonl, overrides.jsonl)`. Zero hand-edits; residue goes in
    `overrides.jsonl`.
-2. **Conservation has two clauses (SPEC §5.3).** (a) Content: fence code
-   bytes identical, prose tokens preserved, added prose limited to section markers and
-   data-sourced strings from `titles.jsonl`. (b) Tags: only SPEC's closed allowlist may be
-   rewritten; every other tag is bytes-identical and every rewrite must match its normal form.
-   Violations quarantine. Adding a fence is in neither clause, so the 114 unfenced examples
-   auto-quarantine — correct behaviour. Do **not** collapse this to "tag bodies identical"; that
-   contradicts the in-scope grammar fixes and would quarantine every free win.
+2. **Conservation has two clauses (SPEC §5.3).** (a) Content: fence code bytes identical, prose
+   preserved, added prose only from section markers and `titles.jsonl`. (b) Tags: only SPEC's
+   closed allowlist may be rewritten; all others bytes-identical, each rewrite matching its normal
+   form. Violations quarantine — including the 114 unfenced examples, since adding a fence is in
+   neither clause. Do **not** collapse this to "tag bodies identical"; that contradicts the
+   in-scope grammar fixes and would quarantine every free win.
 3. **Compute conservation on post-format bytes.** Biome first, then verify.
 4. **Grok returns data only, never writes files.** Reach it at `http://127.0.0.1:8317` with model
    `grok-4.5` — that bills the Grok plan, not API credits. Not a Workflow: the 1,000-agent cap is
    below the 1,935 files.
-5. **Anchors are `path#symbol#ordinal`** — never content hashes, never line numbers.
-   `path#symbol` alone collides on overloads, declaration merging, default exports, and same-name
-   type companions for runtime schemas (documented law). `ordinal` is the 0-based index among
-   blocks sharing an anchor, in source order. `extract` must fail loudly on a duplicate: a title
-   applied to the wrong block is well-formed, and conservation cannot catch it.
+5. **Anchors are `path#symbol#ordinal`; binding is verified, never assumed (SPEC §5.2).**
+   `path#symbol` alone collides — overloads, merged declarations, default exports, same-name type
+   companions. Ordinals shift on add, remove, **or reorder**, and reorder leaves anchors and counts
+   both looking right. `extract` fails loudly on duplicates; `apply`/`verify` fail closed unless
+   frozen records biject with `extract`, every `sourceHash` matches, and `kind` agrees.
+   Conservation cannot catch a mis-binding — a title on the wrong block is well-formed.
 6. **Generated-output compliance needs its own check scope** — re-running the non-generated one
    passes vacuously.
 
-## Two de-risking facts
+## De-risking facts
 
 `docgen/src/Core.ts:360-376` compiles **both** carriers, so tag→section conversion is
 compile-neutral — the legacy examples already sit under the TypeScript gate.
@@ -64,6 +64,5 @@ the finding set shrinks or holds.
 
 ## Do not
 
-Rebase P3. Hand-edit that branch. Let ts-morph reformat blocks. Let Grok write files. Migrate
-generated output without fixing its generator. Use the xAI API directly. Sample instead of
-proving conservation.
+Rebase P3 or hand-edit it. Let ts-morph reformat blocks. Let Grok write files. Migrate generated
+output without fixing its generator. Use the xAI API. Sample instead of proving.
