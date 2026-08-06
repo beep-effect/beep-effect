@@ -97,6 +97,7 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 const stubMcpClient = (clientId: number) =>
   McpServerClient.of({
     clientId,
+    protocolVersion: "2025-06-18",
     getClient: Effect.die("the fixture client is never dereferenced") as never,
     initializePayload: {
       capabilities: {},
@@ -256,7 +257,7 @@ describe("sanitizedToolkit", () => {
         assert.isDefined(registered);
         const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
         assert.strictEqual(inputSchema.type, "object");
-        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersJsonEncoding");
+        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersEncoded");
       })
     );
   });

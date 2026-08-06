@@ -26,7 +26,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/TurboQuery");
-const decodeJsonTextOption = S.decodeUnknownOption(S.UnknownFromJsonString);
+const decodeJsonTextOption = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
 
 class TurboQueryAffectedReason extends S.Class<TurboQueryAffectedReason>($I`TurboQueryAffectedReason`)(
   {

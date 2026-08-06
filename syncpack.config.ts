@@ -128,8 +128,26 @@ const config = {
       // whose global enforcement surfaces ~756 violations; adopting them is
       // its own remediation campaign. Platform binaries stay independently
       // pinned to the build matching the installed native compiler.
+      // @biomejs/biome 2.5.7 stops formatting JSON piped through
+      // `biome format --stdin-file-path`, so `renderBiomeJson` — the writer
+      // behind `beep tsconfig-sync` for docgen.json/tsconfig.json — emits
+      // compact JSON instead of formatted. Pinned exactly (no caret) because a
+      // range would resolve straight back to the broken release.
       label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
-      dependencies: ["typescript", "fast-xml-validator", "detailed-xml-validator", "@effect/tsgo"],
+      dependencies: [
+        "typescript",
+        "fast-xml-validator",
+        "detailed-xml-validator",
+        "@biomejs/biome",
+        "@effect/tsgo",
+        "@effect/tsgo-darwin-arm64",
+        "@effect/tsgo-darwin-x64",
+        "@effect/tsgo-linux-arm",
+        "@effect/tsgo-linux-arm64",
+        "@effect/tsgo-linux-x64",
+        "@effect/tsgo-win32-arm64",
+        "@effect/tsgo-win32-x64",
+      ],
       isIgnored: true,
     },
   ],

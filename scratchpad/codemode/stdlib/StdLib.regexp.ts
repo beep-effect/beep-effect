@@ -41,7 +41,7 @@ export const regexpProperties = LiteralKit([
   "dotAll",
 ])
 
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString)
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))
 
 export const regexFailureReason = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error)).replace(/^Invalid regular expression:\s*/i, "")

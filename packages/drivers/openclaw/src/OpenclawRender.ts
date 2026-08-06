@@ -43,7 +43,7 @@ const indentUnit = "  ";
 const gatewaySecretsProviderName = "op_gateway";
 const telegramSecretsProviderName = "op_telegram";
 const modelProviderSecretsName = (providerId: string): string => `op_provider_${providerId}`;
-const encodeCompactJson = S.encodeResult(S.UnknownFromJsonString);
+const encodeCompactJson = S.encodeResult(S.fromJsonString(S.Unknown));
 const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Result.getOrThrow);
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 

@@ -52,7 +52,7 @@ const makeTestHook = <E>(
 });
 
 const encodeTestInput = S.encodeSync(S.fromJsonString(TestInput));
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const validInput = encodeTestInput(
   TestInput.make({

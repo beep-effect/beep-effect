@@ -159,7 +159,7 @@ interface ImagePathOperations {
 }
 
 const decodeFileSha256Hash = S.decodeUnknownEffect(FileSha256Hash);
-const encodeUnknownJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const byAuditSourceName = Order.mapInput(Order.String, (source: AuditSourceFile) => source.name);
 const byAuditEntryName = Order.mapInput(Order.String, (entry: ImageAuditEntry) => entry.sourceName);
 const bySkippedEntryName = Order.mapInput(Order.String, (entry: ImageAuditSkippedEntry) => entry.sourceName);

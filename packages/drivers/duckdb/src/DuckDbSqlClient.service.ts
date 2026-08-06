@@ -361,11 +361,9 @@ const makeDuckDbWithTransaction =
               Effect.flatMap(() =>
                 Effect.provideContext(
                   restore(effect),
-                  Context.mutate(services, (services) =>
-                    services.pipe(
-                      Context.add(options.transactionService, [connection, id]),
-                      Context.add(Tracer.ParentSpan, span)
-                    )
+                  services.pipe(
+                    Context.add(options.transactionService, [connection, id]),
+                    Context.add(Tracer.ParentSpan, span)
                   )
                 )
               ),

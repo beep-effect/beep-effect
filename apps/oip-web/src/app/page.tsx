@@ -21,7 +21,7 @@ type HomeProps = {
 
 // TODO(effect-native-migration): model schema
 const safeJsonScript = (value: unknown) =>
-  Str.replaceAll("<", "\\u003c")(S.encodeUnknownSync(S.UnknownFromJsonString)(value));
+  Str.replaceAll("<", "\\u003c")(S.encodeUnknownSync(S.fromJsonString(S.Unknown))(value));
 
 /**
  * Allows the search-param aware home route to block during the first render.

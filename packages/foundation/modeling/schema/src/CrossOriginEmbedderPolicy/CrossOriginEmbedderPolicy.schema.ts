@@ -155,11 +155,9 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
           name: headerName,
           value: input === false || input === undefined ? undefined : input,
         }),
-      encode: (
-        header: COEPResponseHeaderEncoded
-      ): Effect.Effect<CrossOriginEmbedderPolicyOption | undefined, SchemaIssue.Issue> =>
+      encode: (): Effect.Effect<CrossOriginEmbedderPolicyOption | undefined, SchemaIssue.Issue> =>
         Effect.fail(
-          new SchemaIssue.Forbidden(O.some(header), {
+          new SchemaIssue.Forbidden({
             message: "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported",
           })
         ),

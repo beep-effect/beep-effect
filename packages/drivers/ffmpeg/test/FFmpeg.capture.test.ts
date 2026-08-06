@@ -65,7 +65,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   );
 };
 
-const ffprobeJson = S.encodeUnknownSync(S.UnknownFromJsonString)({
+const ffprobeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))({
   format: { duration: "2.0", start_time: "0.000000" },
   streams: [
     {

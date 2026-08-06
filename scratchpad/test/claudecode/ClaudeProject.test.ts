@@ -28,7 +28,7 @@ const CWD = "/repo";
 const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const MCP_PATH = `${CWD}/.mcp.json`;
 const SKILL_PATH = `${CWD}/skills/greet/SKILL.md`;
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const notFoundError = (path: string, method: string) =>
   PlatformError.systemError({

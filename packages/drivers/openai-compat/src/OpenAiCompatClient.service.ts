@@ -266,6 +266,16 @@ const mapSseRetry = (method: string): AiError.AiError =>
     })
   );
 
+const mapSseError =
+  (method: string) =>
+  (error: Sse.SseError): AiError.AiError =>
+    makeAiError(
+      method,
+      AiError.InvalidOutputError.make({
+        description: `OpenAI-compatible stream response could not be decoded as SSE (${error.reason._tag}).`,
+      })
+    );
+
 const parseSseData: (data: string) => Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> = flow(
   decodeJsonString,
   Effect.flatMap(decodeChatCompletionChunk),
@@ -311,6 +321,7 @@ const makeService = (client: HttpClient.HttpClient, options: OpenAiCompatClientO
               Stream.catchTags({
                 HttpClientError: flow(mapHttpClientError("streamChatCompletion"), Stream.fromEffect),
                 Retry: () => Stream.fail(mapSseRetry("streamChatCompletion")),
+                SseError: flow(mapSseError("streamChatCompletion"), Stream.fail),
               })
             )
           ),

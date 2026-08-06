@@ -40,7 +40,7 @@ const decodeHttp = S.decodeUnknownEffect(HttpMcpServer);
 const decodeFile = S.decodeUnknownEffect(McpJsonFile);
 const encodeServer = S.encodeEffect(McpServerConfig);
 const encodeHttp = S.encodeEffect(HttpMcpServer);
-const toJsonString = S.encodeUnknownSync(S.UnknownFromJsonString);
+const toJsonString = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 // ---------------------------------------------------------------------------
 // Test layer builder

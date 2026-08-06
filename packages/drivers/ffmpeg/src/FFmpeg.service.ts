@@ -68,7 +68,7 @@ import type * as PlatformError from "effect/PlatformError";
 import type { FFmpegEvent } from "./FFmpeg.models.ts";
 
 const $I = $FfmpegId.create("FFmpeg.service");
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const NumberOrString = S.Union([S.Finite, S.String]);
 type FFmpegConfigInputOptions = (typeof FFmpegConfigInput)["~type.make.in"];
 

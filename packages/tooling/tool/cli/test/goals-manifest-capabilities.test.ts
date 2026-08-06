@@ -20,7 +20,7 @@ import { ChildProcess } from "effect/unstable/process";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const COMPLETION_GATE = {
   operator: "yeet",

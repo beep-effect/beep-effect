@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, flow, SchemaIssue, SchemaTransformation } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
@@ -15,9 +14,9 @@ import { SyntaxValidator } from "fast-xml-validator";
 
 const $I = $SchemaId.create("Xml");
 
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to XML text is not supported by XmlTextToUnknown.",
     })
   );
@@ -32,18 +31,15 @@ const makeXmlParser = () =>
     trimValues: true,
   });
 
-const invalidXmlInput = (content: string, message: string): SchemaIssue.InvalidValue =>
-  new SchemaIssue.InvalidValue(O.some(content), {
-    message,
+const invalidXmlValidationFailure = (cause: unknown): SchemaIssue.InvalidValue =>
+  new SchemaIssue.InvalidValue({
+    message: P.isError(cause) ? `Invalid XML input (${cause.message}).` : "Invalid XML input.",
   });
-
-const invalidXmlValidationFailure = (content: string, cause: unknown): SchemaIssue.InvalidValue =>
-  invalidXmlInput(content, P.isError(cause) ? `Invalid XML input (${cause.message}).` : "Invalid XML input.");
 
 const validateXmlSyntax = (content: string) =>
   Effect.try({
     try: () => SyntaxValidator.validate(content),
-    catch: (cause) => invalidXmlValidationFailure(content, cause),
+    catch: invalidXmlValidationFailure,
   });
 
 const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: string) {
@@ -53,14 +49,18 @@ const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: s
     const details = validation.err;
 
     return yield* Effect.fail(
-      invalidXmlInput(content, `Invalid XML input (${details.msg} at ${details.line}:${details.col}).`)
+      new SchemaIssue.InvalidValue({
+        message: `Invalid XML input (${details.msg} at ${details.line}:${details.col}).`,
+      })
     );
   }
 
   return yield* Effect.try({
     try: () => makeXmlParser().parse(content),
     catch: (cause) =>
-      invalidXmlInput(content, P.isError(cause) ? `Invalid XML input (${cause.message}).` : "Invalid XML input."),
+      new SchemaIssue.InvalidValue({
+        message: P.isError(cause) ? `Invalid XML input (${cause.message}).` : "Invalid XML input.",
+      }),
   });
 });
 

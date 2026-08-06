@@ -11,7 +11,6 @@ import * as O from "@beep/utils/Option";
 import {
   Effect,
   MutableHashMap as MutableHashMap_,
-  Option,
   pipe,
   SchemaIssue,
   SchemaParser,
@@ -204,13 +203,12 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
 
       return (input, ast, parseOptions) => {
         if (!MutableHashMap_.isMutableHashMap(input)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
         return Effect.mapBothEager(SchemaParser.decodeUnknownEffect(entries)(A.fromIterable(input), parseOptions), {
           onSuccess: MutableHashMap_.fromIterable,
-          onFailure: (issue) =>
-            new SchemaIssue.Composite(ast, Option.some(input), [new SchemaIssue.Pointer(["entries"], issue)]),
+          onFailure: (issue) => new SchemaIssue.Composite(ast, [new SchemaIssue.Pointer(["entries"], issue)]),
         });
       };
     },

@@ -6,7 +6,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Crypto, Effect, Encoding, Option, SchemaGetter, SchemaIssue } from "effect";
+import { Crypto, Effect, Encoding, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Sha256");
@@ -33,7 +33,7 @@ const computeSha256Hex = Effect.fn("computeSha256Hex")(function* (
   const digest = yield* crypto.digest("SHA-256", Uint8Array.from(input)).pipe(
     Effect.mapError(
       (cause) =>
-        new SchemaIssue.InvalidValue(Option.some(input), {
+        new SchemaIssue.InvalidValue({
           message: cause.message,
         })
     )

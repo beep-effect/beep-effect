@@ -208,7 +208,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
       }
       const rendered = Cause.pretty(result.cause);
       assert.include(rendered, "Invalid x/typed_request payload:");
-      assert.include(rendered, "Expected string, got 123");
+      assert.include(rendered, "Expected string");
     })
   );
 

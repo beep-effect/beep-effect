@@ -81,7 +81,7 @@ const NormalizedWireName = S.NonEmptyString.check(
 );
 
 const isNormalizedWireName = S.is(NormalizedWireName);
-const encodeCompactJson = S.encodeResult(S.UnknownFromJsonString);
+const encodeCompactJson = S.encodeResult(S.fromJsonString(S.Unknown));
 const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Result.getOrThrow);
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 

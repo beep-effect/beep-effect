@@ -62,7 +62,7 @@ export function Editor({
           // TODO(effect-native-migration): model schema
           ...O.getSomesStruct({
             editorState: O.map(O.fromUndefinedOr(editorSerializedState), (editorSerializedState) =>
-              S.encodeUnknownSync(S.UnknownFromJsonString)(editorSerializedState)
+              S.encodeUnknownSync(S.fromJsonString(S.Unknown))(editorSerializedState)
             ),
           }),
         }}

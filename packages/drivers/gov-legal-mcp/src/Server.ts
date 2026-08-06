@@ -15,6 +15,7 @@ import { $GovLegalMcpId } from "@beep/identity/packages";
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { EcfrToolkitHandlersLive, GovinfoToolkitHandlersLive } from "./Handlers.ts";
 import { EcfrSourceAuthRegistration, GovinfoSourceAuthRegistration } from "./SourceAuth.ts";
@@ -87,5 +88,10 @@ export const makeServerLayer = (config: GovLegalMcpServerConfig): Layer.Layer<ne
   return composeGatedLayers<EcfrError | GovinfoError>(
     gatedLayer(EcfrSourceAuthRegistration, ecfrToolkitLayer),
     gatedLayer(GovinfoSourceAuthRegistration, govinfoToolkitLayer)
-  ).pipe(Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })), Layer.orDie);
+  ).pipe(
+    Layer.provide(
+      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+    ),
+    Layer.orDie
+  );
 };

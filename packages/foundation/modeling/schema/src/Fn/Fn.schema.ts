@@ -12,7 +12,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Cause, Effect, Result, SchemaIssue, SchemaParser } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -298,7 +297,7 @@ const makeFnDeclaration = <Input extends S.Top, Output extends S.Top, Error exte
     () => (value, ast) =>
       isFunctionValue<FnRuntime<Input, Output>>(value)
         ? Effect.succeed(value)
-        : Effect.fail(new SchemaIssue.InvalidType(ast, O.some(value))),
+        : Effect.fail(new SchemaIssue.InvalidType(ast)),
     fnDeclarationAnnotations
   );
 

@@ -96,7 +96,7 @@ const prepareRound = Effect.fnUntraced(function* (cwd: string, round: number) {
   return { layout, qaRoot };
 });
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const fence = "`".repeat(3);
 
 const inventoryText = Effect.fnUntraced(function* (round: number) {

@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
-export const encodeConfig = S.encodeUnknownSync(S.UnknownFromJsonString);
+export const encodeConfig = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 /**
  * Build a decoder that parses a subprocess's JSON `stdout` into `report`'s decoded type,

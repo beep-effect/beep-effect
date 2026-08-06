@@ -251,7 +251,7 @@ export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).p
             name: headerName,
             value,
           })),
-          Effect.mapError((error) => new SchemaIssue.InvalidValue(O.some(error), { message: error.message }))
+          Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }))
         );
       }),
       encode: internal.makeHeaderEncodeForbidden("XSSProtectionHeader"),

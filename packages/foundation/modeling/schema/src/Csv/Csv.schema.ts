@@ -75,8 +75,8 @@ export type CsvDocument<RowSchema extends RowSchemaWithFields> = S.decodeTo<
 const isRowSchemaWithFields = (value: unknown): value is RowSchemaWithFields =>
   P.isObjectKeyword(value) && P.hasProperty(value, "fields");
 
-const toSchemaIssue = (input: unknown, error: CsvError | S.SchemaError): SchemaIssue.Issue =>
-  new SchemaIssue.InvalidValue(O.some(input), {
+const toSchemaIssue = (error: CsvError | S.SchemaError): SchemaIssue.Issue =>
+  new SchemaIssue.InvalidValue({
     message: error.message,
   });
 
@@ -95,8 +95,8 @@ const CsvEffect = <RowSchema extends RowSchemaWithFields>(
     S.decodeTo(
       rowsSchema,
       SchemaTransformation.transformOrFail({
-        decode: (input) => decodeRows(input).pipe(Effect.mapError((error) => toSchemaIssue(input, error))),
-        encode: (rows) => encodeRows(rows).pipe(Effect.mapError((error) => toSchemaIssue(rows, error))),
+        decode: (input) => decodeRows(input).pipe(Effect.mapError(toSchemaIssue)),
+        encode: (rows) => encodeRows(rows).pipe(Effect.mapError(toSchemaIssue)),
       })
     ),
     $I.annoteSchema("Csv", {

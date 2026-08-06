@@ -61,7 +61,7 @@ const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult);
 const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult);
 const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult);
 const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult);
-const decodeUnknownJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
 const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");

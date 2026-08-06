@@ -11,7 +11,7 @@ import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTes
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

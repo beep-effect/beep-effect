@@ -28,7 +28,7 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
 const CreatePackageTestTimeoutMs = 30_000;
 const TestFileCwd = process.cwd();
