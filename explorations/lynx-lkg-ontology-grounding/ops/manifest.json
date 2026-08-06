@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "lynx-lkg-ontology-grounding",
+    "title": "Lynx LKG Ontology Grounding",
+    "status": "active",
+    "stage": "align",
+    "openQuestions": [
+      "Which of the five shortlist opportunities (research/05-value-assessment.md §5) advance, and in what order? #1 multi-claim span annotation and #2 lkg.ttl as first VETTED vendor slice are the recommended leads.",
+      "Does goals/legal-rule-time-identity open to receive the ELI temporal/FRBR donor profile (shortlist #5)? Routing call for Benjamin.",
+      "Thesaurus licences (IATE, EuroVoc, UNESCO, ILO, STW, TheSoz) are unverified — blocks populating M1 seed alignments from any of them.",
+      "Does lexicog (claim-construction lexicography) earn a competency question, or is it IGNORE?",
+      "ELI reuse terms in writing (Decision 2011/833/EU) — only needed if the file is ever vendored; model reimplementation is safe today."
+    ],
+    "sources": [
+      "research/SOURCES.md",
+      "research/01-lynx-project-overview.md",
+      "research/02-lkg-ontology-deep-dive.md",
+      "research/03-reference-ontologies-sweep.md",
+      "research/04-beep-effect-grounding.md",
+      "research/05-value-assessment.md"
+    ],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-06",
+    "updated": "2026-08-06"
+  }
+}
