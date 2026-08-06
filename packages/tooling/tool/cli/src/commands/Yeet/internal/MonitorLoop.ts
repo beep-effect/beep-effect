@@ -563,18 +563,16 @@ export const renderYeetMonitorJobDecision = (decision: YeetMonitorJobDecision): 
  * @category predicates
  * @since 0.0.0
  */
-export const yeetMonitorTerminalState = (state: O.Option<string>): O.Option<YeetMonitorTerminalState> =>
-  pipe(
-    state,
-    O.map(Str.toUpperCase),
-    O.flatMap((value) =>
-      value === "MERGED"
-        ? O.some(YeetMonitorTerminalState.Enum.merged)
-        : value === "CLOSED"
-          ? O.some(YeetMonitorTerminalState.Enum.closed)
-          : O.none()
-    )
-  );
+export const yeetMonitorTerminalState: (state: O.Option<string>) => O.Option<YeetMonitorTerminalState> = flow(
+  O.map(Str.toUpperCase),
+  O.flatMap((value) =>
+    value === "MERGED"
+      ? O.some(YeetMonitorTerminalState.Enum.merged)
+      : value === "CLOSED"
+        ? O.some(YeetMonitorTerminalState.Enum.closed)
+        : O.none()
+  )
+);
 
 class GhMonitorJob extends S.Class<GhMonitorJob>($I`GhMonitorJob`)(
   {
@@ -699,14 +697,13 @@ interface YeetMonitorUntilMergedOptions {
 const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
   pipe(
     snapshot.mergeReady,
-    O.match({
-      onNone: () => "[yeet] merge readiness is unknown; the PR could not be read",
-      onSome: (mergeReady) =>
-        O.match(mergeReady.failing, {
-          onNone: () => "[yeet] merge-ready: every hard criterion is green; awaiting the operator's merge",
-          onSome: (failing) => `[yeet] not merge-ready: blocked on ${failing}`,
-        }),
-    })
+    O.map((mergeReady) =>
+      O.match(mergeReady.failing, {
+        onNone: () => "[yeet] merge-ready: every hard criterion is green; awaiting the operator's merge",
+        onSome: (failing) => `[yeet] not merge-ready: blocked on ${failing}`,
+      })
+    ),
+    O.getOrElse(() => "[yeet] merge readiness is unknown; the PR could not be read")
   );
 
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (

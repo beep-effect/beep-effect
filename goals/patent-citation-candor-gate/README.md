@@ -37,17 +37,71 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — next concrete action: re-verify the live surfaces against Lane
-A's inventory and choose the lawful cross-slice gate shape, then start rung 1
-with the failing `CandorPolicy.test.ts` (schema → service contract →
-implementation).
+P3 Yeet — in progress. PR #575 reached `mergeable=MERGEABLE` / `status=CLEAN` with all
+hosted checks green at `6b98e95d47`, then a follow-up packet-bookkeeping commit
+(`b11ed4ced1`) broke the required `Lint Policy` check: it flipped every phase to
+`complete` while the packet stayed `active` (`phases-terminal-but-active`) and left
+`goals/INDEX.md` stale against the manifest it had just changed. Both are fixed here. The
+PR was closed by the owner for merge-ordering reasons and needs reopening or replacing. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
+`SPEC.md` decisions 10 and 11 kept rung 2 to the half that needs no cross-slice
+decision: durable ports, repository and layers, the slice's first db-admin
+migration with append-only guards, and the IDS fact records. The cross-slice
+consultation and its `foundation/capability` gate port are deferred with
+`research/01-gate-shape-check.md` as the standing evidence.
 
 ## Latest Evidence
 
-Not started. Graduated 2026-08-04 from
+- **P2 durability green (2026-08-05).** The law-practice slice's first
+  db-admin migration (`20260806031625_law_practice_candor_gate`) installs
+  append-only triggers on all three tables; the PGlite proof pins the exact
+  constraint and trigger names and shows both an UPDATE and a DELETE against a
+  recorded disposition rejected. `migrations:check` is clean and the desktop
+  migration bundle is re-synced.
+- **P1 rung-1 proof green (2026-08-05).** `CandorPolicy.test.ts` — 19
+  scenarios, written failing first, now passing over in-memory/test-only
+  layers with real SHA-256 digests and live `verifyTextAnchor`
+  re-verification. `check`, `lint`, and `test` are green in
+  `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
+  `@beep/law-practice-tables`, `@beep/law-practice-server`,
+  `@beep/shared-domain`, and `@beep/db-admin`.
+- **P0 gate-shape check (2026-08-05).**
+  [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) — the
+  two shapes the SPEC authorized are both unavailable; foundation-mediated
+  port inversion is recommended and awaits owner sign-off.
+- **P0 surface re-verification (2026-08-05).**
+  [`research/02-surface-reverification.md`](./research/02-surface-reverification.md)
+  — every SOURCES.md §4 surface confirmed current; two drift notes recorded.
+
+Graduated 2026-08-04 from
 [`explorations/patent-citation-candor-gate`](../../explorations/patent-citation-candor-gate/README.md)
 (BRIEF approved same day after a three-lens adversarial review + four PR #557
 review refinements; four-point definition-of-ready passed at decompose).
+
+## Inherited Blocker (cleared 2026-08-06)
+
+`Lint Policy` was red on PR #575 through ten pre-existing
+`effect-governance-terse-effect` findings in
+`packages/tooling/tool/cli/src/commands/{Yeet/internal,Knowledge}` — files absent from
+this goal's diff, last modified by #563 and #569, and failing on `main`'s own head too.
+Because it is a *required* check the PR could not reach mergeable while they stood, so on
+owner ruling they were repaired inside this PR rather than deferred: two by
+`beep laws terse-effect --write`, eight by hand. `repo-cli`'s own suite stays green at
+1075 tests and `bun run beep lint policy` exits 0. Recorded as a deliberate,
+owner-directed scope widening — see the SPEC's "no unrelated refactors" criterion.
+
+## Criterion-to-Proof Map
+
+| SPEC criterion | Where it is proven |
+| --- | --- |
+| Entities + application-identity union in design order, both judgment slots, tagged discovery union, receipt grounding, explicit staleness/quarantine, disposition lifecycle | `packages/law-practice/domain/src/entities/{PatentCitationEvent,CandorDisposition}/`, `src/values/{CitingApplicationIdentity,ObservationVersionRef}/`; round-tripped through arbitrary-generated encoded form by `test/LawPracticeDomain.test.ts` |
+| `CandorPolicy` contract owns the derived, fail-closed predicate with no stored closure | `packages/law-practice/use-cases/src/CandorPolicy/` — blocked-ness is derived by `CandorGateVerdict.isBlocked`, never a stored field |
+| `CandorPolicy.test.ts` failing first then green, covering every listed scenario | `packages/law-practice/use-cases/test/CandorPolicy.test.ts` — 19 scenarios, real SHA-256, live `verifyTextAnchor` |
+| Test runs slice-isolated | Same file: in-memory `CandorRecordReader` + `Layer.succeed` `SourceTextResolver` fixture + a Web Crypto test layer; no other slice booted, no app runtime layer, no dependency added |
+| Durable append-and-read-only ports → repo/layer | Port: `packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts` (six members, no update and no delete). Drizzle repo + layers: `packages/law-practice/server/src/CandorRecord/` — insert and select only, rows re-decoded through the entity schemas rather than trusted |
+| First db-admin migration + PGlite test + `AcceptedProofManifest` | `packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`, `test/integration/LawPracticeCandorGateMigration.pglite.test.ts`, four manifest entries |
+| Append-only guards proven, not just installed | The PGlite test asserts the exact constraint/trigger name sets, then that both an UPDATE and a DELETE against a recorded disposition are rejected |
+| IDS fact families as presence-only facts | `packages/law-practice/domain/src/entities/IdsSubmissionFact/` — candidate window (never a compliance label), 1.17(p)/(v) fees, 1.97(e) statement + 1.98(a)(4) assertion, 1.98 content presence, office treatment as observed, own operative date per act |
+| Live filing-promotion consultation | **Deferred** — SPEC decisions 10 and 11; see `research/01-gate-shape-check.md` |
 
 ## Notes
 

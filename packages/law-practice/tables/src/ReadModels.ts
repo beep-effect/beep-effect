@@ -1,43 +1,66 @@
 /**
- * Practice knowledge-graph read-model composition and row types.
+ * Law-practice Drizzle schema composition and read-model row types.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "./entities/index.ts";
 import { kgBuildTable } from "./entities/KgBuild/KgBuild.read-model-table.ts";
 import { kgEdgeTable } from "./entities/KgEdge/KgEdge.read-model-table.ts";
 import { kgNodeTable } from "./entities/KgNode/KgNode.read-model-table.ts";
 
+type DbSchemaShape = {
+  readonly candorDisposition: typeof CandorDisposition.Table;
+  readonly idsSubmissionFact: typeof IdsSubmissionFact.Table;
+  readonly kgBuild: typeof kgBuildTable;
+  readonly kgEdge: typeof kgEdgeTable;
+  readonly kgNode: typeof kgNodeTable;
+  readonly patentCitationEvent: typeof PatentCitationEvent.Table;
+};
+
 /**
- * Drizzle schema for packet-owned practice knowledge-graph read models.
+ * Drizzle schema for every table the law-practice slice declares.
  *
- * @remarks
- * This is the whole schema a bundle's PGlite store is created with — pass it as
- * the Drizzle `schema` option so `db.query.kgNode` and friends are typed.
+ * **When to use**
  *
- * @example
+ * Use as the Drizzle `schema` option so `db.query.kgNode` and friends are typed.
+ *
+ * **Details**
+ *
+ * Two populations live here and they have different lifetimes. The `kg*` entries
+ * are packet-owned projections that a bundle's disposable PGlite store is
+ * created with. The `candorDisposition`, `idsSubmissionFact`, and
+ * `patentCitationEvent` entries are entity-derived tables owned by a db-admin
+ * migration, so their rows outlive any single bundle.
+ *
+ * **Example** (Read the composed physical table names)
+ *
  * ```ts
  * import { DbSchema } from "@beep/law-practice-tables"
  * import { getTableName } from "drizzle-orm"
  *
- * const tableNames = Object.values(DbSchema).map(getTableName).sort()
- * console.log(tableNames) // ["kg_build", "kg_edge", "kg_node"]
+ * console.log(getTableName(DbSchema.kgNode)) // "kg_node"
+ * console.log(getTableName(DbSchema.patentCitationEvent)) // "law_practice_patent_citation_event"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const DbSchema = {
+export const DbSchema: DbSchemaShape = {
+  candorDisposition: CandorDisposition.Table,
+  idsSubmissionFact: IdsSubmissionFact.Table,
   kgBuild: kgBuildTable,
   kgEdge: kgEdgeTable,
   kgNode: kgNodeTable,
+  patentCitationEvent: PatentCitationEvent.Table,
 };
 
 /**
  * Type-level view of {@link DbSchema}.
  *
- * @example
+ * **Example** (Order the projections a bundle build writes)
+ *
  * ```ts
  * import type { DbSchema } from "@beep/law-practice-tables"
  *
@@ -45,19 +68,21 @@ export const DbSchema = {
  * console.log(projectionOrder[0]) // "kgNode"
  * ```
  *
- * @category models
+ * @category tables
  * @since 0.0.0
  */
-export type DbSchema = typeof DbSchema;
+export type DbSchema = DbSchemaShape;
 
 /**
  * Selected node projection row.
  *
- * @remarks
+ * **Details**
+ *
  * `docketFamily` and `client` are the only nullable columns: a node such as an
  * email archive belongs to no docket family and no single client.
  *
- * @example
+ * **Example** (Label a node that may have no client)
+ *
  * ```ts
  * import type { KgNodeReadModel } from "@beep/law-practice-tables"
  *
@@ -78,7 +103,7 @@ export type DbSchema = typeof DbSchema;
  * })) // "AB-1234 (Acme Corp)"
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgNodeReadModel = typeof kgNodeTable.$inferSelect;
@@ -86,11 +111,13 @@ export type KgNodeReadModel = typeof kgNodeTable.$inferSelect;
 /**
  * Insertable node projection row.
  *
- * @remarks
+ * **Details**
+ *
  * Differs from {@link KgNodeReadModel} in that the nullable `docketFamily` and
  * `client` columns may be omitted entirely rather than passed as `null`.
  *
- * @example
+ * **Example** (Insert a node that belongs to no docket family)
+ *
  * ```ts
  * import type { KgNodeInsert } from "@beep/law-practice-tables"
  *
@@ -108,7 +135,7 @@ export type KgNodeReadModel = typeof kgNodeTable.$inferSelect;
  * console.log(emailArchive.kind) // "email_archive"
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgNodeInsert = typeof kgNodeTable.$inferInsert;
@@ -116,7 +143,8 @@ export type KgNodeInsert = typeof kgNodeTable.$inferInsert;
 /**
  * Selected edge projection row.
  *
- * @example
+ * **Example** (Detect an unreviewed candidate edge)
+ *
  * ```ts
  * import type { KgEdgeReadModel } from "@beep/law-practice-tables"
  *
@@ -133,7 +161,7 @@ export type KgNodeInsert = typeof kgNodeTable.$inferInsert;
  * })) // true
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgEdgeReadModel = typeof kgEdgeTable.$inferSelect;
@@ -141,11 +169,13 @@ export type KgEdgeReadModel = typeof kgEdgeTable.$inferSelect;
 /**
  * Insertable edge projection row.
  *
- * @remarks
+ * **Details**
+ *
  * Every column is required: an edge carries no nullable state, and its
  * `(subjectIri, predicate, objectIri)` triple is the primary key.
  *
- * @example
+ * **Example** (Insert a grant edge)
+ *
  * ```ts
  * import type { KgEdgeInsert } from "@beep/law-practice-tables"
  *
@@ -161,7 +191,7 @@ export type KgEdgeReadModel = typeof kgEdgeTable.$inferSelect;
  * console.log(grant.predicate) // "granted_as"
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgEdgeInsert = typeof kgEdgeTable.$inferInsert;
@@ -169,11 +199,13 @@ export type KgEdgeInsert = typeof kgEdgeTable.$inferInsert;
 /**
  * Selected build-provenance projection row.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `counts` is stored as JSONB and typed as an unknown record, so read it back
  * through the schema that wrote it rather than indexing it directly.
  *
- * @example
+ * **Example** (Check which runs a bundle was built from)
+ *
  * ```ts
  * import type { KgBuildReadModel } from "@beep/law-practice-tables"
  *
@@ -188,7 +220,7 @@ export type KgEdgeInsert = typeof kgEdgeTable.$inferInsert;
  * })) // true
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgBuildReadModel = typeof kgBuildTable.$inferSelect;
@@ -196,7 +228,8 @@ export type KgBuildReadModel = typeof kgBuildTable.$inferSelect;
 /**
  * Insertable build-provenance projection row.
  *
- * @example
+ * **Example** (Record bundle build provenance)
+ *
  * ```ts
  * import type { KgBuildInsert } from "@beep/law-practice-tables"
  *
@@ -210,7 +243,7 @@ export type KgBuildReadModel = typeof kgBuildTable.$inferSelect;
  * console.log(provenance.bundleVersion) // "2026.07.1"
  * ```
  *
- * @category models
+ * @category read-models
  * @since 0.0.0
  */
 export type KgBuildInsert = typeof kgBuildTable.$inferInsert;

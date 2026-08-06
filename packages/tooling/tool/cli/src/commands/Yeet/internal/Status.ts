@@ -690,19 +690,17 @@ const MARKDOWN_EMPHASIS_PATTERN = /[*_`]/gu;
  * @category formatting
  * @since 0.0.0
  */
-export const yeetReviewThreadExcerpt = (body: string): string =>
-  pipe(
-    body,
-    Str.replace(HTML_COMMENT_PATTERN, " "),
-    Str.replace(MARKDOWN_IMAGE_PATTERN, " "),
-    Str.replace(HTML_TAG_PATTERN, " "),
-    Str.replace(MARKDOWN_LINK_PATTERN, "$1"),
-    Str.split(/\r?\n/u),
-    A.map(flow(Str.replace(MARKDOWN_LINE_PREFIX_PATTERN, ""), Str.replace(MARKDOWN_EMPHASIS_PATTERN, ""), Str.trim)),
-    A.findFirst(Str.isNonEmpty),
-    O.map((line) => yeetCommentExcerpt(line, threadExcerptLength)),
-    O.getOrElse(() => "(no comment body)")
-  );
+export const yeetReviewThreadExcerpt: (body: string) => string = flow(
+  Str.replace(HTML_COMMENT_PATTERN, " "),
+  Str.replace(MARKDOWN_IMAGE_PATTERN, " "),
+  Str.replace(HTML_TAG_PATTERN, " "),
+  Str.replace(MARKDOWN_LINK_PATTERN, "$1"),
+  Str.split(/\r?\n/u),
+  A.map(flow(Str.replace(MARKDOWN_LINE_PREFIX_PATTERN, ""), Str.replace(MARKDOWN_EMPHASIS_PATTERN, ""), Str.trim)),
+  A.findFirst(Str.isNonEmpty),
+  O.map((line) => yeetCommentExcerpt(line, threadExcerptLength)),
+  O.getOrElse(() => "(no comment body)")
+);
 
 const reviewThreadTriage = (thread: GhStatusReviewThread): YeetStatusReviewThread => {
   const opening = A.head(thread.comments.nodes);
@@ -1124,19 +1122,17 @@ export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string =>
 const renderMergeReadyLine = (snapshot: YeetStatusSnapshot): string =>
   pipe(
     snapshot.mergeReady,
-    O.match({
-      onNone: () => "merge-ready: not checked",
-      onSome: (mergeReady) => {
-        const greptile = O.match(mergeReady.criteria.greptileScore, {
-          onNone: () => Str.empty,
-          onSome: (score) => ` (greptile ${score})`,
-        });
-        return O.match(mergeReady.failing, {
-          onNone: () => `merge-ready: yes${greptile}`,
-          onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
-        });
-      },
-    })
+    O.map((mergeReady) => {
+      const greptile = O.match(mergeReady.criteria.greptileScore, {
+        onNone: () => Str.empty,
+        onSome: (score) => ` (greptile ${score})`,
+      });
+      return O.match(mergeReady.failing, {
+        onNone: () => `merge-ready: yes${greptile}`,
+        onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
+      });
+    }),
+    O.getOrElse(() => "merge-ready: not checked")
   );
 
 /**
