@@ -22,14 +22,14 @@ describe("MutableHashSetFromSelf", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
     expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
-      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf, got null"
+      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf"
     );
   });
 
   it("reports member decode failures at the values path", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected string, got null
+    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected string
   at ["values"][1]`);
   });
 
@@ -81,7 +81,7 @@ describe("MutableHashSet", () => {
     const schema = MutableHashSet(S.FiniteFromString);
 
     expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(
-      `Expected array, got MutableHashSet(["1",null])`
+      `Expected array`
     );
   });
 

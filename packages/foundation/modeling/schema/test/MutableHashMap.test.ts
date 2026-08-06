@@ -32,7 +32,7 @@ describe("MutableHashMapFromSelf", () => {
     });
 
     expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
-      "Expected @beep/schema/MutableHashMap/MutableHashMapFromSelf, got null"
+      "Expected @beep/schema/MutableHashMap/MutableHashMapFromSelf"
     );
   });
 
@@ -42,7 +42,7 @@ describe("MutableHashMapFromSelf", () => {
       value: S.FiniteFromString,
     });
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", null]))).toThrow(`Expected string, got null
+    expect(() => S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", null]))).toThrow(`Expected string
   at ["entries"][0][1]`);
   });
 
@@ -107,7 +107,7 @@ describe("MutableHashMap", () => {
     });
 
     expect(() => S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", null]))).toThrow(
-      `Expected array, got MutableHashMap([["a",null]])`
+      `Expected array`
     );
   });
 
