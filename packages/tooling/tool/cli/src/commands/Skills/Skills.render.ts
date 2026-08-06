@@ -78,6 +78,8 @@ const encodeUnknownJson = S.encodeUnknownResult(S.UnknownFromJsonString);
  * console.log(json.endsWith("\n")) // true
  * ```
  *
+ * @param report - Computed provenance report whose `entry` is rendered.
+ * @returns Stable two-space-formatted JSON text of the lock entry, ending in a newline.
  * @throws When the entry cannot be encoded to JSON; a schema-decoded report never triggers this.
  * @see {@link renderSkillProvenanceSummary} for the human-facing rendering of the same report.
  * @category formatting
@@ -158,6 +160,8 @@ export const renderSkillProvenanceJson = (report: SkillProvenanceReport): string
  * console.log(summary.includes("drift: none against pinned snapshot")) // true
  * ```
  *
+ * @param report - Computed provenance report to summarize.
+ * @returns Fixed-order, line-per-fact summary text suitable for line-by-line diffing.
  * @see {@link renderSkillProvenanceJson} for the lock-shaped rendering of the same report.
  * @category formatting
  * @since 0.0.0
