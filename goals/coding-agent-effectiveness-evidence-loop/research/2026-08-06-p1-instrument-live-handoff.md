@@ -107,10 +107,10 @@ UUID and was never exposed either way. Salting is therefore a publication
 requirement, not a hardening nicety.
 
 **Cutover is sharp and global: `2026-08-06T13:12:20Z`.** Bucketing every row by
-30s and classifying each `cwd` against both salts shows 100% default-namespace
+10s and classifying each `cwd` against both salts shows 100% default-namespace
 before that second and 100% operator-namespace after 13:12:30Z, across *all*
-concurrently running sessions on the workstation — several hundred rows per
-bucket, not just the session that made the change.
+concurrently running sessions on the workstation — 50-80 rows per 10s bucket,
+not just the session that made the change.
 
 **Load-bearing operational finding: settings `env` reaches hook subprocesses
 immediately, with no session restart.** This was assumed in the plan and could
