@@ -20,6 +20,12 @@
 #   (PostToolUseFailure). The output object is built key-by-key from an explicit
 #   whitelist and never by deleting keys from the input, so an unforeseen future
 #   content-bearing key cannot leak.
+# - Pseudonymization also happens HERE, for the same reason. `sessionId`, `cwd`,
+#   and `transcriptPath` are private identifiers the instrument cannot simply
+#   drop — wait attribution needs stable per-session and per-clone grouping — so
+#   they are salted SHA-256 digests before the row exists, not after. `Sha256Hex`
+#   on the schema side makes a raw value structurally unwritable rather than
+#   merely discouraged.
 # - `evidenceTier` is `derived`, never `observed`. `waitReason` is derived, so
 #   under evidence-law 2 (weakest link) the row cannot outrank its weakest input;
 #   the codec's `clampDerivedEvidenceTier` maps `observed` to `derived`, so
@@ -35,8 +41,8 @@
 #   on purpose, and the shell guards on an empty `$output`. `put` additionally
 #   forces its value through `[v][0]`, so even a future empty-capable expression
 #   degrades to `null` instead of silently deleting the whole row.
-# - One row per file shard `hook-pulse-<UTC day>-<sessionId>.ndjson`, appended as
-#   a single `printf` under PIPE_BUF. Sharding per session makes interleaving
+# - One row per file shard `hook-pulse-<UTC day>-<hashed sessionId>.ndjson`,
+#   appended as a single `printf` under PIPE_BUF. Sharding per session makes interleaving
 #   between concurrent sessions in sibling worktrees structurally impossible
 #   rather than merely improbable; the single-write append is the second guard
 #   for same-session concurrency (parallel subagent tool calls).
@@ -71,6 +77,88 @@ set -euo pipefail
 # Without jq the instrument degrades to silence rather than to noise or a block.
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Same degradation rule for the digest tool, and for a stronger reason: without
+# it the writer cannot pseudonymize `sessionId`, `cwd`, and `transcriptPath`, and
+# those are exactly the fields `Sha256Hex` exists to keep out of the ledger in
+# the clear. Silence beats an undecodable row, and both beat a raw home
+# directory on disk. Which tool is present is discovered, never assumed;
+# openssl's `-r` normalizes its `SHA2-256(stdin)= <hex>` output to the
+# `<hex> <name>` shape the other two already use, so one field extraction serves
+# all three. The digest shape is still verified per call below, because a tool
+# being on PATH is not proof of what it prints.
+if command -v sha256sum >/dev/null 2>&1; then
+  hash_stdin() { sha256sum; }
+elif command -v shasum >/dev/null 2>&1; then
+  hash_stdin() { shasum -a 256; }
+elif command -v openssl >/dev/null 2>&1; then
+  hash_stdin() { openssl dgst -sha256 -r; }
+else
+  exit 0
+fi
+
+# Mirrors `resolveAiMetricsHashSaltValue` from `@beep/repo-ai-metrics`: absent,
+# empty, or whitespace-only falls back to `AI_METRICS_LOCAL_INSECURE_HASH_SALT`,
+# so an unconfigured clone still produces digests the TypeScript half reproduces
+# exactly rather than digests nobody can check. `${:-}` alone would accept `"   "`
+# as a salt while TypeScript rejected it, so the whitespace case is not
+# decoration — it is the one input on which the two halves could disagree while
+# both looked correct. The second rung is the repo-wide ai-metrics salt, so a
+# machine that already exports one groups hook rows under the same pseudonyms as
+# the rest of the stack; the first rung salts this instrument on its own.
+#
+# KNOWN DIVERGENCE, deliberate and narrow. Every other ai-metrics producer
+# threads an operator salt (`source-discovery.ts`, `retention.ts`,
+# `forwarder.ts` — which provisions `BEEP_AI_METRICS_HASH_SALT` from 1Password
+# via `op read`), so honouring it here keeps hook rows in the same pseudonym
+# namespace as the rest of the stack. But `privateReference` in
+# `hook-pulse.ts` calls `hashPrivateIdentifier(value, undefined)`
+# unconditionally, keeping that schema transform pure and therefore always on
+# the insecure default. Consequence on a machine with a real salt exported:
+# rows this writer appends cannot be grouped with rows the *codec* produces
+# from raw events or migrated legacy records, because the two use different
+# salts for the same identifier. Rows already 64-hex pass `privateReference`
+# through untouched, so nothing is double-hashed; only cross-producer joins
+# are affected. Unconfigured clones — the common case, and what the
+# conformance tests pin — agree exactly.
+hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}"
+case "${hash_salt}" in
+  *[![:space:]]*) ;;
+  *) hash_salt="beep-ai-metrics-local-smoke-insecure-salt" ;;
+esac
+
+# THE NUL TRAP. Bash cannot carry a NUL in a variable and strips it from a
+# heredoc, so building `${hash_salt}<NUL>${value}` as a shell value first hashes
+# `salt+value` with no separator — a digest that is 64 lowercase hex characters,
+# passes every shape check, decodes cleanly as `Sha256Hex`, and can never equal
+# `hashPrivateIdentifier`. The separator survives only when `printf` writes it
+# straight into the pipe, so the salted preimage must never exist as a shell
+# value. `hashPrivateIdentifier` is the oracle, not this comment: the writer
+# conformance test recomputes both digests in TypeScript and compares them.
+#
+# An empty input returns an empty digest rather than the digest of the empty
+# string. That is what lets the jq program treat "absent" and "unhashable" as one
+# case instead of writing a plausible-looking hash of nothing into an optional
+# field.
+sha256_private_identifier() {
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  local digest
+  digest="$(printf '%s\000%s' "${hash_salt}" "$1" | hash_stdin)" || return 1
+  digest="${digest%% *}"
+  # Verified, not assumed: whatever tool was discovered must have produced
+  # exactly the `Sha256Hex` shape or nothing is written at all. This check is
+  # also what makes the shard filename safe without a separate sanitizer — a
+  # value that is only `[0-9a-f]` has no path separators to escape with.
+  case "${digest}" in
+    "" | *[!0-9a-f]*) return 1 ;;
+  esac
+  [ "${#digest}" -eq 64 ] || return 1
+
+  printf '%s' "${digest}"
+}
+
 # Millisecond precision is load-bearing: the spike measured `PreToolUse` and its
 # `PermissionRequest` in the same second, and P4's two-hop join pairs each
 # `PermissionRequest` with the nearest preceding unpaired `PreToolUse`. Fall back
@@ -90,6 +178,45 @@ case "${instrument_class}" in
 esac
 
 payload="$(cat)"
+
+# One extraction pass for the three private identifiers, NUL-delimited. A `cwd`
+# or `transcript_path` containing a newline is legal on POSIX, and a
+# line-delimited read would silently hash a truncated value while still
+# producing a well-formed digest — the same failure class as the NUL trap, one
+# layer earlier. Only the salted preimage is unsafe in a shell value; the raw
+# identifiers themselves are ordinary strings. The `cwd` fallback lives here
+# rather than in the main program so that exactly one expression decides what
+# gets hashed.
+identifier_program='
+def as_string: if type == "string" then . else null end;
+def as_present: as_string | if . == "" then null else . end;
+def nul: [0] | implode;
+((.session_id | as_present) // ""), nul,
+((.cwd | as_string) // $fallbackCwd), nul,
+((.transcript_path | as_present) // ""), nul
+'
+
+# The trailing `nul` is what makes the third read succeed rather than hit EOF,
+# and clobbering to `""` on a failed read is a safety property, not tidiness: a
+# `read` that reaches EOF before its delimiter still assigns the partial data it
+# consumed. So a jq build that could not emit the separator would otherwise leave
+# the three values concatenated into the first variable and hash a string no
+# reader can reproduce. Discarding the partial value instead turns any truncation
+# of this stream into an empty digest, which the jq program below treats as a
+# refusal. DO NOT relax these to `|| true`; that is exactly the substitution that
+# converts a silent refusal into a silently wrong digest.
+raw_session_id=""
+raw_cwd=""
+raw_transcript_path=""
+{
+  IFS= read -r -d '' raw_session_id || raw_session_id=""
+  IFS= read -r -d '' raw_cwd || raw_cwd=""
+  IFS= read -r -d '' raw_transcript_path || raw_transcript_path=""
+} < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
+
+session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
+cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
+transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
 
 jq_program='
 def as_string: if type == "string" then . else null end;
@@ -124,17 +251,22 @@ def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUs
                    "PermissionDenied" ];
 def notification_types: [ "permission_prompt", "idle_prompt" ];
 
-(.session_id | as_present) as $sessionId
+# The three private identifiers arrive pre-hashed and shape-verified, so nothing
+# below can read a raw one: the raw keys are simply never referenced here. An
+# empty argument means the shell could not hash it, which is deliberately the
+# same case as the field being absent — an unhashable identifier must never
+# degrade into a digest of the empty string.
+($sessionIdHash | as_present) as $sessionId
 | (.hook_event_name | as_present) as $hookEventName
 | (if $hookEventName != null and (hook_events | index($hookEventName)) != null
    then $hookEventName
    else null
    end) as $hookEvent
-| (.cwd | as_string) as $cwd
+| ($cwdHash | as_present) as $cwd
 | (.tool_name | as_present) as $toolName
 | (.tool_use_id | as_present) as $toolUseId
 | (.prompt_id | as_present) as $promptId
-| (.transcript_path | as_present) as $transcriptPath
+| ($transcriptPathHash | as_present) as $transcriptPath
 | (.permission_mode | as_present) as $permissionMode
 | (.notification_type | as_present) as $notificationTypeRaw
 | (.duration_ms | as_non_negative) as $durationMs
@@ -154,7 +286,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
    else "none"
    end) as $waitReason
-| if $sessionId == null or $hookEvent == null then
+| if $sessionId == null or $cwd == null or $hookEvent == null then
     empty
   else
     ({
@@ -163,7 +295,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
        sessionId: $sessionId,
        agentKind: $agentKind,
        hookEvent: $hookEvent,
-       cwd: (if $cwd == null then $fallbackCwd else $cwd end),
+       cwd: $cwd,
        notifierRev: $notifierRev,
        instrumentClass: $instrumentClass,
        evidenceTier: "derived",
@@ -179,7 +311,12 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("sessionEndReason"; (if $hookEvent == "SessionEnd" then $reason else null end))
      | put("isInterrupt"; (if $hookEvent == "PostToolUseFailure" then $isInterrupt else null end))
     ) as $row
-    | (($ts[0:10]) + "-" + ($sessionId | gsub("[^A-Za-z0-9._-]"; "_"))), $row
+    # No filename sanitizer here any more, and none is needed: `$sessionId` is a
+    # digest the shell already proved matches `^[0-9a-f]{64}$`, which contains no
+    # path separator, no `..`, and no shell metacharacter. Keeping a `gsub` over
+    # a value with that shape would be a no-op dressed as a guard, and the raw
+    # session UUID it used to sanitize no longer reaches this program at all.
+    | (($ts[0:10]) + "-" + $sessionId), $row
   end
 '
 
@@ -190,7 +327,9 @@ output="$(
     --arg agentKind "claude-code" \
     --arg notifierRev "${notifier_rev}" \
     --arg instrumentClass "${instrument_class}" \
-    --arg fallbackCwd "${PWD}" \
+    --arg sessionIdHash "${session_id_hash}" \
+    --arg cwdHash "${cwd_hash}" \
+    --arg transcriptPathHash "${transcript_path_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
 )" || exit 0
 
