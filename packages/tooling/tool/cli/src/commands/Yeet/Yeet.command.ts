@@ -27,6 +27,11 @@ const baseFlag = Flag.string("base").pipe(
   Flag.withDefault("origin/main")
 );
 
+const branchFlag = Flag.string("branch").pipe(
+  Flag.withDescription("Sweep this branch instead of the checked-out one, so a second pass can finish a merged branch"),
+  Flag.withDefault("")
+);
+
 const headFlag = Flag.string("head").pipe(
   Flag.withDescription("Head ref for affected feedback planning"),
   Flag.withDefault("HEAD")
@@ -243,6 +248,7 @@ const porcelainFlags = {
 
 const sweepFlags = {
   ...porcelainFlags,
+  branch: branchFlag,
   json: jsonFlag,
   plan: planFlag,
 } as const;

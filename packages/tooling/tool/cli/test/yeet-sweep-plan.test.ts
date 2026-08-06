@@ -3,7 +3,9 @@ import {
   executeSweep,
   MergeOutcome,
   observeSweepGitState,
+  overrideSweepBranch,
   RepoRunContext,
+  refreshNotCompletedHandoff,
   renderSweepReport,
   revalidateLocalDeletion,
   revalidateRemoteDeletion,
@@ -23,7 +25,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, pipe, Sink, Stream } from "effect";
+import { Effect, Exit, FileSystem, Layer, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -52,6 +54,7 @@ const mergedFacts = {
   lockfileMovedOnMainUpdate: true,
   statusProbeUnreliable: false,
   worktreeProbeUnreliable: false,
+  mainWorktreePath: O.none<string>(),
   mainTip: O.some(mainTipBeforeUpdate),
   localTip: O.some(mergedTip),
   remoteTip: O.some(mergedTip),
@@ -706,5 +709,81 @@ describe("MergeOutcome", () => {
     });
     expect(outcome.pullRequestNumber).toBe(559);
     expect(outcome.sweep.plan.branch).toBe("feat/merge-loop");
+  });
+});
+
+// Decision 45(d) shipped claiming "a re-run completes the deletion". It does
+// not: `end-state` leaves the clone on main, so the second pass observes main
+// as the current branch and never reconsiders the merged branch. The override
+// is what makes the documented two-pass design actually reachable.
+describe("sweep branch override", () => {
+  const contextAt = (branch: string) =>
+    RepoRunContext.make({
+      base: "origin/main",
+      branch,
+      cwd: "/repo",
+      head: "HEAD",
+      originalArgv: [],
+      packetDir: "/repo",
+      repoRoot: "/repo",
+      turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+    });
+
+  it.effect("re-aims the sweep at a branch the clone is no longer standing on", () =>
+    Effect.gen(function* () {
+      const reaimed = yield* overrideSweepBranch(contextAt("main"), "feat/merge-loop");
+      expect(reaimed.branch).toBe("feat/merge-loop");
+    })
+  );
+
+  it.effect("changes only the branch coordinate", () =>
+    Effect.gen(function* () {
+      const original = contextAt("main");
+      const reaimed = yield* overrideSweepBranch(original, "feat/merge-loop");
+      expect({ ...reaimed, branch: original.branch }).toEqual({ ...original });
+    })
+  );
+
+  it.effect("refuses an option-like branch name instead of passing it to git", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(overrideSweepBranch(contextAt("main"), "--upload-pack=touch /tmp/pwn"));
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+});
+
+describe("refresh handoff addressing", () => {
+  const localMain = O.some("cccc3333");
+  const trackingMain = O.some("dddd4444");
+
+  it("sends the operator to the worktree that holds main, aimed back at this branch", () => {
+    const handoff = refreshNotCompletedHandoff(
+      stateWith({ mainCheckedOutElsewhere: true, mainWorktreePath: O.some("/home/dev/beep-effect") }),
+      localMain,
+      trackingMain
+    );
+    expect(handoff.operatorCommand).toBe(
+      "cd /home/dev/beep-effect && bun run beep yeet sweep --branch feat/merge-loop"
+    );
+    expect(handoff.reason).toContain("/home/dev/beep-effect holds main");
+  });
+
+  it("never tells the operator to re-run in place, which is the loop that was shipped", () => {
+    const handoff = refreshNotCompletedHandoff(
+      stateWith({ mainCheckedOutElsewhere: true, mainWorktreePath: O.some("/home/dev/beep-effect") }),
+      localMain,
+      trackingMain
+    );
+    expect(handoff.operatorCommand).not.toBe("bun run beep yeet sweep");
+  });
+
+  it("names no path when the worktree probe could not be read", () => {
+    const handoff = refreshNotCompletedHandoff(
+      stateWith({ mainCheckedOutElsewhere: true, worktreeProbeUnreliable: true }),
+      localMain,
+      trackingMain
+    );
+    expect(handoff.operatorCommand).toBe("bun run beep yeet sweep");
+    expect(handoff.reason).toContain("Re-running here cannot fix it");
   });
 });

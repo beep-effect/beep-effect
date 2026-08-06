@@ -48,9 +48,17 @@
  *
  * `delete-local-branch` is planned before `end-state`, so a sweep run from the
  * merged branch's own worktree skips the deletion ("no worktree holds
- * `<branch>`" fails) and then leaves the clone on `main`. Re-running the sweep
- * completes the deletion. Moving HEAD first would mean mutating the worktree
- * before the plan's safety facts were acted on, which the rails forbid.
+ * `<branch>`" fails) and then leaves the clone on `main`. Moving HEAD first
+ * would mean mutating the worktree before the plan's safety facts were acted
+ * on, which the rails forbid.
+ *
+ * A bare re-run does NOT complete that deletion. `end-state` has already moved
+ * the clone to `main`, so the second pass observes `main` as the current branch
+ * and plans against it — the merged branch is never reconsidered. The second
+ * pass must name its target: `yeet sweep --branch <merged-branch>`, which
+ * {@link overrideSweepBranch} re-aims. The same override is what makes a
+ * `needs-operator` refresh handoff actionable, since the worktree holding
+ * `main` is rarely the worktree holding the merged branch.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -65,7 +73,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
-import { runRepoCommandCapture, safeOriginBranchFromBase } from "../../../internal/repo-run/index.ts";
+import { RepoRunContext, runRepoCommandCapture, safeOriginBranchFromBase } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -85,7 +93,6 @@ import {
 } from "./Sweep.schemas.ts";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Sweep");
 
@@ -172,6 +179,7 @@ export class SweepGitState extends S.Class<SweepGitState>($I`SweepGitState`)(
     lockfileMovedOnMainUpdate: S.Boolean,
     statusProbeUnreliable: S.Boolean,
     worktreeProbeUnreliable: S.Boolean,
+    mainWorktreePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     mainTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -542,8 +550,18 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> =>
     A.getSomes
   );
 
+// The path is what a handoff needs: "main is held elsewhere" tells an operator
+// they are blocked, not where to go, and re-running the sweep in the blocked
+// worktree loops forever. `heldByOtherWorktree` stays the boolean the
+// preconditions read, derived from the same lookup so the two cannot disagree.
+const worktreeHolding = (worktrees: ReadonlyArray<WorktreeEntry>, branch: string, selfPath: string): O.Option<string> =>
+  pipe(
+    A.findFirst(worktrees, (entry) => entry.path !== selfPath && O.exists(entry.branch, (held) => held === branch)),
+    O.map((entry) => entry.path)
+  );
+
 const heldByOtherWorktree = (worktrees: ReadonlyArray<WorktreeEntry>, branch: string, selfPath: string): boolean =>
-  A.some(worktrees, (entry) => entry.path !== selfPath && O.exists(entry.branch, (held) => held === branch));
+  O.isSome(worktreeHolding(worktrees, branch, selfPath));
 
 const observeSha = (
   cwd: string,
@@ -583,6 +601,50 @@ const refuseUnsafeName = (value: string, role: string) =>
       })
     )
   );
+
+/**
+ * Aim a sweep at a branch other than the one checked out.
+ *
+ * **Details**
+ *
+ * The sweep plans against `context.branch`, so without an override it can only
+ * ever finish the branch it is standing on. That makes the second pass of a
+ * two-pass sweep unreachable: the first pass leaves the clone on `main`, and
+ * from there the merged branch is no longer the current branch. It is also what
+ * a blocked handoff needs — the worktree holding `main` is usually not the
+ * worktree holding the merged branch, so the operator must be able to run the
+ * sweep in one and target the other.
+ *
+ * **Gotchas**
+ *
+ * The override is pushed through the same `guardLiteralArg` refusal as every
+ * other argv-bound name, so an option-like `--branch` value fails the sweep
+ * instead of becoming a git flag. Only the branch coordinate changes; the base,
+ * head, and packet directory stay as hydrated.
+ *
+ * **Example** (Target a merged branch from another worktree)
+ *
+ * ```ts
+ * import { overrideSweepBranch } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(overrideSweepBranch)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param context - The hydrated run context to re-aim.
+ * @param branch - The branch name the sweep should plan against.
+ * @returns The context with its branch coordinate replaced.
+ * @category planning
+ * @since 0.0.0
+ */
+export const overrideSweepBranch = Effect.fn("Yeet.overrideSweepBranch")(function* (
+  context: RepoRunContext,
+  branch: string
+): Effect.fn.Return<RepoRunContext, YeetCommandError> {
+  const safeBranch = yield* refuseUnsafeName(branch, "branch");
+  return RepoRunContext.make({ ...context, branch: safeBranch });
+});
 
 /**
  * Probe the clone for every fact {@link buildSweepPlan} needs.
@@ -668,6 +730,12 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     lockfileMovedOnMainUpdate: lockfile.exitCode === 0 && Str.isNonEmpty(lockfile.output),
     statusProbeUnreliable: probeUnreliable(status),
     worktreeProbeUnreliable: probeUnreliable(worktreeList),
+    // None when the probe was unreliable: an unreadable worktree list forces
+    // `mainCheckedOutElsewhere` true conservatively, but naming a path nobody
+    // observed would send the operator to a worktree that may not hold main.
+    mainWorktreePath: probeUnreliable(worktreeList)
+      ? O.none()
+      : worktreeHolding(worktrees, mainBranch, toplevel.output),
     mainTip,
     localTip,
     remoteTip,
@@ -879,6 +947,62 @@ const guardedDeletion = (
     )
   );
 
+/**
+ * The handoff raised when `main` was never refreshed, naming who can fix it.
+ *
+ * **Details**
+ *
+ * An unrefreshed `main` proves nothing about `bun.lock`, so the dependency
+ * state is unknown rather than unchanged. This is `needs-operator` and not a
+ * skip because it cannot self-heal: whatever blocked the fast-forward — a dirty
+ * tree, or another worktree holding `main` — is still blocking it on the next
+ * run.
+ *
+ * **Gotchas**
+ *
+ * A handoff that names only the command is unactionable when the blocker is
+ * authority rather than state. Re-running the sweep in a worktree that cannot
+ * refresh `main` loops forever. So when the holding worktree is known the
+ * handoff sends the operator THERE and aims the run back at this branch through
+ * `--branch`; when it is not known — an unreliable `worktree list` probe — the
+ * command stays bare and the reason says only what must become true first,
+ * because naming a path nobody observed is worse than naming none.
+ *
+ * **Example** (Build the refresh handoff)
+ *
+ * ```ts
+ * import { refreshNotCompletedHandoff } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof refreshNotCompletedHandoff) // "function"
+ * ```
+ *
+ * @param state - Observed facts for the branch being swept.
+ * @param localMain - The local `main` tip observed after the refresh step.
+ * @param trackingMain - The `origin/main` tip observed after the refresh step.
+ * @returns The operator handoff outcome for the lockfile step.
+ * @category execution
+ * @since 0.0.0
+ */
+export const refreshNotCompletedHandoff = (
+  state: SweepGitState,
+  localMain: O.Option<string>,
+  trackingMain: O.Option<string>
+): SweepStepNeedsOperator =>
+  SweepStepNeedsOperator.make({
+    reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds${O.match(
+      state.mainWorktreePath,
+      {
+        onNone: () =>
+          `. Re-running here cannot fix it — clear whatever blocks the ${state.mainBranch} fast-forward first`,
+        onSome: (holder) => `. ${holder} holds ${state.mainBranch}, so only that worktree can refresh it`,
+      }
+    )}`,
+    operatorCommand: O.match(state.mainWorktreePath, {
+      onNone: () => "bun run beep yeet sweep",
+      onSome: (holder) => `cd ${holder} && bun run beep yeet sweep --branch ${state.branch}`,
+    }),
+  });
+
 // The observed lockfile forecast predates the sweep's own fetch/fast-forward,
 // so the executed decision re-diffs the actual update window: the main tip
 // recorded at observation against post-refresh local main. An unreadable
@@ -908,12 +1032,7 @@ const runLockfileInstallStep = (
               // whatever blocked ff-main (dirty tree, held main), so the
               // unreconciled dependency state lands in the batched handoff
               // instead of waiting for someone to read a buried skip.
-              Effect.succeed<SweepStepOutcome>(
-                SweepStepNeedsOperator.make({
-                  reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds`,
-                  operatorCommand: "bun run beep yeet sweep",
-                })
-              )
+              Effect.succeed<SweepStepOutcome>(refreshNotCompletedHandoff(state, localMain, trackingMain))
             : captureGit(cwd, [
                 "diff",
                 "--name-only",
