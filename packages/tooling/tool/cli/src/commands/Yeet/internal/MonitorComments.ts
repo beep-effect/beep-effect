@@ -312,12 +312,37 @@ export const normalizeYeetMonitorReviewCommentForTesting = normalizeReviewCommen
  */
 export const normalizeYeetMonitorIssueCommentForTesting = normalizeIssueComment;
 
-const excerpt = (body: string): string => {
+/**
+ * Collapse whitespace in a comment body and bound its length for one line.
+ *
+ * **Details**
+ *
+ * Terminal control sequences are stripped before the whitespace collapse, so a
+ * hostile comment body cannot smuggle escape codes into operator terminals.
+ * Shared with `yeet status` thread triage, which strips bot badge markup first
+ * and then bounds the surviving first line here — so both operator surfaces
+ * sanitize and truncate identically instead of drifting apart.
+ *
+ * **Example** (Bound a long body)
+ *
+ * ```ts
+ * import { yeetCommentExcerpt } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetCommentExcerpt("please  add\na regression test", 12))
+ * ```
+ *
+ * @param body - Raw comment text.
+ * @param maxLength - Maximum characters before an ellipsis is appended.
+ * @returns The single-line, bounded, control-sequence-free excerpt.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const yeetCommentExcerpt = (body: string, maxLength: number): string => {
   const normalized = pipe(body, stripTerminalControlSequences, Str.replace(/\s+/gu, " "), Str.trim);
-  return Str.length(normalized) <= commentExcerptLength
-    ? normalized
-    : `${pipe(normalized, Str.takeLeft(commentExcerptLength))}…`;
+  return Str.length(normalized) <= maxLength ? normalized : `${pipe(normalized, Str.takeLeft(maxLength))}…`;
 };
+
+const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerptLength);
 
 /**
  * Render a new pull request comment in Yeet monitor's compact operator format.

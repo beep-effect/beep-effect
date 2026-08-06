@@ -93,17 +93,78 @@ import { ensurePullRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
-import { buildYeetVerdict, YeetExecutedStep } from "./Verdict.ts";
+import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
-import type { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
+import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
+
+/**
+ * The three repository coordinates every yeet run context needs before any
+ * turbo work is planned. Structural on purpose: each caller passes its own
+ * parsed flag bag rather than importing a shared option type.
+ */
+interface YeetContextCoordinates {
+  readonly base: string;
+  readonly head: string;
+  readonly packetDir: string;
+}
+
+const readOnlyRunContext = (repoRoot: string, branch: string, options: YeetContextCoordinates): RepoRunContext =>
+  RepoRunContext.make({
+    repoRoot,
+    cwd: process.cwd(),
+    base: options.base,
+    head: options.head,
+    branch,
+    packetDir: options.packetDir,
+    originalArgv: [],
+    turbo: emptyTurboPlanSnapshot([]),
+  });
+
+/**
+ * Hydrate a run context for commands that read the clone instead of planning
+ * turbo work.
+ *
+ * **Details**
+ *
+ * The porcelain subcommands — sweep, merge, reply, and the merge loop — need the
+ * repo root, the checked-out branch, and the packet directory, and nothing else.
+ * Skipping {@link collectTurboPlanSnapshot} keeps them off the `turbo run --dry`
+ * critical path, which is the whole reason they feel instant next to a publish.
+ *
+ * **Example** (Hydrate a read-only context)
+ *
+ * ```ts
+ * import { hydrateYeetReadOnlyContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(hydrateYeetReadOnlyContext)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Base ref, head ref, and packet directory for the run.
+ * @returns Run context carrying an empty turbo snapshot.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyContext")(function* (
+  options: YeetContextCoordinates
+): Effect.fn.Return<
+  RepoRunContext,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
+  const branch = yield* currentYeetBranch(repoRoot);
+  return readOnlyRunContext(repoRoot, branch, options);
+});
 
 /**
  * Hydrate a shared yeet run context from repository state.
@@ -132,32 +193,14 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const branch = yield* currentYeetBranch(repoRoot);
   if (options.mode === "pre-push-hook") {
-    return RepoRunContext.make({
-      repoRoot,
-      cwd: process.cwd(),
-      base: options.base,
-      head: options.head,
-      branch,
-      packetDir: options.packetDir,
-      originalArgv: [],
-      turbo: emptyTurboPlanSnapshot([]),
-    });
+    return readOnlyRunContext(repoRoot, branch, options);
   }
 
   if (options.mode === "status") {
     if (options.remote) {
       yield* refreshBaseRef(repoRoot, options.base);
     }
-    return RepoRunContext.make({
-      repoRoot,
-      cwd: process.cwd(),
-      base: options.base,
-      head: options.head,
-      branch,
-      packetDir: options.packetDir,
-      originalArgv: [],
-      turbo: emptyTurboPlanSnapshot([]),
-    });
+    return readOnlyRunContext(repoRoot, branch, options);
   }
 
   if (!options.plan) {
@@ -448,7 +491,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       yield* writeVerifiedState(plan.context, "full", fullSteps);
       yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
 
-      return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, skipCommit);
+      return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
     }
 
     const preflightSteps = A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
@@ -493,7 +536,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       );
     }
 
-    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, skipCommit);
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   });
 
   return yield* pipe(
@@ -554,7 +597,8 @@ const runPrePushHookMode = Effect.fn("Yeet.runPrePushHookMode")(function* (
 const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -564,6 +608,7 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
     Effect.catch((error) => failWithRerunGuidance(context, error))
   );
   const snapshot = yield* printOperatorStatusSummary(context, true);
+  yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
   yield* assertNoUnresolvedReviewThreads(snapshot);
   return yield* emptyPlanResult(context);
 });
@@ -627,6 +672,14 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // The planner emits monitor steps only under `--monitor`, so every other
+  // publish arrives here with an empty list. Falling through decoded the absent
+  // PR context and failed the whole run with "Failed to decode pull request
+  // number for yeet monitor" *after* a full success; an empty monitor phase is
+  // a no-op by contract.
+  if (A.isReadonlyArrayEmpty(monitorSteps)) {
+    return;
+  }
   const contextSteps = A.filter(monitorSteps, (step) => step.id === "monitor:01-pr-context");
   const checkSteps = A.filter(monitorSteps, (step) => step.id === "monitor:02-pr-checks-watch");
   const contextResults = yield* runPhase(context, contextSteps, recorder);
@@ -653,6 +706,7 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
   skipCommit: boolean
 ): Effect.fn.Return<
   YeetRunResult,
@@ -664,10 +718,27 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   );
   if (!A.isReadonlyArrayEmpty(monitorSteps)) {
     const snapshot = yield* printOperatorStatusSummary(context, true);
+    yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
     yield* assertNoUnresolvedReviewThreads(snapshot);
   }
   return yield* publishResult(context, !skipCommit);
 });
+
+/**
+ * Run the monitor phase in isolation.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runMonitorPhaseForTesting = runMonitorPhase;
+
+/**
+ * Run the publish tail — monitor phase, operator summary, and run result.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runPublishMonitorAndResultForTesting = runPublishMonitorAndResult;
 
 const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   context: RepoRunContext,
@@ -736,6 +807,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
 
 type YeetVerdictExtras = {
   readonly baseFreshness: O.Option<YeetBaseFreshness>;
+  readonly mergeReady: O.Option<YeetMergeReady>;
   readonly stash: O.Option<YeetStashState>;
 };
 
@@ -836,6 +908,10 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     indexPath: O.getOrUndefined(indexPath),
     message,
     mode: options.mode,
+    // Only the publish/monitor paths observe a live status snapshot, so runs
+    // that never read the pull request omit the key rather than asserting an
+    // unknown merge readiness.
+    mergeReady: O.getOrUndefined(extraState.mergeReady),
     outcome,
     packetPaths: pipe(
       artifacts,
@@ -849,7 +925,13 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     failureKind: outcome === "failure" ? (O.isSome(failedExecution) ? "step-exit" : "handler-error") : undefined,
   });
   const verdictPath = yield* runOutputPathForContext(plan.context, "verdict.json");
-  yield* writeTextFile(verdictPath, `${yield* renderJson(verdict)}\n`);
+  // Encode through the verdict's own schema codec: a generic JSON render of the
+  // decoded instance writes Option fields as `{"_id":"Option",...}`, which the
+  // status reader then rejects as "verdict artifact could not be decoded".
+  const verdictJson = yield* YeetVerdictJson.encode(verdict).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode the yeet verdict artifact."))
+  );
+  yield* writeTextFile(verdictPath, `${verdictJson}\n`);
   yield* appendYeetAttemptJournalEvent(
     plan.context,
     YeetAttemptFinished.make({
@@ -862,6 +944,22 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   );
   yield* Console.log(`[yeet] verdict written to ${verdictPath}`);
 });
+
+/**
+ * Verdict facts collected outside the step recorder during one run.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export type YeetVerdictExtrasForTesting = YeetVerdictExtras;
+
+/**
+ * Write the run verdict artifact and append its attempt-journal record.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const writeRunVerdictForTesting = writeRunVerdict;
 
 const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
@@ -906,7 +1004,11 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const monitorSteps = A.filter(executionSteps, (step) => step.phase === "monitor");
 
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
-  const extras = yield* Ref.make<YeetVerdictExtras>({ baseFreshness: O.none(), stash: O.none() });
+  const extras = yield* Ref.make<YeetVerdictExtras>({
+    baseFreshness: O.none(),
+    mergeReady: O.none(),
+    stash: O.none(),
+  });
 
   const execution = Effect.gen(function* () {
     const prepareResults = yield* runPhase(plan.context, prepareSteps, recorder);
@@ -935,7 +1037,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
           recorder,
           extras
         ),
-      monitor: () => runMonitorMode(plan.context, monitorSteps, recorder),
+      monitor: () => runMonitorMode(plan.context, monitorSteps, recorder, extras),
       closeout: () => runCloseoutMode(plan.context, options),
       status: () => runStatusMode(plan.context, options),
       "pre-push-hook": () => runPrePushHookMode(plan.context),
