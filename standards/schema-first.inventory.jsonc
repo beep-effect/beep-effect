@@ -507,6 +507,16 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "symbol": "partitionMigratedOrphans",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 233,
+      "owner": "@beep/repo-cli",
+      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
       "symbol": "computeJSDocMigrateBinding",
       "kind": "schema-policy-advisory",
       "status": "exception",

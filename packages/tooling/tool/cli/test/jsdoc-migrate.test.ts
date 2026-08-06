@@ -8,12 +8,13 @@ import {
   jsdocMigrateSourceHash,
   jsdocMigrateTitleRecordsFromResponse,
   jsdocMigrateTitlesPrompt,
+  partitionMigratedOrphans,
   rewriteJSDocMigrateBlock,
   scanJSDocMigrateBlocks,
   syntheticJSDocMigrateTitleRecord,
 } from "@beep/repo-cli/test/Quality";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, MutableHashMap } from "effect";
 
 const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
 
@@ -600,5 +601,85 @@ describe("JSDocMigrateTitles response validation", () => {
   it("rejects non-JSON content", () => {
     const exit = Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse("not json", pending));
     expect(Exit.isFailure(exit)).toBe(true);
+  });
+
+  it("rejects empty and duplicate titles", () => {
+    const twoExample = jsdocMigrateExtractRecordsForFile(
+      "packages/x/src/two.ts",
+      lines(
+        "/**",
+        " * Two examples.",
+        " *",
+        " * @example",
+        " * ```ts",
+        " * one()",
+        " * ```",
+        " *",
+        " * @example",
+        " * ```ts",
+        " * two()",
+        " * ```",
+        " */",
+        "export const two = 1",
+        ""
+      )
+    );
+    const duplicate = JSON.stringify(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Same", "Same"] })));
+    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample)))).toBe(true);
+    const empty = JSON.stringify(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Fine", "  "] })));
+    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample)))).toBe(true);
+  });
+
+  it("rejects a see-purpose count that disagrees with the block", () => {
+    const withSee = jsdocMigrateExtractRecordsForFile(
+      "packages/x/src/see.ts",
+      lines(
+        "/**",
+        " * Uses a helper.",
+        " *",
+        " * @see {@link other}",
+        " * @example",
+        " * ```ts",
+        " * use()",
+        " * ```",
+        " */",
+        "export const use = 1",
+        ""
+      )
+    );
+    const missingPurpose = JSON.stringify(withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"] })));
+    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee)))).toBe(
+      true
+    );
+    const withPurpose = JSON.stringify(
+      withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
+    );
+    const records = Effect.runSync(jsdocMigrateTitleRecordsFromResponse(withPurpose, withSee));
+    expect(records.length).toBe(withSee.length);
+  });
+});
+
+describe("JSDocMigrateApply orphan tolerance", () => {
+  it("tolerates records whose blocks were already migrated and keeps true orphans", () => {
+    const migratedSource = lines(
+      "/**",
+      " * Already migrated.",
+      " *",
+      " * **Example** (Use it)",
+      " *",
+      " * ```ts",
+      " * use()",
+      " * ```",
+      " */",
+      "export const done = 1",
+      ""
+    );
+    const blocks = MutableHashMap.empty<string, { readonly affected: boolean }>();
+    for (const block of scanJSDocMigrateBlocks("packages/x/src/done.ts", migratedSource)) {
+      MutableHashMap.set(blocks, block.anchor, { affected: block.affected });
+    }
+    const result = partitionMigratedOrphans(["packages/x/src/done.ts#done#0", "packages/x/src/gone.ts#gone#0"], blocks);
+    expect(result.migrated).toEqual(["packages/x/src/done.ts#done#0"]);
+    expect(result.missing).toEqual(["packages/x/src/gone.ts#gone#0"]);
   });
 });

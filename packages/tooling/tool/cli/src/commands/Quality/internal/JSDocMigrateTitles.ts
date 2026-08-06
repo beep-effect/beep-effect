@@ -173,8 +173,21 @@ const titleSuggestionProblem = (
   if (suggestion.titles.length !== extract.exampleTagCount) {
     return `anchor ${suggestion.anchor} returned ${suggestion.titles.length} title(s); expected ${extract.exampleTagCount}`;
   }
+  const trimmedTitles = A.map(suggestion.titles, Str.trim);
+  if (A.some(trimmedTitles, Str.isEmpty)) {
+    return `anchor ${suggestion.anchor} returned an empty title`;
+  }
+  if (A.dedupe(trimmedTitles).length !== trimmedTitles.length) {
+    return `anchor ${suggestion.anchor} returned duplicate titles within the block`;
+  }
   if (extract.remarksTagCount > 0 && suggestion.remarks === undefined) {
     return `anchor ${suggestion.anchor} is missing the required remarks routing`;
+  }
+  if ((suggestion.seePurposes?.length ?? 0) !== extract.undescribedSeeCount) {
+    return `anchor ${suggestion.anchor} returned ${suggestion.seePurposes?.length ?? 0} see purpose(s); expected ${extract.undescribedSeeCount}`;
+  }
+  if (suggestion.leadEnd !== undefined && (suggestion.leadEnd < 1 || suggestion.leadEnd > extract.leadParagraphCount)) {
+    return `anchor ${suggestion.anchor} returned leadEnd ${suggestion.leadEnd}; expected 1..${extract.leadParagraphCount}`;
   }
   return undefined;
 };

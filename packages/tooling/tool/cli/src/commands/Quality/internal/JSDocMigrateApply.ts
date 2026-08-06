@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -199,6 +199,54 @@ export const computeJSDocMigrateBinding = (input: {
   });
 };
 
+/**
+ * Split orphan record anchors into already-migrated blocks and true orphans.
+ *
+ * **Details**
+ *
+ * A record becomes an orphan when its anchor is absent from the affected
+ * extract. When the anchor still resolves to a block in the current tree and
+ * that block no longer carries a legacy tag, the block was already migrated —
+ * a normal state while iterating apply over residue — so the record is
+ * tolerated. Anchors that resolve nowhere remain hard failures.
+ *
+ * **Example** (Tolerate a migrated block)
+ *
+ * ```ts
+ * import { MutableHashMap } from "effect"
+ * import { partitionMigratedOrphans } from "@beep/repo-cli/test/Quality"
+ *
+ * const blocks = MutableHashMap.make([
+ *   "packages/x/src/a.ts#done#0",
+ *   { affected: false }
+ * ])
+ * const result = partitionMigratedOrphans(["packages/x/src/a.ts#done#0"], blocks)
+ * console.log(result.missing) // []
+ * ```
+ *
+ * @param orphanAnchors - Record anchors the bijection found no extract row for.
+ * @param currentBlocksByAnchor - Every scanned block in the current tree keyed by anchor.
+ * @returns Anchors of already-migrated blocks and anchors that resolve nowhere.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const partitionMigratedOrphans = (
+  orphanAnchors: ReadonlyArray<string>,
+  currentBlocksByAnchor: MutableHashMap.MutableHashMap<string, { readonly affected: boolean }>
+): { readonly migrated: ReadonlyArray<string>; readonly missing: ReadonlyArray<string> } => {
+  const migrated: Array<string> = [];
+  const missing: Array<string> = [];
+  for (const anchor of orphanAnchors) {
+    const block = MutableHashMap.get(currentBlocksByAnchor, anchor);
+    if (O.isSome(block) && !block.value.affected) {
+      A.appendInPlace(migrated, anchor);
+    } else {
+      A.appendInPlace(missing, anchor);
+    }
+  }
+  return { migrated, missing };
+};
+
 const bindingIsClean = (report: JSDocMigrateBindingReport): boolean =>
   A.isReadonlyArrayEmpty(report.orphanRecordAnchors) &&
   A.isReadonlyArrayEmpty(report.unmatchedExtractAnchors) &&
@@ -212,9 +260,9 @@ const bindingIsClean = (report: JSDocMigrateBindingReport): boolean =>
  *
  * Placeholder titles keep the rewrite machinery honest without inventing
  * shippable prose: titles are unique within the block, remarks route to
- * Details, and no lead split or see purposes are synthesized. Dry runs must
- * never be applied for real — the binding checks reject synthetic data in a
- * non-dry apply because it is generated in memory, not frozen.
+ * Details, and no lead split or see purposes are synthesized. Placeholders
+ * can never reach a file: apply refuses `--synthetic-titles` without
+ * `--dry-run` before any rewrite happens.
  *
  * **Example** (Synthesize a record for a two-example block)
  *
@@ -393,6 +441,49 @@ export class RunJSDocMigrateApplyOptions extends S.Class<RunJSDocMigrateApplyOpt
   })
 ) {}
 
+const anchorFilePath = (anchor: string): string => Str.split("#")(anchor)[0] ?? anchor;
+
+const scanAnchorsForOrphans = Effect.fn("JSDocMigrateApply.scanAnchorsForOrphans")(function* (
+  repoRoot: string,
+  affectedFiles: ReadonlyArray<AffectedFile>,
+  orphanAnchors: ReadonlyArray<string>
+): Effect.fn.Return<
+  MutableHashMap.MutableHashMap<string, JSDocMigrateScannedBlock>,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const blocksByAnchor = MutableHashMap.empty<string, JSDocMigrateScannedBlock>();
+  const scannedFiles = MutableHashSet.empty<string>();
+  for (const file of affectedFiles) {
+    MutableHashSet.add(scannedFiles, file.filePath);
+    for (const block of file.blocks) {
+      MutableHashMap.set(blocksByAnchor, block.anchor, block);
+    }
+  }
+  const orphanFiles = A.dedupe(
+    A.filter(A.map(orphanAnchors, anchorFilePath), (filePath) => !MutableHashSet.has(scannedFiles, filePath))
+  );
+  yield* Effect.forEach(
+    orphanFiles,
+    Effect.fnUntraced(function* (filePath: string) {
+      const exists = yield* fs.exists(path.join(repoRoot, filePath)).pipe(Effect.orElseSucceed(thunkFalse));
+      if (!exists) {
+        return;
+      }
+      const sourceText = yield* fs
+        .readFileString(path.join(repoRoot, filePath))
+        .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)));
+      for (const block of scanJSDocMigrateBlocks(filePath, sourceText)) {
+        MutableHashMap.set(blocksByAnchor, block.anchor, block);
+      }
+    }),
+    { concurrency: 8 }
+  );
+  return blocksByAnchor;
+});
+
 type BlockOutcome =
   | { readonly _tag: "Rewritten"; readonly replacement: string }
   | { readonly _tag: "Overridden"; readonly replacement: string }
@@ -471,6 +562,9 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
+  if (options.syntheticTitles && !options.dryRun) {
+    return yield* migrateError("--synthetic-titles is a measurement mode; combine it with --dry-run.");
+  }
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const path = yield* Path.Path;
   const files = yield* listJSDocMigrateCorpusFiles(repoRoot);
@@ -485,8 +579,19 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
     options.syntheticTitles ? O.some(A.map(liveExtract, syntheticJSDocMigrateTitleRecord)) : O.none()
   );
 
-  const binding = computeJSDocMigrateBinding({ extract: liveExtract, titles, overrides });
+  const rawBinding = computeJSDocMigrateBinding({ extract: liveExtract, titles, overrides });
+  const currentBlocksByAnchor = yield* scanAnchorsForOrphans(repoRoot, affectedFiles, rawBinding.orphanRecordAnchors);
+  const orphanSplit = partitionMigratedOrphans(rawBinding.orphanRecordAnchors, currentBlocksByAnchor);
+  const binding = JSDocMigrateBindingReport.make({
+    ...rawBinding,
+    orphanRecordAnchors: orphanSplit.missing,
+  });
   yield* failOnDirtyBinding(binding);
+  if (A.isReadonlyArrayNonEmpty(orphanSplit.migrated)) {
+    yield* Console.log(
+      `[jsdoc-migrate] tolerating ${orphanSplit.migrated.length} record(s) whose blocks are already migrated`
+    );
+  }
 
   const quarantines: Array<JSDocMigrateQuarantineRecord> = [];
   const mismatches: Array<string> = [];
@@ -533,6 +638,7 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
   }
 
   const changedFiles = A.map(pendingWrites, (write) => write.filePath);
+  let biomeFailure: QualityScriptCommandError | undefined;
   if (!options.dryRun && pendingWrites.length > 0) {
     const fs = yield* FileSystem.FileSystem;
     yield* Effect.forEach(
@@ -543,7 +649,12 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
           .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to write ${write.filePath}.`))),
       { concurrency: 8 }
     );
-    yield* formatBiome(repoRoot, changedFiles);
+    // The manifest below must still be written when formatting fails, so a
+    // retry sees the applied state instead of an unexplained partial write.
+    const formatted = yield* formatBiome(repoRoot, changedFiles).pipe(Effect.result);
+    if (formatted._tag === "Failure") {
+      biomeFailure = formatted.failure;
+    }
   }
 
   const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -564,6 +675,9 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
     quarantines,
   });
   yield* writeManifest(repoRoot, options.manifest ?? defaultJSDocMigrateManifestPath, manifest);
+  if (biomeFailure !== undefined) {
+    return yield* biomeFailure;
+  }
   yield* Console.log(
     `[jsdoc-migrate] ${mode} ok: files=${affectedFiles.length} blocks=${liveExtract.length} rewritten=${rewritten} ` +
       `overridden=${overridden} residue=${quarantines.length}`

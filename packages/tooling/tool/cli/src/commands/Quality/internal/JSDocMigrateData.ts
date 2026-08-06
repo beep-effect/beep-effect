@@ -7,7 +7,7 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, MutableHashMap, Path } from "effect";
+import { Console, Effect, FileSystem, MutableHashMap, Path } from "effect";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import {
@@ -128,11 +128,25 @@ export const readJSDocMigrateJsonl = Effect.fn("JSDocMigrateData.readJsonl")(fun
     .readFileString(absolutePath)
     .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${label}.`)));
   const jsonLines = A.filter(A.map(Str.split(/\r?\n/)(content), Str.trim), Str.isNonEmpty);
-  return yield* Effect.forEach(jsonLines, (line, index) =>
-    decodeLine(line).pipe(
-      Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to decode ${label} line ${index + 1}.`))
-    )
-  );
+  const endsWithNewline = Str.endsWith("\n")(content);
+  const records: Array<T> = [];
+  for (const [index, line] of A.entries(jsonLines)) {
+    const outcome = yield* decodeLine(line).pipe(Effect.result);
+    if (outcome._tag === "Failure") {
+      // An interrupted append leaves a final record with no trailing newline;
+      // dropping it lets per-anchor resume regenerate it instead of wedging
+      // every later run on a manual repair.
+      if (index === jsonLines.length - 1 && !endsWithNewline) {
+        yield* Console.warn(
+          `[jsdoc-migrate] dropping truncated trailing record in ${label}; resume will regenerate it.`
+        );
+        break;
+      }
+      return yield* QualityScriptCommandError.new(outcome.failure, `Failed to decode ${label} line ${index + 1}.`);
+    }
+    A.appendInPlace(records, outcome.success);
+  }
+  return records;
 });
 
 /**
