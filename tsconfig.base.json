@@ -54,9 +54,20 @@
           "Equal": "Eq"
         },
         "diagnosticSeverity": {
+          // Every rule the compiler ships is listed explicitly. Rules omitted from this map
+          // run at their upstream default, so silence here is not "disabled" — it is
+          // "whatever upstream decided", which changes under us on every compiler bump.
+          // "off" entries are staged for the 0.33 ratchet, one rule per PR, ending at
+          // "error" like everything else. Remaining counts at time of writing:
+          // preferTypedSchemaDecoder 411, missingPipeableSignature (unmeasured — it wants
+          // pipeable overloads across the public API), abortControllerInEffect 2,
+          // preferUnsafeConstructor 1, the rest 0.
+          "abortControllerInEffect": "off",
           "anyUnknownInErrorContext": "error",
           "asyncFunction": "error",
           "catchAllToMapError": "error",
+          "catchChainToFirstSuccessOf": "off",
+          "catchTagToCatchReason": "off",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
           "catchUnfailableEffect": "error",
@@ -78,6 +89,7 @@
           "extendsNativeError": "error",
           "flatMapToMap": "error",
           "floatingEffect": "error",
+          "floatingEffectInVitest": "error",
           "genericEffectServices": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
@@ -101,6 +113,7 @@
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
           "missingLayerContext": "error",
+          "missingPipeableSignature": "off",
           "missingReturnYieldStar": "error",
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
@@ -113,14 +126,20 @@
           "outdatedApi": "error",
           "overriddenSchemaConstructor": "error",
           "preferSchemaOverJson": "error",
+          "preferSchemaTypeProperty": "off",
+          "preferTypedSchemaDecoder": "off",
+          "preferUnsafeConstructor": "off",
           "processEnv": "error",
           "processEnvInEffect": "error",
+          "promiseInEffectSuccess": "off",
           "redundantOrDie": "error",
           "redundantMapError": "error",
           "redundantSchemaTagIdentifier": "error",
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
+          "schemaLiteralNonFinite": "off",
           "schemaNumber": "error",
+          "schemaOpaqueInstanceMember": "off",
           "schemaStructWithTag": "error",
           "schemaSyncInEffect": "error",
           "schemaUnionOfLiterals": "error",
@@ -128,6 +147,7 @@
           "serviceNotAsClass": "error",
           "strictBooleanExpressions": "error",
           "strictEffectProvide": "error",
+          "syncToSucceed": "off",
           "tryCatchInEffectGen": "error",
           "unknownInEffectCatch": "error",
           "unnecessaryArrowBlock": "error",
