@@ -177,6 +177,8 @@ export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* (rep
  * console.log(isJsonRecord([1])) // false
  * ```
  *
+ * @param value - Candidate value of unknown shape.
+ * @returns Whether the value is a non-array object usable as a JSON record.
  * @category guards
  * @since 0.0.0
  */
