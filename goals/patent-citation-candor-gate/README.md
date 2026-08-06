@@ -37,7 +37,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
+P3 Yeet — **PR #575 is mergeable and all hosted checks are green** (`mergeable=MERGEABLE`,
+`status=CLEAN`, zero unresolved review threads). Merge is the owner's call and has not
+been performed. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
 `SPEC.md` decisions 10 and 11 kept rung 2 to the half that needs no cross-slice
 decision: durable ports, repository and layers, the slice's first db-admin
 migration with append-only guards, and the IDS fact records. The cross-slice
@@ -72,16 +74,17 @@ Graduated 2026-08-04 from
 (BRIEF approved same day after a three-lens adversarial review + four PR #557
 review refinements; four-point definition-of-ready passed at decompose).
 
-## Open Blocker (recorded, not repaired)
+## Inherited Blocker (cleared 2026-08-06)
 
-`Lint Policy` is red on PR #575 and **inherited from `main`**, not introduced here.
-`main`'s own head (`39945d95ef`) fails `Build`, `Lint Policy`, and `Lint`; this PR fails
-only `Lint Policy`. All ten `effect-governance-terse-effect` blocking findings sit in
-`packages/tooling/tool/cli/src/commands/{Yeet/internal,Knowledge}` — files absent from this
-PR's diff, last modified by #563 and #569. `bun run beep lint policy` exits 0 locally
-against this branch. Repairing them here would be the unrelated refactor the acceptance
-criteria forbid, so it is recorded rather than fixed
-([attribution comment](https://github.com/beep-effect/beep-effect/pull/575#issuecomment-5202192922)).
+`Lint Policy` was red on PR #575 through ten pre-existing
+`effect-governance-terse-effect` findings in
+`packages/tooling/tool/cli/src/commands/{Yeet/internal,Knowledge}` — files absent from
+this goal's diff, last modified by #563 and #569, and failing on `main`'s own head too.
+Because it is a *required* check the PR could not reach mergeable while they stood, so on
+owner ruling they were repaired inside this PR rather than deferred: two by
+`beep laws terse-effect --write`, eight by hand. `repo-cli`'s own suite stays green at
+1075 tests and `bun run beep lint policy` exits 0. Recorded as a deliberate,
+owner-directed scope widening — see the SPEC's "no unrelated refactors" criterion.
 
 ## Criterion-to-Proof Map
 

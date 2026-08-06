@@ -5,7 +5,7 @@
     "title": "Patent Citation Candor Gate",
     "status": "active",
     "created": "2026-08-04",
-    "updated": "2026-08-05",
+    "updated": "2026-08-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-citation-candor-gate",
@@ -67,7 +67,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
