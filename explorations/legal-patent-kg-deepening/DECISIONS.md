@@ -309,3 +309,28 @@ stable reference points the relator and episode-ledger wedges compose
 against. Rejected: align-unblocks-now (three concurrent pre-shape packets)
 and open-only-the-next-one (partial parallelism without clear gain once the
 BRIEF was near).
+
+## 2026-08-05 — phase-2: relator wedge opened (pointer)
+
+**Question:** When does `legal-position-relator-runtime` (carrying the
+re-routed contradiction-semantics cluster) open, and with what wedge
+posture?
+
+**Answer:** Benjamin called it 2026-08-05, the day the candor wedge's
+graduation PR #560 merged. The packet is open at
+`explorations/legal-position-relator-runtime` (capture stage) with
+wedge-scoped decisions pre-seeded in its `DECISIONS.md` — two research lanes
+with a public-source Hohfeld/FLINT/UFO-L legal-theory frame including the
+P100/R25 verification gate; live-source + SPEC-bound composition enforcing
+compose-don't-widen against `goals/epistemic-contradiction-triage`; Opus 5
+orchestration carrying the 2026-08-04 supersession; two-stage PR cadence.
+Links, not copies. Parent align questions 1, 17 (the T4-F6 half), and 18 are
+carried into the wedge's `openQuestions`.
+
+**Rationale:** The 2026-08-04 unblock milestone (candor BRIEF approval) was
+already reached and the opening order (`legal-position-relator-runtime`
+first) already fixed; only timing stayed Benjamin's call. One delta from the
+candor open: ownership grounding needed a question, not a grounding — legal
+vocabulary stays in a legal consumer domain (campaign constraint 8), but
+`packages/law-practice/domain` versus a separate legal consumer core package
+is genuinely undecided and is carried as a named align question.
