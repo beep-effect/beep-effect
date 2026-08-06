@@ -343,6 +343,27 @@ const retiredByForeignBinding = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
+/**
+ * An examiner-observed observation supersedes an AI-discovered one on the same
+ * source. `disposeHead` decides whether the examiner-observed head carries a
+ * disposition, which is the whole point of the pair: the head's discovery kind
+ * does not decide whether it can be dispositioned.
+ */
+const examinerHeadOverAiEvent = (disposeHead: boolean) =>
+  Effect.fnUntraced(function* () {
+    const older = yield* observation("a", TEXT_A);
+    const newer = yield* observation("a", TEXT_A2);
+    const dispositions = disposeHead ? [yield* dispositionFixture(10, targets(2, newer))] : [];
+    return {
+      dispositions,
+      events: [
+        yield* eventFixture(1, older),
+        yield* eventFixture(2, newer, { discovery: "ExaminerObserved", supersedes: targets(1, older) }),
+      ],
+      sources: [sourceEntry(older), sourceEntry(newer)],
+    } satisfies Fixture;
+  });
+
 const withEventOptions = (options: EventOptions) =>
   Effect.fnUntraced(function* () {
     const a = yield* observation("a", TEXT_A);
@@ -558,6 +579,30 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
     it.effect("treats a possible duplicate as uncovered rather than resolving it", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["possible-duplicate"]);
+      })
+    );
+  });
+});
+
+describe("CandorPolicy — an examiner-observed head is dispositionable", () => {
+  layer(scenario(examinerHeadOverAiEvent(false)()))((it) => {
+    it.effect("blocks while the examiner-observed head that superseded an AI finding is undisposed", () =>
+      Effect.gen(function* () {
+        // The AI event is superseded, but its history is not discharged by the
+        // arrival of an examiner record — only a human can decide that.
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1]);
+      })
+    );
+  });
+
+  layer(scenario(examinerHeadOverAiEvent(true)()))((it) => {
+    it.effect("releases once a disposition binds to that examiner-observed head", () =>
+      Effect.gen(function* () {
+        // Pins the clearability half: "examiner events record without gating"
+        // constrains what INITIATES gating, not what can be dispositioned.
+        expectReleased(yield* evaluateFiling());
       })
     );
   });
