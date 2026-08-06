@@ -476,15 +476,42 @@ type DerivedStorageMigration = {
 const derivedStorageMigrations = [
   {
     // One-time only, and it must stay that way. Existing stores were written under
-    // the old duplicating scheme, so every row in them has already been exported --
-    // repeatedly. Without this, the first run after the watermark lands would see
-    // millions of NULLs and flush the entire history to Phoenix in one burst, which
-    // is the exact backpressure collapse this work exists to prevent. The
-    // `ai_metrics_schema_migrations` ledger guarantees it runs once; it is applied
-    // before this run's inserts, so genuinely new turns are never swept up in it.
+    // the old duplicating scheme, so their rows have already been exported, usually
+    // many times over. Left entirely un-backfilled, the first run after the watermark
+    // lands would see millions of NULLs and flush the whole history to Phoenix in one
+    // burst -- the exact backpressure collapse this work exists to prevent.
+    //
+    // The newest ingest run is deliberately excluded. Under the old scheme a run that
+    // committed turns and then died before exporting was rescued by the next run,
+    // which re-minted those rows under a fresh id and exported them -- so the content
+    // did reach Phoenix even though the original rows never did. The one case with no
+    // such rescue is the final run before this migration: if it crashed before
+    // exporting, nothing came after it. Leaving that run's turns unmarked costs at
+    // most one run's worth of re-exported spans if it had in fact succeeded, and
+    // avoids silently burying data if it had not.
+    //
+    // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
+    // applied before the run's inserts, so genuinely new turns are never swept up.
     migrationId: "ai-metrics-otlp-export-watermark-v1",
-    requiredColumns: [{ columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" }],
-    statements: ["UPDATE ai_metrics_turns SET otlp_exported_at_epoch_ms = 0 WHERE otlp_exported_at_epoch_ms IS NULL"],
+    // Every column the statement touches, including the ingest-run lookup. Very old
+    // stores predate `ingest_run_id` on turns entirely, and the statement must not be
+    // attempted against them -- an unguarded reference fails schema-ensure outright.
+    // A skipped migration is not recorded, so it applies later once the shape catches up.
+    requiredColumns: [
+      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+    ],
+    statements: [
+      `UPDATE ai_metrics_turns
+       SET otlp_exported_at_epoch_ms = 0
+       WHERE otlp_exported_at_epoch_ms IS NULL
+         AND ingest_run_id <> COALESCE(
+           (SELECT ingest_run_id FROM ai_metrics_ingest_runs ORDER BY started_at_epoch_ms DESC LIMIT 1),
+           ''
+         )`,
+    ],
     transactional: true,
   },
   {

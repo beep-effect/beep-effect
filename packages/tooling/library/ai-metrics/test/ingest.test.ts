@@ -653,11 +653,24 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const afterFailedExport = yield* readAiMetricsOtlpSpanProjections(exportInput);
             expect(afterFailedExport.turnIds).toEqual(pending.turnIds);
 
-            // Once the export succeeds and the watermark closes, they stop being resent.
-            yield* markAiMetricsOtlpTurnsExported(pending.turnIds);
+            // The forwarder exports through runAiMetricsOtlpExport, which reads and
+            // emits as one unit, so that entry point must close the watermark itself.
+            // With marking only in the standalone export command, nothing would ever be
+            // marked and every forwarder run would re-emit the whole store.
+            const exported = yield* runAiMetricsOtlpExport(exportInput);
+            expect(exported.turnSpanCount).toBe(1);
+
             const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections(exportInput);
             expect(afterSuccessfulExport.turnIds).toEqual([]);
             expect(afterSuccessfulExport.projections).toEqual([]);
+
+            // A second forwarder run over unchanged content therefore emits nothing.
+            const secondExport = yield* runAiMetricsOtlpExport(exportInput);
+            expect(secondExport.turnSpanCount).toBe(0);
+            expect(secondExport.spanCount).toBe(0);
+
+            // Marking is safe to call with an empty batch.
+            yield* markAiMetricsOtlpTurnsExported([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));

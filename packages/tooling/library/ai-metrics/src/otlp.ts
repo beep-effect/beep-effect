@@ -741,8 +741,15 @@ export const runAiMetricsOtlpExport: (
 )(
   function* (input) {
     const batch = yield* readAiMetricsOtlpSpanProjections(input);
+    const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch);
+    // Closing the watermark belongs here, not only in the callers. This is the entry
+    // point the forwarder uses (exportForwarderDerivedOtlp), and it reads and exports
+    // as one unit. If marking lived solely in the standalone export command, every
+    // forwarder run would re-emit every unexported turn forever -- strictly worse than
+    // the duplication this watermark exists to stop.
+    yield* markAiMetricsOtlpTurnsExported(batch.turnIds);
 
-    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch);
+    return result;
   },
   (effect, input) => effect.pipe(withOtlpExportSpan(input))
 );
