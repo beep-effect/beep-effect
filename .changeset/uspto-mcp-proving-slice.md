@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 No release required: all touched packages are private workspace packages.

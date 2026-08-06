@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 Remove the repo-exports catalog subsystem and the Reuse-discovery feature to streamline tooling and eliminate generated-artifact churn:

@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 No release required: adds the private `@beep/pacer` driver package and removes

@@ -983,6 +983,20 @@ durability fixes discovery, not trust.
     closeout gains --require-answered-resolutions) and deferred to the
     next yeet Status/closeout touch — jumps the queue if silent
     resolutions are actually observed.
+    OBSERVED, same day (PR #592 closeout): both Greptile threads were
+    fixed in 7e065af387 and drafts naming that sha were staged, but
+    `yeet reply` reported both `stale — already resolved upstream;
+    nothing was posted`. Someone resolved them out-of-band between the
+    publish and the reply pass, so NO receipt exists — and the campaign
+    law forbids bypassing the porcelain with raw `gh api`, so the
+    porcelain now enforces the very silence this item bans: once anyone
+    else resolves first, leaving the receipt is IMPOSSIBLE. Widget:
+    split `stale` — a thread resolved upstream that carries no reply
+    from the publishing identity gets the draft body posted WITHOUT
+    re-resolving (the thread is closed; a comment is additive and
+    harmless) and reports `posted-late`; only a thread already carrying
+    our reply is truly `stale`. Per this item's own trigger clause,
+    this jumps the queue.
 82. **Canonical terminal status line for publish (or `--summary`).**
     (beep-effect14, 2026-08-06 — their top ask.) publish emits a large
     stream including the lane JSON, so context-constrained agents MUST
@@ -1008,6 +1022,12 @@ durability fixes discovery, not trust.
     OPEN`. The verdict was the previous run's, rendered as current
     truth beside remote state that contradicts it. Exactly the disease
     this item names, on the branch that was fixing a different one.
+    THIRD instance, same day, third subcommand: the #592 closeout run
+    printed `verdict: publish failure: Yeet merge readiness requires
+    zero unresolved review threads; found 2: PRRT_...WD, PRRT_...WN`
+    four lines above `review threads: 0 unresolved`. Monitor (#586),
+    publish (#592), closeout (#592) — three subcommands in one day, so
+    this is the verdict writer's default behavior, not an edge case.
 84. **Tree parity: local proof and hosted CI run on DIFFERENT TREES,
     and the stale-base guard is structurally blind to the gap.**
     (Reported by beep-effect5, 2026-08-06 — a plan/manifest phase-id
@@ -1195,6 +1215,66 @@ durability fixes discovery, not trust.
     filtered — seconds, against a full re-proof. Escalate to hard only
     if the isolated re-run also fails. Ties to #35's attribution
     fingerprints and #47's log fetcher. Vehicle: PR-G.
+    SECOND signature, hours later (PR #592): `Test Unit` failed in
+    "Set up job" before any repo command ran — `Failed to resolve
+    action download info. Error: Service Unavailable` /
+    `##[error]Internal Server Error`, three attempts, all GitHub-side
+    5xx during a confirmed major Actions incident (githubstatus,
+    opened 15:22Z). A plain `gh run rerun --job <id>` is the whole
+    remedy, and it is strictly SAFER to auto-rerun than the trusted
+    TS2589 fingerprint because zero repo commands executed.
+    Fingerprint: setup-step failure log contains `Failed to resolve
+    action download info` (or a setup-step `##[error]Internal Server
+    Error`) with no lane output — rerun once per job per head SHA.
+    Promotes this item from "the list is short" to "the list is a
+    list, and it needs entries". Operator-loop rider from the same
+    moment: I reported "0 failing, 19 pending" and stopped watching;
+    the operator found this failure before I did. A pending snapshot
+    is not monitoring — a check set is unobserved until it reaches a
+    terminal state (`monitor --until-merged` exists for exactly this).
+90. **`run_started_at` is rewritten on re-dispatch, so run-level
+    "queue latency" is an artifact unless filtered to attempt 1.**
+    (2026-08-06, caught by the owned-runners plan workflow's value
+    challenge and verified live the same hour.) During the Actions
+    outage, `run_started_at - created_at` read 18-21 minutes on three
+    Check runs and 0s on others; every "delayed" run was `run_attempt`
+    2-3 and every 0s run was attempt 1 — the metric measured
+    time-until-a-human-clicked-rerun, not runner wait. Actual
+    Blacksmith pickup, measured at JOB level during the same outage:
+    19-67 seconds. Job records were garbled too (a job whose
+    `created_at` postdates its own `completed_at`), so during an
+    incident NO Actions timestamp is trustworthy unaudited.
+    Consequence: "PRs are blocked because no runners are available" is
+    falsified — this repo has no runner-capacity problem, and the
+    owned-runner project must not be justified by one
+    (research/o6-execution-plan.md carries the full correction and the
+    plan it feeds). Widget: the lane-timings collector records
+    `run_attempt` and derives attempt-1 pickup latency, applying the
+    filter in the collector, never the reader. Kin to the
+    absence-proof positive-control law: a damning-looking metric needs
+    its provenance checked before it justifies a project.
+
+Empty-frontmatter changeset receipt (2026-08-06, this PR's own first
+publish): 56 no-release changesets on main used bare `---\n---`
+frontmatter, and the repo-wide js-yaml override (5.2.2, pinned since PR
+#437) makes `yaml.load("")` THROW ("expected a document, but the input
+is empty") where v4 returned `undefined` — so `changeset status` dies on
+the ENTIRE tree, but only after a FRESH install materializes the pinned
+resolution. Worktrees running on older physical node_modules kept
+passing the lane (PR #592's proof passed it hours earlier on the same
+lock), which is the stale-artifact false-green class operating in the
+install layer itself: the lockfile said 5.2.2 for months while the
+installed tree said otherwise, and `--frozen-lockfile` after the
+post-#595 branch switch is what detonated it. `bunx changeset add
+--empty` still emits the bare form, so every new empty changeset
+re-plants the mine. Repair shipped in this PR: `{}` frontmatter (the
+form the tree already used elsewhere), valid under both js-yaml majors.
+Context receipt for the same hour: #595 merged with Test Unit and Knip
+FAILURE and most contexts CANCELLED while the required-checks rule was
+temporarily removed from the ruleset during the GitHub Actions outage —
+the first fresh-install lane break surfaced immediately downstream of
+that window. Kin: stale-artifact false greens, #88's gate-staleness
+contract, and the new-package staged-changeset gotchas.
 
 Hint-misattribution receipt (PR #592, 2026-08-06) — third instance in
 one day, so it is a pattern and not an accident. The monitor phase
