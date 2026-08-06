@@ -182,6 +182,20 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
   });
 
+  it("treats a missing closeout artifact as unknown, not as an open-thread blocker", () => {
+    const mergeReady = deriveYeetMergeReady(
+      YeetStatusArtifact.make({
+        detail: "no closeout artifact found for this branch",
+        path: ".beep/yeet/runs/feature/pr-closeout.json",
+        state: "missing",
+      }),
+      openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
+    );
+
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+  });
+
   it("is ready with no failing criterion when both hard criteria hold, carrying Greptile as display only", () => {
     const mergeReady = deriveYeetMergeReady(
       closeoutArtifact(0, O.some("4/5")),

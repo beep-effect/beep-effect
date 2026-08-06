@@ -426,3 +426,21 @@ decisions close them:
     `YeetMergeReady` coherence filter enforces consistency, NOT reporting
     precedence (`failing` stays independently meaningful) — disclosed in
     the class Gotchas.
+49. **The evidence ladder is mandatory, not situational (operator
+    ratification, 2026-08-06).** The PR-E arc's effectiveness traced to a
+    closed loop: lived failure → ledger receipt (PR numbers, timestamps,
+    exact text) → grill sentence → dogfooded implementation → adversarial
+    hardening. For PR-I, PR-G, and every subsequent queue item this
+    ladder is BINDING: no design enters a grill without ledger receipts;
+    no implementation ships without dogfooding on its own surface where
+    one exists; no "fixed" claim stands without adversarial or
+    mutation-level verification; and infrastructure PRs whose natural
+    feedback loops are slower must MANUFACTURE the loop — spike
+    harnesses, shadow runs, #75's battery measured on real proof cycles —
+    rather than design from confidence accumulated on other surfaces.
+    Confidence earned on one surface does not transfer as evidence to
+    another. Concretely: PR-G's battery ordering comes from the recorded
+    failure-frequency/cost data, not intuition, and its parity footer
+    ships before any lane-closing work so the gap is visible while being
+    closed; PR-I's AgentBrief is dogfooded by generating briefs for this
+    campaign's own waves before any fleet adoption.

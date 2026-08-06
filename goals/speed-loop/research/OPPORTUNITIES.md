@@ -791,7 +791,59 @@ excerpt, path, line, and commentDatabaseId.
     (fix pattern on record: per-package tsconfig.test.json +
     beep:check:tests). Riders: #52 briefs must name repo-level lanes,
     never package scripts; interim doctrine = run the specific lanes
-    before any full verify.
+    before any full verify. Fourth dataset (beep-effect12 operator
+    feedback): cleanup-on-touch joins the battery — it is deterministic
+    from the diff and belongs in the first seconds, not at minute 17;
+    "schema-first caught 3 stale entries in ~5s that would otherwise have
+    been cycle #6".
+
+76. **Verdict lanes must be the composite's sub-lanes.** (beep-effect12
+    session feedback + this session's misattribution trifecta.) On success
+    verdict.json records 3 lanes (the composite is one lane when green);
+    on early-stop failure ~24 — a bimodal shape one agent nearly reported
+    as a false green, and the artifact is strictly less informative than a
+    grep of the run's own `[beep-github-check-run]` stdout line. Fix: the
+    verdict writer flattens the composite's sub-lanes into the lanes
+    array in both shapes, making verdict.json the truth surface its
+    consumers already assume it is. Retires the 3-lane-shape memory
+    workaround.
+77. **`yeet publish --reconcile` + refuse `--amend` when
+    pushed-and-diverged.** (beep-effect12 got hard-stuck exactly once:
+    `--amend` on a pushed branch walks into a force-push the setup
+    correctly denies.) The documented recovery — merge the moved base,
+    regenerate aggregates per #60's map, verify, push fast-forward — was
+    performed manually four times in this session alone; it is proven
+    doctrine with no porcelain. Ship it as `--reconcile`, and make
+    `--amend` detect pushed && diverged and refuse WITH that explanation
+    (#50 grammar).
+78. **Local-proof parity footer.** (beep-effect12's top pick, seconded.)
+    21 local lanes vs 26 hosted required checks, and the gap is silent:
+    Coverage Regression, Lint Policy, Property Laws, Codegen Drift, and
+    Professional Desktop IPC Stdio run only hosted — while local full
+    proof is also STRICTER than hosted elsewhere, so the sets are
+    incomparable in both directions. The `[beep-github-check-run]` tag
+    names a parity that does not exist, converting "verified" into a
+    claim the operator cannot calibrate — and a tool whose green does not
+    imply the gate's green retrains its operator to distrust it. Fix now:
+    verify prints an explicit "not covered locally: …" footer (nearly
+    free). Fix later: PR-G closes the actual gap lane by lane.
+
+beep-effect12 operator-feedback disposition (2026-08-06): new items
+#76–78 above. Evidence amendments — #21/#25: `--reuse-verified` fired
+zero times across 8 re-proofs with docs-only amends invalidating full
+proofs (~1 hour); combined with this session's serial re-proofs, the
+comparison decision 41 asked for is effectively done — promote
+tree/input-keyed proof reuse from research question to PR-G build item.
+#74: widget named — `--regenerate-aggregates` wires #60's map into the
+stale-base remedy. #8 (ship porcelain): `--start-pr-early` requires
+`--monitor` but says so only after running — infer flag implications or
+fail at parse with the remedy. #50 exhibits: changeset-status says "no
+changesets were found" when one exists untracked (say "found but
+untracked — git add it"); both ratchets demand a separate
+`--write-baseline` instead of offering it inline. Kept-column
+validation for the reflection: the stale-base guard caught a real revert
+hazard pre-ship; the append-optional discipline is WHY the review P1s
+were findable; repair's config-sync → lint-fix → laws ordering is right.
 
 PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
 wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
