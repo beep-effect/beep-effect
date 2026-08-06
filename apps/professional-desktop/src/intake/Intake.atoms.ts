@@ -861,7 +861,7 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
  * @category atoms
  * @since 0.0.0
  */
-export const clearIntakeResultsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+const clearIntakeResultsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   professionalBrowserRuntime.fn<void>()(
     Effect.fnUntraced(function* (_, ctx) {
       const stateAtom = documentIntakeStateAtoms(workspaceId);

@@ -33,7 +33,7 @@ professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
  * @category layers
  * @since 0.0.0
  */
-export const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
+const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
 
 /**
  * Browser runtime mounted by the Professional Desktop Atom provider.

@@ -328,7 +328,7 @@ export type ComposerSendDecision = typeof ComposerSendDecision.Type;
  * @category models
  * @since 0.0.0
  */
-export interface ComposerSendInput {
+interface ComposerSendInput {
   readonly confirmed: O.Option<SafeDocument>;
   readonly gateOpen: boolean;
   readonly seed: Md.Document;
@@ -344,7 +344,7 @@ export interface ComposerSendInput {
  * @category models
  * @since 0.0.0
  */
-export interface ComposerConfirmInput {
+interface ComposerConfirmInput {
   readonly normalized: O.Option<SafeDocument>;
   readonly turnActive: boolean;
 }

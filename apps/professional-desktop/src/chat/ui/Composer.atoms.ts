@@ -38,13 +38,7 @@ import type { ComposerSafetyRefusal } from "./ComposerPolicy.ts";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Composer.atoms");
 
-export {
-  ComposerNotice,
-  ComposerSafetyRefusal,
-  composerDocumentForSend,
-  composerDocumentFromEditorState,
-  DocumentViolationFlags,
-} from "./ComposerPolicy.ts";
+export { ComposerSafetyRefusal, composerDocumentForSend, composerDocumentFromEditorState } from "./ComposerPolicy.ts";
 
 const normalizeLegacyInline: (inline: Md.Inline) => Md.Inline = Match.type<Md.Inline>().pipe(
   Match.withReturnType<Md.Inline>(),
