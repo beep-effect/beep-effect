@@ -491,6 +491,90 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   })
 ) {}
 
+const HookPulseLegacyV1Record = S.Struct({
+  schemaVersion: S.Literal("hook-pulse/v1"),
+  ts: S.String,
+  sessionId: S.String,
+  agentKind: HookPulseAgentKind,
+  hookEvent: HookPulseEvent,
+  cwd: S.String,
+  notifierRev: S.String,
+  instrumentClass: HookPulseInstrumentClass,
+  evidenceTier: HookPulseEvidenceTier,
+  waitReason: HookPulseWaitReason,
+  toolName: S.optionalKey(S.String),
+  toolUseId: S.optionalKey(S.String),
+  promptId: S.optionalKey(S.String),
+  transcriptPath: S.optionalKey(S.String),
+  permissionMode: S.optionalKey(S.String),
+  notificationType: S.optionalKey(HookPulseNotificationType),
+  durationMs: S.optionalKey(NonNegNum),
+  sessionEndReason: S.optionalKey(S.String),
+});
+
+/**
+ * Compatibility codec for hook-pulse/v1 rows written before private
+ * identifiers were pseudonymized. Decoding hashes legacy raw identifiers;
+ * encoding emits only the privacy-safe canonical representation.
+ *
+ * **Example** (Migrate a Legacy Ledger Row)
+ * ```ts
+ * import { HookPulseV1FromLegacyRecord } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const migrate = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord)
+ * const pulse = migrate({
+ *   schemaVersion: "hook-pulse/v1",
+ *   ts: "2026-08-01T06:40:07.000Z",
+ *   sessionId: "legacy-session",
+ *   agentKind: "claude-code",
+ *   hookEvent: "Stop",
+ *   cwd: "/workspace/beep-effect",
+ *   notifierRev: "spike-0",
+ *   instrumentClass: "spike",
+ *   evidenceTier: "observed",
+ *   waitReason: "none"
+ * })
+ * console.log(pulse)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
+  S.decodeTo(
+    HookPulseV1,
+    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
+      decode: (input) =>
+        Effect.all({
+          sessionId: privateReference(input.sessionId),
+          cwd: privateReference(input.cwd),
+          transcriptPath: O.match(O.fromUndefinedOr(input.transcriptPath), {
+            onNone: () => Effect.succeed(O.none<Sha256Hex>()),
+            onSome: (value) => privateReference(value).pipe(Effect.map(O.some)),
+          }),
+        }).pipe(
+          Effect.mapError(
+            () =>
+              new SchemaIssue.InvalidValue(O.some(input), {
+                message: "Failed to migrate private identifiers from a legacy hook-pulse/v1 row",
+              })
+          ),
+          Effect.map((privateRefs) => ({
+            ...input,
+            sessionId: privateRefs.sessionId,
+            cwd: privateRefs.cwd,
+            ...O.getSomesStruct({ transcriptPath: privateRefs.transcriptPath }),
+          }))
+        ),
+      encode: (input) => Effect.succeed(input),
+    })
+  ),
+  $I.annoteSchema("HookPulseV1FromLegacyRecord", {
+    description: "Migration codec that pseudonymizes private identifiers in legacy hook-pulse/v1 ledger rows.",
+  })
+);
+
 /**
  * Codec deriving a canonical hook-pulse record from a raw hook event and writer stamps.
  *

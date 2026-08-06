@@ -23,6 +23,9 @@ import {
   defaultYeetRunOptions,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
+  GhActor,
+  GhRestIssueComment,
+  GhRestReviewComment,
   GreptileSummary,
   gitPathListFromNulOutputForTesting,
   greptileIssueLimitExceededForTesting,
@@ -33,6 +36,8 @@ import {
   knownSubLaneRemediationFromOutput,
   latestGreptileSummaryForTesting,
   loadVerifiedStateForTesting,
+  normalizeYeetMonitorIssueCommentForTesting,
+  normalizeYeetMonitorReviewCommentForTesting,
   overlappingBasePathsForTesting,
   PrCloseoutOptions,
   PrCloseoutReport,
@@ -1630,6 +1635,34 @@ describe("yeet quality issue index", () => {
 });
 
 describe("yeet monitor comments", () => {
+  it("normalizes nullable GitHub payload fields before rendering", () => {
+    const review = normalizeYeetMonitorReviewCommentForTesting(
+      GhRestReviewComment.make({
+        body: null,
+        created_at: "2026-08-04T12:00:01.000Z",
+        html_url: "https://github.com/o/r/pull/1#discussion_r43",
+        id: 43,
+        line: null,
+        original_line: null,
+        path: "src/Monitor.ts",
+        user: null,
+      })
+    );
+    const issue = normalizeYeetMonitorIssueCommentForTesting(
+      GhRestIssueComment.make({
+        body: "Ready for review.",
+        created_at: "2026-08-04T12:00:02.000Z",
+        html_url: "https://github.com/o/r/pull/1#issuecomment-44",
+        id: 44,
+        user: GhActor.make({ login: "octocat" }),
+      })
+    );
+
+    expect(renderYeetMonitorComment(review)).toContain("unknown @ src/Monitor.ts:?");
+    expect(renderYeetMonitorComment(issue)).toContain("new PR issue comment: octocat");
+    expect(issue.body).toBe("Ready for review.");
+  });
+
   it("uses timestamp and id as the in-memory comment watermark", () => {
     const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-04T12:00:01.000Z", id: 44 });
     const seen = YeetMonitorIssueComment.make({

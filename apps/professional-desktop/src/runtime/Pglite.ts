@@ -313,7 +313,7 @@ const materializeBtreeGistBundle = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const bytes = yield* Effect.promise(() => Bun.file(toBunFileSystemPath(btreeGistBundlePath)).arrayBuffer());
-  const directory = yield* fs.makeTempDirectory({ prefix: "beep-professional-desktop-btree-gist-" });
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-professional-desktop-btree-gist-" });
   const target = path.join(directory, "btree_gist.tar.gz");
   yield* fs.writeFile(target, new Uint8Array(bytes), { flag: "wx", mode: 0o600 });
   return NodeURL.pathToFileURL(target);

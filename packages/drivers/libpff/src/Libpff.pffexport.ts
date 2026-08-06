@@ -288,7 +288,6 @@ interface ExportedItemDirectory {
 }
 
 interface EmlBudgetState {
-  budgetExhausted: boolean;
   materializedBytes: number;
 }
 
@@ -771,15 +770,13 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     const emlLowerBoundBytes =
       O.match(item.body, { onNone: () => 0, onSome: (entry) => entry.ref.sizeBytes ?? 0 }) +
       A.reduce(item.attachments, 0, (total, entry) => total + (entry.ref.sizeBytes ?? 0));
-    if (state.budgetExhausted || O.exists(budget, (limit) => state.materializedBytes + emlLowerBoundBytes > limit)) {
-      state.budgetExhausted = true;
+    if (O.exists(budget, (limit) => state.materializedBytes + emlLowerBoundBytes > limit)) {
       warnings.push(budgetSkippedWarning);
       return O.none<ArtifactReference>();
     }
 
     const emlBytes = yield* assembleItemEmlBytes(operation, item, outlookHeaders);
     if (O.exists(budget, (limit) => state.materializedBytes + emlBytes.length > limit)) {
-      state.budgetExhausted = true;
       warnings.push(budgetSkippedWarning);
       return O.none<ArtifactReference>();
     }
@@ -905,7 +902,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     }
 
     const budget = O.some(operation.maxMaterializedBytes ?? defaultMaxMaterializedBytes);
-    const state: EmlBudgetState = { budgetExhausted: false, materializedBytes: 0 };
+    const state: EmlBudgetState = { materializedBytes: 0 };
     const records: Array<PffexportMessageRecord> = [];
 
     const resolvedMessages = yield* Effect.forEach(classifyExportedItems(entries, treeRootNames), (item) =>

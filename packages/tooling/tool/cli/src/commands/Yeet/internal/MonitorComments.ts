@@ -160,7 +160,13 @@ export const YeetMonitorComment = S.Union([YeetMonitorReviewComment, YeetMonitor
  */
 export type YeetMonitorComment = typeof YeetMonitorComment.Type;
 
-class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewComment`)(
+/**
+ * GitHub REST inline review payload used by monitor normalization tests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewComment`)(
   {
     body: S.NullOr(S.String),
     created_at: S.String,
@@ -176,7 +182,13 @@ class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewCo
   })
 ) {}
 
-class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIssueComment`)(
+/**
+ * GitHub REST issue-comment payload used by monitor normalization tests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIssueComment`)(
   {
     body: S.NullOr(S.String),
     created_at: S.String,
@@ -283,6 +295,22 @@ const normalizeIssueComment = (comment: GhRestIssueComment): YeetMonitorIssueCom
     id: comment.id,
     url: comment.html_url,
   });
+
+/**
+ * Review-comment normalizer exposed through the source-only Yeet test kit.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const normalizeYeetMonitorReviewCommentForTesting = normalizeReviewComment;
+
+/**
+ * Issue-comment normalizer exposed through the source-only Yeet test kit.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const normalizeYeetMonitorIssueCommentForTesting = normalizeIssueComment;
 
 const excerpt = (body: string): string => {
   const normalized = pipe(body, stripTerminalControlSequences, Str.replace(/\s+/gu, " "), Str.trim);
