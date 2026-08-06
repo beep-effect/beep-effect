@@ -23,13 +23,7 @@
  */
 "use client";
 
-import {
-  draftRevisionAtoms,
-  editTargetAtom,
-  reportDecodeFailureAtom,
-  runTurnAtom,
-  turnActiveAtom,
-} from "@beep/agents-client/Chat.atoms";
+import { reportDecodeFailureAtom, runTurnAtom } from "@beep/agents-client/Chat.atoms";
 import { attachmentsAtom } from "@beep/editor/chat/atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
@@ -41,19 +35,8 @@ import { A, O, Str, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import {
-  ComposerDocumentSafetyGate,
-  composerCancelEditHandlerAtom,
-  composerConfirmNormalizationHandlerAtoms,
-  composerDocumentSafetyGateAtoms,
-  composerDraftSeedAtoms,
-  composerSafetyRefusalAtoms,
-  composerSendHandlerAtoms,
-  composerSerializedChangeHandlerAtoms,
-  composerStopHandlerAtom,
-} from "./Composer.atoms.ts";
+import { ComposerDocumentSafetyGate, composerShellAtoms, composerSurfaceAtoms } from "./Composer.atoms.ts";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
-import type { EditTarget } from "@beep/agents-client/Chat.atoms";
 import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer";
 import type { MentionSource } from "@beep/editor/chat/config";
 import type { SerializedEditorState } from "@beep/lexical-schema";
@@ -61,14 +44,6 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
 import type { JSX } from "react";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
-
-// Derives the content to seed the editor with, hoisted out of a useMemo. Editing
-// wins over the draft; the draft seeds only on thread / edit-target switches.
-const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.Document>): O.Option<Md.Document> =>
-  O.match(editTarget, {
-    onNone: () => draft,
-    onSome: (t) => O.some(t.content),
-  });
 
 // v1 mention source — a small app-injected set demonstrating ephemeral `@`
 // mentions. Real entity / prior-art / persona sources land with the knowledge
@@ -175,16 +150,7 @@ function ComposerRawNormalizationWarning({
  * @since 0.0.0
  */
 export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
-  // Edit state is global while the composer is per-thread: an edit target from
-  // another thread would otherwise seed this composer and submit that thread's
-  // turn id against this one.
-  const editTarget = O.filter(useAtomValue(editTargetAtom), (target) => target.threadId === threadId);
-  const streaming = useAtomValue(turnActiveAtom);
-  const draftRevision = useAtomValue(draftRevisionAtoms(threadId));
-  const draft = useAtomValue(composerDraftSeedAtoms(threadId)(draftRevision));
-  const safetyRefusal = useAtomValue(composerSafetyRefusalAtoms(threadId));
-  const cancelEdit = useAtomValue(composerCancelEditHandlerAtom);
-  const stop = useAtomValue(composerStopHandlerAtom);
+  const shell = useAtomValue(composerShellAtoms(threadId));
 
   // keep the report + turn fibers subscribed — unobserved fn atoms get
   // interrupted by the registry (POC lesson, ported verbatim). ChatComposer
@@ -194,41 +160,29 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   useAtomMount(reportDecodeFailureAtom);
   useAtomMount(runTurnAtom);
 
-  const isEditing = O.isSome(editTarget);
-
-  // initial content + a remount `key` so switching thread / edit-target remounts
-  // the composer with the right state loaded. Editing wins over the draft (derived
-  // by the module-level contentToLoadFor, not a useMemo).
-  const contentToLoad = contentToLoadFor(editTarget, draft);
-
-  const composerKey = O.match(editTarget, {
-    onNone: () => `thread:${threadId}:${draftRevision}`,
-    onSome: (t) => `edit:${t.turnId}`,
-  });
-
   const composerProps: ThreadComposerProps = {
-    content: contentToLoad,
+    content: shell.contentToLoad,
     threadId,
-    onStop: stop,
-    streaming,
-    sendLabel: isEditing ? "Rewrite" : "Send",
+    onStop: shell.stop,
+    streaming: shell.streaming,
+    sendLabel: shell.isEditing ? "Rewrite" : "Send",
   };
 
   return (
     <div className="shrink-0 border-t bg-background/80 p-3 backdrop-blur" data-testid="composer">
-      {isEditing ? (
+      {shell.isEditing ? (
         <div className="mb-2 flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
           <span>Editing message — sending will rewrite the thread from this point.</span>
-          <Button variant="ghost" size="sm" onClick={cancelEdit}>
+          <Button variant="ghost" size="sm" onClick={shell.cancelEdit}>
             Cancel
           </Button>
         </div>
       ) : null}
-      {O.match(safetyRefusal, {
+      {O.match(shell.safetyRefusal, {
         onNone: thunkNull,
         onSome: (refusal) => <ComposerSafetyWarning message={refusal.message} />,
       })}
-      <ThreadComposer key={composerKey} {...composerProps} />
+      <ThreadComposer key={shell.composerKey} {...composerProps} />
     </div>
   );
 }
@@ -288,10 +242,7 @@ function AttachmentTransportNotice(): JSX.Element | null {
 // at send time, so there is no latest-state mirror to seed here.
 function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: ThreadComposerProps): JSX.Element {
   const safetySeed = content.pipe(O.getOrElse(() => emptyDocument));
-  const safetyGate = useAtomValue(composerDocumentSafetyGateAtoms(threadId)(safetySeed));
-  const confirmNormalization = useAtomValue(composerConfirmNormalizationHandlerAtoms(threadId)(safetySeed));
-  const onSend = useAtomValue(composerSendHandlerAtoms(threadId)(safetySeed));
-  const onSerializedChange = useAtomValue(composerSerializedChangeHandlerAtoms(threadId)(safetySeed));
+  const surface = useAtomValue(composerSurfaceAtoms(threadId)(safetySeed));
   const initialState = useAtomValue(
     content.pipe(
       O.match({
@@ -301,23 +252,23 @@ function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: Thr
     )
   );
   const seedState = content.pipe(O.flatMap(() => AsyncResult.value(initialState)));
-  const mountConfig: ChatComposerMountConfig = { onSend };
+  const mountConfig: ChatComposerMountConfig = { onSend: surface.onSend };
 
   return (
     <ChatComposer
       {...O.getSomesStruct({ initialState: seedState })}
       placeholder="Message… (Enter to send, Shift+Enter for a newline)"
-      onSerializedChange={onSerializedChange}
+      onSerializedChange={surface.onSerializedChange}
       mountConfig={mountConfig}
       onStop={onStop}
       streaming={streaming}
-      sendDisabled={O.isSome(safetyGate)}
+      sendDisabled={O.isSome(surface.safetyGate)}
       sendLabel={sendLabel}
       slashItems={defaultChatSlashItems}
       mentionSource={mentionSource}
     >
       <AttachmentTransportNotice />
-      <ComposerSafetyGateNotice gate={safetyGate} onConfirm={confirmNormalization} />
+      <ComposerSafetyGateNotice gate={surface.safetyGate} onConfirm={surface.confirmNormalization} />
     </ChatComposer>
   );
 }

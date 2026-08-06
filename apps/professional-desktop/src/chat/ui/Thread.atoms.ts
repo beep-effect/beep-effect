@@ -13,8 +13,7 @@ import {
 } from "@beep/agents-client/Chat.atoms";
 import { A, Eq, N, O, P, thunkEffectVoid } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
-import { Effect } from "effect";
-import * as HashSet from "effect/HashSet";
+import { Effect, HashSet } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { EditTarget, StreamingTurn } from "@beep/agents-client/Chat.atoms";

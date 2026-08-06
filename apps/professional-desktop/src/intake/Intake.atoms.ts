@@ -851,12 +851,7 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
 /**
  * Runtime action family that clears completed intake outcomes.
  *
- * @example
- * ```ts
- * import { clearIntakeResultsAtoms } from "@/intake/Intake.atoms"
- *
- * console.log(typeof clearIntakeResultsAtoms === "function") // true
- * ```
+ * Consumed through the intake surface view model's `actions.clearResults`.
  *
  * @category atoms
  * @since 0.0.0
@@ -964,8 +959,11 @@ export interface DocumentIntakeSurface {
  * @category atoms
  * @since 0.0.0
  */
-export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  Atom.make((get): DocumentIntakeSurface => {
+// Actions read no reactive state, so this atom computes once per workspace and
+// every closure — including the file-input React ref callback — stays
+// referentially stable across intake state changes.
+const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  Atom.make((get): DocumentIntakeSurface["actions"] => {
     const domEvents = intakeDomEventAtoms(workspaceId);
     const chooseVaultAtom = chooseWorkspaceVaultAtoms(workspaceId);
     const clearResultsAtom = clearIntakeResultsAtoms(workspaceId);
@@ -980,23 +978,29 @@ export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIde
     get.mount(domEvents.fileSelection);
     get.mount(openFilePickerAtom);
     get.mount(setFileInputAtom);
+    return {
+      chooseVault: () => get.set(chooseVaultAtom, void 0),
+      clearResults: () => get.set(clearResultsAtom, void 0),
+      dragEnter: (input) => get.set(domEvents.dragEnter, input),
+      dragLeave: (input) => get.set(domEvents.dragLeave, input),
+      dragOver: (input) => get.set(domEvents.dragOver, input),
+      drop: (input) => get.set(domEvents.drop, input),
+      fileSelection: (files) => get.set(domEvents.fileSelection, files),
+      openFilePicker: () => get.set(openFilePickerAtom, void 0),
+      setFileInput: (element) => get.set(setFileInputAtom, element),
+    };
+  })
+);
+
+export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  Atom.make((get): DocumentIntakeSurface => {
     const vaultConfig = get(workspaceVaultConfigAtom(workspaceId));
     const state = get(documentIntakeStateAtoms(workspaceId));
     return {
       state,
       configured: AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath),
       needsOnboarding: AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath),
-      actions: {
-        chooseVault: () => get.set(chooseVaultAtom, void 0),
-        clearResults: () => get.set(clearResultsAtom, void 0),
-        dragEnter: (input) => get.set(domEvents.dragEnter, input),
-        dragLeave: (input) => get.set(domEvents.dragLeave, input),
-        dragOver: (input) => get.set(domEvents.dragOver, input),
-        drop: (input) => get.set(domEvents.drop, input),
-        fileSelection: (files) => get.set(domEvents.fileSelection, files),
-        openFilePicker: () => get.set(openFilePickerAtom, void 0),
-        setFileInput: (element) => get.set(setFileInputAtom, element),
-      },
+      actions: get(documentIntakeActionsAtoms(workspaceId)),
     };
   })
 );

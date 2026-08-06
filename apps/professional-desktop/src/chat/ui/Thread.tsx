@@ -33,7 +33,7 @@ import { A, O, thunkNull } from "@beep/utils";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import * as HashSet from "effect/HashSet";
+import { HashSet } from "effect";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import {
@@ -65,9 +65,9 @@ const TimelineItemRow = ({ item }: { readonly item: TimelineItem }): JSX.Element
     tool_call: (toolCall) => <ToolCallChip name={toolCall.name} />,
   });
 
-const turnRole = (turn: TimelineTurn): string =>
+const turnRole = (turn: TimelineTurn): MessageRole =>
   O.match(A.findFirst(turn.items, ThreadProjections.TimelineItem.guards.message), {
-    onNone: () => "assistant",
+    onNone: () => MessageRole.Enum.assistant,
     onSome: (item) => item.role,
   });
 
@@ -94,8 +94,13 @@ const TurnRow = ({
   );
 
   return (
-    <div className={`mb-4 flex flex-col ${role === "user" ? "items-end" : "items-start"}`} data-testid={`turn-${role}`}>
-      <div className={`max-w-[80%] rounded-lg px-3 py-2 ${role === "user" ? "bg-primary/10" : "bg-muted/50"}`}>
+    <div
+      className={`mb-4 flex flex-col ${MessageRole.is.user(role) ? "items-end" : "items-start"}`}
+      data-testid={`turn-${role}`}
+    >
+      <div
+        className={`max-w-[80%] rounded-lg px-3 py-2 ${MessageRole.is.user(role) ? "bg-primary/10" : "bg-muted/50"}`}
+      >
         {A.map(turn.items, (item, i) => (
           <TimelineItemRow key={i} item={item} />
         ))}

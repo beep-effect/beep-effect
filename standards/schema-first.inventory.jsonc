@@ -14,6 +14,22 @@
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
     {
+      "file": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
+      "symbol": "ThreadTranscriptView",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/professional-desktop",
+      "reason": "Derived per-render transcript view model recomputed on every streaming block; every field is already schema-validated upstream (TimelineTurn, StreamingTurn, HashSet of TurnIds), so an S.Class .make here would revalidate a hot path without adding an invariant. Recorded in-source as a crispen: comment."
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "DocumentIntakeSurface",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/professional-desktop",
+      "reason": "Atom view model whose actions record carries runtime-bound closures (get.set dispatchers), which cannot be schema data; the data half (DocumentIntakeState) is already an annotated S.Class."
+    },
+    {
       "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -507,16 +523,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
-      "symbol": "partitionMigratedOrphans",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 233,
-      "owner": "@beep/repo-cli",
-      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
       "symbol": "computeJSDocMigrateBinding",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -524,6 +530,16 @@
       "line": 178,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "symbol": "partitionMigratedOrphans",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 233,
+      "owner": "@beep/repo-cli",
+      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",

@@ -7,6 +7,7 @@
 
 import {
   draftAtoms,
+  draftRevisionAtoms,
   EditTurnRequest,
   editTargetAtom,
   reportDecodeFailureAtom,
@@ -32,13 +33,12 @@ import {
   documentViolationFlags,
   unsafeDocumentMessage,
 } from "./ComposerPolicy.ts";
+import type { EditTarget } from "@beep/agents-client/Chat.atoms";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { ComposerSafetyRefusal } from "./ComposerPolicy.ts";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Composer.atoms");
-
-export { ComposerSafetyRefusal, composerDocumentForSend, composerDocumentFromEditorState } from "./ComposerPolicy.ts";
 
 const normalizeLegacyInline: (inline: Md.Inline) => Md.Inline = Match.type<Md.Inline>().pipe(
   Match.withReturnType<Md.Inline>(),
@@ -649,3 +649,93 @@ export const composerCancelEditHandlerAtom = Atom.make((get) => {
   get.mount(cancelComposerEditAtom);
   return (): void => get.set(cancelComposerEditAtom, void 0);
 });
+
+// Derives the content to seed the editor with. Editing wins over the draft;
+// the draft seeds only on thread / edit-target switches.
+const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.Document>): O.Option<Md.Document> =>
+  O.match(editTarget, {
+    onNone: () => draft,
+    onSome: (target) => O.some(target.content),
+  });
+
+interface ComposerShellView {
+  readonly cancelEdit: () => void;
+  readonly composerKey: string;
+  readonly contentToLoad: O.Option<Md.Document>;
+  readonly isEditing: boolean;
+  readonly safetyRefusal: O.Option<ComposerSafetyRefusal>;
+  readonly stop: () => void;
+  readonly streaming: boolean;
+}
+
+/**
+ * One read for the composer shell: edit state, streaming flag, seeded content,
+ * remount key, refusal banner, and the stable stop/cancel handlers.
+ *
+ * @example
+ * ```ts
+ * import { composerShellAtoms } from "@/chat/ui/Composer.atoms"
+ *
+ * console.log(typeof composerShellAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const composerShellAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
+  Atom.make((get): ComposerShellView => {
+    // Edit state is global while the composer is per-thread: an edit target from
+    // another thread would otherwise seed this composer and submit that thread's
+    // turn id against this one.
+    const editTarget = O.filter(get(editTargetAtom), (target) => target.threadId === threadId);
+    const draftRevision = get(draftRevisionAtoms(threadId));
+    const draft = get(composerDraftSeedAtoms(threadId)(draftRevision));
+    return {
+      cancelEdit: get(composerCancelEditHandlerAtom),
+      composerKey: O.match(editTarget, {
+        onNone: () => `thread:${threadId}:${draftRevision}`,
+        onSome: (target) => `edit:${target.turnId}`,
+      }),
+      contentToLoad: contentToLoadFor(editTarget, draft),
+      isEditing: O.isSome(editTarget),
+      safetyRefusal: get(composerSafetyRefusalAtoms(threadId)),
+      stop: get(composerStopHandlerAtom),
+      streaming: get(turnActiveAtom),
+    };
+  })
+);
+
+interface ComposerSurfaceView {
+  readonly confirmNormalization: () => boolean;
+  readonly onSend: (state: SerializedEditorState) => boolean;
+  readonly onSerializedChange: (state: SerializedEditorState) => void;
+  readonly safetyGate: O.Option<ComposerDocumentSafetyGate>;
+}
+
+/**
+ * One read for the mounted editor surface: the safety gate plus the three
+ * stable handlers, all keyed by the same `(threadId, seed)` pair so the
+ * component never re-derives the double family application.
+ *
+ * @example
+ * ```ts
+ * import { composerSurfaceAtoms } from "@/chat/ui/Composer.atoms"
+ *
+ * console.log(typeof composerSurfaceAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const composerSurfaceAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
+  Atom.family((seed: Md.Document) =>
+    Atom.make(
+      (get): ComposerSurfaceView => ({
+        confirmNormalization: get(composerConfirmNormalizationHandlerAtoms(threadId)(seed)),
+        onSend: get(composerSendHandlerAtoms(threadId)(seed)),
+        onSerializedChange: get(composerSerializedChangeHandlerAtoms(threadId)(seed)),
+        safetyGate: get(composerDocumentSafetyGateAtoms(threadId)(seed)),
+      })
+    )
+  )
+);

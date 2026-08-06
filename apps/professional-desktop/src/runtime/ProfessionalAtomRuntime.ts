@@ -18,21 +18,8 @@ const professionalAtomRuntimeFactory = Atom.context({
 });
 professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
 
-/**
- * The application `Context.Service` layers every professional browser runtime
- * atom can reach. Grown as policy moves out of atom closures into services.
- *
- * @example
- * ```ts
- * import { ProfessionalDesktopServicesLive } from "@/runtime/ProfessionalAtomRuntime"
- * import { Layer } from "effect"
- *
- * console.log(Layer.isLayer(ProfessionalDesktopServicesLive)) // true
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
+// The application Context.Service layers every professional browser runtime
+// atom can reach. Grown as policy moves out of atom closures into services.
 const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
 
 /**

@@ -36,13 +36,12 @@ import { Composer, ComposerSafetyWarning } from "@/chat/ui/Composer";
 import {
   composerConfirmedNormalizationAtoms,
   composerConfirmNormalizationHandlerAtoms,
-  composerDocumentForSend,
-  composerDocumentFromEditorState,
   composerDocumentSafetyGateAtoms,
   composerSerializedChangeHandlerAtoms,
   normalizeLegacyRawDocument,
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
+import { composerDocumentForSend, composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
 import type { Atom } from "effect/unstable/reactivity";
 
 function SeedEditor({ label, text }: { readonly label: string; readonly text: string }) {
