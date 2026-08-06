@@ -37,7 +37,7 @@ import { MentionOption } from "@beep/editor/chat/config";
 import { defaultChatSlashItems } from "@beep/editor/chat/slash-items";
 import * as Md from "@beep/md/Md.model";
 import { Button } from "@beep/ui/components/button";
-import { A, O, P, Str, thunkNull } from "@beep/utils";
+import { A, O, Str, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -207,6 +207,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   });
 
   const composerProps: ThreadComposerProps = {
+    content: contentToLoad,
     threadId,
     onStop: stop,
     streaming,
@@ -227,16 +228,13 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
         onNone: thunkNull,
         onSome: (refusal) => <ComposerSafetyWarning message={refusal.message} />,
       })}
-      {O.match(contentToLoad, {
-        onNone: () => <ThreadComposer key={composerKey} {...composerProps} />,
-        onSome: (content) => <ThreadComposer key={composerKey} content={content} {...composerProps} />,
-      })}
+      <ThreadComposer key={composerKey} {...composerProps} />
     </div>
   );
 }
 
 interface ThreadComposerProps {
-  readonly content?: Md.Document;
+  readonly content: O.Option<Md.Document>;
   readonly onStop: () => void;
   readonly sendLabel: string;
   readonly streaming: boolean;
@@ -282,11 +280,6 @@ function AttachmentTransportNotice(): JSX.Element | null {
   });
 }
 
-const editorStateAtomFor = (
-  content: Md.Document | undefined
-): Atom.Atom<AsyncResult.AsyncResult<SerializedEditorState, unknown>> =>
-  P.isUndefined(content) ? emptyEditorStateAtom : documentEditorStateAtom(content);
-
 // Resolves the optional seed document to a serialized editor state through the
 // shared documentEditorStateAtom family (no runSyncExit). documentToEditorState is
 // a pure codec, so the runtime atom resolves to Success synchronously on first
@@ -294,13 +287,20 @@ const editorStateAtomFor = (
 // degrades to an empty editor. The send handler receives the editor's live state
 // at send time, so there is no latest-state mirror to seed here.
 function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: ThreadComposerProps): JSX.Element {
-  const safetySeed = content ?? emptyDocument;
+  const safetySeed = content.pipe(O.getOrElse(() => emptyDocument));
   const safetyGate = useAtomValue(composerDocumentSafetyGateAtoms(threadId)(safetySeed));
   const confirmNormalization = useAtomValue(composerConfirmNormalizationHandlerAtoms(threadId)(safetySeed));
   const onSend = useAtomValue(composerSendHandlerAtoms(threadId)(safetySeed));
   const onSerializedChange = useAtomValue(composerSerializedChangeHandlerAtoms(threadId)(safetySeed));
-  const initialState = useAtomValue(editorStateAtomFor(content));
-  const seedState = O.flatMap(O.fromUndefinedOr(content), () => AsyncResult.value(initialState));
+  const initialState = useAtomValue(
+    content.pipe(
+      O.match({
+        onNone: () => emptyEditorStateAtom,
+        onSome: documentEditorStateAtom,
+      })
+    )
+  );
+  const seedState = content.pipe(O.flatMap(() => AsyncResult.value(initialState)));
   const mountConfig: ChatComposerMountConfig = { onSend };
 
   return (
