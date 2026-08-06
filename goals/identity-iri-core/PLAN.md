@@ -11,9 +11,10 @@ Status: `pending`
 | P0 Research | pending | Confirm authority host (BLOCKING); inspect audit-B surface + prototype donors; confirm scope. | Authority ruled; preserve-exactly inventory confirmed current; blockers recorded. |
 | P1 Implement | pending | Shape-stable harness first, then port Vocab/Curie/PnLocal/Composer into `@beep/identity` with house conventions. | SPEC acceptance criteria met; zero call-site changes. |
 | P2 Verify | pending | Type-level tests, registry round-trips, interning/rebase pins, blast-radius measurement, package gates. | Verification green or blockers documented (inherited main-red per Exception Ledger). |
-| P3 Close | pending | PR via yeet, review response, closeout reflection, packet status update. | PR mergeable; reflection exists; manifest/README updated. |
+| P3 Yeet: PR to mergeable | pending | PR via yeet; drive to mergeable and answer review. | PR mergeable; required checks green. |
+| P4 Close | pending | Closeout reflection and packet status update. | Reflection exists; manifest/README updated. |
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (and `status` → `completed-retained` / `complete`):
 
