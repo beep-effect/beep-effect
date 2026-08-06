@@ -91,6 +91,8 @@
     "@next/mdx": "16.3.1-canary.2",
     "@noble/hashes": "^2.2.0",
     "@openai/codex-sdk": "~0.146.0",
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/core": "2.10.0",
     "@opentelemetry/exporter-logs-otlp-proto": "0.221.0",
     "@opentelemetry/exporter-metrics-otlp-proto": "0.221.0",
     "@opentelemetry/exporter-trace-otlp-proto": "0.221.0",
