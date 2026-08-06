@@ -526,7 +526,7 @@ export const turnErrorAtom = Atom.make<O.Option<ChatActionError>>(O.none());
 const fallbackTurnErrorMessage = "Assistant turn failed" as const;
 
 const messageFromUnknownError = (error: unknown): string => {
-  const message = P.hasProperty(error, "message") && P.isString(error.message) ? Str.trim(error.message) : "";
+  const message = P.hasProperty(error, "message") && P.isString(error.message) ? Str.trim(error.message) : Str.empty;
   return Str.isNonEmpty(message) ? message : fallbackTurnErrorMessage;
 };
 
