@@ -242,6 +242,34 @@ as of 11:04"; it may never say "idle."
 
 ---
 
+## 2026-08-06 — D6. Rung 1 starts now; rung 2 waits for PR-I.
+
+**Question.** Does the derivation rung start now, or does the whole packet wait
+for PR-I?
+
+**Answer.** Rung 1 starts now. Graduated as
+[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md), scoped to derivation
+only.
+
+**Rationale.** `MAP.md`'s capability check — run against `main` by source search
+rather than carried from the research — found that `AgentBrief`,
+`OwnershipClaim`, and `beep agent report list` have **zero source references**,
+while `worktree doctor`, `merge-tree`, and `/proc` are all present. Ambient
+delivery is therefore genuinely blocked and derivation is blocked by nothing, so
+`BRIEF.md`'s "starting when PR-I merges" was stronger than the evidence required.
+
+The decisive argument is risk order: the uncertain part was never whether the
+view can be built, but whether the three signals are **correct and quiet enough**
+against the live fleet. Rung 1 answers that without waiting on another session's
+PR, and a wrong answer there invalidates the delivery design anyway.
+
+**Re-verified 2026-08-06** at `b4a06cefa3`, after PR-E landed as #569: the three
+rung-2 capabilities were still absent, so the split holds. That re-check is now a
+standing instruction in the goal packet's `research/SOURCES.md` — it is a claim
+about another session's unmerged work, and it rots without warning.
+
+---
+
 ## 2026-08-05 — Amendment to D4: the directive comes from `git status`, not the event
 
 **Trigger.** PR #562 review (codex connector, `DECISIONS.md:122`).
