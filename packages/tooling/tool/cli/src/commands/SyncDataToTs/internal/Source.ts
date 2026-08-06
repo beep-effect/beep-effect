@@ -17,7 +17,7 @@ import { dual, flow } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as jsonc from "jsonc-parser";
+import { formatJsonValue } from "../../../internal/cli/Json.ts";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
 import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.ts";
 
@@ -82,19 +82,23 @@ const attachCsvColumns = (rows: ReadonlyArray<ParsedCsvRecord>, columns: Readonl
 /**
  * Pretty-print a JSON value as canonical JSON with a trailing newline.
  *
- * @param value - The JSON-compatible value to format.
- * @returns Canonical JSON text with a trailing newline.
+ * **Details**
+ *
+ * A target-facing alias for the package's canonical renderer so every generated
+ * data file shares one byte-for-byte formatting definition.
+ *
+ * **Example** (Render a canonical payload)
+ *
+ * ```ts
+ * import { formatJson } from "@beep/repo-cli/commands/SyncDataToTs/internal/Source"
+ *
+ * console.log(formatJson({ ok: true }) === `{\n  "ok": true\n}\n`) // true
+ * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
-export const formatJson = (value: unknown): string => {
-  const encoded = Result.getOrThrow(encodeUnknownJsonResult(value));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
+export const formatJson = formatJsonValue;
 
 /**
  * Normalize a JSON-compatible value into Effect's canonical JSON model.
