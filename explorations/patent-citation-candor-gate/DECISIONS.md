@@ -259,3 +259,125 @@ ST.13, with explicit conversion.
 `standards/ARCHITECTURE.md` before acceptance; the fixes tighten the
 BRIEF's contract without changing the align boundaries (locator home,
 fact/judgment split, derived no-stored-closure gate, core-first scope).
+
+## 2026-08-04 — decompose + graduate
+
+**Question:** How does the approved BRIEF decompose into goal packets, and
+does the packet pass the four-point graduation definition-of-ready?
+
+**Answer:** One candidate goal packet, `goals/patent-citation-candor-gate`
+(same slug; the `effect-jsdoc-quality` precedent), with the BRIEF's two rungs
+as strict phases — rung 1 the in-memory domain proof around the failing
+`CandorPolicy.test.ts`, rung 2 durability + the slice's first db-admin
+migration + the live promotion-path invocation. `MAP.md` carries the full
+capability check (every component a file-grounded REUSE cite or explicit
+NET-NEW) and names the non-graduating follow-ons with their triggers.
+Definition-of-ready: (1) BRIEF complete — approved 2026-08-04 with all five
+Shape Up parts; (2) manifest `openQuestions` empty, deferrals logged with
+owners; (3) MAP names slug, mission, dependency/sequencing edges, first
+vertical slice; (4) capability check passes — all four hold, so the packet
+GRADUATED the same day: goal scaffolded from `goals/_template` (SPEC seeded
+from the BRIEF: no-gos → non-goals, rabbit holes → constraints, this log →
+the SPEC decision log; `research/SOURCES.md` inherited with the exploration
+ledger primary; manifests cross-linked; goal `active`, phases P0–P4 pending).
+Exploration status → `graduated`, retained as provenance.
+
+**Rationale:** The BRIEF's appetite is explicit (one packet, two phases);
+splitting rungs into separate packets would recreate the sequencing the
+appetite already encodes, and widening to the follow-on children would
+violate the compose-don't-widen phase-2 decision. Rejected: two packets
+(rung-per-packet — the rungs share one schema family and one decision log)
+and holding graduation for another review pass (the BRIEF was already
+twice-hardened; decompose introduced no new semantics).
+
+Two decompose-owned refinements, surfaced by the graduation three-lens Opus 5
+review panel (17 verified findings folded across MAP, SPEC, PLAN, GOAL, both
+READMEs, both SOURCES ledgers, and ATLAS):
+
+1. **Gate-shape narrowing.** The BRIEF assigned the lawful cross-slice shape
+   pick to decomposition and offered three shapes; decompose narrows the set
+   to the two `standards/ARCHITECTURE.md:632-636` actually sanctions —
+   emitted events (preferred) or a contract promoted into `shared/use-cases`
+   through the normal promotion gate — and demotes "app-local runtime
+   coordination" to entrypoint wiring that must never own cross-slice
+   orchestration (the God-Layer rejection test). The final binding pick
+   between the two lands at goal P0 with an `architecture-guardian` check,
+   where the promotion path's real wiring is in evidence; this explicit
+   deferral-of-the-final-pick is recorded here rather than silently
+   reassigned.
+2. **Entity-identity surface.** Every law-practice entity takes its EntityId
+   from `packages/shared/domain/src/identity/LawPractice.ts` (precedent
+   `PriorArtReferenceId`), so the goal's target surfaces include the two new
+   id registrations there — identity infrastructure, not a shared-kernel
+   product-language promotion.
+
+The panel also restored dropped BRIEF semantics verbatim (application-identity
+prohibitions; judgment slots representable at rung 1 with only the vocabulary
+deferred; the T2-F2 separate-fields clause), corrected the refinement count to
+four everywhere, and back-ported the PR #557 refinements into this packet's
+`research/SOURCES.md` §4 (EvidenceSpan superseded; ExecutionLedger
+attribution).
+
+## 2026-08-05 — PR #560 review adjudication (7 Codex P1s + Greptile)
+
+**Question:** The graduation PR's automated reviews raised seven P1 findings
+(Codex) and one blocking claim (Greptile, 4/5). Which survive adjudication
+against the locked align/BRIEF decisions, and what folds into the packet?
+
+**Answer:** A seven-agent Opus 5 panel fact-checked every claim against the
+live tree: 2 FOLD, 5 PARTIAL, 0 REBUT — every finding had a real kernel; no
+locked decision was superseded. Folded, by finding:
+
+1. **Release path (PARTIAL):** the criteria were phrased entirely in blocking
+   terms. Narrowed the claimed outcome instead of blocking on the runtime
+   goal: blocked-vs-released is owned and proven at the `CandorPolicy`
+   predicate boundary (rung 1 asserts release when all current AI events are
+   covered; rung 2 asserts both directions); candidate advancement past the
+   agents slice's single-member `pending` vocabulary stays gated.
+2. **Integration surface (PARTIAL):** verified that neither sanctioned shape
+   has a writable consumer on disk (`RuntimeApprovalGate` has no caller; no
+   slice emits domain events; `packages/shared/use-cases` does not exist).
+   The consumer surface is now an explicit P0 output; the no-new-packages
+   non-goal carries a bounded Exception-Ledger carve-out for the
+   promoted-contract branch. Rejected: naming agents/apps surfaces now
+   (pre-empts the locked P0 pick + architecture-guardian check).
+3. **Attorney authority (PARTIAL):** the disposition author is the
+   `createdByPrincipal: Principal` every `BaseEntity` entity already
+   carries; the predicate now fails closed on principal kind (only `User`
+   covers; agent/system-authored dispositions never do), with a negative
+   test case. Practitioner-authority enforcement is a named follow-on — no
+   authority substrate exists (`Membership.Role` is owner/member only) and
+   an authz service is scope growth. The trust boundary is stated.
+4. **Source-text resolver (PARTIAL):** re-verification's source text comes
+   through the EXISTING `SourceTextResolver` port (`@beep/file-processing`,
+   already a dependency) — fixture layer at rung 1, live layer at app
+   wiring gated on `uspto-prosecution-read`. A new resolution service is
+   now a named no-go; unresolvable sources fail closed as undisposed.
+5. **Disposition history (FOLD):** all three durable surfaces (events,
+   dispositions, fact records) are append-and-read-only; a
+   LiteralKit lifecycle domain (`active`/`superseded`/`withdrawn`) plus
+   supersedes reference is representable from rung 1; the migration
+   installs update/delete/truncate guards asserted by the PGlite test
+   (precedents: `ClaimDisposition.ports.ts`, the evidence-verification
+   migration, `EdgeVersion.supersedesId` — patterns only, never imported).
+6. **Concurrent citations (FOLD):** the first slice exercised the universal
+   quantifier only at cardinality one; a second reference with its own
+   current AI event now proves disposing one leaves promotion blocked and
+   only disposing both releases.
+7. **Version currency (PARTIAL):** currency is declared, never inferred —
+   explicit supersession naming the exact prior observation version;
+   arrival/ingestion order and timestamps never establish it; absent,
+   ambiguous, or forked lineage fails closed; out-of-order and replay
+   fixtures added to the rung-1 test. Rejected: a version comparator or
+   lineage mechanism here (forks `uspto-prosecution-read`'s SPEC — the
+   authoritative binding stays its gated criterion).
+
+Greptile's blocking claim ("`packages/law-practice/tables` and `server` do
+not exist") is REBUTTED: both exist on disk (`ls packages/law-practice/` →
+domain, server, tables, use-cases); its knowledge-base snapshot was stale.
+
+**Rationale:** Every fold names a mechanism, port, or test case in the
+planning docs rather than designing new substrate; every rejection traces to
+a locked decision (dependency posture, appetite, P0 pick ownership,
+fail-closed semantics). The authorship and lifecycle folds strengthen the
+fact/judgment split and no-stored-closure decisions at near-zero rung cost.
