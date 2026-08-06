@@ -9,7 +9,7 @@ binding. `research/corpus-census.md` has every number and how to reproduce it.
 (`increased=0`); `enforceTouchedFileCleanup` in
 `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts` is what exits 1. It
 rejects any changed non-generated `packages/**/src/**/*.{ts,tsx}` file containing `@example` or
-`@remarks` anywhere in the file — not the diff hunk. 1,965 of 2,553 source files (77%) contain
+`@remarks` anywhere in the file — not the diff hunk. 1,935 of 2,565 source files (75%) contain
 one. The JSDoc law is agent-facing, so the same corpus also teaches agents the forbidden pattern.
 
 ## Scope
@@ -46,7 +46,7 @@ phrases, generator templates, the gate swap, the baseline rewrite.
 3. **Compute conservation on post-format bytes.** Biome first, then verify.
 4. **Grok returns data only, never writes files.** Reach it at `http://127.0.0.1:8317` with model
    `grok-4.5` — that is what bills the Grok plan rather than API credits. Not a Workflow: the
-   1,000-agent cap is below the 1,965 files.
+   1,000-agent cap is below the 1,935 files.
 5. **Anchors are `path#symbol`**, never content hashes. Anchor stability is what makes P3
    re-derivable.
 

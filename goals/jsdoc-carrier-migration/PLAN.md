@@ -53,7 +53,7 @@ reverts the migration and fails the ratchet for an author who merely regenerated
 
 ## P3 — Migration mega-PR
 
-1. Run `titles` over all 13,605 blocks. Freeze `titles.jsonl`.
+1. Run `titles` over all 13,265 blocks. Freeze `titles.jsonl`.
 2. Run `apply`. Resolve every quarantined block into `overrides.jsonl`. Re-run until residue is
    zero. **No hand-edits on the branch, ever.**
 3. Run `verify`. Land the proof manifest.

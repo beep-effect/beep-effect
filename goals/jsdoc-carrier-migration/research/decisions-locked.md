@@ -22,7 +22,7 @@ The pipeline extracts blocks, Grok returns a JSON map of `anchor → { title, re
 and the codemod applies it.
 
 **Why.** A bad model output becomes a bad string, never a broken file or a lost doc block.
-Deterministic titles were rejected because 13,549 formulaic titles would install a *new* bad
+Deterministic titles were rejected because 13,209 formulaic titles would install a *new* bad
 exemplar teaching agents that Example titles are filler — the exact failure this initiative exists
 to end.
 
@@ -31,7 +31,7 @@ directly (a hallucinated rewrite silently destroys documentation; unbounded blas
 
 ## D3 — Four PRs; the mega-PR is regenerated, never rebased
 
-P0 law + packet, P1 codemod, P2 generators, P3 the 1,965-file migration.
+P0 law + packet, P1 codemod, P2 generators, P3 the 1,935-file migration.
 
 **Why.** A deterministic codemod plus frozen data files makes P3 re-derivable: on conflict,
 re-run against fresh `main` and replace the branch. Conflicts stop being a merge problem. This
@@ -52,9 +52,9 @@ order, lead splitting, `@see` purpose phrases.
 before the first section marker, so inserting sections *moves the boundary* and can clear
 `multiple-description-paragraphs`. And Grok is already reading each block to write a title —
 returning a section routing and a lead split point in the same call costs a few extra output
-tokens on ~1,400 of 13,605 blocks.
+tokens on ~1,400 of 13,265 blocks.
 
-**Rejected.** Carrier-only (leaves 929 multi-paragraph leads and the grammar findings, requiring a
+**Rejected.** Carrier-only (leaves 872 multi-paragraph leads and the grammar findings, requiring a
 second migration later). Repo-wide grammar sweep including the ~4,600 untouched blocks (materially
 larger diff, touches files the gate never flagged).
 
@@ -65,7 +65,7 @@ to `**Details**`, `**Gotchas**`, `**Example** (<title>)`. Violations quarantine.
 
 **Why.** Every other gate gets *happier* when content silently disappears — totals drop, examples
 still compile, shape stays valid. Conservation is the only check that catches a drop, and a
-1,965-file diff will not be read by a human. Sampling was rejected because a systematic bug in a
+1,935-file diff will not be read by a human. Sampling was rejected because a systematic bug in a
 rare block shape could go entirely unsampled.
 
 **Rejected.** Inverse round-trip to byte-exact original (strictly stronger, but two transforms to
@@ -99,7 +99,7 @@ the agent-facing-laws principle). Migrating output only (the codegen mine).
 
 **Why.** The proxy is what bills the Grok plan rather than API credits — a direct xAI API call
 would defeat the purpose. A native Workflow caps at 1,000 agents per run and one call per file is
-1,965. A script has no cap, resumes per anchor rather than per run, and keeps the whole
+1,935. A script has no cap, resumes per anchor rather than per run, and keeps the whole
 extract→titles→apply→verify pipeline in one place.
 
 **Rejected.** `claudeg` Workflow batched at ~4 files per agent (~490 agents; fits the cap, but

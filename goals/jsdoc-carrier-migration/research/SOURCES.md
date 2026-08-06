@@ -51,7 +51,7 @@ at `680a862a8e`.
 | `claudeg` selects Grok 4.5 through the local proxy | `~/.zshrc:161-163` — `claudeg() { _claude_proxy claude --model 'grok-4.5' "$@" }` |
 | The proxy is an Anthropic-compatible endpoint on `127.0.0.1:8317` | `~/.zshrc:149` — `ANTHROPIC_BASE_URL=http://127.0.0.1:8317`; `~/.cli-proxy-api/config.yaml` — `host: "127.0.0.1"`, `port: 8317` |
 | The proxy fronts personal OAuth credentials, so it bills the plan | `~/.cli-proxy-api/config.yaml` header — "this proxy fronts personal OAuth credentials"; `routing.strategy: fill-first` over admitted OAuth credentials |
-| A Workflow cannot host one call per file | Workflow tool contract — 1,000-agent lifetime cap per run; the corpus is 1,965 files |
+| A Workflow cannot host one call per file | Workflow tool contract — 1,000-agent lifetime cap per run; the corpus is 1,935 files |
 | An Anthropic-direct session cannot select `grok-4.5` | `ANTHROPIC_BASE_URL` unset in a plain `claude` session, so proxy model IDs are unreachable there |
 
 ## Corpus measurements
@@ -67,5 +67,5 @@ extract` supersedes them in P1.
 | `main` is PR-only; publish from a feature branch through Yeet | every phase |
 | Same-PR packet-state flips | P4 must land with P3 |
 | Attribute verification failures before repairing | P3's full-matrix CI run on a chronically red `main` |
-| Changeset gate counts `--since=origin/main` and fails on uncommitted changesets | P3 spans ~91 family buckets |
+| Changeset gate counts `--since=origin/main` and fails on uncommitted changesets | P3 spans ~96 family buckets |
 | Stacked PRs on a non-`main` base run a fraction of the required checks | why D3 rejected stacking |

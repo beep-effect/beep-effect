@@ -19,7 +19,7 @@ JSDoc cleanup-on-touch gate failed.                             <- actual failur
 changed non-generated `packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`.
 It scans the **entire file**, not the diff hunk, across `origin/main...HEAD` plus dirty paths.
 
-**1,965 of 2,553 source files (77%) carry a legacy carrier.** Touching almost anything demands
+**1,935 of 2,565 source files (75%) carry a legacy carrier.** Touching almost anything demands
 migrating that file's whole documentation surface as an unrelated side quest.
 
 A secondary effect compounds it: agents read the corpus as exemplars, and ~93% of it demonstrates
@@ -67,6 +67,13 @@ on 19 blocks repo-wide.
 
 Full measurements and reproduction commands: `research/corpus-census.md`.
 
+Every count in this packet is a snapshot stamped to a commit, currently `dbbad11e15`. The corpus
+shrinks on its own — cleanup-on-touch makes ordinary PRs retire carriers as a side effect, and
+340 examples went that way in a single day without anyone targeting them. Re-measure before P3
+and never quote a count without its commit. Two figures have not moved and are not expected to:
+the 19 multi-example blocks and the 114 unfenced examples, which is precisely why they are the
+cases the codemod must handle explicitly.
+
 ## 4. Scope
 
 **In scope.** Carrier retirement across every non-generated `packages/**/src/**/*.{ts,tsx}` file;
@@ -107,8 +114,8 @@ The only non-code inputs. Frozen and versioned once P3 opens.
 // titles.jsonl — one record per block
 { "anchor":  "packages/x/src/Y.ts#decodeUserName",
   "title":   "Decode a user name",
-  "remarks": "details" | "gotchas",   // routing for the 509 @remarks blocks
-  "leadEnd": 1 }                      // paragraphs 2..n -> Details, for the 929
+  "remarks": "details" | "gotchas",   // routing for the 501 @remarks blocks
+  "leadEnd": 1 }                      // paragraphs 2..n -> Details, for the 872
 
 // overrides.jsonl — full replacement block text for quarantined blocks
 { "anchor": "packages/x/src/Y.ts#thing", "block": "/** ... */" }
@@ -131,7 +138,7 @@ ASSERT added ⊆ { "**Details**", "**Gotchas**", "**Example** (<title>)" }
 violation -> quarantine, do not write
 ```
 
-Exhaustive over all 13,605 blocks. No sampling. Results recorded in a schema-versioned proof
+Exhaustive over all 13,265 blocks. No sampling. Results recorded in a schema-versioned proof
 manifest following the existing `DocgenProofManifest` / `AcceptedProofManifest` idiom.
 
 Conservation is computed on **post-format** bytes. Run biome first, then verify, or reflow is
@@ -147,7 +154,7 @@ CLIProxyAPI at `http://127.0.0.1:8317`, which is what bills the Grok plan rather
 credits. A direct xAI API call would defeat the purpose.
 
 The title pass is a repo pipeline step, not a Workflow: a native Workflow caps at 1,000 agents
-per run and one call per file is 1,965.
+per run and one call per file is 1,935.
 
 ## 6. Definition of done
 
@@ -163,7 +170,7 @@ per run and one call per file is 1,965.
 
 | # | Claim | Proof |
 | --- | --- | --- |
-| 1 | No documentation content was destroyed | Conservation law over 13,605 blocks, proof manifest |
+| 1 | No documentation content was destroyed | Conservation law over 13,265 blocks, proof manifest |
 | 2 | No block's shape regressed | `documentationShapeViolations` pre/post, finding set never grows |
 | 3 | Every example still compiles | `bun run docgen` full-repo proof |
 | 4 | Corpus reaches zero legacy carriers | Repo-wide zero-legacy check passes |
@@ -173,11 +180,11 @@ per run and one call per file is 1,965.
 
 ## 8. Hazards
 
-- A 1,965-file diff busts turbo cache repo-wide, producing a full-matrix CI run on a chronically
+- A 1,935-file diff busts turbo cache repo-wide, producing a full-matrix CI run on a chronically
   red `main`. Attribute before repairing: introduced / inherited / unrelated / environment-only.
-- Greptile review of a mechanical 1,965-file diff is theater. The real review target is P1.
+- Greptile review of a mechanical 1,935-file diff is theater. The real review target is P1.
 - The P3 branch is **regenerated, never rebased**. One hand-edit forfeits that property and
-  returns you to rebasing a 1,965-file diff. Residue fixes therefore go in `overrides.jsonl`.
+  returns you to rebasing a 1,935-file diff. Residue fixes therefore go in `overrides.jsonl`.
 - The changeset gate counts `--since=origin/main` and fails on uncommitted changesets; P3 spans
-  ~91 package-family buckets.
+  ~96 package-family buckets.
 - The docgen proof manifest goes stale on a change this size and must be regenerated in P3.

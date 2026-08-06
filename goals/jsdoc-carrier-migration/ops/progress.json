@@ -23,13 +23,19 @@
     "C8_baseline_rewrite": { "status": "pending" }
   },
   "measurements": {
-    "affectedFiles": 1965,
-    "affectedBlocks": 13605,
-    "legacyExamplesInBlocks": 13590,
+    "measuredAtCommit": "dbbad11e15",
+    "measuredOn": "2026-08-06",
+    "decayNote": "Counts shrink on their own: cleanup-on-touch makes ordinary PRs retire carriers as a side effect. 340 examples and 30 files were retired between 680a862a8e and dbbad11e15 with nobody targeting them. Re-measure before P3; never quote a count without its commit.",
+    "affectedFiles": 1935,
+    "affectedBlocks": 13265,
+    "legacyExamplesInBlocks": 13250,
     "unfencedExamples": 114,
+    "multiExampleBlocks": 19,
+    "multiParagraphLeadBlocks": 872,
     "generatedFiles": 18,
     "generatedExamples": 1065,
     "residueCount": null,
-    "residueNote": "Unknown until P1 dry-run. The 114 unfenced examples auto-quarantine by construction; additional conservation-law quarantines are unmeasured."
+    "residueNote": "Unknown until P1 dry-run. The 114 unfenced examples auto-quarantine by construction; additional conservation-law quarantines are unmeasured.",
+    "stableTails": "unfencedExamples (114) and multiExampleBlocks (19) held constant across both measurements while 340 examples retired — the pathological tails are not eroded by ordinary work and will still be there at P3."
   }
 }
