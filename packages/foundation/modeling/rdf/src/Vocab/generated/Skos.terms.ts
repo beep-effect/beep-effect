@@ -10,7 +10,8 @@
 /**
  * SKOS namespace IRI generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the SKOS namespace IRI)
+ *
  * ```ts
  * import { SKOS_NAMESPACE } from "@beep/rdf/Vocab/generated/Skos.terms"
  *
@@ -25,7 +26,8 @@ export const SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#" as const;
 /**
  * SKOS local-name inventory generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the SKOS term inventory)
+ *
  * ```ts
  * import { SKOS_TERMS } from "@beep/rdf/Vocab/generated/Skos.terms"
  *

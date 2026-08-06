@@ -10,7 +10,8 @@
 /**
  * OWL namespace IRI generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the OWL namespace IRI)
+ *
  * ```ts
  * import { OWL_NAMESPACE } from "@beep/rdf/Vocab/generated/Owl.terms"
  *
@@ -25,7 +26,8 @@ export const OWL_NAMESPACE = "http://www.w3.org/2002/07/owl#" as const;
 /**
  * OWL local-name inventory generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the OWL term inventory)
+ *
  * ```ts
  * import { OWL_TERMS } from "@beep/rdf/Vocab/generated/Owl.terms"
  *
