@@ -30,7 +30,7 @@
       "id": "jcm-003",
       "rank": 3,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-001"],
       "title": "beep quality jsdoc-migrate extract",
       "detail": "New subcommand in packages/tooling/tool/cli/src/commands/Quality/internal/, registered in the existing jsdoc-* family. ts-morph walks packages/**/src/**/*.{ts,tsx}, emitting one extract.jsonl record per affected doc block: path#symbol anchor, symbol kind (value-level vs pure type-level per the kind-split Example law), lead paragraphs, fence bodies, existing tags, and byte offsets for the block span. Anchors are path#symbol#ordinal, NEVER content hashes and never line numbers. path#symbol alone collides: overloads, declaration merging, default exports, and same-name type companions for runtime schemas (documented law in .patterns/jsdoc-documentation.md) all share a name. ordinal is the 0-based index among blocks sharing an anchor in source order, 0 in the unique case. extract MUST fail loudly on a duplicate anchor — a title applied to the wrong block is well-formed and the conservation law cannot catch it. Each record also carries sourceHash (hash of the ORIGINAL block bytes) and kind (value | type-level from ts-morph). These are verification fields, never addressing fields: ordinals shift on add, remove, OR REORDER ahead of a block, and reorder leaves both the anchor set and the record count looking correct, so only an exact identity check detects it."
@@ -39,7 +39,7 @@
       "id": "jcm-004",
       "rank": 4,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-003"],
       "title": "Conservation law + proof manifest",
       "detail": "Export documentationShapeViolations within the package (not across package boundaries). Implement BOTH clauses of SPEC 5.3. (a) Content: every fence's code bytes identical, prose tokens a subset of output, added prose limited to section markers plus data-sourced strings from titles.jsonl (title, @see purpose phrase) — the codemod never invents prose. (b) Tags: only the closed allowlist may be rewritten (@template->@typeParam, @module->@packageDocumentation, @default->@defaultValue, {type} removal, @returns/@throws hyphen, canonical order, @see purpose phrase, and the two carrier consumptions); every other tag is bytes-identical, every rewrite must match its normal form exactly, and no tag may be dropped without a consuming rule. Do NOT implement this as blanket 'tags bytes-identical' — that contradicts the D4 grammar fixes and would quarantine every free win. Violations quarantine rather than write. Pair it with the shape oracle: accept a rewrite only when documentationShapeViolations' finding set shrinks or stays equal. Record results in a schema-versioned proof manifest following the DocgenProofManifest / AcceptedProofManifest idiom. Conservation is computed on POST-FORMAT bytes — biome first, then verify, or reflow reads as content mutation."
@@ -48,7 +48,7 @@
       "id": "jcm-005",
       "rank": 5,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-004"],
       "title": "beep quality jsdoc-migrate apply",
       "detail": "Text-surgical rewrite by byte offset. ts-morph is for analysis only and must never reformat a block — byte conservation becomes unprovable if it does. Consumes titles.jsonl and overrides.jsonl, and FAILS CLOSED on any binding doubt (SPEC 5.2): frozen records must biject with extract (orphans on either side are a hard failure, never a skip), every sourceHash must match the block currently at that anchor, and every kind must agree. A hash mismatch means re-title, not apply. Idempotent: re-running over already-migrated files is a no-op. Transform set per SPEC 5: carrier swap, @template->@typeParam, @module->@packageDocumentation, @default->@defaultValue, {type} blob removal, @returns/@throws hyphen, canonical tag order, lead splitting at leadEnd, @see purpose phrases."
@@ -57,7 +57,7 @@
       "id": "jcm-006",
       "rank": 6,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-004"],
       "title": "beep quality jsdoc-migrate titles",
       "detail": "effect/unstable/http against http://127.0.0.1:8317 with model grok-4.5 — never node:http, and never the xAI API directly (that bills credits instead of the plan). Returns data only: { anchor, title, remarks: details|gotchas, leadEnd }. Append-only titles.jsonl with per-anchor resume and retry only on schema-invalid returns. Resume skips an anchor only when its record is present AND its sourceHash still matches the current block — a bare anchor-present check would silently reuse a stale title after an upstream edit. Not a Workflow: the 1,000-agent cap is below the 1,935 files."
@@ -66,7 +66,7 @@
       "id": "jcm-007",
       "rank": 7,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-005"],
       "title": "Fixture corpus + full-corpus dry run",
       "detail": "Fixtures covering every recognised block shape, including the pathological ones: unfenced example (expect quarantine — a fence is a third addition), multi-example block (19 exist, max 5, the only place title uniqueness binds), @remarks + @example together (464 blocks), multi-paragraph lead (872 blocks), block already carrying **Example** sections (expect no-op), and ANCHOR COLLISIONS — a runtime schema plus its same-name type companion in one file, an overload set, and a merged declaration, each expecting distinct ordinals and a loud failure if extract would emit a duplicate anchor. Also ANCHOR DRIFT against a frozen record set: same-named declarations REORDERED (anchors and counts both unchanged, expect sourceHash mismatch and fail-closed), one added ahead (expect bijection failure), one removed (expect orphan record failure), and a block edited in place (expect re-title, not apply). Also cover each allowlisted tag rewrite and at least one off-normal-form rewrite (expect quarantine). Then dry-run the full corpus and record the true residue count into ops/progress.json measurements.residueCount. P3's zero claim is not committable until this number exists."

@@ -39,9 +39,18 @@ export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
 export * from "../commands/Quality/internal/FlakeQuarantine.ts";
 export { githubCheckChangesetStatusLane, githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
+export * from "../commands/Quality/internal/JSDocMigrate.schemas.ts";
+export * from "../commands/Quality/internal/JSDocMigrateApply.ts";
+export * from "../commands/Quality/internal/JSDocMigrateExtract.ts";
+export * from "../commands/Quality/internal/JSDocMigrateRewrite.ts";
+export * from "../commands/Quality/internal/JSDocMigrateTitles.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
 export * from "../commands/Quality/internal/KnipRatchet.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";
-export { jsdocCommentsFromSource, tagsFromComment } from "../commands/Quality/internal/QualityArtifactSupport.ts";
+export {
+  fencedLineState,
+  jsdocCommentsFromSource,
+  tagsFromComment,
+} from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../internal/process/index.ts";

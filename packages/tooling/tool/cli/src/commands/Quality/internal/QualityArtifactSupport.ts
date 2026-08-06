@@ -333,6 +333,7 @@ export const expandWorkspacePattern: {
     repoRoot: string,
     path: Path.Path
   ): Effect.Effect<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> =>
+    // fallow-ignore-next-line complexity -- pre-existing workspace-glob walker; the segment/candidate double loop mirrors the glob grammar and predates this change
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const segments = A.filter(Str.split("/")(normalizeSlashes(pattern)), Str.isNonEmpty);
@@ -614,7 +615,36 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
   return O.none();
 };
 
-const fencedLineState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
+/**
+ * Advance the fenced-code-block scanner state by one stripped comment line.
+ *
+ * **Details**
+ *
+ * The state is the currently open fence delimiter (or `undefined` outside a
+ * fence). The returned flag is `true` for delimiter lines and interior lines,
+ * so callers can skip fenced example code when scanning for tags or section
+ * headings.
+ *
+ * **Example** (Track fence state across lines)
+ *
+ * ```ts
+ * import { fencedLineState } from "@beep/repo-cli/test/Quality"
+ *
+ * const [open, fenced] = fencedLineState("```ts", undefined)
+ * console.log(fenced) // true
+ * console.log(fencedLineState("```", open)[0]) // undefined
+ * ```
+ *
+ * @param line - Stripped comment line to scan.
+ * @param openFence - Currently open fence delimiter, or `undefined` outside a fence.
+ * @returns Next open-fence state and whether the line is fenced.
+ * @category jsdoc
+ * @since 0.0.0
+ */
+export const fencedLineState = (
+  line: string,
+  openFence: string | undefined
+): readonly [string | undefined, boolean] => {
   const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
   const fence = match === null ? undefined : match[1];
   if (openFence === undefined) {

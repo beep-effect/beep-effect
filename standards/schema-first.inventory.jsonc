@@ -498,6 +498,78 @@
       "reason": "Two-sided comparison boundary that carries the base and HEAD KnowledgeArchiveOracle runtime seams; only renames is data, and it is already schema-backed by KnowledgeRename. The pair is assembled in-process before every scan and is never decoded or persisted."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "symbol": "DocumentationIssue",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Hot-path finding record constructed as plain literals by every inventory rule; S.Struct keeps that construction allocation-light while the annotated schema still owns the shape. Values are aggregated in-process and never decoded from IO."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "symbol": "computeJSDocMigrateBinding",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 178,
+      "owner": "@beep/repo-cli",
+      "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
+      "symbol": "JSDocMigrateScannedBlock",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "In-memory scan result produced once per doc block while walking an 11k+-block corpus; S.Struct plus the same-name type keeps the hot loop literal-based while the annotated schema owns the shape. Never decoded or persisted - the persisted row is JSDocMigrateExtractRecord."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "symbol": "JSDocMigrateBlockStats",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Derived per-block counters computed in the same corpus walk; plain-literal construction in the hot loop with the annotated S.Struct owning the shape. Never decoded from IO."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "symbol": "JSDocMigrateRewriteData",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Structural parameter contract of the pure block rewriter; callers project it from the schema-decoded JSDocMigrateTitleRecord, so the IO boundary is already class-modeled and this struct is never decoded itself."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "symbol": "jsdocMigrateConservationFindings",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 429,
+      "owner": "@beep/repo-cli",
+      "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "symbol": "rewriteJSDocMigrateBlock",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 844,
+      "owner": "@beep/repo-cli",
+      "reason": "Inline input pairs raw block bytes with a projection of the schema-decoded title record; the tagged result union is transient control flow consumed immediately by apply, never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "symbol": "fencedLineState",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-null-return",
+      "line": 644,
+      "owner": "@beep/repo-cli",
+      "reason": "Pre-existing fence-scanner state tuple ([openFence | undefined, isFenced]) exported verbatim from the private scanners it was extracted from; wrapping the open-fence slot in Option would churn every hot-loop call site in the comment scanners."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
