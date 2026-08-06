@@ -17,8 +17,8 @@ jobs:
   pr-size:
     name: PR Size Label
     if: github.event_name == 'pull_request'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
     permissions:
       pull-requests: write
     steps:
@@ -56,56 +56,56 @@ jobs:
         include:
           - id: lint
             name: Lint
-            runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 30
+            runner: ubuntu-24.04
+            timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "true"
           - id: lint-policy
             name: Lint Policy
-            runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 25
+            runner: ubuntu-24.04
+            timeout_minutes: 50
             uses_turbo: "false"
             install_typos: "true"
           - id: repo-sanity
             name: Repo Sanity
-            runner: blacksmith-4vcpu-ubuntu-2404
-            timeout_minutes: 15
+            runner: ubuntu-24.04
+            timeout_minutes: 30
             uses_turbo: "false"
             install_typos: "false"
           - id: check
             name: Check
-            runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 60
+            runner: ubuntu-24.04
+            timeout_minutes: 120
             uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
             name: Test Unit
-            runner: blacksmith-4vcpu-ubuntu-2404
-            timeout_minutes: 30
+            runner: ubuntu-24.04
+            timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 20
+            runner: ubuntu-24.04
+            timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
-            runner: blacksmith-8vcpu-ubuntu-2404
-            timeout_minutes: 40
+            runner: ubuntu-24.04
+            timeout_minutes: 80
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
             name: Docgen
-            runner: blacksmith-4vcpu-ubuntu-2404
-            timeout_minutes: 30
+            runner: ubuntu-24.04
+            timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
           - id: codegen
             name: Codegen Drift
-            runner: blacksmith-4vcpu-ubuntu-2404
-            timeout_minutes: 15
+            runner: ubuntu-24.04
+            timeout_minutes: 30
             uses_turbo: "false"
             install_typos: "false"
     env:
@@ -166,10 +166,10 @@ jobs:
           echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for verification lanes
-        # startsWith(runner.name) scopes the destructive image cleanup to
-        # ephemeral Blacksmith VMs; any other runner (owned, workstation,
-        # GitHub-hosted) keeps its filesystem.
-        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && startsWith(runner.name, 'blacksmith-')
+        # Destructive image cleanup runs on ephemeral hosted images (GitHub-
+        # hosted and lookalikes); owned/workstation runners (beep- prefix)
+        # keep their filesystem.
+        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
         shell: bash
         run: |
           set -euo pipefail
@@ -253,8 +253,8 @@ jobs:
 
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     permissions:
       contents: read
     steps:
@@ -319,8 +319,8 @@ jobs:
     # addition) is a P4 close criterion after a stable green history. The
     # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
     name: Property Laws
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     env:
@@ -368,8 +368,8 @@ jobs:
 
   fallow-advisory:
     name: Fallow Advisory Envelopes
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
@@ -403,8 +403,8 @@ jobs:
 
       - name: Free runner disk for Fallow
         # Same scoping as the verify matrix: destructive cleanup only on
-        # ephemeral Blacksmith VMs.
-        if: runner.os == 'Linux' && startsWith(runner.name, 'blacksmith-')
+        # ephemeral hosted images, never owned (beep-) runners.
+        if: runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
         shell: bash
         run: |
           set -euo pipefail
@@ -496,8 +496,8 @@ jobs:
 
   knip:
     name: Knip
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -519,8 +519,8 @@ jobs:
 
   jsdoc-ratchet:
     name: JSDoc Ratchet
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -554,8 +554,8 @@ jobs:
   build:
     name: Build
     if: github.event_name == 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     permissions:
       contents: read
     env:
@@ -591,8 +591,8 @@ jobs:
 
   commitlint:
     name: Commitlint
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -651,8 +651,8 @@ jobs:
 
   secrets:
     name: Secret Scanning
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -710,8 +710,8 @@ jobs:
 
   security:
     name: Security
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
@@ -797,8 +797,8 @@ jobs:
 
   nix:
     name: Nix Shell
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -838,8 +838,8 @@ jobs:
 
   sast:
     name: SAST
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
       security-events: write

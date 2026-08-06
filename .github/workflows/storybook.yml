@@ -16,8 +16,8 @@ permissions:
 jobs:
   build-and-test:
     name: Build And Test
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     env:
       # Same secret posture as check.yml's verify matrix: this job executes
       # PR-authored turbo tasks, so the remote-cache write token stays on
@@ -36,8 +36,8 @@ jobs:
       # exhaust the runner's disk ("No space left on device"). Mirror the
       # cleanup that check.yml already performs for its verification lanes.
       - name: Free runner disk
-        # Destructive image cleanup only on ephemeral Blacksmith VMs.
-        if: runner.os == 'Linux' && startsWith(runner.name, 'blacksmith-')
+        # Destructive image cleanup only on ephemeral hosted images, never owned (beep-) runners.
+        if: runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
         shell: bash
         run: |
           set -euo pipefail

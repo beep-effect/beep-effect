@@ -31,8 +31,8 @@ permissions:
 jobs:
   property-sweep:
     name: Property Laws Sweep
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 90
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
