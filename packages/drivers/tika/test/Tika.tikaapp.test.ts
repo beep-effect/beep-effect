@@ -1,5 +1,5 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
-import { ExtractFileOperation } from "@beep/file-processing/Operation";
+import { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -41,6 +41,12 @@ const failingStub = `#!/usr/bin/env bash
 exit 1
 `;
 
+const echoSourceStub = `#!/usr/bin/env bash
+source="\${@: -1}"
+printf '[{"Content-Type":"application/pdf","X-TIKA:content":"%s"}]' "$(cat "$source")"
+exit 0
+`;
+
 const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamily) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -49,7 +55,8 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
   yield* fs.writeFileString(stubPath, stubScript);
   yield* fs.chmod(stubPath, 0o755);
   const sourcePath = path.join(dir, "document.pdf");
-  yield* fs.writeFileString(sourcePath, "not a real pdf");
+  const sourceBytes = new TextEncoder().encode("not a real pdf");
+  yield* fs.writeFile(sourcePath, sourceBytes);
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
   const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(sourcePath);
@@ -67,11 +74,12 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "document.pdf",
       relativePath,
-      sizeBytes: NonNegativeInt.make(14),
+      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      bytes: sourceBytes,
     }),
   });
 
-  return { operation, stubPath };
+  return { operation, sourcePath, stubPath };
 });
 
 describe("makeTikaAppFileProcessingEngine", () => {
@@ -96,6 +104,55 @@ describe("makeTikaAppFileProcessingEngine", () => {
       }),
       fcRuns(25)
     ));
+
+  it.effect(
+    "refuses extraction when the caller omits source bytes",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const operationWithoutBytes = ExtractFileOperation.make({
+          ...operation,
+          source: SourceArtifact.make(sourceWithoutBytes),
+        });
+
+        const error = yield* engine.extract(operationWithoutBytes).pipe(Effect.flip);
+
+        expect(error.reason).toBe("file-extraction-failed");
+        expect(error.message).toContain("caller-supplied source bytes");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reports archive export as unsupported",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
+        const exportOperation = ExportArchiveOperation.make({
+          format: "pst",
+          operationId: operation.operationId,
+          operationKind: "export-archive",
+          preference: { engine: "tika" },
+          source: operation.source,
+        });
+
+        const error = yield* engine.exportArchive(exportOperation).pipe(Effect.flip);
+
+        expect(error.reason).toBe("unsupported-file-format");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
 
   it.effect(
     "extracts trimmed text and stringified metadata via tika-app",
@@ -133,6 +190,25 @@ describe("makeTikaAppFileProcessingEngine", () => {
 
         expect(result.text).toBeUndefined();
         expect(result.metadata["Content-Type"]).toBe("application/pdf");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "extracts the caller-supplied snapshot instead of reopening the locator",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, sourcePath, stubPath } = yield* fixture(echoSourceStub, "pdf-text-layer");
+        yield* FileSystem.FileSystem.pipe(Effect.flatMap((fs) => fs.writeFileString(sourcePath, "swapped after hash")));
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
+
+        const result = yield* engine.extract(operation);
+
+        expect(result.text).toBe("not a real pdf");
       },
       Effect.scoped,
       provideTestLayer

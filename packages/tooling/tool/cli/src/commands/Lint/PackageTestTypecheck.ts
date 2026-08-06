@@ -72,7 +72,7 @@ const recursiveGlobSegment = "**";
 const scriptReferencePattern =
   /\bbun\s+run\s+(?:(?:--(?:cwd|config|env-file)\s+\S+|--?[\w-]+(?:=\S+)?)\s+)*([\w:.-]+)/gu;
 const projectFlagPattern = /(?:^|\s)(?:-p|--project|-b|--build)(?:=|\s+)([^\s]+)/gu;
-const typescriptProgramPattern = /\b(?:tsgo|tsc)\b/u;
+const typescriptProgramPattern = /^\s*(?:(?:env\s+)?(?:[^\s=]+=[^\s]+\s+)*)(?:bunx\s+)?(?:tsgo|tsc)\b/u;
 const commandSeparatorPattern = /&&|\|\||;|\|/u;
 const defaultProjectFileName = "tsconfig.json";
 const newPackageHandling =
@@ -86,12 +86,13 @@ const baselineHeader = `// Regenerate with: ${regenerationCommand}
 /**
  * Shape of a package test-typecheck blind spot.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TestTypecheckBlindSpotKind } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
  * console.log(TestTypecheckBlindSpotKind.is["missing-test-tsconfig"]("missing-test-tsconfig"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -105,13 +106,14 @@ export const TestTypecheckBlindSpotKind = LiteralKit(["missing-test-tsconfig", "
 /**
  * Shape of a package test-typecheck blind spot.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { TestTypecheckBlindSpotKind } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
  * const kind: TestTypecheckBlindSpotKind = "missing-test-tsconfig"
  * console.log(kind) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,7 +122,7 @@ export type TestTypecheckBlindSpotKind = typeof TestTypecheckBlindSpotKind.Type;
 /**
  * One package whose `check` script never typechecks its `test/` sources.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TestTypecheckBlindSpot } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
@@ -131,6 +133,7 @@ export type TestTypecheckBlindSpotKind = typeof TestTypecheckBlindSpotKind.Type;
  * })
  * console.log(finding.package)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,7 +151,7 @@ export class TestTypecheckBlindSpot extends S.Class<TestTypecheckBlindSpot>($I`T
 /**
  * Deterministic count summary for a blind-spot baseline or run.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TestTypecheckBlindSpotSummary } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
@@ -159,6 +162,7 @@ export class TestTypecheckBlindSpot extends S.Class<TestTypecheckBlindSpot>($I`T
  * })
  * console.log(summary.total_findings)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -178,16 +182,18 @@ export class TestTypecheckBlindSpotSummary extends S.Class<TestTypecheckBlindSpo
 /**
  * Committed fail-on-growth baseline of test-typecheck blind spots.
  *
- * @remarks
+ * **Details**
+ *
  * Membership is compared by package name alone, so remediating a package
  * half-way (adding `tsconfig.test.json` without wiring it into `check`) shifts
  * its `kind` without registering as a new finding. `notes` is hand-authored
  * rationale keyed by package name and is preserved across regeneration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TestTypecheckBlindSpotBaseline } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  * console.log(TestTypecheckBlindSpotBaseline.fields.schema_version)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -746,15 +752,17 @@ const packageBlindSpot = Effect.fn("PackageTestTypecheck.packageBlindSpot")(func
 /**
  * Scan the repository for packages whose `check` script skips their test sources.
  *
- * @param repoRoot - Absolute repository root directory.
- * @returns Effect yielding the blind spots, ordered by package name.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { collectTestTypecheckBlindSpots } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(collectTestTypecheckBlindSpots("/repo")))
  * ```
+ *
+ * @param repoRoot - Absolute repository root directory.
+ * @returns Effect yielding the blind spots, ordered by package name.
  * @category use-cases
  * @since 0.0.0
  */
@@ -825,7 +833,7 @@ const renderFindingLines = (findings: ReadonlyArray<TestTypecheckBlindSpot>): Re
 /**
  * Options accepted by {@link runPackageTestTypecheckLint}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PackageTestTypecheckOptions } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
@@ -835,6 +843,7 @@ const renderFindingLines = (findings: ReadonlyArray<TestTypecheckBlindSpot>): Re
  * })
  * console.log(options.writeBaseline)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -851,9 +860,8 @@ export class PackageTestTypecheckOptions extends S.Class<PackageTestTypecheckOpt
 /**
  * Enforce or refresh the committed test-typecheck blind-spot baseline.
  *
- * @param options - Baseline path and write mode.
- * @returns Effect that fails only when a package not already in the baseline is blind.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { runPackageTestTypecheckLint } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  * import { Effect } from "effect"
@@ -864,6 +872,9 @@ export class PackageTestTypecheckOptions extends S.Class<PackageTestTypecheckOpt
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Baseline path and write mode.
+ * @returns Effect that fails only when a package not already in the baseline is blind.
  * @category use-cases
  * @since 0.0.0
  */
@@ -940,12 +951,13 @@ export const runPackageTestTypecheckLint = Effect.fn("PackageTestTypecheck.runPa
  * Repo-relative location of the committed blind-spot baseline consumed when
  * `--baseline` is not passed.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { defaultTestTypecheckBaselinePath } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
  *
  * console.log(defaultTestTypecheckBaselinePath)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -955,10 +967,11 @@ export const defaultTestTypecheckBaselinePath = defaultBaselinePath;
  * `bun run beep lint package-test-typecheck` — gate packages whose `check`
  * script never typechecks their own test sources.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * console.log("bun run beep lint package-test-typecheck")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

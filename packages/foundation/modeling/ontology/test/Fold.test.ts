@@ -540,6 +540,25 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
+  it.effect("rejects language tags containing Turtle syntax", () =>
+    Effect.gen(function* () {
+      const injected = [
+        LeftDocument,
+        "rdfs:label",
+        { value: "Document", language: 'en" . <https://attacker.example/s> <https://attacker.example/p> "x' },
+      ] as unknown as Triple;
+      const error = yield* Effect.flip(
+        fold($Neg, {
+          label: "Invalid Language Tag",
+          schemas: [LeftDocument],
+          triples: [injected],
+        })
+      );
+
+      expect(error.reason).toBe("invalidTriple");
+    })
+  );
+
   it.effect("rejects empty ontology labels with a typed error", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(

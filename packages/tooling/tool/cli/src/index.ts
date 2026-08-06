@@ -178,6 +178,21 @@ export {
   imageCommand,
 } from "./commands/Image/index.ts";
 /**
+ * Knowledge-surface verification command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Knowledge-surface verification command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  knowledgeCommand,
+} from "./commands/Knowledge/index.ts";
+/**
  * Effect laws command group.
  *
  * @category cli-commands

@@ -16,6 +16,7 @@ import {
   OperationId,
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
@@ -24,6 +25,7 @@ import { NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@b
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -33,7 +35,8 @@ import type * as SqlClient from "effect/unstable/sql/SqlClient";
 const $I = $LawPracticeServerId.create("PracticeKg.claims");
 const docketPattern = /(?<!\d)(\d{5}[A-Z]{2}\d{2})(?!\d)/iu;
 const leadingDocketPattern = /^(\d{5})(?!\d)/u;
-const textEncoder = new TextEncoder();
+const maxClaimsInputBytes = 2 * 1024 * 1024;
+const claimsInputExtensions = [".md", ".txt"] as const;
 class ClaimsCountRow extends S.Class<ClaimsCountRow>($I`ClaimsCountRow`)({
   count: S.Finite,
 }) {}
@@ -102,7 +105,7 @@ ON CONFLICT (public_id) DO NOTHING`;
 /**
  * Inputs for one candidate-claims batch.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsOptions } from "@beep/law-practice-server"
  *
@@ -126,7 +129,7 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
 /**
  * Deterministic claims-batch summary.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsSummary } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -156,7 +159,7 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
 /**
  * Typed batch failure with the provider or persistence cause retained locally.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsError } from "@beep/law-practice-server"
  *
@@ -232,7 +235,7 @@ const persistCandidate = Effect.fn("PracticeKgClaims.persistCandidate")(function
 /**
  * Extract and persist grounded OA candidates into an existing bundle PGlite.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsOptions, runPracticeKgClaimsBatch } from "@beep/law-practice-server"
  * import { Effect } from "effect"
@@ -255,7 +258,8 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const review = yield* OfficeActionReview;
     const sql = (yield* SqlClientService).withoutTransforms();
     yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
-    const entries = A.sort(yield* fs.readDirectory(options.inputs), Order.String);
+    const canonicalInputs = yield* fs.realPath(options.inputs);
+    const entries = A.sort(yield* fs.readDirectory(canonicalInputs), Order.String);
     const [skippedFiles, docketedFiles] = A.partition(entries, (filename) =>
       O.match(docketFromFilename(filename), {
         onNone: () => Result.fail(filename),
@@ -275,9 +279,36 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       readonly docket: string;
       readonly filename: string;
     }) {
-      const sourcePath = path.join(options.inputs, filename);
-      const text = yield* fs.readFileString(sourcePath);
-      const digestHex = yield* hashBytes(textEncoder.encode(text));
+      if (!A.contains(claimsInputExtensions, Str.toLowerCase(path.extname(filename)))) {
+        return yield* PracticeKgClaimsError.make({ message: `Unsupported claims input extension: ${filename}` });
+      }
+      const sourcePath = path.resolve(canonicalInputs, filename);
+      const canonicalSource = yield* resolvePathWithinCanonicalRoot({
+        canonicalRoot: canonicalInputs,
+        candidate: filename,
+      });
+      if (!Eq.equals(sourcePath, canonicalSource)) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Claims input must not traverse a symbolic link: ${filename}`,
+        });
+      }
+      const info = yield* fs.stat(canonicalSource);
+      if (!Eq.equals(info.type, "File") || Number(info.size) > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Claims input is not a bounded regular file: ${filename}`,
+        });
+      }
+      const bytes = yield* fs.readFile(canonicalSource);
+      if (bytes.byteLength > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Claims input exceeds ${maxClaimsInputBytes} bytes: ${filename}`,
+        });
+      }
+      const text = yield* Effect.try({
+        try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+        catch: () => PracticeKgClaimsError.make({ message: `Claims input is not valid UTF-8: ${filename}` }),
+      });
+      const digestHex = yield* hashBytes(bytes);
       const artifactId = yield* decodeArtifactId(`artifact:${digestHex}`);
       const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
@@ -353,7 +384,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const claimCountRows = yield* sql
       .unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM epistemic_candidate_claim")
       .pipe(Effect.flatMap(decodeClaimsCountRows));
-    if (A.isReadonlyArrayNonEmpty(docketedFiles) && A.headNonEmpty(claimCountRows).count === 0) {
+    if (A.isReadonlyArrayNonEmpty(docketedFiles) && A.isReadonlyArrayEmpty(extractedFiles)) {
       return yield* PracticeKgClaimsError.make({
         message: "Claims batch persisted zero claims across all extractable inputs.",
       });

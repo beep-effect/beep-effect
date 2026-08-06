@@ -103,6 +103,36 @@ const backupNames = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.backu
 });
 
 layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
+  describe("makeBundledPgliteLayer", () => {
+    it.effect(
+      "removes the materialized extension bundle when its layer scope closes",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-chat-db-extension-cleanup-" });
+        const dataDir = path.join(rootDir, "chat-db");
+        const extensionTempRoot = path.join(rootDir, "extension-temp");
+        yield* fs.makeDirectory(extensionTempRoot);
+        const isolatedFileSystem = FileSystem.FileSystem.of({
+          ...fs,
+          makeTempDirectory: Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.makeTempDirectory")((options) =>
+            fs.makeTempDirectory({ ...options, directory: extensionTempRoot })
+          ),
+          makeTempDirectoryScoped: Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.makeTempDirectoryScoped")(
+            (options) => fs.makeTempDirectoryScoped({ ...options, directory: extensionTempRoot })
+          ),
+        });
+
+        yield* withPgliteSql(dataDir, Effect.void).pipe(
+          Effect.provideService(FileSystem.FileSystem, isolatedFileSystem)
+        );
+
+        expect(yield* fs.readDirectory(extensionTempRoot)).toEqual([]);
+      }),
+      { timeout: 30_000 }
+    );
+  });
+
   describe("ensureCompatibleChatDbDataDir", () => {
     it.effect(
       "prepares a fresh data dir and defers the marker until successful open",

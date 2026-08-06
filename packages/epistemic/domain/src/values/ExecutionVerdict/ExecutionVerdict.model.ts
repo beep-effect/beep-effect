@@ -14,19 +14,20 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as S from "effect/Schema";
 import { GrantOperation, SinkAudience, SinkClass, SinkDestination } from "../ExecutionGrant/index.ts";
 
 const $I = $EpistemicDomainId.create("values/ExecutionVerdict/ExecutionVerdict.model");
 
 /**
- * Bounded denial reasons. Six are produced by the pure evaluator; two —
+ * Bounded denial reasons. Eight are produced by the pure evaluator; two —
  * `no-grant-in-scope` and `ledger-unavailable` — are produced only at the
  * enforcement boundary (no frozen grant set exists, or the write-ahead
  * decision write failed). See {@link evaluatorDenialReasons} and
  * {@link boundaryDenialReasons} for the split.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { DenialReason } from "@beep/epistemic-domain"
  *
@@ -40,6 +41,7 @@ const $I = $EpistemicDomainId.create("values/ExecutionVerdict/ExecutionVerdict.m
 export const DenialReason = LiteralKit([
   "no-grant-in-scope",
   "grant-set-digest-mismatch",
+  "principal-not-granted",
   "operation-not-granted",
   "sink-class-not-granted",
   "audience-not-granted",
@@ -56,7 +58,7 @@ export const DenialReason = LiteralKit([
 /**
  * Runtime type for {@link DenialReason}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { DenialReason } from "@beep/epistemic-domain"
  *
@@ -71,18 +73,18 @@ export type DenialReason = typeof DenialReason.Type;
 
 /**
  * The denial reasons the pure evaluator can produce, in evaluation-precedence
- * order: seal, then revision, then operation, then sink class, then audience,
- * then destination, then expiry. The seal check comes first because a grant set
+ * order: seal, then revision, then principal, operation, sink class, audience,
+ * destination, and expiry. The seal check comes first because a grant set
  * whose digest does not match its contents cannot be trusted to answer any
  * later question. Each subsequent check narrows the candidate grant set; the
  * first narrowing that empties it names the reason.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { evaluatorDenialReasons } from "@beep/epistemic-domain"
  *
  * console.log(evaluatorDenialReasons.length)
- * // 7
+ * // 8
  * ```
  *
  * @category constants
@@ -91,6 +93,7 @@ export type DenialReason = typeof DenialReason.Type;
 export const evaluatorDenialReasons = DenialReason.pickOptions([
   "grant-set-digest-mismatch",
   "policy-revision-mismatch",
+  "principal-not-granted",
   "operation-not-granted",
   "sink-class-not-granted",
   "audience-not-granted",
@@ -104,7 +107,7 @@ export const evaluatorDenialReasons = DenialReason.pickOptions([
  * HTTP, health probes, loopback RPC), and a failed write-ahead decision write
  * (no record, no action).
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { boundaryDenialReasons } from "@beep/epistemic-domain"
  *
@@ -122,7 +125,7 @@ export const boundaryDenialReasons = DenialReason.pickOptions(["no-grant-in-scop
  * interpolated with request data, so guidance can never smuggle a payload
  * into a log line or ledger row.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { denialGuidance } from "@beep/epistemic-domain"
  *
@@ -136,6 +139,7 @@ export const denialGuidance: Readonly<Record<DenialReason, string>> = {
   "no-grant-in-scope": "No frozen grant set is in scope for this execution; open a governed run before dispatching.",
   "grant-set-digest-mismatch":
     "The frozen grant set's digest does not match its contents; it was altered after freezing and cannot authorize anything.",
+  "principal-not-granted": "No grant in the frozen set belongs to the requesting principal.",
   "operation-not-granted": "No grant in the frozen set names this operation.",
   "sink-class-not-granted": "A grant names this operation but not this sink class.",
   "audience-not-granted": "A grant covers this sink class but not the resolved audience.",
@@ -151,7 +155,7 @@ export const denialGuidance: Readonly<Record<DenialReason, string>> = {
  * The caller never supplies the audience — a request cannot self-declare a
  * friendlier classification.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExecutionRequest } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -159,6 +163,7 @@ export const denialGuidance: Readonly<Record<DenialReason, string>> = {
  * const request = S.decodeUnknownSync(ExecutionRequest)({
  *   destination: "https://registry.example",
  *   operation: "ontology_publish_provenance",
+ *   principal: { component: "Runtime", kind: "System" },
  *   resolvedAudience: "external-network",
  *   sinkClass: "network-egress"
  * })
@@ -173,6 +178,9 @@ export class ExecutionRequest extends S.Class<ExecutionRequest>($I`ExecutionRequ
     operation: GrantOperation.annotateKey({
       description: "Operation being attempted.",
     }),
+    principal: Principal.annotateKey({
+      description: "Principal attempting the governed operation.",
+    }),
     sinkClass: SinkClass.annotateKey({
       description: "Sink class the operation would reach.",
     }),
@@ -184,7 +192,8 @@ export class ExecutionRequest extends S.Class<ExecutionRequest>($I`ExecutionRequ
     }),
   },
   $I.annote("ExecutionRequest", {
-    description: "One governed execution request: operation, sink class, destination, resolver-owned audience.",
+    description:
+      "One governed execution request: principal, operation, sink class, destination, resolver-owned audience.",
   })
 ) {
   static readonly is = S.is(ExecutionRequest);
@@ -198,7 +207,7 @@ const ExecutionVerdictTag = LiteralKit(["allowed", "denied"]);
  * and unknown anything denies. The denied variant carries the bounded reason
  * for the ledger and the log — the agent never sees it.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExecutionVerdict } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -226,7 +235,7 @@ export const ExecutionVerdict = ExecutionVerdictTag.toTaggedUnion("verdict")({
 /**
  * Runtime type for {@link ExecutionVerdict}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { ExecutionVerdict } from "@beep/epistemic-domain"
  *
@@ -246,7 +255,7 @@ export type ExecutionVerdict = typeof ExecutionVerdict.Type;
  * empty in this slice, and kept closed so a future contributor cannot land in
  * a fail-open branch by default.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { EgressClassification } from "@beep/epistemic-domain"
  *
@@ -270,7 +279,7 @@ export const EgressClassification = LiteralKit([
 /**
  * Runtime type for {@link EgressClassification}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { EgressClassification } from "@beep/epistemic-domain"
  *
@@ -291,7 +300,7 @@ export type EgressClassification = typeof EgressClassification.Type;
  * deliberate type-level act, not a string push, and a test asserts the exact
  * membership so an addition cannot land silently.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ungovernedInfrastructureDestinations } from "@beep/epistemic-domain"
  *

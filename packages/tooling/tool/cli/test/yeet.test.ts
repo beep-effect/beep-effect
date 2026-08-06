@@ -23,6 +23,9 @@ import {
   defaultYeetRunOptions,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
+  GhActor,
+  GhRestIssueComment,
+  GhRestReviewComment,
   GreptileSummary,
   gitPathListFromNulOutputForTesting,
   greptileIssueLimitExceededForTesting,
@@ -33,6 +36,8 @@ import {
   knownSubLaneRemediationFromOutput,
   latestGreptileSummaryForTesting,
   loadVerifiedStateForTesting,
+  normalizeYeetMonitorIssueCommentForTesting,
+  normalizeYeetMonitorReviewCommentForTesting,
   overlappingBasePathsForTesting,
   PrCloseoutOptions,
   PrCloseoutReport,
@@ -1630,6 +1635,34 @@ describe("yeet quality issue index", () => {
 });
 
 describe("yeet monitor comments", () => {
+  it("normalizes nullable GitHub payload fields before rendering", () => {
+    const review = normalizeYeetMonitorReviewCommentForTesting(
+      GhRestReviewComment.make({
+        body: null,
+        created_at: "2026-08-04T12:00:01.000Z",
+        html_url: "https://github.com/o/r/pull/1#discussion_r43",
+        id: 43,
+        line: null,
+        original_line: null,
+        path: "src/Monitor.ts",
+        user: null,
+      })
+    );
+    const issue = normalizeYeetMonitorIssueCommentForTesting(
+      GhRestIssueComment.make({
+        body: "Ready for review.",
+        created_at: "2026-08-04T12:00:02.000Z",
+        html_url: "https://github.com/o/r/pull/1#issuecomment-44",
+        id: 44,
+        user: GhActor.make({ login: "octocat" }),
+      })
+    );
+
+    expect(renderYeetMonitorComment(review)).toContain("unknown @ src/Monitor.ts:?");
+    expect(renderYeetMonitorComment(issue)).toContain("new PR issue comment: octocat");
+    expect(issue.body).toBe("Ready for review.");
+  });
+
   it("uses timestamp and id as the in-memory comment watermark", () => {
     const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-04T12:00:01.000Z", id: 44 });
     const seen = YeetMonitorIssueComment.make({
@@ -1667,6 +1700,44 @@ describe("yeet monitor comments", () => {
     expect(output).toContain("[yeet] new PR review comment: greptile-apps[bot] @ src/Monitor.ts:88");
     expect(output).toContain("Please preserve the existing polling interval.");
     expect(output).toContain("https://github.com/o/r/pull/1#discussion_r43");
+  });
+
+  it("strips terminal control sequences from every remote comment field", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorReviewComment.make({
+        author: "greptile\u001b[31m-apps",
+        body: "keep \u001b[32mvisible\u001b[0m \u001b]52;c;clipboard-canary\u0007 text\u009b31m",
+        createdAt: "2026-08-04T12:00:01.000Z",
+        id: 43,
+        line: O.some(88),
+        path: "src/Monitor\u001b]8;;https://malicious.example\u0007.ts",
+        url: "https://github.com/o/r/pull/1\u0007#discussion_r43",
+      })
+    );
+
+    expect(output).toContain("greptile-apps @ src/Monitor.ts:88");
+    expect(output).toContain("keep visible text31m");
+    expect(output).toContain("https://github.com/o/r/pull/1#discussion_r43");
+    expect(output).not.toContain("clipboard-canary");
+    expect(output).not.toContain("malicious.example");
+    expect(output).not.toMatch(/[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/u);
+  });
+
+  it("strips terminal control sequences from issue comments", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorIssueComment.make({
+        author: "reviewer\u001b[31m",
+        body: "safe\u001b]52;c;clipboard-canary\u0007 body",
+        createdAt: "2026-08-04T12:00:02.000Z",
+        id: 44,
+        url: "https://github.com/o/r/pull/1\u0007#issuecomment-44",
+      })
+    );
+
+    expect(output).toContain("[yeet] new PR issue comment: reviewer");
+    expect(output).toContain("safe body");
+    expect(output).toContain("https://github.com/o/r/pull/1#issuecomment-44");
+    expect(output).not.toContain("clipboard-canary");
   });
 });
 

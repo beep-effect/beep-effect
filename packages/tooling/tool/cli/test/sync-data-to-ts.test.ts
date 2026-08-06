@@ -1,4 +1,5 @@
 import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
+import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/test/Cli";
 import {
   assembleCourtsData,
   assertPinnedArchive,
@@ -376,6 +377,16 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
     expect(formatted).toBe("2026-01-01 * / export const injected = true;");
     expect(formatted).not.toContain("*/");
     expect(formatted).not.toContain("\n");
+  });
+
+  it("pretty-prints generated data past the terminal pretty-print cap", () => {
+    // The checked-in Free Law Project payloads are megabytes wide; capping them the way
+    // terminal output is capped would rewrite them as one unreviewable line.
+    const rendered = formatJson({ blob: "x".repeat(DEFAULT_JSON_PRETTY_MAX_LENGTH), ok: true });
+
+    expect(rendered.length).toBeGreaterThan(DEFAULT_JSON_PRETTY_MAX_LENGTH);
+    expect(rendered.startsWith(`{\n  "blob": "x`)).toBe(true);
+    expect(rendered.endsWith(`",\n  "ok": true\n}\n`)).toBe(true);
   });
 
   it.effect(

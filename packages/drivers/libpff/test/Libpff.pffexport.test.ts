@@ -58,6 +58,25 @@ done
 exit 0
 `;
 
+const unevenBudgetStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+inbox="$target.export/Top of Personal Folders/Inbox"
+large="$inbox/Message00001"
+small="$inbox/Message00002"
+mkdir -p "$large" "$small"
+printf 'Subject:\tlarge\n' > "$large/OutlookHeaders.txt"
+printf 'Subject:\tsmall\n' > "$small/OutlookHeaders.txt"
+printf 'x%.0s' {1..2048} > "$large/Message.txt"
+printf 'ok' > "$small/Message.txt"
+exit 0
+`;
+
 // One item whose only body is a single physical HTML line over the RFC 5322
 // 998-octet limit; the assembled EML must re-encode that part as base64.
 const overlongBodyStub = `#!/usr/bin/env bash
@@ -123,7 +142,8 @@ const fixture = Effect.fn(function* (stubScript: string) {
   yield* fs.writeFileString(stubPath, stubScript);
   yield* fs.chmod(stubPath, 0o755);
   const sourcePath = path.join(dir, "mailbox.pst");
-  yield* fs.writeFileString(sourcePath, "not a real pst");
+  const sourceBytes = new TextEncoder().encode("not a real pst");
+  yield* fs.writeFile(sourcePath, sourceBytes);
   const exportRoot = path.join(dir, "out");
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
@@ -142,7 +162,8 @@ const fixture = Effect.fn(function* (stubScript: string) {
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "mailbox.pst",
       relativePath,
-      sizeBytes: NonNegativeInt.make(14),
+      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      bytes: sourceBytes,
     }),
   });
 
@@ -165,6 +186,30 @@ describe("makePffexportFileProcessingEngine", () => {
       }),
       fcRuns(25)
     ));
+
+  it.effect(
+    "refuses archive export when the caller omits source bytes",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const operationWithoutBytes = ExportArchiveOperation.make({
+          ...operation,
+          source: SourceArtifact.make(sourceWithoutBytes),
+        });
+
+        const error = yield* engine.exportArchive(operationWithoutBytes).pipe(Effect.flip);
+
+        expect(error.reason).toBe("archive-export-failed");
+        expect(error.message).toContain("caller-supplied source bytes");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
 
   it.effect(
     "exports children, assembles EML artifacts, and writes JSONL metadata records",
@@ -412,6 +457,31 @@ describe("makePffexportFileProcessingEngine", () => {
         const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
         expect(record.eml).toBeUndefined();
         expect(record.body?.relativePath.endsWith("Message.txt")).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "continues evaluating later messages after an oversized item exceeds the budget",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, exportRoot, stubPath } = yield* fixture(unevenBudgetStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({ ...operation, maxMaterializedBytes: 1024 })
+        );
+        const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
+
+        expect(emlChildren).toHaveLength(1);
+        expect(emlChildren[0]?.relativePath).toContain("Message00002/Message.eml");
+        expect(
+          result.warnings.filter((warning) => warning.includes("materialization budget was exceeded"))
+        ).toHaveLength(1);
       },
       Effect.scoped,
       provideTestLayer

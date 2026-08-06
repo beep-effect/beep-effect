@@ -52,6 +52,7 @@ import { HooksSection, type HooksSectionEncoded } from "../Settings/HooksSection
 import {
   isJsonFilePath,
   isMarkdownFilePath,
+  isSafePluginPath,
   isSkillFilePath,
   normalizeManifestPath,
   pathSpecs,
@@ -467,7 +468,9 @@ const resolveFlatEntryRelativePath = <Entry extends { readonly name: string; rea
   readonly entry: Entry;
 }): Effect.Effect<string, PluginWriteError> => {
   if (options.entry.path !== undefined) {
-    return Effect.succeed(options.entry.path);
+    return isSafePluginPath(options.entry.path)
+      ? Effect.succeed(options.entry.path)
+      : Effect.fail(layoutError(options.destDir, `${options.field} entry path must stay within the plugin root`));
   }
 
   const specs = pathSpecs(options.spec);
@@ -496,7 +499,9 @@ const resolveSkillRelativePath = (options: {
   readonly entry: PluginSkillEntry;
 }): Effect.Effect<string, PluginWriteError> => {
   if (options.entry.path !== undefined) {
-    return Effect.succeed(options.entry.path);
+    return isSafePluginPath(options.entry.path)
+      ? Effect.succeed(options.entry.path)
+      : Effect.fail(layoutError(options.destDir, "skill entry path must stay within the plugin root"));
   }
 
   const specs = pathSpecs(options.spec);

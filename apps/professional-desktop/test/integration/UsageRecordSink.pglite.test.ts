@@ -72,7 +72,7 @@ if (!shouldRunPgliteIntegration) {
   describe("Professional desktop UsageRecordSink Drizzle PgLite integration", { concurrent: false }, () => {
     layer(UsageRecordSinkLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
-        "cleans legacy activity ids and persists a finalized turn UsageRecord",
+        "preserves legacy activity provenance and persists a finalized turn UsageRecord",
         Effect.fnUntraced(function* () {
           const db = yield* makeDrizzle();
           yield* migrateBundle(db, { migrations: migrationsBeforeOptionalActivity, migrationsSchema: "drizzle" });
@@ -124,7 +124,7 @@ if (!shouldRunPgliteIntegration) {
           const legacyAfter = yield* sql<{ readonly activity_id: number | null }>`
             SELECT activity_id FROM epistemic_usage_record WHERE id = 41
           `;
-          expect(legacyAfter).toEqual([{ activity_id: null }]);
+          expect(legacyAfter).toEqual([{ activity_id: 1 }]);
 
           const sink = yield* UsageRecordSink;
 

@@ -21,6 +21,7 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
+import { Principal } from "@beep/shared-domain/entity/Principal";
 import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -47,7 +48,7 @@ const grantSetEncodingVersion = "epistemic-grant-set/v1";
  * decision so a record provably names the exact authority it was decided
  * under.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GrantSetDigest } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -69,7 +70,7 @@ export const GrantSetDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link GrantSetDigest}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GrantSetDigest } from "@beep/epistemic-domain"
  *
@@ -86,7 +87,7 @@ export type GrantSetDigest = typeof GrantSetDigest.Type;
  * A grant set still under construction. The only state {@link addGrant}
  * accepts; carries no digest because its contents are not yet fixed.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { DraftGrantSet } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -126,7 +127,7 @@ export class DraftGrantSet extends S.Class<DraftGrantSet>($I`DraftGrantSet`)(
  * {@link verifyFrozenGrantSetDigest} re-checks the seal on any instance that
  * crossed a boundary.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { DraftGrantSet, freezeGrantSet } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -174,7 +175,7 @@ const GrantSetState = LiteralKit(["draft", "frozen"]);
  * `.match` from `S.toTaggedUnion`. The two states are deliberately different
  * types so "widen after freeze" is unrepresentable rather than checked.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GrantSet } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -201,7 +202,7 @@ export const GrantSet = GrantSetState.mapMembers(Tuple.evolve([() => DraftGrantS
 /**
  * Runtime type for {@link GrantSet}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { GrantSet } from "@beep/epistemic-domain"
  * import { DraftGrantSet } from "@beep/epistemic-domain"
@@ -223,7 +224,7 @@ export type GrantSet = typeof GrantSet.Type;
 /**
  * Starts a draft grant set pinned to one policy revision.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, PolicyRevision } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -249,7 +250,7 @@ export const emptyDraftGrantSet = (policyRevision: PolicyRevision): DraftGrantSe
  * smuggle in authority issued under revision Y, or the revision recorded in
  * every decision would not describe the grants that actually authorized it.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { addGrant, emptyDraftGrantSet, ExecutionGrant, PolicyRevision } from "@beep/epistemic-domain"
  * import { Result } from "effect"
@@ -295,7 +296,7 @@ export const addGrant: {
  * to the freeze without adding it here would be a silent change in what the
  * seal actually covers.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GrantSetDigestInput } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -345,7 +346,7 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): GrantSetDigest =>
  * `FrozenGrantSet.make` everywhere else, so freezing cannot be bypassed by
  * constructing the class directly.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -375,7 +376,7 @@ export const freezeGrantSet = (draft: DraftGrantSet, frozenAt: DateTime.Utc): Fr
  * contents. Run this on any frozen set that crossed a process or persistence
  * boundary before trusting it for evaluation.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision, verifyFrozenGrantSetDigest } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -402,7 +403,7 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
 /**
  * Time and policy context used to evaluate one execution request.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExecutionRequestEvaluationOptions, PolicyRevision } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -431,6 +432,7 @@ export class ExecutionRequestEvaluationOptions extends S.Class<ExecutionRequestE
 ) {}
 
 const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make({ verdict: "denied", reason });
+const principalsEqual = S.toEquivalence(Principal);
 
 /**
  * The pure evaluator: a total function of (frozen grants, request, evaluation
@@ -443,7 +445,8 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  * with `grant-set-digest-mismatch` and answers nothing else.
  *
  * The remaining checks narrow the candidate grant set in a fixed precedence
- * order (revision, operation, sink class, audience, destination, expiry) and
+ * order (revision, principal, operation, sink class, audience, destination,
+ * expiry) and
  * the first narrowing that empties it names the reason, so every member of
  * {@link evaluatorDenialReasons} is reachable and distinct. Narrowing is
  * cumulative over a single list, so all axes must be satisfied by **one**
@@ -454,7 +457,7 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  * destination that matches no grant denies; there is no default-allow branch
  * to land in.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, evaluateExecutionRequest, ExecutionRequest, ExecutionRequestEvaluationOptions, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -465,6 +468,7 @@ const denied = (reason: DenialReason): ExecutionVerdict => ExecutionVerdict.make
  * const request = S.decodeUnknownSync(ExecutionRequest)({
  *   destination: "https://registry.example",
  *   operation: "ontology_publish_provenance",
+ *   principal: { component: "Runtime", kind: "System" },
  *   resolvedAudience: "external-network",
  *   sinkClass: "network-egress"
  * })
@@ -493,7 +497,11 @@ export const evaluateExecutionRequest: {
   if (frozen.policyRevision !== options.currentPolicyRevision) {
     return denied("policy-revision-mismatch");
   }
-  const byOperation = A.filter(frozen.grants, (grant) => grant.operation === request.operation);
+  const byPrincipal = A.filter(frozen.grants, (grant) => principalsEqual(grant.principal, request.principal));
+  if (byPrincipal.length === 0) {
+    return denied("principal-not-granted");
+  }
+  const byOperation = A.filter(byPrincipal, (grant) => grant.operation === request.operation);
   if (byOperation.length === 0) {
     return denied("operation-not-granted");
   }

@@ -14,6 +14,7 @@ import {
   OpenClawDeploymentConfig,
   OpenClawExpectedIdentity,
   OpenClawGenerationIdentityScriptInput,
+  OpenClawHostedProviderConfig,
   OpenClawPulumiConfigValues,
   OpenClawStackArgs,
   OpenClawWorkstationPaths,
@@ -149,6 +150,26 @@ WantedBy=default.target
 `;
 
 describe("@beep/infra OpenClaw", () => {
+  it("rejects plaintext HTTP for hosted provider credentials", () => {
+    const provider = {
+      apiKeyRef: "op://beep-openclaw/hosted/api-key",
+      baseUrl: "https://hosted.example.test/v1",
+      modelId: "model",
+      modelName: "Model",
+      providerId: "hosted",
+    };
+
+    expect(Result.isSuccess(S.decodeUnknownResult(OpenClawHostedProviderConfig)(provider))).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(OpenClawHostedProviderConfig)({
+          ...provider,
+          baseUrl: "http://hosted.example.test/v1",
+        })
+      )
+    ).toBe(true);
+  });
+
   it("applies workstation defaults around a declared identity", () => {
     expect(defaultArgs.identity.machineId).toBe("0bffc9bc5a6b48928f1ab4794df5244b");
     expect(defaultArgs.paths.configRoot).toBe("/etc/beep/openclaw");

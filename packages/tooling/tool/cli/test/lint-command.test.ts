@@ -1467,6 +1467,39 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
+    "does not treat compiler names echoed as script text as test typechecking",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": 'echo "tsgo -p tsconfig.test.json --noEmit" && tsgo -b tsconfig.json',
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
     "treats a baselined blind spot as green",
     () =>
       Effect.runPromise(

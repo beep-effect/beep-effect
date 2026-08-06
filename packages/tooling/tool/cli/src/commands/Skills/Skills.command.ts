@@ -14,11 +14,15 @@ import { Console, Crypto, Effect, Encoding, FileSystem, Order, Path, pipe, Resul
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/unstable/cli";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as jsonc from "jsonc-parser";
+import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
+import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
+import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
+import type { SkillProvenanceService } from "./Skills.service.ts";
 
 // cspell:ignore mattpocock Gebert
 
@@ -66,11 +70,20 @@ type SkillDriftLineFormatter<Tag extends SkillDrift["_tag"]> = (drift: SkillDrif
 /**
  * GitHub-backed skill source tracked by this checkout.
  *
- * **Example** (Inspect configured remote skill sources)
+ * **Example** (Describe one mirrored skill folder)
  *
  * ```ts
- * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
- * console.log(remoteSkillSources.length)
+ * import { RemoteSkillSource } from "@beep/repo-cli/commands/Skills"
+ *
+ * const source = RemoteSkillSource.make({
+ *   name: "grill-me",
+ *   source: "UditAkhourii/grill-me",
+ *   sourceType: "github",
+ *   ref: "main",
+ *   skillPath: "skills/grill-me",
+ * })
+ *
+ * console.log(source.name) // "grill-me"
  * ```
  *
  * @category models
@@ -294,15 +307,12 @@ const skillFlag = Flag.string("skill").pipe(
   Flag.withDescription("Update or check one known GitHub-backed skill"),
   Flag.optional
 );
-
-const formatJson = (value: unknown): string => {
-  const encoded = Result.getOrThrow(encodeUnknownJsonResult(value));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
+const provenanceSkillArgument = Argument.string("skill").pipe(
+  Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
+);
+const provenanceJsonFlag = Flag.boolean("json").pipe(
+  Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
+);
 
 const normalizeSlashes = (value: string): string => Str.replaceAll("\\", "/")(value);
 
@@ -341,24 +351,6 @@ const toSortedRecord = <A>(entries: ReadonlyArray<readonly [string, A]>): Record
     record[key] = value;
   }
   return record;
-};
-
-const asArrayBufferView = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => Uint8Array.from(bytes);
-
-const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  let size = 0;
-  for (const chunk of chunks) {
-    size += chunk.byteLength;
-  }
-
-  const output = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    output.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return output;
 };
 
 const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
@@ -408,15 +400,22 @@ const readExistingFile = Effect.fn("Skills.readExistingFile")(function* (
     .pipe(Effect.map(O.some), SkillsCommandError.mapError(`Failed to read ${absolutePath}.`, absolutePath));
 });
 
-const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
-  absolutePath: string,
-  content: string
+const makeParentDirectory = Effect.fn("Skills.makeParentDirectory")(function* (
+  absolutePath: string
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs
     .makeDirectory(path.dirname(absolutePath), { recursive: true })
     .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
+});
+
+const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
+  absolutePath: string,
+  content: string
+): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
+  const fs = yield* FileSystem.FileSystem;
   yield* fs
     .writeFileString(absolutePath, content)
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -426,11 +425,8 @@ const writeByteFile = Effect.fn("Skills.writeByteFile")(function* (
   absolutePath: string,
   bytes: Uint8Array
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs
-    .makeDirectory(path.dirname(absolutePath), { recursive: true })
-    .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
   yield* fs
     .writeFile(absolutePath, asArrayBufferView(bytes))
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -721,7 +717,7 @@ const buildDesiredLock = Effect.fn("Skills.buildDesiredLock")(function* (
   });
 });
 
-const renderLockFile = (lock: SkillLockFile): string => formatJson(lock);
+const renderLockFile = (lock: SkillLockFile): string => formatJsonValue(lock);
 
 const tomlString = (value: string): string => Result.getOrThrow(encodeUnknownJsonResult(value));
 
@@ -1002,6 +998,42 @@ const skillsUpdateCommand = Command.make(
   })
 ).pipe(Command.withDescription("Update repo-local Claude/Codex skill mirrors from known upstream sources"));
 
+const runSkillsProvenanceCommand = Effect.fn("Skills.runSkillsProvenanceCommand")(function* (options: {
+  readonly json: boolean;
+  readonly skill: string;
+}): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path | SkillProvenanceService> {
+  const repoRoot = yield* findRepoRoot().pipe(
+    SkillsCommandError.mapError("Failed to locate repository root for skill provenance.")
+  );
+  const report = yield* runSkillProvenance(options.skill, repoRoot);
+  yield* Console.log(
+    options.json ? Str.trimEnd(renderSkillProvenanceJson(report)) : renderSkillProvenanceSummary(report)
+  );
+});
+
+const skillsProvenanceCommand = Command.make(
+  "provenance",
+  {
+    skill: provenanceSkillArgument,
+    json: provenanceJsonFlag,
+  },
+  Effect.fn("Skills.provenanceCommand")(function* (options) {
+    yield* runSkillsProvenanceCommand(options).pipe(
+      Effect.catchTag(
+        "SkillsCommandError",
+        Effect.fn("Skills.provenanceCommand.reportError")(function* (error) {
+          const message = `skills:provenance: ${error.message}`;
+          yield* Console.error(message);
+          return yield* failWithReportedExit(message);
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Report a would-be skills-lock/v2 entry without writing repository state"),
+  Command.provide(SkillProvenanceServiceLive)
+);
+
 /**
  * Skills command group.
  *
@@ -1020,8 +1052,10 @@ const skillsUpdateCommand = Command.make(
  * @since 0.0.0
  */
 export const skillsCommand = Command.make("skills", {}, () =>
-  Console.log("Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check")
+  Console.log(
+    "Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check\n- bun run beep skills provenance shadcn"
+  )
 ).pipe(
   Command.withDescription("Manage repo-local Claude and Codex skill mirrors"),
-  Command.withSubcommands([skillsUpdateCommand])
+  Command.withSubcommands([skillsUpdateCommand, skillsProvenanceCommand])
 );

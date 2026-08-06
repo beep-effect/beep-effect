@@ -164,6 +164,9 @@ const byAuditSourceName = Order.mapInput(Order.String, (source: AuditSourceFile)
 const byAuditEntryName = Order.mapInput(Order.String, (entry: ImageAuditEntry) => entry.sourceName);
 const bySkippedEntryName = Order.mapInput(Order.String, (entry: ImageAuditSkippedEntry) => entry.sourceName);
 const roundMetric = (value: number): number => Math.round(value * 1_000_000) / 1_000_000;
+const maxAuditSourceCount = 400;
+const maxAuditSourceBytes = 50 * 1024 * 1024;
+const maxAuditPixels = 40_000_000;
 
 const fileSha256 = Effect.fn("Files.imageCurationFileSha256")(function* (
   filePath: string
@@ -300,6 +303,18 @@ const collectAuditSources = Effect.fn("Files.collectImageAuditSources")(function
         skipped,
         ImageAuditSkippedEntry.make({
           message: "Only direct regular image files are audited.",
+          sourceName: name,
+          sourcePath,
+        })
+      );
+      continue;
+    }
+
+    if (Number(stat.size) > maxAuditSourceBytes) {
+      skipped = A.append(
+        skipped,
+        ImageAuditSkippedEntry.make({
+          message: `Image exceeds the ${maxAuditSourceBytes}-byte audit limit.`,
           sourceName: name,
           sourcePath,
         })
@@ -485,12 +500,15 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   source: AuditSourceFile
 ): Effect.fn.Return<AuditedPixels, FilesCommandError> {
   const metadata = yield* Effect.tryPromise({
-    try: () => sharp(source.path, { failOn: "error" }).metadata(),
+    try: () => sharp(source.path, { failOn: "error", limitInputPixels: maxAuditPixels }).metadata(),
     catch: FilesCommandError.new(`Failed to decode image audit pixels for "${source.path}"`),
   });
+  if ((metadata.width ?? 0) * (metadata.height ?? 0) > maxAuditPixels) {
+    return yield* FilesCommandError.make({ message: `Image exceeds the ${maxAuditPixels}-pixel audit limit.` });
+  }
   const decoded = yield* Effect.tryPromise({
     try: () =>
-      sharp(source.path, { failOn: "error" })
+      sharp(source.path, { failOn: "error", limitInputPixels: maxAuditPixels })
         .rotate()
         .flatten({ background: { b: 255, g: 255, r: 255 } })
         .toColorspace("srgb")
@@ -795,6 +813,11 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
 
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
+  if (A.length(sources.files) > maxAuditSourceCount) {
+    return yield* FilesCommandError.make({
+      message: `Image audit accepts at most ${maxAuditSourceCount} supported source files per run.`,
+    });
+  }
   const manifestPath = yield* canonicalizeImageTargetPath(options.manifest, "image audit manifest path");
   const modelPath = yield* canonicalizeImageTargetPath(options.modelPath, "image audit face model path");
   if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {

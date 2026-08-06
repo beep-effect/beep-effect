@@ -501,6 +501,9 @@ export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
   if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
   if (P.isNumber(value) && !Number.isFinite(value)) return null;
   if (A.isArray(value)) {
+    if (A.length(value) > 100_000) {
+      throw ToolRuntimeError.new("InvalidDataValue", "Execution result array exceeds the 100000-item boundary limit.");
+    }
     // Index construction densifies holes, matching JSON-compatible boundary semantics.
     if (A.isArrayEmpty(value)) return A.empty();
     return A.map(A.makeBy(A.length(value), (index) => value[index]), (item) => {

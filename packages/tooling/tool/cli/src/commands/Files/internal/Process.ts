@@ -55,7 +55,7 @@ import {
 } from "@beep/tika";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe, Ref } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
@@ -96,10 +96,7 @@ interface ProcessCollectedFile {
   readonly sourcePath: string;
 }
 
-// Deliberately light: bytes are hashed and released during preparation, and
-// the dispatch-time SourceArtifact is built per representative so the whole
-// corpus is never resident at once.
-interface ProcessPreparedSource {
+interface ProcessSourceIdentity {
   readonly artifactId: ArtifactId;
   readonly digest: ContentDigest;
   readonly format: FileFormatFamily;
@@ -107,6 +104,10 @@ interface ProcessPreparedSource {
   readonly operationId: OperationId;
   readonly relativePath: PosixPath;
   readonly sourceFile: ProcessCollectedFile;
+}
+
+interface ProcessPreparedSource extends ProcessSourceIdentity {
+  readonly bytes: Uint8Array;
 }
 
 interface ProcessInputCollection {
@@ -127,6 +128,13 @@ interface ProcessSourceOutcome {
   readonly sourceRecord: SourceProcessingRecord;
   readonly strategy: SelectedStrategy;
   readonly text: O.Option<readonly [string, string]>;
+}
+
+interface ProcessSourceResult {
+  readonly engineWarningCount: number;
+  readonly failure: O.Option<FileProcessingFailureRecord>;
+  readonly sourceRecord: SourceProcessingRecord;
+  readonly strategy: SelectedStrategy;
 }
 
 const processPathSeparators = Str.replace(/\\/gu, "/");
@@ -579,6 +587,7 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
 
   return {
     artifactId,
+    bytes,
     digest,
     format: classifyProcessExtension(sourceFile.extension),
     locatorPath,
@@ -588,31 +597,28 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
   };
 });
 
-// Built per dispatched representative, never retained across the batch: real
-// engines read the source through the file locator, so only the in-memory
-// test engine's text-like extraction materializes content here.
+const processSourceIdentity = (prepared: ProcessPreparedSource): ProcessSourceIdentity => ({
+  artifactId: prepared.artifactId,
+  digest: prepared.digest,
+  format: prepared.format,
+  locatorPath: prepared.locatorPath,
+  operationId: prepared.operationId,
+  relativePath: prepared.relativePath,
+  sourceFile: prepared.sourceFile,
+});
+
 const makeDispatchSourceArtifact = Effect.fn("Files.makeDispatchSourceArtifact")(function* (
   prepared: ProcessPreparedSource,
   options: ProcessFilesOptions
-): Effect.fn.Return<SourceArtifact, FilesCommandError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<SourceArtifact, FilesCommandError> {
   const mediaType = mediaTypeForProcessFormat(prepared.format);
   const text =
     options.engine === "test" && A.contains(processTextLikeFormats, prepared.format)
-      ? O.some(
-          processUtf8Decoder.decode(
-            yield* fs
-              .readFile(prepared.sourceFile.sourcePath)
-              .pipe(
-                Effect.mapError((cause) =>
-                  formatPlatformError("Failed to read process source", prepared.sourceFile.sourcePath, { cause })
-                )
-              )
-          )
-        )
+      ? O.some(processUtf8Decoder.decode(prepared.bytes))
       : O.none<string>();
 
   return SourceArtifact.make({
+    bytes: prepared.bytes,
     digest: prepared.digest,
     extension: prepared.sourceFile.extension,
     id: prepared.artifactId,
@@ -798,7 +804,7 @@ const processSkippedOutcome = (
 const processDuplicateOutcome = (
   options: ProcessFilesOptions,
   prepared: ProcessPreparedSource,
-  representative: ProcessPreparedSource
+  representative: ProcessSourceIdentity
 ): ProcessSourceOutcome =>
   processSkippedOutcome(
     processDescriptorFor(options.engine, prepared.format),
@@ -1070,10 +1076,38 @@ const writeProcessStringFile = Effect.fn("Files.writeProcessStringFile")(functio
     .pipe(Effect.mapError((cause) => formatPlatformError("Failed to write process output", outputPath, { cause })));
 });
 
+const writeProcessOutcomeArtifacts = Effect.fn("Files.writeProcessOutcomeArtifacts")(function* (
+  outputDirectory: string,
+  outcome: ProcessSourceOutcome
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+
+  if (O.isSome(outcome.text)) {
+    yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
+  }
+
+  if (A.length(outcome.childRecords) > 0) {
+    const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
+      encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
+    );
+    yield* writeProcessStringFile(
+      path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
+      A.join("")(childLines)
+    );
+  }
+});
+
+const releaseProcessOutcomePayload = (outcome: ProcessSourceOutcome): ProcessSourceResult => ({
+  engineWarningCount: outcome.engineWarningCount,
+  failure: outcome.failure,
+  sourceRecord: outcome.sourceRecord,
+  strategy: outcome.strategy,
+});
+
 const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(function* (
   outputDirectory: string,
   options: ProcessFilesOptions,
-  outcomes: ReadonlyArray<ProcessSourceOutcome>,
+  outcomes: ReadonlyArray<ProcessSourceResult>,
   coverage: FileProcessingCoverageSummary
 ): Effect.fn.Return<
   void,
@@ -1112,22 +1146,6 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
   yield* writeProcessStringFile(path.join(outputDirectory, "coverage.json"), `${coverageJson}\n`);
   yield* writeProcessStringFile(path.join(outputDirectory, "sources.jsonl"), A.join("")(sourceLines));
   yield* writeProcessStringFile(path.join(outputDirectory, "failures.jsonl"), A.join("")(failureLines));
-
-  for (const outcome of outcomes) {
-    if (O.isSome(outcome.text)) {
-      yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
-    }
-
-    if (A.length(outcome.childRecords) > 0) {
-      const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
-        encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
-      );
-      yield* writeProcessStringFile(
-        path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
-        A.join("")(childLines)
-      );
-    }
-  }
 });
 
 // SPEC exit policy: configuration, output preparation, and engine discovery
@@ -1145,23 +1163,64 @@ const asConfigPhaseFailure = <A, R>(
 
 // Whether processPreparedSource would dispatch this source to an engine (as
 // opposed to resolving it with a descriptor-only skip).
-const processSourceDispatches = (options: ProcessFilesOptions, prepared: ProcessPreparedSource): boolean => {
-  if (
-    prepared.format === "docm" ||
-    prepared.format === "xls" ||
-    prepared.format === "xlsx" ||
-    prepared.format === "unknown"
-  ) {
+const processSourceDispatches = (options: ProcessFilesOptions, format: FileFormatFamily): boolean => {
+  if (format === "docm" || format === "xls" || format === "xlsx" || format === "unknown") {
     return false;
   }
-  if (prepared.format === "pst") {
+  if (format === "pst") {
     return (
-      options.exportChildren &&
-      processEngineSupportsChildExport(processDescriptorFor(options.engine, prepared.format), prepared.format)
+      options.exportChildren && processEngineSupportsChildExport(processDescriptorFor(options.engine, format), format)
     );
   }
   return true;
 };
+
+// Read, hash, and process bounded chunks rather than retaining source bytes or
+// extracted payloads for the complete corpus. Representative identities omit
+// bytes, and each outcome writes its text and child manifest before only its
+// lightweight records are retained for the run summaries.
+const processCollectedSources = Effect.fn("Files.processCollectedSources")(function* (
+  files: ReadonlyArray<ProcessCollectedFile>,
+  outputDirectory: string,
+  options: ProcessFilesOptions,
+  engineFor: ProcessEngineResolver
+): Effect.fn.Return<
+  ReadonlyArray<ProcessSourceResult>,
+  FilesCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
+  const processState = yield* Ref.make({
+    byId: R.empty<string, ProcessSourceIdentity>(),
+    outcomes: A.empty<ProcessSourceResult>(),
+  });
+  for (const chunk of A.chunksOf(files, FilesConcurrency.scan)) {
+    const preparedChunk = yield* Effect.forEach(
+      chunk,
+      (sourceFile) => prepareProcessSource(sourceFile, options.engine),
+      { concurrency: FilesConcurrency.scan }
+    );
+    for (const source of preparedChunk) {
+      const state = yield* Ref.get(processState);
+      const representative = R.get(state.byId, source.artifactId);
+      if (O.isSome(representative)) {
+        const outcome = processDuplicateOutcome(options, source, representative.value);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
+        yield* Ref.set(processState, {
+          ...state,
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
+        });
+      } else {
+        const outcome = yield* processPreparedSource(source, options, engineFor);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
+        yield* Ref.set(processState, {
+          byId: R.set(state.byId, source.artifactId, processSourceIdentity(source)),
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
+        });
+      }
+    }
+  }
+  return (yield* Ref.get(processState)).outcomes;
+});
 
 /**
  * Execute the process subcommand pipeline: collect input artifacts, prepare
@@ -1182,62 +1241,23 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
   ).pipe(asConfigPhaseFailure);
   const engineFor = yield* makeProcessEngineResolver(options, outputDirectory);
 
-  const prepared = yield* Effect.forEach(
-    collection.files,
-    (sourceFile) => prepareProcessSource(sourceFile, options.engine),
-    { concurrency: FilesConcurrency.scan }
-  );
-
-  // Duplicate byte-identical inputs share a content-addressed artifact id;
-  // exactly one representative per digest (the first in sorted relative-path
-  // order) is dispatched so concurrent engines never race on shared
-  // content-addressed targets, and every other copy records a deterministic
-  // skip naming the representative.
-  const grouped = A.reduce(
-    prepared,
-    {
-      byId: R.empty<string, ProcessPreparedSource>(),
-      representatives: A.empty<ProcessPreparedSource>(),
-    },
-    (state, source) =>
-      R.has(state.byId, source.artifactId)
-        ? state
-        : {
-            byId: R.set(state.byId, source.artifactId, source),
-            representatives: A.append(state.representatives, source),
-          }
-  );
-
   // Engine construction failures are configuration failures; forcing the
   // required families up front keeps SPEC's exit-2 phase ahead of every
   // engine side effect instead of surfacing mid-dispatch.
   yield* Effect.forEach(
     A.dedupeWith(
-      A.filter(grouped.representatives, (source: ProcessPreparedSource) => processSourceDispatches(options, source)),
-      (left: ProcessPreparedSource, right: ProcessPreparedSource) =>
-        (left.format === "pst") === (right.format === "pst")
+      pipe(
+        collection.files,
+        A.map((source) => classifyProcessExtension(source.extension)),
+        A.filter((format) => processSourceDispatches(options, format))
+      ),
+      (left, right) => (left === "pst") === (right === "pst")
     ),
-    (source) => engineFor(source.format),
+    engineFor,
     { discard: true }
   );
 
-  const processedOutcomes = yield* Effect.forEach(
-    grouped.representatives,
-    (source) => processPreparedSource(source, options, engineFor),
-    { concurrency: FilesConcurrency.scan }
-  );
-  const outcomeByOperation = R.fromEntries(
-    A.map(processedOutcomes, (outcome) => [outcome.sourceRecord.operationId, outcome] as const)
-  );
-  const outcomes = A.getSomes(
-    A.map(prepared, (source) =>
-      O.flatMap(R.get(grouped.byId, source.artifactId), (representative) =>
-        representative === source
-          ? R.get(outcomeByOperation, source.operationId)
-          : O.some(processDuplicateOutcome(options, source, representative))
-      )
-    )
-  );
+  const outcomes = yield* processCollectedSources(collection.files, outputDirectory, options, engineFor);
 
   const { sourceRecords } = collectSourceOutcomeRecords(outcomes);
   const coverage = makeProcessCoverage(sourceRecords);

@@ -13,6 +13,7 @@
 import { CoreVocab, expandOption, expandPredicate } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
 import { IRI } from "@beep/rdf/Iri";
+import { LanguageTag } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as O from "effect/Option";
@@ -26,7 +27,7 @@ const $I = $OntologyId.create("Fold");
 /**
  * Absolute IRI literal accepted at tuple endpoints.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { AbsoluteIri } from "@beep/ontology"
  *
@@ -50,7 +51,7 @@ export type AbsoluteIri =
  *
  * Handles resolve through their owned identity annotations during assembly.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { SchemaHandle } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -67,7 +68,7 @@ export type SchemaHandle = S.Top;
 /**
  * Tuple subject: a schema handle, known CURIE, or absolute IRI literal.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { Subject } from "@beep/ontology"
  *
@@ -83,7 +84,7 @@ export type Subject = SchemaHandle | Curie<CoreVocab> | AbsoluteIri;
 /**
  * Scalar payload accepted inside a typed literal object.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { LiteralScalar } from "@beep/ontology"
  *
@@ -102,7 +103,7 @@ export type LiteralScalar = string | number | boolean;
  * Bare strings are always terms (CURIEs or absolute IRIs); literal values
  * must ride this wrapper, so the grammar never guesses.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { TypedLiteral } from "@beep/ontology"
  *
@@ -122,7 +123,7 @@ export type TypedLiteral = {
 /**
  * Tuple object: a subject endpoint or a typed literal.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { TupleObject } from "@beep/ontology"
  *
@@ -141,7 +142,7 @@ export type TupleObject = Subject | TypedLiteral;
  * The predicate is the composer's closed CURIE literal type, optionally
  * reverse-marked with `^` (SPARQL inverse-path syntax).
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { Triple } from "@beep/ontology"
  *
@@ -157,7 +158,7 @@ export type Triple = readonly [Subject, Predicate<CoreVocab>, TupleObject];
 /**
  * Input payload accepted by the ontology fold entrypoint.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyFoldInput } from "@beep/ontology"
  *
@@ -187,7 +188,7 @@ const isKnownPredicate = (value: string): boolean => expandPredicate(value) !== 
 /**
  * Guard for schema handles at tuple endpoints.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { isSchemaHandle } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -236,7 +237,7 @@ const SchemaHandleValue = S.declare(isSchemaHandle, {
 const TypedLiteralValue = S.Struct({
   value: S.Union([S.String, S.Finite, S.Boolean]),
   datatype: S.optionalKey(TermString),
-  language: S.optionalKey(S.String),
+  language: S.optionalKey(LanguageTag),
 })
   .check(
     S.makeFilter((literal) => literal.datatype === undefined || literal.language === undefined, {
@@ -261,7 +262,7 @@ const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
  * The tuple grammar is itself schema-validated — the ontology definition is
  * an instance of schema-is-truth, not an exception.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TripleValue } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -282,7 +283,7 @@ export const TripleValue = S.Tuple([SubjectValue, PredicateString, ObjectValue])
 /**
  * Runtime type for {@link TripleValue}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { TripleValue } from "@beep/ontology"
  *
@@ -298,7 +299,7 @@ export type TripleValue = typeof TripleValue.Type;
 /**
  * SKOS classification marker recorded on assembled classes.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { SkosClassification } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -318,7 +319,7 @@ export const SkosClassification = LiteralKit(["concept", "conceptScheme"]).pipe(
 /**
  * Runtime type for {@link SkosClassification}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { SkosClassification } from "@beep/ontology"
  *
@@ -337,7 +338,7 @@ export type SkosClassification = typeof SkosClassification.Type;
  * Scalar-valued keys become datatype predicates; schema-valued keys become
  * object predicates. The kind is inferred, never declared.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { AssembledPredicateKind } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -357,7 +358,7 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
 /**
  * Runtime type for {@link AssembledPredicateKind}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { AssembledPredicateKind } from "@beep/ontology"
  *
@@ -373,7 +374,7 @@ export type AssembledPredicateKind = typeof AssembledPredicateKind.Type;
 /**
  * Resolved literal payload carried by an assembled fact object.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { FactLiteral } from "@beep/ontology"
  * import * as O from "effect/Option"
@@ -389,7 +390,7 @@ export class FactLiteral extends S.Class<FactLiteral>($I`FactLiteral`)(
   {
     value: S.Union([S.String, S.Finite, S.Boolean]),
     datatypeIri: S.OptionFromOptionalKey(IRI),
-    language: S.OptionFromOptionalKey(S.NonEmptyString),
+    language: S.OptionFromOptionalKey(LanguageTag),
   },
   $I.annote("FactLiteral", {
     description: "Resolved typed literal carried by an assembled fact.",
@@ -399,7 +400,7 @@ export class FactLiteral extends S.Class<FactLiteral>($I`FactLiteral`)(
 /**
  * Resolved object position of an assembled fact: an IRI or a literal.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { FactObject } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -419,7 +420,7 @@ export const FactObject = S.Union([IRI, FactLiteral]).pipe(
 /**
  * Runtime type for {@link FactObject}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { FactObject } from "@beep/ontology"
  * import { FactLiteral } from "@beep/ontology"
@@ -440,7 +441,7 @@ export type FactObject = typeof FactObject.Type;
  * The assembled model is predicate-open: every relation is a fact record,
  * never an enumerated field.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { AssembledFact } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -472,7 +473,7 @@ export class AssembledFact extends S.Class<AssembledFact>($I`AssembledFact`)(
 /**
  * One assembled field predicate with its inferred kind.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { AssembledPredicate } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -508,7 +509,7 @@ export class AssembledPredicate extends S.Class<AssembledPredicate>($I`Assembled
 /**
  * One assembled ontology class with its field predicates.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { AssembledClass } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -542,7 +543,7 @@ export class AssembledClass extends S.Class<AssembledClass>($I`AssembledClass`)(
 /**
  * Warning codes surfaced by the SKOS integrity gate.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyWarningCode } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -566,7 +567,7 @@ export const OntologyWarningCode = LiteralKit([
 /**
  * Runtime type for {@link OntologyWarningCode}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyWarningCode } from "@beep/ontology"
  *
@@ -585,7 +586,7 @@ export type OntologyWarningCode = typeof OntologyWarningCode.Type;
  * Warnings never fail the fold; hard SKOS integrity violations become typed
  * {@link OntologyAssemblyError} failures instead.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyValidationWarning } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -614,7 +615,7 @@ export class OntologyValidationWarning extends S.Class<OntologyValidationWarning
 /**
  * The assembled, deterministic result of an ontology fold.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { AssembledOntology } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -650,7 +651,7 @@ export class AssembledOntology extends S.Class<AssembledOntology>($I`AssembledOn
 /**
  * Failure reasons for the ontology fold's diagnostics ledger.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyAssemblyErrorReason } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -679,7 +680,7 @@ export const OntologyAssemblyErrorReason = LiteralKit([
 /**
  * Runtime type for {@link OntologyAssemblyErrorReason}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyAssemblyErrorReason } from "@beep/ontology"
  *
@@ -695,7 +696,7 @@ export type OntologyAssemblyErrorReason = typeof OntologyAssemblyErrorReason.Typ
 /**
  * Typed assembly failure raised by the ontology fold's gate.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyAssemblyError } from "@beep/ontology"
  * import * as O from "effect/Option"
@@ -734,7 +735,7 @@ export class OntologyAssemblyError extends TaggedErrorClass<OntologyAssemblyErro
 /**
  * Derived guard for {@link AssembledFact} literal objects.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { FactLiteral, isFactLiteral } from "@beep/ontology"
  * import * as O from "effect/Option"

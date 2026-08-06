@@ -10,7 +10,7 @@ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $TikaId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, Stream } from "effect";
+import { Effect, FileSystem, Path, Stream } from "effect";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { tikaOperationError } from "./Tika.error-translation.ts";
@@ -30,7 +30,7 @@ const defaultForceKillAfterMillis = 10_000;
 /**
  * Configuration for the tika-app subprocess engine.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TikaAppEngineConfig } from "@beep/tika"
  *
@@ -67,7 +67,7 @@ export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaApp
  * source file and returns trimmed text plus stringified metadata; the
  * `image-metadata` format returns metadata only.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika"
  * import { Effect } from "effect"
@@ -88,8 +88,14 @@ export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaApp
  */
 export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFileProcessingEngine")(function* (
   config: TikaAppEngineConfig
-): Effect.fn.Return<FileProcessingEngineShape, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  FileProcessingEngineShape,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
 
   const runTika = Effect.fn("Tika.tikaapp.run")(function* (sourcePath: string): Effect.fn.Return<string, TikaError> {
     const command = ChildProcess.make(config.javaPath, ["-jar", config.jarPath, "-J", "-t", sourcePath], {
@@ -134,9 +140,10 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
   });
 
   const extractImpl = Effect.fn("TikaAppEngine.extractImpl")(function* (
-    operation: ExtractFileOperation
+    operation: ExtractFileOperation,
+    sourcePath: string
   ): Effect.fn.Return<ExtractionResult, TikaError> {
-    const stdout = yield* runTika(operation.source.locator.value).pipe(
+    const stdout = yield* runTika(sourcePath).pipe(
       Effect.timeoutOrElse({
         duration: `${config.timeoutMillis} millis`,
         orElse: () => Effect.fail(makeTikaError("timeout")),
@@ -169,17 +176,33 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
       });
     }),
     extract: Effect.fn("TikaAppEngine.extract")(function* (operation: ExtractFileOperation) {
-      if (operation.source.locator.kind !== "file") {
+      const bytes = operation.source.bytes;
+      if (bytes === undefined) {
         return yield* FileProcessingOperationError.fromReason("file-extraction-failed", {
           artifactId: operation.source.id,
           engine: TikaFileProcessingEngineDescriptor.name,
           format: operation.format,
-          message: "tika-app extraction requires a file locator for the source artifact.",
+          message: "tika-app extraction requires caller-supplied source bytes.",
           operationId: operation.operationId,
         });
       }
 
-      return yield* extractImpl(operation).pipe(Effect.mapError((error) => tikaOperationError(operation, error)));
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const directory = yield* fs
+            .makeTempDirectoryScoped({ prefix: "beep-tika-app-" })
+            .pipe(
+              Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "source snapshot directory failed" }))
+            );
+          const sourcePath = path.join(directory, `source.${operation.source.extension}`);
+          yield* fs
+            .writeFile(sourcePath, bytes, { flag: "wx", mode: 0o600 })
+            .pipe(
+              Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "source snapshot write failed" }))
+            );
+          return yield* extractImpl(operation, sourcePath);
+        })
+      ).pipe(Effect.mapError((error) => tikaOperationError(operation, error)));
     }),
   };
 

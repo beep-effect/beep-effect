@@ -14,7 +14,7 @@ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Config, Effect, FileSystem, flow, Order, pipe, Stream } from "effect";
+import { Config, Effect, flow, Order, pipe, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -142,9 +142,8 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
  * `descriptor.version`. A failed probe leaves the version unset rather than
  * failing construction; later extractions then fail as `engine-unavailable`.
  *
- * @param config - Base URL, per-file timeout, and output budget for the Tika Server sidecar.
- * @returns The constructed engine.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika"
  * import { Effect } from "effect"
@@ -157,15 +156,16 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @effects Requires an `HttpClient` and a `FileSystem`; the returned engine fails through the operation error channel only.
+ * @param config - Base URL, per-file timeout, and output budget for the Tika Server sidecar.
+ * @returns The constructed engine.
+ * @effects Requires an `HttpClient`; the returned engine fails through the operation error channel only.
  * @category constructors
  * @since 0.0.0
  */
 export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServerFileProcessingEngine")(function* (
   config: TikaServerEngineConfig
-): Effect.fn.Return<FileProcessingEngineShape, never, FileSystem.FileSystem | HttpClient.HttpClient> {
+): Effect.fn.Return<FileProcessingEngineShape, never, HttpClient.HttpClient> {
   const client = yield* HttpClient.HttpClient;
-  const fileSystem = yield* FileSystem.FileSystem;
 
   const timeout = `${config.timeoutMillis} millis` as const;
 
@@ -188,16 +188,6 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
       return source.bytes;
     }
 
-    if (source.locator.kind === "file") {
-      return yield* fileSystem
-        .readFile(source.locator.value)
-        .pipe(
-          Effect.mapError(() =>
-            operationFailure(operation, "file-extraction-failed", "Tika could not read the source file.")
-          )
-        );
-    }
-
     if (source.text !== undefined) {
       return textEncoder.encode(source.text);
     }
@@ -205,7 +195,7 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
     return yield* operationFailure(
       operation,
       "file-extraction-failed",
-      "Tika extraction found no readable source content."
+      "Tika extraction requires caller-supplied bytes or text; file locators are not trusted read authority."
     );
   });
 
@@ -302,8 +292,8 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
  * `BEEP_TIKA_MAX_OUTPUT_BYTES` through Effect `Config`, falling back to the
  * schema defaults for absent keys.
  *
- * @returns The constructed engine.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { makeTikaServerFileProcessingEngineFromEnv } from "@beep/tika"
  * import { Effect } from "effect"
@@ -313,12 +303,13 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @returns The constructed engine.
  * @effects Requires an `HttpClient` and a `FileSystem`; fails with a `config` {@link TikaError} when the environment cannot be read or decoded.
  * @category constructors
  * @since 0.0.0
  */
 export const makeTikaServerFileProcessingEngineFromEnv = Effect.fn("Tika.makeTikaServerFileProcessingEngineFromEnv")(
-  function* (): Effect.fn.Return<FileProcessingEngineShape, TikaError, FileSystem.FileSystem | HttpClient.HttpClient> {
+  function* (): Effect.fn.Return<FileProcessingEngineShape, TikaError, HttpClient.HttpClient> {
     return yield* makeTikaServerFileProcessingEngine(yield* configFromEnvironment);
   }
 );
