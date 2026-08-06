@@ -586,12 +586,13 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       });
       const browserPrompt = Effect.annotateCurrentSpan({
         "professional_desktop.intake.vault_selection.fallback": "browser_prompt",
-      }).pipe(Effect.andThen(Effect.sync(() => globalThis.window.prompt("Workspace vault path"))));
+      }).pipe(Effect.andThen(Effect.sync(() => O.fromNullishOr(globalThis.window.prompt("Workspace vault path")))));
       const selected = yield* hasTauriRuntime()
         ? Effect.tryPromise({
             try: () => invoke<string | null>("select_vault_directory"),
             catch: (cause) => VaultDirectoryPickerInvocationError.make({ cause }),
           }).pipe(
+            Effect.map(O.fromNullishOr),
             Effect.tapCause((cause) =>
               logIntakeCause(cause, "tauri vault directory picker failed", "pick_workspace_vault")
             ),
@@ -607,7 +608,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
                     );
                   })
                 ),
-                Effect.as<string | null>(null)
+                Effect.as(O.none<string>())
               )
             )
           )
@@ -620,7 +621,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
               VaultDirectoryPickError: () => browserPrompt,
             })
           );
-      const selectedPath = O.fromNullishOr(selected).pipe(O.map(Str.trim), O.filter(Str.isNonEmpty));
+      const selectedPath = selected.pipe(O.map(Str.trim), O.filter(Str.isNonEmpty));
       if (O.isNone(selectedPath)) {
         const cancelled = ctx.registry.modify(stateAtom, (state) =>
           VaultSelectionState.guards.choosing(state.vaultSelection)
@@ -916,4 +917,86 @@ export const openIntakeFilePickerAtoms = Atom.family((workspaceId: WorkspaceIden
       });
     })
   )
+);
+
+/**
+ * One read for the document intake surface: intake state, vault-configuration
+ * flags, and the runtime-backed actions, so components consume a single view
+ * model instead of a hook wall keyed by the same workspace id.
+ *
+ * @example
+ * ```ts
+ * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export interface DocumentIntakeSurface {
+  readonly actions: {
+    readonly chooseVault: () => void;
+    readonly clearResults: () => void;
+    readonly dragEnter: (input: { readonly preventDefault: () => void }) => void;
+    readonly dragLeave: (input: { readonly currentTarget: Node; readonly relatedTarget: EventTarget | null }) => void;
+    readonly dragOver: (input: { readonly preventDefault: () => void }) => void;
+    readonly drop: (input: { readonly files: ReadonlyArray<File>; readonly preventDefault: () => void }) => void;
+    readonly fileSelection: (files: ReadonlyArray<File>) => void;
+    readonly openFilePicker: () => void;
+    readonly setFileInput: (element: HTMLInputElement | null) => void;
+  };
+  readonly configured: boolean;
+  readonly needsOnboarding: boolean;
+  readonly state: DocumentIntakeState;
+}
+
+/**
+ * Per-workspace document intake surface view model.
+ *
+ * @example
+ * ```ts
+ * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  Atom.make((get): DocumentIntakeSurface => {
+    const domEvents = intakeDomEventAtoms(workspaceId);
+    const chooseVaultAtom = chooseWorkspaceVaultAtoms(workspaceId);
+    const clearResultsAtom = clearIntakeResultsAtoms(workspaceId);
+    const openFilePickerAtom = openIntakeFilePickerAtoms(workspaceId);
+    const setFileInputAtom = setIntakeFileInputAtoms(workspaceId);
+    get.mount(chooseVaultAtom);
+    get.mount(clearResultsAtom);
+    get.mount(domEvents.dragEnter);
+    get.mount(domEvents.dragLeave);
+    get.mount(domEvents.dragOver);
+    get.mount(domEvents.drop);
+    get.mount(domEvents.fileSelection);
+    get.mount(openFilePickerAtom);
+    get.mount(setFileInputAtom);
+    const vaultConfig = get(workspaceVaultConfigAtom(workspaceId));
+    const state = get(documentIntakeStateAtoms(workspaceId));
+    return {
+      state,
+      configured: AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath),
+      needsOnboarding: AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath),
+      actions: {
+        chooseVault: () => get.set(chooseVaultAtom, void 0),
+        clearResults: () => get.set(clearResultsAtom, void 0),
+        dragEnter: (input) => get.set(domEvents.dragEnter, input),
+        dragLeave: (input) => get.set(domEvents.dragLeave, input),
+        dragOver: (input) => get.set(domEvents.dragOver, input),
+        drop: (input) => get.set(domEvents.drop, input),
+        fileSelection: (files) => get.set(domEvents.fileSelection, files),
+        openFilePicker: () => get.set(openFilePickerAtom, void 0),
+        setFileInput: (element) => get.set(setFileInputAtom, element),
+      },
+    };
+  })
 );

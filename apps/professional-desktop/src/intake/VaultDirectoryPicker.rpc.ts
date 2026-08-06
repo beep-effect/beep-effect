@@ -62,7 +62,7 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
  * @since 0.0.0
  */
 const PickVaultDirectoryRpc = Rpc.make("PickVaultDirectory", {
-  success: S.NullOr(S.String),
+  success: S.OptionFromNullOr(S.String),
   error: VaultDirectoryPickError,
 });
 
