@@ -120,9 +120,16 @@ The only non-code inputs. Frozen and versioned once P3 opens.
   "leadEnd":    1 }                    // paragraphs 2..n -> Details, for the 872
 
 // overrides.jsonl — full replacement block text for quarantined blocks
-{ "anchor": "packages/x/src/Y.ts#thing#0", "sourceHash": "sha256:9c02…",
-  "block": "/** ... */" }
+{ "anchor":     "packages/x/src/Y.ts#thing#0",
+  "sourceHash": "sha256:9c02…",       // same verification fields as titles.jsonl
+  "kind":       "value",
+  "block":      "/** ... */" }
 ```
+
+Both files carry `anchor`, `sourceHash`, and `kind`. The binding rule below applies to **every**
+frozen record regardless of which file it came from — an override is a hand-authored replacement
+block, so applying one to the wrong declaration is exactly as damaging as a mis-bound title, and
+the `kind` check is what stops a value-level replacement landing on a type-level companion.
 
 #### Anchor format
 
