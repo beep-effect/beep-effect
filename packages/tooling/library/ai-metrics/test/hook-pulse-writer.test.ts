@@ -15,12 +15,13 @@ import {
 } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { ChildProcess } from "effect/unstable/process";
 
 // The writer is shell, so the only honest conformance test spawns the real
 // script and decodes what it wrote. `HookPulseV1` carries the
@@ -143,12 +144,41 @@ const runWriter = Effect.fnUntraced(function* (
     yield* fs.writeFileString(path.join(evidenceRoot, "hook-pulse.disarmed"), `${options.disarmSentinel}\n`);
   }
 
-  const child = Bun.spawn([writerPath], {
+  // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
+  // `node:child_process`. Measured: inside a vitest worker under the coverage script
+  // (`bunx vitest run --coverage`, a different runtime from `bunx --bun vitest run`),
+  // Bun's spawn does not deliver stdin from a TypedArray at all — a `cat` probe echoed
+  // "". Its async form additionally never closed stdin, so the writer's
+  // `payload="$(cat)"` blocked on EOF forever: that is the 40-minute CI hang, reaped as
+  // 8 orphan `bash` + 8 orphan `cat`. `yeet verify` runs each package's `test` script
+  // and never the `coverage` one, so no local proof could reach it. The spawner behind
+  // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
+  // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
+  const handle = yield* ChildProcess.make(writerPath, [], {
     cwd: repoRoot,
+    // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
+    // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
+    // child environment rather than extending it. Letting the spawner inherit also keeps
+    // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
+    // forbids.
+    //
+    // Note for anyone debugging a future empty-store failure: an earlier revision here
+    // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
+    // implemented as `{ ...globalThis.process.env, ...options.env }`
+    // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
+    // works. The real cause was that Bun's spawn never delivered stdin in this worker at
+    // all, so the writer parsed nothing and took its fail-open exit. Empty store means
+    // "the writer bailed"; it does not tell you which guard bailed. Instrument before
+    // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
+    extendEnv: true,
     env: {
-      ...process.env,
       HOME: stateHome,
       XDG_STATE_HOME: stateHome,
+      // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
+      // the inherited `PWD` — bash would correct it at startup, but the correction is
+      // not this test's to assume now that the environment is inherited rather than
+      // rebuilt.
+      PWD: repoRoot,
       // Empty values fall through to the writer's own `:-` defaults, so ambient
       // developer configuration cannot change what this test asserts. Clearing
       // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
@@ -164,14 +194,27 @@ const runWriter = Effect.fnUntraced(function* (
       BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
       BEEP_AI_METRICS_HASH_SALT: "",
     },
-    stdin: new TextEncoder().encode(stdin),
+    // `endOnDone` is stated rather than left to its `true` default: closing stdin once
+    // the payload is written is the whole reason this run terminates, so it is part of
+    // what the helper promises and not an incidental default someone may retune.
+    stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
     stdout: "pipe",
     stderr: "pipe",
   });
 
-  const exitCode = yield* Effect.promise(() => child.exited);
-  const stderr = yield* Effect.promise(() => new Response(child.stderr).text());
-  const stdout = yield* Effect.promise(() => new Response(child.stdout).text());
+  // Drained concurrently with the exit wait, never after it: a child that filled a pipe
+  // buffer while the parent sat blocked on `exitCode` is the other shape of the same
+  // hang. A signal death fails `handle.exitCode` with a `PlatformError` naming the
+  // signal instead of yielding a code, which for this always-exits-0 writer is itself
+  // the bug worth failing on, so it is left to propagate rather than coerced to success.
+  const [stdout, stderr, exitCode] = yield* Effect.all(
+    [
+      Stream.mkString(Stream.decodeText(handle.stdout)),
+      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.exitCode,
+    ],
+    { concurrency: "unbounded" }
+  );
 
   const storeExists = yield* fs.exists(storeDir);
   const files = storeExists ? yield* fs.readDirectory(storeDir) : A.empty<string>();
