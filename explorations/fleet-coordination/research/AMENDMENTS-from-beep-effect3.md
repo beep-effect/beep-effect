@@ -181,6 +181,23 @@ without `--monitor` continues to exit 1 after a fully successful publish here.
 Read the exit code accordingly; do not "fix" it locally and do not switch to
 `--fast --monitor` to dodge it.
 
+✅ **Closed 2026-08-06.** PR-E landed as **#569**
+(`b4a06cefa3`, *"yeet merge-loop porcelain, until-merged monitor, artifact
+codecs"*). The fix is an early return on an empty step list
+(`Handler.ts:680`) carrying a comment that names the exact failure, plus the
+promised regression test at
+`packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts`. Delivered
+exactly as A6 said it would be. The standing constraint above no longer applies.
+
+**And the closure was itself a Mode B event.** This clone held in-flight work
+whose factual claims depended on `main` — a graduating goal packet asserting the
+regression was live and pinning a capability check to `0dd24c6862`. #569 rotted
+the first claim and staled the second. Nothing conflicted textually, no signal
+fired, and it was learned only because the operator mentioned the merge in
+passing. Second specimen in three days, same shape as the one in
+[`CAPTURE.md`](../CAPTURE.md), and this one landed on the packet built to catch
+it.
+
 ## A7 — `earlyPushStep` design conflict: the marker rides it
 
 Ruled the way the evidence pointed. Marker semantics are **"yeet-orchestrated
