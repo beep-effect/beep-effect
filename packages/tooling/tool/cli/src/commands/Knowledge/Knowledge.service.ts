@@ -34,6 +34,7 @@ import {
   KnowledgeFindingId,
   KnowledgeFindingLocation,
   KnowledgeIndexBytes,
+  KnowledgeProbePolicy,
   KnowledgeRename,
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
@@ -136,6 +137,12 @@ export interface KnowledgeArchiveOracle {
  * `renames` is what lets a moved document keep its base-side identity; without it every finding in a
  * renamed file would report as one resolved and one introduced pair.
  *
+ * **Gotchas**
+ *
+ * `probePolicy` is one value for the comparison rather than one per oracle on purpose. Probing only
+ * the base would report every archive-local command and index finding as resolved, and probing only
+ * HEAD would report every one of them as introduced.
+ *
  * @see {@link KnowledgeArchiveOracle} for the per-side read surface this input pairs.
  * @category services
  * @since 0.0.0
@@ -143,6 +150,7 @@ export interface KnowledgeArchiveOracle {
 export interface KnowledgePairedOracleInput {
   readonly base: KnowledgeArchiveOracle;
   readonly head: KnowledgeArchiveOracle;
+  readonly probePolicy: KnowledgeProbePolicy;
   readonly renames: ReadonlyArray<KnowledgeRename>;
 }
 
@@ -753,7 +761,8 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
 const candidatesForSide = Effect.fn("Knowledge.candidatesForSide")(function* (
   oracle: KnowledgeArchiveOracle,
   documentId: (entry: KnowledgeTrackedEntry) => string,
-  indexDocumentId: string
+  indexDocumentId: string,
+  probePolicy: KnowledgeProbePolicy
 ) {
   const documents = pipe(
     oracle.trackedEntries,
@@ -766,6 +775,11 @@ const candidatesForSide = Effect.fn("Knowledge.candidatesForSide")(function* (
     const extracted = yield* extractDocument(oracle, entry, documentId(entry));
     candidates = A.appendAll(candidates, extracted.candidates);
     commands = A.appendAll(commands, extracted.commands);
+  }
+  // Both remaining evaluators run Bun on the scanned revision's own code, so an untrusted
+  // comparison stops here with only the tracked-tree classes it derived without executing anything.
+  if (!KnowledgeProbePolicy.is.enabled(probePolicy)) {
+    return candidates;
   }
   candidates = A.appendAll(candidates, yield* commandCandidates(oracle, commands));
   const index = yield* indexCandidate(oracle, indexDocumentId);
@@ -823,6 +837,12 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * shared identities become `unchanged`. Every bucket is sorted by identity, so the report is stable
  * across runs and safe to diff.
  *
+ * **Gotchas**
+ *
+ * `input.probePolicy` is applied to both sides at once and echoed onto the report. A
+ * `skipped-untrusted-context` scan still produces a well-formed delta, but one whose empty buckets
+ * only cover the classes that need no archive-local execution.
+ *
  * **Example** (Scan two empty archives)
  *
  * ```ts
@@ -840,11 +860,17 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  *   trackedEntries: [],
  * }
  *
- * const report = scanKnowledgePair({ base: emptyArchive, head: emptyArchive, renames: [] })
+ * const report = scanKnowledgePair({
+ *   base: emptyArchive,
+ *   head: emptyArchive,
+ *   probePolicy: "enabled",
+ *   renames: [],
+ * })
  *
  * console.log(Effect.isEffect(report)) // true
  * ```
  *
+ * @see {@link resolveKnowledgeProbePolicy} for how the live command decides that policy.
  * @category use-cases
  * @since 0.0.0
  */
@@ -852,7 +878,8 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
   const baseCandidates = yield* candidatesForSide(
     input.base,
     (entry) => documentIdForBase(entry.path),
-    documentIdForBase(INDEX_PATH)
+    documentIdForBase(INDEX_PATH),
+    input.probePolicy
   );
   const headIndexEntry = A.findFirst(input.head.trackedEntries, (entry) => entry.path === INDEX_PATH);
   const headIndexDocumentId = O.match(headIndexEntry, {
@@ -862,7 +889,8 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
   const headCandidates = yield* candidatesForSide(
     input.head,
     (entry) => makeHeadDocumentId(input.base.trackedEntries, entry, input.renames),
-    headIndexDocumentId
+    headIndexDocumentId,
+    input.probePolicy
   );
   const baseFindings = yield* findingsFromCandidates(baseCandidates);
   const headFindings = yield* findingsFromCandidates(headCandidates);
@@ -881,6 +909,7 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
       A.filter(headFindings, (finding) => HashSet.has(baseIds, finding.findingId)),
       findingOrder
     ),
+    probePolicy: input.probePolicy,
   });
 });
 
@@ -1118,11 +1147,124 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
   } satisfies KnowledgeArchiveOracle;
 });
 
+const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
+
+/**
+ * Materializes only the entry types the scan reads, so a hostile revision cannot aim extraction
+ * anywhere.
+ *
+ * Regular files carry every scanned document and every module the probes import; directories carry
+ * their structure. Links are dropped: the tracked-path oracle already comes from `git ls-tree` rather
+ * than the extracted tree, documents whose blob is a link are filtered out by mode before they are
+ * ever read, and a link entry in an untrusted archive is the classic primitive for redirecting a
+ * later write out of the archive root. Dropping them also keeps `strict` extraction meaningful — a
+ * repository that tracks a link through another link would otherwise abort the whole scan on an
+ * entry nothing reads.
+ *
+ * The argument is read structurally because the library shares this filter signature with archive
+ * creation, where the second parameter is a stat result carrying no entry type at all. Extraction
+ * always supplies an entry; anything without a readable type is filtered out rather than admitted.
+ *
+ * @param _path - Archive-relative entry path, unused: the decision is by entry type alone.
+ * @param entry - Tar entry offered for extraction, read structurally for its type name.
+ * @returns True only for regular files and directories.
+ */
+const isReadableArchiveEntry = (_path: string, entry: unknown): boolean =>
+  P.hasProperty(entry, "type") && P.isString(entry.type) && HashSet.has(READABLE_ARCHIVE_ENTRY_TYPES, entry.type);
+
 const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (archivePath: string, archiveRoot: string) {
   yield* Effect.tryPromise({
-    try: () => extractTar({ file: archivePath, cwd: archiveRoot, strict: true, preservePaths: false, unlink: true }),
+    try: () =>
+      extractTar({
+        file: archivePath,
+        cwd: archiveRoot,
+        strict: true,
+        preservePaths: false,
+        unlink: true,
+        filter: isReadableArchiveEntry,
+      }),
     catch: KnowledgeOperationalError.new(`Failed to safely extract Git archive "${archivePath}".`),
   });
+});
+
+/** GitHub Actions events whose checked-out revision can come from a repository we do not control. */
+const PULL_REQUEST_EVENT_NAMES = HashSet.make("pull_request", "pull_request_target");
+
+const GithubPullRequestEvent = S.Struct({
+  pull_request: S.Struct({
+    head: S.Struct({
+      repo: S.NullishOr(S.Struct({ full_name: S.String })),
+    }),
+  }),
+});
+
+const decodeGithubPullRequestEvent = S.decodeUnknownEffect(S.fromJsonString(GithubPullRequestEvent));
+
+/**
+ * Full name of the repository the pull-request head branch lives in, when the event payload names one.
+ *
+ * @param eventPath - Value of `GITHUB_EVENT_PATH`, pointing at the runner's event payload file.
+ * @returns The `owner/name` of the head repository, or `O.none()` when it cannot be read or decoded.
+ */
+const readHeadRepository = Effect.fn("Knowledge.readHeadRepository")(function* (eventPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const event = yield* fs.readFileString(eventPath).pipe(Effect.flatMap(decodeGithubPullRequestEvent), Effect.option);
+  return O.flatMap(event, (payload) => O.fromNullishOr(payload.pull_request.head.repo)).pipe(
+    O.map((repo) => Str.toLowerCase(repo.full_name))
+  );
+});
+
+/**
+ * Decides whether this invocation may execute archive-local `--help` and index probes.
+ *
+ * **Details**
+ *
+ * Probing runs Bun on code taken from the scanned revision, which is the same trust boundary as
+ * running that revision's tests. Locally, on `push`, and on a same-repo pull request that boundary is
+ * already ours, so probes run. On a pull request whose head branch lives in another repository — a
+ * fork of this public repository — probing would execute a contributor's code on our runner, so the
+ * probe substep is skipped and the comparison degrades to the classes the tracked-tree oracle decides
+ * on its own.
+ *
+ * **Gotchas**
+ *
+ * Any pull-request event whose head repository cannot be established resolves to
+ * `skipped-untrusted-context`: an unreadable or unexpected event payload must not be able to buy
+ * execution. Because the decision keys on `GITHUB_EVENT_NAME` alone, exporting it locally reproduces a
+ * fork run exactly.
+ *
+ * **Example** (A push build probes; a fork pull request does not)
+ *
+ * ```ts
+ * import { resolveKnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { Effect } from "effect"
+ *
+ * const policy = resolveKnowledgeProbePolicy({ GITHUB_EVENT_NAME: "push" })
+ *
+ * console.log(Effect.isEffect(policy)) // true
+ * ```
+ *
+ * @param env - Process environment to read the GitHub Actions context from.
+ * @returns `"enabled"` when the scanned revision is ours, `"skipped-untrusted-context"` otherwise.
+ * @see {@link KnowledgeProbePolicy} for what a skipped comparison stops checking.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const resolveKnowledgeProbePolicy = Effect.fn("Knowledge.resolveProbePolicy")(function* (
+  env: Readonly<Record<string, string | undefined>>
+) {
+  const read = (name: string): O.Option<string> => O.flatMap(R.get(env, name), O.fromNullishOr);
+  if (!O.exists(read("GITHUB_EVENT_NAME"), (name) => HashSet.has(PULL_REQUEST_EVENT_NAMES, name))) {
+    return KnowledgeProbePolicy.Enum.enabled;
+  }
+  const baseRepository = O.map(read("GITHUB_REPOSITORY"), Str.toLowerCase);
+  const headRepository = yield* O.match(read("GITHUB_EVENT_PATH"), {
+    onNone: () => Effect.succeedNone,
+    onSome: readHeadRepository,
+  });
+  return O.isSome(baseRepository) && O.contains(headRepository, baseRepository.value)
+    ? KnowledgeProbePolicy.Enum.enabled
+    : KnowledgeProbePolicy.Enum["skipped-untrusted-context"];
 });
 
 const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRef: string) {
@@ -1134,6 +1276,7 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
   const historyAdapter = historyGitAdapter(baseRef);
   const headCommit = yield* resolveGitCommit(repoRoot, "HEAD", historyAdapter);
   const baseCommit = yield* resolveGitMergeBase(repoRoot, baseRef, headCommit, historyAdapter);
+  const probePolicy = yield* resolveKnowledgeProbePolicy(process.env);
 
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -1179,7 +1322,7 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       );
       const base = yield* makeLiveArchiveOracle(repoRoot, baseRoot, path.join(tempRoot, "base-scratch"), baseEntries);
       const head = yield* makeLiveArchiveOracle(repoRoot, headRoot, path.join(tempRoot, "head-scratch"), headEntries);
-      return yield* scanKnowledgePair({ base, head, renames });
+      return yield* scanKnowledgePair({ base, head, probePolicy, renames });
     })
   );
 });
