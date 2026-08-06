@@ -13,6 +13,7 @@
 
 import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
@@ -22,6 +23,44 @@ import { describeSensitiveHits, scanSensitiveText } from "./Findings.scan.ts";
 const $I = $RepoCliId.create("commands/Codex/Findings.write");
 
 const encoder = new TextEncoder();
+
+/**
+ * How a document's scan hits are treated.
+ *
+ * **Details**
+ *
+ * `reject` is the default and governs everything the CLI composes itself.
+ * `report` exists for one narrow case: report bodies copied verbatim into
+ * ignored `raw/` evidence. Those are external prose that legitimately quotes
+ * developer-local paths and secret-shaped literals — measured against a real
+ * 27-finding export, 4 bodies carry content `reject` refuses — and they are the
+ * evidence P2 validates against, so refusing them would make capture unusable.
+ * Their hits are surfaced to the operator instead of failing the ingest.
+ *
+ * **Example** (Naming the strict policy)
+ *
+ * ```ts
+ * import { PacketScanPolicy } from "@beep/repo-cli/commands/Codex/Findings.write"
+ *
+ * console.log(PacketScanPolicy.is.reject("reject")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PacketScanPolicy = LiteralKit(["reject", "report"]).pipe(
+  $I.annoteSchema("PacketScanPolicy", {
+    description: "Whether reject-scan hits on a document refuse the write or are reported.",
+  })
+);
+
+/**
+ * Scan policy applied to one packet document.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PacketScanPolicy = typeof PacketScanPolicy.Type;
 
 /**
  * One document destined for a generated packet.
@@ -74,7 +113,13 @@ export class PacketDocument extends S.Class<PacketDocument>($I`PacketDocument`)(
     ),
     tracked: S.Boolean.pipe(
       $I.annoteKey("PacketDocument.tracked", {
-        description: "Whether git tracks this document; ignored raw evidence is scanned identically.",
+        description: "Whether git tracks this document.",
+      })
+    ),
+    scan: PacketScanPolicy.pipe(
+      SchemaUtils.withKeyDefaults("reject"),
+      $I.annoteKey("PacketDocument.scan", {
+        description: "Whether scan hits refuse the write or are reported to the operator.",
       })
     ),
   },
@@ -113,7 +158,8 @@ export class PacketDocument extends S.Class<PacketDocument>($I`PacketDocument`)(
  * @since 0.0.0
  */
 export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents: ReadonlyArray<PacketDocument>) {
-  const hits = A.flatMap(documents, (document) => scanSensitiveText(document.path, document.contents));
+  const strict = A.filter(documents, (document) => document.scan === "reject");
+  const hits = A.flatMap(strict, (document) => scanSensitiveText(document.path, document.contents));
 
   if (A.isReadonlyArrayNonEmpty(hits)) {
     const surfaces = describeSensitiveHits(hits);
@@ -122,6 +168,11 @@ export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents
       surfaces,
     });
   }
+
+  // Verbatim evidence is not refused, but the operator is told what it holds so
+  // ignored `raw/` never becomes a place where nobody is looking.
+  const verbatim: ReadonlyArray<PacketDocument> = A.filter(documents, (document) => document.scan === "report");
+  return describeSensitiveHits(A.flatMap(verbatim, (document) => scanSensitiveText(document.path, document.contents)));
 });
 
 /**
@@ -196,13 +247,14 @@ export const writePacket = Effect.fnUntraced(function* (options: {
     });
   }
 
-  yield* assertPacketDocumentsClean(options.documents);
+  const reportedEvidence = yield* assertPacketDocumentsClean(options.documents);
 
   if (options.dryRun) {
     return {
       packetPath: packetRelative,
       written: A.map(options.documents, (document) => `${packetRelative}/${document.path}`),
       committed: false,
+      reportedEvidence,
     };
   }
 
@@ -230,15 +282,19 @@ export const writePacket = Effect.fnUntraced(function* (options: {
         );
       }
 
-      // Under --force the caller has accepted losing the existing packet. The
-      // removal happens here, after every document has been staged and scanned,
-      // so a refusal or a failed write never destroys what is already on disk.
-      if (options.force === true) {
+      // Under --force the existing packet is moved aside rather than deleted,
+      // so a failed promotion can put it back. Deleting first would open a
+      // window where a rename failure loses the replacement AND the packet of
+      // hand-written triage prose it was replacing.
+      const replacing = options.force === true && exists;
+      const backupDir = `${stagingDir}-replaced`;
+
+      if (replacing) {
         yield* fs
-          .remove(packetDir, { recursive: true, force: true })
+          .rename(packetDir, backupDir)
           .pipe(
             Effect.mapError((cause) =>
-              CodexPacketWriteError.from(cause, "commit-failed", `${packetRelative} could not be replaced.`)
+              CodexPacketWriteError.from(cause, "commit-failed", `${packetRelative} could not be moved aside.`)
             )
           );
       }
@@ -246,22 +302,30 @@ export const writePacket = Effect.fnUntraced(function* (options: {
       // A rename onto an existing non-empty directory fails, so the
       // refuse-to-clobber guarantee survives a packet created between the
       // existence check above and this promotion.
-      yield* fs
-        .rename(stagingDir, packetDir)
-        .pipe(
-          Effect.mapError((cause) =>
-            CodexPacketWriteError.from(
-              cause,
-              "commit-failed",
-              `The staged packet could not be promoted to ${packetRelative}.`
-            )
-          )
+      const restoreThenFail = Effect.fnUntraced(function* (cause: unknown) {
+        // Put the replaced packet back before surfacing the failure, so a lost
+        // promotion never also loses the packet it was replacing.
+        if (replacing) {
+          yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
+        }
+        return yield* CodexPacketWriteError.from(
+          cause,
+          "commit-failed",
+          `The staged packet could not be promoted to ${packetRelative}.`
         );
+      });
+
+      yield* fs.rename(stagingDir, packetDir).pipe(Effect.catch(restoreThenFail));
+
+      if (replacing) {
+        yield* fs.remove(backupDir, { recursive: true, force: true }).pipe(Effect.ignore);
+      }
 
       return {
         packetPath: packetRelative,
         written: A.map(options.documents, (document) => `${packetRelative}/${document.path}`),
         committed: true,
+        reportedEvidence,
       };
     }),
     () => fs.remove(stagingDir, { recursive: true, force: true }).pipe(Effect.ignore)

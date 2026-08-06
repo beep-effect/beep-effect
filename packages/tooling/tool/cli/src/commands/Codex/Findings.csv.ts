@@ -150,6 +150,47 @@ export const CodexCsvStatus = MappedLiteralKit([
  */
 export type CodexCsvStatus = typeof CodexCsvStatus.Type;
 
+/**
+ * One finding's unsanitized report body, destined only for ignored evidence.
+ *
+ * **Gotchas**
+ *
+ * This shape is deliberately distinct from the tracked finding record, and no
+ * packet renderer accepts it. Report text is external prose that legitimately
+ * quotes developer-local paths and secret-shaped literals — measured against a
+ * real 27-finding export, 4 bodies carry content the tracked-document scan
+ * refuses outright. It belongs in gitignored `raw/`, never in a tracked file.
+ *
+ * **Example** (Constructing a raw report)
+ *
+ * ```ts
+ * import { CodexRawReport } from "@beep/repo-cli/commands/Codex/Findings.csv"
+ *
+ * const report = CodexRawReport.make({
+ *   codexId: "d2b9e11e8550819193516057a336ff90",
+ *   description: "The resolver reads an unbounded file.",
+ *   relevantPaths: "packages/x/src/Y.ts",
+ *   detectedAt: "2026-08-04T16:06:15.518000Z",
+ * })
+ *
+ * console.log(report.relevantPaths) // "packages/x/src/Y.ts"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CodexRawReport extends S.Class<CodexRawReport>($I`CodexRawReport`)(
+  {
+    codexId: S.String,
+    description: S.String,
+    relevantPaths: S.String,
+    detectedAt: S.String,
+  },
+  $I.annote("CodexRawReport", {
+    description: "One finding's unsanitized report body, written only to ignored raw evidence.",
+  })
+) {}
+
 const FINDING_URL_PREFIX = "https://chatgpt.com/codex/cloud/security/findings/";
 
 /**
@@ -200,15 +241,19 @@ const decodeSeverity = S.decodeUnknownOption(CodexCsvSeverity);
 const decodeStatus = S.decodeUnknownOption(CodexCsvStatus);
 
 /**
- * Decode one data row, dropping every column the packet must never carry.
+ * Decode one data row into its tracked projection and its raw report body.
  *
- * The returned record is the whole of what leaves this module for a row: no
- * description, no author, no assignee. `index` is zero-based over data rows, so
- * the reported line number adds two to account for the header.
+ * **Details**
+ *
+ * The two halves are returned separately on purpose. `finding` is the only
+ * shape any tracked renderer accepts; `report` carries the unsanitized report
+ * text and relevant paths and is reachable only by the ignored `raw/` writer.
+ * Personal-data columns are read by neither. `index` is zero-based over data
+ * rows, so the reported line number adds two to account for the header.
  *
  * @param row - Raw cells of one data row.
  * @param index - Zero-based position of the row among data rows.
- * @returns The normalized finding fields for that row.
+ * @returns The tracked projection paired with its raw report body.
  */
 const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index: number) {
   const line = index + 2;
@@ -231,11 +276,19 @@ const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index
   }
 
   return {
-    codexId: codexId.value,
-    title: cellAt(row, "title"),
-    severity: severity.value,
-    codexStatus: status.value,
-    commit: cellAt(row, "commit_hash"),
+    finding: {
+      codexId: codexId.value,
+      title: cellAt(row, "title"),
+      severity: severity.value,
+      codexStatus: status.value,
+      commit: cellAt(row, "commit_hash"),
+    },
+    report: CodexRawReport.make({
+      codexId: codexId.value,
+      description: cellAt(row, "description"),
+      relevantPaths: cellAt(row, "relevant_paths"),
+      detectedAt: cellAt(row, "detected_at"),
+    }),
   };
 });
 
@@ -251,9 +304,10 @@ const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index
  *
  * **Gotchas**
  *
- * The returned findings carry no description, author, or assignee. The report
- * body is unsanitized external text and belongs in ignored raw evidence, not in
- * a value that packet renderers can reach.
+ * `findings` carries no description, author, or assignee — it is the tracked
+ * projection. The report bodies come back separately as `reports`, which only
+ * the ignored `raw/` writer consumes, so unsanitized external prose cannot
+ * reach a value a packet renderer accepts.
  *
  * **Example** (Refusing a signed-out response)
  *
@@ -299,7 +353,9 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
 
   const dataRows = A.filter(A.drop(1)(rows), (row) => A.length(row) > 1);
 
-  const findings = yield* Effect.forEach(dataRows, decodeRow);
+  const decoded = yield* Effect.forEach(dataRows, decodeRow);
+  const findings = A.map(decoded, (entry) => entry.finding);
+  const reports = A.map(decoded, (entry) => entry.report);
 
   const identities = A.map(findings, (finding) => finding.codexId);
   if (A.length(A.dedupe(identities)) !== A.length(identities)) {
@@ -312,6 +368,7 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
 
   return {
     findings,
+    reports,
     // Every row of one export names the same repository; the head row is the
     // only place it needs to be read from.
     repository: O.getOrElse(

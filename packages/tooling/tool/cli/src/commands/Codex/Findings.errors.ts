@@ -46,6 +46,7 @@ export const CodexIngestFailureReason = LiteralKit([
   "csv-row-malformed",
   "csv-duplicate-finding",
   "capture-date-unknown",
+  "ledger-unreadable",
   "auth-expired",
   "short-read",
   "inbox-ambiguous",

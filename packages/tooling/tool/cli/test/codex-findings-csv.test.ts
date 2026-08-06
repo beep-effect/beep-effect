@@ -116,6 +116,7 @@ describe("codex findings csv decoding", () => {
   it.effect("drops every personal-data column at the parse boundary", () =>
     Effect.gen(function* () {
       const decoded = yield* decode(csv([row({ seed: "a" })]));
+      // Covers both halves: the tracked projection and the raw report bodies.
       const serialized = encodeJson(decoded);
 
       // The fixture row carries a real-shaped author email; nothing that leaves
@@ -128,11 +129,17 @@ describe("codex findings csv decoding", () => {
     })
   );
 
-  it.effect("never carries the unsanitized report body out of the parser", () =>
+  // The report body is the evidence P2 validates against, so it must survive the
+  // parser — but only in `reports`, which nothing tracked ever renders. Asserting
+  // it never leaves at all would re-encode the bug two reviewers caught: a packet
+  // whose own template says "summarize from the raw report" with no report in it.
+  it.effect("carries the report body only in the raw-evidence half", () =>
     Effect.gen(function* () {
       const decoded = yield* decode(csv([row({ seed: "a", description: "SENSITIVE REPORT BODY" })]));
 
-      expect(encodeJson(decoded)).not.toContain("SENSITIVE REPORT BODY");
+      expect(encodeJson(decoded.findings)).not.toContain("SENSITIVE REPORT BODY");
+      expect(decoded.reports[0]?.description).toContain("SENSITIVE REPORT BODY");
+      expect(decoded.reports[0]?.codexId).toBe(id("a"));
     })
   );
 

@@ -71,14 +71,21 @@ const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
     return priorIdsOfEntries([]);
   }
 
-  // A packet whose ledger cannot be read is treated as having no bindings
-  // rather than failing the ingest: the write path still refuses to clobber it
-  // unless --force was passed deliberately.
+  // A ledger that exists but cannot be read is a hard failure, never an empty
+  // binding map. Falling back to "no bindings" here would let a --force ingest
+  // renumber every CSF-NNN from the current sort order, silently invalidating
+  // hand-written references and the exact-identifier closeout allowlist — the
+  // precise outcome sticky identity exists to prevent.
   const entries = yield* fs.readFileString(ledgerPath).pipe(
     Effect.flatMap(parseJsonText),
     Effect.flatMap(decodeCodexTriageLedger),
     Effect.map((ledger) => A.map(ledger.findings, (finding) => ({ id: finding.id, codexId: finding.codexId }))),
-    Effect.orElseSucceed(A.empty<{ readonly id: string; readonly codexId: string }>)
+    Effect.mapError(() =>
+      CodexFindingsIngestError.make({
+        reason: "ledger-unreadable",
+        message: `${ledgerPath} exists but does not decode as a codex-triage/v1 ledger. Repair or remove it before re-ingesting; continuing would renumber every CSF-NNN and break the closeout allowlist.`,
+      })
+    )
   );
 
   return priorIdsOfEntries(entries);
@@ -191,6 +198,9 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
 
   const documents = renderPacketDocuments({
     plan,
+    // Report bodies are the evidence P2 validates against. They only ever reach
+    // ignored `raw/reports/`; no tracked renderer accepts this shape.
+    rawReports: parsed.reports,
     // Raw evidence is the normalized capture, never the export itself: the CSV
     // carries author email addresses and unsanitized report bodies.
     rawPayloadJson: `${encodePayload(payload)}\n`,
@@ -237,7 +247,12 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
     },
     [
       `✓ export   ${A.length(plan.records)} findings   ${severities}`,
-      "✓ scan     0 rejections across payload and raw evidence",
+      "✓ scan     0 rejections across payload and tracked documents",
+      ...(A.isReadonlyArrayEmpty(outcome.reportedEvidence)
+        ? A.empty<string>()
+        : [
+            `! raw      ${A.length(outcome.reportedEvidence)} report body/bodies carry sensitive-shaped text (ignored, untracked): ${A.join(outcome.reportedEvidence, ", ")}`,
+          ]),
       outcome.committed
         ? `✓ packet   ${outcome.packetPath}  (${A.length(outcome.written)} files)`
         : `• dry run  ${outcome.packetPath} not written  (${A.length(outcome.written)} files planned)`,

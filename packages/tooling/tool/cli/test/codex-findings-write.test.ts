@@ -106,6 +106,45 @@ describe("codex findings packet promotion", () => {
     ));
 });
 
+describe("codex findings verbatim raw evidence", () => {
+  // Report bodies are external prose that legitimately quotes local paths.
+  // Measured against a real 27-finding export, 4 bodies trip the scan — so a
+  // hard refusal here would block roughly one ingest in seven.
+  it("reports rather than refuses hits inside verbatim raw evidence", () =>
+    run(
+      Effect.gen(function* () {
+        const outcome = yield* writeIn({
+          documents: [
+            doc("README.md", "# clean\n"),
+            PacketDocument.make({
+              path: "raw/reports/CSF-001.md",
+              contents: "The resolver reads /home/someone/notes.txt without bounds.\n",
+              tracked: false,
+              scan: "report",
+            }),
+          ],
+        });
+
+        expect(outcome.committed).toBe(true);
+        expect(outcome.reportedEvidence).toEqual(["raw/reports/CSF-001.md (private-home-path)"]);
+      })
+    ));
+
+  it("still refuses the same content in a tracked document", () =>
+    run(
+      Effect.gen(function* () {
+        const outcome = yield* writeIn({
+          documents: [doc("findings/CSF-001.md", "The resolver reads /home/someone/notes.txt.\n")],
+        }).pipe(
+          Effect.map(() => "accepted"),
+          Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
+        );
+
+        expect(outcome).toBe("refused");
+      })
+    ));
+});
+
 describe("codex findings packet forced replacement", () => {
   it("replaces an existing packet when force is set", () =>
     run(
@@ -119,6 +158,9 @@ describe("codex findings packet forced replacement", () => {
 
         expect(outcome.committed).toBe(true);
         expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe(sampleDocuments[0]?.contents);
+        // The replaced packet is moved aside, promoted, then removed. Nothing
+        // may survive under goals/ once the promotion succeeds.
+        expect(A.filter(yield* fs.readDirectory("goals"), (e) => e.includes("-replaced"))).toEqual([]);
         // A replacement is a replacement: files the new packet does not declare
         // must not survive from the packet it replaced.
         expect(yield* fs.exists(`goals/${SLUG}/findings/CSF-999.md`)).toBe(false);

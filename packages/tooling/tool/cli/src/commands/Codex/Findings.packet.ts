@@ -15,7 +15,7 @@
  */
 
 import { escapeMarkdownText } from "@beep/md/Md.escape";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import * as R from "effect/Record";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
 import {
@@ -623,6 +623,59 @@ const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
   });
 };
 
+/**
+ * Report bodies, one file per finding, under ignored `raw/reports/`.
+ *
+ * The body is written verbatim beneath a `CSF-NNN` heading so P2 can validate
+ * against exactly what Codex reported. It is never escaped or merged into a
+ * tracked document: these files exist because the tracked records deliberately
+ * carry only sanitized metadata.
+ *
+ * @param plan - The resolved plan supplying assigned identities.
+ * @param reports - Report bodies keyed by Codex identity.
+ * @returns One untracked document per finding that has a report body.
+ */
+const rawReportDocuments = (
+  plan: CodexPacketPlan,
+  reports: ReadonlyArray<{
+    readonly codexId: string;
+    readonly description: string;
+    readonly relevantPaths: string;
+    readonly detectedAt: string;
+  }>
+): ReadonlyArray<PacketDocument> => {
+  const recordFor = (codexId: string) => A.findFirst(plan.records, (record) => record.codexId === codexId);
+
+  return A.map(
+    A.filter(reports, (report) => O.isSome(recordFor(report.codexId))),
+    (report) => {
+      // Safe by the filter above; the plan and the reports come from the same
+      // decode, so every report has exactly one assigned record.
+      const record = O.getOrElse(recordFor(report.codexId), () => plan.records[0]!);
+      return PacketDocument.make({
+        path: `raw/reports/${record.id}.md`,
+        tracked: false,
+        // Report text is external prose that legitimately quotes local paths;
+        // hits are surfaced to the operator rather than refusing the ingest.
+        scan: "report",
+        contents: lines([
+          `# ${record.id}: ${record.title}`,
+          "",
+          `- Codex ID: \`${record.codexId}\``,
+          `- Severity: ${record.severity}`,
+          `- Source commit: \`${record.commit}\``,
+          `- Detected at: ${report.detectedAt}`,
+          `- Relevant paths: ${report.relevantPaths}`,
+          "",
+          "## Report",
+          "",
+          report.description,
+        ]),
+      });
+    }
+  );
+};
+
 const rawGitignoreDocument = (): PacketDocument =>
   PacketDocument.make({
     path: "raw/.gitignore",
@@ -642,14 +695,19 @@ const rawGitignoreDocument = (): PacketDocument =>
  *
  * Document order is stable and the content is a pure function of the plan, so
  * ingesting one capture twice produces byte-identical output. `raw/payload.json`
- * carries the normalized capture — never the CSV export, which holds author
- * email addresses and unsanitized report text.
+ * carries the normalized capture and `raw/reports/CSF-NNN.md` the report bodies
+ * P2 validates against — never the CSV export itself, which also holds author
+ * email addresses.
  *
  * **Gotchas**
  *
  * `GOAL.md` is under a hard 4000-character doctor gate, so it reports severity
  * counts and points at `findings/INDEX.md` rather than listing findings. Adding
  * a per-finding line here would breach the gate on a large batch.
+ *
+ * Everything under `raw/` is untracked by construction. Report bodies are
+ * external prose that legitimately quotes developer-local paths, so they are
+ * written there and never merged into a tracked document.
  *
  * **Example** (Rendering a packet for an empty capture)
  *
@@ -682,6 +740,13 @@ const rawGitignoreDocument = (): PacketDocument =>
 export const renderPacketDocuments = (options: {
   readonly plan: CodexPacketPlan;
   readonly rawPayloadJson: string;
+  /** Report bodies keyed by Codex identity, written only under ignored `raw/`. */
+  readonly rawReports?: ReadonlyArray<{
+    readonly codexId: string;
+    readonly description: string;
+    readonly relevantPaths: string;
+    readonly detectedAt: string;
+  }>;
 }): ReadonlyArray<PacketDocument> =>
   A.appendAll(
     [
@@ -700,5 +765,8 @@ export const renderPacketDocuments = (options: {
         contents: options.rawPayloadJson,
       }),
     ],
-    A.map(options.plan.records, findingDocument)
+    A.appendAll(
+      A.map(options.plan.records, findingDocument),
+      rawReportDocuments(options.plan, options.rawReports ?? A.empty())
+    )
   );
