@@ -58,18 +58,13 @@ nothing downstream (notifications, escalation ladder, the P8 paired trial)
 can start until it accrues. P0 storage-cutover preparation may proceed in
 parallel by a separate actor.
 
-**Day-1 empirical checks against the first real rows** — these were derived
-statically from harness 2.1.223 and are not yet confirmed against live data:
-
-- Does `PostToolUseFailure` actually fire? Its dispatcher sits behind an
-  internal feature gate (amendment 8). If it is disabled, approved-then-
-  failed calls emit no closing event at all and their brackets must be
-  tombstoned rather than closed.
-- Does `PermissionDenied` fire on 2.1.223? It never did on 2.1.220. If it
-  does, denials become closeable instead of permanently open.
-- Do the 2.1.220 payload shapes still hold three patch versions on? The
-  conformance fixtures are frozen 2.1.220 ground truth and cannot detect
-  harness drift by construction.
+**Day-1 checks: done 2026-08-06** against 1,329 live rows across 10 session
+shards (`research/2026-08-06-p1-instrument-live-handoff.md`). `PermissionRequest`
+fires, `PostToolUseFailure` fires (amendment 8 validated), and the payload shapes
+hold. One check remains open: **no `ExitPlanMode` plan approval has been observed
+yet**, and that is the headline wait class. Verify one end to end before starting
+the baseline. An operator-salt decision is also required first — rows hashed
+under the public default cannot be strengthened retroactively.
 
 ## Latest Evidence
 

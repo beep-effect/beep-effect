@@ -5,7 +5,7 @@
     "title": "Coding Agent Effectiveness Evidence Loop",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-08-05",
+    "updated": "2026-08-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/coding-agent-effectiveness-evidence-loop",
@@ -37,6 +37,7 @@
     "research/SOURCES.md",
     "research/2026-07-31-adhd-amendments.md",
     "research/2026-08-01-p1-hook-semantics-spike.md",
+    "research/2026-08-06-p1-instrument-live-handoff.md",
     "history/evidence/2026-08-01-hook-pulse-spike.ndjson"
   ],
   "agentLaunchers": [
