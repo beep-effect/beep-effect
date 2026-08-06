@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,9 +32,11 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P7 monitor` - all 27 findings were confirmed, assigned to five remediation
-lanes, and fixed. The initial batch has green local proof and PR #559 is open;
-the follow-up finding and review remediation are undergoing repo proof.
+`P9 complete` - all 27 findings were remediated in PR #559, which passed hosted
+checks and merged as `e6c371e1f1`. All six review threads were resolved. Signed-in
+Chrome closure verified every exact Codex ID as closed with `Reason: Fixed`, and
+the live open inventory is `0-0 of 0`. See
+[`history/2026-08-05-closeout.md`](./history/2026-08-05-closeout.md).
 
 ## Findings at a glance
 
@@ -48,3 +50,5 @@ invalid.
 - Raw report bodies remain untracked under `raw/`; tracked files are sanitized.
 - Do not use Codex's Create PR or patch-apply controls.
 - Browser closure is post-merge and must match the captured Codex ID allowlist.
+- The Fable 5 handoff for automating future captures is retained under
+  [`research/FABLE-5-BEEP-SECURITY-CAPTURE-HANDOFF.md`](./research/FABLE-5-BEEP-SECURITY-CAPTURE-HANDOFF.md).

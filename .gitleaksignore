@@ -75,3 +75,11 @@ goals/repo-crispening-orchestration/ops/inventory/S5/beep__shared-domain.json:ge
 # False positives in the immutable Effect subtree squash used by PR #546.
 8657c68a54a437e3646c0d2291fdd259f2455b4d:packages/effect/src/Config.ts:generic-api-key:1461
 8657c68a54a437e3646c0d2291fdd259f2455b4d:packages/platform-node/test/NodeHttpServer.test.ts:generic-api-key:853
+
+# False positives in the immutable Effect subtree squash used by the
+# 4.0.0-beta.103 refresh. Same upstream JSDoc sample as the #546 entry above
+# (`API_KEY` in the Config.redacted example), moved to line 1482 by upstream's
+# ConfigProvider rework. Paths are subtree-relative because `git subtree pull
+# --squash` records upstream-relative paths, so the `.repos/effect/` allowlist
+# in .gitleaks.toml cannot match them.
+3d37b37f7710fa096e25e1711243e480917bf999:packages/effect/src/Config.ts:generic-api-key:1482

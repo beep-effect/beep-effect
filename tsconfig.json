@@ -1872,6 +1872,9 @@
       ],
       "@beep/agents-use-cases/AssistantTurn.repair-errors": [
         "./packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.repair-errors.ts"
+      ],
+      "@beep/repo-cli/commands/Knowledge": [
+        "./packages/tooling/tool/cli/src/commands/Knowledge/index.ts"
       ]
     }
   }

@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -26,19 +26,29 @@ checkouts share one filesystem, one kernel, one user.
 
 ## Next Open Question
 
-Does [`BRIEF.md`](./BRIEF.md) match the picture in the operator's head? On yes,
-the packet moves to `decompose` and writes `MAP.md` naming the goal packet(s),
-sequenced **behind PR-I** — `AgentBrief.fleet` is the delivery vehicle and that
-field ships there. All nine align questions are closed
-([`DECISIONS.md`](./DECISIONS.md)).
+**Does rung 1 start now, or does the whole packet wait for PR-I?**
+[`MAP.md`](./MAP.md) verified the capability surface against `main` and found the
+split the BRIEF did not: `AgentBrief`, `OwnershipClaim`, and `beep agent report
+list` are **not on main** — so ambient delivery (rung 2) is genuinely blocked —
+but `worktree doctor`, `merge-tree`, and `/proc` all are, so **derivation (rung
+1) is not blocked by anything**. The BRIEF's "starting when PR-I merges" is
+therefore stronger than the evidence requires. That ruling is the last thing
+standing between this packet and graduation, and it is recorded in the manifest's
+`openQuestions` so a session orienting from machine state sees it too.
+
+Graduation contract status: **brief complete ✓**, **map names the work ✓**,
+**capability check ✓** (verified against `main`, not assumed) — and **blocking
+questions ✗**, held open by exactly the ruling above. Graduation is one decision
+away, not zero.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) — machine state.
 2. [`BRIEF.md`](./BRIEF.md) — the shaped pitch: problem, appetite, sketch, rabbit holes, no-gos.
-3. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
-4. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
-5. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface.
+3. [`MAP.md`](./MAP.md) — the goal packet, sequencing edges, verified capability check, first vertical slice.
+4. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
+5. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
+6. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface.
 
 ## Cross-Session Coordination
 
@@ -54,6 +64,15 @@ capability this packet is about does not exist yet.
 
 ## Trail
 
+- 2026-08-05: operator approved `BRIEF.md` → `decompose`. [`MAP.md`](./MAP.md)
+  names one goal packet (`fleet-mirror`) and verifies every cited capability
+  against `main` at `680a862a8e` rather than against the research. That check
+  produced the stage's real finding: `AgentBrief`, `OwnershipClaim`, and `beep
+  agent report list` have **zero source references on main**, while `worktree
+  doctor`, `merge-tree`, and `/proc` are all present — so the work splits into a
+  **derivation rung that is unblocked today** and a **delivery rung gated on
+  PR-I**, and the BRIEF's "starts when PR-I merges" is stronger than the evidence
+  requires. Awaiting the operator's ruling on that split before graduation.
 - 2026-08-05: PR #562 review closed — seven findings, **all seven valid**. Three
   were design defects, now amended: `merge-tree` needs the target *object* and
   `ls-remote` only supplies its SHA (signal 2 was unavailable exactly when main
