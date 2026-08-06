@@ -24,13 +24,14 @@
 
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
 import { runYeetReply } from "./Reply.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
-import { executeSweep, planSweep, renderSweepReport } from "./Sweep.ts";
+import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
@@ -49,9 +50,13 @@ interface YeetPorcelainOptions {
 /**
  * Parsed `yeet sweep` flag values. `plan` is the dry run — observe the clone,
  * build the plan, print it, execute nothing — and `json` selects the artifact
- * codec instead of the operator text, for both the plan and the report.
+ * codec instead of the operator text, for both the plan and the report. An
+ * empty `branch` means "the checked-out branch"; any other value re-aims the
+ * sweep through {@link overrideSweepBranch}, which is how a second pass reaches
+ * a merged branch the clone is no longer standing on.
  */
 interface YeetSweepOptions extends YeetPorcelainOptions {
+  readonly branch: string;
   readonly json: boolean;
   readonly plan: boolean;
 }
@@ -105,7 +110,8 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* hydrateYeetReadOnlyContext(options);
+  const hydrated = yield* hydrateYeetReadOnlyContext(options);
+  const context = Str.isEmpty(options.branch) ? hydrated : yield* overrideSweepBranch(hydrated, options.branch);
   if (options.plan) {
     const plan = yield* planSweep(context);
     yield* Console.log(options.json ? yield* encodeSweepPlan(plan) : renderSweepPlan(plan));
