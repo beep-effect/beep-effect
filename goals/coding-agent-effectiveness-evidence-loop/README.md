@@ -38,7 +38,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. Two of its three instrument steps are done:
+P1 is in progress. All three instrument steps are done, and the instrument is
+live and verified in production; the phase is now waiting on baseline wall-clock:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -51,25 +52,37 @@ P1 is in progress. Two of its three instrument steps are done:
    before any parsing. `notifierRev` is `log-only-0`: notifications stay
    **off** by design.
 
-Next concrete action: **collect the ~1 week log-only baseline.** This is
-wall-clock, not work — the instrument-before-treat method in
-[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so
-nothing downstream (notifications, escalation ladder, the P8 paired trial)
-can start until it accrues. P0 storage-cutover preparation may proceed in
-parallel by a separate actor.
+**The ~1 week log-only baseline is running**, open since
+`2026-08-06T13:12:30Z`, target close on or after `2026-08-13T13:12:30Z`. This is
+wall-clock, not work: the instrument-before-treat method in
+[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so nothing
+downstream (notifications, escalation ladder, the P8 paired trial) can start
+until it accrues, and turning any of them on mid-window destroys it.
+`notifierRev` stays `log-only-0` throughout. P0 storage-cutover preparation may
+proceed in parallel by a separate actor.
 
-**Day-1 empirical checks against the first real rows** — these were derived
-statically from harness 2.1.223 and are not yet confirmed against live data:
+**Day-1 checks and both pre-baseline gates: closed 2026-08-06**
+(`research/2026-08-06-p1-instrument-live-handoff.md`). Verified against 1,329
+live rows: `PermissionRequest` fires, `PostToolUseFailure` fires (amendment 8
+validated), payload shapes hold. Then the two blockers were cleared:
 
-- Does `PostToolUseFailure` actually fire? Its dispatcher sits behind an
-  internal feature gate (amendment 8). If it is disabled, approved-then-
-  failed calls emit no closing event at all and their brackets must be
-  tombstoned rather than closed.
-- Does `PermissionDenied` fire on 2.1.223? It never did on 2.1.220. If it
-  does, denials become closeable instead of permanently open.
-- Do the 2.1.220 payload shapes still hold three patch versions on? The
-  conformance fixtures are frozen 2.1.220 ground truth and cannot detect
-  harness drift by construction.
+1. **Plan approval is observed.** A full `ExitPlanMode` bracket was captured at
+   13:10:06Z — `PreToolUse` → `PermissionRequest{waitReason: "plan-approval"}` →
+   `PostToolUse`, joined through the amendment-4 two-hop rule, true wait 12.935s.
+   The headline wait class is instrumented. New hazard recorded there:
+   `permissionMode` flips *within* a bracket, so stratification must key on the
+   `PermissionRequest` row, never the terminal event.
+2. **Operator salt provisioned**, sourced from `op://TBK/ai-metrics/hash-salt`,
+   cut over globally at `2026-08-06T13:12:20Z`. Pre-cutover rows are verification
+   data in a different pseudonym namespace and are not baseline data.
+
+**Open risk — sampling power, checkpoint 2026-08-09.** 20 of 22 observed sessions
+run `bypassPermissions`, where ordinary tool gates emit no `PermissionRequest` at
+all. Zero *organic* plan approvals have been seen (the one captured was induced),
+and all organic `tool-permission` rows are `AskUserQuestion`. The baseline
+therefore measures plan approvals and `AskUserQuestion` only — a narrower slice
+than "agent waits", by construction rather than by chance. Re-check at mid-week
+before assuming the window can produce a p95.
 
 ## Latest Evidence
 
