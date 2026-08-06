@@ -839,8 +839,6 @@ CREATE TRIGGER epistemic_evidence_verification_block_truncate
   {
     name: "20260801021411_usage_record_optional_activity",
     sql: `ALTER TABLE "epistemic_usage_record" ALTER COLUMN "activity_id" DROP NOT NULL;
---> statement-breakpoint
-UPDATE "epistemic_usage_record" SET "activity_id" = NULL WHERE "activity_id" IS NOT NULL;
 `,
   },
 ];

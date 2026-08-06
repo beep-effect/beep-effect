@@ -1070,8 +1070,12 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
       record.destPath,
       "Provenance source path escapes the corpus raw directory"
     );
+    const sourceBytes = yield* fs
+      .readFile(safeSourcePath)
+      .pipe(CorpusCommandError.mapError(`Failed reading corpus source "${safeSourcePath}".`));
 
     const source = yield* decodeSourceArtifact({
+      bytes: sourceBytes,
       digest,
       id: artifactId,
       locator: { kind: "file", value: safeSourcePath },
@@ -2051,7 +2055,7 @@ const docketFamilyPattern = /^\d{5,6}/;
  *
  * @param text - File name or path text to scan.
  * @returns The normalized docket and family, or none.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { extractCorpusDocket } from "@beep/repo-cli/commands/Corpus"
  * import * as O from "effect/Option"

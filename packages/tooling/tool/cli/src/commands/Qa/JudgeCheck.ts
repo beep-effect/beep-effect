@@ -11,10 +11,11 @@
  * @since 0.0.0
  */
 
-import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, Path, pipe } from "effect";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -27,13 +28,14 @@ const $I = $RepoCliId.create("commands/Qa/JudgeCheck");
 /**
  * Everything an inventory cited that the round cannot back up.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { EvidenceCrossCheck } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  *
  * const check = EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] })
  * console.log(check.missingPaths.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -58,14 +60,16 @@ export class EvidenceCrossCheck extends S.Class<EvidenceCrossCheck>($I`EvidenceC
 /**
  * Whether a cross-check found nothing wrong.
  *
- * @param check - Cross-check result to inspect.
- * @returns True when the inventory cited nothing the round cannot back up.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { EvidenceCrossCheck, isCrossCheckClean } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  *
  * console.log(isCrossCheckClean(EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))) // true
  * ```
+ *
+ * @param check - Cross-check result to inspect.
+ * @returns True when the inventory cited nothing the round cannot back up.
  * @category predicates
  * @since 0.0.0
  */
@@ -75,9 +79,8 @@ export const isCrossCheckClean = (check: EvidenceCrossCheck): boolean =>
 /**
  * Every round-relative path an inventory cites, deduplicated.
  *
- * @param inventory - Inventory whose evidence citations are collected.
- * @returns Every distinct round-relative path the inventory cites.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { citedPaths } from "@beep/repo-cli/commands/Qa/JudgeCheck"
@@ -92,6 +95,9 @@ export const isCrossCheckClean = (check: EvidenceCrossCheck): boolean =>
  * })
  * console.log(citedPaths(inventory).length) // 0
  * ```
+ *
+ * @param inventory - Inventory whose evidence citations are collected.
+ * @returns Every distinct round-relative path the inventory cites.
  * @category utilities
  * @since 0.0.0
  */
@@ -105,9 +111,8 @@ export const citedPaths = (inventory: QaInventory): ReadonlyArray<string> =>
 /**
  * Every witness sequence number an inventory cites, deduplicated.
  *
- * @param inventory - Inventory whose evidence citations are collected.
- * @returns Every distinct witness sequence number the inventory cites.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { citedEventIds } from "@beep/repo-cli/commands/Qa/JudgeCheck"
@@ -122,6 +127,9 @@ export const citedPaths = (inventory: QaInventory): ReadonlyArray<string> =>
  * })
  * console.log(citedEventIds(inventory).length) // 0
  * ```
+ *
+ * @param inventory - Inventory whose evidence citations are collected.
+ * @returns Every distinct witness sequence number the inventory cites.
  * @category utilities
  * @since 0.0.0
  */
@@ -135,7 +143,7 @@ export const citedEventIds = (inventory: QaInventory): ReadonlyArray<number> =>
 /**
  * Compare an inventory's citations against what a round actually holds.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { crossCheckEvidence } from "@beep/repo-cli/commands/Qa/JudgeCheck"
@@ -152,6 +160,7 @@ export const citedEventIds = (inventory: QaInventory): ReadonlyArray<number> =>
  * const check = crossCheckEvidence(inventory, HashSet.empty<string>(), HashSet.empty<number>())
  * console.log(check.missingPaths.length) // 0
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -181,7 +190,7 @@ export const crossCheckEvidence: {
 /**
  * Render a cross-check failure into an operator-readable error.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { EvidenceCrossCheck, renderCrossCheckFailure } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  *
@@ -191,6 +200,7 @@ export const crossCheckEvidence: {
  * )
  * console.log(message.includes("frames/ghost.png")) // true
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -211,7 +221,7 @@ export const renderCrossCheckFailure: {
 /**
  * Cross-check an inventory against a round directory on disk.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { crossCheckAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
@@ -241,6 +251,7 @@ export const renderCrossCheckFailure: {
  * const program = crossCheckAgainstRound(layout, inventory, QaEventLog.make({ events: [], rejectedCount: 0 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -251,17 +262,22 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // fallow-ignore-next-line code-duplication -- judge-check resolves cited paths while judge-pack assembles typed image evidence after the same mandatory root guard
+  const canonicalRoot = yield* fs.realPath(layout.root).pipe(Effect.orElseSucceed(() => path.resolve(layout.root)));
   // Citations are round-relative by contract; a `../` escape resolving to an
   // artifact in another round (or anywhere above) must count as missing, not
   // as backed evidence.
   const present = yield* Effect.forEach(citedPaths(inventory), (relative) => {
-    const resolved = path.resolve(layout.root, relative);
-    return isPathWithinRoot(layout.root, resolved)
-      ? fs.exists(resolved).pipe(
-          Effect.map((exists) => (exists ? O.some(relative) : O.none<string>())),
-          Effect.orElseSucceed(O.none<string>)
-        )
-      : Effect.succeed(O.none<string>());
+    const resolved = path.resolve(canonicalRoot, relative);
+    return resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: relative }).pipe(
+      Effect.filterOrFail(
+        (canonical) => Eq.equals(resolved, canonical),
+        () => QaCommandError.make({ message: `qa judge-check refused linked evidence path "${relative}".` })
+      ),
+      Effect.flatMap((canonical) => fs.stat(canonical)),
+      Effect.map((info) => (Eq.equals(info.type, "File") ? O.some(relative) : O.none<string>())),
+      Effect.orElseSucceed(O.none<string>)
+    );
   });
   return crossCheckEvidence(
     inventory,
@@ -273,7 +289,7 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
 /**
  * Fail with a cross-check error when an inventory cites unbacked evidence.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { EvidenceCrossCheck, raiseCrossCheckFailure } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  * import { Effect } from "effect"
@@ -281,6 +297,7 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
  * const clean = EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] })
  * console.log(Effect.isEffect(raiseCrossCheckFailure(1, clean))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -302,7 +319,7 @@ export const raiseCrossCheckFailure: {
  * rounds, so a copied inventory can genuinely pass another round's evidence
  * cross-check; the declared round has to be checked explicitly.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { requireInventoryRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
@@ -318,6 +335,7 @@ export const raiseCrossCheckFailure: {
  * })
  * console.log(Effect.isEffect(requireInventoryRound(1, inventory))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -354,9 +372,8 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
  * block, so everything before it — reasoning, tool chatter, earlier draft
  * blocks — is ignored rather than parsed.
  *
- * @param text - Raw judge output, narration and draft blocks included.
- * @returns The last fenced JSON block, or none when the output carries none.
- * @example
+ * **Example** (Usage)
+ *
  * ```ts
  * import { extractLastJsonBlock } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  * import * as O from "effect/Option"
@@ -367,6 +384,9 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
  * const stdout = ["thinking...", draft, "on reflection:", final, "REQUIRED FINDINGS: 0"].join("\n")
  * console.log(O.getOrElse(extractLastJsonBlock(stdout), () => "")) // '{"final":true}'
  * ```
+ *
+ * @param text - Raw judge output, narration and draft blocks included.
+ * @returns The last fenced JSON block, or none when the output carries none.
  * @category utilities
  * @since 0.0.0
  */

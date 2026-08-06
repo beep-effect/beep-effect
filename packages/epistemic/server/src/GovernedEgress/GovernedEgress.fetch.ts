@@ -97,7 +97,7 @@ const outcomeAppendTimeout = Duration.seconds(1);
  * boundary. The destinations themselves are never passed here — they come from
  * `EpistemicConfig`, so the allowlist has exactly one owner.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
@@ -190,7 +190,7 @@ const coveredBy = (entry: string, requested: string): boolean =>
  * decision row and the server log; an agent that could tell them apart could
  * map the allowlist by probing it.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GovernedEgressOptions, makeGovernedEgressFetch } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
@@ -289,6 +289,7 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
     const request = ExecutionRequest.make({
       destination,
       operation: options.operation,
+      principal: egressPrincipal,
       resolvedAudience: resolveSinkAudience(destination),
       sinkClass: "network-egress",
     });
