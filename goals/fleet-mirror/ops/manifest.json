@@ -31,9 +31,13 @@
     "goals/fleet-mirror/SPEC.md",
     "goals/fleet-mirror/PLAN.md",
     "goals/fleet-mirror/GOAL.md",
-    "goals/fleet-mirror/research/SOURCES.md"
+    "goals/fleet-mirror/research/SOURCES.md",
+    "goals/fleet-mirror/research/p0-policy-surface-measurement.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p0-policy-surface-measurement.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -47,7 +51,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
