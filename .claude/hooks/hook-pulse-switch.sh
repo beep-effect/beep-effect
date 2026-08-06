@@ -45,19 +45,40 @@ case "${1:-status}" in
     # and worse than a loud failure because the ledger still looks complete.
     # Preserving the original reason follows for the same reason: the window is
     # attributed to why the instrument first went down, not to the latest command.
-    if [ -e "${sentinel}" ]; then
-      # jq's `//` cannot cover an EMPTY sentinel: with no input jq emits nothing and
-      # still exits 0, so neither the alternative nor `||` fires and the message
-      # renders "since ;". Same empty-output trap as the `capture()` defect in
-      # `hook-pulse.sh`. Default in the shell, where an empty string is observable.
-      disarmed_at="$(jq -r '.disarmedAt // empty' "${sentinel}" 2>/dev/null || true)"
-      case "${disarmed_at}" in "") disarmed_at="an unrecorded time" ;; esac
-      echo "hook-pulse already disarmed since ${disarmed_at}; original window start left intact"
+    # Claiming the sentinel is a single atomic step, not test-then-write. A
+    # `[ -e ]` guard followed by a redirect is TOCTOU: two `disarm` runs against
+    # this shared evidence root — and it IS shared, one XDG store across every
+    # clone and worktree — can both see it absent and the later one clobbers the
+    # first `disarmedAt`, which is the very bug the guard exists to prevent.
+    #
+    # `ln` is the atomic primitive here: it fails with EEXIST rather than
+    # overwriting, and unlike `set -o noclobber` with `: >` it publishes a
+    # fully-formed sentinel in one step. The noclobber form would create an empty
+    # file first, leaving a window in which a concurrent `arm` reads a sentinel
+    # with no timestamp and records the gap as having an unknown start. The temp
+    # file is written in the sentinel's own directory so the link cannot cross a
+    # filesystem boundary.
+    staged="${sentinel}.staged.$$"
+    trap 'rm -f "${staged}"' EXIT
+    jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
+      '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${staged}"
+    if ln "${staged}" "${sentinel}" 2>/dev/null; then
+      rm -f "${staged}"
+      echo "hook-pulse disarmed: ${sentinel}"
       exit 0
     fi
-    jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
-      '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${sentinel}"
-    echo "hook-pulse disarmed: ${sentinel}"
+    rm -f "${staged}"
+    # Lost the race, or it was already disarmed — same outcome either way: the gap
+    # began at whatever start is already recorded, so leave it alone.
+    #
+    # jq's `//` cannot cover an EMPTY sentinel: with no input jq emits nothing and
+    # still exits 0, so neither the alternative nor `||` fires and the message
+    # renders "since ;". Same empty-output trap as the `capture()` defect in
+    # `hook-pulse.sh`. Default in the shell, where an empty string is observable.
+    disarmed_at="$(jq -r '.disarmedAt // empty' "${sentinel}" 2>/dev/null || true)"
+    case "${disarmed_at}" in "") disarmed_at="an unrecorded time" ;; esac
+    echo "hook-pulse already disarmed since ${disarmed_at}; original window start left intact"
+    exit 0
     ;;
   arm)
     if [ ! -e "${sentinel}" ]; then
