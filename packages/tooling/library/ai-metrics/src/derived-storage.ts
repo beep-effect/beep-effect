@@ -224,6 +224,16 @@ const createTableStatements = [
 
 const migrationColumns = [
   {
+    // Explicit OTLP export state. Previously the exporter inferred this from
+    // `ingest_run_id`, which only worked because every run re-minted its rows. Once
+    // ingestion became idempotent that inference broke: a run that committed turns
+    // and then died before exporting left them attached to a run the exporter would
+    // never look at again, so they could never reach Phoenix.
+    columnDefinition: "otlp_exported_at_epoch_ms DOUBLE",
+    columnName: "otlp_exported_at_epoch_ms",
+    tableName: "ai_metrics_turns",
+  },
+  {
     columnDefinition: "source_role VARCHAR DEFAULT 'primary'",
     columnName: "source_role",
     tableName: "ai_metrics_source_files",
@@ -464,6 +474,19 @@ type DerivedStorageMigration = {
 };
 
 const derivedStorageMigrations = [
+  {
+    // One-time only, and it must stay that way. Existing stores were written under
+    // the old duplicating scheme, so every row in them has already been exported --
+    // repeatedly. Without this, the first run after the watermark lands would see
+    // millions of NULLs and flush the entire history to Phoenix in one burst, which
+    // is the exact backpressure collapse this work exists to prevent. The
+    // `ai_metrics_schema_migrations` ledger guarantees it runs once; it is applied
+    // before this run's inserts, so genuinely new turns are never swept up in it.
+    migrationId: "ai-metrics-otlp-export-watermark-v1",
+    requiredColumns: [{ columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" }],
+    statements: ["UPDATE ai_metrics_turns SET otlp_exported_at_epoch_ms = 0 WHERE otlp_exported_at_epoch_ms IS NULL"],
+    transactional: true,
+  },
   {
     migrationId: "ai-metrics-p6a-default-backfill-v1",
     statements: migrationBackfillStatements,

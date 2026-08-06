@@ -58,6 +58,7 @@ import {
   makeAiMetricsInstallSpec,
   makeAiMetricsPrivacyCheckResult,
   makeAiMetricsSourceAttribution,
+  markAiMetricsOtlpTurnsExported,
   OpenClawTranscriptLine,
   otlpExportResultToJson,
   privacyCheckToJson,
@@ -624,6 +625,39 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             // on every run even though the table had stopped growing. Retaining
             // first-seen lineage is what makes the export incremental.
             expect(turnLineage).toEqual([{ ingestRunId: "forwarder-1" }]);
+
+            // A run can commit turns and then die before its OTLP export. Because
+            // ingestion is idempotent, the retry no longer re-mints those rows under a
+            // new run id -- so if the exporter scoped itself to "this run", the
+            // committed turns would be stranded and never reach Phoenix. Export state
+            // is tracked on its own watermark for exactly that reason.
+            const phoenix = phoenixService(installSpec);
+            expect(O.isSome(phoenix)).toBe(true);
+            if (O.isNone(phoenix)) {
+              return;
+            }
+            const exportInput = AiMetricsOtlpExportInput.make({
+              duckDbPath,
+              endpoint: phoenix.value.otlp,
+              ingestRunId: "latest",
+              target: AiMetricsDeployTarget.Enum.local,
+            });
+
+            // Un-exported turns are visible even though they belong to forwarder-1 and
+            // the latest run is forwarder-3.
+            const pending = yield* readAiMetricsOtlpSpanProjections(exportInput);
+            expect(pending.turnIds.length).toBe(1);
+
+            // Simulate the export failing: nothing is marked, so the next attempt must
+            // still see the same turns rather than silently skipping them.
+            const afterFailedExport = yield* readAiMetricsOtlpSpanProjections(exportInput);
+            expect(afterFailedExport.turnIds).toEqual(pending.turnIds);
+
+            // Once the export succeeds and the watermark closes, they stop being resent.
+            yield* markAiMetricsOtlpTurnsExported(pending.turnIds);
+            const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections(exportInput);
+            expect(afterSuccessfulExport.turnIds).toEqual([]);
+            expect(afterSuccessfulExport.projections).toEqual([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
