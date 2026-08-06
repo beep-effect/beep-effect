@@ -469,8 +469,11 @@ const isPackageSourceFile = (filePath: string): boolean =>
 /**
  * Whether a diff line adds or removes part of a JSDoc comment.
  *
- * Matches the framing (`/**`, `*​/`) and continuation (`*`) forms, so a change
- * confined to code lines does not register.
+ * Matches the framing and continuation forms, so a change confined to code
+ * lines does not register.
+ *
+ * @param line - One line of unified diff output, including its +/- marker.
+ * @returns `true` when the line edits a JSDoc comment.
  */
 const isJSDocDiffLine = (line: string): boolean =>
   /^[+-]\s*(?:\/\*\*|\*\/|\*(?:\s|$))/.test(line) && !Str.startsWith("+++")(line) && !Str.startsWith("---")(line);
