@@ -173,6 +173,37 @@ const liveSpawnerLayer = Layer.succeed(
   })
 );
 
+const stdinPayloads: Array<string> = [];
+const stdinSpawnerLayer = Layer.succeed(
+  ChildProcessSpawner.ChildProcessSpawner,
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("Expected a standard OpenClaw command");
+    }
+
+    expect(command.options.stdin).toBe("pipe");
+    return Effect.succeed(
+      ChildProcessSpawner.makeHandle({
+        pid: ChildProcessSpawner.ProcessId(2),
+        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+        isRunning: Effect.succeed(false),
+        kill: () => Effect.void,
+        unref: Effect.succeed(Effect.void),
+        stdin: Sink.forEach((bytes: Uint8Array) =>
+          Effect.sync(() => {
+            stdinPayloads.push(new TextDecoder().decode(bytes));
+          })
+        ),
+        stdout: Stream.make(encoder.encode(agentTurnJson)),
+        stderr: Stream.empty,
+        all: Stream.empty,
+        getInputFd: () => Sink.drain,
+        getOutputFd: () => Stream.empty,
+      })
+    );
+  })
+);
+
 describe("@beep/openclaw OpenclawCli service", () => {
   layer(OpenclawCli.makeLayer().pipe(Layer.provide(liveSpawnerLayer)))((it) => {
     it.effect(
@@ -182,6 +213,24 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const info = yield* cli.version(baseContext);
 
         expect(info.version).toBe("2026.7.1-2");
+      })
+    );
+  });
+
+  layer(OpenclawCli.makeLayer().pipe(Layer.provide(stdinSpawnerLayer)))((it) => {
+    it.effect(
+      "pipes private agent messages through stdin",
+      Effect.fnUntraced(function* () {
+        stdinPayloads.length = 0;
+        const cli = yield* OpenclawCli;
+
+        yield* cli.agentTurn(gatewayContext, {
+          agentId: "spike3",
+          message: "private prompt",
+          timeoutSeconds: 120,
+        });
+
+        expect(stdinPayloads).toEqual(["private prompt"]);
       })
     );
   });

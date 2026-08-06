@@ -1,8 +1,8 @@
 # Codex Security Findings Index (2026-08-04)
 
 Captured from the authenticated Codex Cloud Security view for
-`kriegcloud/beep-effect` on 2026-08-04 through Chrome control. All 26 source
-commits are ancestors of the packet branch. Full reports remain ignored under
+`kriegcloud/beep-effect` on 2026-08-04 through Chrome control and CSV export.
+All 27 source commits are ancestors of the packet branch. Full reports remain ignored under
 `raw/`; tracked records omit signed URLs, auth values, and raw local paths.
 
 ## Severity Summary
@@ -11,7 +11,7 @@ commits are ancestors of the packet branch. Full reports remain ignored under
 | --- | ---: |
 | Medium | 13 |
 | Low | 7 |
-| Informational | 6 |
+| Informational | 7 |
 
 ## Findings
 
@@ -43,6 +43,7 @@ commits are ancestors of the packet branch. Full reports remain ignored under
 | [CSF-024](./CSF-024.md) | Informational | remediated; local proof green | Plugin writer allows manifest path traversal | scratchpad Claude plugin |
 | [CSF-025](./CSF-025.md) | Informational | remediated; local proof green | Absolute local paths leaked in research catalog | academia corpus catalog |
 | [CSF-026](./CSF-026.md) | Informational | remediated; local proof green | Goal packet verification fails on trailing whitespace | OpenClaw goal packet |
+| [CSF-027](./CSF-027.md) | Informational | remediated; targeted proof green | Unescaped PR comments printed to terminal | Yeet monitor |
 
 ## Closeout Mapping
 

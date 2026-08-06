@@ -2,8 +2,8 @@
 
 Repo root: the current working directory. Do not assume an absolute path.
 
-Outcome: fix and close the 26 Codex Cloud security findings captured on
-2026-08-04 for `kriegcloud/beep-effect`: 13 Medium, 7 Low, 6 Informational.
+Outcome: fix and close the 27 Codex Cloud security findings captured on
+2026-08-04 for `kriegcloud/beep-effect`: 13 Medium, 7 Low, 7 Informational.
 Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
 Codex IDs until no packet-applicable finding remains open.
 
@@ -39,7 +39,7 @@ Rules:
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
    repair/verify. Publish one intentional PR and monitor through mergeable.
-6. After merge, close only the exact 26-ID allowlist in Codex as Already fixed
+6. After merge, close only the exact 27-ID allowlist in Codex as Already fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
 
 Stop if Chrome authentication is unavailable, tracked evidence contains secret

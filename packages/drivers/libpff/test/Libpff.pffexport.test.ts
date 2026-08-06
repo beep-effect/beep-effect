@@ -169,6 +169,30 @@ describe("makePffexportFileProcessingEngine", () => {
     ));
 
   it.effect(
+    "refuses archive export when the caller omits source bytes",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const operationWithoutBytes = ExportArchiveOperation.make({
+          ...operation,
+          source: SourceArtifact.make(sourceWithoutBytes),
+        });
+
+        const error = yield* engine.exportArchive(operationWithoutBytes).pipe(Effect.flip);
+
+        expect(error.reason).toBe("archive-export-failed");
+        expect(error.message).toContain("caller-supplied source bytes");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "exports children, assembles EML artifacts, and writes JSONL metadata records",
     Effect.fnUntraced(
       function* () {

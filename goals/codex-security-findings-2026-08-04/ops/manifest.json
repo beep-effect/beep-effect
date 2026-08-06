@@ -5,19 +5,19 @@
     "title": "Codex Security Findings (2026-08-04)",
     "status": "active",
     "created": "2026-08-04",
-    "updated": "2026-08-04",
+    "updated": "2026-08-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-04",
   "lifecycle": "active",
-  "mission": "Remediate and close the 26 Codex Cloud security findings captured on 2026-08-04.",
+  "mission": "Remediate and close the 27 Codex Cloud security findings captured on 2026-08-04.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 26 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 27 Codex findings are resolved with zero packet-applicable open findings.",
     "grandfathered": false
   },
   "branch": "security/codex-findings-2026-08-04",
@@ -30,7 +30,10 @@
     "goals/codex-security-findings-2026-08-04/GOAL.md",
     "goals/codex-security-findings-2026-08-04/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/FABLE-5-BEEP-SECURITY-CAPTURE-HANDOFF.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -45,27 +48,27 @@
     "repository": "kriegcloud/beep-effect",
     "url": "https://chatgpt.com/codex/cloud/security/findings/",
     "capturedAt": "2026-08-04",
-    "captureMethodPolicy": "signed-in-chrome-control",
+    "captureMethodPolicy": "signed-in-chrome-control-and-csv-export",
     "rawCaptureRoot": "goals/codex-security-findings-2026-08-04/raw",
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 26,
-    "capturedCount": 26,
+    "expectedCount": 27,
+    "capturedCount": 27,
     "severityCountsKnown": true,
     "severityCounts": {
       "Medium": 13,
       "Low": 7,
-      "Informational": 6
+      "Informational": 7
     },
     "dispositionCounts": {
-      "remediate": 26,
+      "remediate": 27,
       "already-fixed": 0,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All findings confirmed and remediated; full local Yeet repository proof is green."
+    "note": "All findings are confirmed and remediated; the initial 26-finding batch has green local Yeet proof, and combined follow-up proof for the 27th finding is pending."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -121,12 +124,12 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P8",
@@ -143,7 +146,7 @@
     "test \"$(wc -m < goals/codex-security-findings-2026-08-04/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-08-04/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-08-04/ops/triage.json",
-    "test \"$(find goals/codex-security-findings-2026-08-04/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 26",
+    "test \"$(find goals/codex-security-findings-2026-08-04/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 27",
     "git diff --check -- goals/codex-security-findings-2026-08-04",
     "bun run beep lint reflection-artifacts"
   ],

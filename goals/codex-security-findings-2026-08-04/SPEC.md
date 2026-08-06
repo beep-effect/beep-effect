@@ -4,7 +4,7 @@
 
 Remediate every open Codex Cloud security finding visible at
 `https://chatgpt.com/codex/cloud/security/findings/` for
-`kriegcloud/beep-effect` in the 26-finding batch captured on 2026-08-04. Publish
+`kriegcloud/beep-effect` in the 27-finding batch captured on 2026-08-04. Publish
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
@@ -44,12 +44,12 @@ exact captured findings until no packet-applicable finding remains open.
 - Security controls may not be simplified away for diff size.
 - Full reports stay in ignored `raw/`; tracked records contain only sanitized
   metadata, summaries, validation, decisions, changed files, and proof.
-- Browser closure happens after merge, against the exact 26-ID allowlist.
+- Browser closure happens after merge, against the exact 27-ID allowlist.
 - Preserve unrelated work and stage only reviewed packet intent.
 
 ## Acceptance Criteria
 
-- [x] All 26 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 27 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
 - [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
@@ -60,7 +60,7 @@ exact captured findings until no packet-applicable finding remains open.
 - [x] Yeet repair and verify are green on the complete remediation scope.
 - [ ] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 26 captured Codex findings are resolved after merge and the live view
+- [ ] All 27 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
 ## Verification Matrix
@@ -69,8 +69,8 @@ exact captured findings until no packet-applicable finding remains open.
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-08-04/GOAL.md)" -le 4000` | Pass |
 | JSON shape | `jq .` over both files in `ops/` | Pass |
-| Finding count | CSF file count equals 26 | Pass |
-| Severity count | 13 Medium, 7 Low, 6 Informational | Pass |
+| Finding count | CSF file count equals 27 | Pass |
+| Severity count | 13 Medium, 7 Low, 7 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
 | Sanitization | tracked packet secret/path pattern scan | No matches |
 | Per-finding proof | command recorded in finding and triage ledger | Pass |

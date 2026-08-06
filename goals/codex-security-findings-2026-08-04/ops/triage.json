@@ -4,11 +4,11 @@
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=open",
     "branch": "security/codex-findings-2026-08-04",
-    "expectedCount": 26,
-    "capturedCount": 26,
+    "expectedCount": 27,
+    "capturedCount": 27,
     "capturedAt": "2026-08-04",
-    "captureMethod": "signed-in-chrome-control",
-    "note": "All 26 findings confirmed at current HEAD and remediated; full Yeet repository proof is pending."
+    "captureMethod": "signed-in-chrome-control-and-csv-export",
+    "note": "All 27 findings confirmed at current HEAD and remediated; combined follow-up Yeet proof is pending."
   },
   "lanes": {
     "L1-bounded-file-ingestion": {
@@ -46,7 +46,8 @@
         "CSF-021",
         "CSF-023",
         "CSF-024",
-        "CSF-026"
+        "CSF-026",
+        "CSF-027"
       ]
     }
   },
@@ -751,6 +752,35 @@
         "verificationCommands": [
           "targeted package check",
           "targeted regression test",
+          "bun run beep yeet verify"
+        ]
+      }
+    },
+    {
+      "id": "CSF-027",
+      "codexId": "cbe85d133e408191bc0ca9e0643905d9",
+      "title": "Unescaped PR comments printed to terminal",
+      "severity": "Informational",
+      "codexStatus": "Open",
+      "commit": "aee2664b91d163cd7481eb16b0c5a485c092f5c2",
+      "ownerArea": "repo-cli Yeet monitor comment renderer",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-tooling-and-config",
+      "validation": {
+        "status": "complete",
+        "confidence": "high"
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+          "packages/tooling/tool/cli/test/yeet.test.ts"
+        ],
+        "verificationCommands": [
+          "targeted Yeet monitor regression test",
+          "targeted repo-cli check",
+          "repo-cli coverage ratchet",
           "bun run beep yeet verify"
         ]
       }

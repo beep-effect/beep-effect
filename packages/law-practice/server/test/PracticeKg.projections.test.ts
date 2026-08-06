@@ -269,6 +269,25 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
     },
     { discard: true }
   );
+  const messageOne = path.join(childrenRoot, "Message00001");
+  const messageTwo = path.join(childrenRoot, "Message00002");
+  const messageThree = path.join(childrenRoot, "Message00003");
+  yield* fs.remove(path.join(messageThree, "Recipients.txt"));
+  yield* fs.symlink(path.join(messageTwo, "Recipients.txt"), path.join(messageThree, "Recipients.txt"));
+  yield* fs.writeFileString(
+    path.join(messageThree, "OutlookHeaders.txt"),
+    "Conversation topic:\tFixture topic\nSender name:\tFixture Sender Three\n"
+  );
+  const linkedMessage = path.join(childrenRoot, "LinkedMessage00004");
+  yield* fs.makeDirectory(linkedMessage);
+  yield* fs.symlink(path.join(messageOne, "OutlookHeaders.txt"), path.join(linkedMessage, "OutlookHeaders.txt"));
+  const archiveRoot = path.dirname(childrenRoot);
+  const archiveCollectionRoot = path.dirname(archiveRoot);
+  yield* fs.writeFileString(
+    path.join(archiveCollectionRoot, `artifact:${Str.repeat(64)("e")}.export`),
+    "not a directory"
+  );
+  yield* fs.makeDirectory(path.join(archiveCollectionRoot, "not-an-artifact"));
 });
 
 const makeFixtureCorpus = Effect.fn("PracticeKgTest.makeFixtureCorpus")(function* () {
@@ -640,6 +659,49 @@ describe("practice KG projections", () => {
       expect(summary.claims).toBe(2);
       expect(summary.files).toBe(2);
       expect(summary.failedFiles).toBe(2);
+      const invalidClaimsPath = path.join(inputs, "00_Response OA - 20001US09.pdf");
+      yield* fs.writeFileString(invalidClaimsPath, "unsupported extension");
+      const unsupportedExtensionFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(unsupportedExtensionFailure.message).toContain("Unsupported claims input extension");
+      yield* fs.remove(invalidClaimsPath);
+
+      const directoryClaimsPath = path.join(inputs, "00_Response OA - 20001US09.txt");
+      yield* fs.makeDirectory(directoryClaimsPath);
+      const directoryClaimsFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(directoryClaimsFailure.message).toContain("not a bounded regular file");
+      yield* fs.remove(directoryClaimsPath, { recursive: true });
+
+      const invalidUtf8Path = path.join(inputs, "00_Response OA - 20001US09.txt");
+      yield* fs.writeFile(invalidUtf8Path, Uint8Array.of(0xff));
+      const invalidUtf8Failure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(invalidUtf8Failure.message).toContain("not valid UTF-8");
+      yield* fs.remove(invalidUtf8Path);
+
+      const oversizedClaimsPath = path.join(inputs, "00_Response OA - 20001US09.md");
+      yield* fs.writeFile(oversizedClaimsPath, new Uint8Array(2 * 1024 * 1024 + 1));
+      const oversizedClaimsFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(oversizedClaimsFailure.message).toContain("not a bounded regular file");
+      yield* fs.remove(oversizedClaimsPath);
+
+      const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");
+      const insideClaimsLink = path.join(inputs, "00_Response OA - 20001US09.txt");
+      yield* fs.writeFileString(insideClaimsTarget, OFFICE_ACTION_FIXTURE);
+      yield* fs.symlink(insideClaimsTarget, insideClaimsLink);
+      const insideLinkedClaimsFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({ bundleOut, inputs })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(insideLinkedClaimsFailure.message).toContain("must not traverse a symbolic link");
+      yield* fs.remove(insideClaimsLink);
+      yield* fs.remove(insideClaimsTarget);
+
       const outsideClaimsPath = path.join(corpusRoot, "outside-claims.txt");
       const linkedClaimsPath = path.join(inputs, "9_Response OA - 20001US09.txt");
       yield* fs.writeFileString(outsideClaimsPath, "private file outside the claims input root");

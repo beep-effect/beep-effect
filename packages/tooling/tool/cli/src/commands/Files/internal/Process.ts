@@ -55,7 +55,7 @@ import {
 } from "@beep/tika";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe, Ref } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
@@ -96,15 +96,18 @@ interface ProcessCollectedFile {
   readonly sourcePath: string;
 }
 
-interface ProcessPreparedSource {
+interface ProcessSourceIdentity {
   readonly artifactId: ArtifactId;
-  readonly bytes: Uint8Array;
   readonly digest: ContentDigest;
   readonly format: FileFormatFamily;
   readonly locatorPath: PosixPath;
   readonly operationId: OperationId;
   readonly relativePath: PosixPath;
   readonly sourceFile: ProcessCollectedFile;
+}
+
+interface ProcessPreparedSource extends ProcessSourceIdentity {
+  readonly bytes: Uint8Array;
 }
 
 interface ProcessInputCollection {
@@ -587,6 +590,16 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
   };
 });
 
+const processSourceIdentity = (prepared: ProcessPreparedSource): ProcessSourceIdentity => ({
+  artifactId: prepared.artifactId,
+  digest: prepared.digest,
+  format: prepared.format,
+  locatorPath: prepared.locatorPath,
+  operationId: prepared.operationId,
+  relativePath: prepared.relativePath,
+  sourceFile: prepared.sourceFile,
+});
+
 const makeDispatchSourceArtifact = Effect.fn("Files.makeDispatchSourceArtifact")(function* (
   prepared: ProcessPreparedSource,
   options: ProcessFilesOptions
@@ -784,7 +797,7 @@ const processSkippedOutcome = (
 const processDuplicateOutcome = (
   options: ProcessFilesOptions,
   prepared: ProcessPreparedSource,
-  representative: ProcessPreparedSource
+  representative: ProcessSourceIdentity
 ): ProcessSourceOutcome =>
   processSkippedOutcome(
     processDescriptorFor(options.engine, prepared.format),
@@ -1131,23 +1144,56 @@ const asConfigPhaseFailure = <A, R>(
 
 // Whether processPreparedSource would dispatch this source to an engine (as
 // opposed to resolving it with a descriptor-only skip).
-const processSourceDispatches = (options: ProcessFilesOptions, prepared: ProcessPreparedSource): boolean => {
-  if (
-    prepared.format === "docm" ||
-    prepared.format === "xls" ||
-    prepared.format === "xlsx" ||
-    prepared.format === "unknown"
-  ) {
+const processSourceDispatches = (options: ProcessFilesOptions, format: FileFormatFamily): boolean => {
+  if (format === "docm" || format === "xls" || format === "xlsx" || format === "unknown") {
     return false;
   }
-  if (prepared.format === "pst") {
+  if (format === "pst") {
     return (
-      options.exportChildren &&
-      processEngineSupportsChildExport(processDescriptorFor(options.engine, prepared.format), prepared.format)
+      options.exportChildren && processEngineSupportsChildExport(processDescriptorFor(options.engine, format), format)
     );
   }
   return true;
 };
+
+// Read, hash, and process bounded chunks rather than retaining source bytes
+// for the complete corpus. Representative identities omit bytes, preserving
+// deterministic cross-chunk deduplication while each immutable source-byte
+// snapshot becomes collectible as soon as its chunk is processed.
+const processCollectedSources = Effect.fn("Files.processCollectedSources")(function* (
+  files: ReadonlyArray<ProcessCollectedFile>,
+  options: ProcessFilesOptions,
+  engineFor: ProcessEngineResolver
+): Effect.fn.Return<ReadonlyArray<ProcessSourceOutcome>, FilesCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  const processState = yield* Ref.make({
+    byId: R.empty<string, ProcessSourceIdentity>(),
+    outcomes: A.empty<ProcessSourceOutcome>(),
+  });
+  for (const chunk of A.chunksOf(files, FilesConcurrency.scan)) {
+    const preparedChunk = yield* Effect.forEach(
+      chunk,
+      (sourceFile) => prepareProcessSource(sourceFile, options.engine),
+      { concurrency: FilesConcurrency.scan }
+    );
+    for (const source of preparedChunk) {
+      const state = yield* Ref.get(processState);
+      const representative = R.get(state.byId, source.artifactId);
+      if (O.isSome(representative)) {
+        yield* Ref.set(processState, {
+          ...state,
+          outcomes: A.append(state.outcomes, processDuplicateOutcome(options, source, representative.value)),
+        });
+      } else {
+        const outcome = yield* processPreparedSource(source, options, engineFor);
+        yield* Ref.set(processState, {
+          byId: R.set(state.byId, source.artifactId, processSourceIdentity(source)),
+          outcomes: A.append(state.outcomes, outcome),
+        });
+      }
+    }
+  }
+  return (yield* Ref.get(processState)).outcomes;
+});
 
 /**
  * Execute the process subcommand pipeline: collect input artifacts, prepare
@@ -1168,62 +1214,23 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
   ).pipe(asConfigPhaseFailure);
   const engineFor = yield* makeProcessEngineResolver(options, outputDirectory);
 
-  const prepared = yield* Effect.forEach(
-    collection.files,
-    (sourceFile) => prepareProcessSource(sourceFile, options.engine),
-    { concurrency: FilesConcurrency.scan }
-  );
-
-  // Duplicate byte-identical inputs share a content-addressed artifact id;
-  // exactly one representative per digest (the first in sorted relative-path
-  // order) is dispatched so concurrent engines never race on shared
-  // content-addressed targets, and every other copy records a deterministic
-  // skip naming the representative.
-  const grouped = A.reduce(
-    prepared,
-    {
-      byId: R.empty<string, ProcessPreparedSource>(),
-      representatives: A.empty<ProcessPreparedSource>(),
-    },
-    (state, source) =>
-      R.has(state.byId, source.artifactId)
-        ? state
-        : {
-            byId: R.set(state.byId, source.artifactId, source),
-            representatives: A.append(state.representatives, source),
-          }
-  );
-
   // Engine construction failures are configuration failures; forcing the
   // required families up front keeps SPEC's exit-2 phase ahead of every
   // engine side effect instead of surfacing mid-dispatch.
   yield* Effect.forEach(
     A.dedupeWith(
-      A.filter(grouped.representatives, (source: ProcessPreparedSource) => processSourceDispatches(options, source)),
-      (left: ProcessPreparedSource, right: ProcessPreparedSource) =>
-        (left.format === "pst") === (right.format === "pst")
+      pipe(
+        collection.files,
+        A.map((source) => classifyProcessExtension(source.extension)),
+        A.filter((format) => processSourceDispatches(options, format))
+      ),
+      (left, right) => (left === "pst") === (right === "pst")
     ),
-    (source) => engineFor(source.format),
+    engineFor,
     { discard: true }
   );
 
-  const processedOutcomes = yield* Effect.forEach(
-    grouped.representatives,
-    (source) => processPreparedSource(source, options, engineFor),
-    { concurrency: FilesConcurrency.scan }
-  );
-  const outcomeByOperation = R.fromEntries(
-    A.map(processedOutcomes, (outcome) => [outcome.sourceRecord.operationId, outcome] as const)
-  );
-  const outcomes = A.getSomes(
-    A.map(prepared, (source) =>
-      O.flatMap(R.get(grouped.byId, source.artifactId), (representative) =>
-        representative === source
-          ? R.get(outcomeByOperation, source.operationId)
-          : O.some(processDuplicateOutcome(options, source, representative))
-      )
-    )
-  );
+  const outcomes = yield* processCollectedSources(collection.files, options, engineFor);
 
   const { sourceRecords } = collectSourceOutcomeRecords(outcomes);
   const coverage = makeProcessCoverage(sourceRecords);

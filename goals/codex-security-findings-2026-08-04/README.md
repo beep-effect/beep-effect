@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Capture, validate, remediate, and close every open Codex Cloud security finding
-for `kriegcloud/beep-effect` in the 26-finding batch captured on 2026-08-04.
+for `kriegcloud/beep-effect` in the 27-finding batch captured on 2026-08-04.
 Ship the fixes through one Yeet-driven PR, close the exact captured findings, and
 leave no packet-applicable finding open.
 
@@ -32,13 +32,13 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P6 publish` - all 26 findings were confirmed, assigned to five remediation
-lanes, fixed, covered by focused proof, and proven by a green full Yeet repair
-and verify run. Publication and hosted closeout are next.
+`P7 monitor` - all 27 findings were confirmed, assigned to five remediation
+lanes, and fixed. The initial batch has green local proof and PR #559 is open;
+the follow-up finding and review remediation are undergoing repo proof.
 
 ## Findings at a glance
 
-13 Medium, 7 Low, and 6 Informational findings. All source commits are ancestors
+13 Medium, 7 Low, and 7 Informational findings. All source commits are ancestors
 of the packet branch. Accepted risk is unavailable; each item must be fixed or
 closed only with strict proof that the report is already fixed or materially
 invalid.

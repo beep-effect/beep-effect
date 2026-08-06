@@ -1,5 +1,5 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
-import { ExtractFileOperation } from "@beep/file-processing/Operation";
+import { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -104,6 +104,55 @@ describe("makeTikaAppFileProcessingEngine", () => {
       }),
       fcRuns(25)
     ));
+
+  it.effect(
+    "refuses extraction when the caller omits source bytes",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const operationWithoutBytes = ExtractFileOperation.make({
+          ...operation,
+          source: SourceArtifact.make(sourceWithoutBytes),
+        });
+
+        const error = yield* engine.extract(operationWithoutBytes).pipe(Effect.flip);
+
+        expect(error.reason).toBe("file-extraction-failed");
+        expect(error.message).toContain("caller-supplied source bytes");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reports archive export as unsupported",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
+        const exportOperation = ExportArchiveOperation.make({
+          format: "pst",
+          operationId: operation.operationId,
+          operationKind: "export-archive",
+          preference: { engine: "tika" },
+          source: operation.source,
+        });
+
+        const error = yield* engine.exportArchive(exportOperation).pipe(Effect.flip);
+
+        expect(error.reason).toBe("unsupported-file-format");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
 
   it.effect(
     "extracts trimmed text and stringified metadata via tika-app",
