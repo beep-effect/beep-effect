@@ -28,7 +28,6 @@ import {
   ChatRpcs,
   ProviderUsageMetadata,
   TurnGenerationError,
-  TurnRequestStatus,
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
@@ -63,7 +62,7 @@ import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { approximateCostUsdMicros } from "./UsagePricing.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import type { IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import type { IndexedBlock, TurnHistoryItem, TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
@@ -713,9 +712,18 @@ class NotPersistedTurnRequestReceipt extends S.Class<NotPersistedTurnRequestRece
   })
 ) {}
 
-// Derived from the shared rpc literal family so the two can never drift;
-// `omitOptions` returns a literal array (not a schema), so it is re-wrapped.
-const TurnRequestReceiptStatus = LiteralKit(TurnRequestStatus.omitOptions(["unknown"])).pipe(
+// The receipt lifecycle is the shared rpc family minus "unknown". A literal
+// tuple is required (deriving via omitOptions loses tuple-ness and collapses
+// the receipt mapping below to one member); membership in the rpc family is
+// enforced where receipt statuses flow into getTurnRequestStatus's
+// TurnRequestStatus-typed return.
+const TurnRequestReceiptStatus = LiteralKit([
+  "pending",
+  "accepted",
+  "persisted",
+  "user_persisted",
+  "not_persisted",
+]).pipe(
   $I.annoteSchema("TurnRequestReceiptStatus", {
     description: "Lifecycle variants for generation-scoped chat persistence receipts.",
   })
@@ -737,7 +745,7 @@ const TurnRequestReceipts = TurnRequestReceiptStatus.mapMembers(
 );
 
 type TurnRequestReceipt = typeof TurnRequestReceipts.Type;
-type TurnRequestQueryStatus = typeof TurnRequestStatus.Type;
+type TurnRequestQueryStatus = TurnRequestStatus;
 const TURN_REQUEST_STATUS_TTL_MILLIS = Duration.toMillis(Duration.minutes(5));
 
 class TrackedTurnRequestReceipt extends S.Class<TrackedTurnRequestReceipt>($I`TrackedTurnRequestReceipt`)(

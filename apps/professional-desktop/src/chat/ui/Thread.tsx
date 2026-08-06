@@ -29,7 +29,7 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, O, P, thunkNull } from "@beep/utils";
+import { A, O, thunkNull } from "@beep/utils";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
@@ -89,7 +89,8 @@ const TurnRow = ({
   const role = turnRole(turn);
   const userMessage = A.findFirst(
     turn.items,
-    P.and(ThreadProjections.TimelineItem.guards.message, (item) => MessageRole.is.user(item.role))
+    (item): item is ThreadUseCases.TimelineMessageItem =>
+      ThreadProjections.TimelineItem.guards.message(item) && MessageRole.is.user(item.role)
   );
 
   return (

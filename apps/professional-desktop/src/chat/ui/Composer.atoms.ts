@@ -34,6 +34,7 @@ import {
 } from "./ComposerPolicy.ts";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { ComposerSafetyRefusal } from "./ComposerPolicy.ts";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Composer.atoms");
 
