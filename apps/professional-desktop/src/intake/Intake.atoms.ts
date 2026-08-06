@@ -122,9 +122,8 @@ class IntakeFileMetadata extends S.Class<IntakeFileMetadata>($I`IntakeFileMetada
  */
 export const intakeRefusal = (file: IntakeFileMetadata): O.Option<string> =>
   Match.value(file.size).pipe(
-    Match.when(
-      (size) => size > MAX_INTAKE_FILE_BYTES,
-      (size) => O.some(`${formatMegabytes(size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`)
+    Match.when(N.isGreaterThan(MAX_INTAKE_FILE_BYTES), (size) =>
+      O.some(`${formatMegabytes(size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`)
     ),
     Match.when(0, () => O.some("This file is empty, so there is nothing to file.")),
     Match.orElse(O.none<string>)

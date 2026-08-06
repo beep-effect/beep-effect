@@ -262,13 +262,45 @@ class ContradictionQaFact extends S.Class<ContradictionQaFact>($I`ContradictionQ
   })
 ) {}
 
-type EvidenceSpecification = {
-  readonly artifactFixtureKey: string;
-  readonly createdAt: number;
-  readonly publicIdSuffix: Cuid;
-  readonly span: typeof EvidenceSpan.Encoded;
-  readonly spanFixtureKey: string;
+const evidenceSpecificationFields = {
+  artifactFixtureKey: S.String,
+  createdAt: S.Finite,
+  publicIdSuffix: Cuid,
+  span: S.toEncoded(EvidenceSpan),
+  spanFixtureKey: S.String,
 };
+
+// Self-typed annotations (examples, toArbitrary, ...) must live in an explicitly
+// annotated const: inline in the extends clause they force TS to resolve the
+// class while its base type is still being computed (TS2310/TS2506).
+const evidenceSpecificationAnnotations: S.Annotations.Declaration<
+  EvidenceSpecification,
+  readonly [S.Struct<typeof evidenceSpecificationFields>]
+> = $I.annoteClass<S.declare<EvidenceSpecification>, readonly [S.Struct<typeof evidenceSpecificationFields>]>(
+  "EvidenceSpecification",
+  {
+    description: "Deterministic evidence fixture specification consumed by the contradiction browser-QA seed.",
+    examples: [
+      {
+        artifactFixtureKey: "artifactFixtureKey",
+        createdAt: 1,
+        publicIdSuffix: Cuid.make("a123"),
+        span: {
+          confidence: 0.99,
+          endChar: Str.length("The renewal notice lists 15 July 2027."),
+          quote: "The renewal notice lists 15 July 2027.",
+          startChar: 0,
+        },
+        spanFixtureKey: "",
+      },
+    ],
+  }
+);
+
+class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSpecification`)(
+  evidenceSpecificationFields,
+  evidenceSpecificationAnnotations
+) {}
 
 type BeliefSpecification = {
   readonly fact: ContradictionQaFact;

@@ -12,6 +12,7 @@ import { Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ProviderUsageMetadata } from "@beep/agents-use-cases/public";
 
@@ -99,7 +100,10 @@ export const approximateCostUsdMicros = (usage: ProviderUsageMetadata): O.Option
   O.map(
     A.findFirst(
       APPROXIMATE_MODEL_PRICES,
-      (price) => Eq.equals(price.model, usage.model) && Eq.equals(price.provider, usage.provider)
+      P.Struct({
+        model: Eq.equals(usage.model),
+        provider: Eq.equals(usage.provider),
+      })
     ),
     (price) =>
       NonNegativeInt.make(

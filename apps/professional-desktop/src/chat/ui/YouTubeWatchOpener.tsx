@@ -9,7 +9,7 @@
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, thunkNull, thunkUndefined } from "@beep/utils";
 import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Cause, Effect } from "effect";
@@ -57,7 +57,7 @@ const youtubeWatchOpenerBindingAtom = Atom.make((get) => {
   const onWatch = (event: Event): void => {
     if (!hasTauriRuntime() || !(event instanceof CustomEvent)) return;
     O.match(decodeWatchRequest(event.detail), {
-      onNone: () => undefined,
+      onNone: thunkUndefined,
       onSome: (request) => {
         event.preventDefault();
         get.set(openYouTubeWatchAtom, request);
@@ -130,8 +130,8 @@ export function YouTubeWatchOpener(): JSX.Element | null {
   const [openResult, retry] = useAtom(openYouTubeWatchAtom);
 
   return AsyncResult.match(openResult, {
-    onInitial: () => null,
-    onSuccess: () => null,
+    onInitial: thunkNull,
+    onSuccess: thunkNull,
     onFailure: ({ cause }) => renderOpenFailure(cause, retry),
   });
 }

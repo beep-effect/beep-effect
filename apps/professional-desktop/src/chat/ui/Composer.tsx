@@ -37,7 +37,7 @@ import { MentionOption } from "@beep/editor/chat/config";
 import { defaultChatSlashItems } from "@beep/editor/chat/slash-items";
 import * as Md from "@beep/md/Md.model";
 import { Button } from "@beep/ui/components/button";
-import { A, O, Str } from "@beep/utils";
+import { A, O, P, Str, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -224,7 +224,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
         </div>
       ) : null}
       {O.match(safetyRefusal, {
-        onNone: () => null,
+        onNone: thunkNull,
         onSome: (refusal) => <ComposerSafetyWarning message={refusal.message} />,
       })}
       {O.match(contentToLoad, {
@@ -251,7 +251,7 @@ function ComposerSafetyGateNotice({
   readonly onConfirm: () => boolean;
 }): JSX.Element | null {
   return O.match(gate, {
-    onNone: () => null,
+    onNone: thunkNull,
     onSome: ComposerDocumentSafetyGate.match({
       UnsafeDocument: ({ message }) => <ComposerSafetyWarning message={message} />,
       RawNormalization: ({ message, preview }) => (
@@ -266,7 +266,7 @@ function AttachmentTransportNotice(): JSX.Element | null {
   const attachments = useAtomValue(attachmentsAtom(editor));
 
   return A.match(attachments, {
-    onEmpty: () => null,
+    onEmpty: thunkNull,
     onNonEmpty: (attachments) => {
       const count = A.length(attachments);
       return (
@@ -285,7 +285,7 @@ function AttachmentTransportNotice(): JSX.Element | null {
 const editorStateAtomFor = (
   content: Md.Document | undefined
 ): Atom.Atom<AsyncResult.AsyncResult<SerializedEditorState, unknown>> =>
-  content === undefined ? emptyEditorStateAtom : documentEditorStateAtom(content);
+  P.isUndefined(content) ? emptyEditorStateAtom : documentEditorStateAtom(content);
 
 // Resolves the optional seed document to a serialized editor state through the
 // shared documentEditorStateAtom family (no runSyncExit). documentToEditorState is

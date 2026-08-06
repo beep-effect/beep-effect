@@ -37,6 +37,7 @@ import {
 import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
+import { thunkUndefined } from "@beep/utils";
 import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { invoke } from "@tauri-apps/api/core";
 import { Effect } from "effect";
@@ -121,7 +122,7 @@ const devRpcSessionToken = (): string | undefined => {
 
 const browserSidecarTransport = (): SidecarTransport => {
   const token = devRpcSessionToken();
-  return token === undefined
+  return P.isUndefined(token)
     ? SidecarTransport.make({ ipc: false })
     : SidecarTransport.make({ ipc: false, rpcSessionToken: token });
 };
@@ -155,10 +156,11 @@ const ContradictionTriageSurface = (): JSX.Element => {
       Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
     </div>
   );
+  const thunkUnavailable = () => unavailable;
 
   return AsyncResult.match(transport, {
-    onInitial: () => unavailable,
-    onFailure: () => unavailable,
+    onInitial: thunkUnavailable,
+    onFailure: thunkUnavailable,
     onSuccess: ({ value }) => (hasDesktopRpcAccess(value) ? <ContradictionTriagePanel /> : unavailable),
   });
 };
@@ -229,9 +231,9 @@ const focusPanelGroup = (
   key: DesktopPanelKey
 ): void =>
   O.match(DockWorkspace.findTabsForPanel(workspace, desktopPanelId(key)), {
-    onNone: () => undefined,
+    onNone: thunkUndefined,
     onSome: (tabs) => {
-      if (api !== undefined) graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId));
+      if (P.isNotUndefined(api)) graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId));
     },
   });
 
@@ -296,7 +298,7 @@ const initializeDockApiAtom = professionalBrowserRuntime.fn<InitializeDockApi>()
           })
       );
       O.match(bootGroup, {
-        onNone: () => undefined,
+        onNone: thunkUndefined,
         onSome: (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)),
       });
     });

@@ -3,6 +3,7 @@ import "./styles/globals.css";
 import "./styles/dock.css";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { P, Str } from "@beep/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -40,7 +41,7 @@ class RendererObservabilityConfig extends S.Class<RendererObservabilityConfig>($
 const decodeRendererObservabilityConfig = S.decodeUnknownEffect(RendererObservabilityConfig);
 
 const setRuntimeString = (key: string, value: string | undefined): void => {
-  if (value !== undefined && value.length > 0) Reflect.set(globalThis, key, value);
+  if (P.isNotUndefined(value) && Str.isNonEmpty(value)) Reflect.set(globalThis, key, value);
 };
 
 const loadRendererObservabilityConfig = Effect.fn("professional_desktop.bootstrap.load_renderer_observability_config")(
@@ -60,9 +61,8 @@ const loadRendererObservabilityConfig = Effect.fn("professional_desktop.bootstra
 
 const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
   yield* loadRendererObservabilityConfig().pipe(
-    Effect.catchCause((cause) =>
+    Effect.catchCause(
       logRedactedCause(
-        cause,
         LogRedactedCauseOptions.make({
           message: "professional desktop renderer observability bootstrap failed",
           level: "Warn",
@@ -76,9 +76,8 @@ const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
     Effect.withSpan("professional_desktop.bootstrap.renderer_observability")
   );
   yield* migrateWorkbenchThemeMode().pipe(
-    Effect.catchCause((cause) =>
+    Effect.catchCause(
       logRedactedCause(
-        cause,
         LogRedactedCauseOptions.make({
           message: "professional desktop theme preference migration failed",
           level: "Warn",
@@ -91,7 +90,7 @@ const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
     ),
     Effect.withSpan("professional_desktop.bootstrap.theme_preference_migration")
   );
-  if (root === null) return;
+  if (P.isNull(root)) return;
 
   createRoot(root).render(
     <StrictMode>

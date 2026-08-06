@@ -586,25 +586,28 @@ const logAtRedactedCauseLevel = (level: RedactedCauseLogLevel, message: string):
  * @since 0.0.0
  * @category observability
  */
-export const logRedactedCause = Effect.fn("observability.log_redacted_cause")(function* (
-  input: unknown,
-  options: LogRedactedCauseOptions
-) {
-  const redacted = yield* redactCauseEffect(input);
-  const baseAttributes = {
-    ...(options.attributes ?? {}),
-    cause_classification: redacted.tag,
-    cause_fingerprint: redacted.fingerprint,
-    cause_message: redacted.message,
-    cause_truncated: `${redacted.truncated}`,
-  };
-  const attributes = O.match(redacted.detail, {
-    onNone: () => baseAttributes,
-    onSome: (causeDetail) => ({ ...baseAttributes, cause_detail: causeDetail }),
-  });
+export const logRedactedCause: {
+  (input: unknown, options: LogRedactedCauseOptions): Effect.Effect<void>;
+  (options: LogRedactedCauseOptions): (input: unknown) => Effect.Effect<void>;
+} = dual(
+  2,
+  Effect.fn("observability.log_redacted_cause")(function* (input: unknown, options: LogRedactedCauseOptions) {
+    const redacted = yield* redactCauseEffect(input);
+    const baseAttributes = {
+      ...(options.attributes ?? {}),
+      cause_classification: redacted.tag,
+      cause_fingerprint: redacted.fingerprint,
+      cause_message: redacted.message,
+      cause_truncated: `${redacted.truncated}`,
+    };
+    const attributes = O.match(redacted.detail, {
+      onNone: () => baseAttributes,
+      onSome: (causeDetail) => ({ ...baseAttributes, cause_detail: causeDetail }),
+    });
 
-  return yield* logAtRedactedCauseLevel(options.level, options.message).pipe(Effect.annotateLogs(attributes));
-});
+    return yield* logAtRedactedCauseLevel(options.level, options.message).pipe(Effect.annotateLogs(attributes));
+  })
+);
 
 /**
  * Observe every failing exit of an Effect with sanitized Cause logging while
@@ -628,5 +631,5 @@ export const tapRedactedCause: {
   <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions): Effect.Effect<A, E, R>;
   (options: LogRedactedCauseOptions): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 } = dual(2, <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions) =>
-  effect.pipe(Effect.tapCause((cause) => logRedactedCause(cause, options)))
+  effect.pipe(Effect.tapCause(logRedactedCause(options)))
 );

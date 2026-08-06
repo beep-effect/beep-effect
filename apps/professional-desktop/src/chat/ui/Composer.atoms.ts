@@ -21,8 +21,8 @@ import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { documentSafetyIssues, refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
 import { LiteralKit } from "@beep/schema";
 import { toast } from "@beep/ui/components/sonner";
-import { A, O, Str } from "@beep/utils";
-import { Effect, Match, Result, Tuple } from "effect";
+import { A, O, Str, thunkUndefined } from "@beep/utils";
+import { Effect, flow, Match, Result, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
@@ -95,23 +95,23 @@ class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`ComposerSa
   })
 ) {}
 
-const normalizeLegacyInline = (inline: Md.Inline): Md.Inline =>
-  Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      text: (node) => node,
-      rawMarkdown: ({ value }) => Md.Text.make({ value }),
-      rawHtml: ({ value }) => Md.Text.make({ value }),
-      strong: ({ children }) => Md.Strong.make({ children: A.map(children, normalizeLegacyInline) }),
-      em: ({ children }) => Md.Em.make({ children: A.map(children, normalizeLegacyInline) }),
-      del: ({ children }) => Md.Del.make({ children: A.map(children, normalizeLegacyInline) }),
-      code: (node) => node,
-      a: ({ children, href, title }) => Md.A.make({ children: A.map(children, normalizeLegacyInline), href, title }),
-      img: (node) => node,
-      br: (node) => node,
-      inlineMath: (node) => node,
-      footnoteReference: (node) => node,
-    })
-  );
+const normalizeLegacyInline: (inline: Md.Inline) => Md.Inline = Match.type<Md.Inline>().pipe(
+  Match.withReturnType<Md.Inline>(),
+  Match.tags({
+    rawMarkdown: ({ value }) => Md.Text.make({ value }),
+    rawHtml: ({ value }) => Md.Text.make({ value }),
+    strong: ({ children }) => Md.Strong.make({ children: A.map(children, normalizeLegacyInline) }),
+    em: ({ children }) => Md.Em.make({ children: A.map(children, normalizeLegacyInline) }),
+    del: ({ children }) => Md.Del.make({ children: A.map(children, normalizeLegacyInline) }),
+    a: ({ children, href, title }) =>
+      Md.A.make({
+        children: A.map(children, normalizeLegacyInline),
+        href,
+        title,
+      }),
+  }),
+  Match.orElse((node) => node)
+);
 
 const normalizeLegacyListChild = (child: Md.ListItemChild): Md.ListItemChild =>
   Md.Inline.is(child) ? normalizeLegacyInline(child) : normalizeLegacyBlock(child);
@@ -121,42 +121,55 @@ const normalizeLegacyListItems = (items: ReadonlyArray<Md.Li>): ReadonlyArray<Md
 
 const normalizeLegacyTaskItems = (items: ReadonlyArray<Md.TaskItem>): ReadonlyArray<Md.TaskItem> =>
   A.map(items, ({ checked, children }) =>
-    Md.TaskItem.make({ checked, children: A.map(children, normalizeLegacyListChild) })
-  );
-
-function normalizeLegacyBlock(block: Md.Block): Md.Block {
-  return Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: ({ children, level }) => Md.Heading.make({ children: A.map(children, normalizeLegacyInline), level }),
-      p: ({ children }) => Md.P.make({ children: A.map(children, normalizeLegacyInline) }),
-      blockquote: ({ children }) => Md.BlockQuote.make({ children: A.map(children, normalizeLegacyBlock) }),
-      pre: (node) => node,
-      ul: ({ children }) => Md.Ul.make({ children: normalizeLegacyListItems(children) }),
-      ol: ({ children, start }) => Md.Ol.make({ children: normalizeLegacyListItems(children), start }),
-      taskList: ({ children }) => Md.TaskList.make({ children: normalizeLegacyTaskItems(children) }),
-      table: ({ align, children, headerRow }) =>
-        Md.Table.make({
-          align,
-          headerRow,
-          children: A.map(children, ({ children: cells }) =>
-            Md.TableRow.make({
-              children: A.map(cells, ({ children: inlines }) =>
-                Md.TableCell.make({ children: A.map(inlines, normalizeLegacyInline) })
-              ),
-            })
-          ),
-        }),
-      youtube: (node) => node,
-      mathBlock: (node) => node,
-      footnoteDefinition: ({ children, identifier }) =>
-        Md.FootnoteDefinition.make({ children: A.map(children, normalizeLegacyBlock), identifier }),
-      admonition: ({ children, kind, title }) =>
-        Md.Admonition.make({ children: A.map(children, normalizeLegacyBlock), kind, title }),
-      embed: (node) => node,
-      hr: (node) => node,
+    Md.TaskItem.make({
+      checked,
+      children: A.map(children, normalizeLegacyListChild),
     })
   );
-}
+
+const normalizeLegacyBlock: (block: Md.Block) => Md.Block = Match.type<Md.Block>().pipe(
+  Match.withReturnType<Md.Block>(),
+  Match.tags({
+    heading: ({ children, level }) =>
+      Md.Heading.make({
+        children: A.map(children, normalizeLegacyInline),
+        level,
+      }),
+    p: ({ children }) => Md.P.make({ children: A.map(children, normalizeLegacyInline) }),
+    blockquote: ({ children }) => Md.BlockQuote.make({ children: A.map(children, normalizeLegacyBlock) }),
+    ul: ({ children }) => Md.Ul.make({ children: normalizeLegacyListItems(children) }),
+    ol: ({ children, start }) =>
+      Md.Ol.make({
+        children: normalizeLegacyListItems(children),
+        start,
+      }),
+    taskList: ({ children }) => Md.TaskList.make({ children: normalizeLegacyTaskItems(children) }),
+    table: ({ align, children, headerRow }) =>
+      Md.Table.make({
+        align,
+        headerRow,
+        children: A.map(children, ({ children: cells }) =>
+          Md.TableRow.make({
+            children: A.map(cells, ({ children: inlines }) =>
+              Md.TableCell.make({ children: A.map(inlines, normalizeLegacyInline) })
+            ),
+          })
+        ),
+      }),
+    footnoteDefinition: ({ children, identifier }) =>
+      Md.FootnoteDefinition.make({
+        children: A.map(children, normalizeLegacyBlock),
+        identifier,
+      }),
+    admonition: ({ children, kind, title }) =>
+      Md.Admonition.make({
+        children: A.map(children, normalizeLegacyBlock),
+        kind,
+        title,
+      }),
+  }),
+  Match.orElse((node) => node)
+);
 
 /**
  * Converts legacy trusted raw Markdown/HTML nodes to ordinary text nodes.
@@ -275,22 +288,27 @@ export type ComposerDocumentSafetyGate = typeof ComposerDocumentSafetyGate.Type;
 const rawNormalizationMessage =
   "This legacy draft contains trusted raw Markdown or HTML. Review the escaped literal copy before sending.";
 
-interface DocumentViolationFlags {
-  readonly footnote: boolean;
-  readonly raw: boolean;
-  readonly scalar: boolean;
-  readonly url: boolean;
+class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
+  {
+    footnote: S.Boolean,
+    raw: S.Boolean,
+    scalar: S.Boolean,
+    url: S.Boolean,
+  },
+  $I.annote("DocumentViolationFlags", {
+    description: "",
+  })
+) {
+  static readonly empty = DocumentViolationFlags.make({
+    footnote: false,
+    raw: false,
+    scalar: false,
+    url: false,
+  });
 }
 
-const emptyDocumentViolationFlags: DocumentViolationFlags = {
-  footnote: false,
-  raw: false,
-  scalar: false,
-  url: false,
-};
-
 const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>): DocumentViolationFlags =>
-  A.reduce(issues, emptyDocumentViolationFlags, (flags, issue) =>
+  A.reduce(issues, DocumentViolationFlags.empty, (flags, issue) =>
     Match.value(issue).pipe(
       Match.tagsExhaustive({
         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
@@ -301,9 +319,9 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
     )
   );
 
-const documentViolationReason = (issues: ReadonlyArray<DocumentSafetyViolation>): string => {
-  const flags = documentViolationFlags(issues);
-  return Match.value(flags).pipe(
+const documentViolationReason = flow(
+  documentViolationFlags,
+  Match.type<DocumentViolationFlags>().pipe(
     Match.when(
       { footnote: true, scalar: true, url: true },
       () =>
@@ -325,8 +343,8 @@ const documentViolationReason = (issues: ReadonlyArray<DocumentSafetyViolation>)
     Match.when({ scalar: true }, () => "unsupported text encoding (a NUL character or lone UTF-16 surrogate)"),
     Match.when({ url: true }, () => "a link or embedded URL outside the safe destination policy"),
     Match.orElse(() => "trusted raw Markdown or HTML")
-  );
-};
+  )
+);
 
 const unsafeDocumentMessage = (issues: ReadonlyArray<DocumentSafetyViolation>): string =>
   `This draft contains ${documentViolationReason(issues)}. Edit or replace that content before sending.`;
@@ -541,7 +559,12 @@ const submitComposerAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =
         O.filter(ctx(editTargetAtom), (target) => target.threadId === threadId),
         {
           onNone: () => SendTurnRequest.make({ threadId, content }),
-          onSome: (target) => EditTurnRequest.make({ threadId, turnId: target.turnId, content }),
+          onSome: (target) =>
+            EditTurnRequest.make({
+              threadId,
+              turnId: target.turnId,
+              content,
+            }),
         }
       );
       ctx.set(runTurnAtom, request);
@@ -560,7 +583,7 @@ const stopComposerAtom = professionalBrowserRuntime.fn<void>()(
 const cancelComposerEditAtom = professionalBrowserRuntime.fn<void>()(
   Effect.fnUntraced(function* (_, ctx) {
     O.match(ctx(editTargetAtom), {
-      onNone: () => undefined,
+      onNone: thunkUndefined,
       onSome: (target) => {
         ctx.set(composerConfirmedNormalizationAtoms(target.threadId)(target.content), O.none());
       },
@@ -620,7 +643,10 @@ export const composerDocumentFromEditorState: {
   (seed: Md.Document, state: SerializedEditorState): Md.Document;
 } = dual(2, (seed: Md.Document, state: SerializedEditorState): Md.Document => {
   const projected = editorStateToDocument(state);
-  return Md.Document.make({ children: projected.children, frontmatter: seed.frontmatter });
+  return Md.Document.make({
+    children: projected.children,
+    frontmatter: seed.frontmatter,
+  });
 });
 
 /**

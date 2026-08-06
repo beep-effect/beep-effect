@@ -22,7 +22,7 @@ import {
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { A, N, O, pipe, thunkNull } from "@beep/utils";
+import { A, N, O, pipe, thunkEmptyStr, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Duration, Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
@@ -320,7 +320,7 @@ export function Graph3DSpike(): JSX.Element {
           {pipe(
             heap,
             O.map((megabytes) => ` heap ${megabytes}MB`),
-            O.getOrElse(() => "")
+            O.getOrElse(thunkEmptyStr)
           )}
         </div>
         {O.match(stats, {

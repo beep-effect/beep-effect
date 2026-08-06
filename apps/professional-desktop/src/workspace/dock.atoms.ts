@@ -424,7 +424,7 @@ const restoreOperation = (): DockAtomOperation =>
     }),
   });
 
-const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make({});
+const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make();
 
 /**
  * Builds the desktop dock graph: validated default workspace, live engine,

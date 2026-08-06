@@ -8,7 +8,7 @@
 "use client";
 
 import { Button } from "@beep/ui/components/button";
-import { A, O } from "@beep/utils";
+import { A, O, thunkNull } from "@beep/utils";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
@@ -88,9 +88,9 @@ const VaultSyncStatusView = ({
 
 const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState }): JSX.Element | null =>
   VaultSyncPanelState.match(state, {
-    idle: () => null,
-    syncing: () => null,
-    reviewing: () => null,
+    idle: thunkNull,
+    syncing: thunkNull,
+    reviewing: thunkNull,
     succeeded: ({ message }) => (
       <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
         {message}

@@ -36,6 +36,7 @@ import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit } from "@beep/schema";
+import { A, Eq, flow, O, Str, thunkEffectVoid, thunkFalse } from "@beep/utils";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
 import {
@@ -56,10 +57,7 @@ import {
   Stream,
   Tuple,
 } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { approximateCostUsdMicros } from "./UsagePricing.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
@@ -127,8 +125,8 @@ const isFirstUserMessageTurn = (timeline: Thread.ThreadTimeline, turnId: Workspa
   pipe(
     firstUserMessageTurnId(timeline),
     O.match({
-      onNone: () => false,
-      onSome: (firstUserTurnId) => firstUserTurnId === turnId,
+      onNone: thunkFalse,
+      onSome: Eq.equals(turnId),
     })
   );
 
@@ -180,11 +178,10 @@ const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArra
     A.flatMap((turn) =>
       A.flatMap(
         turn.items,
-        (item): ReadonlyArray<TurnHistoryItem> =>
-          Thread.TimelineItem.match({
-            message: messageItemToHistory,
-            tool_call: () => [],
-          })(item)
+        Thread.TimelineItem.match({
+          message: messageItemToHistory,
+          tool_call: A.emptyReadonly<TurnHistoryItem>,
+        })
       )
     )
   );
@@ -432,18 +429,20 @@ const streamAndPersist = (
               threadId
             ).pipe(
               Effect.flatMap(usage.append),
-              Effect.tapError((error) =>
-                logRedactedCause(
-                  Cause.fail(error),
-                  LogRedactedCauseOptions.make({
-                    message: "assistant turn persisted but its usage record was not recorded",
-                    level: "Warn",
-                    attributes: {
-                      context: "SendMessage.usage",
-                      kind,
-                      subsystem: "chat",
-                    },
-                  })
+              Effect.tapError(
+                flow(
+                  Cause.fail,
+                  logRedactedCause(
+                    LogRedactedCauseOptions.make({
+                      message: "assistant turn persisted but its usage record was not recorded",
+                      level: "Warn",
+                      attributes: {
+                        context: "SendMessage.usage",
+                        kind,
+                        subsystem: "chat",
+                      },
+                    })
+                  )
                 )
               ),
               Effect.ignore
@@ -544,17 +543,19 @@ const streamAndPersist = (
             Exit.isSuccess(exit)
               ? Effect.void
               : persist(O.some(Cause.hasInterrupts(exit.cause) ? STOPPED_NOTE : FAILED_NOTE)).pipe(
-                  Effect.tapError((error) =>
-                    logRedactedCause(
-                      Cause.fail(error),
-                      LogRedactedCauseOptions.make({
-                        message: "chat turn could not record its interruption",
-                        level: "Warn",
-                        attributes: {
-                          context: "SendMessage.persistInterrupted",
-                          subsystem: "chat",
-                        },
-                      })
+                  Effect.tapError(
+                    flow(
+                      Cause.fail,
+                      logRedactedCause(
+                        LogRedactedCauseOptions.make({
+                          message: "chat turn could not record its interruption",
+                          level: "Warn",
+                          attributes: {
+                            context: "SendMessage.persistInterrupted",
+                            subsystem: "chat",
+                          },
+                        })
+                      )
                     )
                   ),
                   Effect.ignore
@@ -589,22 +590,24 @@ const setTitleFromFirstUserMessage = (
     deriveThreadTitle(content),
     O.map((title) =>
       store.setTitleIfEmpty({ threadId, emptyTitle, title }).pipe(
-        Effect.catch((error) =>
-          logRedactedCause(
-            Cause.fail(error),
-            LogRedactedCauseOptions.make({
-              message: "chat title derivation skipped",
-              level: "Warn",
-              attributes: {
-                context: "SendMessage.setTitleIfEmpty",
-                subsystem: "chat",
-              },
-            })
+        Effect.catch(
+          flow(
+            Cause.fail,
+            logRedactedCause(
+              LogRedactedCauseOptions.make({
+                message: "chat title derivation skipped",
+                level: "Warn",
+                attributes: {
+                  context: "SendMessage.setTitleIfEmpty",
+                  subsystem: "chat",
+                },
+              })
+            )
           )
         )
       )
     ),
-    O.getOrElse(() => Effect.void)
+    O.getOrElse(thunkEffectVoid)
   );
 
 const titleGuardForEditedTurn = (
@@ -616,18 +619,21 @@ const titleGuardForEditedTurn = (
     Effect.map((timeline) =>
       isFirstUserMessageTurn(timeline, turnId) ? titleGuardForEditedFirstUserTurn(timeline, turnId) : O.none()
     ),
-    Effect.catch((error) =>
-      logRedactedCause(
-        Cause.fail(error),
-        LogRedactedCauseOptions.make({
-          message: "chat title derivation skipped",
-          level: "Warn",
-          attributes: {
-            context: "EditMessage.firstUserTitleGate",
-            subsystem: "chat",
-          },
-        })
-      ).pipe(Effect.as(O.none<string>()))
+    Effect.catch(
+      flow(
+        Cause.fail,
+        logRedactedCause(
+          LogRedactedCauseOptions.make({
+            message: "chat title derivation skipped",
+            level: "Warn",
+            attributes: {
+              context: "EditMessage.firstUserTitleGate",
+              subsystem: "chat",
+            },
+          })
+        ),
+        Effect.as(O.none<string>())
+      )
     )
   );
 
@@ -851,7 +857,7 @@ const trackTurnRequest = <A, E>(
       Effect.flatMap((now) =>
         Ref.update(coordinator.turnRequestStatuses, (statuses) =>
           HashMap.set(
-            HashMap.filter(statuses, (tracked) => !O.exists(tracked.expiresAt, (expiresAt) => expiresAt <= now)),
+            HashMap.filter(statuses, (tracked) => !O.exists(tracked.expiresAt, N.isLessThanOrEqualTo(now))),
             requestId,
             TrackedTurnRequestReceipt.make({
               receipt: pendingReceipt,

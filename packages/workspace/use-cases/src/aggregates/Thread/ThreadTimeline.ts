@@ -61,7 +61,9 @@ export class TimelineMessageItem extends S.Class<TimelineMessageItem>($I`Timelin
   $I.annote("TimelineMessageItem", {
     description: "Timeline item resolving a turn message reference to its role and md-aligned content.",
   })
-) {}
+) {
+  static readonly is = (i: unknown) => S.is(this)(i);
+}
 
 const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
 
@@ -98,7 +100,9 @@ export class TimelineToolCallItem extends S.Class<TimelineToolCallItem>($I`Timel
   $I.annote("TimelineToolCallItem", {
     description: "Timeline item placeholder summarizing a turn tool-call request by name.",
   })
-) {}
+) {
+  static readonly is = (i: unknown) => S.is(this)(i);
+}
 
 /**
  * Resolved timeline item for a turn.

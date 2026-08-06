@@ -29,9 +29,10 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, Eq, N, O, thunkNull } from "@beep/utils";
-import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
+import { A, Eq, N, O, P, thunkNull } from "@beep/utils";
+import { Thread as ThreadProjections, Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
+import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
@@ -44,7 +45,6 @@ import {
 } from "./Thread.atoms.ts";
 import type { StreamingTurn } from "@beep/agents-client/Chat.atoms";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import type { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import type { JSX } from "react";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
@@ -58,7 +58,11 @@ const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
 );
 
 const TimelineItemRow = ({ item }: { readonly item: TimelineItem }): JSX.Element =>
-  item.kind === "message" ? <MessageView content={item.content} /> : <ToolCallChip name={item.name} />;
+  S.is(ThreadUseCases.TimelineMessageItem)(item) ? (
+    <MessageView content={item.content} />
+  ) : (
+    <ToolCallChip name={item.name} />
+  );
 
 const turnRole = (turn: TimelineTurn): string => {
   const first = A.findFirst(turn.items, (item) => item.kind === "message");
@@ -96,18 +100,26 @@ const TurnRow = ({
         <div className="mt-1 flex items-center gap-2">
           {O.match(userMessage, {
             onNone: thunkNull,
-            onSome: (item) =>
-              item.kind === "message" ? (
+            onSome: ThreadProjections.TimelineItem.match({
+              message: (item) => (
                 <Button
                   variant="ghost"
                   size="xs"
                   title="Edit — rewrites the thread from here"
-                  onClick={() => editTurn({ threadId, turnId: turn.turnId, content: item.content })}
+                  onClick={() =>
+                    editTurn({
+                      threadId,
+                      turnId: turn.turnId,
+                      content: item.content,
+                    })
+                  }
                   data-testid="turn-edit"
                 >
                   Edit
                 </Button>
-              ) : null,
+              ),
+              tool_call: thunkNull,
+            }),
           })}
           {/* version selector affordance — only when this turn participates in
               a branch point created by an edit. */}
@@ -130,11 +142,14 @@ const resolvableParentTurnId = (
   turn: TimelineTurn
 ): O.Option<WorkspaceIdentity.TurnId> =>
   turn.parentTurnId.pipe(
-    O.filter((parentTurnId) => !Eq.equals(parentTurnId, turn.turnId)),
+    O.filter(P.not(Eq.equals(turn.turnId))),
     O.filter((parentTurnId) =>
       A.some(
         allTurns,
-        (candidate) => Eq.equals(candidate.turnId, parentTurnId) && N.isLessThan(candidate.turnIndex, turn.turnIndex)
+        P.Struct({
+          turnId: Eq.equals(parentTurnId),
+          turnIndex: N.isLessThan(turn.turnIndex),
+        })
       )
     )
   );
@@ -255,12 +270,12 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   useAtomSubscribe(unreconciledAtom, scrollThread);
 
   // a turn keeps streaming in its own thread when the user navigates away.
-  const streamingHere = O.filter(streaming, (turn) => turn.threadId === threadId);
+  const streamingHere = O.filter(streaming, P.Struct({ threadId: Eq.equals(threadId) }));
   // A success is authoritative for timeline fallbacks, but it cannot identify
   // an exact request whose receipt RPC stayed unavailable. Keep those prompts
   // visible and non-sendable until exact persistence evidence resolves.
   const displayedUnreconciled = AsyncResult.isSuccess(timeline)
-    ? A.filter(unreconciled, (turn) => turn.reconciliation === "receipt")
+    ? A.filter(unreconciled, P.Struct({ reconciliation: Eq.equals("receipt") }))
     : unreconciled;
 
   // The conversation as it now stands: an edited turn and the exchange it
@@ -268,7 +283,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   // (The transcript used to fall back to every turn once streaming finished, so
   // the tail the rewrite banner promised to discard came straight back.)
   const timelineTurns = O.match(AsyncResult.value(timeline), {
-    onNone: () => [],
+    onNone: A.empty<never>,
     onSome: (value) => value.turns,
   });
   const allTurns = ThreadProjections.activeBranchTurns(timelineTurns);
@@ -277,14 +292,14 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
     O.match(
       O.flatMap(localTurn.truncateFrom, (truncateFrom) =>
-        A.findFirstIndex(allTurns, (turn) => turn.turnId === truncateFrom)
+        A.findFirstIndex(allTurns, P.Struct({ turnId: Eq.equals(truncateFrom) }))
       ),
       {
         onNone: () => earliest,
         onSome: (index) =>
           O.some(
             earliest.pipe(
-              O.map((current) => N.min(current, index)),
+              O.map(N.min(index)),
               O.getOrElse(() => index)
             )
           ),

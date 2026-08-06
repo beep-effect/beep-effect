@@ -6,7 +6,7 @@
  */
 
 import { editTargetAtom, unreconciledTurnAtoms } from "@beep/agents-client/Chat.atoms";
-import { A, O, P } from "@beep/utils";
+import { A, Eq, O, P, thunkEffectVoid } from "@beep/utils";
 import { Effect } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -109,7 +109,7 @@ export const scrollThreadAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
       );
       if (readerMovedAway) return;
       yield* O.match(ctx(threadBottomAtoms(threadId)), {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (element) =>
           Effect.sync(() => {
             const scrollToBottom = () => element.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -143,11 +143,11 @@ export const reconcileThreadTimelineAtoms = Atom.family((threadId: WorkspaceIden
     Effect.fn("professional_desktop.chat.reconcile_thread_timeline")(function* (timeline, ctx) {
       const unreconciledAtom = unreconciledTurnAtoms(threadId);
       const unreconciled = ctx(unreconciledAtom);
-      if (AsyncResult.isSuccess(timeline) && A.some(unreconciled, (turn) => turn.reconciliation === "timeline")) {
-        ctx.set(
-          unreconciledAtom,
-          A.filter(unreconciled, (turn) => turn.reconciliation === "receipt")
-        );
+      if (
+        AsyncResult.isSuccess(timeline) &&
+        A.some(unreconciled, P.Struct({ reconciliation: Eq.equals("timeline") }))
+      ) {
+        ctx.set(unreconciledAtom, A.filter(unreconciled, P.Struct({ reconciliation: Eq.equals("receipt") })));
       }
       ctx.set(scrollThreadAtoms(threadId), timeline);
     })

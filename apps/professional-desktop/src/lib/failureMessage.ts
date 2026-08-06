@@ -6,7 +6,8 @@
  */
 
 import { redactCauseForClient } from "@beep/observability";
-import * as P from "effect/Predicate";
+import { P } from "@beep/utils";
+import * as Str from "effect/String";
 
 /**
  * Best-effort human-readable message from an unknown failure cause, falling
@@ -29,8 +30,11 @@ import * as P from "effect/Predicate";
 export const failureMessageOr =
   (fallback: string) =>
   (cause: unknown): string =>
-    P.isError(cause) && cause.message.length > 0
+    P.isError(cause) && P.Struct({ message: Str.isNonEmpty })
       ? redactCauseForClient(cause).message
-      : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
+      : P.isObject(cause) &&
+          P.hasProperty(cause, "message") &&
+          P.isString(cause.message) &&
+          Str.isNonEmpty(cause.message)
         ? redactCauseForClient(cause).message
         : fallback;
