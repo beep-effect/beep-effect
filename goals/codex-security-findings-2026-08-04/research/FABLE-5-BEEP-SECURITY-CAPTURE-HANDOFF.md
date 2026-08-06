@@ -1,14 +1,13 @@
 # Fable 5 Handoff: Automate Codex Security Finding Packets
 
-You are Fable 5 working in
-`/home/elpresidank/YeeBois/projects/beep-effect11`.
+You are Fable 5 working at the repository root.
 
 Research, design, plan, and orchestrate implementation of a `beep-cli` workflow
 that captures the repository's open Codex Cloud security findings, bootstraps or
 refreshes a goal packet, validates it, and leaves an immediately executable
-goal launcher. Do not begin implementation until PR #559 has merged. Then sync
-a fresh feature branch from `origin/main` and re-audit current repo law, CLI
-topology, prior security packets, and the live Codex export contract.
+goal launcher. PR #559 has merged as `e6c371e1f1`; sync a fresh feature branch
+from `origin/main`, then re-audit current repo law, CLI topology, prior security
+packets, and the live Codex export contract.
 
 ## Non-negotiable security boundary
 
