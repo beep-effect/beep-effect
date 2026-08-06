@@ -62,11 +62,14 @@ assert filing promotion stays blocked until an attorney disposition covers
 the AI event's exact observation version, then flips blocked again when a
 newer observation version of the same source arrives (staleness re-blocks:
 the superseded event stops blocking only once the newer event is itself
-dispositioned). The quarantine branch is proven against a hand-constructed
-fixture (no live producer until `uspto-prosecution-read` lands its
-raw-preserving unknown-code failures). Verify with the standard slice test
-lane (`@effect/vitest` `layer()` over in-memory test layers only — no other
-slice booted, no app runtime Layer).
+dispositioned). A second `PatentReference` carries its own AI-discovered
+event so the gate's quantifier is exercised above cardinality one: with both
+events current, disposing only one leaves promotion blocked, and only
+disposing both releases it. The quarantine branch is proven against a
+hand-constructed fixture (no live producer until `uspto-prosecution-read`
+lands its raw-preserving unknown-code failures). Verify with the standard
+slice test lane (`@effect/vitest` `layer()` over in-memory test layers only
+— no other slice booted, no app runtime Layer).
 
 ## Capability Check
 
@@ -77,10 +80,12 @@ slice booted, no app runtime Layer).
 | Citing-application identity | **REUSE + NET-NEW:** live `ApplicationNumber` (WIPO ST.13) at `packages/law-practice/domain/src/values/ApplicationNumber/`; **NET-NEW** law-owned union member mirroring the USPTO eight-digit normalized shape (`UsptoApplicationNumber` at `packages/drivers/uspto/src/Uspto.models.ts` — mirrored, never imported: domain never imports drivers), with explicit conversion — never `OfficeAction`'s free-text `applicationNumber`, never a `PatentAsset` fixture key, and never ST.13-only. |
 | Entity identity | **NET-NEW (required registration):** `PatentCitationEventId` / `CandorDispositionId` in `packages/shared/domain/src/identity/LawPractice.ts` — every law-practice entity takes its id from there (precedent: `PriorArtReferenceId`, `LawPractice.ts:293`, consumed at `PriorArtReference.model.ts:51`). |
 | Evidence grounding | **REUSE:** `TextAnchor` / `VerifiedTextAnchor` / `TextAnchorVerificationReceipt` / `verifyTextAnchor` at `packages/foundation/modeling/provenance/src/` (`TextAnchor.ts`, `VerifiedTextAnchor.ts`); persisted receipts are not live proof — re-verification required before any "current" claim. Epistemic's `EvidenceSpan` is NOT embedded (forbidden cross-slice edge). |
-| Source-version identity | **REUSE:** `SourceTextIdentity` at `packages/foundation/modeling/provenance/src/SourceTextIdentity.ts`; binding the USPTO observation identity (parser/vocabulary versions, checksums, freshness) is a gated criterion on the `uspto-prosecution-read` SPEC. |
+| Source-version identity | **REUSE:** `SourceTextIdentity` at `packages/foundation/modeling/provenance/src/SourceTextIdentity.ts` — digests plus pinned extractor/normalization versions, and no revision order, parent relation, or head marker, so currency is declared by explicit supersession on the event (`EdgeVersion.supersedesId` posture at `packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts:141` — pattern only, never imported), never inferred from arrival or observation time. Binding that lineage to the USPTO observation identity (parser/vocabulary versions, checksums, retrieval time, freshness, cursor/upstream identity) is a gated criterion on the `uspto-prosecution-read` SPEC. |
+| Canonical source text | **REUSE:** `SourceTextResolver` port with `ResolveSourceTextRequest` / `ResolvedSourceText` at `packages/foundation/capability/file-processing/src/SourceText/index.ts` (shape `:357`, service `:374`); `@beep/law-practice-use-cases` already declares `@beep/file-processing` (`package.json:52`) and `standards/ARCHITECTURE.md:622-623` permits use-cases → foundation/capability. A NET-NEW resolution service is a named no-go. Rung 1 uses a `Layer.succeed` fixture layer (precedent: `packages/epistemic/server/test/ContradictionTriage.observability.test.ts:67`); live layers are wired at the app entrypoint (`apps/professional-desktop/src/runtime/Layer.ts:218`, `:295`), never from law-practice. |
 | Fragment identity (optional) | **REUSE neighbors:** `Claim`, `PatentDocumentTriplet`, `DurableLocator` under `packages/law-practice/domain/src/`; **NET-NEW (rung-1 optional / later-rung child):** `PatentFragmentLocator` value object beside them, composing verified anchors (align decision: law-practice home). |
 | Citation event | **NET-NEW:** `PatentCitationEvent` entity in `law-practice/domain` — actor LiteralKit domain, tagged discovery-provenance union, observation/submission times, explicit staleness + explicit quarantine states that never rewrite evidence. |
 | Attorney judgment | **NET-NEW:** `CandorDisposition` entity — dated, scoped, exact-event + exact-observation-version binding, minimal LiteralKit judgment vocabulary; judgment never computed (hard fact/judgment split, align decision). |
+| Disposition authorship | **REUSE:** `createdByPrincipal: Principal` on every `BaseEntity` entity (`packages/shared/domain/src/entity/BaseEntity.ts:82`, persisted at `:108`; precedent `PriorArtReference.model.ts:50`), a union discriminating `User`/`Agent`/`ServiceAccount`/`System` (`packages/shared/domain/src/entity/Principal.ts`) — the predicate fails closed on that kind. **GAP (not this goal):** no attorney/practitioner-authority substrate exists — `Membership.Role` is `owner`/`member` only (`packages/shared/domain/src/entities/Membership/Membership.values.ts:13`) — so the gate never asserts practitioner authority (see Follow-Ons). |
 | Gate predicate | **NET-NEW:** `CandorPolicy` `Context.Service` in `law-practice/use-cases` — derived, fail-closed, recomputed from events + dispositions; no stored closure state anywhere (align decision). |
 | Filing gate state | **REUSE (read-only compose):** `RuntimeApprovalGate` / `RuntimeCandidateDraft` at `packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts` — single-member decision vocabulary today; composition only through a lawful cross-slice shape; release-capable vocabulary is a gated criterion on `goals/agentic-professional-runtime`. |
 | Durability precedent | **REUSE (pattern):** `ExecutionLedger` ports at `packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts` end to end (ports → repo/layer → migration); **NET-NEW:** the law-practice slice's first db-admin migration + PGlite migration test + `AcceptedProofManifest` entries, and the rung-2 append-only IDS fact records (1.97 window facts as candidate-window-never-compliance, 1.17 fee facts, 1.98 content-presence facts, office-treatment states, supplemental submissions each with its own operative date). |
@@ -108,6 +113,13 @@ form.
   through the normal promotion-record gate.
 - **Widening the quantified gate set** (examiner events gating) — a later
   align question; this wedge records examiner events without gating on them.
+- **Practitioner-authority enforcement** — binding a `CandorDisposition` to a
+  verified authorized practitioner (bar registration / authorized-signer
+  role) needs an authority substrate no slice owns today; epistemic's
+  `FrozenGrantSet` governs agent execution grants, not human standing, and
+  is cross-slice. Returns through its own align question and packet. Until
+  then the predicate's `User`-kind principal check is the entire trust
+  boundary.
 
 ## Open Risks Inherited From The Brief
 
@@ -115,7 +127,12 @@ form.
   `shared/use-cases` contract — the two doctrine-sanctioned shapes decompose
   narrowed to) lands at goal P0; the existing `law-practice/use-cases` →
   epistemic dependencies are prior drift that must not be compounded with a
-  new edge.
+  new edge. Neither shape has a writable consumer on disk yet —
+  `RuntimeApprovalGate`/`RuntimeCandidateDraft` have no caller in
+  `packages/` or `apps/`, no product slice emits domain events, and
+  `packages/shared/use-cases` does not exist — so P0 picks the shape *and*
+  names its consumer surface, and the promoted-contract branch additionally
+  needs an Exception Ledger entry against the no-new-packages non-goal.
 - Quarantine has no live producer at rung 1 — the predicate branch is proven
   against fixtures until `uspto-prosecution-read` lands fail-explicit codes.
 - Rung 2's real cost is the migration lane (slice's first db-admin migration,

@@ -80,3 +80,12 @@ each returns through its own align question, not by reopening this packet.
   non-goals, rabbit holes → constraints, DECISIONS → SPEC decision log;
   SOURCES ledger inherited; manifests cross-linked). Status active →
   graduated; packet retained as provenance.
+- 2026-08-05: PR #560 review adjudication — seven Codex P1 findings
+  fact-checked by a seven-agent Opus 5 panel (2 FOLD, 5 PARTIAL, 0 REBUT;
+  see the dated DECISIONS entry) and folded across SPEC/PLAN/MAP:
+  predicate-level release semantics, P0-owned consumer surface +
+  Exception-Ledger carve-out, `User`-kind authorship trust boundary,
+  `SourceTextResolver` reuse, append-only disposition lifecycle,
+  concurrent-citations quantifier fixture, declared-never-inferred version
+  currency. Greptile's absent-packages claim rebutted (`law-practice/tables`
+  + `server` exist on disk).

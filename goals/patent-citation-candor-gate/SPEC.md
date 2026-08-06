@@ -14,7 +14,9 @@ an explicit, auditable gate in the law-practice slice:
 - Filing promotion is blocked by a derived, fail-closed `CandorPolicy`
   predicate until every current AI-discovered event is covered; a newer
   observation version of a source re-blocks until the newer event is itself
-  dispositioned.
+  dispositioned. Blocked-vs-released is owned and proven in law-practice at
+  the predicate boundary; advancing a candidate through the agents runtime's
+  own decision vocabulary is gated on `agentic-professional-runtime`.
 - Rung 1 proves the domain (schemas + service contract + failing-then-green
   `CandorPolicy.test.ts` over in-memory/test-only storage). Rung 2 retires the
   risk: durable storage on the `ExecutionLedger` precedent, the slice's first
@@ -91,7 +93,16 @@ Normative here:
   `citation-verified-span-substrate`, or `uspto-prosecution-read`.
 - No changes to the `RuntimeApprovalGate` contract or the agents slice's
   decision/lifecycle vocabularies.
-- No new packages: everything lands in existing law-practice packages.
+- No new packages: everything lands in existing law-practice packages. The
+  single bounded exception is decision 7's promoted-contract gate shape,
+  which would have to create `packages/shared/use-cases`
+  (`standards/ARCHITECTURE.md:352-356` — no package directory today);
+  picking it at P0 requires an Exception Ledger entry plus owner sign-off
+  before the package is created, and the promotion record of
+  `standards/ARCHITECTURE.md:366-375`. Emitted events stay preferred
+  precisely because they need none of that.
+- No new source-text resolution service and no source custody inside
+  law-practice: the existing `SourceTextResolver` port is reused as-is.
 
 ## Source Hierarchy
 
@@ -116,11 +127,29 @@ Higher sources outrank lower sources when they conflict.
   `src/identity/LawPractice.ts`, following the `PriorArtReferenceId`
   precedent (every law-practice entity takes its id from there).
 - `packages/law-practice/use-cases` — `CandorPolicy` `Context.Service` and
-  `CandorPolicy.test.ts`.
+  `CandorPolicy.test.ts`; the contract carries the existing
+  `SourceTextResolver` port (`@beep/file-processing/SourceText`) and
+  `Crypto.Crypto` in its requirement channel, satisfied by the caller —
+  never by a layer this slice owns.
 - Rung 2: `packages/law-practice/tables`, `packages/law-practice/server`, the
   db-admin migration lane (law-practice's first migration + PGlite migration
   test + `AcceptedProofManifest` entries), and the filing-promotion path's
-  lawful consultation of the predicate.
+  lawful consultation of the predicate. That path has no writable consumer
+  on disk today: `RuntimeApprovalGate`/`RuntimeCandidateDraft` live only in
+  `packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts`
+  with no caller anywhere in `packages/` or `apps/`; no product slice emits
+  domain events yet (`.events.ts`/`.event-handlers.ts` are canonical roles
+  at `standards/ARCHITECTURE.md:984,1065` with no slice instance); and
+  `packages/shared/use-cases` does not exist
+  (`standards/ARCHITECTURE.md:352-356`). The consuming surface is therefore
+  a P0 output, not a pre-authorized edit: the shape P0 picks must name the
+  exact files it writes, and "a real filing candidate" means the promotion
+  path of record — today the agents first-proof SDK's
+  `RuntimeCandidateDraft` — never a law-practice test double. Under emitted
+  events that consumer edit is read-only subscription in the slice owning
+  the promotion path plus app-level wiring, never a change to the
+  `RuntimeApprovalGate` contract or the agents decision/lifecycle
+  vocabularies.
 - This packet's own files under `goals/patent-citation-candor-gate/`.
 
 ## Constraints
@@ -141,12 +170,51 @@ Higher sources outrank lower sources when they conflict.
   re-verification via `verifyTextAnchor` is required before any "current"
   claim, and "current" is defined against source-version identity, never
   receipt existence.
+- Version currency is declared, never inferred: an observation stays current
+  until another event explicitly supersedes it by naming the exact prior
+  observation version. Arrival order, ingestion order, and observation
+  timestamps never establish currency — `SourceTextIdentity` carries digests
+  and pinned extractor/normalization versions but no revision order, parent
+  relation, or head marker. Lineage is written once and the head is derived,
+  never stored as an `isCurrent` flag (the `EdgeVersion.supersedesId`
+  posture — pattern only, never imported; slice-to-slice imports stay
+  forbidden). Absent, ambiguous, or forked lineage — including two
+  unsuperseded observations of one source and any replayed or out-of-order
+  arrival — fails closed: those events count as undisposed and the predicate
+  never repairs or infers the link.
+- Canonical source text for that re-verification resolves through the
+  existing `SourceTextResolver` port
+  (`packages/foundation/capability/file-processing/src/SourceText/index.ts`);
+  `law-practice/use-cases` already depends on `@beep/file-processing` and
+  `standards/ARCHITECTURE.md:622-623` permits the edge. Rung 1 supplies a
+  `Layer.succeed(SourceTextResolver, ...)` fixture layer, keeping the test
+  slice-isolated; the live layer is wired at the app entrypoint, never
+  inside law-practice. A source that fails to resolve, mismatches its
+  digest, or fails `verifyTextAnchor` yields an undisposed event — fail
+  closed, never a skipped check.
 - No `CitationMention` adapter until `citation-extraction-engine` lands its
   semantic union (gated criterion).
 - Disposition vocabulary stays minimal at rung 1; the full judgment
   vocabulary (including the dual Rule 56 / 1.98(c) cumulativeness judgments)
   is rung-2 shaping detail — but both judgment slots stay representable from
-  rung 1 (decision 2).
+  rung 1 (decision 2). The disposition-lifecycle domain is not judgment
+  vocabulary and is not what "minimal" constrains: because a recorded
+  disposition is never edited, supersession and withdrawal must be
+  representable from rung 1.
+- Disposition authorship is recorded; practitioner authority is not
+  enforced. The author is the `Principal` every entity already carries
+  (`createdByPrincipal`, `packages/shared/domain/src/entity/BaseEntity.ts`),
+  a union discriminating `User` / `Agent` / `ServiceAccount` / `System`.
+  Fail closed on that discriminator: only a `User`-kind principal's
+  disposition covers an event, so an agent can never dispose its own
+  AI-discovered finding. Proving the human holds practitioner authority is
+  out of scope — no attorney/practitioner role exists anywhere in the repo
+  (`Membership.Role` is `owner`/`member`), the nearest authority substrate
+  is epistemic's agent-grant `FrozenGrantSet` (a forbidden cross-slice
+  reach), and an authorization service is a named follow-on, not this goal.
+  Both rungs therefore carry an explicit trust boundary: the gate proves
+  that a human principal disposed the exact observation version, never that
+  the human was authorized to.
 - 1.97 window arithmetic derives a *candidate* window only — surface the
   controlling dates and edge cases (certificate of mailing / Priority Mail
   Express, weekend-or-DC-holiday shift, withdrawn closing action,
@@ -165,26 +233,52 @@ Rung 1 — domain proof:
       union land in `law-practice/domain` in design order (schema first), with
       LiteralKit actor/judgment domains, both judgment slots (Rule 56 vs
       litigation-frame) representable, the tagged discovery-provenance
-      union, `SourceTextIdentity` composition, receipt-based grounding, and
-      the two separately-triggered explicit states (staleness, quarantine)
-      that never rewrite evidence.
+      union, `SourceTextIdentity` composition, receipt-based grounding, the
+      two separately-triggered explicit states (staleness, quarantine)
+      that never rewrite evidence, and a LiteralKit disposition-lifecycle
+      domain (`active` / `superseded` / `withdrawn`) plus a supersedes
+      reference, so revising or withdrawing a judgment is representable
+      without editing a recorded disposition (precedents:
+      `ClaimDispositionStatus`, `EdgeVersion.supersedesId`).
 - [ ] `CandorPolicy` `Context.Service` contract in `law-practice/use-cases`
       owns the derived, fail-closed predicate with no stored closure state.
 - [ ] `CandorPolicy.test.ts` — written failing first, then green — proves:
       promotion blocked until an attorney disposition covers the AI event's
-      exact observation version; a newer observation of the same source
-      re-blocks; the superseded event stops blocking only once the newer
-      event is dispositioned; quarantined and possible-duplicate fixtures
-      stay uncovered; examiner-observed events record without gating.
+      exact observation version, and released — the predicate reports
+      promotion no longer candor-blocked — once every current AI-discovered
+      event is covered; two simultaneously current AI-discovered events on
+      different references both gate, so disposing one leaves promotion
+      blocked and only disposing both releases it; a newer observation of
+      the same source re-blocks; the superseded event stops blocking only
+      once the newer event is dispositioned; an out-of-order fixture (the
+      superseding observation ingested before the one it supersedes) and a
+      replay of an already-superseded observation change no head and
+      release nothing; two unsuperseded observations of one source stay
+      uncovered; a superseded or withdrawn disposition stops covering its
+      event, so that event blocks again (fail closed); a disposition whose
+      recorded `createdByPrincipal` is an `Agent` or `System` principal
+      never covers its event (authorship trust boundary); an event whose
+      source text fails to resolve or fails `verifyTextAnchor` stays
+      uncovered; quarantined and possible-duplicate fixtures stay
+      uncovered; examiner-observed events record without gating.
 - [ ] The test runs slice-isolated: in-memory/test-only layers, no other
       slice booted, no app runtime Layer.
 
 Rung 2 — durability + live gate:
 
-- [ ] Durable storage for events, dispositions, and append-only IDS fact
-      records via ports → repo/layer on the `ExecutionLedger` precedent.
+- [ ] Durable storage for events, dispositions, and IDS fact records via
+      ports → repo/layer on the `ExecutionLedger` precedent. All three
+      surfaces are append-and-read-only — the ports expose no update and no
+      delete (`ExecutionLedger.ports.ts`, `ClaimDisposition.ports.ts`) — so
+      a disposition is revised or withdrawn only by appending a superseding
+      record, never by overwriting what was decided at filing time.
 - [ ] The law-practice slice's first db-admin migration with its PGlite
-      migration test, both registered in `AcceptedProofManifest`.
+      migration test, both registered in `AcceptedProofManifest`. The
+      migration installs `BEFORE UPDATE OR DELETE` / `BEFORE TRUNCATE`
+      append-only guards on the disposition and fact tables (precedent:
+      `20260730043536_epistemic_evidence_verification/migration.sql`), and
+      the PGlite test asserts that both an UPDATE and a DELETE against a
+      recorded disposition are rejected.
 - [ ] Fact families recorded as presence-only facts: submission acts with
       1.97 candidate-window facts, 1.17(p)/1.17(v) fee facts, 1.97(e)
       statement presence/type + the 1.98(a)(4) written assertion, 1.98
@@ -193,17 +287,25 @@ Rung 2 — durability + live gate:
       its own operative date (37 CFR 1.97(i); MPEP 609.05(a)).
 - [ ] The filing-promotion path consults `CandorPolicy` through the lawful
       cross-slice shape chosen at implementation, so a blocked predicate
-      blocks a real filing candidate.
+      blocks a real filing candidate and a fully dispositioned one stops
+      blocking it — both directions asserted at the predicate boundary,
+      since the agents slice's single-member `RuntimeApprovalDecision`
+      (`pending`) cannot express advancement and this goal never widens it.
 
 Gated criteria (activate when the owning goal lands; never block this goal):
 
 - [ ] GATED on `uspto-prosecution-read`: bind the USPTO observation identity
-      (parser/vocabulary versions, checksums, freshness) and consume the live
-      quarantine producer.
+      (parser/vocabulary versions, checksums, retrieval time, freshness,
+      cursor/upstream identity) as the authoritative lineage behind declared
+      supersession, consume the live quarantine producer, and wire a live
+      `SourceTextResolver` layer for prosecution documents at the app
+      entrypoint.
 - [ ] GATED on `citation-extraction-engine`: the `CitationMention` handoff
       into event discovery-provenance.
-- [ ] GATED on `agentic-professional-runtime`: compose a release-capable gate
-      decision vocabulary when one exists.
+- [ ] GATED on `agentic-professional-runtime`: when a release-capable gate
+      decision vocabulary lands there, extend the read-only composition so a
+      candor-cleared candidate can advance through it; candidate advancement
+      past `pending` is outside this goal's outcome until then.
 
 Always binding (both rungs):
 
