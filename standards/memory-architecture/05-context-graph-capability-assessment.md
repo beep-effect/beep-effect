@@ -197,6 +197,11 @@ not own accepted claims, professional approvals, or durable legal facts.
 > relational rollback ledger, and the all-Postgres deployment shape. See
 > `docs/agent-memory-infra/cognee-clone.md`.
 
+> **Superseded (2026-08-06) by [`07-shared-memory-adoption.md`](./07-shared-memory-adoption.md):**
+> the Role B dev-tooling memory incumbency passes to basic-memory +
+> codegraph; Cognee is retired to document-KG experiments. Its donor and
+> authority-boundary notes above are unchanged.
+
 ### Graphiti / Zep
 
 Sources: [Graphiti GitHub](https://github.com/getzep/graphiti),
