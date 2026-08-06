@@ -61,7 +61,14 @@ capability this packet is about does not exist yet.
   conflict and no signal to anyone until it was tripped
   ([`CAPTURE.md`](./CAPTURE.md); handed off as item 3 of
   [`HANDOFF-2`](./research/HANDOFF-2-pre-push-and-guard.md)). The `law-pulse.sh`
-  fix was confirmed firing in a live session.
+  fix was confirmed firing in a live session. Speed-loop closed **all three**
+  HANDOFF-2 items the same day (A6–A10 in
+  [`AMENDMENTS`](./research/AMENDMENTS-from-beep-effect3.md)); the load-bearing
+  one is that PR-I now builds on `additionalContext` rather than plain stdout.
+  `block/buzz` recorded as considered-and-rejected prior art — the closest
+  existing artifact to the original message-board framing, rejected because it
+  solves delivery by owning the agent runtime, coordinates only what is
+  *declared*, and is built for the cross-machine case ruled out of scope.
 - 2026-08-04: grill #1 closed all nine questions → `shape`. Five locked (D1–D5),
   four disposed. The load-bearing move was a **correction to the synthesis**:
   only one of five live collisions is intra-wave, not four, so `WaveManifest`'s

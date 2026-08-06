@@ -341,8 +341,67 @@ and skip the dependency.
 
 ---
 
+## Addendum — 2026-08-05: `block/buzz`
+
+Surfaced by the operator after this track closed; not found by any of the ~14
+queries above. It deserves recording because it is the **most on-the-nose
+existing artifact for the operator's original message-board framing** — and
+therefore the strongest available test of the pivot away from it.
+
+**What it is.** A self-hostable Nostr-relay workspace where humans and agents
+share the same rooms. Agents are first-class members: own keypair, own channel
+memberships, own durable history, own presence, own audit trail, scoped by
+identity rather than permission flags. Every message, reaction, workflow step,
+review approval, and git event is a signed event in one log. Its agent runtime is
+`buzz-agent` (Rust, ACP over stdio) paired with `buzz-dev-mcp`;
+`VISION_REMOTE_AGENTS.md` makes the relay the management plane, with a one-way
+deploy handoff and a deliberately disposable body.
+
+**Verdict: reject**, for three reasons that this track's own findings predicted.
+
+1. **It solves delivery by owning the agent runtime.** Buzz agents are driven by
+   the relay because they *are* Buzz processes. This fleet is Claude Code, where
+   the only channel into a live session is `hookSpecificOutput.additionalContext`.
+   Buzz's coordination is not a transport that could be adopted — it is a
+   different agent. Adopting it means replacing the harness.
+2. **Everything it coordinates is declared.** Every claim and update is a signed
+   event someone chose to post. Derive-don't-declare is this packet's spine, and
+   D1 puts claim registries out of scope on exactly that ground. Buzz is evidence
+   *for* the call: even executed this well, it cannot see the #551 specimen —
+   that change conflicted with nothing and its author had no reason to announce
+   it. A board carries only what someone knew to post.
+3. **Cross-machine is its reason for existing, and that is out of scope by
+   operator ruling.** Relay, Postgres, Redis, object storage, Kubernetes
+   providers — that is the machinery of coordinating across hosts and across
+   time. T2's finding was that on one machine liveness is *directly observable*.
+   Buzz confirms it from the other side: `VISION_REMOTE_AGENTS.md:59` makes
+   presence a lease the agent renews, with a wrong-dot window of up to about
+   three minutes. D5's `/proc` scan has no such window because it reads the truth
+   instead of estimating it.
+
+Scale follows from that: 539 MB, 676 Rust files plus a full server stack, against
+this packet's 1–2 day appetite for a read-only derived view.
+
+**Worth taking:**
+
+- **"Agents are members, not bots."** Scoping by identity rather than permission
+  flags is decision 37's principle reached independently — and the same instinct
+  behind speed-loop's `beep agent report list`.
+- **`docs/welcome-kickoff-silent-failures.md`** is the directly transferable
+  artifact: a postmortem on agent-to-agent silent failures in which `ignore_self`
+  is the only loop guard and A→B→A is precisely what it misses. Read it before
+  any fleet bulletin becomes bidirectional.
+
+**What it does not change.** The negative result above stands unweakened: Buzz
+does not broadcast base-state change into running agents either. It moves the
+agents inside its own workspace instead — a legitimate answer to a different
+question.
+
+---
+
 ## Sources
 
+- [block/buzz](https://github.com/block/buzz) · `VISION_AGENT.md` · `VISION_REMOTE_AGENTS.md` · `docs/welcome-kickoff-silent-failures.md` (read from a local clone at `~/YeeBois/dev/buzz`, `a7ea86cdc`, 2026-08-05)
 - [clash-sh/clash](https://github.com/clash-sh/clash)
 - [MCP Agent Mail](https://mcpagentmail.com/) · [Dicklesworthstone/mcp_agent_mail](https://github.com/Dicklesworthstone/mcp_agent_mail) · [mcp_agent_mail_rust](https://github.com/Dicklesworthstone/mcp_agent_mail_rust)
 - [aannoo/hcom](https://github.com/aannoo/hcom) · [hcom README](https://github.com/aannoo/hcom/blob/main/README.md)

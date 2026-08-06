@@ -51,6 +51,7 @@ the verdict for a single-machine, CLI-native, 13-checkout fleet.
 | MCP Agent Mail, Gastown, Beads | Fail the "must beat shared-dir + flock on its own merits" bar: daemon, 38 MCP tools, TUI/web UI, or Dolt + tmux services |
 | Mergify / Aviator / Graphite / Trunk merge queues | Batch-failure bisection studied; all deferred with merge queue itself |
 | In-process multi-agent frameworks (AutoGen, CrewAI, LangGraph, A2A, ACP) | Coordinate subagents inside one orchestrator process — a different problem shape from independent OS-level sessions in separate checkouts |
+| **`block/buzz`** (Apache-2.0, Nostr-relay workspace; added 2026-08-05, operator-surfaced) | **Reject.** The most on-the-nose artifact for the original message-board framing, and rejected for three reasons this research predicted: it solves delivery by owning the agent runtime (`buzz-agent`, not Claude Code); everything it coordinates is *declared*, which is the primitive D1 put out of scope; and cross-machine is its whole reason for existing, out of scope by operator ruling. Worth keeping: identity-scoped agent membership (decision 37 reached independently) and `docs/welcome-kickoff-silent-failures.md` on agent-to-agent silent failures. Full entry: [`T1-prior-art.md`](./T1-prior-art.md) addendum |
 
 **Citation-integrity note:** T1 attributed the phrase *"No broadcast by design"*
 to the MCP Agent Mail README. Verification found the phrase absent, and that the

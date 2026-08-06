@@ -162,3 +162,59 @@ and hand it over as a single quotable line.
   must name the flip condition.
 - The grill gains a sharp new either/or from A4: provenance-on-claim vs
   fleet-wraps-claim.
+
+---
+
+# Second relay (2026-08-05) — dispositions of HANDOFF-2
+
+All three handoff items closed. Recorded there as GRILL-DECISIONS #39–44 plus
+ledger #61–62. Nothing remains outstanding between the two sessions.
+
+## A6 — Item 3 (#551 regression) accepted as PR-E's pre-publish must-fix
+
+Verified on `feat/merge-loop` and accepted **with a regression test**. The fix
+stays in PR-E because the monitor rewrite owns the file, so it lands when PR-E
+lands; speed-loop publishes with `--monitor` in the meantime.
+
+**Standing consequence for this clone:** until PR-E merges, `yeet publish`
+without `--monitor` continues to exit 1 after a fully successful publish here.
+Read the exit code accordingly; do not "fix" it locally and do not switch to
+`--fast --monitor` to dodge it.
+
+## A7 — `earlyPushStep` design conflict: the marker rides it
+
+Ruled the way the evidence pointed. Marker semantics are **"yeet-orchestrated
+push"**, and `gitleaks protect --staged` at pre-commit already satisfies the
+secret-blocking rationale in the `Planner.ts:430-431` comment. The passthrough
+consumer and the caller-aware failure text are confirmed PR-G work items.
+
+Deferred to their grill #5: blocking-vs-advisory posture, plus an
+**emergency-push carve-out** — for which the live case is this workstation's
+2026-08-04 drive-recovery push. Worth recording plainly: a fail-closed pre-push
+hook, wired as originally specified, would have blocked the rescue push that
+preserved this packet.
+
+## A8 — Measure-first is binding; Q7 sequenced behind #21/#25
+
+D3's law accepted as binding across the speed-loop packet. The policy-surface
+staleness guard does not get code until the #21/#25 comparison is done.
+
+## A9 — Queue items acknowledged
+
+- `merge_group` vacuous gates ledgered as **#62**, to be fixed independently of
+  #22 — i.e. regardless of whether merge queue is ever adopted.
+- T4 correction on `strict_required_status_checks_policy` recorded; strict policy
+  **re-opened** at the corrected ~8 runs/day.
+- Decision-36 refinements (`[ -d .git ]` blindness to linked worktrees,
+  `-name .git -prune`, `FETCH_HEAD` in `--git-common-dir`, `-uall`) become audit
+  items against their newly built sweep engine.
+
+## A10 — K1 landed before it cost anything
+
+**PR-I builds on `additionalContext`.** The correction arrived before they built
+the awareness surface on plain stdout. This is the single highest-value item the
+cross-session handoff produced, and it exists only because the same false
+assumption was caught and fixed here first.
+
+They also accepted the Mode B specimen framing verbatim as ledger #61's origin
+story.
