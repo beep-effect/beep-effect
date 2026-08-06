@@ -31,10 +31,10 @@ scheme + simple relator; package home = `law-practice/domain` with a
 promotion gate; Party–Role split + shared `Principal` composition; the full
 Lane B `CorrectionDelta` shape; two-axis void-vs-penalised; typed
 `LegalActContent` with required polarity — see [`DECISIONS.md`](./DECISIONS.md)).
-`openQuestions` is empty. Next: land **PR 2** (research artifacts + align
-outcomes + the parent-ledger P100/R25 promotions), then draft `BRIEF.md`
-inside the six decision boundaries (stage align → shape) and iterate it with
-Benjamin to approval.
+`openQuestions` is empty, and PR 2 — research artifacts, align outcomes,
+and the parent-ledger P100/R25 promotions — is PR #573, the PR that carries
+this text. Next: draft `BRIEF.md` inside the six decision boundaries (stage
+align → shape) and iterate it with Benjamin to approval.
 
 ## Read This First
 

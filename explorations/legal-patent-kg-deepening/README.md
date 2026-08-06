@@ -21,10 +21,10 @@ The second wedge is at ALIGN-COMPLETE:
 [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md)
 (opened 2026-08-05 on Benjamin's call; research lanes, synthesis, review
 gate 1, and all six align branches closed by 2026-08-06 — its packet owns
-the detail). Next for this packet: land the wedge's PR 2 (research
-artifacts + align outcomes + the P100/R25 ledger promotions) to merged;
-only then does the wedge draft its `BRIEF.md` inside the six align
-boundaries (shape stage, iterated with Benjamin to approval), with
+the detail; the research + align record and the P100/R25 ledger promotions
+landed with PR #573, the same PR that carries this pointer). Next: the
+wedge drafts its `BRIEF.md` inside the six align boundaries (shape stage,
+iterated with Benjamin to approval), with
 `patent-drafting-episode-ledger` and the FunctionalUnit extension into
 `uspto-patent-driver-depth` queued behind it on Benjamin's call. The first
 wedge is fully landed: graduated 2026-08-04, goal packet active on main
