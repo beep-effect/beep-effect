@@ -1,12 +1,9 @@
 # Agent Guide
 
 Canonical rules for all coding agents. Claude Code loads this via the
-`CLAUDE.md` symlink; Codex reads it directly. Laws only — architecture lives
-in `standards/ARCHITECTURE.md`, workflows in skills.
-
-## Mission
-
-Ship reliable code with effect-first and schema-first patterns.
+`CLAUDE.md` symlink (edit `AGENTS.md`, never the symlink); Codex reads it
+directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
+workflows in skills.
 
 ## Code Laws
 
@@ -15,18 +12,17 @@ Ship reliable code with effect-first and schema-first patterns.
   keep root `effect` imports for core combinators.
 - Prefer match helpers over conditional chains; prefer service composition
   over global state; keep service boundaries explicit.
-- Prefer tersest equivalent helper forms when behavior is unchanged: direct
-  helper refs over trivial lambdas, `flow(...)` for passthrough `pipe(...)`
-  callbacks, shared thunk helpers when already in scope.
+- Prefer the tersest equivalent helper form when behavior is unchanged: direct
+  helper refs over trivial lambdas, `flow(...)` over passthrough `pipe(...)`
+  callbacks, shared thunks already in scope.
 - Prefer named schema building blocks, derived `S.is(...)` guards, and
   `LiteralKit` internal domains over ad-hoc predicate helpers. Do not add
   `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
   type parameters already.
 - Apply schema defaults when safe. Keep changes focused and testable.
-- JSDoc on exported symbols uses titled section grammar: `**Example** (Title)`
-  prose sections (one ts fence each) and `**Details**`/`**Gotchas**` prose —
-  never `@example` or `@remarks` tags. Law: `.patterns/jsdoc-documentation.md`;
-  worked before/after in the `jsdoc-annotation-specialist` skill.
+- JSDoc on exported symbols uses titled `**Example** (Title)` and
+  `**Details**`/`**Gotchas**` prose sections — never `@example` or `@remarks`
+  tags. Law: `.patterns/jsdoc-documentation.md`.
 - In `packages/**/test/**/*.{ts,tsx}`, import package source through
   `@beep/*` aliases instead of relative paths into any workspace `src/`;
   relatives only for local helpers, fixtures, snapshots, and other
@@ -35,10 +31,9 @@ Ship reliable code with effect-first and schema-first patterns.
 ## Discovery & Reuse
 
 - Before recreating a shared helper, schema, utility, model, or known symbol,
-  search live source and barrels first:
-  `rg -n "export (const|function|class|type|interface) .*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'`
-  and `rg -n "<intent>" packages --glob '**/src/index.ts'`. Use the
-  `repo-symbol-discovery` skill for broader lookups.
+  search live source (`packages/**/src/**`) and package barrels
+  (`**/src/index.ts`) first; the `repo-symbol-discovery` skill carries the
+  canonical ripgrep recipes.
 - The old `standards/repo-exports.catalog.*` is retired; never look for it or
   run repo-export catalog commands as a discovery or proof step.
 
@@ -52,13 +47,9 @@ Ship reliable code with effect-first and schema-first patterns.
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also
   server-side commitlint input; keep body lines wrapped under 100 characters.
-- Fast-plus-monitor is opt-in only (`publish --fast --monitor`, PR-branch
-  guarded). Default to plain `publish --message`. Keep
-  `bun run audit:github pre-push` as the explicit full local fallback for
-  secrets, security, SAST, or Nix lanes.
-- Docgen: prefer `bun run docgen:local` for edit loops (bounded,
-  `origin/main...HEAD` + dirty files); `bun run docgen` only for the full
-  repo proof.
+- Docgen: `bun run docgen:local` for edit loops (bounded to
+  `origin/main...HEAD` + dirty files); full `bun run docgen` only for the
+  repo-wide proof.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
@@ -67,15 +58,12 @@ Ship reliable code with effect-first and schema-first patterns.
 
 - Use `bun run beep architecture` for canonical slice, concept, role, and
   architecture proof generation instead of hand-authoring boilerplate.
-- Architecture concepts use canonical `--domain-kind` archetypes:
-  `aggregates` (full slice concepts), `entities` (persisted domain entities),
-  `values` (domain-only value objects).
 
 ## Dev Servers
 
 - Dev servers run only through the portless-wrapped package scripts; canonical
-  URLs are `http://<app>.beep.localhost:1355` (`storybook.beep`,
-  `oip-web.beep`, `professional-desktop.beep`, `graph3d-bench.beep`).
+  URLs are `http://<name>.beep.localhost:1355`, where `<name>` is the
+  `portless` argument in that app's dev script.
 - Never launch raw `vite`/`next`/`storybook dev` or test against numeric
   localhost ports; `PORTLESS=0 <script>` is diagnostic-only.
 
@@ -83,27 +71,21 @@ Ship reliable code with effect-first and schema-first patterns.
 
 - Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded
   evidence via `bun run beep qa` (record → extract → judge); judge inventories
-  are schema-validated (`qa-inventory/v1`). GIFs are for humans; the vision
-  judge reads frame strips and contact sheets.
+  are schema-validated (`qa-inventory/v1`).
 
 ## Docs & Knowledge
 
-- `docs/` is tracked authored documentation (see `docs/README.md`); docgen
-  aggregate lands in gitignored `docs/generated/`; `docs/_internal/` is
-  private and must never be committed (public repo).
-- `explorations/` is the fuzzy front end (capture → graduate), driven by the
-  `/explore` skill; crystallized work graduates into `goals/` packets and
-  `docs/product/` prose.
+- `docs/` is tracked authored documentation (`docs/README.md` has the layout);
+  `docs/_internal/` is private and must never be committed — this repo is
+  public.
 - same-PR packet-state flips: flip goal manifest/lifecycle status and land the
   closeout reflection in the same PR as the final work.
 
 ## Agent Memory
 
 - Cognee is the durable always-on dev-memory; file memory (`CLAUDE.md` /
-  `MEMORY.md`) remains Layer 1; `graphiti-memory` is retired (bitemporal port
-  landed — see the 2026-07-25 memory-architecture decision-log entry).
-- See `standards/memory-architecture/` for all memory decisions and operational
-  detail.
+  `MEMORY.md`) remains Layer 1. All memory decisions and operational detail
+  live in `standards/memory-architecture/`.
 - If memory is unavailable in-session, fall back to repo-local docs, code
   search, and this file.
 
@@ -112,13 +94,9 @@ Ship reliable code with effect-first and schema-first patterns.
 - effect v3↔v4 differences: prefer the `effect-v4-imports` skill.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
-- MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
-  it returned.
-- UI motion evidence: prefer `bun run beep qa` + the `qa-session-ops` skill
-  (lane choice lives there); evidence reading via `motion-evidence-review`;
-  artifact provenance via `exif-provenance`; the `chrome-devtools` MCP (slim,
-  default-disabled) for perf-trace/computed-style introspection during QA
-  sessions. No QA MCP server.
+- UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
+  MCP server; the `chrome-devtools` MCP is slim and default-disabled, for
+  perf-trace/computed-style introspection during QA sessions.
 
 ## Context Economy
 
@@ -127,8 +105,6 @@ Ship reliable code with effect-first and schema-first patterns.
 - Always-loaded files (this file, skill frontmatter, settings) are the prompt
   cache prefix: batch edits to them, keep them lean; durable cross-session
   knowledge belongs in file-memory or Cognee, not here.
-- Front-load stable context; let volatile per-task detail arrive later in the
-  conversation.
 - Continue related follow-ups on an existing subagent (SendMessage) instead
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
