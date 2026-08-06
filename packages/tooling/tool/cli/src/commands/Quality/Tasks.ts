@@ -1706,7 +1706,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   yield* runStep(coverageStep(repoRoot, options));
 
   if (options.writeBaseline) {
-    yield* writeCoverageRegressionBaseline(repoRoot);
+    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped);
     return;
   }
 

@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -63,7 +63,41 @@ const VitestCoveragePct = S.Union([S.Finite, S.Literal("Unknown")]).pipe(
 type VitestCoveragePct = typeof VitestCoveragePct.Type;
 
 /**
+ * Absolute uncovered counts per metric, recorded alongside the percentages.
+ *
+ * **Details**
+ *
+ * Percentages alone cannot distinguish the two ways they fall. Deleting code
+ * that tests already covered lowers the ratio arithmetically, because removing
+ * one covered unit from a package below full coverage leaves a smaller ratio
+ * than it started with — yet nothing regressed, because the covered subject was
+ * removed rather than left untested. Adding untested code lowers the ratio too,
+ * and that one is a real gap. The uncovered count separates them: it stays flat
+ * when code is deleted and rises only when coverage is genuinely lost.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I`CoverageUncoveredCounts`)(
+  {
+    lines: S.Int,
+    statements: S.Int,
+    branches: S.Int,
+    functions: S.Int,
+  },
+  $I.annote("CoverageUncoveredCounts", {
+    description: "Absolute uncovered counts per metric for one workspace package.",
+  })
+) {}
+
+/**
  * Per-package coverage percentages stored in the committed baseline.
+ *
+ * **Gotchas**
+ *
+ * `uncovered` is optional so baselines written before it existed still decode.
+ * When either side of a comparison lacks it the ratchet falls back to the
+ * percentage-only rule, which is the stricter of the two.
  *
  * @category models
  * @since 0.0.0
@@ -75,6 +109,7 @@ export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I
     statements: S.Finite,
     branches: S.Finite,
     functions: S.Finite,
+    uncovered: CoverageUncoveredCounts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CoveragePackageBaseline", {
     description: "Committed coverage percentages for one workspace package.",
@@ -138,12 +173,14 @@ class VitestCoverageSummary extends S.Class<VitestCoverageSummary>($I`VitestCove
  * Baseline entry paired with the package it covers, used when reporting
  * packages that are new since the committed baseline.
  *
- * @example
+ * **Example** (Reading the package a snapshot entry covers)
+ *
  * ```ts
  * import type { CoverageSnapshotEntry } from "@beep/repo-cli/test/Quality"
  * declare const entry: CoverageSnapshotEntry
  * console.log(entry.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -160,12 +197,14 @@ export class CoverageSnapshotEntry extends S.Class<CoverageSnapshotEntry>($I`Cov
 /**
  * One metric that dropped below its committed baseline for one package.
  *
- * @example
+ * **Example** (Reporting one dropped metric)
+ *
  * ```ts
  * import type { CoverageComparisonFailure } from "@beep/repo-cli/test/Quality"
  * declare const failure: CoverageComparisonFailure
  * console.log(`${failure.packageName} ${failure.metric}: ${failure.actual} < ${failure.baseline}`)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -187,12 +226,14 @@ export class CoverageComparisonFailure extends S.Class<CoverageComparisonFailure
  * metric drops (failures), packages missing a current summary, and packages
  * new since the baseline was written.
  *
- * @example
+ * **Example** (Deciding whether a run regressed)
+ *
  * ```ts
  * import type { CoverageComparisonResult } from "@beep/repo-cli/test/Quality"
  * declare const result: CoverageComparisonResult
  * console.log(result.failures.length === 0 ? "ok" : "regression")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,6 +261,8 @@ const coverageSummaryPath = (path: Path.Path, info: WorkspacePackageInfo): strin
 
 const coveragePctValue = (value: VitestCoveragePct): number => (value === "Unknown" ? 0 : value);
 
+const uncoveredCount = (metric: VitestCoverageMetric): number => metric.total - metric.covered;
+
 const toCoveragePackageBaseline = (path: string, summary: VitestCoverageSummary): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
     path,
@@ -227,6 +270,14 @@ const toCoveragePackageBaseline = (path: string, summary: VitestCoverageSummary)
     statements: coveragePctValue(summary.total.statements.pct),
     branches: coveragePctValue(summary.total.branches.pct),
     functions: coveragePctValue(summary.total.functions.pct),
+    uncovered: O.some(
+      CoverageUncoveredCounts.make({
+        lines: uncoveredCount(summary.total.lines),
+        statements: uncoveredCount(summary.total.statements),
+        branches: uncoveredCount(summary.total.branches),
+        functions: uncoveredCount(summary.total.functions),
+      })
+    ),
   });
 
 const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshotEntry) => entry.packageName);
@@ -340,9 +391,54 @@ export const collectCoverageSnapshot = Effect.fn("CoverageRegression.collectCove
   return pipe(entries, A.getSomes, A.sort(packageByNameOrder));
 });
 
+const snapshotPackages = (entries: ReadonlyArray<CoverageSnapshotEntry>): Record<string, CoveragePackageBaseline> =>
+  R.fromEntries(A.map(entries, (entry) => [entry.packageName, entry.baseline] as const));
+
+/**
+ * Merge a snapshot over the packages a previous baseline recorded.
+ *
+ * Only packages the run actually measured are replaced; everything else is
+ * carried through untouched. A scoped run measures a handful of packages, so
+ * without this the written document would contain only those and silently drop
+ * every other entry.
+ *
+ * @param previous - Packages recorded by the committed baseline.
+ * @param entries - Packages this run measured.
+ * @returns The committed packages with the measured ones replaced.
+ * @category testing
+ * @since 0.0.0
+ */
+export const mergeCoverageBaselinePackagesForTesting = (
+  previous: Record<string, CoveragePackageBaseline>,
+  entries: ReadonlyArray<CoverageSnapshotEntry>
+): Record<string, CoveragePackageBaseline> => ({ ...previous, ...snapshotPackages(entries) });
+
+/**
+ * Whether writing this snapshot would silently delete committed entries.
+ *
+ * Only an unscoped run replaces the document, so only an unscoped run can drop
+ * entries. Measuring fewer packages than the baseline records means the run did
+ * not cover what an unscoped run claims to — a partially failed run, or a filter
+ * the caller forgot to declare — and the missing entries would vanish without a
+ * word.
+ *
+ * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
+ * @param measuredCount - Packages this run produced a summary for.
+ * @param previousCount - Packages the committed baseline records.
+ * @returns `true` when writing would delete committed entries.
+ * @category testing
+ * @since 0.0.0
+ */
+export const baselineReplacementDropsEntries = (
+  scoped: boolean,
+  measuredCount: number,
+  previousCount: number
+): boolean => !scoped && measuredCount < previousCount;
+
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
   repoRoot: string,
-  entries: ReadonlyArray<CoverageSnapshotEntry>
+  entries: ReadonlyArray<CoverageSnapshotEntry>,
+  previous: O.Option<CoverageRegressionBaseline>
 ): Effect.fn.Return<
   CoverageRegressionBaseline,
   QualityTaskConfigurationError,
@@ -353,11 +449,21 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
 
   return CoverageRegressionBaseline.make({
     schema_version: 1,
-    generated_at: generatedAt,
-    git_sha: gitSha,
+    // A merge leaves most entries untouched, so claiming this run's timestamp
+    // and revision for the whole document would attribute a provenance the
+    // unmeasured entries do not have. Only a full regeneration earns fresh
+    // metadata; a merge inherits the last one.
+    generated_at: pipe(previous, O.match({ onNone: () => generatedAt, onSome: (document) => document.generated_at })),
+    git_sha: pipe(previous, O.match({ onNone: () => gitSha, onSome: (document) => document.git_sha })),
     command: coverageRegressionRegenerationCommand,
     epsilon: coverageRegressionEpsilon,
-    packages: R.fromEntries(A.map(entries, (entry) => [entry.packageName, entry.baseline] as const)),
+    packages: pipe(
+      previous,
+      O.match({
+        onNone: () => snapshotPackages(entries),
+        onSome: (document) => mergeCoverageBaselinePackagesForTesting(document.packages, entries),
+      })
+    ),
   });
 });
 
@@ -383,7 +489,15 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
   baseline: CoverageRegressionBaseline
 ): Effect.fn.Return<string, QualityTaskConfigurationError> {
-  const jsonc = yield* formatJsonc(baseline).pipe(
+  // `formatJsonc` stringifies whatever it is handed, so the document has to be
+  // encoded first. That was invisible while every field was a plain scalar and
+  // the decoded value doubled as the wire value; `uncovered` is an `Option`
+  // decoded and an optional key encoded, so writing the decoded shape produces
+  // a baseline the reader rejects.
+  const encoded = yield* S.encodeEffect(CoverageRegressionBaseline)(baseline).pipe(
+    QualityTaskConfigurationError.mapError("Failed to encode coverage regression baseline.")
+  );
+  const jsonc = yield* formatJsonc(encoded).pipe(
     QualityTaskConfigurationError.mapError("Failed to format coverage regression baseline.")
   );
   return [
@@ -397,13 +511,29 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
+ * **Details**
+ *
+ * A scoped run measures only the packages it was filtered to, so its snapshot
+ * is merged over the committed document and every unmeasured entry is carried
+ * through. An unscoped run is a full regeneration and replaces the document
+ * outright, which is what prunes entries for packages that no longer exist.
+ *
+ * **Gotchas**
+ *
+ * An unscoped run that measured fewer packages than the document it is about to
+ * replace is refused rather than written. That shape means the coverage run did
+ * not cover what it claimed to — a partial failure, a filter the caller forgot
+ * to declare — and writing it would delete the missing entries silently.
+ *
  * @param repoRoot - Repository root.
+ * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
  * @category use-cases
  * @since 0.0.0
  */
 export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.writeCoverageRegressionBaseline")(
   function* (
-    repoRoot: string
+    repoRoot: string,
+    scoped: boolean
   ): Effect.fn.Return<
     void,
     QualityTaskConfigurationError,
@@ -415,7 +545,16 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
       return yield* QualityTaskConfigurationError.new("No coverage summaries were generated; cannot write baseline.");
     }
 
-    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries);
+    const previous = yield* readBaseline(repoRoot).pipe(Effect.option);
+    const previousCount = pipe(previous, O.match({ onNone: () => 0, onSome: (document) => R.size(document.packages) }));
+
+    if (baselineReplacementDropsEntries(scoped, A.length(entries), previousCount)) {
+      return yield* QualityTaskConfigurationError.new(
+        `Refusing to write ${coverageRegressionBaselinePath}: this run measured ${A.length(entries)} package(s) but the committed baseline records ${previousCount}. An unscoped regeneration replaces the document, so writing it would drop the ${previousCount - A.length(entries)} unmeasured entry(ies). Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead.`
+      );
+    }
+
+    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, scoped ? previous : O.none());
     const content = yield* formatBaseline(baseline);
     yield* writeArtifact({
       path: path.join(repoRoot, coverageRegressionBaselinePath),
@@ -426,13 +565,43 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
         ),
     });
     yield* Console.log(
-      `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
+      scoped
+        ? `[coverage-ratchet] merged ${A.length(entries)} measured package(s) into ${coverageRegressionBaselinePath} (${R.size(baseline.packages)} total)`
+        : `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
     );
   }
 );
 
 const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
   R.fromEntries(A.map(actuals, (entry) => [entry.packageName, entry] as const));
+
+/**
+ * Whether a metric's percentage drop reflects lost coverage rather than deleted
+ * covered code.
+ *
+ * A percentage falls both when untested code is added and when tested code is
+ * removed, and only the first is a regression. The uncovered count tells them
+ * apart: deleting covered code leaves it flat, losing coverage raises it. When
+ * either side predates the count the percentage rule stands alone, which keeps
+ * the stricter behaviour for baselines that have not been rewritten yet.
+ *
+ * @param metric - Metric being compared.
+ * @param baseline - Committed entry for the package.
+ * @param actual - Entry measured by this run.
+ * @param epsilon - Percentage-point tolerance for floating-point noise.
+ * @returns `true` when the drop reflects coverage that was actually lost.
+ */
+const metricRegressed = (
+  metric: CoverageMetricName,
+  baseline: CoveragePackageBaseline,
+  actual: CoveragePackageBaseline,
+  epsilon: number
+): boolean =>
+  actual[metric] + epsilon < baseline[metric] &&
+  pipe(
+    O.zipWith(baseline.uncovered, actual.uncovered, (before, after) => after[metric] > before[metric]),
+    O.getOrElse(thunkTrue)
+  );
 
 const droppedMetrics = (
   packageName: string,
@@ -442,7 +611,7 @@ const droppedMetrics = (
 ): ReadonlyArray<CoverageComparisonFailure> =>
   pipe(
     metricNames,
-    A.filter((metric) => actual[metric] + epsilon < baseline[metric]),
+    A.filter((metric) => metricRegressed(metric, baseline, actual, epsilon)),
     A.map((metric) => ({
       packageName,
       packagePath: baseline.path,
