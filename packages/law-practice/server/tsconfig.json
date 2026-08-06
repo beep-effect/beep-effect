@@ -18,6 +18,9 @@
       "path": "../../drivers/pglite/tsconfig.json"
     },
     {
+      "path": "../../drivers/postgres/tsconfig.json"
+    },
+    {
       "path": "../../drivers/tika/tsconfig.json"
     },
     {

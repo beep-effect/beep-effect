@@ -67,6 +67,51 @@ Normative here:
    epistemic dependencies are prior drift this goal must not compound.
 8. **Core-first rungs** — rung 1 domain proof, rung 2 durability + fact
    records + live invocation; nothing sequenced between them.
+9. **P0 gate-shape finding (2026-08-05) — decision 7's two options are both
+   unavailable; a third, ratified shape is recommended and awaits owner
+   sign-off.** Evidence:
+   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md).
+   - Decision 7 read `standards/ARCHITECTURE.md:632-636` correctly, but that
+     bullet is stale. `standards/architecture/10-cross-slice-coordination.md:36-51`
+     and `standards/architecture/DECISIONS.md:1095-1148` ratified a third
+     mechanism on 2026-07-25 — **foundation-mediated port inversion** — and
+     that ratifying decision rejects events *specifically* for a gate that
+     must fail closed before an action runs, which is exactly this gate.
+   - **Emitted events are not viable.** No domain event has ever been defined,
+     emitted, delivered, or consumed in this repo: zero slice `*.events.ts`,
+     zero `*.event-handlers.ts`, no shared event log, no bus. Worse, the
+     doctrine requires a cross-slice event contract to live in
+     `shared/use-cases` anyway, so this option is a strict superset of the
+     other — plus a durable journal with no lawful home — and at the end an
+     event still cannot say "do not proceed".
+   - **The promoted contract fails its own promotion bar.**
+     `standards/architecture/02-shared-kernel.md:189` requires ≥2 packages
+     currently importing the export by name; this gate has one consumer.
+     Creating `packages/shared/use-cases` here waives the bar rather than
+     clearing it.
+   - **Recommended: foundation-mediated port inversion**, with two landed
+     precedents — `TierGate` (`packages/foundation/capability/mcp-kit/src/TierGate.ts`)
+     and `SourceTextResolver`, the port this SPEC already consumes at rung 1.
+     It needs a product-neutral gate port in a new `foundation/capability`
+     package, which breaches the Non-Goal below and therefore requires an
+     Exception Ledger entry plus owner sign-off before P2 writes it.
+   - **Rung 1 is unaffected by this choice and is complete** — the shape
+     decides who reads the predicate, not what the predicate is.
+10. **Owner ruling on decision 9 (2026-08-05): durability now, gate shape
+    deferred.** Rung 2 in this goal is the half that needs no cross-slice
+    decision — durable append-and-read-only ports, repository and layer on the
+    `ExecutionLedger` precedent, the slice's first db-admin migration with
+    append-only guards, its PGlite migration test, `AcceptedProofManifest`
+    entries, and the append-only IDS fact records. The cross-slice
+    consultation and the `foundation/capability` gate-port package are
+    deferred to a follow-up, with `research/01-gate-shape-check.md` as the
+    standing evidence. The Exception Ledger entry stays PENDING and is not
+    exercised by this goal.
+11. **Owner ruling on the live-gate criterion (2026-08-05): rescope to the
+    predicate boundary.** Both directions are asserted at the `CandorPolicy`
+    predicate boundary; the app-entrypoint binding and the agents-slice
+    promotion-path consultation are recorded as deferred rather than claimed.
+    This goal never asserts a live gate it cannot prove.
 
 ## Non-Goals
 
@@ -229,7 +274,7 @@ Higher sources outrank lower sources when they conflict.
 
 Rung 1 — domain proof:
 
-- [ ] `PatentCitationEvent`, `CandorDisposition`, and the application-identity
+- [x] `PatentCitationEvent`, `CandorDisposition`, and the application-identity
       union land in `law-practice/domain` in design order (schema first), with
       LiteralKit actor/judgment domains, both judgment slots (Rule 56 vs
       litigation-frame) representable, the tagged discovery-provenance
@@ -240,9 +285,9 @@ Rung 1 — domain proof:
       reference, so revising or withdrawing a judgment is representable
       without editing a recorded disposition (precedents:
       `ClaimDispositionStatus`, `EdgeVersion.supersedesId`).
-- [ ] `CandorPolicy` `Context.Service` contract in `law-practice/use-cases`
+- [x] `CandorPolicy` `Context.Service` contract in `law-practice/use-cases`
       owns the derived, fail-closed predicate with no stored closure state.
-- [ ] `CandorPolicy.test.ts` — written failing first, then green — proves:
+- [x] `CandorPolicy.test.ts` — written failing first, then green — proves:
       promotion blocked until an attorney disposition covers the AI event's
       exact observation version, and released — the predicate reports
       promotion no longer candor-blocked — once every current AI-discovered
@@ -261,25 +306,25 @@ Rung 1 — domain proof:
       source text fails to resolve or fails `verifyTextAnchor` stays
       uncovered; quarantined and possible-duplicate fixtures stay
       uncovered; examiner-observed events record without gating.
-- [ ] The test runs slice-isolated: in-memory/test-only layers, no other
+- [x] The test runs slice-isolated: in-memory/test-only layers, no other
       slice booted, no app runtime Layer.
 
 Rung 2 — durability + live gate:
 
-- [ ] Durable storage for events, dispositions, and IDS fact records via
+- [x] Durable storage for events, dispositions, and IDS fact records via
       ports → repo/layer on the `ExecutionLedger` precedent. All three
       surfaces are append-and-read-only — the ports expose no update and no
       delete (`ExecutionLedger.ports.ts`, `ClaimDisposition.ports.ts`) — so
       a disposition is revised or withdrawn only by appending a superseding
       record, never by overwriting what was decided at filing time.
-- [ ] The law-practice slice's first db-admin migration with its PGlite
+- [x] The law-practice slice's first db-admin migration with its PGlite
       migration test, both registered in `AcceptedProofManifest`. The
       migration installs `BEFORE UPDATE OR DELETE` / `BEFORE TRUNCATE`
       append-only guards on the disposition and fact tables (precedent:
       `20260730043536_epistemic_evidence_verification/migration.sql`), and
       the PGlite test asserts that both an UPDATE and a DELETE against a
       recorded disposition are rejected.
-- [ ] Fact families recorded as presence-only facts: submission acts with
+- [x] Fact families recorded as presence-only facts: submission acts with
       1.97 candidate-window facts, 1.17(p)/1.17(v) fee facts, 1.97(e)
       statement presence/type + the 1.98(a)(4) written assertion, 1.98
       content-presence facts, office-treatment states as observed, and
@@ -291,6 +336,28 @@ Rung 2 — durability + live gate:
       blocking it — both directions asserted at the predicate boundary,
       since the agents slice's single-member `RuntimeApprovalDecision`
       (`pending`) cannot express advancement and this goal never widens it.
+
+      **P0 feasibility finding (2026-08-05): this criterion is not achievable
+      as written and needs rescoping before P2 attempts it.** "A real filing
+      candidate" was defined as the promotion path of record, but that path
+      has no runtime: `ProfessionalRuntimeSdk` has exactly one implementation
+      (`ProfessionalRuntime.fixture-service.ts`, in-memory), consumed only by
+      `packages/agents/use-cases/test/ProfessionalRuntime.test.ts`, with no
+      `agents/server` implementation and no app wiring. No app composes both
+      slices: `apps/professional-desktop` depends on the agents slice and not
+      law-practice; `apps/practice-kg-mcp` depends on law-practice and not
+      agents. Either P2 additionally stands up an app-entrypoint binding (a
+      new app-level dependency edge, lawful but unscoped by this SPEC), or
+      the criterion is rescoped to the proof SDK's promotion path asserted at
+      the predicate boundary, with the deferred binding recorded. Evidence:
+      [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md)
+      §2.D.
+
+      **Resolved by decisions 10 and 11: this criterion is DEFERRED out of
+      this goal.** Both predicate directions are proven at the boundary by
+      `CandorPolicy.test.ts`; the cross-slice consultation, its gate-port
+      package, and the app-entrypoint binding move to a follow-up together,
+      so nothing here claims a live gate the repo cannot currently run.
 
 Gated criteria (activate when the owning goal lands; never block this goal):
 
@@ -340,4 +407,4 @@ Always binding (both rungs):
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| **PENDING SIGN-OFF** — one new `foundation/capability` package holding a product-neutral gate port | Rung 2 only; the port carries no candor, citation, filing, or disposition semantics | Unassigned — requires repo owner | Decision 9: the two shapes decision 7 authorized are unavailable (events have no transport and cannot fail closed; the promoted contract fails the ≥2-consumer promotion bar). Foundation-mediated port inversion is the mechanism the repo ratified 2026-07-25 for exactly this synchronous fail-closed case, and is strictly smaller than either alternative. | Not applicable — the package is the lawful home. Withdraw the exception only if the gate stops needing a cross-slice consumer. |

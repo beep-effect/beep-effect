@@ -1244,6 +1244,7 @@
           "@beep/db-admin",
           "@beep/documents-tables",
           "@beep/epistemic-tables",
+          "@beep/law-practice-tables",
           "@beep/postgres",
           "@beep/test-utils",
           "@beep/utils",
@@ -1254,6 +1255,7 @@
           "@beep/db-admin",
           "@beep/documents-tables",
           "@beep/epistemic-tables",
+          "@beep/law-practice-tables",
           "@beep/postgres",
           "@beep/test-utils",
           "@beep/utils",
@@ -1957,6 +1959,7 @@
           "@beep/libpff",
           "@beep/mcp-kit",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/tika",
@@ -1978,6 +1981,7 @@
           "@beep/libpff",
           "@beep/mcp-kit",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/tika",
@@ -1987,14 +1991,18 @@
       {
         "from": "@beep/law-practice-tables",
         "allow": [
+          "@beep/drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -2010,6 +2018,7 @@
           "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2023,6 +2032,7 @@
           "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
