@@ -19,9 +19,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
-import { Effect, flow, Order, pipe } from "effect";
+import { Effect, flow, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

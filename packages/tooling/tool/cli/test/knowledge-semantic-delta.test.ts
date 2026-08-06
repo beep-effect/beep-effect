@@ -118,7 +118,7 @@ const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(fun
 });
 
 const independentDigest = (text: string): Effect.Effect<string> =>
-  independentDigestEffect(text).pipe(provideScopedLayer(NodeCrypto.layer));
+  independentDigestEffect(text).pipe(provideScopedLayer(NodeCrypto.layer), Effect.orDie);
 
 const lp = (value: string): string => {
   const normalized = Str.normalize("NFC")(value);

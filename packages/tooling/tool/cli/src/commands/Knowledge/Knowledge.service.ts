@@ -275,7 +275,13 @@ const trackedPathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPa
 
 const stripQueryAndFragment = Str.replace(/[?#].*$/u, "");
 
-/** Spellings a governed path may never contain: whitespace, glob and shell syntax, ellipses, absolute roots, URLs. */
+/**
+ * Spellings a governed path may never contain: whitespace, glob and shell syntax, ellipses, absolute
+ * roots, URLs.
+ *
+ * @param value - Query-and-fragment-stripped, NFC-normalized spelling read from a document.
+ * @returns True when the spelling carries syntax no tracked repository path can legitimately use.
+ */
 const hasUngovernedPathSyntax = (value: string): boolean =>
   /[\s\\]/u.test(value) ||
   /[*[\]{}<>|:]/u.test(value) ||
@@ -300,7 +306,14 @@ const isGovernedPathSpelling = (raw: string): boolean => {
   });
 };
 
-/** Applies one path segment to the resolved stack, or `O.none()` when `..` escapes the repository root. */
+/**
+ * Applies one path segment to the resolved stack, or `O.none()` when `..` escapes the repository
+ * root.
+ *
+ * @param segments - Segments resolved so far, always rooted at the repository root.
+ * @param segment - Next raw segment; empty and `.` segments leave the stack untouched.
+ * @returns The extended stack, or `O.none()` when `..` would step above the repository root.
+ */
 const applyPathSegment = (segments: ReadonlyArray<string>, segment: string): O.Option<ReadonlyArray<string>> => {
   if (segment === "" || segment === ".") {
     return O.some(segments);
@@ -440,7 +453,13 @@ const commandWords = (span: string): ReadonlyArray<string> => {
   return Str.isEmpty(tail) ? A.empty<string>() : Str.split(/\s+/u)(tail);
 };
 
-/** Drains a global pattern over one line, preserving `exec` order. */
+/**
+ * Drains a global pattern over one line, preserving `exec` order.
+ *
+ * @param pattern - Global pattern whose `lastIndex` advances across the whole drain.
+ * @param text - One line of document prose, already excluded from any fenced block.
+ * @returns Every match in source order, which is what keeps duplicate occurrence indices stable.
+ */
 const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray> => {
   let matches = A.empty<RegExpExecArray>();
   let match = pattern.exec(text);
@@ -465,7 +484,14 @@ const inlineSpanOf = (match: RegExpExecArray): O.Option<InlineSpan> => {
     : O.none();
 };
 
-/** A tracked path that the paired archive does not contain, or `O.none()` when the spelling is fine. */
+/**
+ * A tracked path that the paired archive does not contain, or `O.none()` when the spelling is fine.
+ *
+ * @param raw - Path spelling exactly as written inside the document.
+ * @param documentPath - Containing document, which anchors `./` and `../` resolution.
+ * @param entries - Tracked tree of the archive side currently being scanned.
+ * @returns The normalized repository path when it is governed and absent from that tracked tree.
+ */
 const brokenPathAt = (
   raw: string,
   documentPath: string,
@@ -575,7 +601,13 @@ const closesFence = (line: string, open: OpenFence): boolean => {
   );
 };
 
-/** Fence state after one line: `O.none()` outside a fence, `O.some` while inside one. */
+/**
+ * Fence state after one line: `O.none()` outside a fence, `O.some` while inside one.
+ *
+ * @param fence - Fence state carried in from the preceding line.
+ * @param line - Raw line whose delimiter may open or close the surrounding fenced block.
+ * @returns The fence state the next line starts from.
+ */
 const advanceFence = (fence: O.Option<OpenFence>, line: string): O.Option<OpenFence> =>
   O.match(fence, {
     onNone: () => openedFence(line),
