@@ -39,11 +39,13 @@ const DERIVED_TABLES = [
 /**
  * Parquet export behavior for one derived AI metrics write.
  *
- * @example
+ * **Example** (Read a parquet export mode)
+ *
  * ```ts
  * import { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsParquetExportMode.Enum.snapshot)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -56,12 +58,14 @@ export const AiMetricsParquetExportMode = LiteralKit(["none", "latest", "snapsho
 /**
  * Runtime type for {@link AiMetricsParquetExportMode}.
  *
- * @example
+ * **Example** (Type a parquet export mode)
+ *
  * ```ts
  * import type { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * const mode: AiMetricsParquetExportMode = "latest"
  * console.log(mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -492,7 +496,8 @@ const derivedStorageMigrations = [
 /**
  * Error raised by the DuckDB derived storage projection.
  *
- * @example
+ * **Example** (Construct a projection error)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageError } from "@beep/repo-ai-metrics"
  * const error = AiMetricsDerivedStorageError.make({
@@ -501,6 +506,7 @@ const derivedStorageMigrations = [
  * })
  * console.log(error)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -520,7 +526,8 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
 /**
  * One sanitized transcript ready for derived storage projection.
  *
- * @example
+ * **Example** (Build a sanitized transcript record)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedTranscriptRecord,
@@ -566,6 +573,7 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
  * })
  * console.log(record.archiveObject.archiveObjectId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -584,7 +592,8 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
 /**
  * Input for a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Assemble a derived write input)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -614,6 +623,7 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
  * })
  * console.log(input.parquetExportMode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -641,7 +651,8 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
 /**
  * Result of a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Inspect a derived write result)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageWriteResult } from "@beep/repo-ai-metrics"
  *
@@ -656,6 +667,7 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
  * })
  * console.log(result.parquetTables)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -794,8 +806,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
 /**
  * Ensure the AI metrics derived DuckDB schema exists and has P4 columns.
  *
- * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
- * @example
+ * **Example** (Ensure the schema before writing)
+ *
  * ```ts
  * import { ensureAiMetricsDerivedStorage } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
@@ -807,6 +819,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
  * @category services
  * @since 0.0.0
  */
@@ -1239,12 +1253,8 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
 /**
  * Project sanitized AI metrics records into DuckDB and export Parquet snapshots.
  *
- * @effects
- * - Creates the derived DuckDB directory when missing.
- * - Runs DuckDB table creation and migrations before writing rows.
- * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
- * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
- * @example
+ * **Example** (Write one derived ingest run)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -1276,6 +1286,12 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
  * const write = writeAiMetricsDerivedStorage(input)
  * console.log(write)
  * ```
+ *
+ * @effects
+ * - Creates the derived DuckDB directory when missing.
+ * - Runs DuckDB table creation and migrations before writing rows.
+ * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
+ * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
  * @category services
  * @since 0.0.0
  */
