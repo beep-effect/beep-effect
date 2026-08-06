@@ -38,7 +38,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. Two of its three instrument steps are done:
+P1 is in progress. All three instrument steps are done, and the instrument is
+live and verified in production; the phase is now waiting on baseline wall-clock:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -51,20 +52,29 @@ P1 is in progress. Two of its three instrument steps are done:
    before any parsing. `notifierRev` is `log-only-0`: notifications stay
    **off** by design.
 
-Next concrete action: **collect the ~1 week log-only baseline.** This is
-wall-clock, not work — the instrument-before-treat method in
-[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so
-nothing downstream (notifications, escalation ladder, the P8 paired trial)
-can start until it accrues. P0 storage-cutover preparation may proceed in
-parallel by a separate actor.
+**The ~1 week log-only baseline is running**, open since
+`2026-08-06T13:12:30Z`, target close on or after `2026-08-13T13:12:30Z`. This is
+wall-clock, not work: the instrument-before-treat method in
+[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so nothing
+downstream (notifications, escalation ladder, the P8 paired trial) can start
+until it accrues, and turning any of them on mid-window destroys it.
+`notifierRev` stays `log-only-0` throughout. P0 storage-cutover preparation may
+proceed in parallel by a separate actor.
 
-**Day-1 checks: done 2026-08-06** against 1,329 live rows across 10 session
-shards (`research/2026-08-06-p1-instrument-live-handoff.md`). `PermissionRequest`
-fires, `PostToolUseFailure` fires (amendment 8 validated), and the payload shapes
-hold. One check remains open: **no `ExitPlanMode` plan approval has been observed
-yet**, and that is the headline wait class. Verify one end to end before starting
-the baseline. An operator-salt decision is also required first — rows hashed
-under the public default cannot be strengthened retroactively.
+**Day-1 checks and both pre-baseline gates: closed 2026-08-06**
+(`research/2026-08-06-p1-instrument-live-handoff.md`). Verified against 1,329
+live rows: `PermissionRequest` fires, `PostToolUseFailure` fires (amendment 8
+validated), payload shapes hold. Then the two blockers were cleared:
+
+1. **Plan approval is observed.** A full `ExitPlanMode` bracket was captured at
+   13:10:06Z — `PreToolUse` → `PermissionRequest{waitReason: "plan-approval"}` →
+   `PostToolUse`, joined through the amendment-4 two-hop rule, true wait 12.935s.
+   The headline wait class is instrumented. New hazard recorded there:
+   `permissionMode` flips *within* a bracket, so stratification must key on the
+   `PermissionRequest` row, never the terminal event.
+2. **Operator salt provisioned**, sourced from `op://TBK/ai-metrics/hash-salt`,
+   cut over globally at `2026-08-06T13:12:20Z`. Pre-cutover rows are verification
+   data in a different pseudonym namespace and are not baseline data.
 
 ## Latest Evidence
 

@@ -1,7 +1,7 @@
 # P1 instrument: live verification and session handoff
 
 Date: 2026-08-06
-Status: instrument shipped and live; baseline not yet started deliberately
+Status: instrument shipped and live; both pre-baseline gates closed same day
 Predecessor: `2026-08-01-p1-hook-semantics-spike.md`
 
 ## What shipped
@@ -55,42 +55,109 @@ failure event is real and does fire — 5 rows — but for genuine tool errors, 
 command exit codes. Bracket-closing for ordinary failing shell commands is
 therefore unaffected.
 
-## The one check still open
+## The last check: closed 2026-08-06
 
-**`plan-approval` has never been observed.** All 4 `PermissionRequest` rows are
-`AskUserQuestion` → `tool-permission`. No `ExitPlanMode` approval has been
-captured, and that is the headline wait class — the p95 105-minute figure this
-whole packet exists to reduce.
+**`plan-approval` is now observed in production.** Captured deliberately at
+13:10:06Z by writing this session's own plan in plan mode and having the operator
+approve it. The bracket is complete and matches the amended design exactly:
 
-Do not start the week-long baseline until one `ExitPlanMode` approval has been
-observed end to end. Ten minutes of deliberate verification de-risks seven days
-of collection. Expected shape: a `PermissionRequest` row with
-`toolName: "ExitPlanMode"` and `waitReason: "plan-approval"`, closed by a
-`PostToolUse` bearing the same `toolUseId`.
+| Event | ts | `toolUseId` | `waitReason` | `permissionMode` |
+| --- | --- | --- | --- | --- |
+| `PreToolUse` | 13:10:06.132Z | `toolu_015GXU9UDRYhVBxRmB8NrJDN` | `none` | `plan` |
+| `PermissionRequest` | 13:10:06.150Z | *(absent)* | **`plan-approval`** | `plan` |
+| `PostToolUse` | 13:10:19.086Z | `toolu_015GXU9UDRYhVBxRmB8NrJDN` | `none` | `bypassPermissions` |
 
-## Decision required before the baseline accrues
+True wait, per amendment 3: `13:10:19.086 − 13:10:06.150 − 1ms` = **12.935s**.
 
-**Operator salt.** `sessionId` / `cwd` / `transcriptPath` are hashed with
-`hashPrivateIdentifier`, whose salt defaults to the public constant
-`beep-ai-metrics-local-smoke-insecure-salt`. Against guessable filesystem paths
-that is weak protection. Rows hashed under the default **cannot be strengthened
-retroactively**, so this is a now-or-never call for the baseline corpus.
+This validates three amendments against real production rows at once.
+Amendment 2's derivation (`ExitPlanMode` ⇒ `plan-approval`) fires. Amendment 4's
+premise holds literally — `PermissionRequest` carries **no** `tool_use_id`, so
+the two-hop join through the nearest preceding unpaired `PreToolUse` is the only
+way to reach the closing event, and it resolves cleanly here. Amendment 3's
+execution subtraction is computable, though at `durationMs: 1` it is immaterial
+for this tool specifically.
 
-Known divergence, documented in `hook-pulse.sh`: every other ai-metrics producer
-threads an operator salt (`forwarder.ts` provisions `BEEP_AI_METRICS_HASH_SALT`
-from 1Password), but `privateReference` in `hook-pulse.ts` hashes with the
-default unconditionally to keep that schema transform pure. On a salted machine,
-writer rows and codec-migrated rows land in different pseudonym namespaces.
+**New finding: `permissionMode` is not stable across a bracket.** The opening two
+events report `plan`; the closing `PostToolUse` reports `bypassPermissions`,
+because approving the plan exits plan mode before the tool completes. Any
+stratification on permission mode must therefore key on the **`PermissionRequest`
+row**, never on the terminal event — keying on the terminal event would file
+every plan approval under the session's ambient mode and make the headline wait
+class statistically invisible. This is a genuine measurement hazard that only
+appears once a real approval is captured.
 
-## Next steps, in order
+Caveat on generality: this is one approval, answered in ~13 seconds, under an
+ambient `bypassPermissions` session. It proves the event fires and the bracket
+closes; it says nothing yet about the p95 tail. That is what the baseline is for.
 
-1. Observe one `ExitPlanMode` plan approval end to end (above).
-2. Decide the operator salt (above).
-3. Start the ~1 week log-only baseline. It is wall-clock, not work — everything
-   downstream (notifications, escalation ladder, the P8 paired trial) is gated
-   on having it.
-4. While it accrues: P0 storage cutover may proceed in parallel by a separate
-   actor, per PLAN.md.
+## Operator salt: decided and cut over 2026-08-06
+
+**Decision: salt the corpus.** `BEEP_AI_METRICS_HASH_SALT` is now provisioned in
+the `env` block of the operator's `~/.claude/settings.json`, sourced once from
+`op://TBK/ai-metrics/hash-salt`. The ai-metrics rung was chosen over
+`BEEP_HOOK_PULSE_HASH_SALT` so hook rows share a pseudonym namespace with the
+rest of the stack, which is what P4 reconciliation will need.
+
+The deciding argument was not the strength of the hash but **where the rows go**:
+this repository is public and the packet commits ledgers under
+`history/evidence/`. The default salt is a constant published in the same
+repository as the digests, so any committed row lets a reader recover `cwd` and
+`transcriptPath` by hashing a guessed list of clone paths. `sessionId` is a v4
+UUID and was never exposed either way. Salting is therefore a publication
+requirement, not a hardening nicety.
+
+**Cutover is sharp and global: `2026-08-06T13:12:20Z`.** Bucketing every row by
+30s and classifying each `cwd` against both salts shows 100% default-namespace
+before that second and 100% operator-namespace after 13:12:30Z, across *all*
+concurrently running sessions on the workstation — several hundred rows per
+bucket, not just the session that made the change.
+
+**Load-bearing operational finding: settings `env` reaches hook subprocesses
+immediately, with no session restart.** This was assumed in the plan and could
+have failed silently — a week of collection on the default salt would have looked
+identical to success. It was verified by recomputing the expected digest
+independently and watching it appear in the live stream within one tool call.
+
+Two consequences for anyone reading the corpus:
+
+- The ~1,700 pre-cutover rows are **day-1 verification data, not baseline data**,
+  and are not joinable with baseline rows. Do not migrate or re-hash them; the
+  namespace boundary is the timestamp above.
+- Never commit a confirmed path→digest pair to this repo. Publishing "clone X
+  hashes to Y" re-identifies every row for that clone and undoes the cutover. The
+  verification recipe below recomputes from the live salt instead of quoting a
+  digest, deliberately.
+
+Known divergence, unchanged and now *active*: `privateReference` in
+`hook-pulse.ts` calls `hashPrivateIdentifier(value, undefined)` unconditionally,
+so the codec still hashes with the default. Writer rows arrive already 64-hex and
+pass through untouched, and nothing outside `hook-pulse.ts` consumes the codec's
+raw-event path today, so this is latent for the baseline. It must be resolved
+before P4 replay reconciles v2 wait spans against this ledger.
+
+## Baseline: open
+
+Both pre-baseline gates closed on 2026-08-06, so the ~1 week log-only baseline is
+**open as of `2026-08-06T13:12:30Z`** — the first bucket entirely in the operator
+salt namespace. Target close: on or after `2026-08-13T13:12:30Z`.
+
+`notifierRev` stays `log-only-0` for the whole window. Notifications, the
+escalation ladder, and the P8 paired trial all remain gated on this baseline;
+turning any of them on mid-window destroys it, because `notifierRev` is a
+stratification variable and not the treatment.
+
+This is wall-clock, not work. The correct action for the next seven days is to
+leave the instrument alone.
+
+Remaining, and safe to do in parallel:
+
+1. P0 storage cutover, by a separate actor, per PLAN.md.
+2. Resolve the `privateReference` salt divergence before P4 replay (above). Not
+   urgent, but it is now a real inconsistency rather than a hypothetical one.
+
+Do **not** re-run the plan-approval check to "get more samples" — the baseline
+collects those naturally, and a deliberately fast approval is not a sample of the
+p95 tail.
 
 ## Traps worth not re-learning
 
