@@ -845,6 +845,25 @@ validation for the reflection: the stale-base guard caught a real revert
 hazard pre-ship; the append-optional discipline is WHY the review P1s
 were findable; repair's config-sync → lint-fix → laws ordering is right.
 
+PR-I evidence amendment — idle-without-reporting (operator observation,
+2026-08-06, recurring across sessions): sub-agents finish or go idle
+without a final report, forcing orchestrators to re-derive WHAT was done
+(discovery cost, distinct from verification cost). Three observed loss
+modes for chat-borne reports: final turn ends on a tool call (gate green
+→ idle, no closing text); result-cap truncation (three of five fix-wave
+reports arrived cut mid-sentence); death/compaction near the end (the
+power outage left a journal saying "started" beside completed work).
+Sharpen #45: the report file is written INCREMENTALLY, before the final
+gate run — an end-composed file shares the chat message's failure modes;
+`beep agent report list` makes discovery independent of the last
+message. #52 rider: the brief carries "the report file is the
+deliverable; the final message is a pointer." Doctrine available today:
+report-bearing fan-outs go through Workflow agent() WITH schema (the
+harness forces validated structured output; free-text stages and
+teammate flows are where every observed loss occurred). Verify-don't-
+trust stays: reports are claims, gates are evidence (#71) — report
+durability fixes discovery, not trust.
+
 PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
 wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
 findings should anchor on SYMBOL NAMES, not line numbers — three of four
