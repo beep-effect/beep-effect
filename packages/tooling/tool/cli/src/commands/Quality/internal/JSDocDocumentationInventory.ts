@@ -8,6 +8,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
+import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
@@ -88,13 +89,40 @@ const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pickOptions([
   "forbidden-remarks",
 ]);
 
-type DocumentationIssue = {
-  readonly rule: JSDocDocumentationRuleCode;
-  readonly detail?: string;
-  readonly lineOffset?: number;
-  readonly text?: string;
-  readonly example?: number;
-};
+/**
+ * One JSDoc documentation finding produced by an inventory rule.
+ *
+ * **Example** (Construct a finding)
+ *
+ * ```ts
+ * import { DocumentationIssue } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DocumentationIssue)({ rule: "forbidden-remarks" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DocumentationIssue = S.Struct({
+  rule: JSDocDocumentationRuleCode,
+  detail: S.String.pipe(S.UndefinedOr, S.optionalKey),
+  lineOffset: S.Int.pipe(S.UndefinedOr, S.optionalKey),
+  text: S.String.pipe(S.UndefinedOr, S.optionalKey),
+  example: S.Int.pipe(S.UndefinedOr, S.optionalKey),
+}).pipe(
+  $I.annoteSchema("DocumentationIssue", {
+    description: "One JSDoc documentation finding produced by an inventory rule.",
+  })
+);
+
+/**
+ * One JSDoc documentation finding produced by an inventory rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DocumentationIssue = typeof DocumentationIssue.Type;
 
 type InventoryEntry = JsonRecord & {
   readonly remediationStatus: "open" | "resolved";
@@ -260,40 +288,8 @@ const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.reso
 const markdownAnchor = (value: string): string =>
   Str.replace(/^-+|-+$/g, "")(Str.replace(/[^a-z0-9]+/g, "-")(Str.replace(/`/g, "")(Str.toLowerCase(value))));
 
-const globPatternToRegExp = (pattern: string): RegExp => {
-  const normalized = normalizeSlashes(Str.replace(/^\.\//, "")(pattern));
-  let source = "^";
-  let index = 0;
-
-  while (index < normalized.length) {
-    const char = normalized[index];
-    const next = normalized[index + 1];
-    const afterNext = normalized[index + 2];
-
-    if (char === "*" && next === "*" && afterNext === "/") {
-      source += "(?:.*/)?";
-      index += 3;
-      continue;
-    }
-
-    if (char === "*" && next === "*") {
-      source += ".*";
-      index += 2;
-      continue;
-    }
-
-    if (char === "*") {
-      source += "[^/]*";
-      index += 1;
-      continue;
-    }
-
-    source += escapeRegExp(char ?? "");
-    index += 1;
-  }
-
-  return new RegExp(`${source}$`);
-};
+const globPatternToRegExp = (pattern: string): RegExp =>
+  sharedGlobPatternToRegExp(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)));
 
 const packageSourceMatchesExclude = (
   packagePath: string,
@@ -435,8 +431,32 @@ const missingRequiredExportTags = (
   return missingRequiredTags(effectiveTags, requiredTags);
 };
 
+/**
+ * Score one JSDoc comment against the documentation section-shape rules.
+ *
+ * **Details**
+ *
+ * This is the exact scorer the JSDoc ratchet totals are built from, exported
+ * within the package so the carrier-migration codemod can use it as a
+ * per-block oracle: a rewrite is acceptable only when the finding set shrinks
+ * or holds. It never becomes a cross-package public surface.
+ *
+ * **Example** (Score a legacy comment)
+ *
+ * ```ts
+ * import { documentationShapeViolations } from "@beep/repo-cli/test/Quality"
+ *
+ * const findings = documentationShapeViolations("/** Lead.\n *\n * @remarks Detail. *" + "/")
+ * console.log(findings.some((finding) => finding.rule === "forbidden-remarks")) // true
+ * ```
+ *
+ * @param commentText - Raw JSDoc comment text to score.
+ * @returns Shape findings for the comment, empty when compliant.
+ * @category use-cases
+ * @since 0.0.0
+ */
 // fallow-ignore-next-line complexity -- this flat pass preserves the documented section-order state machine in one auditable rule boundary
-const documentationShapeViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
+export const documentationShapeViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const findings: Array<DocumentationIssue> = [];
   const { bodyLines, sections } = parseSections(commentText);
   const hasNewStyleSections = A.isReadonlyArrayNonEmpty(sections);
