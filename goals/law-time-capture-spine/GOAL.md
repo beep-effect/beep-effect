@@ -40,7 +40,7 @@ Workflow:
 5. Prove the approval firewall, idempotency, retention, revocation, and pilot
    thresholds; do not substitute inferred duration for explicit timer duration.
 6. Update packet evidence/status as readiness changes.
-7. At P3 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
+7. At P4 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
    `/reflect`; `bun run beep lint reflection-artifacts` must pass.
 
 Acceptance:
