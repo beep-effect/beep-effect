@@ -107,6 +107,9 @@ workflows in skills.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
   MCP server; the `chrome-devtools` MCP is slim and default-disabled, for
   perf-trace/computed-style introspection during QA sessions.
+- Codex Cloud security findings: export the CSV from the signed-in findings
+  view, then `bun run beep codex findings ingest --from <export.csv>`; prefer
+  the `codex-findings` skill. Never hand-build the packet.
 
 ## Context Economy
 
