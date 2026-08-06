@@ -481,14 +481,19 @@ const derivedStorageMigrations = [
     // lands would see millions of NULLs and flush the whole history to Phoenix in one
     // burst -- the exact backpressure collapse this work exists to prevent.
     //
-    // The newest ingest run is deliberately excluded. Under the old scheme a run that
-    // committed turns and then died before exporting was rescued by the next run,
-    // which re-minted those rows under a fresh id and exported them -- so the content
-    // did reach Phoenix even though the original rows never did. The one case with no
-    // such rescue is the final run before this migration: if it crashed before
-    // exporting, nothing came after it. Leaving that run's turns unmarked costs at
-    // most one run's worth of re-exported spans if it had in fact succeeded, and
-    // avoids silently burying data if it had not.
+    // The newest ingest run that actually committed turns is deliberately excluded.
+    // Under the old scheme a run that committed turns and then died before exporting
+    // was rescued by the next run, which re-minted those rows under a fresh id and
+    // exported them -- so the content did reach Phoenix even though the original rows
+    // never did. The one case with no such rescue is the final turn-bearing run before
+    // this migration: if it crashed before exporting, nothing came after it. Leaving
+    // that run's turns unmarked costs at most one run's worth of re-sent spans if it
+    // had in fact succeeded -- and those carry content-addressed span ids the collector
+    // deduplicates -- while marking them would silently bury data.
+    //
+    // "That committed turns" is load-bearing. Scoping the exclusion to the newest run
+    // outright meant a later zero-turn run (a discovery pass that found nothing new)
+    // shadowed the real one, and the genuinely at-risk turns were marked after all.
     //
     // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
     // applied before the run's inserts, so genuinely new turns are never swept up.
@@ -508,7 +513,13 @@ const derivedStorageMigrations = [
        SET otlp_exported_at_epoch_ms = 0
        WHERE otlp_exported_at_epoch_ms IS NULL
          AND ingest_run_id <> COALESCE(
-           (SELECT ingest_run_id FROM ai_metrics_ingest_runs ORDER BY started_at_epoch_ms DESC LIMIT 1),
+           (SELECT runs.ingest_run_id
+            FROM ai_metrics_ingest_runs runs
+            WHERE EXISTS (
+              SELECT 1 FROM ai_metrics_turns turns WHERE turns.ingest_run_id = runs.ingest_run_id
+            )
+            ORDER BY runs.started_at_epoch_ms DESC
+            LIMIT 1),
            ''
          )`,
     ],
