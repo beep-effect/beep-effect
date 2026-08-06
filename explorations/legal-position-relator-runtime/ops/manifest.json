@@ -3,12 +3,12 @@
   "exploration": {
     "slug": "legal-position-relator-runtime",
     "title": "Legal Position Relator Runtime",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/legal-position-relator-runtime"],
       "docs": [],
       "supersededBy": null
     },

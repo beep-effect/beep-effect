@@ -2,10 +2,13 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated into
+[`goals/legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md).
 
 ## Spark
 
@@ -26,22 +29,29 @@ matrix (2026-08-01 reconciliation grill; 2026-08-04 phase-2 grill; opened
 
 ## Next Open Question
 
-The BRIEF is APPROVED (Benjamin, 2026-08-06): drafted inside the six align
-boundaries, hardened by a three-lens Opus review (39 findings folded, 5 P1
-— see the shape entry in [`DECISIONS.md`](./DECISIONS.md)), and landed
-together with this pointer — if you are reading this on main, the BRIEF PR
-is merged. Next: **decompose** — author `MAP.md` (candidate goal packet(s)
-per the BRIEF appetite, sequencing, the first vertical slice, and the
-capability check with file-grounded cites), then run the four-point
-graduation definition-of-ready and graduate on Benjamin's call.
+None — this packet is complete. It walked capture → research → align → shape →
+decompose → graduate and spawned
+[`goals/legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md),
+which now owns the work. The packet remains as provenance: the BRIEF, the ten
+binding decisions, both research lanes, and `MAP.md`'s capability table are the
+goal's source record, and the goal's `SPEC.md` back-links here rather than
+copying.
+
+Anyone resuming the *campaign* should start at the parent packet
+[`../legal-patent-kg-deepening/README.md`](../legal-patent-kg-deepening/README.md),
+whose queued wedges (`patent-drafting-episode-ledger`, the FunctionalUnit
+extension) wait on Benjamin's call.
 
 ## Read This First
 
-1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): both cluster rows, ten nuggets, grounding, cautions.
-3. [`DECISIONS.md`](./DECISIONS.md) - pre-seeded wedge decisions: research lanes, dependency posture, orchestration, PR staging.
-4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (stub until research).
-5. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
+1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, links to the graduated goal.
+2. [`BRIEF.md`](./BRIEF.md) - the approved pitch (problem, appetite, sketch, rabbit holes, no-gos).
+3. [`DECISIONS.md`](./DECISIONS.md) - the ten binding decisions seeded into the goal's SPEC decision log.
+4. [`MAP.md`](./MAP.md) - the decompose surface: one packet, two rungs, sequencing, first slice, capability table.
+5. [`RESEARCH.md`](./RESEARCH.md) - stage-1 synthesis over [`research/01-repo-surfaces.md`](./research/01-repo-surfaces.md) and [`research/02-position-relator-legal-frame.md`](./research/02-position-relator-legal-frame.md).
+6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (primary copy; the goal's is a reproduction).
+7. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): both cluster rows, ten nuggets, grounding, cautions.
+8. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
 
 ## Trail
 
@@ -91,3 +101,22 @@ graduation definition-of-ready and graduate on Benjamin's call.
   cross-slice rabbit hole, breaker/proof consistency), and APPROVED by
   Benjamin. Stage align → shape. Next: decompose (`MAP.md`), the
   four-point gate, then graduation on Benjamin's call.
+- 2026-08-06: decomposed and GRADUATED into
+  [`goals/legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md)
+  — one packet, two strict rungs, per the BRIEF appetite. Before writing
+  `MAP.md`, a four-lane Opus 5 panel (Workflow `wf_2900c494-4f9`)
+  re-verified every capability anchor against `main` *after* the candor
+  sibling's implementation (PR #575) merged, then adversarially rechecked
+  the eight non-confirmed findings. That settled the two questions the
+  BRIEF explicitly deferred to decompose: the **migration-lane fork**
+  resolves in this packet's favour (the candor goal's rung 2 already opened
+  the lane, so rung 2 here generates a delta migration and is not the
+  first mover), and the **candidate-handoff shape** splits — rung 1 crosses
+  no slice boundary at all, while rung 2's handoff is narrowed to four
+  evaluated shapes, three with disqualifying evidence, and routed to goal
+  P0 with an `architecture-guardian` check rather than guessed at. The
+  adversarial pass also overturned one of this session's own claims: five
+  live inverse-flavoured surfaces exist (including a real involution at
+  `Session.model.ts:861`), so the derivations are NET-NEW only in the
+  narrower sense recorded in `MAP.md`. Four-point definition-of-ready
+  passed. Stage shape → graduate; status `active` → `graduated`.
