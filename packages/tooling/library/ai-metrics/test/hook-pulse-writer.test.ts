@@ -32,6 +32,16 @@ import { ChildProcess } from "effect/unstable/process";
 // checkout path containing a space or `#` would yield an unspawnable writer path.
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
+// The operator half of the same instrument: the switch writes the sentinel the
+// writer tests for, so the two scripts have to agree about where it lives.
+const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
+
+// Named once because three parties spell these: the writer (which tests for the
+// sentinel before anything else), the switch (which writes both), and this file
+// (which reads both back). Neither name is exported from the TypeScript side yet,
+// so a single const here is the closest thing to one definition.
+const DISARM_SENTINEL_FILE = "hook-pulse.disarmed";
+const DISARM_WINDOWS_FILE = "hook-pulse-disarm-windows.ndjson";
 
 // A distinctive marker planted in every content-bearing raw key measured by the
 // P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
@@ -141,7 +151,7 @@ const runWriter = Effect.fnUntraced(function* (
 
   if (O.isSome(O.fromUndefinedOr(options.disarmSentinel))) {
     yield* fs.makeDirectory(evidenceRoot, { recursive: true });
-    yield* fs.writeFileString(path.join(evidenceRoot, "hook-pulse.disarmed"), `${options.disarmSentinel}\n`);
+    yield* fs.writeFileString(path.join(evidenceRoot, DISARM_SENTINEL_FILE), `${options.disarmSentinel}\n`);
   }
 
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
@@ -820,6 +830,350 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["plan-approval"]);
+      })
+    )
+  );
+});
+
+// The switch's two artifacts, stated as schemas rather than as inline object
+// shapes so a field it stops emitting fails the decode instead of passing an
+// assertion that never looked for it. Neither is a `HookPulseV1` row and neither
+// belongs under `hook-events/`: `HookPulseEvent` has no member for "the
+// instrument was off", so representing a disarm window in the canonical ledger
+// would mean inventing a hook event. Keeping the window in a sibling file is
+// what lets P4 replay treat `hook-events/` as exactly one schema.
+const DISARM_WINDOW_SCHEMA_VERSION = "hook-pulse-disarm-window/v1";
+
+const HookPulseDisarmSentinel = S.Struct({
+  disarmedAt: S.String,
+  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
+  reason: S.String,
+});
+
+const HookPulseDisarmWindow = S.Struct({
+  // `null` rather than absent, and rather than a fabricated start: an unknown
+  // window start must stay distinguishable from a measured one.
+  disarmedAt: S.NullOr(S.String),
+  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
+  reason: S.NullOr(S.String),
+  rearmedAt: S.String,
+  schemaVersion: S.Literal(DISARM_WINDOW_SCHEMA_VERSION),
+});
+
+const decodeDisarmSentinel = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmSentinel));
+const decodeDisarmWindow = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmWindow));
+
+// An ISO-8601 UTC instant at second resolution, which is all `date -u
+// +%Y-%m-%dT%H:%M:%SZ` can express. Asserted on `rearmedAt` so a window closed
+// with an empty or malformed stamp fails here rather than decoding as a string.
+const isoSecond = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+interface SwitchRun {
+  readonly exitCode: number;
+  readonly stderr: string;
+  readonly stdout: string;
+}
+
+interface SwitchStore {
+  readonly evidenceRoot: string;
+  readonly sentinelPath: string;
+  readonly stateHome: string;
+  readonly windowsPath: string;
+}
+
+// One isolated evidence root shared by every invocation in a case. The
+// regression this file pins only exists *across* invocations — `disarm`,
+// `disarm`, `arm` is the whole shape of it — so a helper that minted a fresh
+// temp root per call, as `runWriter` does, could not express it at all.
+const makeSwitchStore = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const stateHome = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-switch-" });
+  const evidenceRoot = agentEvidenceRoot(stateHome);
+
+  return {
+    evidenceRoot,
+    sentinelPath: path.join(evidenceRoot, DISARM_SENTINEL_FILE),
+    stateHome,
+    windowsPath: path.join(evidenceRoot, DISARM_WINDOWS_FILE),
+  };
+});
+
+// Same `ChildProcess` wiring as `runWriter`, with one difference that matters:
+// the switch is argv-driven and reads no stdin, so its stdin is `"ignore"`
+// rather than a stream. Leaving a pipe open for a process that never reads it is
+// how the writer test hung for 40 minutes; `"ignore"` cannot reproduce that.
+const runSwitch = Effect.fnUntraced(function* (store: SwitchStore, args: ReadonlyArray<string>) {
+  const handle = yield* ChildProcess.make(switchPath, args, {
+    cwd: repoRoot,
+    // As in `runWriter`: inherited so `jq` and `date` stay on `PATH` without this
+    // file reading `process.env`, which the `processEnvInEffect` law forbids.
+    extendEnv: true,
+    env: {
+      HOME: store.stateHome,
+      XDG_STATE_HOME: store.stateHome,
+      BEEP_AGENT_EVIDENCE_ROOT: store.evidenceRoot,
+      // Cleared so the switch derives the sentinel path from the evidence root
+      // through the same rung `hook-pulse.sh` uses. An override here would let
+      // the two scripts disagree about the path while this suite stayed green,
+      // which is precisely the failure the sentinel cannot afford: the writer
+      // would keep writing against a switch that thinks it is disarmed.
+      BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
+    },
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  const [stdout, stderr, exitCode] = yield* Effect.all(
+    [
+      Stream.mkString(Stream.decodeText(handle.stdout)),
+      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.exitCode,
+    ],
+    { concurrency: "unbounded" }
+  );
+
+  return { exitCode, stderr, stdout };
+});
+
+const readSentinel = Effect.fnUntraced(function* (store: SwitchStore) {
+  const fs = yield* FileSystem.FileSystem;
+
+  return (yield* fs.exists(store.sentinelPath))
+    ? O.some(yield* fs.readFileString(store.sentinelPath))
+    : O.none<string>();
+});
+
+const readWindowRows = Effect.fnUntraced(function* (store: SwitchStore) {
+  const fs = yield* FileSystem.FileSystem;
+  const contents = (yield* fs.exists(store.windowsPath)) ? yield* fs.readFileString(store.windowsPath) : "";
+
+  return A.filter(contents.split("\n"), (line) => line.length > 0);
+});
+
+const seedSentinel = Effect.fnUntraced(function* (store: SwitchStore, contents: string) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(store.evidenceRoot, { recursive: true });
+  yield* fs.writeFileString(store.sentinelPath, contents);
+});
+
+// A sentinel stamped at an instant no test run can collide with. `date -u` has
+// one-second resolution, so two disarms inside the same second produce equal
+// timestamps and a naive "the timestamp did not change" assertion passes against
+// the bug. Seeding an unmistakably older start removes that race outright —
+// preferable to sleeping past a second boundary, which would both slow the suite
+// and put a wall-clock wait inside `it.effect`, whose clock is the `TestClock`.
+const SEEDED_DISARM = {
+  disarmedAt: "2026-08-05T00:00:00Z",
+  evidenceTier: HookPulseEvidenceTier.Enum.unknown,
+  reason: "seeded-first-window",
+};
+const seededSentinelJson = `${encodeJson(SEEDED_DISARM)}\n`;
+
+const expectSingleWindow = (rows: ReadonlyArray<string>): string => {
+  expect(rows).toHaveLength(1);
+  const [row] = rows;
+  expect(row).toBeDefined();
+  return `${row}`;
+};
+
+// Every command below is expected to succeed silently on stderr, so the pair is
+// asserted through one helper: the interesting half of each case is what it did
+// to the sentinel and the ledger, not that it exited.
+const expectSwitchOk = (run: SwitchRun): void => {
+  expect(run.exitCode).toBe(0);
+  expect(run.stderr).toBe("");
+};
+
+// The switch is an operator command rather than a hook, so — unlike the writer —
+// its stdout is a feature and is asserted for content instead of for silence.
+// stderr is still expected empty on every success path: `jq` failing to parse a
+// hand-mangled sentinel is handled, and letting its diagnostics through would
+// train operators to ignore the one channel that reports real trouble.
+layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
+  it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const store = yield* makeSwitchStore();
+        const first = yield* runSwitch(store, ["disarm", "first-reason"]);
+        const afterFirst = yield* readSentinel(store);
+        const second = yield* runSwitch(store, ["disarm", "second-reason"]);
+        const afterSecond = yield* readSentinel(store);
+
+        expectSwitchOk(first);
+        expectSwitchOk(second);
+        // Byte-identity, because the timestamps alone cannot separate "preserved"
+        // from "rewritten within the same second". The reason changes on the
+        // second call, so a `disarm` that overwrites moves these two apart even
+        // when the clock does not.
+        expect(afterSecond).toEqual(afterFirst);
+
+        const decoded = yield* afterSecond.pipe(O.getOrThrow, decodeDisarmSentinel);
+
+        expect(decoded.reason).toBe("first-reason");
+        expect(decoded.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
+        // Reported back to the operator, not silently swallowed: re-running
+        // `disarm` has to say which window it is still inside, or the human has
+        // no way to notice the instrument went down earlier than they think.
+        expect(second.stdout).toContain(`already disarmed since ${decoded.disarmedAt}`);
+      })
+    )
+  );
+
+  it.effect("never moves an existing window start forward, across any elapsed time", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const store = yield* makeSwitchStore();
+        yield* seedSentinel(store, seededSentinelJson);
+
+        const run = yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
+
+        expectSwitchOk(run);
+        // Byte-identical to what was seeded: not the reason, not the timestamp,
+        // not the trailing newline. The seeded start is far enough in the past
+        // that an overwrite is unambiguous rather than clock-resolution noise.
+        expect(yield* readSentinel(store)).toEqual(O.some(seededSentinelJson));
+        expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
+      })
+    )
+  );
+
+  it.effect("closes the ledger window at the FIRST disarm, not the latest", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // This is the assertion that encodes why the overwrite mattered. `arm`
+        // copies the sentinel's `disarmedAt` into the append-only window ledger,
+        // so a re-disarm that moved it forward recorded a *shorter* gap than
+        // actually occurred — silently reclassifying uninstrumented time as
+        // covered. Nothing downstream can detect that: the ledger still looks
+        // complete, and the window it describes is simply wrong.
+        const store = yield* makeSwitchStore();
+        yield* seedSentinel(store, seededSentinelJson);
+        yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
+
+        const armed = yield* runSwitch(store, ["arm"]);
+        const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
+
+        expectSwitchOk(armed);
+        expect(window.schemaVersion).toBe(DISARM_WINDOW_SCHEMA_VERSION);
+        expect(window.disarmedAt).toBe(SEEDED_DISARM.disarmedAt);
+        expect(window.reason).toBe(SEEDED_DISARM.reason);
+        // Self-labelled `unknown`: no hook rows exist for the window, so anything
+        // computed across it is uninstrumented by construction.
+        expect(window.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
+        expect(window.rearmedAt).toMatch(isoSecond);
+        // ISO-8601 UTC at fixed width sorts lexicographically, so this is a real
+        // ordering check: a window that closes before it opens is not a window.
+        expect(window.rearmedAt > SEEDED_DISARM.disarmedAt).toBe(true);
+        // The switch is armed again only if the sentinel is actually gone — the
+        // writer tests for its existence and nothing else.
+        expect(yield* readSentinel(store)).toEqual(O.none());
+      })
+    )
+  );
+
+  A.forEach(
+    [
+      { contents: "", label: "an empty `touch`-created sentinel" },
+      { contents: "{not json", label: "a sentinel holding invalid JSON" },
+    ],
+    ({ contents, label }) => {
+      it.effect(`records an unknown window start for ${label}`, () =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            // `touch`ing the sentinel path is a documented manual disarm, so both
+            // of these are reachable in production. jq's `//` cannot rescue them:
+            // on empty input jq emits nothing and still exits 0, so neither the
+            // alternative nor `||` fires — the same empty-output trap that made
+            // the writer's `capture()` drop whole rows.
+            const store = yield* makeSwitchStore();
+            yield* seedSentinel(store, contents);
+
+            const disarmed = yield* runSwitch(store, ["disarm", "later-reason"]);
+
+            expectSwitchOk(disarmed);
+            // Idempotent here too: a sentinel it cannot parse is still a
+            // sentinel, and stamping a fresh timestamp onto it would invent a
+            // window start where the honest answer is that there isn't one.
+            expect(yield* readSentinel(store)).toEqual(O.some(contents));
+
+            const armed = yield* runSwitch(store, ["arm"]);
+            const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
+
+            expectSwitchOk(armed);
+            // `null`, never the rearm instant: a window whose start defaulted to
+            // "now" would read as a zero-length gap, which is worse than an
+            // admitted unknown because it looks like coverage.
+            expect(window.disarmedAt).toBeNull();
+            expect(window.reason).toBeNull();
+            expect(window.rearmedAt).toMatch(isoSecond);
+            expect(yield* readSentinel(store)).toEqual(O.none());
+          })
+        )
+      );
+    }
+  );
+
+  it.effect("appends nothing when arm runs while already armed", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* makeSwitchStore();
+
+        const run = yield* runSwitch(store, ["arm"]);
+
+        expectSwitchOk(run);
+        expect(run.stdout).toContain("already armed");
+        // The ledger is append-only, so a no-op that appended anything would be
+        // permanent: a phantom window nothing can retract. Not creating the file
+        // at all also keeps "no windows yet" distinguishable from "a window whose
+        // fields all came out empty".
+        expect(yield* readWindowRows(store)).toEqual([]);
+        expect(yield* fs.exists(store.windowsPath)).toBe(false);
+      })
+    )
+  );
+
+  it.effect("reports the sentinel document on status and stops reporting it once armed", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // `status` is how an operator answers "is the instrument recording right
+        // now", so it has to read the same sentinel the writer tests for rather
+        // than a second opinion about it.
+        const store = yield* makeSwitchStore();
+        yield* seedSentinel(store, seededSentinelJson);
+
+        const disarmed = yield* runSwitch(store, ["status"]);
+        yield* runSwitch(store, ["arm"]);
+        const armed = yield* runSwitch(store, ["status"]);
+
+        expectSwitchOk(disarmed);
+        expectSwitchOk(armed);
+        expect(disarmed.stdout).toContain(store.sentinelPath);
+        expect(disarmed.stdout).toContain(SEEDED_DISARM.disarmedAt);
+        expect(disarmed.stdout).toContain(SEEDED_DISARM.reason);
+        expect(armed.stdout).toContain("armed (no sentinel");
+        expect(armed.stdout).not.toContain(SEEDED_DISARM.disarmedAt);
+      })
+    )
+  );
+
+  it.effect("exits 2 with usage on an unknown subcommand", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // Also the non-vacuity anchor for every `exitCode` assertion above: they
+        // all expect 0, so without one case that does not, a `runSwitch` that
+        // silently reported success would satisfy the whole block.
+        const store = yield* makeSwitchStore();
+
+        const run = yield* runSwitch(store, ["bogus"]);
+
+        expect(run.exitCode).toBe(2);
+        expect(run.stderr).toContain("usage:");
+        // Diagnostics on stderr, so a caller piping stdout cannot mistake a
+        // usage error for a status line.
+        expect(run.stdout).toBe("");
       })
     )
   );

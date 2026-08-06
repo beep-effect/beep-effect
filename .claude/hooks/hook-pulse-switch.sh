@@ -36,6 +36,25 @@ now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 case "${1:-status}" in
   disarm)
     mkdir -p "$(dirname "${sentinel}")"
+    # Idempotent on purpose. The instrumentation gap begins at the FIRST disarm,
+    # so re-running `disarm` while already disarmed must not move `disarmedAt`
+    # forward: `arm` copies that timestamp into the append-only window ledger, and
+    # a later start would record a shorter gap than actually occurred. That
+    # silently reclassifies genuinely uninstrumented time as covered — the same
+    # class of quiet wrongness as a wait bracket that closes on the wrong event,
+    # and worse than a loud failure because the ledger still looks complete.
+    # Preserving the original reason follows for the same reason: the window is
+    # attributed to why the instrument first went down, not to the latest command.
+    if [ -e "${sentinel}" ]; then
+      # jq's `//` cannot cover an EMPTY sentinel: with no input jq emits nothing and
+      # still exits 0, so neither the alternative nor `||` fires and the message
+      # renders "since ;". Same empty-output trap as the `capture()` defect in
+      # `hook-pulse.sh`. Default in the shell, where an empty string is observable.
+      disarmed_at="$(jq -r '.disarmedAt // empty' "${sentinel}" 2>/dev/null || true)"
+      case "${disarmed_at}" in "") disarmed_at="an unrecorded time" ;; esac
+      echo "hook-pulse already disarmed since ${disarmed_at}; original window start left intact"
+      exit 0
+    fi
     jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
       '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${sentinel}"
     echo "hook-pulse disarmed: ${sentinel}"
