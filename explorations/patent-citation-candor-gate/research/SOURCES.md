@@ -69,13 +69,18 @@ notes live there):
 - `@beep/provenance` (foundation/modeling/provenance) — `TextAnchor`,
   `VerifiedTextAnchor` (opaque runtime proof vs persistable receipt needing
   re-verification), `SourceTextIdentity` — reuse, LIVE SOURCE.
-- `@beep/epistemic-domain` — `EvidenceSpan` — reuse, LIVE SOURCE.
+- `@beep/epistemic-domain` — `EvidenceSpan` — LIVE SOURCE; **SUPERSEDED
+  2026-08-04** (PR #557 shape refinement, see DECISIONS): NOT embedded — a
+  law-practice → epistemic edge is a forbidden slice-to-slice import;
+  foundation's `TextAnchorVerificationReceipt` suffices for grounding.
 - `@beep/agents-use-cases` — `ProfessionalRuntime` contracts
   (`RuntimeCandidateDraft`, `RuntimeApprovalGate` with array-of-non-empty-
   string `candidateRefs`/`requestedActions`, `RuntimeEvidenceRef`; decision
   vocabulary currently `pending` only; no candor or observation-version
-  field) and `ExecutionLedger` ports (append-only precedent) — compose,
-  LIVE SOURCE.
+  field) — compose read-only, LIVE SOURCE.
+- `@beep/epistemic-use-cases` — `ExecutionLedger` ports (append-only
+  precedent; pattern, not import) — LIVE SOURCE (package attribution
+  corrected 2026-08-04; previously folded into the agents bullet above).
 - SPEC CONTRACT only (compose-only, never fork): `CitationMention`
   (`goals/citation-extraction-engine`), verified-span invariants
   (`goals/citation-verified-span-substrate`), prosecution observations
@@ -84,6 +89,8 @@ notes live there):
 - `PatentCitationEvent`, `CandorDisposition`, `PatentFragmentLocator`,
   `PatentReferenceDiscoveryEvent` — NET-NEW (zero source symbols, re-verified
   2026-08-04 by Lane A's rg sweep; commands recorded in its §5).
+  `PatentReferenceDiscoveryEvent` was checked by Lane A but dropped from the
+  approved BRIEF — recorded here as provenance, not planned work.
 
 ## 5. Cross-links & provenance
 

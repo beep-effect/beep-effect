@@ -3,12 +3,12 @@
   "exploration": {
     "slug": "patent-citation-candor-gate",
     "title": "Patent Citation Candor Gate",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/patent-citation-candor-gate"],
       "docs": [],
       "supersededBy": null
     },
