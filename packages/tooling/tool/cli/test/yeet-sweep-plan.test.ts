@@ -5,6 +5,8 @@ import {
   observeSweepGitState,
   RepoRunContext,
   renderSweepReport,
+  revalidateLocalDeletion,
+  revalidateRemoteDeletion,
   SweepGitState,
   SweepPlan,
   SweepReport,
@@ -47,8 +49,8 @@ const mergedFacts = {
   branchCheckedOutElsewhere: false,
   branchMergedIntoBase: false,
   lockfileMovedOnMainUpdate: true,
-  statusProbeTruncated: false,
-  worktreeProbeTruncated: false,
+  statusProbeUnreliable: false,
+  worktreeProbeUnreliable: false,
   localTip: O.some(mergedTip),
   remoteTip: O.some(mergedTip),
   pullRequestState: O.some("MERGED"),
@@ -193,34 +195,34 @@ describe("truncated probe rail", () => {
   // What `observeSweepGitState` records when the capture bound cut the probe
   // off: the flag plus the conservative value of every fact it feeds.
   const truncatedWorktreeProbe = {
-    worktreeProbeTruncated: true,
+    worktreeProbeUnreliable: true,
     branchCheckedOutElsewhere: true,
     mainCheckedOutElsewhere: true,
   };
-  const truncatedStatusProbe = { statusProbeTruncated: true, worktreeDirty: true };
+  const truncatedStatusProbe = { statusProbeUnreliable: true, worktreeDirty: true };
 
   it("blocks the local deletion and names the truncated command", () => {
     expect(blockerText(stateWith(truncatedWorktreeProbe), "delete-local-branch")).toEqual([
-      "git worktree list --porcelain output was not truncated",
+      "git worktree list --porcelain succeeded without truncation",
     ]);
   });
 
   it("blocks moving HEAD back to main on a truncated worktree list", () => {
     expect(blockerText(stateWith({ ...truncatedWorktreeProbe, headBranch: "feat/merge-loop" }), "end-state")).toEqual([
-      "git worktree list --porcelain output was not truncated",
+      "git worktree list --porcelain succeeded without truncation",
     ]);
   });
 
   it("blocks the fast-forward fetch on a truncated worktree list", () => {
     expect(blockerText(stateWith({ ...truncatedWorktreeProbe, headBranch: "feat/merge-loop" }), "ff-main")).toEqual([
-      "git worktree list --porcelain output was not truncated",
+      "git worktree list --porcelain succeeded without truncation",
     ]);
   });
 
   it("blocks the in-place merge and the install on a truncated status probe", () => {
     const state = stateWith(truncatedStatusProbe);
-    expect(blockerText(state, "ff-main")).toEqual(["git status --porcelain output was not truncated"]);
-    expect(blockerText(state, "lockfile-install")).toEqual(["git status --porcelain output was not truncated"]);
+    expect(blockerText(state, "ff-main")).toEqual(["git status --porcelain succeeded without truncation"]);
+    expect(blockerText(state, "lockfile-install")).toEqual(["git status --porcelain succeeded without truncation"]);
   });
 
   it("leaves the remote deletion untouched by a truncated worktree list", () => {
@@ -430,6 +432,7 @@ const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git worktree list --porcelain", ok(`worktree /repo\nHEAD ${mergedTip}\nbranch refs/heads/main`)],
   ["git merge-base --is-ancestor", nonzero(1)],
   ["git diff --name-only", ok("bun.lock")],
+  ["git ls-remote origin refs/heads/feat/merge-loop", ok(`${mergedTip}\trefs/heads/feat/merge-loop`)],
   ["gh pr view feat/merge-loop", ok(prViewJson)],
 ];
 
@@ -487,11 +490,11 @@ describe("executeSweep", () => {
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const state = yield* observeSweepGitState(sweepContext(root));
-        expect(state.worktreeProbeTruncated).toBe(true);
+        expect(state.worktreeProbeUnreliable).toBe(true);
         expect(state.branchCheckedOutElsewhere).toBe(true);
         expect(state.mainCheckedOutElsewhere).toBe(true);
         expect(blockerText(state, "delete-local-branch")).toEqual([
-          "git worktree list --porcelain output was not truncated",
+          "git worktree list --porcelain succeeded without truncation",
         ]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer(truncatedWorktreeStubs)))
@@ -505,6 +508,94 @@ describe("executeSweep", () => {
         expect(blockerText(state, "delete-local-branch")).toEqual([]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
+  );
+
+  it.effect("reads a failed status probe as unknown, not as a clean worktree", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const state = yield* observeSweepGitState(sweepContext(root));
+        expect(state.statusProbeUnreliable).toBe(true);
+        expect(state.worktreeDirty).toBe(true);
+        expect(blockerText(state, "lockfile-install")).toContain("git status --porcelain succeeded without truncation");
+      })
+    ).pipe(provideScopedLayer(sweepTestLayer([["git status --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("reads a failed worktree list as held branches, not as a free clone", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const state = yield* observeSweepGitState(sweepContext(root));
+        expect(state.worktreeProbeUnreliable).toBe(true);
+        expect(state.branchCheckedOutElsewhere).toBe(true);
+        expect(state.mainCheckedOutElsewhere).toBe(true);
+        expect(blockerText(state, "delete-local-branch")).toEqual([
+          "git worktree list --porcelain succeeded without truncation",
+        ]);
+      })
+    ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("skips remote deletion when the live remote tip moved since planning", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+        expect(remoteStep.outcome.status).toBe("skipped");
+        expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
+          "moved since planning"
+        );
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          ["git ls-remote origin refs/heads/feat/merge-loop", ok("ffff9999eeee8888\trefs/heads/feat/merge-loop")],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
+  );
+});
+
+describe("deletion revalidation", () => {
+  it.effect("refuses a local deletion when the branch tip moved since planning", () =>
+    Effect.gen(function* () {
+      const drifted = stateWith({ localTip: O.some("cccc3333dddd4444") });
+      const refusal = yield* revalidateLocalDeletion("/repo", drifted);
+      expect(O.isSome(refusal)).toBe(true);
+      expect(O.getOrElse(refusal, () => "")).toContain("moved since planning");
+
+      const unchanged = yield* revalidateLocalDeletion("/repo", mergedState);
+      expect(unchanged).toEqual(O.none());
+    }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
+  );
+
+  it.effect("refuses a remote deletion when ls-remote cannot be read", () =>
+    Effect.gen(function* () {
+      const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
+      expect(O.getOrElse(refusal, () => "")).toContain("could not re-verify");
+    }).pipe(
+      provideScopedLayer(
+        sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", nonzero(128)], ...mergedSweepStubs])
+      )
+    )
+  );
+
+  it.effect("treats an already-deleted remote ref as nothing to delete", () =>
+    Effect.gen(function* () {
+      const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
+      expect(O.getOrElse(refusal, () => "")).toContain("no longer exists");
+    }).pipe(
+      provideScopedLayer(
+        sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", ok("")], ...mergedSweepStubs])
+      )
+    )
+  );
+
+  it.effect("allows the remote deletion when the live tip still matches the plan", () =>
+    Effect.gen(function* () {
+      const allowed = yield* revalidateRemoteDeletion("/repo", mergedState);
+      expect(allowed).toEqual(O.none());
+    }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
   );
 });
 

@@ -59,7 +59,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
-import { Clock, DateTime, Effect, Path, pipe } from "effect";
+import { Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -124,10 +124,11 @@ const permissionDenialMarkers = [
  *
  * **Gotchas**
  *
- * `statusProbeTruncated` and `worktreeProbeTruncated` are the "this fact is
- * unknown" carriers. When either is true the boolean it feeds is already forced
+ * `statusProbeUnreliable` and `worktreeProbeUnreliable` are the "this fact is
+ * unknown" carriers, set when the probe failed, exited nonzero, or overran the
+ * capture bound. When either is true the boolean it feeds is already forced
  * to its conservative value here, so a reader of the raw facts is safe too; the
- * flag exists so the plan can name the truncated command as the blocker instead
+ * flag exists so the plan can name the unreadable command as the blocker instead
  * of asserting a worktree state nobody observed.
  *
  * **Example** (Describe a merged branch that is safe to delete)
@@ -145,8 +146,8 @@ const permissionDenialMarkers = [
  *   branchCheckedOutElsewhere: false,
  *   branchMergedIntoBase: false,
  *   lockfileMovedOnMainUpdate: true,
- *   statusProbeTruncated: false,
- *   worktreeProbeTruncated: false,
+ *   statusProbeUnreliable: false,
+ *   worktreeProbeUnreliable: false,
  *   localTip: O.some("aaaa1111"),
  *   remoteTip: O.some("aaaa1111"),
  *   pullRequestState: O.some("MERGED"),
@@ -169,8 +170,8 @@ export class SweepGitState extends S.Class<SweepGitState>($I`SweepGitState`)(
     branchCheckedOutElsewhere: S.Boolean,
     branchMergedIntoBase: S.Boolean,
     lockfileMovedOnMainUpdate: S.Boolean,
-    statusProbeTruncated: S.Boolean,
-    worktreeProbeTruncated: S.Boolean,
+    statusProbeUnreliable: S.Boolean,
+    worktreeProbeUnreliable: S.Boolean,
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -232,8 +233,8 @@ const holdsBranch = (held: boolean, headBranch: string, branch: string): boolean
 const pullRequestIsMerged = (state: SweepGitState): boolean =>
   O.exists(state.pullRequestState, (value) => value === "MERGED");
 
-const truncatedProbePrecondition = (command: string): SweepPrecondition =>
-  precondition(`${command} output was not truncated`, false);
+const unreliableProbePrecondition = (command: string): SweepPrecondition =>
+  precondition(`${command} succeeded without truncation`, false);
 
 /**
  * A truncated probe leaves the fact unknown, so the blocker names the command
@@ -243,18 +244,18 @@ const truncatedProbePrecondition = (command: string): SweepPrecondition =>
  * @returns The clean-worktree precondition, or the truncation blocker.
  */
 const cleanWorktreePrecondition = (state: SweepGitState): SweepPrecondition =>
-  state.statusProbeTruncated
-    ? truncatedProbePrecondition(statusProbeCommand)
+  state.statusProbeUnreliable
+    ? unreliableProbePrecondition(statusProbeCommand)
     : precondition("worktree is clean", !state.worktreeDirty);
 
 const mainFreePrecondition = (state: SweepGitState): SweepPrecondition =>
-  state.worktreeProbeTruncated
-    ? truncatedProbePrecondition(worktreeProbeCommand)
+  state.worktreeProbeUnreliable
+    ? unreliableProbePrecondition(worktreeProbeCommand)
     : precondition(`${state.mainBranch} is not checked out in another worktree`, !state.mainCheckedOutElsewhere);
 
 const branchFreePrecondition = (state: SweepGitState): SweepPrecondition =>
-  state.worktreeProbeTruncated
-    ? truncatedProbePrecondition(worktreeProbeCommand)
+  state.worktreeProbeUnreliable
+    ? unreliableProbePrecondition(worktreeProbeCommand)
     : precondition(
         `no worktree holds ${state.branch}`,
         !holdsBranch(state.branchCheckedOutElsewhere, state.headBranch, state.branch)
@@ -414,8 +415,8 @@ const endStatePlanStep = (state: SweepGitState): SweepPlanStep =>
  *     branchCheckedOutElsewhere: false,
  *     branchMergedIntoBase: false,
  *     lockfileMovedOnMainUpdate: false,
- *     statusProbeTruncated: false,
- *     worktreeProbeTruncated: false,
+ *     statusProbeUnreliable: false,
+ *     worktreeProbeUnreliable: false,
  *     localTip: O.some("aaaa1111"),
  *     remoteTip: O.some("aaaa1111"),
  *     pullRequestState: O.some("MERGED"),
@@ -474,6 +475,11 @@ const captureCommand = (
     ),
     Effect.orElseSucceed((): CommandProbe => ({ exitCode: 1, output: "", truncated: false }))
   );
+
+// A probe that failed to spawn, exited nonzero, or overran the capture bound
+// proves nothing about the fact it was asked for; "empty output" and "the
+// worktree is clean" are the same bytes, and only one is safe to delete against.
+const probeUnreliable = (probe: CommandProbe): boolean => probe.truncated || probe.exitCode !== 0;
 
 const captureGit = (
   cwd: string,
@@ -576,11 +582,11 @@ const refuseUnsafeName = (value: string, role: string) =>
  * reach any argv, so an option-like branch name fails the sweep outright instead
  * of becoming a git flag. That refusal is the one way sweep planning errors.
  *
- * Failure-tolerant is not the same as optimistic. A truncated `status` or
- * `worktree list` capture is recorded as such and the fact it feeds is forced to
- * its conservative value — dirty worktree, branch held — because "the output was
- * cut off" and "the branch is free" are the same bytes to a parser and only one
- * of them is safe to force-delete against.
+ * Failure-tolerant is not the same as optimistic. A `status` or `worktree list`
+ * probe that failed, exited nonzero, or overran the capture bound is recorded as
+ * unreliable and the fact it feeds is forced to its conservative value — dirty
+ * worktree, branch held — because "no output" and "the branch is free" are the
+ * same bytes to a parser and only one of them is safe to force-delete against.
  *
  * **Example** (Observe the current clone)
  *
@@ -633,13 +639,14 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
       optionFromNonEmpty(head.output),
       O.getOrElse(() => "HEAD")
     ),
-    worktreeDirty: status.truncated || (status.exitCode === 0 && Str.isNonEmpty(status.output)),
-    mainCheckedOutElsewhere: worktreeList.truncated || heldByOtherWorktree(worktrees, mainBranch, toplevel.output),
-    branchCheckedOutElsewhere: worktreeList.truncated || heldByOtherWorktree(worktrees, branch, toplevel.output),
+    worktreeDirty: probeUnreliable(status) || Str.isNonEmpty(status.output),
+    mainCheckedOutElsewhere:
+      probeUnreliable(worktreeList) || heldByOtherWorktree(worktrees, mainBranch, toplevel.output),
+    branchCheckedOutElsewhere: probeUnreliable(worktreeList) || heldByOtherWorktree(worktrees, branch, toplevel.output),
     branchMergedIntoBase: ancestry.exitCode === 0 && O.isSome(localTip),
     lockfileMovedOnMainUpdate: lockfile.exitCode === 0 && Str.isNonEmpty(lockfile.output),
-    statusProbeTruncated: status.truncated,
-    worktreeProbeTruncated: worktreeList.truncated,
+    statusProbeUnreliable: probeUnreliable(status),
+    worktreeProbeUnreliable: probeUnreliable(worktreeList),
     localTip,
     remoteTip,
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
@@ -724,6 +731,112 @@ const runRemoteDeletionStep = (
     })
   );
 
+/**
+ * Re-verify that the local branch tip still matches the planned observation
+ * immediately before deletion.
+ *
+ * **Details**
+ *
+ * The plan's deletion preconditions were proven against a snapshot; a commit
+ * landing on the branch between observation and execution would make that
+ * proof stale, and deleting would orphan the new commit. `None` means the tip
+ * is unchanged and deletion may proceed; `Some(reason)` names the drift.
+ *
+ * **Example** (Refuse a moved tip)
+ *
+ * ```ts
+ * import { revalidateLocalDeletion } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(revalidateLocalDeletion)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param cwd - Repository root the tip is re-read from.
+ * @param state - Planned sweep state carrying the observed local tip.
+ * @returns `None` when the tip is unchanged; `Some(skip reason)` on drift.
+ * @category planning
+ * @since 0.0.0
+ */
+export const revalidateLocalDeletion = (
+  cwd: string,
+  state: SweepGitState
+): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  observeSha(cwd, `refs/heads/${state.branch}`).pipe(
+    Effect.map((fresh) =>
+      tipsMatch(fresh, state.localTip)
+        ? O.none<string>()
+        : O.some(
+            `refs/heads/${state.branch} moved since planning (planned ${optionText(state.localTip)}, now ${optionText(fresh)})`
+          )
+    )
+  );
+
+/**
+ * Re-verify against the live remote that `origin/<branch>` still points at the
+ * planned tip immediately before remote deletion.
+ *
+ * **Details**
+ *
+ * The planned remote tip came from the local remote-tracking ref; a push landing
+ * after observation would advance the real remote while the tracking ref stays
+ * stale, and deleting would make the new commit unreachable from that ref. This
+ * asks the server directly via `git ls-remote origin refs/heads/<branch>` — an
+ * unreadable answer or any drift refuses the deletion.
+ *
+ * **Example** (Refuse when the remote cannot be re-verified)
+ *
+ * ```ts
+ * import { revalidateRemoteDeletion } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(revalidateRemoteDeletion)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param cwd - Repository root the `ls-remote` runs from.
+ * @param state - Planned sweep state carrying the observed remote tip.
+ * @returns `None` when the live tip matches the plan; `Some(skip reason)` otherwise.
+ * @category planning
+ * @since 0.0.0
+ */
+export const revalidateRemoteDeletion = (
+  cwd: string,
+  state: SweepGitState
+): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  captureGit(cwd, ["ls-remote", "origin", `refs/heads/${state.branch}`]).pipe(
+    Effect.map((probe) => {
+      if (probeUnreliable(probe)) {
+        return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
+      }
+      const fresh = pipe(
+        optionFromNonEmpty(probe.output),
+        O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
+      );
+      if (O.isNone(fresh)) {
+        return O.some(`origin/${state.branch} no longer exists; nothing to delete`);
+      }
+      return tipsMatch(fresh, state.remoteTip)
+        ? O.none<string>()
+        : O.some(
+            `origin/${state.branch} moved since planning (planned ${optionText(state.remoteTip)}, now ${optionText(fresh)})`
+          );
+    })
+  );
+
+const guardedDeletion = (
+  revalidate: Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>,
+  runDeletion: Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner>
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  revalidate.pipe(
+    Effect.flatMap(
+      O.match({
+        onNone: () => runDeletion,
+        onSome: (reason) => Effect.succeed<SweepStepOutcome>(SweepStepSkipped.make({ reason })),
+      })
+    )
+  );
+
 const runEndStateStep = (
   state: SweepGitState,
   cwd: string,
@@ -761,13 +874,20 @@ const performSweepStep = (
             planStep.action
           ),
     "delete-local-branch": () =>
-      runCommandStep(
-        "git",
-        ["branch", state.branchMergedIntoBase ? "-d" : "-D", state.branch],
-        context.repoRoot,
-        planStep.action
+      guardedDeletion(
+        revalidateLocalDeletion(context.repoRoot, state),
+        runCommandStep(
+          "git",
+          ["branch", state.branchMergedIntoBase ? "-d" : "-D", state.branch],
+          context.repoRoot,
+          planStep.action
+        )
       ),
-    "delete-remote-branch": () => runRemoteDeletionStep(state, context.repoRoot, planStep.action),
+    "delete-remote-branch": () =>
+      guardedDeletion(
+        revalidateRemoteDeletion(context.repoRoot, state),
+        runRemoteDeletionStep(state, context.repoRoot, planStep.action)
+      ),
     "lockfile-install": () => runCommandStep("bun", ["install"], context.repoRoot, planStep.action),
     "end-state": () => runEndStateStep(state, context.repoRoot, planStep.action),
   });
