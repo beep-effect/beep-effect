@@ -58,10 +58,11 @@ tokens on ~1,400 of 13,265 blocks.
 second migration later). Repo-wide grammar sweep including the ~4,600 untouched blocks (materially
 larger diff, touches files the gate never flagged).
 
-## D5 — Per-block byte conservation law, exhaustive
+## D5 — Per-block conservation law, exhaustive, two clauses
 
-Code bytes and tag bodies identical; prose tokens a subset of output; permitted additions limited
-to `**Details**`, `**Gotchas**`, `**Example** (<title>)`. Violations quarantine.
+Content conservation (fence code bytes identical, prose tokens preserved, added prose limited to
+section markers and data-sourced strings) plus a closed tag-rewrite allowlist. Everything outside
+the allowlist is bytes-identical. Violations quarantine. Full contract: SPEC §5.3.
 
 **Why.** Every other gate gets *happier* when content silently disappears — totals drop, examples
 still compile, shape stays valid. Conservation is the only check that catches a drop, and a
@@ -71,6 +72,83 @@ rare block shape could go entirely unsampled.
 **Rejected.** Inverse round-trip to byte-exact original (strictly stronger, but two transforms to
 maintain and an artifact that can drift). Fingerprint manifest plus sampled review (cheapest,
 but accepts a blind spot exactly where a codemod bug would live).
+
+### Amendment 2026-08-06 — the original wording contradicted D4
+
+As first written, D5 asserted `tags[i] bytes-identical` with additions limited to three section
+markers. That is incompatible with D4, which puts `@template`→`@typeParam`,
+`@module`→`@packageDocumentation`, `@default`→`@defaultValue`, `{type}` removal,
+`@returns`/`@throws` hyphen fixes, canonical tag reordering, and `@see` purpose phrases **in
+scope**. Under the original letter, every block containing a grammar target would have quarantined
+instead of being fixed, and `@see` purpose phrases would have been forbidden prose.
+
+Both decisions were locked in consecutive grill questions and never reconciled against each other.
+Three independent reviewers on PR #576 flagged it (clawhole `bug`, Greptile P1 ×1, plus the GOAL
+mirror) before any implementation existed.
+
+**Resolution:** keep D4 intact and split D5 into the two clauses above, rather than reverting to
+carrier-only or deferring grammar fixes to a second pass. The safety property D5 exists to
+guarantee — you cannot silently destroy documentation — lives entirely in the content clause. The
+tag clause was never load-bearing for that property; it was over-broad phrasing that happened to
+forbid the transforms D4 requires.
+
+**Lesson for the remaining decisions:** a locked decision is only as good as its consistency with
+its neighbours. When one decision constrains what another permits, state the interaction
+explicitly in both places. GOAL.md now carries an explicit "do not restate this as tag bodies
+identical" warning for exactly this reason.
+
+## D5b — Anchors are `path#symbol#ordinal`
+
+Added 2026-08-06 from PR #576 review (Greptile P1).
+
+`path#symbol` is **not unique**. Overloads, declaration merging, default exports, and same-name
+type companions for runtime schemas all produce multiple documented declarations sharing a name —
+and `.patterns/jsdoc-documentation.md` names that companion pattern as documented law, so it is
+common rather than exotic. Two blocks sharing an anchor means the title map applies one block's
+title to another, or per-anchor resume silently skips one.
+
+`ordinal` is the 0-based index among blocks resolving to the same `path#symbol`, in source order;
+`0` in the common unique case. It is stable under edits elsewhere in the file (unlike line
+numbers) and under edits to the block itself (unlike content hashes).
+
+**Why this needed its own decision.** The conservation law cannot detect the failure. A title
+applied to the wrong block is well-formed prose in a valid section and passes every assertion in
+§5.3. That is why SPEC §7 gained a dedicated verification row: `extract` must fail loudly on a
+duplicate anchor rather than resolving it silently.
+
+### Amendment 2026-08-06 — ordinals are not stable under reorder
+
+The first version of D5b said ordinals shift only when a same-named declaration is added or
+removed ahead of a block. **Reordering** shifts them too, and it is the worst case: the anchor set
+is unchanged and the record count still matches, so nothing about the data's shape looks wrong
+while a frozen title binds to a different block. Both reviewers on PR #581 caught it (Greptile P2,
+clawhole `reliability`) within an hour of D5b landing.
+
+Because `titles.jsonl` and `overrides.jsonl` freeze when P3 opens, a later `extract` renumber can
+mis-bind silently. Anchor uniqueness alone is therefore not sufficient — it makes each anchor
+resolve to one block within a single `extract`, but says nothing about whether a *frozen* record
+still belongs to the block its anchor now names.
+
+**Resolution:** records carry `sourceHash` (hash of the original block bytes at extract time) and
+`kind`, and `apply`/`verify` fail closed unless frozen records biject with `extract`, every
+`sourceHash` matches, and every `kind` agrees. Bijection catches add/remove via count divergence;
+the hash catches reorder and in-place edits where counts still match.
+
+**The distinction that makes this work:** an anchor is for *addressing* and must stay stable, so
+it can never be a content hash. A `sourceHash` is for *verification* and must be exact. Using a
+hash to address would destroy re-derivability; using one to verify is what makes freezing safe.
+The two are not in tension once separated.
+
+This also composes with D3's regeneration model instead of fighting it: re-deriving P3 against a
+newer `main` fails the identity check exactly on blocks whose documentation changed upstream,
+which get re-titled, while everything untouched reuses its frozen record.
+
+**Pattern worth noticing.** This is the third defect in the same family — the first was
+conservation-vs-grammar, the second was anchor collision, this is anchor drift. All three share a
+shape: a check that passes while the underlying binding is wrong, because the output is
+*well-formed*. Well-formedness is not correctness, and no amount of shape validation substitutes
+for verifying identity. Assume the next defect in this packet has the same shape and look for it
+there first.
 
 ## D6 — Placement: `packages/tooling/tool/cli`, `beep quality jsdoc-migrate`
 

@@ -112,31 +112,107 @@ The only non-code inputs. Frozen and versioned once P3 opens.
 
 ```jsonc
 // titles.jsonl — one record per block
-{ "anchor":  "packages/x/src/Y.ts#decodeUserName",
-  "title":   "Decode a user name",
-  "remarks": "details" | "gotchas",   // routing for the 501 @remarks blocks
-  "leadEnd": 1 }                      // paragraphs 2..n -> Details, for the 872
+{ "anchor":     "packages/x/src/Y.ts#decodeUserName#0",
+  "sourceHash": "sha256:1f3a…",       // hash of the ORIGINAL block bytes at extract time
+  "kind":       "value",              // value | type-level, from ts-morph
+  "title":      "Decode a user name",
+  "remarks":    "details" | "gotchas", // routing for the 501 @remarks blocks
+  "leadEnd":    1 }                    // paragraphs 2..n -> Details, for the 872
 
 // overrides.jsonl — full replacement block text for quarantined blocks
-{ "anchor": "packages/x/src/Y.ts#thing", "block": "/** ... */" }
+{ "anchor": "packages/x/src/Y.ts#thing#0", "sourceHash": "sha256:9c02…",
+  "block": "/** ... */" }
 ```
 
-Anchors are `path#symbol`. **Never content hashes** — anchor stability across upstream edits is
-what makes the P3 branch re-derivable.
+#### Anchor format
+
+`path#symbol#ordinal`. The **anchor** is never a content hash and never a line number — anchor
+stability across upstream edits is what makes the P3 branch re-derivable.
+
+`path#symbol` alone is **not unique**. Overloads, declaration merging, default exports, and —
+most commonly in this repo — same-name type companions for runtime schemas all produce multiple
+documented declarations sharing one name. `§Kind-split Example law` names that companion pattern
+explicitly, so `export const Foo` and `export type Foo` in one file would both anchor to
+`path#Foo`.
+
+`ordinal` is the 0-based index among blocks resolving to the same `path#symbol`, in source order.
+It is `0` for the overwhelmingly common unique case, and it is stable under edits elsewhere in
+the file (unlike a line number) and under edits to the block itself (unlike a content hash).
+
+**Ordinals are not stable under every edit.** They shift when a same-named declaration is added
+ahead of a block, removed from ahead of it, **or reordered relative to it**. Reordering is the
+nastiest case: the anchor set is unchanged and the record count still matches, so nothing about
+the shape of the data looks wrong — the frozen title simply binds to a different block.
+
+#### Binding rule: fail closed, never guess
+
+`titles.jsonl` and `overrides.jsonl` are frozen once P3 opens, so any later `extract` renumber can
+mis-bind a frozen record. The conservation law **cannot detect this** — a title applied to the
+wrong block is well-formed prose in a valid section and passes every assertion in §5.3. The
+binding therefore has to be checked directly, not inferred.
+
+`extract` must fail loudly if two blocks produce the same anchor. `apply` and `verify` must fail
+closed unless **all** of the following hold:
+
+1. **Bijection.** Every `extract` anchor has exactly one record, and every record matches exactly
+   one `extract` anchor. Orphans on either side are a hard failure, never a skip. This catches
+   additions and removals, where counts diverge.
+2. **Identity.** Each record's `sourceHash` equals the hash of the block currently at that anchor.
+   This catches reordering and in-place edits, where counts still match. A mismatch means the
+   record is stale for that block — re-title it rather than applying the frozen value.
+3. **Kind agreement.** The record's `kind` matches what ts-morph reports for the block, so a
+   value-level title never lands on a type-level companion.
+
+`sourceHash` is a *verification* field, not an addressing one. Anchors stay stable so records can
+be found; hashes stay exact so a found record can be proved to belong. Using a hash to address
+would break re-derivability; using one to verify is what makes freezing safe.
+
+This composes with the regeneration model rather than fighting it: when P3 is re-derived against a
+newer `main`, blocks whose documentation changed upstream fail the identity check, get re-titled,
+and everything untouched reuses its frozen record.
 
 ### 5.3 Conservation law
 
-```
-before = { prose[], code[], tags[] }
-after  = rewrite(before, title, routing)
+Two clauses. Content is conserved absolutely; tag rewrites are permitted only from a closed,
+enumerated allowlist.
 
-ASSERT code[i] bytes-identical
-ASSERT tags[i] bytes-identical
+**(a) Content conservation.** This is the clause that catches destroyed documentation.
+
+```
+ASSERT every fence's code bytes are identical
 ASSERT prose tokens ⊆ after tokens
-ASSERT added ⊆ { "**Details**", "**Gotchas**", "**Example** (<title>)" }
+ASSERT added prose ⊆ data-sourced additions
+       { "**When to use**", "**Details**", "**Gotchas**",
+         "**Example** (<title>)", <see-purpose phrase> }
+```
+
+Titles and `@see` purpose phrases are additions **only** when they come from `titles.jsonl`. The
+codemod never invents prose.
+
+**(b) Tag rewrite allowlist.** A closed set. Each entry has one defined normal form.
+
+| from | to |
+| --- | --- |
+| `@template` | `@typeParam` |
+| `@module` | `@packageDocumentation` |
+| `@default` | `@defaultValue` |
+| `{type}` blob in `@param`/`@returns`/`@throws` | removed |
+| `@returns - ` / `@throws - ` | hyphen removed |
+| tag sequence | canonical order (§Tag order) |
+| `@see {@link X}` | `@see {@link X} <purpose>` from `titles.jsonl` |
+| `@example` | consumed into an `**Example** (Title)` section |
+| `@remarks` | consumed into `**Details**` / `**Gotchas**` |
+
+```
+ASSERT every tag not in the allowlist is bytes-identical
+ASSERT every allowlisted rewrite matches its normal form exactly
+ASSERT no tag is dropped without a consuming rule above
 
 violation -> quarantine, do not write
 ```
+
+A rewrite that lands off its normal form quarantines rather than being written — the allowlist
+permits *specified* transformations, not arbitrary tag mutation.
 
 Exhaustive over all 13,265 blocks. No sampling. Results recorded in a schema-versioned proof
 manifest following the existing `DocgenProofManifest` / `AcceptedProofManifest` idiom.
@@ -144,8 +220,9 @@ manifest following the existing `DocgenProofManifest` / `AcceptedProofManifest` 
 Conservation is computed on **post-format** bytes. Run biome first, then verify, or reflow is
 misread as content mutation.
 
-**Consequence:** a fence is a third addition, so the 114 unfenced examples auto-quarantine by
-construction and flow to `overrides.jsonl`. That is the check working, not a defect.
+**Consequence:** adding a fence is not in either clause, so the 114 unfenced examples
+auto-quarantine by construction and flow to `overrides.jsonl`. That is the check working, not a
+defect.
 
 ### 5.4 Grok's role
 
@@ -159,12 +236,15 @@ per run and one call per file is 1,935.
 ## 6. Definition of done
 
 1. Zero `@example` and zero `@remarks` in non-generated `packages/**/src/**/*.{ts,tsx}`.
-2. All 18 generated files law-compliant, produced by fixed generators, durable across regeneration.
+2. All 18 generated files law-compliant, proved by regenerating and scanning them in
+   generated-inclusive scope — not by re-running the non-generated check.
 3. Conservation proof manifest covers all blocks with zero unexplained quarantines.
-4. `cleanup-on-touch` replaced by a repo-wide zero-legacy check.
-5. `standards/jsdoc-totals.regression-baseline.jsonc` rewritten to the new floor.
-6. `.patterns/jsdoc-documentation.md` transitional carrier section deleted.
-7. The P3 branch is re-derivable: `f(main, codemod, titles.jsonl, overrides.jsonl)`.
+4. `extract` reports zero anchor collisions, and every frozen record binds to its intended block:
+   bijection with `extract`, `sourceHash` match, and `kind` agreement — no orphans, no skips.
+5. `cleanup-on-touch` replaced by a repo-wide zero-legacy check with both scopes available.
+6. `standards/jsdoc-totals.regression-baseline.jsonc` rewritten to the new floor.
+7. `.patterns/jsdoc-documentation.md` transitional carrier section deleted.
+8. The P3 branch is re-derivable: `f(main, codemod, titles.jsonl, overrides.jsonl)`.
 
 ## 7. Verification matrix
 
@@ -173,10 +253,22 @@ per run and one call per file is 1,935.
 | 1 | No documentation content was destroyed | Conservation law over 13,265 blocks, proof manifest |
 | 2 | No block's shape regressed | `documentationShapeViolations` pre/post, finding set never grows |
 | 3 | Every example still compiles | `bun run docgen` full-repo proof |
-| 4 | Corpus reaches zero legacy carriers | Repo-wide zero-legacy check passes |
+| 4 | Corpus reaches zero legacy carriers | Repo-wide zero-legacy check, **non-generated scope**, passes |
 | 5 | Totals did not regress | `beep quality jsdoc-ratchet` against the rewritten baseline |
-| 6 | Generated output stays compliant | Regenerate, then re-run 4 |
-| 7 | The branch is re-derivable | Re-run codemod on fresh `main`, diff against branch: empty |
+| 6 | Generated output stays compliant | Regenerate all 18, then zero-legacy check in **`--include-generated` scope** |
+| 7 | No anchor collided | `extract` reports zero duplicate anchors across the corpus |
+| 8 | Every frozen record bound to its intended block | Bijection with `extract`, `sourceHash` match, `kind` agreement — all three, fail closed |
+| 9 | The branch is re-derivable | Re-run codemod on fresh `main`, diff against branch: empty |
+
+Row 6 must not be proved by re-running row 4. Row 4's check is scoped to non-generated files by
+construction, so re-running it after regeneration cannot observe a carrier in a generated file and
+would pass vacuously. The zero-legacy check therefore needs an explicit generated-inclusive mode,
+and row 6 is the only place it is used.
+
+Rows 7 and 8 exist because the conservation law cannot detect a mis-binding: a title applied to
+the wrong block is well-formed prose in a valid section and passes every assertion in §5.3. Row 7
+covers collisions within a single `extract`; row 8 covers drift between a frozen record set and a
+later `extract`, including the reorder case where anchors and counts both still look correct.
 
 ## 8. Hazards
 
