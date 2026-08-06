@@ -556,7 +556,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
         }).pipe(
           Effect.mapError(
             () =>
-              new SchemaIssue.InvalidValue( {
+              new SchemaIssue.InvalidValue({
                 message: "Failed to migrate private identifiers from a legacy hook-pulse/v1 row",
               })
           ),
@@ -615,7 +615,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
         }).pipe(
           Effect.mapError(
             () =>
-              new SchemaIssue.InvalidValue( {
+              new SchemaIssue.InvalidValue({
                 message: "Failed to hash private hook-pulse identifiers",
               })
           ),
