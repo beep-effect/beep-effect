@@ -31,6 +31,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
 const mergedTip = "aaaa1111bbbb2222";
+const mainTipBeforeUpdate = "eeee5555ffff6666";
 const createdAt = "2026-08-04T00:00:00.000Z";
 const endedAt = "2026-08-04T00:00:01.000Z";
 
@@ -51,6 +52,7 @@ const mergedFacts = {
   lockfileMovedOnMainUpdate: true,
   statusProbeUnreliable: false,
   worktreeProbeUnreliable: false,
+  mainTip: O.some(mainTipBeforeUpdate),
   localTip: O.some(mergedTip),
   remoteTip: O.some(mergedTip),
   pullRequestState: O.some("MERGED"),
@@ -308,10 +310,16 @@ describe("dirty worktree rail", () => {
     expect(blockerText(dirty, "delete-remote-branch")).toEqual([]);
   });
 
-  it("skips the install when the main update did not move bun.lock", () => {
-    expect(blockerText(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install")).toEqual([
-      "bun.lock moved in the main update",
-    ]);
+  it("plans the install as an execution-time re-check, carrying the pre-refresh forecast", () => {
+    expect(blockerText(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install")).toEqual([]);
+    const forecastUnchanged = stepFor(stateWith({ lockfileMovedOnMainUpdate: false }), "lockfile-install");
+    expect(A.map(forecastUnchanged.preconditions, (observed) => observed.description)).toContain(
+      "bun.lock movement is re-checked after the refresh (pre-refresh forecast: unchanged)"
+    );
+    const forecastMoved = stepFor(mergedState, "lockfile-install");
+    expect(A.map(forecastMoved.preconditions, (observed) => observed.description)).toContain(
+      "bun.lock movement is re-checked after the refresh (pre-refresh forecast: moved)"
+    );
   });
 });
 
@@ -431,6 +439,7 @@ const prViewJson = `{"number":559,"headRefName":"feat/merge-loop","state":"MERGE
 const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git rev-parse --abbrev-ref HEAD", ok("main")],
   ["git rev-parse --show-toplevel", ok("/repo")],
+  ["git rev-parse --verify --quiet refs/heads/main", ok(mainTipBeforeUpdate)],
   ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", ok(mergedTip)],
   ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", ok(mergedTip)],
   ["git status --porcelain", ok("")],
@@ -538,6 +547,19 @@ describe("executeSweep", () => {
         ]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+        expect(step.outcome.status).toBe("skipped");
+        expect(step.outcome.status === "skipped" ? step.outcome.reason : "").toContain("did not move");
+      })
+    ).pipe(
+      provideScopedLayer(sweepTestLayer([[`git diff --name-only ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]))
+    )
   );
 
   it.effect("classifies a rejected lease as moved-after-planning, not as a plain failure", () =>

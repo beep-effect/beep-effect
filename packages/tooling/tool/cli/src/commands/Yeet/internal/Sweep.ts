@@ -172,6 +172,7 @@ export class SweepGitState extends S.Class<SweepGitState>($I`SweepGitState`)(
     lockfileMovedOnMainUpdate: S.Boolean,
     statusProbeUnreliable: S.Boolean,
     worktreeProbeUnreliable: S.Boolean,
+    mainTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -367,7 +368,16 @@ const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
     id: "lockfile-install",
     action: "bun install",
     preconditions: [
-      precondition(`bun.lock moved in the ${state.mainBranch} update`, state.lockfileMovedOnMainUpdate),
+      // Always satisfied at plan time: the observation happens before the
+      // sweep's own fetch/fast-forward refresh the refs, so the real decision
+      // is re-derived at execution against the post-refresh update window.
+      // The forecast is still shown so `--plan` says what observation saw.
+      precondition(
+        `bun.lock movement is re-checked after the refresh (pre-refresh forecast: ${
+          state.lockfileMovedOnMainUpdate ? "moved" : "unchanged"
+        })`,
+        true
+      ),
       cleanWorktreePrecondition(state),
     ],
     requiresOperator: false,
@@ -627,6 +637,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   const status = yield* captureGit(repoRoot, ["status", "--porcelain"]);
   const toplevel = yield* captureGit(repoRoot, ["rev-parse", "--show-toplevel"]);
   const worktreeList = yield* captureGit(repoRoot, ["worktree", "list", "--porcelain"]);
+  const mainTip = yield* observeSha(repoRoot, `refs/heads/${mainBranch}`);
   const localTip = yield* observeSha(repoRoot, `refs/heads/${branch}`);
   const remoteTip = yield* observeSha(repoRoot, `refs/remotes/origin/${branch}`);
   const ancestry = yield* captureGit(repoRoot, [
@@ -660,6 +671,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     lockfileMovedOnMainUpdate: lockfile.exitCode === 0 && Str.isNonEmpty(lockfile.output),
     statusProbeUnreliable: probeUnreliable(status),
     worktreeProbeUnreliable: probeUnreliable(worktreeList),
+    mainTip,
     localTip,
     remoteTip,
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
@@ -866,6 +878,32 @@ const guardedDeletion = (
     )
   );
 
+// The observed lockfile forecast predates the sweep's own fetch/fast-forward,
+// so the executed decision re-diffs the actual update window: the main tip
+// recorded at observation against post-refresh local main. An unreadable
+// re-check or an unknown starting tip errs toward installing — `bun install`
+// on a clean tree is safe; a silently stale node_modules is not.
+const runLockfileInstallStep = (
+  state: SweepGitState,
+  cwd: string,
+  action: string
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  O.match(state.mainTip, {
+    onNone: () => runCommandStep("bun", ["install"], cwd, action),
+    onSome: (observedTip) =>
+      captureGit(cwd, ["diff", "--name-only", `${observedTip}..refs/heads/${state.mainBranch}`, "--", "bun.lock"]).pipe(
+        Effect.flatMap((probe) =>
+          !probeUnreliable(probe) && Str.isEmpty(probe.output)
+            ? Effect.succeed<SweepStepOutcome>(
+                SweepStepSkipped.make({
+                  reason: `bun.lock did not move in the ${state.mainBranch} update (${observedTip}..${state.mainBranch})`,
+                })
+              )
+            : runCommandStep("bun", ["install"], cwd, action)
+        )
+      ),
+  });
+
 const runEndStateStep = (
   state: SweepGitState,
   cwd: string,
@@ -917,7 +955,7 @@ const performSweepStep = (
         revalidateRemoteDeletion(context.repoRoot, state),
         runRemoteDeletionStep(state, context.repoRoot, planStep.action)
       ),
-    "lockfile-install": () => runCommandStep("bun", ["install"], context.repoRoot, planStep.action),
+    "lockfile-install": () => runLockfileInstallStep(state, context.repoRoot, planStep.action),
     "end-state": () => runEndStateStep(state, context.repoRoot, planStep.action),
   });
 
