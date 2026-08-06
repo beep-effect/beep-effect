@@ -550,6 +550,29 @@ describe("executeSweep", () => {
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
   );
 
+  it.effect("keeps a generic remote rejection as a failure report, never a stale lease", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+        expect(remoteStep.outcome.status).toBe("skipped");
+        const reason = remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "";
+        expect(reason).not.toContain("moved after planning");
+        expect(reason).toContain("custom hook said no");
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          [
+            "git push origin --force-with-lease",
+            { exitCode: 1, output: " ! [remote rejected] refs/heads/feat/merge-loop (custom hook said no)" },
+          ],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
+  );
+
   it.effect("reports an unrefreshed main as unknown lockfile state, never as unchanged", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {

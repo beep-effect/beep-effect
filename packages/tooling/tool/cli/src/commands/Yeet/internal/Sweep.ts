@@ -736,12 +736,12 @@ const runCommandStep = (
     Effect.map((probe) => (probe.exitCode === 0 ? executedFrom(probe) : skippedFromFailure(action, probe)))
   );
 
-const staleLeaseMarkers = ["stale info", "[rejected]", "[remote rejected]"] as const;
-
-const isStaleLease = (output: string): boolean => {
-  const lowered = Str.toLowerCase(output);
-  return A.some(staleLeaseMarkers, (marker) => Str.includes(marker)(lowered));
-};
+// "stale info" is git's own force-with-lease rejection phrase and the ONLY
+// marker here on purpose: a bare "[rejected]"/"[remote rejected]" can come
+// from any server policy or hook, and classifying those as a benign
+// concurrent update would hide the real failure from the operator — they
+// fall through to the skip that carries the failure text verbatim.
+const isStaleLease = (output: string): boolean => Str.includes("stale info")(Str.toLowerCase(output));
 
 const runRemoteDeletionStep = (
   state: SweepGitState,
