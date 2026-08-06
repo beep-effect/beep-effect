@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../drivers/drizzle/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {

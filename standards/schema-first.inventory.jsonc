@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-01",
+  "generatedOn": "2026-08-06",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -72,6 +72,17 @@
       "line": 32,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 180,
+      "owner": "@beep/db-admin",
+      "reason": "Migration proof, not a codec proof: it decodes three fixed entity fixtures only to obtain rows the generated columns must accept, and its assertions are about constraint/trigger topology and the append-only triggers rejecting UPDATE and DELETE. Schema-derived property coverage for PatentCitationEvent, CandorDisposition, and IdsSubmissionFact already exists in packages/law-practice/domain/test/LawPracticeDomain.test.ts, which round-trips all three through arbitrary-generated encoded form.",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/drivers/acp/src/AcpAgent.service.ts",
@@ -274,14 +285,6 @@
       "reason": "Lossless editor-state envelope whose root and nested nodes admit arbitrary future extension keys. S.StructWithRest preserves those keys exactly; an S.Class would close the envelope and violate the property-tested wire identity contract."
     },
     {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "PandocUnknownConstructorWire",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/pandoc-ast",
-      "reason": "Exact future-constructor wire schema. S.StructWithRest preserves every unknown top-level Pandoc JSON field unchanged; an S.Class cannot retain arbitrary future keys and would break strict/lossless interchange identity."
-    },
-    {
       "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
       "symbol": "OntologyFoldInput",
       "kind": "exported-type-literal",
@@ -304,6 +307,14 @@
       "status": "exception",
       "owner": "@beep/ontology",
       "reason": "Pure projection wire shape over open-keyed JSON-LD nodes (predicate-open facts compact to arbitrary term keys), emitted by a total catamorphism from the schema-first AssembledOntology, which is the modeled truth. Round-trip/inverse parsing stays bounded to beep's own dialect per the exploration No-Go."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "symbol": "PandocUnknownConstructorWire",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/pandoc-ast",
+      "reason": "Exact future-constructor wire schema. S.StructWithRest preserves every unknown top-level Pandoc JSON field unchanged; an S.Class cannot retain arbitrary future keys and would break strict/lossless interchange identity."
     },
     {
       "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
@@ -398,6 +409,17 @@
       "reason": "Mixed React render configuration: id is data, while each Step carries ReactNode content and Popover component-prop values consumed directly by TourProvider."
     },
     {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 63,
+      "owner": "@beep/law-practice-server",
+      "reason": "Repository behaviour proof: the decodes build fixtures so the in-memory adapter's append, filing-scoping, and id-ascending ordering can be asserted against the same contract the Drizzle adapter satisfies. Schema-derived property coverage for these entities lives with the domain schemas in packages/law-practice/domain/test/LawPracticeDomain.test.ts.",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
       "file": "packages/law-practice/server/test/fixture.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -406,6 +428,17 @@
       "line": 51,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 90,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Predicate scenario proof: the decodes construct hand-built lineage, quarantine, authorship, and re-verification fixtures whose value is the 19 fail-closed gate outcomes they exercise, including a live verifyTextAnchor pass over real SHA-256 digests. Schema-derived property coverage for the underlying entities lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts.",
+      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/ontology/server/test/OntologyTools.test.ts",

@@ -724,6 +724,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/LawPracticeCandorGate.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/src/migrations/DocumentsSync.ts",
     writer: "template",
   }),
@@ -802,6 +808,18 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/drizzle/20260725222615_baseline/migration.sql",
     writer: "template",
   }),
@@ -851,6 +869,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "db-admin",
     stage: "persistence",
     path: "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({

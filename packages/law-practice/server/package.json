@@ -30,6 +30,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
+    "./CandorRecord": "./src/CandorRecord/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -55,9 +56,11 @@
     "@beep/law-practice-use-cases": "workspace:^",
     "@beep/libpff": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/tika": "workspace:^",
     "@beep/utils": "workspace:^",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -66,7 +69,6 @@
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:",
-    "drizzle-orm": "catalog:"
+    "@types/node": "catalog:"
   }
 }

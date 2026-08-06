@@ -1,5 +1,6 @@
 import {
   ApplicationNumber,
+  CandorDisposition,
   Citation,
   CitationBase,
   CitationWarning,
@@ -13,6 +14,7 @@ import {
   FullCaseCitation,
   FullCitation,
   IdCitation,
+  IdsSubmissionFact,
   KindCode,
   LawPracticeFixtureKey,
   LawPracticeText,
@@ -28,6 +30,7 @@ import {
   Parenthetical,
   PatentAsset,
   PatentAssetStatus,
+  PatentCitationEvent,
   PatentDocumentTriplet,
   PatentNumber,
   PinciteInfo,
@@ -185,6 +188,9 @@ describe("@beep/law-practice-domain", () => {
       PriorArtReference,
       Rejection,
       Distinction,
+      PatentCitationEvent,
+      CandorDisposition,
+      IdsSubmissionFact,
     ]) {
       assertSchemaEncodedRoundTrips(schema, 3);
     }

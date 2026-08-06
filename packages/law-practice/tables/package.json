@@ -62,6 +62,7 @@
     }
   },
   "dependencies": {
+    "@beep/drizzle": "workspace:^",
     "@beep/law-practice-domain": "workspace:^",
     "@beep/schema": "workspace:^",
     "drizzle-orm": "catalog:"

@@ -32,6 +32,8 @@
     ".": "./src/index.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
+    "./CandorPolicy": "./src/CandorPolicy/index.ts",
+    "./CandorRecord": "./src/CandorRecord/index.ts",
     "./IrToLaw": "./src/IrToLaw/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./test": "./src/test.ts",
