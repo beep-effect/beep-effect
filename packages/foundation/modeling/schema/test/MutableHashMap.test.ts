@@ -106,9 +106,7 @@ describe("MutableHashMap", () => {
       value: S.FiniteFromString,
     });
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", null]))).toThrow(
-      `Expected array`
-    );
+    expect(() => S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", null]))).toThrow(`Expected array`);
   });
 
   it("round-trips arbitrary mutable hash maps derived from the source schema", () => {

@@ -80,9 +80,7 @@ describe("MutableHashSet", () => {
   it("expects the encoded array form at the boundary", () => {
     const schema = MutableHashSet(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(
-      `Expected array`
-    );
+    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected array`);
   });
 
   it("supports decoded mutable hash set defaults for missing struct keys", () => {

@@ -19,9 +19,7 @@ describe("Graph indices", () => {
   });
 
   it("rejects invalid indices", () => {
-    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow(
-      "Expected a value greater than or equal to 0"
-    );
+    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
     expect(() => S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
       "Expected a value greater than or equal to 0"
     );
@@ -300,9 +298,7 @@ describe("Graph FromSelf schemas", () => {
       })
     );
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(
-      "Expected @beep/schema/Graph/GraphFromSelf"
-    );
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow("Expected @beep/schema/Graph/GraphFromSelf");
   });
 
   it("validates existing mutable directed graphs and preserves mutability", () => {
