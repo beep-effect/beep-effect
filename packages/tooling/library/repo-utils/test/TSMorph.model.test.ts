@@ -249,11 +249,12 @@ describe("TSMorph model taxonomy", () => {
   });
 
   describe("effectful transformations", () => {
-    it("derives content hashes from source text", () =>
+    it.effect("derives content hashes from source text", () =>
       Effect.gen(function* () {
         const hash = yield* S.decodeUnknownEffect(ContentHashFromSourceText)("export const a = 1;\n");
         expect(hash).toMatch(/^[0-9a-f]{64}$/);
-      }).pipe(provideScopedLayer(platformLayer)));
+      }).pipe(provideScopedLayer(platformLayer))
+    );
   });
 
   describe("runtime instance schemas", () => {

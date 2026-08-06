@@ -66,7 +66,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 // past the deep-sweep timeout; running the suite sequentially keeps the fast
 // tests instant and gives the heavy property its own core.
 describe("@beep/agents-use-cases", { concurrent: false }, () => {
-  it("runs deterministic fixtures into structured candidate output sets", () =>
+  it.effect("runs deterministic fixtures into structured candidate output sets", () =>
     Effect.gen(function* () {
       const outputSet = yield* runRuntimeFixture(lawFixture);
 
@@ -80,7 +80,8 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       expect(encoded.contextPacket.schemaVersion).toBe("runtime-data-loop.expected.context-packet.v1");
       expect(encoded.contextPacket.generatedAt).toBe("2026-05-01T14:13:30Z");
       expect(encoded.claims[1]?.eventDate).toBe("2026-06-12");
-    }));
+    })
+  );
 
   it("keeps touched runtime DTO encoded shapes stable", () => {
     const evidence = RuntimeEvidenceRef.make({ artifactId: "email-001" });
@@ -134,7 +135,7 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
     });
   });
 
-  it("serves context packets through the in-memory SDK facade", () =>
+  it.effect("serves context packets through the in-memory SDK facade", () =>
     Effect.gen(function* () {
       const sdk = makeInMemoryProfessionalRuntimeSdk([lawFixture]);
       const packet = yield* sdk.getContextPacket(
@@ -147,9 +148,10 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
 
       expect(packet.scope).toEqual(lawScope);
       expect(packet.request.artifactId).toBe(lawFixture.email.artifactId);
-    }));
+    })
+  );
 
-  it("accepts matching candidate output proposals", () =>
+  it.effect("accepts matching candidate output proposals", () =>
     Effect.gen(function* () {
       const sdk = makeInMemoryProfessionalRuntimeSdk([lawFixture]);
       const outputSet = yield* runRuntimeFixture(lawFixture);
@@ -162,7 +164,8 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       );
 
       expect(accepted).toStrictEqual(outputSet);
-    }));
+    })
+  );
 
   it("round-trips bounded runtime schemas with schema-derived arbitraries", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [

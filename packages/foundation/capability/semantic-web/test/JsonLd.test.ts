@@ -253,7 +253,7 @@ describe("JSON-LD", () => {
     )
   );
 
-  it("normalizes, expands, compacts, and merges bounded contexts", () =>
+  it.effect("normalizes, expands, compacts, and merges bounded contexts", () =>
     Effect.gen(function* () {
       const normalized = yield* Effect.promise(() =>
         Promise.resolve(
@@ -322,9 +322,10 @@ describe("JSON-LD", () => {
 
       expect(merged.terms.description).toBe("https://schema.org/description");
       expect(O.isSome(merged["@base"])).toBe(true);
-    }));
+    })
+  );
 
-  it("compacts, frames, and bridges bounded JSON-LD documents to and from RDF", () =>
+  it.effect("compacts, frames, and bridges bounded JSON-LD documents to and from RDF", () =>
     Effect.gen(function* () {
       const compacted = yield* Effect.promise(() =>
         Promise.resolve(
@@ -404,9 +405,10 @@ describe("JSON-LD", () => {
       const [roundTripNode] = roundTripped.document["@graph"];
       expect(roundTripNode.properties.name).toBeDefined();
       expect(O.isSome(roundTripNode["@type"])).toBe(true);
-    }));
+    })
+  );
 
-  it("compacts node identifiers and typed-literal datatypes with the supplied context", () =>
+  it.effect("compacts node identifiers and typed-literal datatypes with the supplied context", () =>
     Effect.gen(function* () {
       const compacted = yield* Effect.promise(() =>
         Promise.resolve(
@@ -480,9 +482,10 @@ describe("JSON-LD", () => {
           expect(maybeRoundTrippedLiteralValue.value["@type"].value).toBe("dateType");
         }
       }
-    }));
+    })
+  );
 
-  it("round-trips blank-node subjects, blank-node object references, and anonymous nodes through RDF", () =>
+  it.effect("round-trips blank-node subjects, blank-node object references, and anonymous nodes through RDF", () =>
     Effect.gen(function* () {
       const bridged = yield* Effect.promise(() =>
         Promise.resolve(
@@ -536,9 +539,10 @@ describe("JSON-LD", () => {
       if (O.isSome(maybeAnonymousNode)) {
         expect(O.isSome(maybeAnonymousNode.value["@id"])).toBe(true);
       }
-    }));
+    })
+  );
 
-  it("expands compacted documents and normalizes bounded document structure", () =>
+  it.effect("expands compacted documents and normalizes bounded document structure", () =>
     Effect.gen(function* () {
       const compacted = yield* Effect.promise(() =>
         Promise.resolve(
@@ -601,9 +605,10 @@ describe("JSON-LD", () => {
       );
 
       expect(Object.keys(normalized.document["@graph"][0].properties)).toEqual(["homepage", "name"]);
-    }));
+    })
+  );
 
-  it("rejects safe-mode normalization for anonymous JSON-LD nodes", () =>
+  it.effect("rejects safe-mode normalization for anonymous JSON-LD nodes", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(
@@ -621,9 +626,10 @@ describe("JSON-LD", () => {
           )
         ).rejects.toThrow("Safe-mode normalization requires explicit @id values for every JSON-LD node.")
       )
-    ));
+    )
+  );
 
-  it("round-trips bounded streaming parse and serialize seams through buffered fallback mode", () =>
+  it.effect("round-trips bounded streaming parse and serialize seams through buffered fallback mode", () =>
     Effect.gen(function* () {
       const bridged = yield* Effect.promise(() =>
         Promise.resolve(
@@ -680,5 +686,6 @@ describe("JSON-LD", () => {
 
       expect(reparsed.mode).toBe("buffered-fallback");
       expect(reparsed.dataset.quads).toHaveLength(3);
-    }));
+    })
+  );
 });

@@ -65,7 +65,7 @@ describe("Provenance", () => {
     }
   });
 
-  it("rejects bounded projections without evidence anchors when records are present", () =>
+  it.effect("rejects bounded projections without evidence anchors when records are present", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(
@@ -83,9 +83,10 @@ describe("Provenance", () => {
           )
         ).rejects.toThrow("Bounded provenance projections require explicit evidence anchors.")
       )
-    ));
+    )
+  );
 
-  it("summarizes record counts and preserves lifecycle fields in bounded projections", () =>
+  it.effect("summarizes record counts and preserves lifecycle fields in bounded projections", () =>
     Effect.gen(function* () {
       const summary = yield* Effect.promise(() =>
         Promise.resolve(
@@ -130,9 +131,10 @@ describe("Provenance", () => {
       expect(projection.bundle.records).toHaveLength(1);
       expect(projection.evidence.anchors).toHaveLength(1);
       expect(O.isSome(projection.bundle.lifecycle)).toBe(true);
-    }));
+    })
+  );
 
-  it("rejects extension-tier exports from the core-only profile", () =>
+  it.effect("rejects extension-tier exports from the core-only profile", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(
@@ -158,9 +160,10 @@ describe("Provenance", () => {
           )
         ).rejects.toThrow("prov-core-v1 does not include extension-tier provenance records.")
       )
-    ));
+    )
+  );
 
-  it("rejects extension-tier relations from the core-only profile", () =>
+  it.effect("rejects extension-tier relations from the core-only profile", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(
@@ -186,7 +189,8 @@ describe("Provenance", () => {
           )
         ).rejects.toThrow("prov-core-v1 does not include extension-tier provenance records.")
       )
-    ));
+    )
+  );
 
   it("decodes evidence anchors through the public surface", () => {
     const anchor = decodeUnknownSync(EvidenceAnchor)(rawAnchor);
