@@ -343,11 +343,24 @@ const deleteRemoteBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
   ];
   return SweepPlanStep.make({
     id: "delete-remote-branch",
-    action: `git push origin --delete ${state.branch}`,
+    action: leasedRemoteDeletionCommand(state),
     preconditions,
     requiresOperator: A.isReadonlyArrayEmpty(unsatisfied(preconditions)),
   });
 };
+
+// Deleting a ref is pushing an empty source; the lease pins the server-side
+// update to the planned tip, so the deletion is a compare-and-swap — a push
+// landing after planning rejects the delete instead of losing its commit.
+const leasedRemoteDeletionArgs = (state: SweepGitState): ReadonlyArray<string> => [
+  "push",
+  "origin",
+  `--force-with-lease=refs/heads/${state.branch}:${O.getOrElse(state.remoteTip, () => "<unknown>")}`,
+  `:refs/heads/${state.branch}`,
+];
+
+const leasedRemoteDeletionCommand = (state: SweepGitState): string =>
+  A.join(["git", ...leasedRemoteDeletionArgs(state)], " ");
 
 const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
   SweepPlanStep.make({
@@ -711,12 +724,19 @@ const runCommandStep = (
     Effect.map((probe) => (probe.exitCode === 0 ? executedFrom(probe) : skippedFromFailure(action, probe)))
   );
 
+const staleLeaseMarkers = ["stale info", "[rejected]", "[remote rejected]"] as const;
+
+const isStaleLease = (output: string): boolean => {
+  const lowered = Str.toLowerCase(output);
+  return A.some(staleLeaseMarkers, (marker) => Str.includes(marker)(lowered));
+};
+
 const runRemoteDeletionStep = (
   state: SweepGitState,
   cwd: string,
   action: string
 ): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  captureGit(cwd, ["push", "origin", "--delete", state.branch]).pipe(
+  captureGit(cwd, leasedRemoteDeletionArgs(state)).pipe(
     Effect.map((probe) => {
       if (probe.exitCode === 0) {
         return executedFrom(probe);
@@ -725,6 +745,11 @@ const runRemoteDeletionStep = (
         return SweepStepNeedsOperator.make({
           reason: `deleting origin/${state.branch} was denied by permission: ${probeFailureText(probe)}`,
           operatorCommand: action,
+        });
+      }
+      if (isStaleLease(probe.output)) {
+        return SweepStepSkipped.make({
+          reason: `origin/${state.branch} moved after planning; the leased deletion was rejected: ${probeFailureText(probe)}`,
         });
       }
       return skippedFromFailure(action, probe);
@@ -782,7 +807,11 @@ export const revalidateLocalDeletion = (
  * after observation would advance the real remote while the tracking ref stays
  * stale, and deleting would make the new commit unreachable from that ref. This
  * asks the server directly via `git ls-remote origin refs/heads/<branch>` — an
- * unreadable answer or any drift refuses the deletion.
+ * unreadable answer or any drift refuses the deletion with a reason naming it.
+ * The deletion itself is additionally leased (`--force-with-lease` pinned to the
+ * planned tip), so a push landing even after this re-check is rejected by the
+ * server rather than losing its commit — this precheck exists for the clean
+ * skip reasons, the lease for atomicity.
  *
  * **Example** (Refuse when the remote cannot be re-verified)
  *

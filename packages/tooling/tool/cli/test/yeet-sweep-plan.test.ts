@@ -233,7 +233,9 @@ describe("truncated probe rail", () => {
 describe("remote branch deletion contract", () => {
   it("flags the authorized deletion as an operator handoff with the exact command", () => {
     const step = stepFor(mergedState, "delete-remote-branch");
-    expect(step.action).toBe("git push origin --delete feat/merge-loop");
+    expect(step.action).toBe(
+      "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+    );
     expect(step.requiresOperator).toBe(true);
   });
 
@@ -340,7 +342,8 @@ describe("renderSweepReport", () => {
       id: "delete-remote-branch",
       outcome: SweepStepNeedsOperator.make({
         reason: "deleting origin/feat/merge-loop was denied by permission: 403",
-        operatorCommand: "git push origin --delete feat/merge-loop",
+        operatorCommand:
+          "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop",
       }),
     }),
   ]);
@@ -355,7 +358,9 @@ describe("renderSweepReport", () => {
   it("batches every needs-operator command into one handoff block", () => {
     const rendered = renderSweepReport(handoffReport);
     expect(rendered).toContain("operator handoff (1 command(s) only you can run):");
-    expect(rendered).toContain("    git push origin --delete feat/merge-loop");
+    expect(rendered).toContain(
+      "    git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+    );
   });
 
   it("omits the handoff block when nothing needs the operator", () => {
@@ -533,6 +538,29 @@ describe("executeSweep", () => {
         ]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
+  );
+
+  it.effect("classifies a rejected lease as moved-after-planning, not as a plain failure", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const report = yield* executeSweep(sweepContext(root));
+        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+        expect(remoteStep.outcome.status).toBe("skipped");
+        expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
+          "moved after planning"
+        );
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          [
+            "git push origin --force-with-lease",
+            { exitCode: 1, output: " ! [rejected] refs/heads/feat/merge-loop (stale info)" },
+          ],
+          ...mergedSweepStubs,
+        ])
+      )
+    )
   );
 
   it.effect("skips remote deletion when the live remote tip moved since planning", () =>
