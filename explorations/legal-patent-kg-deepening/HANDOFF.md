@@ -81,14 +81,18 @@ Original Phase 1 steps (retained for provenance):
 
 ### Phase 2 — per approved wedge — STARTED 2026-08-04
 
-The first wedge is OPEN: `explorations/patent-citation-candor-gate` (capture
-stage), seeded from the candor cluster with wedge-scoped decisions pre-seeded
-in its `DECISIONS.md` (2026-08-04 phase-2 grill; campaign-level entries in
-[`DECISIONS.md`](./DECISIONS.md)). Phase shape is sequential: the remaining
-wedges start no work until the candor wedge reaches align. The
-contradiction-semantics cluster was re-routed in the same grill — compose,
-don't widen; it rides with `legal-position-relator-runtime` (see
-[`ROUTING-SEED.md`](./ROUTING-SEED.md) § Phase-2 amendments).
+The first wedge is COMPLETE: `explorations/patent-citation-candor-gate`
+walked capture → research → align → shape → decompose and GRADUATED
+2026-08-04 into `goals/patent-citation-candor-gate` (graduation PR #560
+merged 2026-08-05). The second wedge is OPEN:
+`explorations/legal-position-relator-runtime` (capture stage, opened
+2026-08-05 on Benjamin's call), seeded from the positions/relators cluster
+plus the carried contradiction-semantics cluster (re-routed 2026-08-04 —
+compose, don't widen; see [`ROUTING-SEED.md`](./ROUTING-SEED.md) § Phase-2
+amendments), with wedge-scoped decisions pre-seeded in its `DECISIONS.md`.
+Phase shape remains sequential: `patent-drafting-episode-ledger` and the
+FunctionalUnit extension into `explorations/uspto-patent-driver-depth` stay
+queued on Benjamin's call.
 
 Run the standard six `/explore` stages plus two review gates:
 
@@ -109,7 +113,7 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 ## Open questions still requiring align
 
-1. `[T1-F1,T1-F2,T1-F9]` Full Hohfeld scheme+bimap+relator in V1, or scheme-first?
+1. `[T1-F1,T1-F2,T1-F9]` Full Hohfeld scheme+bimap+relator in V1, or scheme-first? — CARRIED 2026-08-05 into `explorations/legal-position-relator-runtime` `openQuestions`.
 2. ~~`[T1-F3,T3-F9]` Re-scope contradiction triage for legal semantics, or split?~~ RESOLVED 2026-08-04 (phase-2 grill): compose, don't widen — rides with `legal-position-relator-runtime`; the triage SPEC is not amended.
 3. `[T1-F4]` Is `goals/law-docketing-patent-spine` sufficient procedure ownership?
 4. `[T1-F8]` Should UFO-L become a versioned donor-alignment model?
@@ -125,14 +129,15 @@ For `dup-skip`, record the negative disposition and create nothing.
 14. `[T3-F10,T4-F7,ADHD-3]` What raw fallback, episode set, and rebuild proof?
 15. `[T4-F1,T4-F2,T4-F3,ADHD-2]` Which artifacts, support schema, and attorney gates?
 16. `[T4-F4]` When should routing be learned, fixed, human, or fallback?
-17. `[T4-F5,T4-F6]` Which owner and Party–Role/position states remain generic?
-18. `[T4-F8]` What generic correction-delta shape keeps ODRL caller-owned?
+17. `[T4-F5,T4-F6]` Which owner and Party–Role/position states remain generic? — the `T4-F6` half CARRIED 2026-08-05 into `explorations/legal-position-relator-runtime`; the `T4-F5` half stays with the `legal-rule-time-identity` cluster.
+18. `[T4-F8]` What generic correction-delta shape keeps ODRL caller-owned? — CARRIED 2026-08-05 into `explorations/legal-position-relator-runtime` `openQuestions`.
 
 ## First action
 
-Phase 1 is complete and signed off (2026-08-01 reconciliation grill), and the
-first Phase 2 wedge is already OPEN (2026-08-04 phase-2 grill). First action
-is now to RESUME `explorations/patent-citation-candor-gate` where its
-`README.md` Next Open Question points: run its two locked research lanes,
-then hold the align session over their outputs. Do not re-scaffold the
-packet. Goal graduation and merges still require Benjamin's explicit ask.
+Phase 1 is complete and signed off (2026-08-01 reconciliation grill), the
+first Phase 2 wedge is GRADUATED (goal packet live on main), and the second
+wedge is OPEN (2026-08-05). First action is now to RESUME
+`explorations/legal-position-relator-runtime` where its `README.md` Next
+Open Question points: run its two locked research lanes, then hold the align
+session over their outputs. Do not re-scaffold the packet. Goal graduation
+and merges still require Benjamin's explicit ask.

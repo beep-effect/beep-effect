@@ -62,8 +62,26 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
   day), and the first wedge fully GRADUATED 2026-08-04 into
-  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md);
-  next: open `legal-position-relator-runtime` when Benjamin calls it.
+  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
+  (graduation PR #560 merged 2026-08-05); second wedge opened 2026-08-05
+  ([`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md),
+  carrying the contradiction-semantics cluster); next:
+  `patent-drafting-episode-ledger` and the FunctionalUnit extension on
+  Benjamin's call.
+- [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
+  capture-stage second wedge of the `legal-patent-kg-deepening` routing
+  matrix (opened 2026-08-05, after the candor wedge graduated): a closed
+  `HohfeldPosition` domain whose correlative pairs are one stored directed
+  relation with a derived opposite view, an identity-bearing n-ary
+  `LegalPositionRelator` aggregate over the live taxonomy /
+  bitemporal-edge / approval foundations, and authority-gated
+  `PowerExercise`/`ActFrame` transition events that keep attempted or
+  ineffective acts on record — carrying the re-routed legal-contradiction
+  vocabulary (`LegalScopeContext`, typed `PriorityBasis`, verdict families,
+  caller-owned `CorrectionDelta`) composed over
+  `goals/epistemic-contradiction-triage` without widening it; FLINT/UFO-L
+  donors (`P100`/`R25`) stay study-only until the research lane verifies
+  them.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
