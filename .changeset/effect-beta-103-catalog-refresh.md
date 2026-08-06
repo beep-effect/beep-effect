@@ -22,6 +22,18 @@ release carries.
 - `Sse.decode` can now fail with `SseError`; the OpenAI-compatible streaming
   client maps it to an `InvalidOutputError`.
 
-The `@effect/tsgo-*` platform binaries are held back alongside `@effect/tsgo`
-itself, so `deps:update` stops pulling a compiler whose 0.20+ rules are a
-separate remediation campaign.
+- `McpServer.layerHttp` gained its own DNS-rebinding Origin check. Left unset,
+  `allowedOrigins` makes the mount answer a bodyless 403 to every request
+  carrying an `Origin` header, so the desktop `/mcp` surface now passes the same
+  allowlist its origin middleware and CORS layer already enforce.
+
+Two dependencies are newly held back from `deps:update`:
+
+- The `@effect/tsgo-*` platform binaries, alongside `@effect/tsgo` itself. Those
+  binaries are what `effect-tsgo patch` copies over the native compiler, so
+  updating them silently swaps the compiler `bun run check` runs; adopting the
+  0.20+ rules is its own remediation campaign.
+- `@biomejs/biome`, pinned exactly at 2.5.6. Release 2.5.7 stops formatting JSON
+  piped through `biome format --stdin-file-path`, which makes `renderBiomeJson`
+  — the writer behind `beep tsconfig-sync` for `docgen.json`/`tsconfig.json` —
+  emit compact JSON instead of formatted.

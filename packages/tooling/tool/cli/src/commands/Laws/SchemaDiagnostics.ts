@@ -48,8 +48,8 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
  *
  * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
  * if (Result.isFailure(result)) {
- *   // Unredacted diagnostics keep the offending value.
- *   console.log(formatSchemaDiagnostics(result.failure).some((line) => line.includes("sk-test-secret"))) // true
+ *   // Built-in formatters state the constraint; they never echo the rejected value.
+ *   console.log(formatSchemaDiagnostics(result.failure).some((line) => line.includes("expected-token"))) // true
  * }
  * ```
  * @category utilities
@@ -59,9 +59,14 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
   pipe(standardSchemaFormatter(schemaIssueFrom(errorOrIssue)).issues, A.map(formatStandardIssue));
 
 /**
- * Format a schema issue or schema error after redacting actual values.
+ * Format a schema issue or schema error with every message replaced by a redaction
+ * marker, keeping only the path.
  *
- * @param errorOrIssue - Schema error or issue to format without actual values.
+ * Built-in formatters stopped interpolating rejected values in Effect
+ * 4.0.0-beta.103, so this no longer exists to strip them. It still matters for
+ * repo-authored messages, which may interpolate a value the caller supplied.
+ *
+ * @param errorOrIssue - Schema error or issue to format without message detail.
  * @returns Path-prefixed redacted Standard Schema V1 diagnostic messages.
  * @example
  * ```ts
