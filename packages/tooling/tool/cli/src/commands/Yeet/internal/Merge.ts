@@ -32,6 +32,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import { Duration, Effect, Schedule } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
@@ -219,10 +220,23 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
     });
   }
 
-  const mergeCommand = `gh pr merge ${view.number} --squash`;
+  // Head-pinned on purpose: GitHub rejects the merge server-side if the head
+  // moved after the view above, so a push landing in that window cannot be
+  // merged sight-unseen — the same compare-and-swap posture as the sweep's
+  // leased remote deletion. A view without a head oid cannot be pinned, so it
+  // cannot be merged.
+  const pinnedHead = O.fromUndefinedOr(view.headRefOid);
+  if (O.isNone(pinnedHead)) {
+    return yield* YeetCommandError.make({
+      message: `yeet merge refuses to merge #${view.number} without a head oid to pin the merge to.`,
+      command: `gh pr view ${context.branch} --json ${pullRequestViewFields}`,
+      exitCode: 1,
+    });
+  }
+  const mergeCommand = `gh pr merge ${view.number} --squash --match-head-commit ${pinnedHead.value}`;
   const merge = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "merge", `${view.number}`, "--squash"],
+    ["pr", "merge", `${view.number}`, "--squash", "--match-head-commit", pinnedHead.value],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new(`Failed to run ${mergeCommand}.`)));
   if (merge.exitCode !== 0) {

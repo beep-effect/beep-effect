@@ -41,7 +41,7 @@ Workflow:
 5. Kill the app and prove the alert still arrives, then restore it and prove
    bounded backfill, reconciliation, recovery reporting, and heartbeat resume.
 6. Update packet evidence/status as readiness changes.
-7. At P3 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
+7. At P4 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
    `/reflect`; `bun run beep lint reflection-artifacts` must pass.
 
 Acceptance:

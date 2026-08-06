@@ -39,7 +39,7 @@ Workflow:
    `goals/law-docketing-reliability`; do not claim patent v1 acceptance until its
    kill-app alert and recovery proof pass.
 6. Update packet evidence/status as readiness changes.
-7. At P3 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
+7. At P4 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
    `/reflect`; `bun run beep lint reflection-artifacts` must pass.
 
 Acceptance:
