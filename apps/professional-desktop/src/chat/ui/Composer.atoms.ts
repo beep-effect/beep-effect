@@ -15,85 +15,35 @@ import {
   turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { editorStateToDocument } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { documentSafetyIssues, refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
-import { LiteralKit } from "@beep/schema";
 import { toast } from "@beep/ui/components/sonner";
 import { A, O, Str, thunkUndefined } from "@beep/utils";
-import { Effect, flow, Match, Result, Tuple } from "effect";
-import { dual } from "effect/Function";
+import { Effect, Match, Result } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import {
+  ComposerNotice,
+  ComposerSendDecision,
+  composerDocumentFromEditorState,
+  composerPolicy,
+  documentViolationFlags,
+  unsafeDocumentMessage,
+} from "./ComposerPolicy.ts";
 import type { SerializedEditorState } from "@beep/lexical-schema";
-import type { DocumentSafetyViolation } from "@beep/md/Md.safe";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-
-const MAX_MESSAGE_CHARACTERS = 16_000;
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Composer.atoms");
 
-class ComposerDecodeErrorNotice extends S.Class<ComposerDecodeErrorNotice>($I`ComposerDecodeErrorNotice`)(
-  {
-    kind: S.tag("decode-error"),
-    message: S.NonEmptyString,
-  },
-  $I.annote("ComposerDecodeErrorNotice", {
-    description: "A composer schema projection failure that must also update decode-failure telemetry.",
-  })
-) {}
-
-class ComposerErrorNotice extends S.Class<ComposerErrorNotice>($I`ComposerErrorNotice`)(
-  {
-    kind: S.tag("error"),
-    message: S.NonEmptyString,
-  },
-  $I.annote("ComposerErrorNotice", {
-    description: "An operator-safe composer refusal rendered as an error toast.",
-  })
-) {}
-
-class ComposerInfoNotice extends S.Class<ComposerInfoNotice>($I`ComposerInfoNotice`)(
-  {
-    kind: S.tag("info"),
-    message: S.NonEmptyString,
-  },
-  $I.annote("ComposerInfoNotice", {
-    description: "A non-failing composer notice rendered as an informational toast.",
-  })
-) {}
-
-const ComposerNoticeKind = LiteralKit(["decode-error", "error", "info"]).pipe(
-  $I.annoteSchema("ComposerNoticeKind", {
-    description: "Exhaustive composer notification variants.",
-  })
-);
-
-const ComposerNotice = ComposerNoticeKind.mapMembers(
-  Tuple.evolve([() => ComposerDecodeErrorNotice, () => ComposerErrorNotice, () => ComposerInfoNotice])
-)
-  .annotate(
-    $I.annote("ComposerNotice", {
-      description: "Typed notification commands emitted by the composer state machine.",
-    })
-  )
-  .pipe(S.toTaggedUnion("kind"));
-
-type ComposerNotice = typeof ComposerNotice.Type;
-
-// Inline refusal emitted when a draft contains trusted raw nodes or a URL that
-// is outside the user-content allow list. The general draft remains untouched.
-class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`ComposerSafetyRefusal`)(
-  {
-    issueCount: S.Int.check(S.isGreaterThan(0)),
-    message: S.NonEmptyString,
-  },
-  $I.annote("ComposerSafetyRefusal", {
-    description: "An inline refusal for a draft that fails the Markdown user-content safety boundary.",
-  })
-) {}
+export {
+  ComposerNotice,
+  ComposerSafetyRefusal,
+  composerDocumentForSend,
+  composerDocumentFromEditorState,
+  DocumentViolationFlags,
+} from "./ComposerPolicy.ts";
 
 const normalizeLegacyInline: (inline: Md.Inline) => Md.Inline = Match.type<Md.Inline>().pipe(
   Match.withReturnType<Md.Inline>(),
@@ -287,70 +237,6 @@ export type ComposerDocumentSafetyGate = typeof ComposerDocumentSafetyGate.Type;
 
 const rawNormalizationMessage =
   "This legacy draft contains trusted raw Markdown or HTML. Review the escaped literal copy before sending.";
-
-class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
-  {
-    footnote: S.Boolean,
-    raw: S.Boolean,
-    scalar: S.Boolean,
-    url: S.Boolean,
-  },
-  $I.annote("DocumentViolationFlags", {
-    description: "",
-  })
-) {
-  static readonly empty = DocumentViolationFlags.make({
-    footnote: false,
-    raw: false,
-    scalar: false,
-    url: false,
-  });
-}
-
-const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>): DocumentViolationFlags =>
-  A.reduce(issues, DocumentViolationFlags.empty, (flags, issue) =>
-    Match.value(issue).pipe(
-      Match.tagsExhaustive({
-        DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
-        RawNode: () => ({ ...flags, raw: true }),
-        InvalidScalar: () => ({ ...flags, scalar: true }),
-        UnsafeUrl: () => ({ ...flags, url: true }),
-      })
-    )
-  );
-
-const documentViolationReason = flow(
-  documentViolationFlags,
-  Match.type<DocumentViolationFlags>().pipe(
-    Match.when(
-      { footnote: true, scalar: true, url: true },
-      () =>
-        "duplicate footnote definitions, an unsafe link or embedded URL, and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"
-    ),
-    Match.when(
-      { footnote: true, scalar: true },
-      () => "duplicate footnote definitions and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"
-    ),
-    Match.when(
-      { footnote: true, url: true },
-      () => "duplicate footnote definitions and a link or embedded URL outside the safe destination policy"
-    ),
-    Match.when({ footnote: true }, () => "duplicate footnote definitions"),
-    Match.when(
-      { scalar: true, url: true },
-      () => "an unsafe link or embedded URL and unsupported text encoding (a NUL character or lone UTF-16 surrogate)"
-    ),
-    Match.when({ scalar: true }, () => "unsupported text encoding (a NUL character or lone UTF-16 surrogate)"),
-    Match.when({ url: true }, () => "a link or embedded URL outside the safe destination policy"),
-    Match.orElse(() => "trusted raw Markdown or HTML")
-  )
-);
-
-const unsafeDocumentMessage = (issues: ReadonlyArray<DocumentSafetyViolation>): string =>
-  `This draft contains ${documentViolationReason(issues)}. Edit or replace that content before sending.`;
-
-const keptDraftSafetyMessage = (issues: ReadonlyArray<DocumentSafetyViolation>): string =>
-  `This draft contains ${documentViolationReason(issues)}. It cannot be sent safely, and your draft has been kept.`;
 
 const rawNormalizationGate = (safeDocument: SafeDocument, issueCount: number): ComposerRawNormalizationGate =>
   ComposerRawNormalizationGate.make({
@@ -617,74 +503,6 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
 );
 
 /**
- * Rebuilds editable children while retaining persistence-owned frontmatter,
- * which is intentionally outside the Lexical wire vocabulary.
- *
- * @example
- * ```ts
- * import { composerDocumentFromEditorState } from "@/chat/ui/Composer.atoms"
- * import { documentToEditorState } from "@beep/lexical-schema"
- * import * as Md from "@beep/md/Md.model"
- * import * as A from "effect/Array"
- * import { Effect } from "effect"
- *
- * const program = Effect.gen(function* () {
- *   const seed = Md.Document.make({ children: [] })
- *   const state = yield* documentToEditorState(seed)
- *   console.log(A.length(composerDocumentFromEditorState(seed, state).children)) // 1
- * })
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const composerDocumentFromEditorState: {
-  (state: SerializedEditorState): (seed: Md.Document) => Md.Document;
-  (seed: Md.Document, state: SerializedEditorState): Md.Document;
-} = dual(2, (seed: Md.Document, state: SerializedEditorState): Md.Document => {
-  const projected = editorStateToDocument(state);
-  return Md.Document.make({
-    children: projected.children,
-    frontmatter: seed.frontmatter,
-  });
-});
-
-/**
- * Selects the document submitted by the composer. A confirmed normalized
- * payload wins over Lexical's projection so lossy nodes such as images retain
- * the exact semantics shown in the confirmation preview. Ordinary projection
- * preserves the seed's persistence-owned frontmatter.
- *
- * @example
- * ```ts
- * import { composerDocumentForSend } from "@/chat/ui/Composer.atoms"
- * import { documentToEditorState } from "@beep/lexical-schema"
- * import * as Md from "@beep/md/Md.model"
- * import { refineSafeDocument } from "@beep/md/Md.safe"
- * import { Effect, Result } from "effect"
- * import * as O from "effect/Option"
- *
- * const program = Effect.gen(function* () {
- *   const seed = Md.Document.make({ children: [] })
- *   const state = yield* documentToEditorState(seed)
- *   const confirmed = Result.getOrThrow(refineSafeDocument(seed))
- *   console.log(composerDocumentForSend(seed, state, O.some(confirmed)) === confirmed) // true
- * })
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const composerDocumentForSend: {
-  (state: SerializedEditorState, confirmed: O.Option<SafeDocument>): (seed: Md.Document) => Md.Document;
-  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document;
-} = dual(
-  3,
-  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document =>
-    O.getOrElse(confirmed, () => composerDocumentFromEditorState(seed, state))
-);
-
-/**
  * Stable send handler. Synchronous refusal decisions satisfy the editor
  * contract; notices and accepted state transitions execute through runtime
  * atoms.
@@ -709,63 +527,30 @@ export const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity
       get.mount(submit);
       get.mount(confirmedAtom);
       return (state: SerializedEditorState): boolean => {
-        const confirmed = get.once(confirmedAtom);
-        if (O.isNone(confirmed) && O.isSome(get.once(gateAtom))) return false;
-        if (get.once(turnActiveAtom)) {
-          get.set(confirmedAtom, O.none());
-          get.set(
-            composerNoticeAtom,
-            ComposerNotice.cases.info.make({
-              message: "A reply is still streaming — wait for it to finish, or press Stop.",
-            })
-          );
-          return false;
-        }
-        const content = composerDocumentForSend(seed, state, confirmed);
-        if (A.isReadonlyArrayEmpty(content.children)) {
-          get.set(confirmedAtom, O.none());
-          get.set(
-            composerNoticeAtom,
-            ComposerNotice.cases["decode-error"].make({
-              message: "This message could not be prepared for sending. Your draft has been kept.",
-            })
-          );
-          return false;
-        }
-        const safeContent = O.match(confirmed, {
-          onNone: () => refineSafeDocument(content),
-          onSome: Result.succeed,
+        const decision = composerPolicy.decideSend({
+          confirmed: get.once(confirmedAtom),
+          gateOpen: O.isSome(get.once(gateAtom)),
+          seed,
+          state,
+          turnActive: get.once(turnActiveAtom),
         });
-        return Result.match(safeContent, {
-          onFailure: (issues) => {
+        return ComposerSendDecision.match(decision, {
+          gated: () => false,
+          refuse: ({ notice }) => {
             get.set(confirmedAtom, O.none());
-            get.set(
-              composerSafetyRefusalAtoms(threadId),
-              O.some(
-                ComposerSafetyRefusal.make({
-                  issueCount: A.length(issues),
-                  message: keptDraftSafetyMessage(issues),
-                })
-              )
-            );
+            get.set(composerNoticeAtom, notice);
             return false;
           },
-          onSuccess: (safeContent) => {
-            const length = Str.length(renderPlainTextUnsafe(safeContent));
-            if (length > MAX_MESSAGE_CHARACTERS) {
-              get.set(confirmedAtom, O.none());
-              get.set(
-                composerNoticeAtom,
-                ComposerNotice.cases.error.make({
-                  message: `Message is ${length.toLocaleString()} characters — the limit is ${MAX_MESSAGE_CHARACTERS.toLocaleString()}.`,
-                })
-              );
-              return false;
-            }
+          unsafe: ({ refusal }) => {
+            get.set(confirmedAtom, O.none());
+            get.set(composerSafetyRefusalAtoms(threadId), O.some(refusal));
+            return false;
+          },
+          send: ({ content }) => {
             get.set(confirmedAtom, O.none());
             get.set(gateAtom, O.none());
             get.set(composerSafetyRefusalAtoms(threadId), O.none());
-            get.set(submit, safeContent);
+            get.set(submit, content);
             return true;
           },
         });
@@ -806,46 +591,28 @@ export const composerConfirmNormalizationHandlerAtoms = Atom.family((threadId: W
       get.mount(composerNoticeAtom);
       get.mount(confirmedAtom);
       return (): boolean => {
-        if (get.once(turnActiveAtom)) {
-          get.set(
-            composerNoticeAtom,
-            ComposerNotice.cases.info.make({
-              message: "A reply is still streaming — wait for it to finish, or press Stop.",
+        const decision = composerPolicy.decideConfirmNormalization({
+          normalized: O.flatMap(
+            get.once(gateAtom),
+            ComposerDocumentSafetyGate.match({
+              UnsafeDocument: () => O.none<SafeDocument>(),
+              RawNormalization: ({ normalized }) => O.some(normalized),
             })
-          );
-          return false;
-        }
-        return O.match(get.once(gateAtom), {
-          onNone: () => false,
-          onSome: (gate) =>
-            ComposerDocumentSafetyGate.match(gate, {
-              UnsafeDocument: () => false,
-              RawNormalization: ({ normalized }) => {
-                const plainText = renderPlainTextUnsafe(normalized);
-                const length = Str.length(plainText);
-                if (Str.isEmpty(Str.trim(plainText))) {
-                  get.set(
-                    composerNoticeAtom,
-                    ComposerNotice.cases.error.make({
-                      message: "The escaped copy contains no visible text. Edit the draft before sending.",
-                    })
-                  );
-                  return false;
-                }
-                if (length > MAX_MESSAGE_CHARACTERS) {
-                  get.set(
-                    composerNoticeAtom,
-                    ComposerNotice.cases.error.make({
-                      message: `Message is ${length.toLocaleString()} characters — the limit is ${MAX_MESSAGE_CHARACTERS.toLocaleString()}.`,
-                    })
-                  );
-                  return false;
-                }
-                get.set(confirmedAtom, O.some(normalized));
-                get.set(composerSafetyRefusalAtoms(threadId), O.none());
-                return true;
-              },
-            }),
+          ),
+          turnActive: get.once(turnActiveAtom),
+        });
+        return ComposerSendDecision.match(decision, {
+          gated: () => false,
+          refuse: ({ notice }) => {
+            get.set(composerNoticeAtom, notice);
+            return false;
+          },
+          unsafe: () => false,
+          send: ({ content }) => {
+            get.set(confirmedAtom, O.some(content));
+            get.set(composerSafetyRefusalAtoms(threadId), O.none());
+            return true;
+          },
         });
       };
     })
