@@ -80,11 +80,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
-- [`fleet-coordination`](./fleet-coordination/README.md) — shape-stage: ~13
+- [`fleet-coordination`](./fleet-coordination/README.md) — decompose-stage: ~13
   agent checkouts on one workstation duplicating each other’s fixes and rotting
   each other’s in-flight PRs. Research verdict is a derived **mirror**, not a
   message board — derive early, deliver ambiently, enforce late — shipped
-  through the reserved `AgentBrief.fleet` field, sequenced behind PR-I. Grill #1
+  through the reserved `AgentBrief.fleet` field. `MAP.md` names one packet
+  (`fleet-mirror`) and splits it into a derivation rung that is unblocked today
+  and a delivery rung gated on PR-I, after verifying against `main` that
+  `AgentBrief`/`OwnershipClaim` do not exist yet. Grill #1
   locked D1–D5 and disposed four questions; en route it killed `law-pulse.sh`
   ever reaching the model (fixed here), `beep yeet` being a gate, `flock`
   releasing on holder death, and merge queue at this repo’s measured shape (19%

@@ -4,7 +4,7 @@
     "slug": "fleet-coordination",
     "title": "Fleet Coordination For Parallel Agent Checkouts",
     "status": "active",
-    "stage": "shape",
+    "stage": "decompose",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
