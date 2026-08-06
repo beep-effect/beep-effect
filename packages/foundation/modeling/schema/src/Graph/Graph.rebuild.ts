@@ -53,7 +53,8 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
  * Reconstructs an immutable Effect `Graph.Graph` from an encoded graph payload,
  * failing when node/edge indices do not match the expected insertion order.
  *
- * @example
+ * **Example** (Rebuilding an immutable graph)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -115,7 +116,8 @@ export const rebuildImmutableGraph: {
  * Reconstructs a mutable Effect `Graph.MutableGraph` from an encoded graph payload,
  * failing when node/edge indices do not match the expected insertion order.
  *
- * @example
+ * **Example** (Rebuilding a mutable graph)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

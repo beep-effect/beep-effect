@@ -21,6 +21,7 @@ import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import {
   collectChangedPathsSinceBase,
   collectDirtyPaths,
+  runGitLines,
   sortedUniquePaths,
 } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
@@ -465,6 +466,37 @@ const isPackageSourceFile = (filePath: string): boolean =>
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
   !isGeneratedSourceFile(filePath);
 
+/**
+ * Whether a diff line adds or removes part of a JSDoc comment.
+ *
+ * Matches the framing (`/**`, `*​/`) and continuation (`*`) forms, so a change
+ * confined to code lines does not register.
+ */
+const isJSDocDiffLine = (line: string): boolean =>
+  /^[+-]\s*(?:\/\*\*|\*\/|\*(?:\s|$))/.test(line) && !Str.startsWith("+++")(line) && !Str.startsWith("---")(line);
+
+/**
+ * Whether this branch actually edited a JSDoc comment in `filePath`.
+ *
+ * The cleanup-on-touch gate used to fire whenever a changed file contained a
+ * legacy carrier anywhere, which made any repo-wide mechanical edit — dropping a
+ * removed argument, renaming an API — inherit an unrelated documentation
+ * refactor across every file it swept. Narrowing the trigger to files whose
+ * JSDoc the change itself touched keeps the gate's intent ("clean up the docs
+ * you are already editing") without that trap.
+ */
+const hasTouchedJSDocLines = Effect.fn("JSDocRatchet.hasTouchedJSDocLines")(function* (
+  repoRoot: string,
+  filePath: string
+): Effect.fn.Return<boolean, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const ranges: ReadonlyArray<ReadonlyArray<string>> = [
+    ["diff", "--unified=0", "origin/main...HEAD", "--", filePath],
+    ["diff", "--unified=0", "--", filePath],
+  ];
+  const diffs = yield* Effect.forEach(ranges, (args) => runGitLines(repoRoot, args, jsdocGitErrorAdapter));
+  return pipe(diffs, A.flatten, A.some(isJSDocDiffLine));
+});
+
 const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(function* (
   repoRoot: string
 ): Effect.fn.Return<
@@ -501,10 +533,14 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
   return yield* Effect.forEach(
     existingSourceFiles,
     (filePath) =>
-      fs.readFileString(path.join(canonicalRepoRoot, filePath)).pipe(
-        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
-        Effect.map((sourceText) => {
-          if (hasGeneratedFileHeader(sourceText)) {
+      Effect.all({
+        sourceText: fs
+          .readFileString(path.join(canonicalRepoRoot, filePath))
+          .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`))),
+        touchedDoc: hasTouchedJSDocLines(repoRoot, filePath),
+      }).pipe(
+        Effect.map(({ sourceText, touchedDoc }) => {
+          if (hasGeneratedFileHeader(sourceText) || !touchedDoc) {
             return A.empty<JSDocTouchedFileFinding>();
           }
           const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);

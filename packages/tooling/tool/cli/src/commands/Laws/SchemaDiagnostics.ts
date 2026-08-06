@@ -38,9 +38,13 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
 /**
  * Format a schema issue or schema error as path-prefixed Standard Schema V1 diagnostics.
  *
- * @param errorOrIssue - Schema error or issue to format.
- * @returns Path-prefixed Standard Schema V1 diagnostic messages.
- * @example
+ * **Details**
+ *
+ * Built-in formatters state the constraint that was violated; since Effect
+ * 4.0.0-beta.103 they never echo the rejected value.
+ *
+ * **Example** (Formatting a failed decode)
+ *
  * ```ts
  * import { formatSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
  * import { Result } from "effect"
@@ -48,10 +52,12 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
  *
  * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
  * if (Result.isFailure(result)) {
- *   // Built-in formatters state the constraint; they never echo the rejected value.
  *   console.log(formatSchemaDiagnostics(result.failure).some((line) => line.includes("expected-token"))) // true
  * }
  * ```
+ *
+ * @param errorOrIssue - Schema error or issue to format.
+ * @returns Path-prefixed Standard Schema V1 diagnostic messages.
  * @category utilities
  * @since 0.0.0
  */
@@ -62,13 +68,14 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
  * Format a schema issue or schema error with every message replaced by a redaction
  * marker, keeping only the path.
  *
+ * **Details**
+ *
  * Built-in formatters stopped interpolating rejected values in Effect
  * 4.0.0-beta.103, so this no longer exists to strip them. It still matters for
  * repo-authored messages, which may interpolate a value the caller supplied.
  *
- * @param errorOrIssue - Schema error or issue to format without message detail.
- * @returns Path-prefixed redacted Standard Schema V1 diagnostic messages.
- * @example
+ * **Example** (Redacting a failed decode)
+ *
  * ```ts
  * import { formatRedactedSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
  * import { Result } from "effect"
@@ -76,10 +83,12 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
  *
  * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
  * if (Result.isFailure(result)) {
- *   // Redacted diagnostics strip the offending value while keeping the path.
  *   console.log(formatRedactedSchemaDiagnostics(result.failure).some((line) => line.includes("sk-test-secret"))) // false
  * }
  * ```
+ *
+ * @param errorOrIssue - Schema error or issue to format without message detail.
+ * @returns Path-prefixed redacted Standard Schema V1 diagnostic messages.
  * @category utilities
  * @since 0.0.0
  */
