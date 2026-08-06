@@ -89,3 +89,10 @@ wedge is fully landed: graduated 2026-08-04, goal packet active on main
   forms amended (targets flipped to the live path, dated AMENDED notes);
   align questions 1, 17 (T4-F6 half), and 18 carried into the wedge;
   HANDOFF first action now points at the new wedge's research lanes.
+- 2026-08-06: relator wedge research + align complete in its packet (both
+  lanes, synthesis, review gate 1, six align branches closed with Benjamin —
+  see that packet's DECISIONS). `P100`/`R25` promoted out of
+  `unverified-addendum` in `research/nugget-catalog.json` on the wedge's
+  Lane B verdicts (dated single-pass descriptors, recommendation `adopt`;
+  R25's Apache/MPL split verified on the real TNO GitLab files; the wedge
+  packet added to both rows' targets).

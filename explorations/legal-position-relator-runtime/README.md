@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `capture`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -26,15 +26,15 @@ matrix (2026-08-01 reconciliation grill; 2026-08-04 phase-2 grill; opened
 
 ## Next Open Question
 
-Run the two locked research lanes (see the research-depth decision in
-[`DECISIONS.md`](./DECISIONS.md)): Lane A repo composition inventory →
-`research/01-repo-surfaces.md`; Lane B bounded public-source legal-theory
-frame (Hohfeld, FLINT, UFO-L; never-compute boundary; P100/R25 verification)
-→ `research/02-position-relator-legal-frame.md`. Then review gate 1, then the
-align session with Benjamin — first branch: V1 scope (full scheme + bimap +
-relator, or scheme-first), with the vocabulary's package home and the
-generic-vs-legal Party–Role split behind it (`ops/manifest.json`
-`openQuestions`).
+Align is done — all six branches closed with Benjamin 2026-08-06 (V1 scope =
+scheme + simple relator; package home = `law-practice/domain` with a
+promotion gate; Party–Role split + shared `Principal` composition; the full
+Lane B `CorrectionDelta` shape; two-axis void-vs-penalised; typed
+`LegalActContent` with required polarity — see [`DECISIONS.md`](./DECISIONS.md)).
+`openQuestions` is empty. Next: land **PR 2** (research artifacts + align
+outcomes + the parent-ledger P100/R25 promotions), then draft `BRIEF.md`
+inside the six decision boundaries (stage align → shape) and iterate it with
+Benjamin to approval.
 
 ## Read This First
 
@@ -56,3 +56,29 @@ generic-vs-legal Party–Role split behind it (`ops/manifest.json`
   `T1-F3`/`T3-F9`/`T4-F8`. Wedge-scoped decisions (research lanes, dependency
   posture, Opus 5 orchestration, two-stage PR cadence) pre-seeded into
   DECISIONS.
+- 2026-08-05: packet-open PR #565 published and certified same-day (Greptile
+  4/5 → 5/5 after a routing-seed consistency fix; 26 checks green; awaiting
+  Benjamin's merge). Both research lanes ran as parallel Opus 5 agents
+  (Workflow `wf_66532d96-48b`): Lane A repo surfaces (headline drift: the
+  contradiction-triage substrate is live code since PR #520, 2026-08-02;
+  three citation corrections to the inherited grounding), Lane B legal-theory
+  frame (Hohfeld two-axes correction, Klein four-group algebra, Lane B
+  verdicts P100 → verified-with-correction and R25 → verified with the
+  Apache/MPL split confirmed on the real TNO GitLab files; campaign-ledger
+  promotion pends align/PR 2). `RESEARCH.md` synthesis authored; SOURCES
+  ledger populated; review gate 1 critique (Opus) PASS-WITH-FIXES — all 11
+  findings folded (3 P1: MPL discipline restored to whole-`shacl/` scope,
+  package-home evidence rebalanced to cuts-both-ways, ledger-promotion
+  phrasing corrected). Stage
+  capture → research. Two new align branches surfaced (void-vs-penalised;
+  opposite-bimap content model). Research artifacts stay uncommitted until
+  PR 2.
+- 2026-08-06: align session with Benjamin — all six branches closed in one
+  pass, every recommendation accepted: scheme + simple relator V1;
+  `law-practice/domain` + promotion gate; Party–Role split composing the
+  shared `Principal` (agents runtime untouched — its `Principal` migration
+  is a named follow-on owned by that slice); the full Lane B
+  `CorrectionDelta` shape; two-axis void-vs-penalised; typed
+  `LegalActContent` with required polarity. Stage research → align;
+  `openQuestions` cleared. Next: PR 2 (research + align + parent-ledger
+  promotions), then BRIEF.

@@ -69,8 +69,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `patent-drafting-episode-ledger` and the FunctionalUnit extension on
   Benjamin's call.
 - [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
-  capture-stage second wedge of the `legal-patent-kg-deepening` routing
-  matrix (opened 2026-08-05, after the candor wedge graduated): a closed
+  align-stage second wedge of the `legal-patent-kg-deepening` routing
+  matrix (opened 2026-08-05, after the candor wedge graduated; research
+  lanes + synthesis landed same-day; all six align branches closed
+  2026-08-06 — scheme + simple relator V1, `law-practice/domain` home with
+  a promotion gate, Party–Role split, full `CorrectionDelta` shape,
+  two-axis void-vs-penalised, typed content with polarity): a closed
   `HohfeldPosition` domain whose correlative pairs are one stored directed
   relation with a derived opposite view, an identity-bearing n-ary
   `LegalPositionRelator` aggregate over the live taxonomy /
@@ -80,8 +84,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   vocabulary (`LegalScopeContext`, typed `PriorityBasis`, verdict families,
   caller-owned `CorrectionDelta`) composed over
   `goals/epistemic-contradiction-triage` without widening it; FLINT/UFO-L
-  donors (`P100`/`R25`) stay study-only until the research lane verifies
-  them.
+  donor verdicts landed 2026-08-05 (`P100` verified-with-correction, `R25`
+  verified with the Apache/MPL split confirmed; both promoted to `adopt` in
+  the parent ledger).
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
