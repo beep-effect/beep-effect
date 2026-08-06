@@ -53,6 +53,11 @@ workflows in skills.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
+- PR closeout: run `bun run beep yeet monitor` until it reports
+  `merge-ready: yes`. Unresolved review threads are a hard merge gate —
+  answer and resolve every one via `bun run beep yeet reply` (drafts in
+  `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
+  operator to relay them.
 
 ## Codegen
 
