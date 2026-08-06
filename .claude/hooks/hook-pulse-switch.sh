@@ -144,7 +144,16 @@ case "${1:-status}" in
     # The window is durable; the claim can now be dropped rather than restored.
     trap - EXIT
     rm -f "${claimed}"
-    echo "hook-pulse armed; disarm window appended to ${windows}"
+    # A `disarm` can win the freed path between the rename above and here. The
+    # appended window is still correct — the instrument really was off across it,
+    # and the new gap stays open until some later `arm` closes it — but reporting
+    # a bare "armed" would be false by the time the operator reads it. Report the
+    # state that actually holds rather than the transition that occurred.
+    if [ -e "${sentinel}" ]; then
+      echo "hook-pulse window appended to ${windows}; a concurrent disarm already re-disarmed the instrument"
+    else
+      echo "hook-pulse armed; disarm window appended to ${windows}"
+    fi
     ;;
   status)
     if [ -e "${sentinel}" ]; then
