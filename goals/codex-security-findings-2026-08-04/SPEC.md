@@ -58,9 +58,9 @@ exact captured findings until no packet-applicable finding remains open.
 - [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
 - [x] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
+- [x] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 27 captured Codex findings are resolved after merge and the live view
+- [x] All 27 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
 ## Verification Matrix
