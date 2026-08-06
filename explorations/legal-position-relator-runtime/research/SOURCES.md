@@ -27,28 +27,61 @@ RULES
 Inherited by reference from the parent campaign — the nuggets' distillates
 live in `explorations/legal-patent-kg-deepening/research/mined/` (see each
 nugget's distillate list in [`CAPTURE.md`](../CAPTURE.md)). No new corpus is
-mined for this wedge; links, not copies. `P100` and `R25` remain
-`unverified-addendum` until research Lane B verifies them.
+mined for this wedge; links, not copies. Lane B recorded its verification
+verdicts 2026-08-05: `P100` → `verified-with-correction` (frames verbatim;
+the "transition semantics over Hohfeldian relators" claim is false as
+written; beep-fit partial — eFLINT execution semantics excluded —
+[`02-position-relator-legal-frame.md`](./02-position-relator-legal-frame.md) §2);
+`R25` → `verified`, all four gates pass (§3). The parent ledger's rows were
+promoted 2026-08-06 with the align outcomes (dated verification descriptors,
+recommendation `adopt`) — a parent-packet act landing in the same PR as this
+file.
 
 ## 2. Upstream repositories & licenses
 
-- `flint-ontology` (per `R25`, catalogued in the parent ledger): mixed
-  licensing — Apache-2.0 portions are port-with-attribution; MPL-2.0 SHACL
-  behavior is clean-room-only if adopted. No vendoring; adoption gated on the
-  Lane B verification pass. No other external repo is a donor at capture
-  stage.
+- `flint-ontology` — VERIFIED 2026-08-05 on the real repository: TNO GitLab
+  (`normativesystems/knowledge-modeling/flint-ontology`, © TNO 2022, v1.0.0
+  dated 2025-12-03) — the repo lives on GitLab, not GitHub. License split
+  confirmed on the LICENSE files themselves: top-level **Apache-2.0**
+  (port-with-attribution), `shacl/` **MPL-2.0** (clean-room re-expression
+  only). Per-portion discipline table:
+  [`02-position-relator-legal-frame.md`](./02-position-relator-legal-frame.md) §3.
+  The pre-existing `ShaclSeverity` in `@beep/semantic-web` narrows what the
+  wedge would *want* from `shacl/` (the severity split is already owned) but
+  does not narrow the obligation: anything taken from either `shacl/*.ttl`
+  file is clean-room-only regardless of novelty, per MPL §1.4 file-level
+  scope — no copying of shape text, SPARQL constraint bodies, or file
+  structure — and the clean-room derivation must be recorded in the
+  graduated goal packet. No vendoring. `flint-ontology` is the wedge's single
+  code donor.
+- The UFO-L and FLINT/eFLINT **papers** are cited, never vendored. Only the
+  CEUR demo paper is CC BY 4.0; CALCULEMUS, the ILLC thesis, and the eFLINT
+  arXiv author-version carry no reuse licence — no figures or extended
+  passages may be copied into repo docs (Lane B §2.5, §9).
 
 ## 3. External research sources
 
-To be populated by research Lane B (bounded public-source legal-theory
-frame: Hohfeld's Yale Law Journal articles, published FLINT papers, published
-UFO-L papers; never-compute boundary; P100/R25 verification) →
-`research/02-position-relator-legal-frame.md`.
+Populated 2026-08-05 by Lane B — the full per-URL ledger with access dates is
+[`02-position-relator-legal-frame.md`](./02-position-relator-legal-frame.md) §9
+(Sources), with failed/unverifiable fetches recorded in §8 (NOT FOUND / NOT
+VERIFIED) rather than papered over. Source families: Hohfeld 1913 + 1917 from
+Yale's own repository (`openyls.law.yale.edu`, public domain; the
+`digitalcommons.law.yale.edu` host does not exist and
+`elischolar.library.yale.edu` returns 403 — both recorded), published FLINT /
+eFLINT papers (van Doesburg & van Engers and successors), the TNO
+`flint-ontology` GitLab repo (§2 above), and published UFO-L papers (Griffo,
+Almeida, Guizzardi). Every citation in the lane file was actually opened;
+Wikisource used only as an independent cross-check of the Hohfeld tables.
 
 ## 4. In-repo capability references
 
-To be populated by research Lane A (`research/01-repo-surfaces.md`). Known at
-capture (from the routing seed's grounded rows):
+Populated 2026-08-05 by Lane A ([`01-repo-surfaces.md`](./01-repo-surfaces.md))
+— grounded file:line map of all seven composed surfaces, net-new
+re-confirmation (§8), nugget reconciliation (§9), and drift attribution
+against the 2026-08-01 seed grounding (§10, headline: contradiction triage is
+live code since PR #520, 2026-08-02; three citation corrections to the
+inherited grounding are recorded there). Known at capture (from the routing
+seed's grounded rows, now superseded by the lane file where they differ):
 
 - `@beep/ontology` (foundation/modeling/ontology) — `LiteralKit` domains,
   SKOS mapping kinds, `TaxonomySeed`, `TaxonomyLoader` registry — reuse.

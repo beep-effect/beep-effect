@@ -119,3 +119,141 @@ PR #560 — with clean review treadmills at each step. Rejected: three-stage
 granular (an extra closeout treadmill with no review benefit) and single-PR
 (mixes the decision record with unreviewed research output — the pattern
 that generated the nine-thread closeout on PR #542).
+
+## 2026-08-06 — align: V1 scope
+
+**Question:** What ships in the first rung — scheme-first, full relator
+runtime, or scheme plus simple relator?
+
+**Answer:** Scheme + simple relator (Lane B §7.1's recommendation accepted).
+Rung 1 ships the closed `HohfeldPosition` LiteralKit domain, both bimaps
+(correlative and opposite) defined over `(kind, content)` with act/omission
+polarity, and the *simple* legal relator — one correlative pair + roles +
+source norm + grounding event. Complex-relator composition,
+`SlotCorrespondence`, and `PowerExercise`/`ActFrame` transitions defer to
+rung 2.
+
+**Rationale:** The bimaps are provably total and involutive over a closed
+eight-element domain — testable to exhaustion in rung 1 — but the opposite
+bimap is unsound without act/omission polarity (Lane B §1.2's
+content-negation trap), and polarity lives in the relator's content field;
+UFO-L's "essential and inseparable parts" makes the correlative pair the
+simple relator. Rejected: scheme-first only (ships a scheme that cannot
+express its own soundness invariant) and full relator runtime (pulls the
+unresolved void-vs-penalised branch into rung 1 and risks the one-packet
+appetite).
+
+## 2026-08-06 — align: package home
+
+**Question:** Where does the Hohfeld position/relator vocabulary live —
+`packages/law-practice/domain`, a new legal-core package, or inside
+`@beep/ontology`?
+
+**Answer:** `packages/law-practice/domain` beside the patent entities, with
+a named promotion gate: extract a legal-core package only when a second
+legal consumer needs the contract, through the normal promotion-record gate.
+Entity ids follow the sibling precedent (`shared/domain/src/identity/`).
+
+**Rationale:** Repo consistency wins over donor topology today: the same-day
+candor precedent fixes legal vocabulary in `law-practice/domain` with "No
+new packages" as a Non-Goal, a new package trips the four first-CI
+governance gates, and generality-without-a-second-consumer is exactly the
+pattern the candor `PatentFragmentLocator` decision rejected — the promotion
+gate preserves UFO-L's core-vs-domain layering as a future move rather than
+an up-front package. Rejected: a new legal-core package now (departs from
+precedent for a layering benefit no second consumer yet needs) and folding
+into `@beep/ontology` (the carried caution keeps correlativity outside plain
+SKOS triples; bimaps are typed invariants, not mappings).
+
+## 2026-08-06 — align: Party–Role/principal split
+
+**Question:** How do Party, LegalRole, and the runtime principal relate —
+split or collapsed, and does the agents runtime's principal surface change?
+
+**Answer:** Split, composing the shared `Principal`. Persistent generic
+Party identity stays separate from `LegalRole`, which is norm-prescribed,
+scoped to a relator, carries its `sourceNorm`, and takes a
+role-mixin-style multi-kind player constraint (natural or juristic person).
+The agents runtime is NOT widened: the legal layer consumes the shared
+`Principal` union exactly as epistemic's `ContradictionReviewer` does;
+`RuntimePrincipalId` stays agents-private. Migrating the agents runtime onto
+the shared `Principal` union is a named follow-on owned by that slice, not
+this wedge.
+
+**Rationale:** Lane B §7.3's fourth point makes the split near-mandatory:
+role multiplicity is the mechanism by which principle collisions arise, so
+a collapsed model cannot represent the collisions the carried contradiction
+vocabulary exists to record; T4-F6 asks for the same split from the campaign
+side. Rejected: collapse (structurally unrepresentable collisions) and
+widening the agents runtime in-wedge (a real wart, but fixing another
+slice's contract mid-wedge is the exact move compose-don't-widen forbids).
+
+## 2026-08-06 — align: CorrectionDelta shape
+
+**Question:** What shape does the caller-owned `CorrectionDelta` emission
+contract take?
+
+**Answer:** The full Lane B §7.4 shape: an append-only event carrying a
+two-severity `validatorReport` (hard/advisory, never a boolean), a stage tag
+from the interpretation → qualification → assessment triple, per-element
+source pointers (which slot the correction touched, not one document pointer
+per record), a `reviewerAction` vocabulary that includes `undetermined`, and
+unresolved differences defaulting into contradiction candidates. Emission
+stays caller-owned; the generic triage goal's SPEC is untouched.
+
+**Rationale:** Each element is evidence-backed: FLINT ships exactly the
+hard/advisory validator split; only assessment is machine-checkable, so the
+delta must name the stage it touches; UFO-L's incompleteness argument makes
+`undetermined` a legitimate reviewer outcome (its absence pushes toward
+false closure); FLINT registers sources per element; eFLINT's own authors
+decline to resolve conflicts in-language, independently supporting the
+unresolved-to-candidate default. Rejected: minimal T4-F8 literal (boolean
+validator forces advisory findings into silence-or-block) and
+defer-to-BRIEF (the correction contract informs the appetite the BRIEF must
+state).
+
+## 2026-08-06 — align: void vs penalised
+
+**Question:** How does the model represent an act performed without power
+versus an act performed without permission?
+
+**Answer:** Two independent recorded axes, never one field: a constitution
+outcome (`constituted` / `not-constituted`) and a permission status
+(`permitted` / `violative`). A void act (no power) stays on the record as an
+attempted exercise with zero position effect; a violative-but-constituted
+act (no permission) changes positions AND records the violation. Both are
+recorded determinations bound to an attributed interpretation — in a
+contested case the system never computes which applies (never-compute
+boundary, Lane B §6). The axes land in the relator's event vocabulary now;
+`PowerExercise` itself remains rung 2 per the V1-scope decision.
+
+**Rationale:** The theory split is explicit (Goossens: without permission we
+expect a penalty; without power the act was never constituted), and eFLINT's
+uniform violation rule is the named donor trap — copying it collapses
+exactly the distinction T1-F7 preserves. Rejected: the eFLINT uniform rule
+(one axis, distinction lost) and a void-only model (erases the
+attempted/ineffective record T1-F7 requires and mis-models permission
+violations, which do take legal effect).
+
+## 2026-08-06 — align: opposite-bimap content model
+
+**Question:** What carries the content identity the opposite bimap and
+contradiction alignment operate over?
+
+**Answer:** A named law-practice value object (working name
+`LegalActContent`): required act/omission polarity as a typed field, act
+description as structured-but-plain text for now, equality/digest-capable so
+relator content can be compared for contradiction candidate alignment. The
+opposite bimap negates polarity and preserves the rest. A typed act-verb
+vocabulary is deferred — if it ever materializes it composes
+semantic-foundation's scheme loading, never a new registry.
+
+**Rationale:** Kind-only derivation is unsound (Hohfeld's own
+privilege(enter)/duty(enter) example demands content "of precisely opposite
+tenor"), and the live triage code seals candidates with a digest-based match
+basis — so content must be a comparable schema value, with polarity inside
+it. Rejected: opaque string + polarity flag (no stable equality for the
+match basis; polarity outside content re-opens the unsoundness) and a full
+act ontology in V1 (pulls the function-verb-scheme question owned by
+`goals/semantic-foundation` into this wedge — a scope departure needing its
+own routing approval).

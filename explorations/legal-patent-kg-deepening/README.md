@@ -17,12 +17,15 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The second wedge is OPEN:
+The second wedge is at ALIGN-COMPLETE:
 [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md)
-(capture stage, opened 2026-08-05 on Benjamin's call, carrying the re-routed
-contradiction-semantics cluster). Next for this packet: shepherd that wedge
-through research → review gate 1 → align — its own packet owns the detail —
-with `patent-drafting-episode-ledger` and the FunctionalUnit extension into
+(opened 2026-08-05 on Benjamin's call; research lanes, synthesis, review
+gate 1, and all six align branches closed by 2026-08-06 — its packet owns
+the detail; the research + align record and the P100/R25 ledger promotions
+landed with PR #573, the same PR that carries this pointer). Next: the
+wedge drafts its `BRIEF.md` inside the six align boundaries (shape stage,
+iterated with Benjamin to approval), with
+`patent-drafting-episode-ledger` and the FunctionalUnit extension into
 `uspto-patent-driver-depth` queued behind it on Benjamin's call. The first
 wedge is fully landed: graduated 2026-08-04, goal packet active on main
 (graduation PR #560 merged 2026-08-05).
@@ -89,3 +92,10 @@ wedge is fully landed: graduated 2026-08-04, goal packet active on main
   forms amended (targets flipped to the live path, dated AMENDED notes);
   align questions 1, 17 (T4-F6 half), and 18 carried into the wedge;
   HANDOFF first action now points at the new wedge's research lanes.
+- 2026-08-06: relator wedge research + align complete in its packet (both
+  lanes, synthesis, review gate 1, six align branches closed with Benjamin —
+  see that packet's DECISIONS). `P100`/`R25` promoted out of
+  `unverified-addendum` in `research/nugget-catalog.json` on the wedge's
+  Lane B verdicts (dated single-pass descriptors, recommendation `adopt`;
+  R25's Apache/MPL split verified on the real TNO GitLab files; the wedge
+  packet added to both rows' targets).
