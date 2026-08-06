@@ -16,6 +16,7 @@ import {
 } from "./internal/FallowFeedback.ts";
 import { runYeet } from "./internal/Handler.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
+import { runYeetMerge, runYeetMergeLoop, runYeetReplyPass, runYeetSweep } from "./internal/Porcelain.ts";
 import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 
@@ -55,6 +56,12 @@ const startPrEarlyFlag = Flag.boolean("start-pr-early").pipe(
 
 const monitorFlag = Flag.boolean("monitor").pipe(
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
+);
+
+const untilMergedFlag = Flag.boolean("until-merged").pipe(
+  Flag.withDescription(
+    "Keep monitoring across pushes until the PR merges or closes, rerunning known-flake jobs once per job per head SHA and sweeping the clone on merge"
+  )
 );
 
 const summaryFlag = Flag.boolean("summary").pipe(
@@ -225,6 +232,19 @@ const publishFlags = {
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
+  untilMerged: untilMergedFlag,
+} as const;
+
+const porcelainFlags = {
+  base: baseFlag,
+  head: headFlag,
+  packetDir: packetDirFlag,
+} as const;
+
+const sweepFlags = {
+  ...porcelainFlags,
+  json: jsonFlag,
+  plan: planFlag,
 } as const;
 
 const closeoutFlags = {
@@ -327,8 +347,20 @@ const yeetPublishCommand = Command.make("publish", publishFlags, (options) => ru
   Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, (options) => runYeetMode("monitor", options)).pipe(
-  Command.withDescription("Monitor hosted PR checks for the current branch")
+const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilMerged, ...options }) =>
+  untilMerged && !options.plan ? runYeetMergeLoop(options) : runYeetMode("monitor", options)
+).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
+
+const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
+  Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
+);
+
+const yeetMergeCommand = Command.make("merge", porcelainFlags, (options) => runYeetMerge(options)).pipe(
+  Command.withDescription("Squash-merge this branch's pull request, confirm MERGED, then sweep the clone")
+);
+
+const yeetReplyCommand = Command.make("reply", porcelainFlags, (options) => runYeetReplyPass(options)).pipe(
+  Command.withDescription("Post and resolve the drafted review-thread replies for this branch's pull request")
 );
 
 const yeetCloseoutCommand = Command.make("closeout", closeoutFlags, (options) => runYeetMode("closeout", options)).pipe(
@@ -405,6 +437,9 @@ export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYe
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,
+    yeetSweepCommand,
+    yeetMergeCommand,
+    yeetReplyCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,

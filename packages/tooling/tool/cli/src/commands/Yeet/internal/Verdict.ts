@@ -180,6 +180,166 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
 );
 
 /**
+ * One hard criterion of the merge protocol, named when it is the blocker.
+ *
+ * **Details**
+ *
+ * Only the two hard criteria appear here. The Greptile score is a displayed
+ * target rather than a gate, so it is carried on
+ * {@link YeetMergeReadyCriteria} for the operator to read and can never be the
+ * value of {@link YeetMergeReady.failing}.
+ *
+ * **Example** (List the merge-ready criteria)
+ *
+ * ```ts
+ * import { YeetMergeReadyCriterion } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetMergeReadyCriterion.Options)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetMergeReadyCriterion = LiteralKit(["checks-green", "threads-resolved"]).pipe(
+  $I.annoteSchema("YeetMergeReadyCriterion", {
+    title: "Yeet Merge Ready Criterion",
+    description: "One hard criterion of the merge protocol.",
+  })
+);
+
+/**
+ * One hard criterion of the merge protocol.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
+
+/**
+ * The observed state of each merge-protocol criterion.
+ *
+ * **Example** (Construct merge-ready criteria)
+ *
+ * ```ts
+ * import { YeetMergeReadyCriteria } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const criteria = YeetMergeReadyCriteria.make({
+ *   checksGreen: true,
+ *   threadsResolved: false,
+ *   greptileScore: O.some("5/5"),
+ * })
+ * console.log(criteria.checksGreen)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`YeetMergeReadyCriteria`)(
+  {
+    checksGreen: S.Boolean,
+    threadsResolved: S.Boolean,
+    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("YeetMergeReadyCriteria", {
+    description: "Observed state of each merge-protocol criterion; the Greptile score is display-only.",
+  })
+) {}
+
+const mergeReadyCriterionHolds = (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean =>
+  YeetMergeReadyCriterion.$match(criterion, {
+    "checks-green": () => criteria.checksGreen,
+    "threads-resolved": () => criteria.threadsResolved,
+  });
+
+/**
+ * Cross-field requirement that the three merge-readiness surfaces agree.
+ *
+ * `ready`, `failing`, and `criteria` restate one fact three ways, so without a
+ * filter a document could decode cleanly while carrying
+ * `{"ready":true,"failing":"checks-green"}` — an answer and its own refutation.
+ * Whoever read the field they trusted would act on the wrong one, and nothing
+ * would attribute the contradiction back to the writer that produced it. The
+ * issue is reported at `failing` because that is the field an operator reads to
+ * decide what to do next.
+ */
+const YeetMergeReadyCoherenceCheck = S.makeFilter(
+  (value: {
+    readonly ready: boolean;
+    readonly failing: O.Option<YeetMergeReadyCriterion>;
+    readonly criteria: YeetMergeReadyCriteria;
+  }) =>
+    O.match(value.failing, {
+      onNone: () =>
+        value.ready && value.criteria.checksGreen && value.criteria.threadsResolved
+          ? undefined
+          : {
+              path: ["failing"],
+              issue:
+                "A merge-ready verdict naming no failing criterion must be ready with every hard criterion satisfied.",
+            },
+      onSome: (criterion) =>
+        !value.ready && !mergeReadyCriterionHolds(value.criteria, criterion)
+          ? undefined
+          : {
+              path: ["failing"],
+              issue: `A merge-ready verdict blocked on ${criterion} must not be ready and must record ${criterion} as unsatisfied.`,
+            },
+    }),
+  {
+    identifier: $I`YeetMergeReadyCoherenceCheck`,
+    title: "Yeet merge readiness coherence",
+    description: "Merge readiness must agree with the named blocking criterion and the observed criteria.",
+  }
+);
+
+/**
+ * Merge readiness as data: the verdict plus the criterion that blocks it.
+ *
+ * **Details**
+ *
+ * The merge protocol is otherwise enforced by a human reading three surfaces
+ * that status and monitor already fetch. Folding them into one record with a
+ * named blocker is what lets `--until-merged` decide without re-deriving the
+ * protocol at every call site.
+ *
+ * **Gotchas**
+ *
+ * The three fields are mutually derivable, so a cross-field check makes an
+ * incoherent record undecodable rather than merely wrong: `ready` is true
+ * exactly when `failing` is `None` and both hard criteria hold, and a named
+ * `failing` criterion must be the one recorded as unsatisfied. The Greptile
+ * score is display-only and is not part of the check.
+ *
+ * **Example** (Construct a blocked merge-ready verdict)
+ *
+ * ```ts
+ * import { YeetMergeReady, YeetMergeReadyCriteria } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const mergeReady = YeetMergeReady.make({
+ *   ready: false,
+ *   failing: O.some("threads-resolved"),
+ *   criteria: YeetMergeReadyCriteria.make({ checksGreen: true, threadsResolved: false }),
+ * })
+ * console.log(mergeReady.ready)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetMergeReady extends S.Class<YeetMergeReady>($I`YeetMergeReady`)(
+  S.Struct({
+    ready: S.Boolean,
+    failing: YeetMergeReadyCriterion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    criteria: YeetMergeReadyCriteria,
+  }).pipe(S.check(YeetMergeReadyCoherenceCheck)),
+  $I.annote("YeetMergeReady", {
+    description: "Merge readiness as data, naming the criterion that blocks the merge when one does.",
+  })
+) {}
+
+/**
  * Machine-readable verdict for one yeet run.
  *
  * **Gotchas**
@@ -249,11 +409,55 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optionalKey),
     failedStepId: S.optionalKey(S.String),
     failureKind: YeetFailureKind.pipe(S.optionalKey),
+    mergeReady: YeetMergeReady.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetVerdict", {
     description: "Machine-readable verdict for one yeet run, including per-lane repair commands.",
   })
 ) {}
+
+/**
+ * JSON-string codec for the `verdict.json` artifact.
+ *
+ * **Gotchas**
+ *
+ * Every writer of the verdict artifact must go through this codec. Rendering a
+ * decoded {@link YeetVerdict} with a generic JSON encoder serializes its
+ * `Option` fields as their runtime representation
+ * (`{"_id":"Option","_tag":"Some","value":…}`), which no longer decodes — the
+ * failure surfaces much later as `verdict artifact could not be decoded` from
+ * `yeet status`, with nothing pointing back at the writer.
+ *
+ * **Example** (Round-trip a verdict)
+ *
+ * ```ts
+ * import { YeetVerdict, YeetVerdictJson } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const verdict = YeetVerdict.make({
+ *   schemaVersion: "yeet-verdict/v2",
+ *   attemptId: O.some("550e8400-e29b-41d4-a716-446655440000"),
+ *   base: "origin/main",
+ *   branch: "feature",
+ *   committed: false,
+ *   createdAt: "2026-06-11T00:00:00.000Z",
+ *   head: "HEAD",
+ *   lanes: [],
+ *   message: "yeet verification proof passed.",
+ *   mode: "verify",
+ *   outcome: "success",
+ *   packetPaths: [],
+ *   pushed: false,
+ *   runId: "feature",
+ * })
+ * console.log(Effect.runSync(YeetVerdictJson.encode(verdict)))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const YeetVerdictJson = JsonStringCodec(YeetVerdict);
 
 /**
  * One executed plan step paired with its run result.
@@ -363,6 +567,7 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
     stash: S.optional(YeetStashState),
     failedStepId: S.optional(S.String),
     failureKind: S.optional(YeetFailureKind),
+    mergeReady: S.optional(YeetMergeReady),
   },
   $I.annote("BuildYeetVerdictInput", {
     description: "Run identity, outcome, planned steps, and executed results used to build the run verdict.",
@@ -452,6 +657,7 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     startedAt: input.startedAt,
     endedAt: input.endedAt,
     elapsedMs: input.elapsedMs,
+    mergeReady: O.fromUndefinedOr(input.mergeReady),
     ...O.getSomesStruct({
       indexPath: O.fromUndefinedOr(input.indexPath),
       baseFreshness: O.fromUndefinedOr(input.baseFreshness),
