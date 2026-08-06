@@ -14,5 +14,14 @@ counter="${TMPDIR:-/tmp}/beep-law-pulse-$(id -u)-$(printf '%s' "$PWD" | cksum | 
 n=$(( $(cat "$counter" 2>/dev/null || echo 0) + 1 ))
 printf '%s' "$n" > "$counter"
 if (( n % 5 == 0 )); then
-  echo "law pulse: schema-first models · typed errors/tagged unions · tersest helper forms · effect helper modules over native · @beep/* aliases in test imports · reuse before recreate (rg + barrels)"
+  # PostToolUse stdout on exit 0 reaches the debug log ONLY — never the model.
+  # UserPromptSubmit, UserPromptExpansion, and SessionStart are the sole events
+  # where plain stdout becomes context (code.claude.com/docs/en/hooks). For every
+  # other event the injection channel is hookSpecificOutput.additionalContext,
+  # which Claude Code wraps in a system reminder at the point the hook fired.
+  # A bare echo here made this pulse a silent no-op from 2026-07-05 to 2026-08-04;
+  # the cadence and payload were always right, the channel was never connected.
+  # Payload must stay free of `"` and `\` — it is interpolated into JSON unescaped.
+  laws="schema-first models · typed errors/tagged unions · tersest helper forms · effect helper modules over native · @beep/* aliases in test imports · reuse before recreate (rg + barrels)"
+  printf '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"law pulse: %s"}}\n' "$laws"
 fi
