@@ -17,11 +17,12 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The second wedge is OPEN:
+The second wedge is at ALIGN-COMPLETE:
 [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md)
-(capture stage, opened 2026-08-05 on Benjamin's call, carrying the re-routed
-contradiction-semantics cluster). Next for this packet: shepherd that wedge
-through research → review gate 1 → align — its own packet owns the detail —
+(opened 2026-08-05 on Benjamin's call; research lanes, synthesis, review
+gate 1, and all six align branches closed by 2026-08-06 — its packet owns
+the detail). Next for this packet: the wedge drafts its `BRIEF.md` inside
+the six align boundaries (shape stage, iterated with Benjamin to approval),
 with `patent-drafting-episode-ledger` and the FunctionalUnit extension into
 `uspto-patent-driver-depth` queued behind it on Benjamin's call. The first
 wedge is fully landed: graduated 2026-08-04, goal packet active on main

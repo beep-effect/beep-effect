@@ -127,8 +127,8 @@ primary-source grounding T1-F3/T3-F9 previously lacked.
 (graduated 2026-08-05, PR #560) fixes legal vocabulary in
 `packages/law-practice/domain`, entity ids in `shared/domain/src/identity/`,
 and "No new packages" as a Non-Goal — with one bounded new-package exception
-already carved at `SPEC.md:96-99` — so a separate legal-consumer core
-package departs from precedent (Lane A §7). But Lane B §7.2 carries the
+already carved at `goals/patent-citation-candor-gate/SPEC.md:96-99` — so a
+separate legal-consumer core package departs from precedent (Lane A §7). But Lane B §7.2 carries the
 counter-evidence: UFO-L is explicitly a *core* ontology layered
 UFO-A → UFO-C → UFO-L → domain, so co-locating positions with patent
 entities flattens a distinction the donors treat as structural, while a
