@@ -47,7 +47,7 @@ end of this file.
 
 - **Route / Wave:** mixed · P1
 - **Nuggets:** `T1-F1`, `T1-F2`, `T1-F7`, `T1-F9`, `T4-F6`, `P100`, `R25`
-- **Primary target:** `legal-position-relator-runtime` *(proposed slug; no repo path is asserted)*
+- **Primary target:** [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) *(packet OPENED 2026-08-05; was a proposed slug with no repo path)*
 - **Coordinate with:** `goals/semantic-foundation`, `goals/epistemic-bitemporal-edge-core`, `explorations/agent-governance-control-plane`, `explorations/uspto-patent-driver-depth`
 - **Net-new (no existing home):**
   - `[T1-F1,T1-F2,T1-F9]` A closed `HohfeldPosition` domain, correlative bimap, and n-ary `LegalPositionRelator` aggregate. A source-only `rg` over `packages/**/src/**/*.{ts,tsx}` returned zero `Hohfeld` or `LegalPositionRelator` symbols on 2026-08-01.
@@ -156,7 +156,7 @@ end of this file.
 
 - **Route / Wave:** mixed · P1
 - **Nuggets:** `T2-F2`, `T3-F7`, `ADHD-1`
-- **Primary target:** `patent-citation-candor-gate` *(proposed slug; no repo path is asserted)*
+- **Primary target:** [`explorations/patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) *(packet OPENED 2026-08-04, GRADUATED into `goals/patent-citation-candor-gate`; was a proposed slug with no repo path)*
 - **Coordinate with:** `goals/uspto-prosecution-read`, `goals/citation-extraction-engine`, `goals/citation-verified-span-substrate`, `goals/agentic-professional-runtime`, `explorations/uspto-patent-driver-depth`
 - **Net-new (no existing home):**
   - `[T2-F2,ADHD-1]` `PatentCitationEvent`, discovery provenance, observation version, quarantine/staleness, and attorney `CandorDisposition`; source-only `rg` returned zero `PatentCitationEvent` or `CandorDisposition` symbols.
