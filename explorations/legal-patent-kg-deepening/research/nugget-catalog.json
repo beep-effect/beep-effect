@@ -871,7 +871,7 @@
         "findingId": "P100",
         "distillates": ["P100"]
       },
-      "claim": "FLINT models normative change through n-ary Act and Fact frames whose preconditioned acts create or terminate state facts. It may supply transition semantics over Hohfeldian relators, but it has not passed campaign verification. [CORRECTED 2026-08-05, relator-wedge Lane B: frames and precondition semantics verified verbatim; the transition-semantics-over-Hohfeldian-relators assertion is false as written - FLINT models act frames instead of positions, with two of four correlative pairs and omissions out of its own scope.]",
+      "claim": "FLINT models normative change through n-ary Act and Fact frames whose preconditioned acts create or terminate state facts, verified 2026-08-05 (relator-wedge Lane B) with a correction: it does not supply transition semantics over Hohfeldian relators - FLINT models act frames instead of positions, with two of four correlative pairs and omissions out of its own scope - so adoption covers the frame/slot/precondition machinery only. Original pre-verification wording is preserved in research/14-addendum-new-items.md.",
       "theme": "legal-position-authority",
       "targets": [
         "explorations/legal-patent-kg-deepening",
