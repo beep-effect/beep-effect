@@ -23,7 +23,7 @@ interface InputOverrides {
   readonly tool_input?: Readonly<Record<string, unknown>>;
 }
 
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const makeInputJson = (overrides?: InputOverrides): string =>
   encodeJson({

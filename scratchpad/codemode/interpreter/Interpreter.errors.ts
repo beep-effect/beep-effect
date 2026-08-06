@@ -79,7 +79,7 @@ export const normalizeError = (error: unknown): DiagnosticModel =>
             : P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
               ? value.message
               : pipe(
-                  S.encodeUnknownResult(S.UnknownFromJsonString)(copyOut(value, "json")),
+                  S.encodeUnknownResult(S.fromJsonString(S.Unknown))(copyOut(value, "json")),
                   Result.getOrElse(() => renderUnknown(value))
                 );
         return DiagnosticModel.new("ExecutionFailure", `Uncaught: ${message}`);

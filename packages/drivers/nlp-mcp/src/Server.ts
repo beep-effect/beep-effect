@@ -24,6 +24,7 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { StreamingToolkitHandlersLive } from "./StreamingHandlers.ts";
 import { StreamingToolkit } from "./StreamingTools.ts";
@@ -105,4 +106,9 @@ export const makeServerLayer = (
   Layer.mergeAll(
     sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive)),
     sanitizedToolkit(StreamingToolkit).pipe(Layer.provide(StreamingToolkitHandlersLive))
-  ).pipe(Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })), Layer.orDie);
+  ).pipe(
+    Layer.provide(
+      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+    ),
+    Layer.orDie
+  );

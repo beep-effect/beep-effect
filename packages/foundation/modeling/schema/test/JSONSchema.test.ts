@@ -39,8 +39,8 @@ const decodeDocumentResult = S.decodeUnknownResult(Document);
 const encodeDocumentResult = S.encodeResult(Document);
 const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
 const encodeSubSchemaResult = S.encodeResult(SubSchema);
-const decodeJsonResult = S.decodeUnknownResult(S.UnknownFromJsonString);
-const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const isAbsoluteUriString = S.is(AbsoluteUriString);
 const isIdUriReferenceString = S.is(IdUriReferenceString);
 const isUriReferenceString = S.is(UriReferenceString);
@@ -225,7 +225,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     it.effect(
       "preserves a hostile __proto__ wire key without prototype pollution",
       Effect.fnUntraced(function* () {
-        const wire: unknown = yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(
+        const wire: unknown = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(
           '{"__proto__": {"polluted": 1}, "x-a": 2}'
         );
         const node = yield* decodeNode(wire);

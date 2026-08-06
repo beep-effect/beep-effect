@@ -94,13 +94,12 @@ export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLoo
   static readonly equivalence = SchemaUtils.toEquivalence(EffectLawsAllowlistLookupKey);
 }
 
-const toInvalidValueIssue = (actual: unknown, message: string): SchemaIssue.Issue =>
-  new SchemaIssue.InvalidValue(O.some(actual), { message });
-
-const encodeUnsupported =
-  (transformationName: string) =>
-  (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
-    Effect.fail(toInvalidValueIssue(value, `Encoding unknown values is not supported by ${transformationName}.`));
+const encodeUnsupported = (transformationName: string) => (): Effect.Effect<string, SchemaIssue.Issue> =>
+  Effect.fail(
+    new SchemaIssue.InvalidValue({
+      message: `Encoding unknown values is not supported by ${transformationName}.`,
+    })
+  );
 
 const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> => {
   const parseErrors = A.empty<ParseError>();
@@ -113,15 +112,14 @@ const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssu
     onEmpty: () => Effect.succeed(parsed),
     onNonEmpty: (errors) =>
       Effect.fail(
-        toInvalidValueIssue(
-          content,
-          pipe(
+        new SchemaIssue.InvalidValue({
+          message: pipe(
             errors,
             A.map((error) => `${printParseErrorCode(error.error)}@${error.offset}:${error.length}`),
             A.join(", "),
             (details) => `Allowlist JSONC parse error (${details}).`
-          )
-        )
+          ),
+        })
       ),
   });
 };

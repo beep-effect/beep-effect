@@ -677,7 +677,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   })
 ) {}
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const derivedFailure = (message: string, cause: unknown): AiMetricsDerivedStorageError =>
   AiMetricsDerivedStorageError.make({ cause, message });

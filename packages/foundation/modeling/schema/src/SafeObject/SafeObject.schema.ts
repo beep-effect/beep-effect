@@ -6,7 +6,6 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, SchemaIssue, SchemaTransformation } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { UnknownRecord } from "../Record/index.ts";
 
@@ -94,7 +93,7 @@ export const SafeObjectFromObjectKeyword = S.ObjectKeyword.pipe(
         Effect.try({
           try: () => ({ ...input }),
           catch: () =>
-            new SchemaIssue.InvalidValue(O.none(), {
+            new SchemaIssue.InvalidValue({
               message: "Could not read enumerable own properties from object",
             }),
         }),

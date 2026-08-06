@@ -24,10 +24,10 @@ import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.sche
 const $I = $RepoCliId.create("commands/SyncDataToTs/internal/Source");
 
 const textDecoder = new TextDecoder();
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeJsonTextResult = S.decodeUnknownResult(S.fromJsonString(S.Json));
 const decodeXmlText = S.decodeUnknownEffect(XmlTextToUnknown);
-const encodeUnknownJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const defaultCsvParserOptions = ParserOptions.new();
 
 const ParsedCsvRecord = S.Record(S.String, S.String).pipe(

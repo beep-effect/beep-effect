@@ -59,9 +59,16 @@ describe("allowlist-check", () => {
       const diagnostics = formatSchemaDiagnostics(result.failure);
       const redactedDiagnostics = formatRedactedSchemaDiagnostics(result.failure);
 
+      // beta.103 built-in formatters no longer interpolate the rejected value, so
+      // the unredacted form states the constraint rather than echoing the input.
       expect(diagnostics).toEqual([expect.stringContaining("token")]);
-      expect(diagnostics[0]).toContain("sk-test-secret");
+      expect(diagnostics[0]).toContain('Expected "expected-token"');
+      expect(diagnostics[0]).not.toContain("sk-test-secret");
+
+      // Redaction still replaces the message wholesale, which is what keeps
+      // repo-authored messages — the ones that do interpolate values — safe.
       expect(redactedDiagnostics).toEqual([expect.stringContaining("token")]);
+      expect(redactedDiagnostics[0]).toContain("Invalid data <redacted>");
       expect(redactedDiagnostics[0]).not.toContain("sk-test-secret");
     }
   });

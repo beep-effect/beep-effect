@@ -124,7 +124,7 @@ import type {
 
 const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
 const localCollectorDataRoot = DEFAULT_AI_METRICS_DATA_ROOT;

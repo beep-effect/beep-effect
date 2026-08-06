@@ -16,7 +16,7 @@ import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandT
 
 const FIXTURE_PATH = "packages/tooling/tool/cli/test/roadmap-refs.fixture.md";
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

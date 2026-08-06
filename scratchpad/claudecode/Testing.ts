@@ -305,7 +305,7 @@ export const runHookWithMockStdin = <In extends HookInputEnvelope, Out, E, R>(
     const trimmed = stdout.trim();
     const output: unknown =
       trimmed.length > 0
-        ? yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(trimmed).pipe(Effect.orElseSucceed(() => undefined))
+        ? yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(trimmed).pipe(Effect.orElseSucceed(() => undefined))
         : undefined;
 
     const { exitCode, errorTag } = classifyExit(exit);

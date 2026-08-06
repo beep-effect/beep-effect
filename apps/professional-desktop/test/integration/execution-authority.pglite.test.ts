@@ -46,7 +46,7 @@ const publishBodyCanary = "EXECUTION_AUTHORITY_PUBLISH_BODY_CANARY_8F4C3E2B";
 const responseBodyCanary = "EXECUTION_AUTHORITY_RESPONSE_BODY_CANARY_9A5D4F3C";
 const refusalGuidance = "This action is not authorized for this session. Resolve the mutation tier and retry.";
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeSparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryRequest);
 const decodeSparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);

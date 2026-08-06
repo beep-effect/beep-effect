@@ -47,7 +47,7 @@ const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
-const encodeUnknownJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const createClaimsTables = [
   `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (

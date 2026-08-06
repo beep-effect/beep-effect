@@ -42,7 +42,7 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
 // TODO(effect-native-migration): model schema
-const toPlainJson = (value: unknown): string => S.encodeUnknownSync(S.UnknownFromJsonString)(value);
+const toPlainJson = (value: unknown): string => S.encodeUnknownSync(S.fromJsonString(S.Unknown))(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
   ...O.toArray(evidence.spanId),

@@ -114,7 +114,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
       ),
     onSome: Effect.succeed,
   });
-  const parsed = yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(block).pipe(
+  const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(block).pipe(
     QaCommandError.mapError("qa judge-ingest could not parse the judge's final JSON block.")
   );
   return yield* decodeQaInventory(parsed).pipe(
@@ -169,7 +169,7 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
   const encoded = yield* encodeQaInventory(inventory).pipe(
     QaCommandError.mapError("qa judge-ingest could not encode the inventory.")
   );
-  const json = yield* S.encodeEffect(S.UnknownFromJsonString)(encoded).pipe(
+  const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(encoded).pipe(
     QaCommandError.mapError("qa judge-ingest could not serialize the inventory.")
   );
 

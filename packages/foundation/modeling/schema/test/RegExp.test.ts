@@ -49,7 +49,7 @@ describe("RegExpFromStr", () => {
   });
 
   it("rejects non-string unknown input with the source schema error", () => {
-    expect(() => decode(1)).toThrow("Expected @beep/schema/RegExp/RegExpStr, got 1");
+    expect(() => decode(1)).toThrow("Expected @beep/schema/RegExp/RegExpStr");
   });
 
   it("forbids encoding RegExp values back to the original pattern string", () => {

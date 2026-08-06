@@ -56,7 +56,7 @@ const generateToolNameCollisionReport = Effect.fn("GovLegalMcp.generateToolNameC
   const packageMetadata = yield* fs
     .readFileString(packagePath)
     .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(PackageMetadata))));
-  const encodedVersion = yield* S.encodeUnknownEffect(S.UnknownFromJsonString)(packageMetadata.version);
+  const encodedVersion = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(packageMetadata.version);
 
   yield* fs.makeDirectory(generatedDirectory, { recursive: true });
   yield* fs.writeFileString(reportPath, renderToolNameCollisionReport(ProductionToolNameCollisionReport));

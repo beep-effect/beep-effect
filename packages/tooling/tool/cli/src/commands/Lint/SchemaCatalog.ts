@@ -268,7 +268,6 @@ const SCHEMA_PRIMITIVE_PROPERTY_NAMES = [
   "String",
   "Undefined",
   "Unknown",
-  "UnknownFromJsonString",
 ] as const;
 
 const isSchemaPrimitivePropertyAccess = (node: Node): boolean =>
@@ -309,7 +308,6 @@ const SCHEMA_CONST_MEMBER_NAMES = [
   "Tuple",
   "Undefined",
   "Unknown",
-  "UnknownFromJsonString",
 ] as const;
 
 const SCHEMA_TRANSFORMATION_MEMBER_NAMES = [

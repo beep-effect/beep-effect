@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Graph as Graph_, Option, SchemaIssue, SchemaParser, SchemaTransformation } from "effect";
+import { Effect, Graph as Graph_, SchemaIssue, SchemaParser, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import { EdgeEncoded } from "./Graph.encoded.ts";
 import { isEdge } from "./Graph.guards.ts";
@@ -104,7 +104,7 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
 
       return (input, ast, options) => {
         if (!isEdge(input)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
         return Effect.flatMap(

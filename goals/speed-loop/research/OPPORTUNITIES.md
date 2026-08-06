@@ -845,6 +845,106 @@ validation for the reflection: the stale-base guard caught a real revert
 hazard pre-ship; the append-optional discipline is WHY the review P1s
 were findable; repair's config-sync → lint-fix → laws ordering is right.
 
+PR-I evidence amendment — idle-without-reporting (operator observation,
+2026-08-06, recurring across sessions): sub-agents finish or go idle
+without a final report, forcing orchestrators to re-derive WHAT was done
+(discovery cost, distinct from verification cost). Three observed loss
+modes for chat-borne reports: final turn ends on a tool call (gate green
+→ idle, no closing text); result-cap truncation (three of five fix-wave
+reports arrived cut mid-sentence); death/compaction near the end (the
+power outage left a journal saying "started" beside completed work).
+Sharpen #45: the report file is written INCREMENTALLY, before the final
+gate run — an end-composed file shares the chat message's failure modes;
+`beep agent report list` makes discovery independent of the last
+message. #52 rider: the brief carries "the report file is the
+deliverable; the final message is a pointer." Doctrine available today:
+report-bearing fan-outs go through Workflow agent() WITH schema (the
+harness forces validated structured output; free-text stages and
+teammate flows are where every observed loss occurred). Verify-don't-
+trust stays: reports are claims, gates are evidence (#71) — report
+durability fixes discovery, not trust.
+
+79. **PR provenance + resume footer, stamped by yeet publish.** (Operator
+    pain, 2026-08-06: a four-terminal hunt for which session originated
+    #578; the recurring wrong-agent "fix PR #X" backtrack.) Every
+    yeet-created PR body — never the title, which is squash/commitlint
+    input — gains: clone, branch, session name + id, harness, a
+    machine-readable `<!-- yeet-provenance -->` twin, and a
+    copy-pasteable RESUME BLOCK (`cd <clone> && <harness> --resume
+    <session-id> <operator-flags>`) making any PR a durable bookmark
+    into its originating session — terminals die (2026-08-05 power
+    loss), PRs persist. Flags live in operator config templates per
+    harness, not code. Identity ladder: `BEEP_AGENT_SESSION` env from a
+    launch wrapper now, PR-I's #45/#52 identity later. Dogfooded:
+    #583's body carries the footer hand-stamped. Vehicle: small yeet
+    rider; graduates into PR-I.
+80. **Evaluate GitHub native stacked PRs (public preview).** The docs
+    claim the exact fixes for our recorded blockers: required checks run
+    for ALL stack layers as if against the default branch (would retire
+    the stacked-pr-skips-required-checks hazard), auto-retarget +
+    auto-rebase on merge, squash support, merge-queue aware. Maps to
+    lived pain: the #569→#571→#583 continuation chain was a hand-rolled
+    stack; workflow phases (schemas→engines→wiring) are natural layers
+    that would have shrunk #571's five cumulative-diff review rounds.
+    Decision-49 gate: one throwaway two-layer stack verifying the child
+    runs all 24 required checks under OUR ruleset before any adoption;
+    yeet is stack-unaware (stale-base, sweep deletion contract, --pr
+    creation all need riders); merge-queue interplay relays to the
+    fleet packet (#22, decision 34).
+81. **No silent resolutions.** (Operator question, 2026-08-06: fix
+    commits land but threads stay unmarked — or worse, get resolved
+    with no reply, unauditable.) The gate (#20, shipped) ensures threads
+    GET resolved; #81 requires resolutions to carry a receipt: replies
+    name the addressing commit sha or the reasoned by-design defense,
+    and resolutions go through `yeet reply` (which forces a body).
+    Practice is ambient via #583's AGENTS.md law; the mechanical
+    assertion is DESIGNED (thread query gains comments(last:1) author;
+    closeout gains --require-answered-resolutions) and deferred to the
+    next yeet Status/closeout touch — jumps the queue if silent
+    resolutions are actually observed.
+82. **Canonical terminal status line for publish (or `--summary`).**
+    (beep-effect14, 2026-08-06 — their top ask.) publish emits a large
+    stream including the lane JSON, so context-constrained agents MUST
+    pipe-filter, and piping destroys `$?` — producing "agent confidently
+    reports success on a failed run" (observed twice there; only the
+    zsh `${pipestatus[1]}` habit has protected this session). Contract:
+    the LAST line of publish output is one machine-parseable status
+    line (`yeet: publish OK pushed=<sha> pr=<n>` / `yeet: publish
+    FAILED lane=<id> remedy=<cmd>`), making filtering safe by
+    construction. Kin to #76; cheaper than reading verdict.json.
+83. **Status must reconcile the verdict against remote reality.**
+    (beep-effect14: after out-of-band remediation, status reported
+    `verdict: publish failure` + `next: git push` alongside 0 failing
+    checks — contradictory in one snapshot, the merge-ready disease.)
+    A verdict older than the branch tip or contradicted by remote state
+    renders as "stale (predates last push)" with the re-derivation
+    command, never as current truth — operators must not learn to
+    ignore the verdict line.
+
+Sweep-dogfood receipts (2026-08-06, first executeSweep on its own merged
+branch, exit 0, every rail honored): (a) the lockfile needs-operator
+handoff names the command but not the WHERE — "re-run the sweep" from a
+worktree that cannot refresh main (held elsewhere) loops forever; the
+handoff must name the worktree that can act. (b) Two-pass completion
+gap — sweep targets the CURRENT branch only, so after end-state moves
+off the merged branch the promised second pass cannot reach it; ratified
+decision 45(d)'s "a re-run completes the deletion" is FALSE as shipped.
+Both route to a fast-follow fix PR (sweep --branch override through
+guardLiteralArg + handoff text; decision 45(d) amended same-PR).
+
+beep-effect14 operator-feedback disposition (2026-08-06): new items
+#82–83 above. Amendments — #8 (ship porcelain): third verb gap
+receipt-confirmed, "commit exists, prove and push" has no name
+(--amend/--push-only both misused hunting for it); #77: the empty-index
+--amend error names the two-step remedy; #50: the missing-proof-state
+error lacks the Remedy: line stale-base has — the convention exists,
+applied non-uniformly (one-line fast-follow); #25 (PR-G build item):
+key refinement is (tree hash, MERGE-BASE) — changed-file and changeset
+lanes are base-relative; their byte-identical cherry-picked tree repaid
+a full proof. Kept-column: stale-base guard correct 4/4, --staged-only
+stash never misfired, sweep refused deleting an unpushed commit, reply
+posted nothing on a bot-auto-resolved thread.
+
 PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
 wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
 findings should anchor on SYMBOL NAMES, not line numbers — three of four

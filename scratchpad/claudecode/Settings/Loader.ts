@@ -129,7 +129,7 @@ const decodeSettingsSource = (
   content: string
 ): Effect.Effect<SettingsRaw, SettingsParseError | SettingsDecodeError> =>
   Effect.gen(function* () {
-    const parsed = yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(content).pipe(
+    const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
     );
     const raw = yield* S.decodeUnknownEffect(SettingsRaw)(parsed).pipe(
@@ -141,7 +141,7 @@ const decodeSettingsSource = (
     return raw;
   });
 
-const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const isUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   P.isObject(value) && !A.isArray(value);

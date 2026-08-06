@@ -565,7 +565,7 @@ const makeStreamingRequest = (request = XAiRequestOptions.make({})): XAiRequestO
   });
 
 const decodeSseJson = decodeJsonString;
-const decodeJsonOption = S.decodeUnknownOption(S.UnknownFromJsonString);
+const decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
 const encodeJson = encodeJsonString;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.

@@ -12,7 +12,7 @@ import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
 import type { SkillProvenanceReport } from "./Skills.schemas.ts";
 
-const encodeUnknownJson = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 /**
  * Renders the would-be `skills-lock/v2` entry of a report as stable, formatted JSON.

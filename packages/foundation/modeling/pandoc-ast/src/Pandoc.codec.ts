@@ -577,7 +577,7 @@ const rejectKnownConstructorInContext = (
 ): Effect.Effect<never, S.SchemaError> =>
   Effect.fail(
     new S.SchemaError(
-      new SchemaIssue.InvalidValue(O.some(wire), {
+      new SchemaIssue.InvalidValue({
         message: `Known Pandoc constructor ${wire.t} cannot occur in ${context} context`,
       })
     )
@@ -589,7 +589,7 @@ const rejectUnsupportedCurrentConstructor = (
 ): Effect.Effect<never, S.SchemaError> =>
   Effect.fail(
     new S.SchemaError(
-      new SchemaIssue.InvalidValue(O.some(wire), {
+      new SchemaIssue.InvalidValue({
         message: `Pandoc 1.23.1 ${context} constructor ${wire.t} is outside the strict semantic subset`,
       })
     )
@@ -609,7 +609,7 @@ const rejectUnsupportedConstructorInSlot = (
 ): Effect.Effect<never, S.SchemaError> =>
   Effect.fail(
     new S.SchemaError(
-      new SchemaIssue.InvalidValue(O.some(wire), {
+      new SchemaIssue.InvalidValue({
         message: `Unsupported Pandoc constructor ${wire.t} cannot occur in ${slot}`,
       })
     )
@@ -791,7 +791,7 @@ const decodeTableBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.S
       A.isReadonlyArrayNonEmpty(issues)
         ? Effect.fail(
             new S.SchemaError(
-              new SchemaIssue.InvalidValue(O.some(payload), {
+              new SchemaIssue.InvalidValue({
                 message: issues[0].message,
               })
             )

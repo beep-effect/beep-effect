@@ -7,7 +7,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Option, SchemaIssue, SchemaTransformation } from "effect";
+import { Effect, SchemaIssue, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -35,7 +35,7 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
   Effect.try({
     try: () => makeRegExp(value),
     catch: (cause) =>
-      new SchemaIssue.InvalidValue(Option.some(value), {
+      new SchemaIssue.InvalidValue({
         message: P.isError(cause) ? cause.message : "Expected a valid regular expression pattern string",
       }),
   });
@@ -79,9 +79,9 @@ export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
  */
 export type RegExpStr = typeof RegExpStr.Type;
 
-const encodeRegExpStrForbidden = (value: globalThis.RegExp): Effect.Effect<RegExpStr, SchemaIssue.Issue> =>
+const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.Forbidden(Option.some(value), {
+    new SchemaIssue.Forbidden({
       message: "Encoding RegExpFromStr back to the original pattern string is not supported",
     })
   );

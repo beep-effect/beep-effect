@@ -223,7 +223,7 @@ export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined])
         }
 
         const value = yield* formatReferrerPolicyValue(input).pipe(
-          Effect.mapError((error) => new SchemaIssue.InvalidValue(O.some(error), { message: error.message }))
+          Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }))
         );
 
         return {

@@ -21,7 +21,7 @@ import type {
   DocgenPackageAnalysis,
 } from "./Docgen.schemas.ts";
 
-const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const normalizeSlashes = Str.replace(/\\/g, "/");
 const hasAnalysisIssue = (analysis: DocgenExportAnalysis): boolean =>
   analysis.missingTags.length > 0 || analysis.categoryIssues.length > 0;

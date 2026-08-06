@@ -50,8 +50,8 @@ const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.runtime");
 
 const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
-const decodeJson = S.decodeUnknownOption(S.UnknownFromJsonString);
-const encodeJson = S.encodeUnknownOption(S.UnknownFromJsonString);
+const decodeJson = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownOption(S.fromJsonString(S.Unknown));
 const decodeNonNegativeInt = S.decodeUnknownOption(NonNegativeInt);
 
 const EncodedPathPunctuation = MappedLiteralKit([

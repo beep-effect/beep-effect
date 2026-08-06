@@ -44,7 +44,7 @@ const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const PLUGIN_ROOT = "/plugin";
 const SKILL_PATH = `${PLUGIN_ROOT}/skills/review/SKILL.md`;
 const $I = $ScratchpadId.create("test/claudecode/ClaudeRuntime.test");
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const permissionDeniedError = (path: string) =>
   PlatformError.systemError({

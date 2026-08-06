@@ -428,7 +428,7 @@ class ModelOutputObject extends S.Class<ModelOutputObject>($I`ModelOutputObject`
 ) {}
 
 const ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]);
-const decodeModelOutputJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeModelOutputJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeModelOutputPayload = S.decodeUnknownEffect(ModelOutput);
 type ParsedModelOutput = ReadonlyArray<ExtractionCandidate> | ModelOutputObject;
 const isCandidateArray = (output: ParsedModelOutput): output is ReadonlyArray<ExtractionCandidate> => A.isArray(output);
