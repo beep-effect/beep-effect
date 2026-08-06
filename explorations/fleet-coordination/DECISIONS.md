@@ -203,3 +203,39 @@ reserved: when a registry is eventually built, `FleetClaim` must be able to carr
 either a path set or a work item, per ledger #57 and decision 37's principle —
 the claim record describes *what is claimed*; provenance, liveness, `scannedAt`,
 and expiry are knowledge *about* the claim and belong on the wrapper.
+
+---
+
+## 2026-08-05 — Amendment to D5: liveness has a third state
+
+**Trigger.** Two independent findings on the same day.
+
+Measured here: `/proc/<pid>/cwd` is **not universally readable**. Root-owned
+processes return `EACCES` on the symlink read even though the entry lists. D5's
+scan therefore cannot observe every PID, and its earlier phrasing — "degrade,
+don't throw" — was too weak, because it left open the option of degrading into a
+*dormant* verdict.
+
+Read in `block/buzz`'s own postmortem (`docs/welcome-kickoff-silent-failures.md`,
+[`T1` addendum](./research/T1-prior-art.md)): the distinction the code was missing
+was between *"the agent crashed"* — a fact, worth announcing — and *"no intro
+yet"* — **not** a fact, but ignorance. Their conclusion: **"announcing ignorance
+on a deadline is what produces the wrong story,"** and the corrective principle
+**"facts decide, timers are a last-resort backstop."**
+
+**Amendment.** The liveness scan classifies into **three** states, not two:
+
+| State | Meaning | Mirror behavior |
+|---|---|---|
+| `live` | a fact — observed process, or mtime inside the window | filter/label per D5 |
+| `dormant` | a fact — scanned, readable, nothing found | filter/label per D5 |
+| `unknown` | **ignorance** — the entry could not be read | **silence** |
+
+**`unknown` is never rendered as `dormant`.** An unreadable checkout is not a
+dormant one, and reporting it as dormant is announcing ignorance as fact — the
+exact defect the mirror exists to avoid, since a suppressed signal 2 on a
+falsely-dormant checkout is a silent miss. The snapshot must also state its own
+coverage, so a partial scan is legible as partial.
+
+This composes with D4's replay rule: an epoch-stamped fact may say "not observed
+as of 11:04"; it may never say "idle."

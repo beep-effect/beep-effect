@@ -65,10 +65,15 @@ capability this packet is about does not exist yet.
   HANDOFF-2 items the same day (A6–A10 in
   [`AMENDMENTS`](./research/AMENDMENTS-from-beep-effect3.md)); the load-bearing
   one is that PR-I now builds on `additionalContext` rather than plain stdout.
-  `block/buzz` recorded as considered-and-rejected prior art — the closest
-  existing artifact to the original message-board framing, rejected because it
-  solves delivery by owning the agent runtime, coordinates only what is
-  *declared*, and is built for the cross-machine case ruled out of scope.
+  `block/buzz` recorded as considered-and-rejected prior art, then **corrected
+  the same day** after the operator ran it: it is harness-agnostic and drives
+  Claude Code over ACP, so it owns the *session*, not the *agent*, and the honest
+  option is "stop running human-started sessions in your own clones" rather than
+  "replace Claude Code". The decisive reason is now the operator's: **a channel
+  is not correct use of a channel** — Buzz's own postmortem records its agents
+  going too loud, too quiet, and telling the wrong story inside it, two of three
+  still open. Its fact-vs-ignorance distinction amended D5 to a **third liveness
+  state**, where unreadable renders as silence and never as dormant.
 - 2026-08-04: grill #1 closed all nine questions → `shape`. Five locked (D1–D5),
   four disposed. The load-bearing move was a **correction to the synthesis**:
   only one of five live collisions is intra-wave, not four, so `WaveManifest`'s

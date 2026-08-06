@@ -104,10 +104,12 @@ while a clone held an in-flight branch that never touched the changed file.
   Measure against commit frequency on first-parent `main`; do not curate by
   intuition. The 14-path list that intuition produced touched 52.6% of the last
   253 commits.
-- **`/proc` is not uniformly readable.** Observed 2026-08-05: root-owned
-  processes return `EACCES` on the cwd symlink even though the entry lists. The
-  scan degrades and reports partial coverage; it never throws and never claims
-  completeness across users.
+- **`/proc` is not uniformly readable, and unreadable ≠ dormant.** Observed
+  2026-08-05: root-owned processes return `EACCES` on the cwd symlink even though
+  the entry lists. Per the D5 amendment, liveness has three states and `unknown`
+  renders as **silence**, never as `dormant` — reporting ignorance as a fact is
+  how a suppressed signal 2 becomes a silent miss. The snapshot states its own
+  coverage so a partial scan is legible as partial.
 - **Cross-clone git reads have sharp edges.** `FETCH_HEAD` lives in
   `--git-common-dir`, not `--git-dir`. `status --porcelain` without `-uall`
   collapses a new package's 40 files into one path. `[ -d .git ]` misses every

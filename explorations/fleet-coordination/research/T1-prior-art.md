@@ -359,11 +359,29 @@ deploy handoff and a deliberately disposable body.
 
 **Verdict: reject**, for three reasons that this track's own findings predicted.
 
-1. **It solves delivery by owning the agent runtime.** Buzz agents are driven by
-   the relay because they *are* Buzz processes. This fleet is Claude Code, where
-   the only channel into a live session is `hookSpecificOutput.additionalContext`.
-   Buzz's coordination is not a transport that could be adopted — it is a
-   different agent. Adopting it means replacing the harness.
+1. **It solves delivery by owning the *session*, not the *agent*.**
+   ⚠ **Corrected 2026-08-05 after the operator ran it.** The first version of
+   this entry claimed Buzz means replacing Claude Code with `buzz-agent`. That is
+   **false**, and it was written from two vision docs instead of the repo. Buzz is
+   harness-agnostic: `VISION.md` lists "ACP agent harness — goose, codex, il",
+   the desktop maps `"il" → "Claude Code"`, and `il-acp` normalizes to
+   `claude-agent-acp` (`desktop/src/features/agents/agentReuse.ts`). Onboarding
+   detects installed Claude Code and Codex harnesses and authenticates through
+   them.
+
+   The constraint is real but narrower. `buzz-acp` **spawns** the harness itself
+   — `tokio::process::Command::new(command)` with piped stdin/stdout
+   (`crates/buzz-acp/src/acp.rs:459-462`), `cmd.spawn()` (`:526`), managed by a
+   pool with respawn — and `TESTING.md:182` states the model plainly: *"the
+   harness listens for events, drives the agent over stdio."* Delivery works
+   because Buzz holds the other end of a pipe it created. This fleet's thirteen
+   sessions are interactive TUIs a human started in their own clones; Buzz has no
+   pipe into those, and ACP has no attach-to-existing-session verb.
+
+   **So the honest framing of the option is not "replace Claude Code" but "stop
+   running human-started sessions in your own clones."** That is a coherent
+   alternative operating model, far outside this packet's appetite, and it should
+   be evaluated on its own terms rather than dismissed.
 2. **Everything it coordinates is declared.** Every claim and update is a signed
    event someone chose to post. Derive-don't-declare is this packet's spine, and
    D1 puts claim registries out of scope on exactly that ground. Buzz is evidence
@@ -382,15 +400,58 @@ deploy handoff and a deliberately disposable body.
 Scale follows from that: 539 MB, 676 Rust files plus a full server stack, against
 this packet's 1–2 day appetite for a read-only derived view.
 
+### The strongest reason, which is not about Buzz
+
+**A channel is not correct use of a channel.** Buzz supplies the best-executed
+agent message board in the field and *still cannot guarantee its agents
+communicate effectively* — which is the operator's argument, and Buzz's own
+repo is the evidence.
+
+`docs/welcome-kickoff-silent-failures.md` is a postmortem on agents failing to
+communicate **inside Buzz**, in three directions at once:
+
+| Class | Failure | Status in-repo |
+|---|---|---|
+| Too loud | agents reply to each other indefinitely | fixed 2026-07-18 |
+| Too quiet | nobody speaks; the user stares at an empty channel | **open** |
+| Wrong story | the team announced as late/broken while working fine | **open** |
+
+Their root cause: *"the kickoff decides what to say from a timer and the absence
+of evidence, then writes that guess in permanent ink."* Their remedy — **"facts
+decide, timers are a last-resort backstop"** — is this packet's derive-early rule
+reached independently from the opposite direction.
+
+Two findings there outrank the Buzz verdict itself:
+
+- **"'Don't get into a loop' is not a rule an agent can follow."** A loop is a
+  *global* property of a conversation; each agent sees only its own turn and
+  every individual reply looks locally reasonable. The rule had to become a
+  local, per-turn test — *does this add information the thread doesn't have?*
+  And prose did not hold it: *"Prompt-only means prose-compliance-only, and
+  Codex is proof models don't reliably comply."* There is still no reply-depth
+  counter, hop limit, cooldown, or agent-to-agent budget anywhere in the path;
+  `ignore_self` blocks self-replies only, and A→B→A is exactly what it misses.
+- **The Welcome opener *selected for* the failure.** Teammates were told they
+  **must** reply and that there was **nothing to report**, so the only compliant
+  output was a content-free acknowledgement. A mandate to speak, with nothing
+  true to say, manufactures noise.
+
+**A derived mirror is immune to this entire class**, because every failure above
+is a failure of *agent-authored speech*. A derived view contains none — there is
+nothing to be too loud, too quiet, or wrong. That is what standardization buys
+here: not better messages, but no messages.
+
 **Worth taking:**
 
 - **"Agents are members, not bots."** Scoping by identity rather than permission
   flags is decision 37's principle reached independently — and the same instinct
   behind speed-loop's `beep agent report list`.
-- **`docs/welcome-kickoff-silent-failures.md`** is the directly transferable
-  artifact: a postmortem on agent-to-agent silent failures in which `ignore_self`
-  is the only loop guard and A→B→A is precisely what it misses. Read it before
-  any fleet bulletin becomes bidirectional.
+- **"Don't mandate speech — mandate honesty," and "silence is explicitly a
+  success."** Direct support for D4's silence-when-the-epoch-is-unchanged rule.
+- **The fact/ignorance distinction**, which amends D5 — see `DECISIONS.md`.
+  *"The agent crashed"* is a fact worth announcing; *"no intro yet"* is
+  ignorance, and *"announcing ignorance on a deadline is what produces the wrong
+  story."*
 
 **What it does not change.** The negative result above stands unweakened: Buzz
 does not broadcast base-state change into running agents either. It moves the
