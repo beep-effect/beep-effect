@@ -48,7 +48,7 @@ describe("Fn schema", () => {
 });
 
 describe("Fn thunks", () => {
-  it("validates transformed failures against the schema type side", () =>
+  it.effect("validates transformed failures against the schema type side", () =>
     Effect.gen(function* () {
       const schema = Fn({
         output: S.String,
@@ -62,9 +62,10 @@ describe("Fn thunks", () => {
         error: 2,
       });
       expect(schema.errorSchema).toBe(S.FiniteFromString);
-    }));
+    })
+  );
 
-  it("validates transformed outputs against the schema type side", () =>
+  it.effect("validates transformed outputs against the schema type side", () =>
     Effect.gen(function* () {
       const schema = Fn({ output: S.FiniteFromString });
       const impl = schema.implement(() => 2);
@@ -72,9 +73,10 @@ describe("Fn thunks", () => {
       expect(yield* impl()).toBe(2);
       expect(schema.inputSchema).toBe(S.Never);
       expect(schema.outputSchema).toBe(S.FiniteFromString);
-    }));
+    })
+  );
 
-  it("preserves handler failures for implementEffect", () =>
+  it.effect("preserves handler failures for implementEffect", () =>
     Effect.gen(function* () {
       const schema = Fn({
         output: S.String,
@@ -87,7 +89,8 @@ describe("Fn thunks", () => {
         _tag: "Failure",
         error: "boom",
       });
-    }));
+    })
+  );
 
   it("provides a synchronous helper for service-free schemas", () => {
     const schema = Fn({ output: S.String });
@@ -96,7 +99,7 @@ describe("Fn thunks", () => {
     expect(impl()).toBe("hello");
   });
 
-  it("preserves defects without validating them against errorSchema", () =>
+  it.effect("preserves defects without validating them against errorSchema", () =>
     Effect.gen(function* () {
       const schema = Fn({
         output: S.String,
@@ -107,11 +110,12 @@ describe("Fn thunks", () => {
 
       expect(Cause.hasDies(cause)).toBe(true);
       expect(Cause.hasFails(cause)).toBe(false);
-    }));
+    })
+  );
 });
 
 describe("Fn unary functions", () => {
-  it("decodes transformed inputs before running the handler", () =>
+  it.effect("decodes transformed inputs before running the handler", () =>
     Effect.gen(function* () {
       const schema = Fn({
         input: S.FiniteFromString,
@@ -120,9 +124,10 @@ describe("Fn unary functions", () => {
       const impl = schema.implement((count) => `${count + 1}`);
 
       expect(yield* impl("1")).toBe("2");
-    }));
+    })
+  );
 
-  it("validates input before calling the handler", () =>
+  it.effect("validates input before calling the handler", () =>
     Effect.gen(function* () {
       const schema = Fn({
         input: S.Finite,
@@ -138,9 +143,10 @@ describe("Fn unary functions", () => {
 
       expect(called).toBe(false);
       expect(result._tag).toBe("Failure");
-    }));
+    })
+  );
 
-  it("validates output values from implement", () =>
+  it.effect("validates output values from implement", () =>
     Effect.gen(function* () {
       const schema = Fn({
         input: S.Finite,
@@ -150,9 +156,10 @@ describe("Fn unary functions", () => {
       const result = yield* Effect.promise(() => Promise.resolve(runResult(impl(1))));
 
       expect(result._tag).toBe("Failure");
-    }));
+    })
+  );
 
-  it("validates failure values from implementEffect", () =>
+  it.effect("validates failure values from implementEffect", () =>
     Effect.gen(function* () {
       const schema = Fn({
         input: S.Finite,
@@ -166,7 +173,8 @@ describe("Fn unary functions", () => {
       if (result._tag === "Failure") {
         expect(SchemaIssue.isIssue(result.error)).toBe(true);
       }
-    }));
+    })
+  );
 
   it("supports implementSync for transformed input schemas", () => {
     const schema = Fn({
@@ -188,7 +196,7 @@ describe("Fn unary functions", () => {
     expect(impl("beep")).toBeUndefined();
   });
 
-  it("handles structured payloads", () =>
+  it.effect("handles structured payloads", () =>
     Effect.gen(function* () {
       const schema = Fn({
         input: S.Struct({
@@ -209,7 +217,8 @@ describe("Fn unary functions", () => {
         id: "ada-10",
         label: "Ada (10)",
       });
-    }));
+    })
+  );
 });
 
 describe("Fn convenience exports", () => {

@@ -83,7 +83,7 @@ afterEach(() => {
 });
 
 describe("Canonicalization security hardening", () => {
-  it("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
+  it.effect("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
     Effect.gen(function* () {
       const actual = yield* Effect.promise(() =>
         Promise.resolve(vi.importActual<typeof import("rdf-canonize")>("rdf-canonize"))
@@ -119,25 +119,29 @@ describe("Canonicalization security hardening", () => {
       expect(options.format).toBe("application/n-quads");
       expect(options.maxWorkFactor).toBe(1);
       expect(options.signal).toBeInstanceOf(AbortSignal);
-    }));
+    })
+  );
 
-  it("maps semantic resource-budget failures to work-limit errors", () =>
+  it.effect("maps semantic resource-budget failures to work-limit errors", () =>
     Effect.promise(() =>
       Promise.resolve(expectSemanticBudgetFailure(new Error("Maximum deep iterations exceeded (8).")))
-    ));
+    )
+  );
 
-  it("maps abort-signal budget failures to work-limit errors", () =>
-    Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(new Error("Abort signal received")))));
+  it.effect("maps abort-signal budget failures to work-limit errors", () =>
+    Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(new Error("Abort signal received"))))
+  );
 
-  it("maps timeout-style budget failures to work-limit errors", () =>
+  it.effect("maps timeout-style budget failures to work-limit errors", () =>
     Effect.gen(function* () {
       const timeoutError = new Error("signal timed out");
       timeoutError.name = "TimeoutError";
 
       yield* Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(timeoutError)));
-    }));
+    })
+  );
 
-  it("canonicalizes lexical requests without changing result encoded shape", () =>
+  it.effect("canonicalizes lexical requests without changing result encoded shape", () =>
     Effect.gen(function* () {
       const result = yield* Effect.promise(() =>
         runCanonicalization(
@@ -155,7 +159,8 @@ describe("Canonicalization security hardening", () => {
 
       expectEncodedRoundTrip(CanonicalDatasetResult, result);
       expect(result.canonicalText).toContain("<https://example.com/people/alice>");
-    }));
+    })
+  );
 
   it("round-trips schema-derived canonical dataset results through encoded form", {
     timeout: 30000,
