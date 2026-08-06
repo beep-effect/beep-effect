@@ -29,8 +29,12 @@
 #   empty stream inside object construction annihilates the whole object while
 #   this fail-open script still exits 0 — the spike defect that silently dropped
 #   every idle-wait row. `try`/`catch` does not help; there is no error to catch.
-#   Every derivation below is an if/else or `index(...)` (which yields `null`,
-#   not empty), so no construct here can produce an empty stream.
+#   Every expression feeding the object construction is an if/else or `index(...)`
+#   (which yields `null`, not empty), so none of them can be empty. The one
+#   literal `empty` below is the top-level refusal path — it annihilates the row
+#   on purpose, and the shell guards on an empty `$output`. `put` additionally
+#   forces its value through `[v][0]`, so even a future empty-capable expression
+#   degrades to `null` instead of silently deleting the whole row.
 # - One row per file shard `hook-pulse-<UTC day>-<sessionId>.ndjson`, appended as
 #   a single `printf` under PIPE_BUF. Sharding per session makes interleaving
 #   between concurrent sessions in sibling worktrees structurally impossible
@@ -90,17 +94,39 @@ payload="$(cat)"
 jq_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
-def as_non_negative: if type == "number" and . >= 0 then . else null end;
+# Must be no weaker than the schema side: `NonNegNum` is `S.Finite` plus a
+# non-negative check, and jq happily carries `1e400` through as `1E+400`, which
+# parses back to `Infinity` and fails `S.Finite`. Writing that row would put an
+# *undecodable* line in the ledger, which is worse than dropping the field —
+# a poisoned shard breaks replay for every row it contains, not just this one.
+def as_non_negative: if type == "number" and . >= 0 and . < infinite then . else null end;
 def as_boolean: if type == "boolean" then . else null end;
-def put($key; $value): if $value == null then . else . + { ($key): $value } end;
+# `v` is deliberately NOT a `$`-parameter. jq desugars `def f($a)` to
+# `a as $a | body`, and that binding ITERATES its argument stream: an
+# empty-capable argument makes the whole row vanish (jq still exits 0, the shell
+# writes nothing), and a two-valued one emits two rows. `[v][0]` collapses the
+# stream first — `[empty][0]` is `null`, `[a,b][0]` is `a`. This is the exact
+# re-entry point of the spike defect the `capture()` note above describes.
+# DO NOT "simplify" the null guard to `v // null` or `$value // ...`. The jq
+# alternative operator treats `false` as absent, so `isInterrupt: false` would be
+# silently erased and with it the "human hit escape" vs "tool errored"
+# distinction the field exists to carry.
+def put($key; v): ([v][0]) as $value | if $value == null then . else . + { ($key): $value } end;
+
+# Hand-duplicating these lists against `HookPulseEvent` / `HookPulseNotificationType`
+# is the one drift this script cannot detect on its own: a typo silently drops
+# 100% of one event and every row it would have produced, while every example
+# fixture for the other events stays green. `hook-pulse-writer.test.ts`
+# reads both definitions back out of this file and asserts set equality with the
+# schema `Options`, so the duplication is checked rather than merely intended.
+def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
+                   "Notification", "UserPromptSubmit", "Stop", "SessionEnd",
+                   "PermissionDenied" ];
+def notification_types: [ "permission_prompt", "idle_prompt" ];
 
 (.session_id | as_present) as $sessionId
 | (.hook_event_name | as_present) as $hookEventName
-| (if $hookEventName != null
-     and ([ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
-            "Notification", "UserPromptSubmit", "Stop", "SessionEnd",
-            "PermissionDenied" ]
-          | index($hookEventName)) != null
+| (if $hookEventName != null and (hook_events | index($hookEventName)) != null
    then $hookEventName
    else null
    end) as $hookEvent
@@ -115,7 +141,7 @@ def put($key; $value): if $value == null then . else . + { ($key): $value } end;
 | (.reason | as_present) as $reason
 | (.is_interrupt | as_boolean) as $isInterrupt
 | (if $notificationTypeRaw != null
-     and ([ "permission_prompt", "idle_prompt" ] | index($notificationTypeRaw)) != null
+     and (notification_types | index($notificationTypeRaw)) != null
    then $notificationTypeRaw
    else null
    end) as $notificationType

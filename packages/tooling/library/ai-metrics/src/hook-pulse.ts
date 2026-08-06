@@ -345,7 +345,14 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     session_id: S.NonEmptyString,
     hook_event_name: HookPulseEvent,
     cwd: S.String,
-    tool_name: S.OptionFromOptionalKey(S.String),
+    // Non-empty rather than merely present: the shell writer maps `""` to an
+    // absent `tool_name` and therefore derives `unknown` for a `PermissionRequest`,
+    // while `derivePermissionWaitReason` reads `O.some("")` as a real tool and
+    // derives `tool-permission`. Neither the wait-reason nor the owned-field
+    // invariant can catch that divergence, because each half is internally
+    // consistent. An empty tool name means nothing, so refusing it is the only
+    // reading both halves can share.
+    tool_name: S.OptionFromOptionalKey(S.NonEmptyString),
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
@@ -503,7 +510,11 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     instrumentClass: HookPulseInstrumentClass,
     evidenceTier: HookPulseEvidenceTier,
     waitReason: HookPulseWaitReason,
-    toolName: S.OptionFromOptionalKey(S.String),
+    // Non-empty for the same reason `HookPulseRawEvent.tool_name` is, and it has
+    // to be non-empty on *both* sides: a canonical row carrying `O.some("")`
+    // decodes fine yet can never be encoded back to a raw event, so the drift
+    // would reappear as a replay break instead of a decode failure.
+    toolName: S.OptionFromOptionalKey(S.NonEmptyString),
     toolUseId: S.OptionFromOptionalKey(S.String),
     promptId: S.OptionFromOptionalKey(S.String),
     transcriptPath: S.OptionFromOptionalKey(Sha256Hex),

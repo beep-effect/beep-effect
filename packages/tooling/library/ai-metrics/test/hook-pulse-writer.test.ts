@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { fcRuns } from "@beep/fc-runs";
 import {
   agentEvidenceRoot,
   HookPulseAgentKind,
@@ -17,13 +19,16 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 // The writer is shell, so the only honest conformance test spawns the real
 // script and decodes what it wrote. `HookPulseV1` carries the
 // `HookPulseWaitReasonInvariant` filter, so a jq derivation that ever drifts
 // from the TypeScript `deriveWaitReason` fails the decode rather than silently
 // producing a wrong ledger.
-const repoRoot = new URL("../../../../../", import.meta.url).pathname;
+// `fileURLToPath`, not `URL.pathname`: the latter is percent-encoded, so a
+// checkout path containing a space or `#` would yield an unspawnable writer path.
+const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 
 // A distinctive marker planted in every content-bearing raw key measured by the
@@ -32,13 +37,21 @@ const CANARY = "CANARY-SECRET-VALUE";
 
 const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
+const decodeRowString = S.decodeUnknownSync(S.String);
+const encodeHookPulseRow = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
+const decodeHookPulseRowSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
+const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
 // content-bearing keys we deliberately never model are part of the contract.
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
-// a leak or a drift, whichever it turns out to be.
+// a leak or a drift, whichever it turns out to be. Stated by hand so the leak
+// assertion below reads as an allowlist rather than as a tautology against the
+// schema — and asserted set-equal to `HookPulseV1.fields` by
+// "declares exactly the canonical HookPulseV1 encoded surface", so adding a name
+// here that no schema field carries cannot quietly license a real leak.
 const canonicalRowKeys = [
   "schemaVersion",
   "ts",
@@ -61,8 +74,23 @@ const canonicalRowKeys = [
   "isInterrupt",
 ];
 
+// Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
+// script hand-duplicates two literal domains that only the schema really owns,
+// and nothing in shell can detect a typo in them: a mistyped event name drops
+// 100% of that event's rows while every example fixture for the other events
+// stays green. Reading the definitions back turns that duplication into a
+// checked one. A failed extraction yields an empty list, which fails the
+// set-equality assertion rather than passing vacuously.
+const jqAllowlist = (source: string, definition: string): ReadonlyArray<string> =>
+  O.match(O.fromNullishOr(new RegExp(`def ${definition}:\\s*\\[([^\\]]*)\\];`).exec(source)?.[1]), {
+    onNone: () => A.empty<string>(),
+    onSome: (body) =>
+      A.getSomes(A.map(A.fromIterable(body.matchAll(/"([^"]*)"/g)), (match) => O.fromNullishOr(match[1]))),
+  });
+
 interface WriterRun {
   readonly exitCode: number;
+  readonly files: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<string>;
   readonly stderr: string;
   readonly stdout: string;
@@ -114,18 +142,17 @@ const runWriter = Effect.fnUntraced(function* (
   const stdout = yield* Effect.promise(() => new Response(child.stdout).text());
 
   const storeExists = yield* fs.exists(storeDir);
-  const rows = storeExists
-    ? yield* Effect.map(
-        Effect.forEach(yield* fs.readDirectory(storeDir), (entry) =>
-          Effect.map(fs.readFileString(path.join(storeDir, entry)), (contents) =>
-            A.filter(contents.split("\n"), (line) => line.length > 0)
-          )
-        ),
-        A.flatten
+  const files = storeExists ? yield* fs.readDirectory(storeDir) : A.empty<string>();
+  const rows = yield* Effect.map(
+    Effect.forEach(files, (entry) =>
+      Effect.map(fs.readFileString(path.join(storeDir, entry)), (contents) =>
+        A.filter(contents.split("\n"), (line) => line.length > 0)
       )
-    : A.empty<string>();
+    ),
+    A.flatten
+  );
 
-  return { exitCode, stderr, stdout, rows };
+  return { exitCode, files, stderr, stdout, rows };
 });
 
 const session = "ccd-session-writer";
@@ -201,6 +228,26 @@ const postToolUseFailurePayload = (isInterrupt: boolean) => ({
   tool_use_id: "toolu_writer_1",
 });
 
+// The terminal of a denied-permission wait: without a row here the two-hop join
+// can never close the bracket a `PermissionRequest` opened when the human said
+// no, so a denial is indistinguishable from a session that simply stopped.
+const permissionDeniedPayload = {
+  ...baseFields,
+  hook_event_name: HookPulseEvent.Enum.PermissionDenied,
+  permission_mode: "default",
+  permission_suggestions: [{ rule: CANARY }],
+  reason: CANARY,
+  tool_input: { command: CANARY },
+  tool_name: "Bash",
+  tool_use_id: "toolu_writer_1",
+};
+
+// `1e400` cannot survive a JavaScript round-trip: it *is* `Infinity` in JS, and
+// `JSON.stringify` renders that as `null`. The harness on the other end of this
+// pipe is not JavaScript, so the literal is spliced into the stdin text directly
+// — which is exactly how an out-of-range duration would actually arrive.
+const nonFiniteDurationStdin = `{"duration_ms":1e400,${encodeJson(R.remove(postToolUsePayload, "duration_ms")).slice(1)}`;
+
 const notificationPayload = (notificationType: O.Option<string>) => ({
   ...baseFields,
   hook_event_name: HookPulseEvent.Enum.Notification,
@@ -210,6 +257,15 @@ const notificationPayload = (notificationType: O.Option<string>) => ({
     onSome: (value) => ({ notification_type: value }),
   }),
 });
+
+// Hoisted so the call sites stay one level deep; nesting them under `encodeJson`
+// trips `missedPipeableOpportunity`.
+const idleNotificationPayload = notificationPayload(O.some(HookPulseNotificationType.Enum.idle_prompt));
+const permissionPromptNotificationPayload = notificationPayload(
+  O.some(HookPulseNotificationType.Enum.permission_prompt)
+);
+const futureNotificationPayload = notificationPayload(O.some("some_future_notification"));
+const typelessNotificationPayload = notificationPayload(O.none());
 
 const userPromptSubmitPayload = {
   ...baseFields,
@@ -234,57 +290,100 @@ const sessionEndPayload = {
   reason: "prompt_input_exit",
 };
 
+// `permissionMode` is stated per payload rather than derived from it: the
+// harness omits `permission_mode` on `Notification` and `SessionEnd`, and a
+// writer that invented one — or dropped every real one — would otherwise pass.
 const measuredPayloads = [
-  { label: "PreToolUse", payload: preToolUsePayload, waitReason: HookPulseWaitReason.Enum.none },
+  {
+    label: "PreToolUse",
+    payload: preToolUsePayload,
+    permissionMode: O.some("default"),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
   {
     label: "PermissionRequest{ExitPlanMode}",
     payload: permissionRequestPlanPayload,
+    permissionMode: O.some("plan"),
     waitReason: HookPulseWaitReason.Enum["plan-approval"],
   },
   {
     label: "PermissionRequest{Bash}",
     payload: permissionRequestToolPayload,
+    permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum["tool-permission"],
   },
   {
     label: "PermissionRequest{no tool_name}",
     payload: permissionRequestToollessPayload,
+    permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum.unknown,
   },
-  { label: "PostToolUse", payload: postToolUsePayload, waitReason: HookPulseWaitReason.Enum.none },
+  {
+    label: "PostToolUse",
+    payload: postToolUsePayload,
+    permissionMode: O.some("default"),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
   {
     label: "PostToolUseFailure{is_interrupt: true}",
     payload: postToolUseFailurePayload(true),
+    permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum.none,
   },
   {
     label: "PostToolUseFailure{is_interrupt: false}",
     payload: postToolUseFailurePayload(false),
+    permissionMode: O.some("default"),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
+  {
+    label: "PermissionDenied",
+    payload: permissionDeniedPayload,
+    permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum.none,
   },
   {
     label: "Notification{idle_prompt}",
-    payload: notificationPayload(O.some(HookPulseNotificationType.Enum.idle_prompt)),
+    payload: idleNotificationPayload,
+    permissionMode: O.none(),
     waitReason: HookPulseWaitReason.Enum["idle-input"],
   },
   {
     label: "Notification{permission_prompt}",
-    payload: notificationPayload(O.some(HookPulseNotificationType.Enum.permission_prompt)),
+    payload: permissionPromptNotificationPayload,
+    permissionMode: O.none(),
     waitReason: HookPulseWaitReason.Enum.unknown,
   },
   {
     label: "Notification{unrecognized notification_type}",
-    payload: notificationPayload(O.some("some_future_notification")),
+    payload: futureNotificationPayload,
+    permissionMode: O.none(),
     waitReason: HookPulseWaitReason.Enum.unknown,
   },
   {
     label: "Notification{absent notification_type}",
-    payload: notificationPayload(O.none()),
+    payload: typelessNotificationPayload,
+    permissionMode: O.none(),
     waitReason: HookPulseWaitReason.Enum.unknown,
   },
-  { label: "UserPromptSubmit", payload: userPromptSubmitPayload, waitReason: HookPulseWaitReason.Enum.none },
-  { label: "Stop", payload: stopPayload, waitReason: HookPulseWaitReason.Enum.none },
-  { label: "SessionEnd", payload: sessionEndPayload, waitReason: HookPulseWaitReason.Enum.none },
+  {
+    label: "UserPromptSubmit",
+    payload: userPromptSubmitPayload,
+    permissionMode: O.some("default"),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
+  {
+    label: "Stop",
+    payload: stopPayload,
+    permissionMode: O.some("default"),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
+  {
+    label: "SessionEnd",
+    payload: sessionEndPayload,
+    permissionMode: O.none(),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
 ];
 
 const expectSingleRow = (run: WriterRun): string => {
@@ -300,8 +399,17 @@ const expectSingleRow = (run: WriterRun): string => {
   return `${row}`;
 };
 
+// The same stdout guarantee on the paths where nothing is written at all. These
+// are exactly where a stray `echo` gets added during debugging, and the negative
+// tests would otherwise pass on `rows: []` alone while the decision hook leaked.
+const expectSilentRefusal = (run: WriterRun): void => {
+  expect(run.exitCode).toBe(0);
+  expect(run.stdout).toBe("");
+  expect(run.rows).toEqual([]);
+};
+
 layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
-  A.forEach(measuredPayloads, ({ label, payload, waitReason }) => {
+  A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.scoped(
         Effect.gen(function* () {
@@ -317,6 +425,13 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           expect(decoded.cwd).toBe(baseFields.cwd);
           expect(decoded.notifierRev).toBe("log-only-0");
           expect(decoded.waitReason).toBe(waitReason);
+          // `transcriptPath` is the one forwarded field the codec cannot do
+          // without: `HookPulseRawEvent.transcript_path` is required, so a row
+          // missing it still decodes but can never be re-encoded — a replay
+          // break that only surfaces in P4, long after the evidence is gone.
+          expect(decoded.transcriptPath).toEqual(O.some(baseFields.transcript_path));
+          expect(decoded.promptId).toEqual(O.some(baseFields.prompt_id));
+          expect(decoded.permissionMode).toEqual(permissionMode);
           // Weakest-link: `waitReason` is derived, and the codec's
           // `clampDerivedEvidenceTier` maps `observed` to `derived`. A writer
           // stamping `observed` would make P4's replay-twice-diff disagree.
@@ -338,10 +453,72 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     );
   });
 
+  it("declares exactly the canonical HookPulseV1 encoded surface", () => {
+    // Without this the allowlist is a claim, not a check: a name added to
+    // `canonicalRowKeys` that no schema field carries would license a real leak
+    // of exactly that name, and every content assertion above would still pass.
+    const schemaKeys = R.keys(HookPulseV1.fields);
+
+    expect(A.difference(canonicalRowKeys, schemaKeys)).toEqual([]);
+    expect(A.difference(schemaKeys, canonicalRowKeys)).toEqual([]);
+  });
+
+  it("keeps every schema-inhabitable canonical row inside the declared ledger surface", () => {
+    // The fixtures above only reach the key combinations the measured harness
+    // emits. This walks the whole space `HookPulseV1` admits, so a future field
+    // — or an encoder that starts emitting one conditionally — cannot slip past
+    // the leak allowlist just because no fixture happens to populate it. The
+    // round-trip half proves the NDJSON line the ledger stores is lossless for
+    // every such row, which is what P4 replay actually depends on.
+    fc.assert(
+      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+        const line = encodeHookPulseRow(value);
+
+        expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
+        expect(hookPulseEquivalent(decodeHookPulseRowSync(line), value)).toBe(true);
+      }),
+      fcRuns(50)
+    );
+  });
+
+  it.effect("keeps the jq allowlists set-equal to the schema literal domains", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* fs.readFileString(writerPath);
+      const events = jqAllowlist(source, "hook_events");
+      const notificationTypes = jqAllowlist(source, "notification_types");
+
+      // A name only in the schema is an event the writer silently drops
+      // wholesale; a name only in jq is an event that reaches the ledger and
+      // then fails to decode. Neither shows up in any example fixture, because
+      // fixtures only ever exercise names both halves already agree on.
+      expect(A.difference(events, HookPulseEvent.Options)).toEqual([]);
+      expect(A.difference(HookPulseEvent.Options, events)).toEqual([]);
+      expect(A.difference(notificationTypes, HookPulseNotificationType.Options)).toEqual([]);
+      expect(A.difference(HookPulseNotificationType.Options, notificationTypes)).toEqual([]);
+    })
+  );
+
+  it.effect("shards the ledger by UTC day and session id", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // The script claims per-session sharding makes cross-session
+        // interleaving structurally impossible. The runner globs the whole
+        // directory, so dropping the session suffix would keep every other test
+        // green while quietly restoring that hazard.
+        const run = yield* runWriter(encodeJson(preToolUsePayload));
+        const row = expectSingleRow(run);
+        const ts = decodeRowString(decodeRowKeys(row).ts);
+
+        expect(run.files).toEqual([`hook-pulse-${ts.slice(0, 10)}-${session}.ndjson`]);
+      })
+    )
+  );
+
   it.effect("omits notificationType when the raw value is outside the enum", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(notificationPayload(O.some("some_future_notification"))));
+        const run = yield* runWriter(encodeJson(futureNotificationPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         // The spike's jq `capture()` defect dropped exactly this row while still
@@ -357,9 +534,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("keeps notificationType when the raw value is inside the enum", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(
-          encodeJson(notificationPayload(O.some(HookPulseNotificationType.Enum.permission_prompt)))
-        );
+        const run = yield* runWriter(encodeJson(permissionPromptNotificationPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.notificationType).toEqual(O.some(HookPulseNotificationType.Enum.permission_prompt));
@@ -372,11 +547,15 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       Effect.gen(function* () {
         const ended = yield* runWriter(encodeJson(sessionEndPayload));
         const stopped = yield* runWriter(encodeJson(stopPayload));
+        const denied = yield* runWriter(encodeJson(permissionDeniedPayload));
         const decodedEnd = yield* decodeHookPulseRow(expectSingleRow(ended));
         const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
+        const decodedDenied = yield* decodeHookPulseRow(expectSingleRow(denied));
 
         expect(decodedEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
         expect(decodedStop.sessionEndReason).toEqual(O.none());
+        // `PermissionDenied` carries its own `reason`, and it is content.
+        expect(decodedDenied.sessionEndReason).toEqual(O.none());
       })
     )
   );
@@ -389,6 +568,22 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 
         expect(decoded.durationMs).toEqual(O.some(477));
         expect(decoded.toolUseId).toEqual(O.some("toolu_writer_1"));
+      })
+    )
+  );
+
+  it.effect("drops a non-finite durationMs rather than writing an undecodable row", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // jq carries `1e400` through as `1E+400`, which parses back to
+        // `Infinity` and fails `NonNegNum`'s `S.Finite`. Keeping it would put an
+        // undecodable line in a shard, which poisons replay for every row that
+        // shard holds — strictly worse than dropping one optional field.
+        const run = yield* runWriter(nonFiniteDurationStdin);
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.durationMs).toEqual(O.none());
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
       })
     )
   );
@@ -413,8 +608,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           disarmSentinel: '{"disarmedAt":"2026-08-05T00:00:00Z","reason":"test","evidenceTier":"unknown"}',
         });
 
-        expect(run.exitCode).toBe(0);
-        expect(run.rows).toEqual([]);
+        expectSilentRefusal(run);
       })
     )
   );
@@ -435,8 +629,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           Effect.gen(function* () {
             const run = yield* runWriter(stdin);
 
-            expect(run.exitCode).toBe(0);
-            expect(run.rows).toEqual([]);
+            expectSilentRefusal(run);
           })
         )
       );
