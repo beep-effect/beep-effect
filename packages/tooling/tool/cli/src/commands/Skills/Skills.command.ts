@@ -35,7 +35,7 @@ const SKILLS_LOCK_PATH = "skills-lock.json";
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
-const encodeUnknownJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 type SkillsRunMode = "write" | "check" | "dry-run";
 

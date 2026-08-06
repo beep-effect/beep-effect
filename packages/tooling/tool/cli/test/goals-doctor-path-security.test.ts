@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const absoluteExplorationPath = "/etc/passwd";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);

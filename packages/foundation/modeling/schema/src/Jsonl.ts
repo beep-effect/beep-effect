@@ -28,15 +28,15 @@ class JsonlChunkParseResult extends S.Class<JsonlChunkParseResult>($I`JsonlChunk
 const decodeJsonlChunkParseResult = S.decodeUnknownEffect(JsonlChunkParseResult);
 type JsonlParseChunk = (content: string) => unknown;
 
-const encodeUnsupported = (value: typeof JsonlValues.Type): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to JSONL text is not supported by JsonlTextToUnknown.",
     })
   );
 
-const invalidJsonlInput = (content: string, message: string): SchemaIssue.InvalidValue =>
-  new SchemaIssue.InvalidValue(O.some(content), {
+const invalidJsonlInput = (message: string): SchemaIssue.InvalidValue =>
+  new SchemaIssue.InvalidValue({
     message,
   });
 
@@ -53,33 +53,32 @@ const getJsonlParseChunk = (): O.Option<JsonlParseChunk> => {
 
 const decodeJsonlUnknown = Effect.fn("Jsonl.decodeJsonlUnknown")(function* (content: string) {
   const parseChunk = yield* O.match(getJsonlParseChunk(), {
-    onNone: () =>
-      Effect.fail(invalidJsonlInput(content, "Bun.JSONL.parseChunk is unavailable in the current runtime.")),
+    onNone: () => Effect.fail(invalidJsonlInput("Bun.JSONL.parseChunk is unavailable in the current runtime.")),
     onSome: Effect.succeed,
   });
   const parsed = yield* Effect.try({
     try: () => parseChunk(content),
     catch: (cause) =>
-      invalidJsonlInput(content, P.isError(cause) ? `Invalid JSONL input (${cause.message}).` : "Invalid JSONL input."),
+      invalidJsonlInput(P.isError(cause) ? `Invalid JSONL input (${cause.message}).` : "Invalid JSONL input."),
   });
   const chunk = yield* decodeJsonlChunkParseResult(parsed).pipe(
-    Effect.mapError(() => invalidJsonlInput(content, "Invalid JSONL input (Unexpected parser response shape)."))
+    Effect.mapError(() => invalidJsonlInput("Invalid JSONL input (Unexpected parser response shape)."))
   );
 
   if (chunk.error !== null) {
-    return yield* Effect.fail(invalidJsonlInput(content, `Invalid JSONL input (${chunk.error.message}).`));
+    return yield* Effect.fail(invalidJsonlInput(`Invalid JSONL input (${chunk.error.message}).`));
   }
 
   const trailingRemainder = pipe(content, Str.substring(chunk.read), Str.trim);
 
   if (!chunk.done || !Str.isEmpty(trailingRemainder)) {
     return yield* Effect.fail(
-      invalidJsonlInput(content, `Invalid JSONL input (Incomplete JSONL input after ${chunk.read} characters).`)
+      invalidJsonlInput(`Invalid JSONL input (Incomplete JSONL input after ${chunk.read} characters).`)
     );
   }
 
   return yield* decodeJsonlValues(chunk.values).pipe(
-    Effect.mapError(() => invalidJsonlInput(content, "Invalid JSONL input (Expected JSONL value array output)."))
+    Effect.mapError(() => invalidJsonlInput("Invalid JSONL input (Expected JSONL value array output)."))
   );
 });
 

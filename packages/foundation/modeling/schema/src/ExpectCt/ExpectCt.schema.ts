@@ -198,7 +198,7 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
   }
 
   const value = yield* formatExpectCTValue(input[1]).pipe(
-    Effect.mapError((error) => new SchemaIssue.InvalidValue(O.some(error), { message: error.message }))
+    Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }))
   );
 
   return {

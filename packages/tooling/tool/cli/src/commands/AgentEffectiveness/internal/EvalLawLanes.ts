@@ -25,8 +25,8 @@ import type { LawEvaluation } from "./EvalScoring.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalLawLanes");
 const SCHEMA_FIRST_FIXTURE_PACKAGE_PREFIX = "packages/fixture/";
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const decodeUnknownJsonOption = S.decodeUnknownOption(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownJsonOption = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
 const normalizePathSeparators = Str.replaceAll("\\", "/");

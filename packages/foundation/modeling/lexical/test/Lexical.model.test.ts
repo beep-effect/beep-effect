@@ -525,7 +525,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           children: [node],
         },
       };
-      const source = Effect.runSync(S.encodeEffect(S.UnknownFromJsonString)(state));
+      const source = Effect.runSync(S.encodeEffect(S.fromJsonString(S.Unknown))(state));
       const canonicalTag = ListType.$match(listType, {
         number: ListTag.thunk.ol,
         bullet: ListTag.thunk.ul,

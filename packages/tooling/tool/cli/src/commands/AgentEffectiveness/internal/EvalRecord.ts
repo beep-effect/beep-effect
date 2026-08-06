@@ -31,7 +31,7 @@ import {
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const recordNote = (report: AgentEffectivenessEvalScoreReport): string =>
   `skillopt scorer score=${report.score} completion=${report.breakdown.completion} schemaFirst=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`;

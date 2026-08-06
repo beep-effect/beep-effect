@@ -365,7 +365,7 @@ export const fromString = (dateString: string): Effect.Effect<Timestamp, SchemaI
   pipe(
     DateTime.make(dateString),
     O.match({
-      onNone: () => Effect.fail(new SchemaIssue.InvalidValue(O.some(dateString))),
+      onNone: () => Effect.fail(new SchemaIssue.InvalidValue()),
       onSome: (dateTime) => Effect.succeed(Timestamp.make({ epochMillis: DateTime.toEpochMillis(dateTime) })),
     })
   );

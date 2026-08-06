@@ -108,7 +108,7 @@ import { describe, expect, it } from "vitest";
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const attemptUuid = S.decodeUnknownSync(UUID);
 
 const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>

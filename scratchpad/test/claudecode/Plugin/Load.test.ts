@@ -22,7 +22,7 @@ import * as Testing from "../../../claudecode/Testing.ts";
 
 const fsWith = (entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap<string, string> => new Map(entries);
 
-const toJsonString = S.encodeUnknownSync(S.UnknownFromJsonString);
+const toJsonString = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const encodeManifest = S.encodeEffect(Plugin.PluginManifest);
 
 // ---------------------------------------------------------------------------

@@ -101,7 +101,7 @@ export type JsonArray = typeof JsonArray.Type;
  * @category codecs
  * @since 0.0.0
  */
-export const decodeJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+export const decodeJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Encodes an unknown JSON-compatible value into a compact JSON string.
@@ -119,4 +119,4 @@ export const decodeJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeJsonString = S.encodeUnknownEffect(S.UnknownFromJsonString);
+export const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));

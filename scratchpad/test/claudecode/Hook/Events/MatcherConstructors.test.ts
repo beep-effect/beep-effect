@@ -15,7 +15,7 @@ import * as PermissionRequest from "../../../../claudecode/Hook/Events/Permissio
 import * as PreToolUse from "../../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
 
-const encodeJson = S.encodeSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 const notificationJson = (notificationType: string) =>
   encodeJson({

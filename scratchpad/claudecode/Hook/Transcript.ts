@@ -28,7 +28,7 @@ import { TranscriptReadError } from "../Errors.ts";
 
 const $I = $ScratchpadId.create("claudecode/Hook/Transcript");
 
-const JsonValue = S.UnknownFromJsonString.pipe(
+const JsonValue = S.fromJsonString(S.Unknown).pipe(
   $I.annoteSchema("JsonValue", {
     description: "One JSON value encoded as a transcript JSONL line.",
   })

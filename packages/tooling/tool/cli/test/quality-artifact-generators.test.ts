@@ -17,7 +17,7 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
 
 const tsdocPolicy = {

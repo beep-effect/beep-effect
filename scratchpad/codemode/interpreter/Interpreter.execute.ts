@@ -288,7 +288,7 @@ const boundFailureDiagnostic = (
 ) => {
   const serialized = pipe(
     S.encodeUnknownResult(DiagnosticModel)(diagnostic),
-    Rs.flatMap(S.encodeUnknownResult(S.UnknownFromJsonString)),
+    Rs.flatMap(S.encodeUnknownResult(S.fromJsonString(S.Unknown))),
     Rs.getOrElse(() => "null")
   )
   const bytes = utf8ByteLength(serialized)
@@ -311,7 +311,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
   ResultModel.match(result, {
     Success: (success) => {
       const serialized = pipe(
-        S.encodeUnknownResult(S.UnknownFromJsonString)(success.value),
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))(success.value),
         Rs.getOrElse(() => "null")
       )
       const bytes = utf8ByteLength(serialized)
@@ -327,7 +327,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
       for (const warning of warnings) {
         const warningJson = pipe(
           S.encodeUnknownResult(DiagnosticModel)(warning),
-          Rs.flatMap(S.encodeUnknownResult(S.UnknownFromJsonString)),
+          Rs.flatMap(S.encodeUnknownResult(S.fromJsonString(S.Unknown))),
           Rs.getOrElse(() => "null")
         )
         const warningSize = utf8ByteLength(warningJson) + 1

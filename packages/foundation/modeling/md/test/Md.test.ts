@@ -96,7 +96,7 @@ const documentToHtmlFragmentCompatibility = DocumentToHtmlFragment;
 const documentToPlainTextCompatibility = DocumentToPlainText;
 
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
-const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
 
 const isJsonObject = (value: S.Json): value is JsonObject =>

@@ -470,17 +470,17 @@ const toDateTimeInput = (input: DateTimeInput): DateTime.DateTime.Input => {
   return input;
 };
 
-const invalidDateTimeInputIssue = (input: DateTimeInput) =>
-  new SchemaIssue.InvalidValue(O.some(input), {
-    message: "Expected a valid Effect DateTime.Input value",
-  });
-
 const decodeDateTimeInput = (input: DateTimeInput): Effect.Effect<DateTime.Utc, SchemaIssue.Issue> =>
   pipe(
     DateTime.make(toDateTimeInput(input)),
     O.map(DateTime.toUtc),
     O.match({
-      onNone: () => Effect.fail(invalidDateTimeInputIssue(input)),
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue({
+            message: "Expected a valid Effect DateTime.Input value",
+          })
+        ),
       onSome: Effect.succeed,
     })
   );

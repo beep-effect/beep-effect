@@ -66,7 +66,7 @@ const SemanticClosureDocumentArbitrary = fc
     })
   );
 const JsonArbitrary = S.toArbitrary(S.Json);
-const decodeUnknownJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeUnknownJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const pinnedPandocConstructorNames = [
   "Pandoc",
   "Meta",

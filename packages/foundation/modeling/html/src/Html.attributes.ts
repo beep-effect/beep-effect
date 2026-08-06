@@ -96,7 +96,7 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
             O.match({
               onNone: () =>
                 Effect.fail(
-                  new SchemaIssue.InvalidValue(O.some(value), {
+                  new SchemaIssue.InvalidValue({
                     message: "Expected a permitted HTML enumerated-attribute keyword",
                   })
                 ),

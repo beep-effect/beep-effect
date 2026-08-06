@@ -1462,9 +1462,9 @@ export const renderPlainText = (document: Document): Result.Result<string, Rende
 
 const encodeUnsupported =
   <Output>(name: string) =>
-  (value: unknown): Effect.Effect<Output, SchemaIssue.Issue> =>
+  (): Effect.Effect<Output, SchemaIssue.Issue> =>
     Effect.fail(
-      new SchemaIssue.InvalidValue(O.some(value), {
+      new SchemaIssue.InvalidValue({
         message: `Encoding ${name} output back into a Markdown document AST is not supported.`,
       })
     );

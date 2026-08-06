@@ -806,7 +806,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
         }).pipe(
           Effect.mapError(
             () =>
-              new SchemaIssue.InvalidValue(O.some(input), {
+              new SchemaIssue.InvalidValue({
                 message: "Failed to migrate private identifiers from a legacy hook-pulse/v1 row",
               })
           ),
@@ -900,7 +900,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
         }).pipe(
           Effect.mapError(
             () =>
-              new SchemaIssue.InvalidValue(O.some(input), {
+              new SchemaIssue.InvalidValue({
                 message: "Failed to hash private hook-pulse identifiers",
               })
           ),
@@ -953,7 +953,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
         O.match(O.fromUndefinedOr(input.transcriptPath), {
           onNone: () =>
             Effect.fail(
-              new SchemaIssue.InvalidValue(O.some(input), {
+              new SchemaIssue.InvalidValue({
                 message: "Expected transcriptPath when encoding a canonical hook pulse as a raw hook event",
               })
             ),
@@ -995,7 +995,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               {
                 onFalse: () =>
                   Effect.fail(
-                    new SchemaIssue.InvalidValue(O.some(input), {
+                    new SchemaIssue.InvalidValue({
                       message: "Expected waitReason to match the value derived from the encoded raw hook event",
                     })
                   ),

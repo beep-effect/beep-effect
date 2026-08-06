@@ -14,7 +14,7 @@ import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 layer(NodeServices.layer)("VersionSync Effect Catalog", (it) => {
   describe("resolveEffectCatalog", () => {
@@ -116,7 +116,7 @@ layer(NodeServices.layer)("VersionSync Effect Catalog", (it) => {
           versionSpecifier: "^4.0.0-beta.28",
         });
         const updated = yield* fs.readFileString(packageJsonPath);
-        const decodedUpdated = (yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(updated)) as {
+        const decodedUpdated = (yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(updated)) as {
           readonly catalog: Record<string, string>;
         };
 

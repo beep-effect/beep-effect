@@ -136,7 +136,7 @@ const validateCandidateSeals = (
       ? Result.succeed(candidate)
       : Result.fail(
           new S.SchemaError(
-            new SchemaIssue.InvalidValue(O.some(candidate.candidateKey), {
+            new SchemaIssue.InvalidValue({
               message:
                 "Contradiction candidate has a non-canonical pair or a key/digest that does not seal its persisted payload.",
             })
@@ -196,7 +196,7 @@ const validateDispositionCandidate = (
       ? Result.succeed(disposition)
       : Result.fail(
           new S.SchemaError(
-            new SchemaIssue.InvalidValue(O.some(disposition.candidateId), {
+            new SchemaIssue.InvalidValue({
               message:
                 "Contradiction disposition must reference the supplied sealed candidate in the same organization, resolve at or after candidate.recordedAt, and bind any supersession to its selected proposal and closed former/replacement edge chain.",
             })
@@ -214,7 +214,7 @@ const validateReceiptCandidate = (
     ? Result.succeed(receipt)
     : Result.fail(
         new S.SchemaError(
-          new SchemaIssue.InvalidValue(O.some(receipt.candidateId), {
+          new SchemaIssue.InvalidValue({
             message:
               "Contradiction receipt must reference the supplied candidate in the same organization and be received at or after candidate.recordedAt.",
           })

@@ -9,7 +9,6 @@ import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { DateTime, Result, SchemaIssue } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type { Table } from "./EvidenceVerification.table.ts";
@@ -57,7 +56,7 @@ const validateManifestationKey = (
       ? Result.succeed(verification)
       : Result.fail(
           new S.SchemaError(
-            new SchemaIssue.InvalidValue(O.some(verification.manifestationKey), {
+            new SchemaIssue.InvalidValue({
               message: "Evidence-verification manifestation key does not seal the persisted payload.",
             })
           )
@@ -75,7 +74,7 @@ const validateEvidenceAssociation = (
     ? Result.succeed(verification)
     : Result.fail(
         new S.SchemaError(
-          new SchemaIssue.InvalidValue(O.some(verification.verifiedAnchor.anchor), {
+          new SchemaIssue.InvalidValue({
             message:
               "Evidence-verification association must match the referenced organization, evidence id, and span, and cannot predate the evidence.",
           })

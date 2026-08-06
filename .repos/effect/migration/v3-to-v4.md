@@ -312,6 +312,7 @@ These v4 modules did not have a mapped v3 module. Treat them as v4-only unless a
 more specific migration guide says otherwise.
 
 ```text
+@effect/platform-node/NodeMultipartParser (barrel: @effect/platform-node)
 effect/ErrorReporter (barrel: effect)
 effect/Filter (barrel: effect)
 effect/JsonPatch (barrel: effect)
@@ -338,11 +339,9 @@ effect/unstable/eventlog/EventLogSessionAuth (barrel: effect/unstable/eventlog)
 effect/unstable/eventlog/SqlEventLogServerUnencrypted (barrel: effect/unstable/eventlog)
 effect/unstable/http/FindMyWay (barrel: effect/unstable/http)
 effect/unstable/http/HttpStaticServer (barrel: effect/unstable/http)
-effect/unstable/http/Multipasta (barrel: effect/unstable/http)
-effect/unstable/http/Multipasta/HeadersParser (barrel: effect/unstable/http)
-effect/unstable/http/Multipasta/Node (barrel: effect/unstable/http)
-effect/unstable/http/Multipasta/Search (barrel: effect/unstable/http)
-effect/unstable/http/Multipasta/Web (barrel: effect/unstable/http)
+effect/unstable/http/MultipartParser (barrel: effect/unstable/http)
+effect/unstable/http/MultipartParser/HeadersParser (barrel: effect/unstable/http)
+effect/unstable/http/MultipartParser/Search (barrel: effect/unstable/http)
 effect/unstable/httpapi/HttpApiTest (barrel: effect/unstable/httpapi)
 effect/unstable/observability/PrometheusMetrics (barrel: effect/unstable/observability)
 effect/unstable/persistence/Redis (barrel: effect/unstable/persistence)
@@ -13194,7 +13193,9 @@ Schema.toFormatter(schema)
 
 - `Schedule.addDelayEffect` -> `Schedule.addDelay`: The v4 function is effectful by default and its callback receives full Schedule.Metadata; read metadata.output when only the prior output is needed.
 
-- `Schedule.andThenEither` -> `Schedule.andThenResult`: Sequential phase tagging now uses Result: self outputs are Result.fail and the following schedule outputs are Result.succeed.
+- `Schedule.andThen` -> `Schedule.concat`: The sequencing combinator was renamed to Schedule.concat.
+
+- `Schedule.andThenEither` -> `Schedule.concatResult`: Sequential phase tagging now uses Result: self outputs are Result.fail and the following schedule outputs are Result.succeed.
 
 - `Schedule.as` -> `Schedule.map`: Map the metadata to the constant output; Schedule.map accepts either a plain value or an Effect.
 
@@ -13246,7 +13247,7 @@ Schema.toFormatter(schema)
 
 - `Schedule.fromDelay` -> `Schedule.duration`: The duration constructor recurs once after the supplied delay.
 
-- `Schedule.fromDelays` -> `Schedule.duration + Schedule.andThen`: Build one Schedule.duration per delay and sequence them with Schedule.andThen.
+- `Schedule.fromDelays` -> `Schedule.duration + Schedule.concat`: Build one Schedule.duration per delay and sequence them with Schedule.concat.
 
 - `Schedule.fromFunction` -> `Schedule.identity + Schedule.map`: Start with Schedule.identity\<A\>() and map metadata.input through the function.
 

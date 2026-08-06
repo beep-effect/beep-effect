@@ -21,7 +21,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encoder = new TextEncoder();
-const encodeProbeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeProbeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const healthyProbeJson = encodeProbeJson({
   format: { duration: "2.0" },

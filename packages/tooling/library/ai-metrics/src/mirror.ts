@@ -348,7 +348,7 @@ const countFromRow = (row: Record<string, unknown> | undefined): number => {
   return globalThis.Number.isFinite(parsed) ? parsed : 0;
 };
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
   AiMetricsMirrorError.make({ cause, message });
@@ -660,7 +660,7 @@ const privacyProofFor = (
   const tokenMatchesPayload = (token: ForbiddenTokenCheck): boolean =>
     token.matchMode === "json-string"
       ? // TODO(effect-native-migration): model schema
-        Str.includes(S.encodeUnknownSync(S.UnknownFromJsonString)(token.value))(payload)
+        Str.includes(S.encodeUnknownSync(S.fromJsonString(S.Unknown))(token.value))(payload)
       : Str.includes(token.value)(payload);
   const forbiddenMatches = pipe(
     checkedTokens,

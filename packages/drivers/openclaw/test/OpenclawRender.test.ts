@@ -37,13 +37,13 @@ import {
 const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent);
 
 const decodeJsonDocument = (json: string): unknown =>
-  Result.getOrThrow(S.decodeUnknownResult(S.UnknownFromJsonString)(json));
+  Result.getOrThrow(S.decodeUnknownResult(S.fromJsonString(S.Unknown))(json));
 
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   O.getOrThrow(pipe(decodeJsonDocument(json), O.liftPredicate(P.isObject)));
 
 const withoutSecretsJson = (json: string): string =>
-  Result.getOrThrow(S.encodeResult(S.UnknownFromJsonString)(R.remove(parseDocument(json), "secrets")));
+  Result.getOrThrow(S.encodeResult(S.fromJsonString(S.Unknown))(R.remove(parseDocument(json), "secrets")));
 
 const secretReferenceCount = (json: string): number => Str.split(json, "op://").length - 1;
 
@@ -345,7 +345,7 @@ describe("@beep/openclaw render adapter", () => {
 
         expect(second.canonicalJson).toBe(first.canonicalJson);
         expect(second.contentHash).toBe(first.contentHash);
-        expect(Result.isSuccess(S.decodeUnknownResult(S.UnknownFromJsonString)(first.canonicalJson))).toBe(true);
+        expect(Result.isSuccess(S.decodeUnknownResult(S.fromJsonString(S.Unknown))(first.canonicalJson))).toBe(true);
       }),
       fcRuns(25)
     ));

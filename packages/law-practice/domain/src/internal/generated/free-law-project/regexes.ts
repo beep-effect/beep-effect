@@ -10,7 +10,7 @@
 import { Result } from "effect";
 import * as S from "effect/Schema";
 
-const decodeJson = S.decodeUnknownResult(S.UnknownFromJsonString);
+const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 /**
  * Schema-decoded generated data.

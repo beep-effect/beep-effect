@@ -70,7 +70,7 @@ const CommandTestLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const runDocgenCommand = Command.runWith(docgenCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
 const encodeDocgenConfigDocument = S.encodeSync(DocgenConfigDocument);
 const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);

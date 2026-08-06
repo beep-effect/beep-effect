@@ -92,7 +92,7 @@ class TurboDryRunDocument extends S.Class<TurboDryRunDocument>($I`TurboDryRunDoc
 ) {}
 
 const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDryRunDocument));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {

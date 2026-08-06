@@ -71,7 +71,7 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
 );
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);

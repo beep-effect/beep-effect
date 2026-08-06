@@ -20,7 +20,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 const require = createRequire(import.meta.url);
 const biomeExecutable = require.resolve("@biomejs/biome/bin/biome");
 const moduleDir = fileURLToPath(new URL(".", import.meta.url));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const textEncoder = new TextEncoder();
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>

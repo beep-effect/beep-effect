@@ -33,7 +33,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 const encodeEditorState = S.encodeUnknownResult(SerializedEditorState);
-const encodeJson = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 interface SerializedNodeLike {
   readonly children?: ReadonlyArray<SerializedNodeLike> | undefined;
