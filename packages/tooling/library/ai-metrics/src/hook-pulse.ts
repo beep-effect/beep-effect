@@ -73,14 +73,28 @@ export const agentEvidenceRoot = (stateHome: string): string => `${stateHome}/be
 export const hookPulseLedgerDir = (evidenceRoot: string): string => `${evidenceRoot}/hook-events`;
 
 /**
- * Version identifier for hook-pulse ledger records.
+ * Version tag stamped on every ledger row so a reader can refuse shards written by a contract it does not implement.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * The domain is closed at exactly the versions this module decodes. A shard
+ * appended by a future writer therefore fails to decode rather than being read
+ * with the wrong field meanings, which is the only safe outcome for an
+ * append-only ledger nobody goes back and rewrites.
+ *
+ * **Example** (Refuse a shard written by a newer contract)
+ *
  * ```ts
  * import { HookPulseSchemaVersion } from "@beep/repo-ai-metrics"
- * console.log(HookPulseSchemaVersion.Enum["hook-pulse/v1"])
+ *
+ * const isCurrent = HookPulseSchemaVersion.is["hook-pulse/v1"]
+ *
+ * console.log(HookPulseSchemaVersion.Enum["hook-pulse/v1"]) // "hook-pulse/v1"
+ * console.log(isCurrent("hook-pulse/v1")) // true
+ * console.log(isCurrent("hook-pulse/v2")) // false
  * ```
  *
+ * @see {@link HookPulseV1} for the record this version tag travels on.
  * @category models
  * @since 0.0.0
  */
@@ -91,27 +105,35 @@ export const HookPulseSchemaVersion = LiteralKit(["hook-pulse/v1"]).pipe(
 );
 
 /**
- * Runtime type for {@link HookPulseSchemaVersion}.
+ * Decoded version literal carried by every hook-pulse ledger row.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseSchemaVersion } from "@beep/repo-ai-metrics"
- * const version: HookPulseSchemaVersion = "hook-pulse/v1"
- * console.log(version)
- * ```
- *
+ * @see {@link HookPulseSchemaVersion} for the runtime schema, its guards, and its enum keys.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseSchemaVersion = typeof HookPulseSchemaVersion.Type;
 
 /**
- * Coding-agent harnesses that can emit hook-pulse records.
+ * Coding-agent harness that produced a row, recorded because one ledger mixes rows from more than one harness.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * Wait measurements are comparable only within a single harness: each emits its
+ * own hook vocabulary, so a Claude Code `PermissionRequest` and a Codex approval
+ * prompt are different events wearing similar names. Naming the writer on every
+ * row keeps a cross-harness comparison an explicit choice rather than an
+ * accident of reading the whole directory at once.
+ *
+ * **Example** (Partition ledger rows by the harness that wrote them)
+ *
  * ```ts
  * import { HookPulseAgentKind } from "@beep/repo-ai-metrics"
- * console.log(HookPulseAgentKind.Enum["claude-code"])
+ *
+ * const isClaudeCode = HookPulseAgentKind.is["claude-code"]
+ *
+ * console.log(HookPulseAgentKind.Options) // ["claude-code", "codex-cli"]
+ * console.log(isClaudeCode(HookPulseAgentKind.Enum["claude-code"])) // true
+ * console.log(isClaudeCode(HookPulseAgentKind.Enum["codex-cli"])) // false
  * ```
  *
  * @category models
@@ -124,29 +146,45 @@ export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli"]).pipe(
 );
 
 /**
- * Runtime type for {@link HookPulseAgentKind}.
+ * Decoded harness literal identifying which coding agent appended a row.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseAgentKind } from "@beep/repo-ai-metrics"
- * const agentKind: HookPulseAgentKind = "codex-cli"
- * console.log(agentKind)
- * ```
- *
+ * @see {@link HookPulseAgentKind} for the runtime schema and its per-harness guards.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
 
 /**
- * Hook events recorded by the sequence-break instrument.
+ * Hook lifecycle events the sequence-break instrument records, one ledger row per event.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * The domain is closed so that a harness upgrade emitting an unfamiliar hook
+ * name fails to decode instead of landing an uncategorized row. `PostToolUse`
+ * and `PostToolUseFailure` are the two alternative terminal events for one tool
+ * call: a call produces exactly one of them, so a reader that closes brackets on
+ * `PostToolUse` alone leaves every failed call waiting forever.
+ *
+ * **Gotchas**
+ *
+ * `PreToolUse` is not a human-wait marker. It fires before every tool call,
+ * including auto-approved ones, so counting it as waiting measures execution
+ * rather than blocking. `PermissionRequest` is the event that actually starts a
+ * human wait, and that distinction is the whole point of the instrument.
+ *
+ * **Example** (Separate the human-wait marker from the execution marker)
+ *
  * ```ts
  * import { HookPulseEvent } from "@beep/repo-ai-metrics"
- * console.log(HookPulseEvent.Enum.PreToolUse)
+ *
+ * const startsHumanWait = HookPulseEvent.is.PermissionRequest
+ *
+ * console.log(startsHumanWait(HookPulseEvent.Enum.PermissionRequest)) // true
+ * console.log(startsHumanWait(HookPulseEvent.Enum.PreToolUse)) // false
+ * console.log(HookPulseEvent.Options.length) // 9
  * ```
  *
+ * @see {@link HookPulseWaitReason} for the attribution derived from these events.
  * @category models
  * @since 0.0.0
  */
@@ -167,27 +205,39 @@ export const HookPulseEvent = LiteralKit([
 );
 
 /**
- * Runtime type for {@link HookPulseEvent}.
+ * Decoded hook-event literal naming which lifecycle event a row records.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseEvent } from "@beep/repo-ai-metrics"
- * const hookEvent: HookPulseEvent = "SessionEnd"
- * console.log(hookEvent)
- * ```
- *
+ * @see {@link HookPulseEvent} for the runtime schema, its guards, and its exhaustive matcher.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseEvent = typeof HookPulseEvent.Type;
 
 /**
- * Experimental role of a hook-pulse emitting session.
+ * Experimental role of the session that produced a row, recorded to keep the instrument out of its own baselines.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * A `spike` session was spent building or exercising the instrument, and a
+ * `meta` session was spent reasoning about the measurement rather than doing
+ * repo work; both have wait profiles unlike ordinary work. Default baselines
+ * read `production` alone, but the other two stay on disk rather than being
+ * dropped, because the ledger is raw history and a later question may want them.
+ *
+ * **Example** (Keep spike and meta sessions out of a baseline)
+ *
  * ```ts
  * import { HookPulseInstrumentClass } from "@beep/repo-ai-metrics"
- * console.log(HookPulseInstrumentClass.Enum.spike)
+ *
+ * const countsTowardBaseline = HookPulseInstrumentClass.$match({
+ *   production: () => true,
+ *   spike: () => false,
+ *   meta: () => false
+ * })
+ *
+ * console.log(countsTowardBaseline(HookPulseInstrumentClass.Enum.production)) // true
+ * console.log(countsTowardBaseline(HookPulseInstrumentClass.Enum.spike)) // false
+ * console.log(countsTowardBaseline(HookPulseInstrumentClass.Enum.meta)) // false
  * ```
  *
  * @category models
@@ -200,29 +250,45 @@ export const HookPulseInstrumentClass = LiteralKit(["production", "spike", "meta
 );
 
 /**
- * Runtime type for {@link HookPulseInstrumentClass}.
+ * Decoded instrument-class literal marking whether a session belongs in default baselines.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseInstrumentClass } from "@beep/repo-ai-metrics"
- * const instrumentClass: HookPulseInstrumentClass = "production"
- * console.log(instrumentClass)
- * ```
- *
+ * @see {@link HookPulseInstrumentClass} for the runtime schema and its exhaustive matcher.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseInstrumentClass = typeof HookPulseInstrumentClass.Type;
 
 /**
- * Confidence tier carried by a hook-pulse observation.
+ * Confidence a hook-pulse observation claims for itself, ordered from directly witnessed down to unknown.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * Tiers obey a weakest-link law: a record can never outrank the weakest input it
+ * was computed from. `observed` is reserved for a value read straight out of a
+ * hook payload; anything one inference removed is at best `derived`, and
+ * `heuristic` or `unknown` inputs keep their tier rather than being promoted by
+ * the step that consumed them.
+ *
+ * **Gotchas**
+ *
+ * A tier is a claim about provenance, not about correctness. A `derived` row can
+ * be exactly right and an `observed` row can record a harness bug faithfully;
+ * the tier only says how far the value sits from the raw payload.
+ *
+ * **Example** (Read the weakest-link ladder)
+ *
  * ```ts
  * import { HookPulseEvidenceTier } from "@beep/repo-ai-metrics"
- * console.log(HookPulseEvidenceTier.Enum.observed)
+ *
+ * const isObserved = HookPulseEvidenceTier.is.observed
+ *
+ * // Strongest first: a record clamps down this ladder, never up it.
+ * console.log(HookPulseEvidenceTier.Options) // ["observed", "derived", "heuristic", "unknown"]
+ * console.log(isObserved(HookPulseEvidenceTier.Enum.observed)) // true
+ * console.log(isObserved(HookPulseEvidenceTier.Enum.derived)) // false
  * ```
  *
+ * @see {@link HookPulseV1FromRawEvent} for the clamp that applies this law while deriving a canonical row.
  * @category models
  * @since 0.0.0
  */
@@ -233,29 +299,46 @@ export const HookPulseEvidenceTier = LiteralKit(["observed", "derived", "heurist
 );
 
 /**
- * Runtime type for {@link HookPulseEvidenceTier}.
+ * Decoded evidence-tier literal stating how far a recorded value sits from the raw hook payload.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseEvidenceTier } from "@beep/repo-ai-metrics"
- * const evidenceTier: HookPulseEvidenceTier = "unknown"
- * console.log(evidenceTier)
- * ```
- *
+ * @see {@link HookPulseEvidenceTier} for the runtime schema and the weakest-link law it encodes.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
 /**
- * Wait attribution attached to a hook-pulse event.
+ * Attribution for why a session is blocked, so a stretch of wall-clock waiting can be charged to a cause.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * The value is derived from the hook event, tool name, and notification type
+ * rather than asserted by the writer, which is what lets the schema check it.
+ * `none` and `unknown` are not interchangeable: `none` means the event is not a
+ * wait at all, while `unknown` means the row is a wait whose cause the
+ * whitelisted payload did not identify. Collapsing them would quietly report
+ * unattributed waiting as zero waiting.
+ *
+ * **Example** (Distinguish blocked events from events that are not waits)
+ *
  * ```ts
  * import { HookPulseWaitReason } from "@beep/repo-ai-metrics"
- * console.log(HookPulseWaitReason.Enum["plan-approval"])
+ *
+ * const isHumanWait = HookPulseWaitReason.$match({
+ *   "plan-approval": () => true,
+ *   "tool-permission": () => true,
+ *   "idle-input": () => true,
+ *   none: () => false,
+ *   unknown: () => false
+ * })
+ *
+ * console.log(isHumanWait(HookPulseWaitReason.Enum["plan-approval"])) // true
+ * console.log(isHumanWait(HookPulseWaitReason.Enum.none)) // false
+ * // An unattributed wait keeps its own reason rather than counting as zero waiting.
+ * console.log(isHumanWait(HookPulseWaitReason.Enum.unknown)) // false
  * ```
  *
+ * @see {@link HookPulseV1} for the invariant that recomputes this value and rejects a row that disagrees.
  * @category models
  * @since 0.0.0
  */
@@ -272,27 +355,43 @@ export const HookPulseWaitReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link HookPulseWaitReason}.
+ * Decoded wait-reason literal charging a blocked stretch to a cause, or to no wait at all.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseWaitReason } from "@beep/repo-ai-metrics"
- * const waitReason: HookPulseWaitReason = "idle-input"
- * console.log(waitReason)
- * ```
- *
+ * @see {@link HookPulseWaitReason} for the runtime schema and the none-versus-unknown distinction.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseWaitReason = typeof HookPulseWaitReason.Type;
 
 /**
- * Content-free notification categories retained by the hook-pulse writer.
+ * Notification categories the writer keeps, chosen so a notification can be counted without keeping its text.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * A raw notification payload carries a `message`, which is content and never
+ * reaches the ledger; this category is the only part that survives.
+ * `idle_prompt` is the sole category that marks the human as the thing being
+ * waited on, so it is the one that becomes an `idle-input` wait, while
+ * `permission_prompt` accompanies a decision that `PermissionRequest` already
+ * brackets.
+ *
+ * **Gotchas**
+ *
+ * A category outside this domain is dropped rather than rejected. A future
+ * harness notification therefore decodes into a row whose `notificationType` is
+ * absent and whose wait reason is `unknown`, which records the gap instead of
+ * losing the event.
+ *
+ * **Example** (Recognize the idle category and ignore an unfamiliar one)
+ *
  * ```ts
  * import { HookPulseNotificationType } from "@beep/repo-ai-metrics"
- * console.log(HookPulseNotificationType.Enum.idle_prompt)
+ *
+ * const isIdlePrompt = HookPulseNotificationType.is.idle_prompt
+ *
+ * console.log(isIdlePrompt(HookPulseNotificationType.Enum.idle_prompt)) // true
+ * console.log(isIdlePrompt(HookPulseNotificationType.Enum.permission_prompt)) // false
+ * console.log(isIdlePrompt("future_notification_shape")) // false
  * ```
  *
  * @category models
@@ -305,38 +404,60 @@ export const HookPulseNotificationType = LiteralKit(["permission_prompt", "idle_
 );
 
 /**
- * Runtime type for {@link HookPulseNotificationType}.
+ * Decoded notification-category literal retained in place of a notification message.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseNotificationType } from "@beep/repo-ai-metrics"
- * const notificationType: HookPulseNotificationType = "permission_prompt"
- * console.log(notificationType)
- * ```
- *
+ * @see {@link HookPulseNotificationType} for the runtime schema and the categories it recognizes.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseNotificationType = typeof HookPulseNotificationType.Type;
 
 /**
- * Content-free fields forwarded from a coding-agent hook payload.
+ * Whitelisted, content-free projection of the hook payload a coding agent hands to its hook script.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * The payload a harness delivers carries `prompt`, `message`, `tool_input`,
+ * `tool_response`, and `error`, every one of which is content. This schema names
+ * only the fields the instrument needs, so the content is gone before anything
+ * reaches disk. Privacy here is a property of what the type can represent rather
+ * than of a downstream filter someone has to remember to run.
+ *
+ * **Gotchas**
+ *
+ * `tool_name` must be non-empty, not merely present. The shell writer treats
+ * `""` as an absent tool and derives `unknown` for a `PermissionRequest`, while a
+ * reader that accepted an empty string would derive `tool-permission` from the
+ * same row. Both halves are internally consistent, so no invariant would catch
+ * the disagreement; refusing the empty string is the only reading they share.
+ *
+ * **Example** (Content fields never survive the projection)
+ *
  * ```ts
  * import { HookPulseRawEvent } from "@beep/repo-ai-metrics"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const rawEvent = S.decodeUnknownEffect(HookPulseRawEvent)({
- *   session_id: "session-1",
- *   hook_event_name: "PermissionRequest",
- *   cwd: "/workspace/beep-effect2",
- *   tool_name: "ExitPlanMode",
- *   transcript_path: "/tmp/claude/session-1.jsonl"
- * })
- * console.log(rawEvent)
+ * const decode = S.decodeUnknownResult(HookPulseRawEvent)
+ *
+ * const event = Result.getOrThrow(
+ *   decode({
+ *     session_id: "session-1",
+ *     hook_event_name: "PermissionRequest",
+ *     cwd: "/workspace/beep-effect2",
+ *     tool_name: "ExitPlanMode",
+ *     transcript_path: "/tmp/claude/session-1.jsonl",
+ *     prompt: "content the ledger must never keep",
+ *     tool_input: { command: "bun run check" }
+ *   })
+ * )
+ *
+ * console.log(event.tool_name) // O.some("ExitPlanMode")
+ * console.log(Object.hasOwn(event, "prompt")) // false
+ * console.log(Object.hasOwn(event, "tool_input")) // false
  * ```
  *
+ * @see {@link HookPulseV1FromRawEvent} for the codec that turns this projection into a canonical row.
  * @category models
  * @since 0.0.0
  */
@@ -472,14 +593,38 @@ const hookPulseEventOwnedFieldValue = (
 ): O.Option<unknown> => input[field];
 
 /**
- * Privacy-safe, schema-versioned record emitted once per coding-agent hook event.
+ * Privacy-safe, schema-versioned record written once per coding-agent hook event.
  *
- * **Example** (Usage)
+ * **Details**
+ *
+ * One row per event, appended as NDJSON by `.claude/hooks/hook-pulse.sh`, is the
+ * instrument's raw history: every derived table is rebuilt from these rows, so a
+ * row is never rewritten. Two invariants make the schema its own oracle against
+ * the shell writer. The event-owned field invariant rejects `notificationType`
+ * outside `Notification`, `sessionEndReason` outside `SessionEnd`, and
+ * `isInterrupt` outside `PostToolUseFailure`. The wait-reason invariant
+ * recomputes `waitReason` from `hookEvent`, `toolName`, and `notificationType`
+ * and rejects a row that disagrees, which is what catches a jq derivation that
+ * has drifted away from this contract.
+ *
+ * **Gotchas**
+ *
+ * A human wait starts at `PermissionRequest`, never at `PreToolUse`, which fires
+ * before auto-approved calls too and therefore measures execution. The wait
+ * bracket closes on `PostToolUse` or `PostToolUseFailure`, exactly one of which
+ * a tool call produces, so a reader joining on `PostToolUse` alone never closes a
+ * failed call.
+ *
+ * **Example** (Decode a plan-approval wait and watch a hand-edited attribution fail)
+ *
  * ```ts
  * import { HookPulseV1 } from "@beep/repo-ai-metrics"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const pulse = S.decodeUnknownEffect(HookPulseV1)({
+ * const decode = S.decodeUnknownResult(HookPulseV1)
+ *
+ * const row = {
  *   schemaVersion: "hook-pulse/v1",
  *   ts: "2026-08-01T06:40:07.000Z",
  *   sessionId: "session-1",
@@ -491,10 +636,16 @@ const hookPulseEventOwnedFieldValue = (
  *   evidenceTier: "observed",
  *   waitReason: "plan-approval",
  *   toolName: "ExitPlanMode"
- * })
- * console.log(pulse)
+ * }
+ *
+ * console.log(Result.getOrThrow(decode(row)).waitReason) // "plan-approval"
+ * // waitReason is recomputed, so a writer cannot claim this request was not a wait.
+ * console.log(Result.isFailure(decode({ ...row, waitReason: "none" }))) // true
+ * // sessionEndReason belongs to SessionEnd and to no other event.
+ * console.log(Result.isFailure(decode({ ...row, sessionEndReason: "prompt_input_exit" }))) // true
  * ```
  *
+ * @see {@link HookPulseV1FromRawEvent} for deriving one of these rows from a raw hook payload.
  * @category models
  * @since 0.0.0
  */
@@ -664,30 +815,65 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
 );
 
 /**
- * Codec deriving a canonical hook-pulse record from a raw hook event and writer stamps.
+ * Codec turning a raw hook payload plus its writer stamps into a canonical hook-pulse row, and back again.
  *
- * **Example** (Usage)
+ * **When to use**
+ *
+ * Use when a hook payload has to become a ledger row, or when a stored row has
+ * to be replayed as the raw event that produced it.
+ *
+ * **Details**
+ *
+ * Decoding derives `waitReason` from the whitelisted raw fields instead of
+ * copying a writer-supplied value, so a writer cannot assert an attribution its
+ * payload does not support. Encoding reverses the projection and fails when
+ * `transcriptPath` is absent or when the row disagrees with the attribution its
+ * own encoded event would derive. Fields owned by one event are dropped in both
+ * directions rather than forwarded, which is what keeps the two directions from
+ * disagreeing about the same event: a decode that merely forwarded a misowned
+ * field would hand the canonical schema a record it must reject, losing an
+ * otherwise legitimate row over a field the ledger never wanted.
+ *
+ * **Gotchas**
+ *
+ * An `observed` raw event yields a `derived` row. That clamp is the weakest-link
+ * law in code: the derivation sits one inference away from the payload, so it
+ * cannot claim to have witnessed what it computed. `heuristic` and `unknown`
+ * stay where they are, because the clamp only ever lowers a tier.
+ *
+ * **Example** (Derive wait attribution and clamp the evidence tier)
+ *
  * ```ts
  * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * const pulse = S.decodeUnknownEffect(HookPulseV1FromRawEvent)({
- *   event: {
- *     session_id: "session-1",
- *     hook_event_name: "PermissionRequest",
- *     cwd: "/workspace/beep-effect2",
- *     tool_name: "ExitPlanMode",
- *     transcript_path: "/tmp/claude/session-1.jsonl"
- *   },
- *   notifierRev: "spike-0",
- *   instrumentClass: "spike",
- *   agentKind: "claude-code",
- *   evidenceTier: "observed",
- *   ts: "2026-08-01T06:40:07.000Z"
- * })
- * console.log(pulse)
+ * const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent)
+ *
+ * const pulse = Result.getOrThrow(
+ *   decode({
+ *     event: {
+ *       session_id: "session-1",
+ *       hook_event_name: "PermissionRequest",
+ *       cwd: "/workspace/beep-effect2",
+ *       tool_name: "ExitPlanMode",
+ *       transcript_path: "/tmp/claude/session-1.jsonl"
+ *     },
+ *     notifierRev: "spike-0",
+ *     instrumentClass: "spike",
+ *     agentKind: "claude-code",
+ *     evidenceTier: "observed",
+ *     ts: "2026-08-01T06:40:07.000Z"
+ *   })
+ * )
+ *
+ * // Derived from the tool name, never supplied by the writer.
+ * console.log(pulse.waitReason) // "plan-approval"
+ * // Clamped one step down from the observed tier the writer stamped.
+ * console.log(pulse.evidenceTier) // "derived"
  * ```
  *
+ * @see {@link HookPulseRawEvent} for the whitelisted payload this codec reads.
  * @category models
  * @since 0.0.0
  */
@@ -825,16 +1011,9 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
 );
 
 /**
- * Runtime type for {@link HookPulseV1FromRawEvent}.
+ * Decoded side of the raw-event codec, which is the canonical row rather than the raw payload.
  *
- * **Example** (Usage)
- * ```ts
- * import type { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
- *
- * const printPulse = (pulse: HookPulseV1FromRawEvent) => console.log(pulse)
- * console.log(printPulse)
- * ```
- *
+ * @see {@link HookPulseV1FromRawEvent} for the codec itself and the derivations it performs.
  * @category models
  * @since 0.0.0
  */
