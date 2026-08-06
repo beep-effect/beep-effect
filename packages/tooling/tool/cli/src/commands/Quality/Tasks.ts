@@ -1471,6 +1471,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
   repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
   repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
+  // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
+  // introduced by this branch and lets the corpus keep its inherited ones.
+  repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
   repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
   repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),

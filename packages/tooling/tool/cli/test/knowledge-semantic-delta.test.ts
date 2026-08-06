@@ -1,4 +1,5 @@
 import {
+  KNOWLEDGE_PROBE_DEPENDENT_KINDS,
   KnowledgeCommandResolved,
   KnowledgeCommandUnknown,
   KnowledgeIndexBytes,
@@ -7,12 +8,14 @@ import {
   KnowledgeService,
   KnowledgeServiceLive,
   KnowledgeTrackedEntry,
+  knowledgeSemanticDeltaFailure,
+  resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, Layer } from "effect";
+import { Crypto, Effect, Encoding, Exit, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -21,6 +24,7 @@ import type {
   KnowledgeArchiveOracle,
   KnowledgeFindingKind,
   KnowledgePairedOracleInput,
+  KnowledgeProbePolicy,
   KnowledgeSemanticDeltaReport,
 } from "@beep/repo-cli/commands/Knowledge";
 
@@ -103,13 +107,35 @@ const fixture = (
   options: {
     readonly base?: OracleOptions;
     readonly head?: OracleOptions;
+    readonly probePolicy?: KnowledgeProbePolicy;
     readonly renames?: ReadonlyArray<KnowledgeRename>;
   } = {}
 ): KnowledgePairedOracleInput => ({
   base: makeOracle(baseFiles, options.base),
   head: makeOracle(headFiles, options.head),
+  probePolicy: options.probePolicy ?? "enabled",
   renames: options.renames ?? [],
 });
+
+/**
+ * An oracle whose probes fail if they are ever reached.
+ *
+ * A skipped comparison must decline to execute, not execute and discard: filtering probe results
+ * after the fact would still have run a fork's code on the runner.
+ */
+const explodingProbeOracle = (
+  sourceFiles: Readonly<Record<string, string>>,
+  options: OracleOptions = {}
+): KnowledgeArchiveOracle => {
+  const unreachable = KnowledgeOperationalError.make({
+    message: "Archive-local probe executed under a skipped probe policy.",
+  });
+  return {
+    ...makeOracle(sourceFiles, options),
+    probeCommands: () => Effect.fail(unreachable),
+    indexBytes: Effect.fail(unreachable),
+  };
+};
 
 const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
@@ -472,6 +498,191 @@ describe("knowledge semantic-delta negative controls", () => {
         )
       );
       expect(introducedIds(report)).toEqual([]);
+    })
+  );
+});
+
+describe("knowledge semantic-delta gate semantics", () => {
+  it.effect("a finding this branch introduced gates the lane", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture({ "docs/guide.md": "Nothing cited.\n" }, { "docs/guide.md": "Use `docs/missing.md`.\n" })
+      );
+      const failure = knowledgeSemanticDeltaFailure(report);
+
+      expect(A.length(report.introduced)).toBe(1);
+      expect(O.map(failure, (error) => error.introducedCount)).toEqual(O.some(1));
+    })
+  );
+
+  it.effect("a finding inherited from the merge-base never gates the lane", () =>
+    Effect.gen(function* () {
+      const document = "Use `docs/missing.md`.\n";
+      const report = yield* scan(fixture({ "docs/guide.md": document }, { "docs/guide.md": document }));
+
+      expect(A.length(report.unchanged)).toBe(1);
+      expect(report.introduced).toEqual([]);
+      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+    })
+  );
+
+  it.effect("a finding this branch resolved never gates the lane", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture({ "docs/guide.md": "Use `docs/missing.md`.\n" }, { "docs/guide.md": "Nothing cited.\n" })
+      );
+
+      expect(A.length(report.resolved)).toBe(1);
+      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+    })
+  );
+});
+
+describe("knowledge semantic-delta probe policy", () => {
+  const SAME_REPO = "YeeBois/beep-effect";
+
+  // Written as raw payload bytes rather than encoded from a record: the point of the fixture is that
+  // the decoder tolerates a real event payload's many unmodelled keys.
+  const forkPayload = (headRepository: string): string => `{
+    "action": "synchronize",
+    "number": 7,
+    "pull_request": {
+      "id": 11,
+      "head": { "ref": "topic", "repo": { "id": 12, "full_name": "${headRepository}" } }
+    },
+    "repository": { "full_name": "${SAME_REPO}" }
+  }`;
+
+  const NULL_HEAD_REPO_PAYLOAD = `{ "pull_request": { "head": { "repo": null } } }`;
+
+  /** Resolves the policy for an env whose `GITHUB_EVENT_PATH` points at `payload`, when given. */
+  const policyFor = (
+    env: Readonly<Record<string, string | undefined>>,
+    payload?: string
+  ): Effect.Effect<KnowledgeProbePolicy> =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        if (payload === undefined) {
+          return yield* resolveKnowledgeProbePolicy(env);
+        }
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-probe-policy-" });
+        const eventPath = path.join(directory, "event.json");
+        yield* fs.writeFileString(eventPath, payload);
+        return yield* resolveKnowledgeProbePolicy({ ...env, GITHUB_EVENT_PATH: eventPath });
+      })
+    ).pipe(provideScopedLayer(testLayer), Effect.orDie);
+
+  it.effect("a push build probes, because the revision is already ours", () =>
+    Effect.gen(function* () {
+      expect(yield* policyFor({ GITHUB_EVENT_NAME: "push", GITHUB_REPOSITORY: SAME_REPO })).toBe("enabled");
+    })
+  );
+
+  it.effect("a local run with no GitHub context probes", () =>
+    Effect.gen(function* () {
+      expect(yield* policyFor({})).toBe("enabled");
+    })
+  );
+
+  it.effect("a same-repository pull request probes", () =>
+    Effect.gen(function* () {
+      const policy = yield* policyFor(
+        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
+        forkPayload(SAME_REPO)
+      );
+
+      expect(policy).toBe("enabled");
+    })
+  );
+
+  it.effect("repository names compare case-insensitively", () =>
+    Effect.gen(function* () {
+      const policy = yield* policyFor(
+        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: "YeeBois/Beep-Effect" },
+        forkPayload("yeebois/beep-effect")
+      );
+
+      expect(policy).toBe("enabled");
+    })
+  );
+
+  it.effect("a fork pull request skips probes", () =>
+    Effect.gen(function* () {
+      const policy = yield* policyFor(
+        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
+        forkPayload("contributor/beep-effect")
+      );
+
+      expect(policy).toBe("skipped-untrusted-context");
+    })
+  );
+
+  it.effect("a fork pull_request_target run skips probes", () =>
+    Effect.gen(function* () {
+      const policy = yield* policyFor(
+        { GITHUB_EVENT_NAME: "pull_request_target", GITHUB_REPOSITORY: SAME_REPO },
+        forkPayload("contributor/beep-effect")
+      );
+
+      expect(policy).toBe("skipped-untrusted-context");
+    })
+  );
+
+  it.effect("an undeterminable head repository skips probes rather than buying execution", () =>
+    Effect.gen(function* () {
+      const env = { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO };
+
+      expect(yield* policyFor(env)).toBe("skipped-untrusted-context");
+      expect(yield* policyFor({ ...env, GITHUB_EVENT_PATH: "/nonexistent/event.json" })).toBe(
+        "skipped-untrusted-context"
+      );
+      expect(yield* policyFor(env, "{not json")).toBe("skipped-untrusted-context");
+      expect(yield* policyFor(env, NULL_HEAD_REPO_PAYLOAD)).toBe("skipped-untrusted-context");
+      expect(yield* policyFor({ GITHUB_EVENT_NAME: "pull_request" }, forkPayload(SAME_REPO))).toBe(
+        "skipped-untrusted-context"
+      );
+    })
+  );
+
+  it.effect("a skipped comparison declines to run archive-local probes at all", () =>
+    Effect.gen(function* () {
+      const service = yield* KnowledgeService;
+      const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
+        base: explodingProbeOracle({ "docs/guide.md": "Nothing cited.\n" }),
+        head: explodingProbeOracle({ "docs/guide.md": "Run `bun run beep goals doctro`.\n" }),
+        probePolicy,
+        renames: [],
+      });
+      const skipped = yield* service.scanPair(input("skipped-untrusted-context"));
+      // Counterfactual: the same oracles under `enabled` do reach the probe, so the pass above is a
+      // guard doing its job and not a fixture that had nothing to execute.
+      const probed = yield* Effect.exit(service.scanPair(input("enabled")));
+
+      expect(skipped.probePolicy).toBe("skipped-untrusted-context");
+      expect(skipped.introduced).toEqual([]);
+      expect(Exit.isFailure(probed)).toBe(true);
+    }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("a skipped comparison drops the probe-dependent classes and keeps the rest", () =>
+    Effect.gen(function* () {
+      const baseFiles = { "docs/guide.md": "Nothing cited.\n" };
+      const headFiles = { "docs/guide.md": "Run `bun run beep goals doctro`, see `docs/missing.md`.\n" };
+      const drift = { head: { indexExpected: "# Regenerated Goals Index\n" } };
+      const probed = yield* scan(fixture(baseFiles, headFiles, drift));
+      const skipped = yield* scan(
+        fixture(baseFiles, headFiles, { ...drift, probePolicy: "skipped-untrusted-context" })
+      );
+      const kinds = (report: KnowledgeSemanticDeltaReport): ReadonlyArray<KnowledgeFindingKind> =>
+        A.sort(
+          A.map(report.introduced, (finding) => finding.kind),
+          Order.String
+        );
+
+      expect(kinds(probed)).toEqual(A.sort(["broken-tracked-path", ...KNOWLEDGE_PROBE_DEPENDENT_KINDS], Order.String));
+      expect(kinds(skipped)).toEqual(["broken-tracked-path"]);
     })
   );
 });

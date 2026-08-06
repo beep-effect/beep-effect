@@ -132,6 +132,93 @@ export type KnowledgeFindingSeverity = typeof KnowledgeFindingSeverity.Type;
 export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
 
 /**
+ * Whether a comparison was allowed to execute archive-local probes.
+ *
+ * **Details**
+ *
+ * The `--help` command probe and the index projection both run Bun on code taken from the scanned
+ * revision. That is the same trust boundary as running the revision's tests, which is fine locally
+ * and on same-repo branches but is arbitrary code execution when the revision came from a fork.
+ * `skipped-untrusted-context` records that the run deliberately declined to execute, so a green
+ * report on a fork pull request can never be mistaken for a fully probed one.
+ *
+ * **Gotchas**
+ *
+ * The policy is a property of the whole comparison, never of one side: probing only one archive
+ * would turn every probe-class finding into a spurious introduced or resolved entry.
+ *
+ * **Example** (Read the probe policy domain)
+ *
+ * ```ts
+ * import { KnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ *
+ * console.log(KnowledgeProbePolicy.is.enabled("enabled")) // true
+ * console.log(KnowledgeProbePolicy.Options.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgeProbePolicy = LiteralKit(["enabled", "skipped-untrusted-context"]).pipe(
+  $I.annoteSchema("KnowledgeProbePolicy", {
+    description: "Whether archive-local command and index probes were allowed to execute.",
+  })
+);
+
+/**
+ * Whether archive-local probes ran for a comparison.
+ *
+ * @see {@link KnowledgeProbePolicy} for the runtime schema and the fork-pull-request rule.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type KnowledgeProbePolicy = typeof KnowledgeProbePolicy.Type;
+
+/**
+ * Narrows an unknown value to a knowledge probe policy.
+ *
+ * **Example** (Check a policy read from an archived report)
+ *
+ * ```ts
+ * import { isKnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ *
+ * console.log(isKnowledgeProbePolicy("enabled")) // true
+ * console.log(isKnowledgeProbePolicy("sandboxed")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isKnowledgeProbePolicy = S.is(KnowledgeProbePolicy);
+
+/**
+ * Finding classes that only an archive-local probe can decide.
+ *
+ * **Details**
+ *
+ * `unknown-beep-command` needs the archive's own command tree and `index-drift` needs the archive's
+ * own index projection, so both disappear from a `skipped-untrusted-context` comparison while
+ * `broken-tracked-path` and `failed-assertion` keep working from the tracked-tree oracle alone.
+ * This is the ratified graceful degradation, and naming it here keeps the scanner and its tests
+ * reading from one list.
+ *
+ * **Example** (Read the probe-dependent classes)
+ *
+ * ```ts
+ * import { KNOWLEDGE_PROBE_DEPENDENT_KINDS } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ *
+ * console.log(KNOWLEDGE_PROBE_DEPENDENT_KINDS) // [ "unknown-beep-command", "index-drift" ]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const KNOWLEDGE_PROBE_DEPENDENT_KINDS: ReadonlyArray<KnowledgeFindingKind> = [
+  "unknown-beep-command",
+  "index-drift",
+];
+
+/**
  * Versioned SHA-256 identity of one normalized finding instance.
  *
  * **Details**
@@ -654,16 +741,28 @@ export class KnowledgeCommandOccurrence extends S.Class<KnowledgeCommandOccurren
  * fails a pull request; `resolved` and `unchanged` exist to make the comparison auditable rather than
  * to gate it.
  *
+ * **Gotchas**
+ *
+ * `probePolicy` is part of the report because coverage is part of the result. Under
+ * `skipped-untrusted-context` the probe-dependent classes are absent rather than clean, so an empty
+ * `introduced` bucket means less than it does under `enabled`.
+ *
  * **Example** (Read the gating bucket of a clean report)
  *
  * ```ts
  * import { KnowledgeSemanticDeltaReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
- * const report = KnowledgeSemanticDeltaReport.make({ introduced: [], resolved: [], unchanged: [] })
+ * const report = KnowledgeSemanticDeltaReport.make({
+ *   introduced: [],
+ *   resolved: [],
+ *   unchanged: [],
+ *   probePolicy: "enabled",
+ * })
  *
  * console.log(report.introduced.length) // 0
  * ```
  *
+ * @see {@link KnowledgeProbePolicy} for what a skipped comparison stops checking.
  * @category models
  * @since 0.0.0
  */
@@ -674,6 +773,7 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
     introduced: S.Array(KnowledgeFinding),
     resolved: S.Array(KnowledgeFinding),
     unchanged: S.Array(KnowledgeFinding),
+    probePolicy: KnowledgeProbePolicy,
   },
   $I.annote("KnowledgeSemanticDeltaReport", {
     description: "Findings introduced, resolved, and unchanged between merge-base and HEAD archives.",
@@ -699,7 +799,12 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
  *
  * const json = Effect.runSync(
  *   encodeKnowledgeSemanticDeltaReportJson(
- *     KnowledgeSemanticDeltaReport.make({ introduced: [], resolved: [], unchanged: [] })
+ *     KnowledgeSemanticDeltaReport.make({
+ *       introduced: [],
+ *       resolved: [],
+ *       unchanged: [],
+ *       probePolicy: "enabled",
+ *     })
  *   )
  * )
  *
