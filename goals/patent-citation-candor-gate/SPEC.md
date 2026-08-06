@@ -376,7 +376,16 @@ Gated criteria (activate when the owning goal lands; never block this goal):
 
 Always binding (both rungs):
 
-- [x] No unrelated refactors or formatting churn. Audited 2026-08-06: the diff
+- [x] No unrelated refactors or formatting churn, with ONE owner-approved
+      exception. Owner ruling 2026-08-06: clear the 10 pre-existing
+      `effect-governance-terse-effect` findings in
+      `packages/tooling/tool/cli/src/commands/{Yeet/internal,Knowledge}` inside
+      this PR rather than in a separate one. Those findings are inherited — the
+      files are absent from this goal's diff, were last modified by #563 and
+      #569, and `main`'s own head fails the same `Lint Policy` check — but it is
+      a required check, so the PR cannot reach mergeable without them. Recorded
+      as a deliberate, owner-directed scope widening rather than drift.
+      Otherwise audited 2026-08-06: the diff
       is 75 files, and every path outside `goals/patent-citation-candor-gate/`,
       `packages/law-practice/`, `packages/shared/domain/src/identity/LawPractice.ts`,
       and `packages/_internal/db-admin/` is either machine-generated or

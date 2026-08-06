@@ -10,7 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Console, Context, DateTime, Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Console, Context, DateTime, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -328,16 +328,14 @@ const issueIndexFromEnvelopes = (envelopes: ReadonlyArray<FallowEnvelope>, advis
 // Reject self-contradictory payloads: a successful envelope's findings must share
 // its subcommand feature family, otherwise the issue id (derived from the
 // subcommand) and category/message (derived from the finding) would disagree.
-const familyMismatchRefs = (envelopes: ReadonlyArray<FallowEnvelope>): ReadonlyArray<string> =>
-  pipe(
-    envelopes,
-    A.filter(
-      (envelope) =>
-        envelope.status === "ok" &&
-        !envelope.report.findings.every((finding) => finding.featureFamily === envelope.subcommand)
-    ),
-    A.map((envelope) => envelope.reportPath)
-  );
+const familyMismatchRefs: (envelopes: ReadonlyArray<FallowEnvelope>) => ReadonlyArray<string> = flow(
+  A.filter(
+    (envelope: FallowEnvelope) =>
+      envelope.status === "ok" &&
+      !envelope.report.findings.every((finding) => finding.featureFamily === envelope.subcommand)
+  ),
+  A.map((envelope) => envelope.reportPath)
+);
 
 const assertAdvisoryEnvelopes = Effect.fn("YeetFallowFeedback.assertAdvisoryEnvelopes")(function* (
   envelopes: ReadonlyArray<FallowEnvelope>,
