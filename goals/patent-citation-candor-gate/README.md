@@ -72,6 +72,17 @@ Graduated 2026-08-04 from
 (BRIEF approved same day after a three-lens adversarial review + four PR #557
 review refinements; four-point definition-of-ready passed at decompose).
 
+## Open Blocker (recorded, not repaired)
+
+`Lint Policy` is red on PR #575 and **inherited from `main`**, not introduced here.
+`main`'s own head (`39945d95ef`) fails `Build`, `Lint Policy`, and `Lint`; this PR fails
+only `Lint Policy`. All ten `effect-governance-terse-effect` blocking findings sit in
+`packages/tooling/tool/cli/src/commands/{Yeet/internal,Knowledge}` — files absent from this
+PR's diff, last modified by #563 and #569. `bun run beep lint policy` exits 0 locally
+against this branch. Repairing them here would be the unrelated refactor the acceptance
+criteria forbid, so it is recorded rather than fixed
+([attribution comment](https://github.com/beep-effect/beep-effect/pull/575#issuecomment-5202192922)).
+
 ## Criterion-to-Proof Map
 
 | SPEC criterion | Where it is proven |
