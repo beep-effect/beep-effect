@@ -163,7 +163,11 @@ candidate shapes exist; exactly one is settled, and none is picked here:
 - The goal never claims a live handoff it cannot prove. The sibling's owner
   ruling is the governing precedent: durability now, cross-slice consultation
   deferred with standing evidence and the Exception Ledger entry left PENDING
-  and unexercised (`goals/patent-citation-candor-gate/SPEC.md:100-114`).
+  and unexercised — its decision-log entries opening "Owner ruling on decision 9
+  (2026-08-05): durability now, gate shape deferred" and "Owner ruling on the
+  live-gate criterion (2026-08-05): rescope to the predicate boundary"
+  (`goals/patent-citation-candor-gate/SPEC.md:114-128`; quote-anchored because
+  that SPEC's line numbers shift whenever it gains a decision).
 
 **DRIFT the BRIEF's citation carries.** `standards/ARCHITECTURE.md:632-636` is
 line-accurate — it still says cross-slice integration "goes through emitted
@@ -224,9 +228,10 @@ circuit-breaker degradation; assertion 4 is the pair that degradation deletes
 (returning in rung 2 with the candidate handoff).
 
 Harness, matching the landed in-slice precedent
-`packages/law-practice/use-cases/test/CandorPolicy.test.ts` (20 `it.effect`
-scenarios across 7 describes): `@effect/vitest` `layer(...)((it) => it.effect(...))`
-(`:28`, first block at `:387-389`), every package source imported through
+`packages/law-practice/use-cases/test/CandorPolicy.test.ts` (22 `it.effect`
+scenarios across 8 describes as of PR #589; the count grows, the shape does
+not): `@effect/vitest` `layer(...)((it) => it.effect(...))`
+(`:28`, first block at `:408-410`), every package source imported through
 `@beep/*` aliases per repo test law, capability ports satisfied by hand-built
 fixture `Layer`s, slice-isolated — no other slice booted, no app runtime `Layer`,
 no dependency added to the package.

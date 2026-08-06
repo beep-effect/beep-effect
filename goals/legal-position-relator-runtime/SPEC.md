@@ -244,8 +244,8 @@ The graduated sibling already states the authority half of this boundary, and
 this goal **composes** that language rather than reformulating it so the two do
 not drift apart. In `goals/patent-citation-candor-gate/SPEC.md`: the Non-Goals
 bullets opening "No computed legal judgment, ever" and "No inference of examiner
-reliance" (`:118-124`), and the Constraints bullet opening "Disposition
-authorship is recorded; practitioner authority is not enforced" (`:249-262`),
+reliance" (`:132-138`), and the Constraints bullet opening "Disposition
+authorship is recorded; practitioner authority is not enforced" (`:263-276`),
 whose operative sentence is "the gate proves that a human principal disposed the
 exact observation version, never that the human was authorized to."
 
@@ -410,7 +410,11 @@ Binding regardless of the pick:
   precedent is the sibling's owner ruling — durability now, cross-slice
   consultation deferred with standing evidence and the Exception Ledger entry
   left PENDING and unexercised
-  (`goals/patent-citation-candor-gate/SPEC.md:100-114`).
+  — its decision-log entries opening "Owner ruling on decision 9 (2026-08-05):
+  durability now, gate shape deferred" and "Owner ruling on the live-gate
+  criterion (2026-08-05): rescope to the predicate boundary"
+  (`goals/patent-citation-candor-gate/SPEC.md:114-128`; quote-anchored because
+  that SPEC's line numbers shift whenever it gains a decision).
 
 ### Triage composition
 

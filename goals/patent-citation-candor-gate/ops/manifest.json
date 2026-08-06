@@ -3,13 +3,13 @@
   "initiative": {
     "id": "patent-citation-candor-gate",
     "title": "Patent Citation Candor Gate",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-04",
     "updated": "2026-08-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-citation-candor-gate",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Block filing promotion until every current AI-discovered PatentCitationEvent carries an attorney CandorDisposition bound to its exact observation version \u2014 fail closed, no computed legal judgment, no stored closure.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -67,7 +67,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
