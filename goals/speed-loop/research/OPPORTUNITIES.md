@@ -743,16 +743,22 @@ excerpt, path, line, and commentDatabaseId.
     that worked: let the proof finish, `gh pr create` from the same
     branch (#571). Kin to #61 (flag-path semantics) and the merge loop's
     own CAS family.
-74. **Stale-base guard false-positives on a continuation branch's own
-    squash.** (Lived, 2026-08-06, PR #571 second commit.) After #569
-    squash-merged, the continuation branch's files "changed on
-    origin/main since the merge-base" — changed by this branch's OWN
-    merge. The guard cannot distinguish self-overlap from a genuine
-    conflict; `--allow-stale-base` is the operator-judgment path, correct
-    here but a blunt bypass. Widget: compare patch-ids (or resolve the
-    overlapping main commits to this branch's merged PR) and auto-exempt
-    self-inflicted overlap; a rebase in this state rewrites history for
-    zero content change.
+74. **Stale-base overlap has two classes; the guard should name which.**
+    (Both lived 2026-08-06, opposite verdicts.) Class A — self-overlap
+    from a continuation branch's own squash merge (#571 second commit):
+    the "changed on origin/main" files were changed by THIS branch's own
+    #569 merge; bypass-safe, `--allow-stale-base` correct, and a rebase
+    rewrites history for zero content change. Widget: patch-id
+    comparison (or resolving the overlapping main commits to this
+    branch's merged PR) auto-exempts it. Class B — overlap in whole-repo
+    generated aggregates (parallel session, same day): goals/INDEX.md
+    predated two new packets on main, and bypassing would have REVERTED
+    their entries; the correct move is rebase + regenerate on the merged
+    tree — ledger #60's doctrine, whose first evidence arrived through
+    the stale-base guard rather than a merge conflict. Discriminator:
+    is the overlapping path in #60's generated-path → regenerate-command
+    map? Generated → regenerate, never bypass; self-squash source overlap
+    → bypass.
 75. **Fail-fast preflight lane battery, ordered by empirical failure
     frequency.** Three independent datasets in one week show the same
     shape: (a) a parallel checkout burned 4 of 5 ~17-minute proof cycles
@@ -772,9 +778,20 @@ excerpt, path, line, and commentDatabaseId.
     (decision 41's measure-first law, now with real measurements).
     Vehicle: PR-G — and it reshapes decision 40: the pre-push hook's fast
     tier should BE this battery, which is what makes fail-closed wiring
-    affordable. Riders: #52 briefs must name repo-level lanes, never
-    package scripts; interim doctrine = run the specific lanes before any
-    full verify.
+    affordable. Ordering (amended on the parallel session's per-cycle
+    data): observed failure frequency decides which lanes are IN the
+    battery; COST ASCENDING decides the order — their cheapest gates
+    (goals-doctor, changeset-status) were discovered in cycles 4 and 1,
+    so a cost-ascending battery surfaces them in its first seconds.
+    Confirmed additional member: `beep quality test-tsgo` — package
+    tsconfigs `include: ["src"]`, so a package's own check never
+    typechecks its tests; their TS2551 (`Order.string` vs `Order.String`)
+    left sort comparators undefined at runtime while 19 tests passed —
+    the silent-vacuity class, structurally invisible at package level
+    (fix pattern on record: per-package tsconfig.test.json +
+    beep:check:tests). Riders: #52 briefs must name repo-level lanes,
+    never package scripts; interim doctrine = run the specific lanes
+    before any full verify.
 
 PR-E fix-wave reflection harvest (2026-08-05, #54 ritual; 5 agents, run
 wf_7d56b3bb-e06): new items #71–72 above. Also: adversarial-review
