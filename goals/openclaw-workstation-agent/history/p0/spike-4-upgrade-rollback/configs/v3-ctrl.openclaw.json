@@ -1,6 +1,0 @@
-{
-  "gateway": { "mode": "local", "port": 19013, "bind": "loopback" },
-  "logging": {
-    "file": "/home/elpresidank/.cache/beep-p0-spike4.FmtrDN/spike4/ctrl-openclaw.log"
-  }
-}

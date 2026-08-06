@@ -1,4 +1,0 @@
-Await client.end() in the pg-external teardown finalizer (was abandoned after a 5s timeoutOption,
-leaving the single-connection PGLite wire server draining) and bound the post-close verification
-reconnect with a spaced 60s retry schedule. Fixes the intermittent 180s timeout in
-SqlTest.pglite.test.ts (Test Integration, red on main run 29335038079).

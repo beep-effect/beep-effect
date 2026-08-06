@@ -1,5 +1,0 @@
-name: beep-effect-ai-metrics
-runtime:
-  name: nodejs
-description: Target-agnostic AI metrics install orchestration for beep-effect.
-main: ./src/internal/ai-metrics-entry.ts

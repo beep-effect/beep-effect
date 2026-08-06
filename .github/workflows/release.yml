@@ -1,142 +1,42 @@
 name: Release
-
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      confirm_publish:
-        description: 'Type PUBLISH to approve publish'
-        required: true
-        default: ""
-        type: string
+    branches: [main]
 
 concurrency:
-  group: release-main
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false # Prevent newer push from interrupting active release
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
-  release-pr:
-    name: Release PR
-    if: github.event_name == 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+  release:
+    if: github.repository_owner == 'Effect-Ts'
+    name: Release
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          fetch-depth: 0
-
-      - name: Detect pending changesets
-        id: pending-changesets
-        shell: bash
-        run: |
-          if find .changeset -maxdepth 1 -type f -name "*.md" ! -name "README.md" | grep -q .; then
-            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No pending changesets; skipping release PR creation."
-            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Setup monorepo CI
-        if: steps.pending-changesets.outputs.has_changesets == 'true'
-        uses: ./.github/actions/setup-monorepo-ci
+          # This is required to ensure the `GITHUB_TOKEN` we provide below is
+          # **always** used when pushing updates to the changesets release branch.
+          # Otherwise the default token will be used, and actions on that versioned
+          # release branch will not be triggered.
+          persist-credentials: false
+      - name: Install dependencies
+        uses: ./.github/actions/setup
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@11
+      - name: Create Release Pull Request or Publish
+        uses: changesets/action@d0ee272882939fa35f22d979828acb7e61e0bd47 # v2.0.0-next.4
         with:
-          cache-turbo: false
-
-      - name: Validate changeset package graph
-        if: steps.pending-changesets.outputs.has_changesets == 'true'
-        run: bun run beep quality changeset-graph
-
-      - name: Detect release diff
-        id: release-diff
-        if: steps.pending-changesets.outputs.has_changesets == 'true'
-        shell: bash
-        env:
-          # @changesets/changelog-github resolves PR/author links via the
-          # GitHub API and hard-fails without a token (main-red cause,
-          # fixed 2026-07-05, goals/agent-pipeline-velocity B3).
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun run changeset:version
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "has_release_diff=true" >> "$GITHUB_OUTPUT"
-            git status --short
-          else
-            echo "No release diff produced by changeset version; skipping release PR creation."
-            echo "has_release_diff=false" >> "$GITHUB_OUTPUT"
-          fi
-          git reset --hard HEAD
-
-      - name: Create or update release pull request
-        id: changesets-release
-        if: steps.release-diff.outputs.has_release_diff == 'true'
-        uses: changesets/action@v1
-        continue-on-error: true
-        with:
-          version: bun run changeset:version
-          commit: "chore(release): version packages"
-          title: "chore(release): version packages"
-        env:
-          LEFTHOOK: "0"
-          # Auto-provisioned by GitHub Actions; requires permissions above.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Validate release branch fallback
-        if: >-
-          steps.release-diff.outputs.has_release_diff == 'true' &&
-          steps.changesets-release.outcome == 'failure'
-        shell: bash
-        run: |
-          set -euo pipefail
-          branch="changeset-release/main"
-          git ls-remote --exit-code origin "refs/heads/${branch}" >/dev/null
-          {
-            echo "### Release PR fallback"
-            echo
-            echo "Changesets produced and pushed \`${branch}\`, but this"
-            echo "organization does not allow GitHub Actions to create pull"
-            echo "requests. Open or update the release PR manually:"
-            echo
-            echo "https://github.com/beep-effect/beep-effect/compare/main...${branch}?expand=1"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  publish:
-    name: Publish (Manual Approval Required)
-    if: github.event_name == 'workflow_dispatch' && inputs.confirm_publish ==
-      'PUBLISH'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
-    environment:
-      # Configure this environment with required reviewers to enforce approval.
-      name: release-publish
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
-        with:
-          cache-turbo: true
-
-      - name: Configure npm registry access
-        uses: actions/setup-node@v4
-        with:
-          registry-url: https://registry.npmjs.org
-          node-version-file: .nvmrc
-
-      - name: Publish packages via locked release script
-        run: bun run release
-        env:
-          # Required repository secret: npm automation token with publish access.
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          version-script: pnpm changeset-version
+          publish-script: pnpm changeset-publish
+          # Use a personal access token instead of the one that GitHub generates
+          # automatically to ensure workflows get triggered on the changesets
+          # release branch.
+          github-token: ${{ secrets.CHANGESET_GITHUB_TOKEN }}

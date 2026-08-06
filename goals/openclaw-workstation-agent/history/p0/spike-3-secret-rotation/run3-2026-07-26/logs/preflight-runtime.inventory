@@ -1,4 +1,0 @@
-path=/etc/beep/openclaw-spike state=absent
-path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/state state=absent
-path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/home state=absent
-path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/workspace state=absent
