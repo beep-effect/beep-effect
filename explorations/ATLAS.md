@@ -69,12 +69,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `patent-drafting-episode-ledger` and the FunctionalUnit extension on
   Benjamin's call.
 - [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
-  align-stage second wedge of the `legal-patent-kg-deepening` routing
+  shape-stage second wedge of the `legal-patent-kg-deepening` routing
   matrix (opened 2026-08-05, after the candor wedge graduated; research
   lanes + synthesis landed same-day; all six align branches closed
   2026-08-06 — scheme + simple relator V1, `law-practice/domain` home with
   a promotion gate, Party–Role split, full `CorrectionDelta` shape,
-  two-axis void-vs-penalised, typed content with polarity): a closed
+  two-axis void-vs-penalised, typed content with polarity; BRIEF hardened
+  by a three-lens Opus review and APPROVED 2026-08-06 — decompose next): a
+  closed
   `HohfeldPosition` domain whose correlative pairs are one stored directed
   relation with a derived opposite view, an identity-bearing n-ary
   `LegalPositionRelator` aggregate over the live taxonomy /
