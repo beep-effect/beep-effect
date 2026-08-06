@@ -180,7 +180,7 @@ describe("Services and Surface", () => {
     expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
   });
 
-  it("canonicalizes and fingerprints datasets deterministically", () =>
+  it.effect("canonicalizes and fingerprints datasets deterministically", () =>
     Effect.gen(function* () {
       const canonicalized = yield* Effect.promise(() =>
         Promise.resolve(
@@ -218,9 +218,10 @@ describe("Services and Surface", () => {
 
       expect(fingerprint.fingerprint).toMatch(/^[0-9a-f]{64}$/);
       expect(fingerprint.canonicalText).toBe(canonicalized.canonicalText);
-    }));
+    })
+  );
 
-  it("produces the same semantic fingerprint for isomorphic blank-node datasets", () =>
+  it.effect("produces the same semantic fingerprint for isomorphic blank-node datasets", () =>
     Effect.gen(function* () {
       const knows = makeNamedNode("https://schema.org/knows");
       const name = makeNamedNode("https://schema.org/name");
@@ -268,9 +269,10 @@ describe("Services and Surface", () => {
 
       expect(leftFingerprint.fingerprint).toBe(rightFingerprint.fingerprint);
       expect(leftFingerprint.canonicalText).toBe(rightFingerprint.canonicalText);
-    }));
+    })
+  );
 
-  it("validates bounded SHACL-inspired shapes and truncates when max results is reached", () =>
+  it.effect("validates bounded SHACL-inspired shapes and truncates when max results is reached", () =>
     Effect.gen(function* () {
       const result = yield* Effect.promise(() =>
         Promise.resolve(
@@ -306,9 +308,10 @@ describe("Services and Surface", () => {
       expect(result.conforms).toBe(false);
       expect(result.truncated).toBe(true);
       expect(result.violations).toHaveLength(1);
-    }));
+    })
+  );
 
-  it("exposes the unsupported SPARQL fallback and the web-annotation seam DTOs", () =>
+  it.effect("exposes the unsupported SPARQL fallback and the web-annotation seam DTOs", () =>
     Effect.gen(function* () {
       yield* Effect.promise(() =>
         Promise.resolve(
@@ -343,5 +346,6 @@ describe("Services and Surface", () => {
 
       expect(annotation.type).toBe("Annotation");
       expect(annotation.target.selector.type).toBe("TextQuoteSelector");
-    }));
+    })
+  );
 });

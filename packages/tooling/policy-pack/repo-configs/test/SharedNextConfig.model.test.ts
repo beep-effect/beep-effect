@@ -98,7 +98,7 @@ describe("Shared Next.js config preset", () => {
     expect(omitted).toEqual(explicitEmpty);
   });
 
-  it("adds secure headers without invoking app headers during construction", () =>
+  it.effect("adds secure headers without invoking app headers during construction", () =>
     Effect.gen(function* () {
       let headersCalled = false;
       const config = defineBeepNextConfig({
@@ -133,7 +133,8 @@ describe("Shared Next.js config preset", () => {
         source: "/custom",
         headers: [{ key: "X-App", value: "1" }],
       });
-    }));
+    })
+  );
 
   it("can disable every shared feature wrapper explicitly", () => {
     const config = defineBeepNextConfig({

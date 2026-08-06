@@ -95,6 +95,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
@@ -103,7 +104,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
-import { describe, expect, it } from "vitest";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
@@ -1945,7 +1945,7 @@ describe("yeet attempt journal", () => {
 });
 
 describe("yeet publish scope helpers", () => {
-  it("refuses publish on main before any publish plan can push", () =>
+  it.effect("refuses publish on main before any publish plan can push", () =>
     Effect.gen(function* () {
       const mainContext = RepoRunContext.make({ ...context, branch: "main" });
       const error = yield* validatePublishBranchForTesting(
@@ -1955,7 +1955,8 @@ describe("yeet publish scope helpers", () => {
 
       expect(error.message).toContain('yeet publish is PR-branch-only; refusing to publish directly from "main"');
       expect(error.command).toBe("git switch -c <feature-branch> origin/main");
-    }));
+    })
+  );
 
   it("summarizes refused paths with counts, top-level entries, and capped examples", () => {
     const paths = pipe(
@@ -2090,7 +2091,7 @@ describe("yeet publish scope helpers", () => {
     ]);
   });
 
-  it("requires explicit --pr before start-pr-early can reach commit or push", () =>
+  it.effect("requires explicit --pr before start-pr-early can reach commit or push", () =>
     Effect.gen(function* () {
       const error = yield* validateMonitorGuards(
         context,
@@ -2113,9 +2114,10 @@ describe("yeet publish scope helpers", () => {
           startPrEarly: true,
         })
       );
-    }));
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
 
-  it("surfaces the clean-HEAD frozen-install repair hint and removes its temp worktree", () =>
+  it.effect("surfaces the clean-HEAD frozen-install repair hint and removes its temp worktree", () =>
     withTempDirectory((tmpDir) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -2144,7 +2146,8 @@ describe("yeet publish scope helpers", () => {
           "beep-yeet-head-install-"
         );
       })
-    ));
+    )
+  );
 
   it("builds a verdict with hint-derived repair commands and not-run lanes", () => {
     const proofStep = RepoPlanStep.make({
