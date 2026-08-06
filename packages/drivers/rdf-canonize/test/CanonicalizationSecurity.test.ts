@@ -82,7 +82,12 @@ afterEach(() => {
   canonizeMock.mockReset();
 });
 
-describe("Canonicalization security hardening", () => {
+// `vitest.shared.ts` sets `sequence.concurrent`, and every case here drives the
+// same module-level `canonizeMock`: they queue `mockRejectedValueOnce`, assert
+// call counts, and share one `afterEach` reset. Run concurrently they would
+// consume each other's queued rejections and assert against foreign call
+// history. That was latent while these cases returned an Effect nobody ran.
+describe("Canonicalization security hardening", { concurrent: false }, () => {
   it.effect("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
     Effect.gen(function* () {
       const actual = yield* Effect.promise(() =>

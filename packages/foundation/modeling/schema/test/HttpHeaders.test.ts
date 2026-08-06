@@ -193,10 +193,13 @@ describe("Secure header schemas", () => {
 
       // `createValue` is typed for the decoded option but decodes its argument
       // as if it were encoded, so with `reportURI` present no value satisfies
-      // both sides: `decoded` type-checks and fails at run time, `encoded` runs
-      // and fails to type-check. Pinned as failing so the contradiction stays
-      // visible; fixing it is a behaviour change tracked separately.
+      // both sides. Both halves are pinned, because either one alone reads as a
+      // quirk rather than a contradiction: the decoded form type-checks and
+      // fails at run time, the encoded form produces the right header but needs
+      // a cast to get past the signature. Fixing it is a behaviour change
+      // tracked in #599.
       expect(Exit.isFailure(runExit(ExpectCTHeader.createValue(decoded)))).toBe(true);
+      expect(runExit(ExpectCTHeader.createValue(encoded as never))).toStrictEqual(Exit.succeed(O.some(expected)));
     })
   );
 
@@ -405,7 +408,7 @@ describe("Secure header schemas", () => {
     })
   );
 
-  it.effect("formats permissions policy directives and rejects invalid directive names", () =>
+  it.effect("formats permissions policy directives and silently drops invalid directive names", () =>
     Effect.gen(function* () {
       const option = {
         directives: {
@@ -431,8 +434,8 @@ describe("Secure header schemas", () => {
       // that rejection is not what happens: `S.Record` drops keys its key schema
       // does not match, so an unrecognised directive is silently discarded and
       // the header collapses to `None` — a typo removes the security control
-      // rather than failing. Pinned to the real behaviour here; tightening the
-      // schema is a behaviour change this compiler bump should not smuggle in.
+      // rather than failing. Pinned to the real behaviour here; making it fail
+      // closed is tracked in #599.
       const invalid = runExit(
         PermissionsPolicyHeader.createValue({
           directives: {
