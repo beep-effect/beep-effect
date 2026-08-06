@@ -12,6 +12,7 @@
 
 import { CoreVocab, expand, expandOption, expandPredicate } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
+import { LanguageTag } from "@beep/rdf/Rdf";
 import { Effect, flow, MutableHashMap, MutableHashSet, pipe, SchemaAST } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -48,7 +49,7 @@ import type {
  * One-argument `make(...)` composers are unbound and expose no IRI/CURIE
  * projections; the fold requires a bound composer.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { make } from "@beep/identity"
  * import type { BoundComposer } from "@beep/ontology"
@@ -314,6 +315,7 @@ const isLiteralScalar = (value: unknown): value is string | number | boolean =>
 
 const isTypedLiteral = (value: unknown): value is TypedLiteral =>
   P.isObject(value) && P.hasProperty(value, "value") && isLiteralScalar(value.value);
+const decodeLanguageTag = S.decodeUnknownOption(LanguageTag);
 
 const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, literal: TypedLiteral) {
   const datatypeIri =
@@ -322,7 +324,7 @@ const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, lite
   return FactLiteral.make({
     value: literal.value,
     datatypeIri,
-    language: O.fromUndefinedOr(literal.language),
+    language: O.flatMap(O.fromUndefinedOr(literal.language), decodeLanguageTag),
   });
 });
 
@@ -851,7 +853,7 @@ const composerPrefix = (composer: BoundComposer): string =>
  * identity annotations, owned predicates default their local names from
  * struct keys, and borrowed predicates ride the `ontologyTerm` channel.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold } from "@beep/ontology"

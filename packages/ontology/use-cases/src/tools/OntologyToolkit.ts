@@ -31,7 +31,7 @@ const OptionalBaseIri = S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUti
 /**
  * Semantic rdfc-1.0 fingerprint used by stateless ontology CAS.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyFingerprint } from "@beep/ontology-use-cases/tools"
  * const fingerprint = OntologyFingerprint.make("0".repeat(64))
@@ -49,7 +49,7 @@ export const OntologyFingerprint = Sha256Hex.pipe(
 );
 
 /** Type for {@link OntologyFingerprint}.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyFingerprint } from "@beep/ontology-use-cases/tools"
  * const value: OntologyFingerprint = OntologyFingerprint.make("0".repeat(64))
@@ -61,7 +61,7 @@ export const OntologyFingerprint = Sha256Hex.pipe(
 export type OntologyFingerprint = typeof OntologyFingerprint.Type;
 
 /** Server-owned ontology tool ceilings.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ontologyToolBudgets } from "@beep/ontology-use-cases/tools"
  * console.log(ontologyToolBudgets.maxChangeOperations) // 256
@@ -81,7 +81,7 @@ export class OntologyToolBudgets extends S.Class<OntologyToolBudgets>($I`Ontolog
 ) {}
 
 /** Immutable ontology tool budget defaults.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ontologyToolBudgets } from "@beep/ontology-use-cases/tools"
  * console.log(ontologyToolBudgets.maxQueryResults) // 200
@@ -98,7 +98,7 @@ export const ontologyToolBudgets = OntologyToolBudgets.make({
 });
 
 /** Budget family refused by the toolkit.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyBudgetKind } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyBudgetKind.is.changeOperations("changeOperations"))
@@ -114,7 +114,7 @@ export const OntologyBudgetKind = LiteralKit([
 ]).pipe($I.annoteSchema("OntologyBudgetKind", { description: "Server-owned ontology budget family." }));
 
 /** Type for {@link OntologyBudgetKind}.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyBudgetKind } from "@beep/ontology-use-cases/tools"
  * const kind: OntologyBudgetKind = "queryResults"
@@ -126,7 +126,7 @@ export const OntologyBudgetKind = LiteralKit([
 export type OntologyBudgetKind = typeof OntologyBudgetKind.Type;
 
 /** Recoverable semantic CAS conflict.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyCasConflict } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyCasConflict.fields.currentFingerprint)
@@ -146,7 +146,7 @@ export class OntologyCasConflict extends TaggedErrorClass<OntologyCasConflict>($
 ) {}
 
 /** Recoverable static budget refusal.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyBudgetRefusal } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyBudgetRefusal.fields.limit)
@@ -169,7 +169,7 @@ export class OntologyBudgetRefusal extends TaggedErrorClass<OntologyBudgetRefusa
 ) {}
 
 /** Recoverable reasoner drift-cap refusal.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyReasonerDriftRefusal } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyReasonerDriftRefusal.fields.cap)
@@ -193,7 +193,7 @@ export class OntologyReasonerDriftRefusal extends TaggedErrorClass<OntologyReaso
 ) {}
 
 /** Explicit refusal for a change batch with no real delta.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyNoOpRefusal } from "@beep/ontology-use-cases/tools"
  * const error = OntologyNoOpRefusal.make({ guidance: "Refetch before proposing another change.", recoverable: true })
@@ -211,7 +211,7 @@ export class OntologyNoOpRefusal extends TaggedErrorClass<OntologyNoOpRefusal>($
 ) {}
 
 /** Recoverable refusal when authenticated caller identity is unavailable.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyActorIdentityRefusal } from "@beep/ontology-use-cases/tools"
  * const error = OntologyActorIdentityRefusal.make({ guidance: "Initialize an authenticated MCP session and retry.", recoverable: true })
@@ -231,7 +231,7 @@ export class OntologyActorIdentityRefusal extends TaggedErrorClass<OntologyActor
 ) {}
 
 /** Recoverable refusal returned when TierGate does not approve a mutation.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyTierGateRefusal } from "@beep/ontology-use-cases/tools"
  * const error = OntologyTierGateRefusal.make({ guidance: "Resolve the mutation tier and retry.", recoverable: true })
@@ -249,7 +249,7 @@ export class OntologyTierGateRefusal extends TaggedErrorClass<OntologyTierGateRe
 ) {}
 
 /** Typed execution failure from a real ontology layer.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyToolExecutionError } from "@beep/ontology-use-cases/tools"
  * const error = OntologyToolExecutionError.make({ operation: "open-inspect", message: "The file could not be opened.", recoverable: false })
@@ -267,7 +267,7 @@ export class OntologyToolExecutionError extends TaggedErrorClass<OntologyToolExe
 ) {}
 
 /** Returned ontology tool failure union.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyToolFailure } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyToolFailure)
@@ -286,7 +286,7 @@ export const OntologyToolFailure = S.Union([
 ]).pipe($I.annoteSchema("OntologyToolFailure", { description: "Failure returned by the ontology agent toolkit." }));
 
 /** Type for {@link OntologyToolFailure}.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyToolFailure } from "@beep/ontology-use-cases/tools"
  * const show = (failure: OntologyToolFailure) => failure._tag
@@ -298,7 +298,7 @@ export const OntologyToolFailure = S.Union([
 export type OntologyToolFailure = typeof OntologyToolFailure.Type;
 
 /** Open/inspect request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenInspectRequest } from "@beep/ontology-use-cases/tools"
  * console.log(OpenInspectRequest.fields.path)
@@ -312,7 +312,7 @@ export class OpenInspectRequest extends S.Class<OpenInspectRequest>($I`OpenInspe
 ) {}
 
 /** Open/inspect response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenInspectResponse } from "@beep/ontology-use-cases/tools"
  * console.log(OpenInspectResponse)
@@ -332,7 +332,7 @@ export class OpenInspectResponse extends S.Class<OpenInspectResponse>($I`OpenIns
 ) {}
 
 /** Snapshot/describe request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { SnapshotDescribeRequest } from "@beep/ontology-use-cases/tools"
  * console.log(SnapshotDescribeRequest.fields.path)
@@ -346,7 +346,7 @@ export class SnapshotDescribeRequest extends S.Class<SnapshotDescribeRequest>($I
 ) {}
 
 /** Snapshot/describe response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { SnapshotDescribeResponse } from "@beep/ontology-use-cases/tools"
  * console.log(SnapshotDescribeResponse)
@@ -360,7 +360,7 @@ export class SnapshotDescribeResponse extends S.Class<SnapshotDescribeResponse>(
 ) {}
 
 /** Search request with no caller-owned result ceiling.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySearchRequest } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySearchRequest.fields.query)
@@ -383,7 +383,7 @@ export class OntologySearchRequest extends S.Class<OntologySearchRequest>($I`Ont
 ) {}
 
 /** Bounded ontology search response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySearchResponse } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySearchResponse)
@@ -402,7 +402,7 @@ export class OntologySearchResponse extends S.Class<OntologySearchResponse>($I`O
 ) {}
 
 /** SPARQL query request with server-owned safeguards.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySparqlQueryRequest } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySparqlQueryRequest.fields.profile)
@@ -426,7 +426,7 @@ export class OntologySparqlQueryRequest extends S.Class<OntologySparqlQueryReque
 ) {}
 
 /** SPARQL query response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySparqlQueryResponse } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySparqlQueryResponse)
@@ -442,7 +442,7 @@ export class OntologySparqlQueryResponse extends S.Class<OntologySparqlQueryResp
 ) {}
 
 /** CAS-safe typed change batch request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ProposeChangeBatchRequest } from "@beep/ontology-use-cases/tools"
  * console.log(ProposeChangeBatchRequest)
@@ -462,7 +462,7 @@ export class ProposeChangeBatchRequest extends S.Class<ProposeChangeBatchRequest
 ) {}
 
 /** CAS-safe typed change batch response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ProposeChangeBatchResponse } from "@beep/ontology-use-cases/tools"
  * console.log(ProposeChangeBatchResponse)
@@ -484,7 +484,7 @@ export class ProposeChangeBatchResponse extends S.Class<ProposeChangeBatchRespon
 ) {}
 
 /** SHACL validation request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ValidateOntologyRequest } from "@beep/ontology-use-cases/tools"
  * console.log(ValidateOntologyRequest.fields.path)
@@ -506,7 +506,7 @@ export class ValidateOntologyRequest extends S.Class<ValidateOntologyRequest>($I
 ) {}
 
 /** SHACL validation response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ValidateOntologyResponse } from "@beep/ontology-use-cases/tools"
  * console.log(ValidateOntologyResponse)
@@ -522,7 +522,7 @@ export class ValidateOntologyResponse extends S.Class<ValidateOntologyResponse>(
 ) {}
 
 /** Verified repair request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { RepairOntologyRequest } from "@beep/ontology-use-cases/tools"
  * console.log(RepairOntologyRequest)
@@ -544,7 +544,7 @@ export class RepairOntologyRequest extends S.Class<RepairOntologyRequest>($I`Rep
 ) {}
 
 /** Verified repair response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { RepairOntologyResponse } from "@beep/ontology-use-cases/tools"
  * console.log(RepairOntologyResponse)
@@ -558,7 +558,7 @@ export class RepairOntologyResponse extends S.Class<RepairOntologyResponse>($I`R
 ) {}
 
 /** Provenance sidecar export request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExportProvenanceRequest } from "@beep/ontology-use-cases/tools"
  * console.log(ExportProvenanceRequest.fields.provPath)
@@ -579,7 +579,7 @@ export class ExportProvenanceRequest extends S.Class<ExportProvenanceRequest>($I
 ) {}
 
 /** Provenance sidecar export response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExportProvenanceResponse } from "@beep/ontology-use-cases/tools"
  * console.log(ExportProvenanceResponse)
@@ -593,11 +593,13 @@ export class ExportProvenanceResponse extends S.Class<ExportProvenanceResponse>(
 ) {}
 
 /** Provenance publication request.
- * @remarks `destination` is supplied by the caller, which is what makes this
+ * **Details**
+ *
+ * `destination` is supplied by the caller, which is what makes this
  * tool an egress primitive rather than a workspace one. Nothing here validates
  * it: the governed egress boundary owns that decision, so a destination the
  * operator never allowlisted is refused no matter what an agent asks for.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools"
  * console.log(PublishProvenanceRequest)
@@ -607,7 +609,14 @@ export class ExportProvenanceResponse extends S.Class<ExportProvenanceResponse>(
  */
 export class PublishProvenanceRequest extends S.Class<PublishProvenanceRequest>($I`PublishProvenanceRequest`)(
   {
-    provPath: OntologyFilePath,
+    provPath: OntologyFilePath.check(
+      S.isPattern(/\.prov\.ttl$/u, {
+        identifier: "OntologyPublishProvenanceFilePath",
+        title: "Published ontology provenance sidecar path",
+        description: "A generated ontology provenance sidecar ending in .prov.ttl.",
+        message: "Expected a .prov.ttl provenance sidecar path",
+      })
+    ),
     destination: S.NonEmptyString.annotateKey({
       description: "Absolute URL to publish to; authorized by the governed egress allowlist, never by this schema.",
     }),
@@ -618,7 +627,7 @@ export class PublishProvenanceRequest extends S.Class<PublishProvenanceRequest>(
 ) {}
 
 /** Provenance publication response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PublishProvenanceResponse } from "@beep/ontology-use-cases/tools"
  * console.log(PublishProvenanceResponse)
@@ -632,7 +641,7 @@ export class PublishProvenanceResponse extends S.Class<PublishProvenanceResponse
 ) {}
 
 /** Capability metadata request.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { CapabilityMetadataRequest } from "@beep/ontology-use-cases/tools"
  * console.log(CapabilityMetadataRequest.make({}))
@@ -646,7 +655,7 @@ export class CapabilityMetadataRequest extends S.Class<CapabilityMetadataRequest
 ) {}
 
 /** One advertised ontology tool capability.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyToolCapability } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyToolCapability.make({ name: "ontology-search", mutating: false }).name)
@@ -660,7 +669,7 @@ export class OntologyToolCapability extends S.Class<OntologyToolCapability>($I`O
 ) {}
 
 /** Capability metadata response.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { CapabilityMetadataResponse } from "@beep/ontology-use-cases/tools"
  * console.log(CapabilityMetadataResponse)
@@ -693,7 +702,7 @@ const makeTool = <Name extends string, Parameters extends S.Top, Success extends
   );
 
 /** Open and inspect tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenInspectTool } from "@beep/ontology-use-cases/tools"
  * console.log(OpenInspectTool.name)
@@ -709,7 +718,7 @@ export const OpenInspectTool = makeTool(
   false
 );
 /** Snapshot and describe tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { SnapshotDescribeTool } from "@beep/ontology-use-cases/tools"
  * console.log(SnapshotDescribeTool.name)
@@ -725,7 +734,7 @@ export const SnapshotDescribeTool = makeTool(
   false
 );
 /** Search tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySearchTool } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySearchTool.name)
@@ -741,7 +750,7 @@ export const OntologySearchTool = makeTool(
   false
 );
 /** SPARQL tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologySparqlQueryTool } from "@beep/ontology-use-cases/tools"
  * console.log(OntologySparqlQueryTool.name)
@@ -757,7 +766,7 @@ export const OntologySparqlQueryTool = makeTool(
   false
 );
 /** Change-batch tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ProposeChangeBatchTool } from "@beep/ontology-use-cases/tools"
  * console.log(ProposeChangeBatchTool.name)
@@ -773,7 +782,7 @@ export const ProposeChangeBatchTool = makeTool(
   true
 );
 /** Validation tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ValidateOntologyTool } from "@beep/ontology-use-cases/tools"
  * console.log(ValidateOntologyTool.name)
@@ -789,7 +798,7 @@ export const ValidateOntologyTool = makeTool(
   false
 );
 /** Repair tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { RepairOntologyTool } from "@beep/ontology-use-cases/tools"
  * console.log(RepairOntologyTool.name)
@@ -805,7 +814,7 @@ export const RepairOntologyTool = makeTool(
   true
 );
 /** Provenance export tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { ExportProvenanceTool } from "@beep/ontology-use-cases/tools"
  * console.log(ExportProvenanceTool.name)
@@ -821,12 +830,14 @@ export const ExportProvenanceTool = makeTool(
   true
 );
 /** Provenance publication tool declaration.
- * @remarks Registered only when the governed egress allowlist is non-empty —
+ * **Details**
+ *
+ * Registered only when the governed egress allowlist is non-empty —
  * the tool and its control ship together, and an empty allowlist means the tool
  * does not appear in `tools/list` at all. Its outbound request must travel the
  * ambient `HttpClient`, never a self-provided one, or the governed egress
  * `Fetch` will not apply to it.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PublishProvenanceTool } from "@beep/ontology-use-cases/tools"
  * console.log(PublishProvenanceTool.name)
@@ -842,7 +853,7 @@ export const PublishProvenanceTool = makeTool(
   true
 );
 /** Capability metadata tool declaration.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { CapabilityMetadataTool } from "@beep/ontology-use-cases/tools"
  * console.log(CapabilityMetadataTool.name)
@@ -859,7 +870,7 @@ export const CapabilityMetadataTool = makeTool(
 );
 
 /** Curated nine-tool ontology agent toolkit.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyToolkit } from "@beep/ontology-use-cases/tools"
  * console.log(Object.keys(OntologyToolkit.tools).length) // 9
@@ -880,7 +891,7 @@ export const OntologyToolkit = Toolkit.make(
 );
 
 /** Read-only ontology toolkit registered independently of mutation enablement.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyReadOnlyToolkit } from "@beep/ontology-use-cases/tools"
  * console.log(Object.keys(OntologyReadOnlyToolkit.tools).includes("ontology_sparql_query"))
@@ -898,7 +909,7 @@ export const OntologyReadOnlyToolkit = Toolkit.make(
 );
 
 /** Mutation toolkit registered only when the sidecar mutation feature gate is enabled.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyMutationToolkit } from "@beep/ontology-use-cases/tools"
  * console.log(Object.keys(OntologyMutationToolkit.tools).includes("ontology_repair"))
@@ -909,11 +920,13 @@ export const OntologyReadOnlyToolkit = Toolkit.make(
 export const OntologyMutationToolkit = Toolkit.make(ProposeChangeBatchTool, RepairOntologyTool, ExportProvenanceTool);
 
 /** Egress toolkit registered only when the governed destination allowlist is non-empty.
- * @remarks Separate from {@link OntologyMutationToolkit} because it is gated on
+ * **Details**
+ *
+ * Separate from {@link OntologyMutationToolkit} because it is gated on
  * a different condition: mutation registration turns on workspace writes, while
  * this turns on outbound publication, and an operator may want the first
  * without the second.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OntologyPublishToolkit } from "@beep/ontology-use-cases/tools"
  * console.log(Object.keys(OntologyPublishToolkit.tools).includes("ontology_publish_provenance"))
@@ -924,7 +937,7 @@ export const OntologyMutationToolkit = Toolkit.make(ProposeChangeBatchTool, Repa
 export const OntologyPublishToolkit = Toolkit.make(PublishProvenanceTool);
 
 /** Type for {@link OntologyToolkit}.
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OntologyToolkit } from "@beep/ontology-use-cases/tools"
  * const accept = (toolkit: OntologyToolkit) => toolkit

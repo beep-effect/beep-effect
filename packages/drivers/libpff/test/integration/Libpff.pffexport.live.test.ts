@@ -40,6 +40,7 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const stat = yield* fs.stat(pstPath);
+  const sourceBytes = yield* fs.readFile(pstPath);
   const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-" });
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
@@ -59,6 +60,7 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
       name: path.basename(pstPath),
       relativePath,
       sizeBytes: NonNegativeInt.make(Number(stat.size)),
+      bytes: sourceBytes,
     }),
   });
 

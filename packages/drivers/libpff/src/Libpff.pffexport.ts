@@ -92,7 +92,7 @@ const bodyContentTypeFor = Match.type<string>().pipe(
 /**
  * pffexport item export mode.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportMode } from "@beep/libpff"
  * console.log(PffexportMode)
@@ -111,7 +111,7 @@ export const PffexportMode = PffexportModeBase.pipe(
 /**
  * Type for {@link PffexportMode}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportMode } from "@beep/libpff"
  *
@@ -127,7 +127,7 @@ export type PffexportMode = typeof PffexportMode.Type;
 /**
  * pffexport message body export format.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportFormat } from "@beep/libpff"
  * console.log(PffexportFormat)
@@ -146,7 +146,7 @@ export const PffexportFormat = PffexportFormatBase.pipe(
 /**
  * Type for {@link PffexportFormat}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportFormat } from "@beep/libpff"
  *
@@ -162,7 +162,7 @@ export type PffexportFormat = typeof PffexportFormat.Type;
 /**
  * Policy applied when a prior export already exists for the same source.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportExistingExportPolicy } from "@beep/libpff"
  *
@@ -183,7 +183,7 @@ export const PffexportExistingExportPolicy = PffexportExistingExportPolicyBase.p
 /**
  * Type for {@link PffexportExistingExportPolicy}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportExistingExportPolicy } from "@beep/libpff"
  *
@@ -199,7 +199,7 @@ export type PffexportExistingExportPolicy = typeof PffexportExistingExportPolicy
 /**
  * Configuration for the pffexport subprocess engine.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { PffexportEngineConfig } from "@beep/libpff"
  *
@@ -288,8 +288,12 @@ interface ExportedItemDirectory {
 }
 
 interface EmlBudgetState {
-  budgetExhausted: boolean;
   materializedBytes: number;
+}
+
+interface ResolvedExportedMessage {
+  readonly emlRef: O.Option<ArtifactReference>;
+  readonly record: PffexportMessageRecord;
 }
 
 const itemFolderPath = (directoryPath: string, treeRootNames: ReadonlyArray<string>): string => {
@@ -418,6 +422,7 @@ const nonPortablePathWarning = (sizeBytes: number): string =>
 
 const budgetSkippedWarning =
   "Skipped EML assembly for one exported item because the materialization budget was exceeded.";
+const defaultMaxMaterializedBytes = 64 * 1024 * 1024;
 
 const itemRecordSkippedWarning = "Skipped one exported item record with a non-portable path.";
 
@@ -437,7 +442,7 @@ const claimReleaseFailedWarning =
  * requires `effect/Crypto` so child artifact ids can be derived through the
  * shared SHA-backed artifact id schema.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff"
  * import { Effect } from "effect"
@@ -765,15 +770,13 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     const emlLowerBoundBytes =
       O.match(item.body, { onNone: () => 0, onSome: (entry) => entry.ref.sizeBytes ?? 0 }) +
       A.reduce(item.attachments, 0, (total, entry) => total + (entry.ref.sizeBytes ?? 0));
-    if (state.budgetExhausted || O.exists(budget, (limit) => state.materializedBytes + emlLowerBoundBytes > limit)) {
-      state.budgetExhausted = true;
+    if (O.exists(budget, (limit) => state.materializedBytes + emlLowerBoundBytes > limit)) {
       warnings.push(budgetSkippedWarning);
       return O.none<ArtifactReference>();
     }
 
     const emlBytes = yield* assembleItemEmlBytes(operation, item, outlookHeaders);
     if (O.exists(budget, (limit) => state.materializedBytes + emlBytes.length > limit)) {
-      state.budgetExhausted = true;
       warnings.push(budgetSkippedWarning);
       return O.none<ArtifactReference>();
     }
@@ -837,14 +840,51 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       );
   });
 
+  const resolveExportedMessage = Effect.fn("Libpff.pffexport.resolveExportedMessage")(function* (input: {
+    readonly budget: O.Option<number>;
+    readonly entryPathIndex: Readonly<Record<string, boolean>>;
+    readonly item: ExportedItemDirectory;
+    readonly operation: ExportArchiveOperation;
+    readonly state: EmlBudgetState;
+    readonly warnings: Array<string>;
+  }): Effect.fn.Return<O.Option<ResolvedExportedMessage>, LibpffError, Crypto.Crypto> {
+    const outlookHeaders = parseOutlookHeaders(yield* readItemText(input.item.outlookHeaders.absolutePath));
+    const folderPath = yield* decodeChildPath(input.item.folderPath);
+    const messagePath = yield* decodeChildPath(input.item.directoryPath);
+    if (O.isNone(folderPath) || O.isNone(messagePath)) {
+      input.warnings.push(itemRecordSkippedWarning);
+      return O.none<ResolvedExportedMessage>();
+    }
+
+    const emlRef = yield* resolveItemEml(
+      input.operation,
+      input.item,
+      outlookHeaders,
+      input.entryPathIndex,
+      input.budget,
+      input.state,
+      input.warnings
+    );
+    return O.some({
+      emlRef,
+      record: PffexportMessageRecord.make({
+        attachments: A.map(input.item.attachments, (entry) => entry.ref),
+        folderPath: folderPath.value,
+        headers: outlookHeaders,
+        messagePath: messagePath.value,
+        ...O.getSomesStruct({ body: O.map(input.item.body, (entry) => entry.ref), eml: emlRef }),
+      }),
+    });
+  });
+
   const performExport = Effect.fn("LibpffPffexportEngine.performExport")(function* (
     operation: ExportArchiveOperation,
+    sourcePath: string,
     targetBase: string,
     claimPath: string,
     messagesJsonlName: string,
     messagesJsonlPath: string
   ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
-    const sourcePath = operation.source.locator.value;
     const treeSuffixes = targetTreeSuffixesFor(exportMode);
     const treeRootNames = A.map(treeSuffixes, (suffix) => `${operation.source.id}${suffix}`);
 
@@ -861,32 +901,18 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       entryPathIndex[entry.ref.relativePath] = true;
     }
 
-    const budget = O.fromUndefinedOr(operation.maxMaterializedBytes);
-    const state: EmlBudgetState = { budgetExhausted: false, materializedBytes: 0 };
+    const budget = O.some(operation.maxMaterializedBytes ?? defaultMaxMaterializedBytes);
+    const state: EmlBudgetState = { materializedBytes: 0 };
     const records: Array<PffexportMessageRecord> = [];
 
-    for (const item of classifyExportedItems(entries, treeRootNames)) {
-      const outlookHeaders = parseOutlookHeaders(yield* readItemText(item.outlookHeaders.absolutePath));
-      const folderPath = yield* decodeChildPath(item.folderPath);
-      const messagePath = yield* decodeChildPath(item.directoryPath);
-      if (O.isNone(folderPath) || O.isNone(messagePath)) {
-        warnings.push(itemRecordSkippedWarning);
-        continue;
+    const resolvedMessages = yield* Effect.forEach(classifyExportedItems(entries, treeRootNames), (item) =>
+      resolveExportedMessage({ budget, entryPathIndex, item, operation, state, warnings })
+    );
+    for (const resolved of A.getSomes(resolvedMessages)) {
+      if (O.isSome(resolved.emlRef)) {
+        children.push(resolved.emlRef.value);
       }
-
-      const emlRef = yield* resolveItemEml(operation, item, outlookHeaders, entryPathIndex, budget, state, warnings);
-      if (O.isSome(emlRef)) {
-        children.push(emlRef.value);
-      }
-      records.push(
-        PffexportMessageRecord.make({
-          attachments: A.map(item.attachments, (entry) => entry.ref),
-          folderPath: folderPath.value,
-          headers: outlookHeaders,
-          messagePath: messagePath.value,
-          ...O.getSomesStruct({ body: O.map(item.body, (entry) => entry.ref), eml: emlRef }),
-        })
-      );
+      records.push(resolved.record);
     }
 
     const jsonlRef = yield* writeMessagesJsonl(operation, records, messagesJsonlName, messagesJsonlPath, warnings);
@@ -916,7 +942,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   });
 
   const exportArchiveImpl = Effect.fn("LibpffPffexportEngine.exportArchiveImpl")(function* (
-    operation: ExportArchiveOperation
+    operation: ExportArchiveOperation,
+    sourcePath: string
   ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
     const targetBase = path.join(config.exportRoot, operation.source.id);
     const claimPath = `${targetBase}${PFFEXPORT_CLAIM_SUFFIX}`;
@@ -928,9 +955,14 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
 
     yield* acquireExportClaim(claimPath);
-    return yield* performExport(operation, targetBase, claimPath, messagesJsonlName, messagesJsonlPath).pipe(
-      Effect.ensuring(fs.remove(claimPath, { recursive: true }).pipe(Effect.ignore))
-    );
+    return yield* performExport(
+      operation,
+      sourcePath,
+      targetBase,
+      claimPath,
+      messagesJsonlName,
+      messagesJsonlPath
+    ).pipe(Effect.ensuring(fs.remove(claimPath, { recursive: true }).pipe(Effect.ignore)));
   });
 
   const engine: FileProcessingEngineShape = {
@@ -947,19 +979,29 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         });
       }
 
-      if (operation.source.locator.kind !== "file") {
+      const bytes = operation.source.bytes;
+      if (bytes === undefined) {
         return yield* FileProcessingOperationError.fromReason("archive-export-failed", {
           artifactId: operation.source.id,
           engine: LibpffFileProcessingEngineDescriptor.name,
           format: operation.format,
-          message: "pffexport requires a file locator for the source archive.",
+          message: "pffexport requires caller-supplied source bytes.",
           operationId: operation.operationId,
         });
       }
 
-      return yield* exportArchiveImpl(operation).pipe(
-        Effect.mapError((error) => libpffOperationError(operation, error))
-      );
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const directory = yield* fs
+            .makeTempDirectoryScoped({ prefix: "beep-pffexport-source-" })
+            .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "source snapshot directory failed" })));
+          const sourcePath = path.join(directory, `source.${operation.source.extension}`);
+          yield* fs
+            .writeFile(sourcePath, bytes, { flag: "wx", mode: 0o600 })
+            .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "source snapshot write failed" })));
+          return yield* exportArchiveImpl(operation, sourcePath);
+        })
+      ).pipe(Effect.mapError((error) => libpffOperationError(operation, error)));
     }),
     extract: Effect.fn("LibpffPffexportEngine.extract")(function* (operation: ExtractFileOperation) {
       return yield* FileProcessingOperationError.fromReason("unsupported-file-format", {

@@ -68,7 +68,7 @@ const OpenclawDiagnosticTextTarget = S.Trimmed.check(
 /**
  * Process exit status accepted from OpenClaw and systemctl invocations.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawExitCode } from "@beep/openclaw/Openclaw.models"
  *
@@ -89,7 +89,7 @@ export const OpenclawExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 2
 /**
  * Runtime type for {@link OpenclawExitCode}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawExitCode } from "@beep/openclaw/Openclaw.models"
  *
@@ -109,7 +109,7 @@ export type OpenclawExitCode = typeof OpenclawExitCode.Type;
  * diagnostics never smuggle full process output (or secrets embedded in it)
  * into errors or reports.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
  *
@@ -137,7 +137,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
 /**
  * Runtime type for {@link OpenclawDiagnosticText}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
  *
@@ -156,7 +156,7 @@ export type OpenclawDiagnosticText = typeof OpenclawDiagnosticText.Type;
  * The environment is an execution boundary only — it can carry the gateway
  * token and must never be rendered into diagnostics, errors, or spans.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -185,7 +185,10 @@ export class OpenclawProcessRequest extends S.Class<OpenclawProcessRequest>($I`O
       description: "Executable command or path used by the child process.",
     }),
     stdin: OpenclawProcessStdinBase.pipe(SchemaUtils.withKeyDefaults("ignore")).annotateKey({
-      description: "Standard-input policy; driver processes never read stdin.",
+      description: "Standard-input policy; defaults to ignored unless a private stdin payload is present.",
+    }),
+    stdinText: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Private standard-input payload supplied to the child without placing it in argv.",
     }),
     timeoutMs: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional per-invocation timeout in milliseconds.",
@@ -199,7 +202,7 @@ export class OpenclawProcessRequest extends S.Class<OpenclawProcessRequest>($I`O
 /**
  * Process output captured from an OpenClaw or systemctl command.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  *
@@ -230,7 +233,7 @@ export class OpenclawProcessResult extends S.Class<OpenclawProcessResult>($I`Ope
 /**
  * Version facts parsed from `openclaw --version` output.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawVersionInfo } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -262,7 +265,7 @@ export class OpenclawVersionInfo extends S.Class<OpenclawVersionInfo>($I`Opencla
   /**
    * Parse `openclaw --version` stdout (e.g. `OpenClaw 2026.7.1-2 (0790d9f)`).
    *
-   * @example
+   * ## Example: Usage
    * ```ts
    * import { OpenclawVersionInfo } from "@beep/openclaw/Openclaw.models"
    * import * as O from "effect/Option"
@@ -290,7 +293,7 @@ export class OpenclawVersionInfo extends S.Class<OpenclawVersionInfo>($I`Opencla
 /**
  * Successful `openclaw config validate` outcome.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawConfigValid } from "@beep/openclaw/Openclaw.models"
  *
@@ -321,7 +324,7 @@ export class OpenclawConfigValid extends S.Class<OpenclawConfigValid>($I`Opencla
  * A nonzero validate exit is a decodable result — negative fixtures must be
  * assertable — not an error-channel failure.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawConfigInvalid } from "@beep/openclaw/Openclaw.models"
  *
@@ -356,7 +359,7 @@ export class OpenclawConfigInvalid extends S.Class<OpenclawConfigInvalid>($I`Ope
 /**
  * Result of running `openclaw config validate`.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawConfigValid, OpenclawConfigValidation } from "@beep/openclaw/Openclaw.models"
  * import * as S from "effect/Schema"
@@ -378,7 +381,7 @@ export const OpenclawConfigValidation = S.Union([OpenclawConfigValid, OpenclawCo
 /**
  * Runtime type for {@link OpenclawConfigValidation}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawConfigValidation } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawConfigValid } from "@beep/openclaw/Openclaw.models"
@@ -398,7 +401,7 @@ export type OpenclawConfigValidation = typeof OpenclawConfigValidation.Type;
  * Doctor may exit nonzero with findings; that is a report, not a driver
  * error.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawDoctorReport } from "@beep/openclaw/Openclaw.models"
  *
@@ -429,7 +432,7 @@ export class OpenclawDoctorReport extends S.Class<OpenclawDoctorReport>($I`Openc
  * The pinned binary prints exactly `{ "ok": true, "warningCount": 0 }` on
  * success.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretsReloadOutput } from "@beep/openclaw/Openclaw.models"
  * import { Result } from "effect"
@@ -461,7 +464,7 @@ export class OpenclawSecretsReloadOutput extends S.Class<OpenclawSecretsReloadOu
 /**
  * Successful secrets reload outcome.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { OpenclawSecretsReloaded } from "@beep/openclaw/Openclaw.models"
@@ -494,7 +497,7 @@ export class OpenclawSecretsReloaded extends S.Class<OpenclawSecretsReloaded>($I
  * `Gateway did not respond`); the causal `SECRETS_RELOADER_DEGRADED` detail
  * lands exclusively in the gateway log, never here.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretsReloadDegraded } from "@beep/openclaw/Openclaw.models"
  *
@@ -531,7 +534,7 @@ export class OpenclawSecretsReloadDegraded extends S.Class<OpenclawSecretsReload
 /**
  * Result of running `openclaw secrets reload --json`.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { OpenclawSecretsReload, OpenclawSecretsReloaded } from "@beep/openclaw/Openclaw.models"
@@ -554,7 +557,7 @@ export const OpenclawSecretsReload = S.Union([OpenclawSecretsReloaded, OpenclawS
 /**
  * Runtime type for {@link OpenclawSecretsReload}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import type { OpenclawSecretsReload } from "@beep/openclaw/Openclaw.models"
@@ -575,7 +578,7 @@ export type OpenclawSecretsReload = typeof OpenclawSecretsReload.Type;
 /**
  * Per-channel health facts projected from the gateway health document.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawChannelHealth } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -613,7 +616,7 @@ export class OpenclawChannelHealth extends S.Class<OpenclawChannelHealth>($I`Ope
 /**
  * Normalized projection of `openclaw gateway call health --json`.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { OpenclawGatewayHealth } from "@beep/openclaw/Openclaw.models"
@@ -652,7 +655,7 @@ export class OpenclawGatewayHealth extends S.Class<OpenclawGatewayHealth>($I`Ope
 /**
  * Per-account status projected from `openclaw channels status --probe --json`.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawChannelAccountStatus } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -710,7 +713,7 @@ export class OpenclawChannelAccountStatus extends S.Class<OpenclawChannelAccount
 /**
  * Completed agent turn projected from `openclaw agent --json` output.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawAgentTurn } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -759,7 +762,7 @@ export class OpenclawAgentTurn extends S.Class<OpenclawAgentTurn>($I`OpenclawAge
 /**
  * One entry from the pinned `skills list --json` inventory.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSkillInventoryEntry } from "@beep/openclaw"
  *
@@ -790,7 +793,7 @@ export class OpenclawSkillInventoryEntry extends S.Class<OpenclawSkillInventoryE
 /**
  * Pinned `skills list --json` output projection.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawAbsolutePath, OpenclawSkillInventory, OpenclawSkillInventoryEntry } from "@beep/openclaw"
  *
@@ -824,7 +827,7 @@ export class OpenclawSkillInventory extends S.Class<OpenclawSkillInventory>($I`O
 /**
  * Nested Telegram receipt payload emitted by the pinned message CLI.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawTelegramSendPayload } from "@beep/openclaw"
  *
@@ -851,7 +854,7 @@ export class OpenclawTelegramSendPayload extends S.Class<OpenclawTelegramSendPay
 /**
  * Sanitized successful `message send --json` result.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawTelegramSendPayload, OpenclawTelegramSendResult } from "@beep/openclaw"
  *
@@ -889,7 +892,7 @@ export class OpenclawTelegramSendResult extends S.Class<OpenclawTelegramSendResu
 /**
  * One OpenAI-compatible model entry returned by a local `/models` endpoint.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLocalModelEntry } from "@beep/openclaw"
  *
@@ -910,7 +913,7 @@ export class OpenclawLocalModelEntry extends S.Class<OpenclawLocalModelEntry>($I
 /**
  * OpenAI-compatible local `/models` response projection.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLocalModelEntry, OpenclawLocalModels } from "@beep/openclaw"
  *
@@ -933,7 +936,7 @@ export class OpenclawLocalModels extends S.Class<OpenclawLocalModels>($I`Opencla
 /**
  * Acceptance sequence step names.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
  *
@@ -954,7 +957,7 @@ export const OpenclawLiveAcceptanceStep = OpenclawLiveAcceptanceStepBase.pipe(
 /**
  * Runtime type for {@link OpenclawLiveAcceptanceStep}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
  *
@@ -970,7 +973,7 @@ export type OpenclawLiveAcceptanceStep = typeof OpenclawLiveAcceptanceStep.Type;
 /**
  * Fully decoded inputs consumed by the pure P3 acceptance coordinator.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import {
@@ -1050,7 +1053,7 @@ export class OpenclawLiveAcceptanceInput extends S.Class<OpenclawLiveAcceptanceI
 /**
  * Successful result from the pure P3 acceptance coordinator.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLiveAcceptancePassed } from "@beep/openclaw"
  *
@@ -1079,7 +1082,7 @@ export class OpenclawLiveAcceptancePassed extends S.Class<OpenclawLiveAcceptance
 /**
  * Failed result from the pure P3 acceptance coordinator.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLiveAcceptanceFailed } from "@beep/openclaw"
  *
@@ -1110,7 +1113,7 @@ export class OpenclawLiveAcceptanceFailed extends S.Class<OpenclawLiveAcceptance
 /**
  * Tagged result returned by the pure P3 acceptance coordinator.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawLiveAcceptancePassed, OpenclawLiveAcceptanceResult } from "@beep/openclaw"
  * import * as S from "effect/Schema"
@@ -1135,7 +1138,7 @@ export const OpenclawLiveAcceptanceResult = S.Union([OpenclawLiveAcceptancePasse
 /**
  * Runtime type for {@link OpenclawLiveAcceptanceResult}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawLiveAcceptanceResult } from "@beep/openclaw"
  * import { OpenclawLiveAcceptancePassed } from "@beep/openclaw"
@@ -1158,7 +1161,7 @@ export type OpenclawLiveAcceptanceResult = typeof OpenclawLiveAcceptanceResult.T
  * Carries hermetic-environment inputs (paths, nix mode) and gateway
  * addressing. Gateway tokens travel only through `extraEnv`, never argv.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawInvocationContext } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -1208,7 +1211,7 @@ export class OpenclawInvocationContext extends S.Class<OpenclawInvocationContext
 /**
  * systemd unit active states this driver recognizes.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSystemdActiveState } from "@beep/openclaw/Openclaw.models"
  *
@@ -1230,7 +1233,7 @@ export const OpenclawSystemdActiveState = OpenclawSystemdActiveStateBase.pipe(
 /**
  * Runtime type for {@link OpenclawSystemdActiveState}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawSystemdActiveState } from "@beep/openclaw/Openclaw.models"
  *
@@ -1249,7 +1252,7 @@ export type OpenclawSystemdActiveState = typeof OpenclawSystemdActiveState.Type;
  * `activeState` keeps the raw reported string; {@link OpenclawSystemdUnitState.knownActiveState}
  * derives the recognized literal when the raw value is in the known domain.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSystemdUnitState } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -1293,7 +1296,7 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
 /**
  * HTTP probe verdicts for gateway liveness and readiness endpoints.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawHttpProbeStatus } from "@beep/openclaw/Openclaw.models"
  *
@@ -1313,7 +1316,7 @@ export const OpenclawHttpProbeStatus = OpenclawHttpProbeStatusBase.pipe(
 /**
  * Runtime type for {@link OpenclawHttpProbeStatus}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawHttpProbeStatus } from "@beep/openclaw/Openclaw.models"
  *
@@ -1332,7 +1335,7 @@ export type OpenclawHttpProbeStatus = typeof OpenclawHttpProbeStatus.Type;
  * Any 2xx response is `healthy`; transport failures and timeouts collapse to
  * `unreachable` — the probe itself never fails.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawHttpProbe } from "@beep/openclaw/Openclaw.models"
  * import * as O from "effect/Option"
@@ -1368,7 +1371,7 @@ export class OpenclawHttpProbe extends S.Class<OpenclawHttpProbe>($I`OpenclawHtt
 /**
  * Reasons a declared extension surface is considered lossy in a schema export.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"
  *
@@ -1388,7 +1391,7 @@ export const OpenclawSchemaPlaceholderReason = OpenclawSchemaPlaceholderReasonBa
 /**
  * Runtime type for {@link OpenclawSchemaPlaceholderReason}.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import type { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"
  *
@@ -1408,7 +1411,7 @@ export type OpenclawSchemaPlaceholderReason = typeof OpenclawSchemaPlaceholderRe
  * JSON schema is missing a declared surface or collapses it to an
  * `additionalProperties: true` placeholder.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawSchemaPlaceholderFinding } from "@beep/openclaw/Openclaw.models"
  *
@@ -1438,7 +1441,7 @@ export class OpenclawSchemaPlaceholderFinding extends S.Class<OpenclawSchemaPlac
 /**
  * One pinned Node/OpenClaw/adapter/fixture compatibility set.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawCompatibilitySet } from "@beep/openclaw/Openclaw.models"
  *

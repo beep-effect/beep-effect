@@ -14,7 +14,7 @@ import {
   make,
 } from "../../codemode/Codemode.service.ts";
 import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
-import { SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
+import { copyOut, CopyOutMode, SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
 import {
   Binding,
   CodeModeGenerator,
@@ -75,6 +75,12 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
 };
 
 describe("CodeMode schema laws", () => {
+  it("rejects sparse arrays whose declared length exceeds the result boundary", () => {
+    const sparse = new Array(100_001);
+
+    expect(() => copyOut(sparse, CopyOutMode.Enum.json)).toThrow(/100000-item boundary limit/u);
+  });
+
   it("derives warning-free arbitraries for every checked string domain", () => {
     assertSchemaArbitraryRoundTrip(IdentifierSegment);
     assertSchemaArbitraryRoundTrip(ApiPath);

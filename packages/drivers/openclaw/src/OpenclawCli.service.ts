@@ -387,7 +387,7 @@ const toChannelAccountStatus = (entry: unknown) =>
  * execution; tests inject deterministic runners that capture the request and
  * return canned {@link OpenclawProcessResult} values.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service"
@@ -417,7 +417,6 @@ interface OpenclawCliShape {
       readonly agentId: string;
       readonly local?: boolean | undefined;
       readonly message: string;
-      readonly sessionKey: string;
       readonly timeoutSeconds: number;
     }
   ) => Effect.Effect<OpenclawAgentTurn, OpenclawCliError>;
@@ -475,13 +474,15 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     ctx: OpenclawInvocationContext,
     subcommand: string,
     args: ReadonlyArray<string>,
-    timeout: Duration.Duration
+    timeout: Duration.Duration,
+    stdinText?: string
   ) {
     const timeoutMs = Duration.toMillis(timeout);
     const request = OpenclawProcessRequest.make({
       args,
       env: hermeticOpenclawEnv(ctx),
       executable: ctx.binaryPath,
+      stdinText: O.fromUndefinedOr(stdinText),
       timeoutMs: O.some(timeoutMs),
     });
 
@@ -628,7 +629,6 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
       readonly agentId: string;
       readonly local?: boolean | undefined;
       readonly message: string;
-      readonly sessionKey: string;
       readonly timeoutSeconds: number;
     }
   ) {
@@ -636,10 +636,8 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
       "agent",
       "--agent",
       options.agentId,
-      "--session-key",
-      options.sessionKey,
-      "--message",
-      options.message,
+      "--message-file",
+      "-",
       "--thinking",
       "off",
       "--timeout",
@@ -648,7 +646,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
       ...(options.local === true ? ["--local"] : []),
     ];
     const timeout = Duration.sum(Duration.seconds(options.timeoutSeconds), agentTurnTimeoutGrace);
-    const result = yield* execute(ctx, "agent", args, timeout);
+    const result = yield* execute(ctx, "agent", args, timeout, options.message);
     if (result.exitCode !== 0) {
       return yield* exitFailure(ctx.binaryPath, "agent", result, O.none());
     }
@@ -712,7 +710,8 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
 /**
  * Effect service for hermetic execution of the pinned OpenClaw binary.
  *
- * @remarks
+ * **Details**
+ *
  * Every operation takes an {@link OpenclawInvocationContext} carrying the
  * binary path and hermetic-environment inputs. Gateway tokens are injected
  * exclusively through `ctx.extraEnv` (as `OPENCLAW_GATEWAY_TOKEN`) and never
@@ -720,7 +719,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
  * `--fix`); `config validate` nonzero exits and degraded secrets reloads are
  * decodable results rather than error-channel failures.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { OpenclawInvocationContext, OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service"
@@ -751,7 +750,7 @@ export class OpenclawCli extends Context.Service<OpenclawCli, OpenclawCliShape>(
   /**
    * Build a live OpenClaw CLI layer backed by hermetic child processes.
    *
-   * @example
+   * ## Example: Usage
    * ```ts
    * import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service"
    *
@@ -774,7 +773,7 @@ export class OpenclawCli extends Context.Service<OpenclawCli, OpenclawCliShape>(
   /**
    * Build a deterministic test layer from an injected process runner.
    *
-   * @example
+   * ## Example: Usage
    * ```ts
    * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
    * import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service"

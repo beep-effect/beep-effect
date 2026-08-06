@@ -17,14 +17,15 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The queued wedges are UNBLOCKED: the unblock milestone was decided as the
-candor BRIEF's approval, and that BRIEF was approved the same day
-(2026-08-04 — see [`DECISIONS.md`](./DECISIONS.md) and the wedge packet).
-Next for this packet: open `legal-position-relator-runtime` (carrying the
-re-routed contradiction-semantics cluster) via capture → research → align
-when Benjamin calls it, with `patent-drafting-episode-ledger` and the
-FunctionalUnit extension into `uspto-patent-driver-depth` behind it. The
-candor wedge itself proceeds to decompose (`MAP.md`) in its own packet.
+The second wedge is OPEN:
+[`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md)
+(capture stage, opened 2026-08-05 on Benjamin's call, carrying the re-routed
+contradiction-semantics cluster). Next for this packet: shepherd that wedge
+through research → review gate 1 → align — its own packet owns the detail —
+with `patent-drafting-episode-ledger` and the FunctionalUnit extension into
+`uspto-patent-driver-depth` queued behind it on Benjamin's call. The first
+wedge is fully landed: graduated 2026-08-04, goal packet active on main
+(graduation PR #560 merged 2026-08-05).
 
 ## Read This First
 
@@ -81,3 +82,10 @@ candor wedge itself proceeds to decompose (`MAP.md`) in its own packet.
   wedge stage align → shape. Unblock milestone decided (BRIEF approval) and
   reached same-day — queued wedges UNBLOCKED. Orchestration superseded
   codex → Opus 5 for remaining campaign sub-agent work (weekly codex limit).
+- 2026-08-05: second wedge opened on Benjamin's call —
+  `explorations/legal-position-relator-runtime` (capture stage, decisions
+  pre-seeded, carrying the re-routed contradiction-semantics cluster) —
+  after the candor wedge's graduation PR #560 merged. Both routing-seed
+  forms amended (targets flipped to the live path, dated AMENDED notes);
+  align questions 1, 17 (T4-F6 half), and 18 carried into the wedge;
+  HANDOFF first action now points at the new wedge's research lanes.

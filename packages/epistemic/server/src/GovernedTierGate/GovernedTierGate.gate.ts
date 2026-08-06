@@ -97,7 +97,7 @@ const $I = $EpistemicServerId.create("GovernedTierGate/GovernedTierGate.gate");
  * workspace sink the boundary owns the classification (the URL-parsing
  * network resolver would misclassify a non-network destination).
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
@@ -167,7 +167,7 @@ const approvedGuidance = "Approved by a grant in the session's frozen grant set.
  * ledger row and the server log, neither of which the agent can read. Exported
  * so a test can assert that refusals are indistinguishable.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { refusalGuidance } from "@beep/epistemic-server/GovernedTierGate"
  *
@@ -211,7 +211,7 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
  * per-request context is the `CurrentMcpCaller` reference the sanitized
  * toolkit populates on each dispatch.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { GovernedTierGateOptions, makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
@@ -355,6 +355,7 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
         const executionRequest = ExecutionRequest.make({
           destination: options.sink.destination,
           operation: GrantOperation.make(request.tool.name),
+          principal: grantPrincipal,
           // The boundary owns the classification for this branch's sink:
           // every governed operation here targets the composition-root sink
           // triple, so its audience is a construction fact, not a resolver

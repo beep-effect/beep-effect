@@ -243,7 +243,7 @@ describe("GovernedEgress", () => {
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("denied");
-      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("operation-not-granted");
+      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
       expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
     })
   );

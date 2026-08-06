@@ -23,13 +23,10 @@ import {
   OntologyMcpReadOnlyToolsLive,
 } from "@beep/ontology-server/tools";
 import {
-  ExportProvenanceTool,
   OntologyMutationToolkit,
   OntologyPublishToolkit,
   OntologyReadOnlyToolkit,
-  ProposeChangeBatchTool,
   PublishProvenanceTool,
-  RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { A, O } from "@beep/utils";
 import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
@@ -107,13 +104,6 @@ const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
  * @category constants
  * @since 0.0.0
  */
-const approvedOntologyMutationTools: ReadonlyArray<string> = [
-  ProposeChangeBatchTool.name,
-  RepairOntologyTool.name,
-  ExportProvenanceTool.name,
-  PublishProvenanceTool.name,
-];
-
 // Every governed ontology mutation writes the local workspace; the sink triple
 // is a composition-root fact, so the boundary classifies its audience by
 // construction (the URL-parsing resolver is for network-egress destinations).
@@ -159,7 +149,7 @@ export const makeOntologyMcpTransportLayer = (options: {
   readonly approvedMutationTools?: ReadonlyArray<string> | undefined;
   readonly egressFetch?: typeof globalThis.fetch | undefined;
 }) => {
-  const approvedTools = options.approvedMutationTools ?? approvedOntologyMutationTools;
+  const approvedTools = options.approvedMutationTools ?? [];
   const security = ontologyMcpSecurityMiddleware(options.token);
   const server = McpServer.layerHttp({ name: "beep-ontology", version: "0.0.0", path: "/mcp" }).pipe(
     Layer.provide(security.layer)
@@ -245,7 +235,10 @@ export const makeOntologyMcpTransportLayer = (options: {
     Effect.gen(function* () {
       const mcpConfig = yield* OntologyMcpConfig;
       const epistemic = yield* EpistemicConfig;
-      const governed = mcpConfig.mutationsEnabled ? Layer.merge(readOnly, mutations) : readOnly;
+      if (!mcpConfig.mutationsEnabled) {
+        return readOnly;
+      }
+      const governed = Layer.merge(readOnly, mutations);
       return epistemic.destinationAllowlist.length === 0 ? governed : Layer.merge(governed, publish);
     })
   );

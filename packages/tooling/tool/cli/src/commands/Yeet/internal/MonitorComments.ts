@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Duration, Effect, Match, Order, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -160,7 +160,13 @@ export const YeetMonitorComment = S.Union([YeetMonitorReviewComment, YeetMonitor
  */
 export type YeetMonitorComment = typeof YeetMonitorComment.Type;
 
-class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewComment`)(
+/**
+ * GitHub REST inline review payload used by monitor normalization tests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewComment`)(
   {
     body: S.NullOr(S.String),
     created_at: S.String,
@@ -176,7 +182,13 @@ class GhRestReviewComment extends S.Class<GhRestReviewComment>($I`GhRestReviewCo
   })
 ) {}
 
-class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIssueComment`)(
+/**
+ * GitHub REST issue-comment payload used by monitor normalization tests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIssueComment`)(
   {
     body: S.NullOr(S.String),
     created_at: S.String,
@@ -246,12 +258,20 @@ const authorLogin = (user: GhActor | null): string =>
     O.getOrElse(() => "unknown")
   );
 const commentBody = (body: string | null): string => O.getOrElse(O.fromNullishOr(body), () => Str.empty);
-const reviewLine = (line: O.Option<number>): string =>
-  pipe(
-    line,
-    O.map((value) => `${value}`),
-    O.getOrElse(() => "?")
-  );
+
+// GitHub comment fields are attacker-controlled terminal input. Strip OSC,
+// CSI, other ESC sequences, and remaining C0/C1 controls before rendering so
+// a comment cannot spoof output, write the clipboard, or create hyperlinks.
+const stripTerminalControlSequences: (value: string) => string = flow(
+  Str.replace(/\u001B\][\s\S]*?(?:\u0007|\u001B\\)/gu, ""),
+  Str.replace(/\u001B\[[0-?]*[ -/]*[@-~]/gu, ""),
+  Str.replace(/\u001B[@-Z\\-_]/gu, ""),
+  Str.replace(/[\u0000-\u001F\u007F-\u009F]/gu, "")
+);
+const reviewLine: (line: O.Option<number>) => string = flow(
+  O.map((value) => `${value}`),
+  O.getOrElse(() => "?")
+);
 
 const normalizeReviewComment = (comment: GhRestReviewComment): YeetMonitorReviewComment =>
   YeetMonitorReviewComment.make({
@@ -276,8 +296,24 @@ const normalizeIssueComment = (comment: GhRestIssueComment): YeetMonitorIssueCom
     url: comment.html_url,
   });
 
+/**
+ * Review-comment normalizer exposed through the source-only Yeet test kit.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const normalizeYeetMonitorReviewCommentForTesting = normalizeReviewComment;
+
+/**
+ * Issue-comment normalizer exposed through the source-only Yeet test kit.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const normalizeYeetMonitorIssueCommentForTesting = normalizeIssueComment;
+
 const excerpt = (body: string): string => {
-  const normalized = pipe(body, Str.replace(/\s+/gu, " "), Str.trim);
+  const normalized = pipe(body, stripTerminalControlSequences, Str.replace(/\s+/gu, " "), Str.trim);
   return Str.length(normalized) <= commentExcerptLength
     ? normalized
     : `${pipe(normalized, Str.takeLeft(commentExcerptLength))}…`;
@@ -313,8 +349,9 @@ export const renderYeetMonitorComment = (comment: YeetMonitorComment): string =>
   Match.value(comment).pipe(
     Match.tags({
       review: (review) =>
-        `[yeet] new PR review comment: ${review.author} @ ${review.path}:${reviewLine(review.line)}\n  ${excerpt(review.body)}\n  ${review.url}`,
-      issue: (issue) => `[yeet] new PR issue comment: ${issue.author}\n  ${excerpt(issue.body)}\n  ${issue.url}`,
+        `[yeet] new PR review comment: ${stripTerminalControlSequences(review.author)} @ ${stripTerminalControlSequences(review.path)}:${reviewLine(review.line)}\n  ${excerpt(review.body)}\n  ${stripTerminalControlSequences(review.url)}`,
+      issue: (issue) =>
+        `[yeet] new PR issue comment: ${stripTerminalControlSequences(issue.author)}\n  ${excerpt(issue.body)}\n  ${stripTerminalControlSequences(issue.url)}`,
     }),
     Match.exhaustive
   );

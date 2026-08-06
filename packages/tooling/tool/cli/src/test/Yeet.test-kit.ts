@@ -42,4 +42,5 @@ export * from "../commands/Yeet/internal/TurboQuery.ts";
 export * from "../commands/Yeet/internal/Verdict.ts";
 export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
+export { GhActor } from "../internal/github/GhSchema.ts";
 export * from "../internal/repo-run/index.ts";
