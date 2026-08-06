@@ -47,7 +47,8 @@
     "research/p2-grill-decisions.md",
     "research/p1-execution-decisions.md",
     "research/p1-report-manifest-capabilities.md",
-    "research/p1-report-skills-provenance.md"
+    "research/p1-report-skills-provenance.md",
+    "research/p1-report-semantic-delta.md"
   ],
   "agentLaunchers": [
     {

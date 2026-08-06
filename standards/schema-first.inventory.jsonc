@@ -442,6 +442,22 @@
       "reason": "Scoped test resource intentionally couples a live StartedTestContainer with its connection metadata for use and teardown."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "symbol": "KnowledgeArchiveOracle",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Injected per-side archive read seam, not a record: indexBytes is an Effect, and readBytes and probeCommands are Effectful reads over an extracted Git archive and an archive-local subprocess probe. Its one data member, trackedEntries, is already schema-backed by KnowledgeTrackedEntry, and the bytes it yields are modeled by KnowledgeIndexBytes; the seam itself is constructed in-process by the live layer and by golden fixtures, so it has no decode or persistence boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "symbol": "KnowledgePairedOracleInput",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Two-sided comparison boundary that carries the base and HEAD KnowledgeArchiveOracle runtime seams; only renames is data, and it is already schema-backed by KnowledgeRename. The pair is assembled in-process before every scan and is never decoded or persisted."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
