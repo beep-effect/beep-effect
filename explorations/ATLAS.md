@@ -40,6 +40,20 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`graphnosis-prior-art`](./graphnosis-prior-art/README.md) — shape-stage:
+  mined the Apache-2.0 Graphnosis dual-graph memory engine plus four papers
+  (two Zenodo preprints, two arXiv; all CC BY 4.0, linked from
+  [`assets/README.md`](./graphnosis-prior-art/assets/README.md)) against the
+  live checkout — 191 mappings, beep-effect partial-or-better on 78%. Yield:
+  26 amendments to existing packets and shipped code
+  ([`AMENDMENTS.json`](./graphnosis-prior-art/research/AMENDMENTS.json)),
+  three live-defect findings (WinkCorpus tie-break, DocText WorkerTransport
+  leak, law-scan vacuity), and a dissolve verdict with exactly two
+  graduations (`epistemic-contradiction-detection`, repo-law bundle). Align
+  Q1–Q10 resolved 2026-08-06
+  ([`DECISIONS.md`](./graphnosis-prior-art/DECISIONS.md)); BRIEF drafted and
+  adversarially verified against main — next: human confirmation of the
+  BRIEF, then the amendment-application pass.
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
