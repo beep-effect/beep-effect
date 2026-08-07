@@ -81,7 +81,8 @@ Original Phase 1 steps (retained for provenance):
 
 ### Phase 2 — per approved wedge — STARTED 2026-08-04
 
-Both opened wedges are COMPLETE, and no wedge is mid-stage.
+The first two wedges are COMPLETE (graduated); the third is OPEN at capture
+stage.
 
 The first: `explorations/patent-citation-candor-gate` walked capture →
 research → align → shape → decompose and GRADUATED 2026-08-04 into
@@ -101,9 +102,17 @@ law-practice lane, so the relator goal is not the first mover) and narrowed
 the cross-slice candidate handoff to four evaluated shapes routed to goal
 P0 rather than guessed at.
 
-Phase shape remains sequential: `patent-drafting-episode-ledger` and the
-FunctionalUnit extension into `explorations/uspto-patent-driver-depth` stay
-queued on Benjamin's call.
+The third: `explorations/patent-drafting-episode-ledger` (opened 2026-08-06
+on Benjamin's call, the day the relator wedge's graduation PR #590 merged),
+seeded from the merged drafting-episodes row — which absorbed
+claim-limitation support as its first rung in the 2026-08-01 reconciliation
+grill, with the resolved remo2/remo3 boundaries carried verbatim as binding.
+It sits at capture stage with wedge-scoped decisions pre-seeded and parent
+align questions 11 (the `T3-F4` half), 12, 14, 15, and 16 carried into its
+`openQuestions`.
+
+Phase shape remains sequential: the FunctionalUnit extension into
+`explorations/uspto-patent-driver-depth` stays queued on Benjamin's call.
 
 Run the standard six `/explore` stages plus two review gates:
 
@@ -134,25 +143,28 @@ For `dup-skip`, record the negative disposition and create nothing.
 8. `[T3-F1,T3-F2]` One applicability value and one change-event family, or splits?
 9. `[T3-F3]` Which LegalRuleML subset and legal package earn a donor profile?
 10. `[T3-F6]` P054 Expression or P055 Work for temporal-version identity?
-11. `[T3-F4,T3-F7]` Smallest retrieval API/answer annex and first locator families?
-12. `[T3-F5]` Which independent benchmark avoids LKG-gold circularity?
+11. `[T3-F4,T3-F7]` Smallest retrieval API/answer annex and first locator families? — the `T3-F4` half CARRIED 2026-08-06 into `explorations/patent-drafting-episode-ledger` `openQuestions`; the `T3-F7` locator-families half was ANSWERED 2026-08-04 at the candor wedge's align (`PatentFragmentLocator` home + families — see `explorations/patent-citation-candor-gate/DECISIONS.md` and `goals/patent-citation-candor-gate/SPEC.md`), but the symbol itself was never built: it is that goal's rung-1 optional slot and named budget-circuit-breaker drop, still net-new in source.
+12. `[T3-F5]` Which independent benchmark avoids LKG-gold circularity? — CARRIED 2026-08-06 into `explorations/patent-drafting-episode-ledger` `openQuestions`.
 13. `[T3-F8]` What reviewed state machine promotes quarantined phrases?
-14. `[T3-F10,T4-F7,ADHD-3]` What raw fallback, episode set, and rebuild proof?
-15. `[T4-F1,T4-F2,T4-F3,ADHD-2]` Which artifacts, support schema, and attorney gates?
-16. `[T4-F4]` When should routing be learned, fixed, human, or fallback?
+14. `[T3-F10,T4-F7,ADHD-3]` What raw fallback, episode set, and rebuild proof? — CARRIED 2026-08-06 into `explorations/patent-drafting-episode-ledger` `openQuestions`.
+15. `[T4-F1,T4-F2,T4-F3,ADHD-2]` Which artifacts, support schema, and attorney gates? — CARRIED 2026-08-06 into `explorations/patent-drafting-episode-ledger` `openQuestions`.
+16. `[T4-F4]` When should routing be learned, fixed, human, or fallback? — CARRIED 2026-08-06 into `explorations/patent-drafting-episode-ledger` `openQuestions`.
 17. `[T4-F5,T4-F6]` Which owner and Party–Role/position states remain generic? — the `T4-F6` half RESOLVED 2026-08-06 (relator-wedge align): Party–Role split composing the shared `Principal`, agents runtime untouched; the `T4-F5` half stays with the `legal-rule-time-identity` cluster.
 18. ~~`[T4-F8]` What generic correction-delta shape keeps ODRL caller-owned?~~ RESOLVED 2026-08-06 (relator-wedge align): the full Lane B shape, caller-owned — see that packet's `DECISIONS.md`.
 
 ## First action
 
-Phase 1 is complete and signed off (2026-08-01 reconciliation grill), and
-both Phase 2 wedges opened so far are GRADUATED with their goal packets on
-main. **There is no wedge to resume** — do not re-scaffold either packet or
-re-run any of their completed stages.
+Phase 1 is complete and signed off (2026-08-01 reconciliation grill). Of the
+Phase 2 wedges, the first two are GRADUATED with their goal packets on main,
+and the third — `explorations/patent-drafting-episode-ledger` — is OPEN
+(2026-08-06). First action is now to RESUME that wedge where its `README.md`
+Next Open Question points: run its two locked research lanes, then review
+gate 1, then hold the align session over their outputs — the align session
+is Benjamin's. Do not re-scaffold the packet or re-run the graduated
+siblings' stages.
 
-First action is a routing call that belongs to Benjamin: open
-`patent-drafting-episode-ledger`, or the FunctionalUnit extension into
-`explorations/uspto-patent-driver-depth`. Both are already-approved
-routing-matrix slugs, so opening either needs only his go-ahead, not fresh
-routing approval; a wedge outside those slugs still does. Executing either
-graduated goal is likewise his explicit ask, as are merges.
+Behind it, the FunctionalUnit extension into
+`explorations/uspto-patent-driver-depth` stays queued on Benjamin's call —
+an already-approved routing-matrix slug needing only his go-ahead, not fresh
+routing approval; a wedge outside the approved slugs still needs it.
+Executing either graduated goal is likewise his explicit ask, as are merges.

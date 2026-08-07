@@ -71,14 +71,31 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   contradiction-semantics cluster re-routed to ride with
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
-  day). Both opened wedges are now fully GRADUATED: the first 2026-08-04 into
+  day). The first two wedges are fully GRADUATED: the first 2026-08-04 into
   [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
   (graduation PR #560 merged 2026-08-05; implementation PR #575 merged
   2026-08-06), and the second — opened 2026-08-05 carrying the
   contradiction-semantics cluster — 2026-08-06 into
   [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md).
-  Next: `patent-drafting-episode-ledger` and the FunctionalUnit extension on
+  Third wedge
+  [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
+  OPENED 2026-08-06 (capture stage). Next: the FunctionalUnit extension on
   Benjamin's call.
+- [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
+  capture-stage third wedge of the `legal-patent-kg-deepening` routing matrix
+  (opened 2026-08-06): a law-owned, append-only `DraftingEpisode` product
+  record — closed event union + pure replay fold over outline, retrieval,
+  chunk generation, limitation support, deterministic validation, bounded
+  retry, correction delta, and attorney disposition — whose first rung is the
+  `ClaimLimitationSupportSet` promotion gate (a submachine sharing
+  `RuntimeApprovalGate`, merged in by the 2026-08-01 reconciliation grill),
+  with deterministic retrieval disclosed through a machine-readable answer
+  annex and memory engines behind an engine-agnostic `MemoryProjection` port
+  as lossy rebuildable projections with recent-raw fallback — the resolved
+  remo2/remo3 boundaries binding (no persistent graph store; no projection
+  becomes authority; the 2026-08-06 operator dev-memory role change leaves
+  the product/operator boundary untouched). Eleven nuggets seeded verbatim;
+  two research lanes locked; the align session is Benjamin's.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill

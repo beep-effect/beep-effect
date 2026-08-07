@@ -39,8 +39,11 @@ copying.
 
 Anyone resuming the *campaign* should start at the parent packet
 [`../legal-patent-kg-deepening/README.md`](../legal-patent-kg-deepening/README.md),
-whose queued wedges (`patent-drafting-episode-ledger`, the FunctionalUnit
-extension) wait on Benjamin's call.
+whose third wedge
+[`patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+opened 2026-08-06 (capture stage) and whose remaining slug — the
+FunctionalUnit extension into `uspto-patent-driver-depth` — waits on
+Benjamin's call.
 
 ## Read This First
 
