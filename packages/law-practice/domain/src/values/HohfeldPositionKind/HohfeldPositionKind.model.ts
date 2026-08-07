@@ -26,7 +26,7 @@ const HohfeldPositionKindBase = LiteralKit([
  *
  * **When to use**
  *
- * Use wherever a position kind is read or derived. Only the advantage side is
+ * Use when a position kind is read or derived. Only the advantage side is
  * ever stored, so a stored field takes {@link AdvantagePositionKind} instead.
  *
  * **Details**

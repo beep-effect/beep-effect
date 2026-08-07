@@ -16,8 +16,8 @@ const PartyKindBase = LiteralKit(["natural-person", "juristic-person"]);
  *
  * **When to use**
  *
- * Use on a party to record what it is, and on a legal role to record which
- * kinds of person the prescribing norm admits as players of that role.
+ * Use to record what a party is, and on a legal role to record which kinds of
+ * person the prescribing norm admits as players of that role.
  *
  * **Details**
  *

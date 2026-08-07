@@ -17,7 +17,7 @@ const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalO
  *
  * **When to use**
  *
- * Use wherever a verdict family is recorded. The family never travels without
+ * Use when a verdict family is recorded. The family never travels without
  * the person who assigned it, because "attorney-assigned" is the whole content
  * of the record: a family with no assigner behind it would read as something
  * the system worked out.

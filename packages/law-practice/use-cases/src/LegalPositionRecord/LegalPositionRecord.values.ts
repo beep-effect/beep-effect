@@ -18,9 +18,10 @@ const $I = $LawPracticeUseCasesId.create("LegalPositionRecord/LegalPositionRecor
  *
  * **When to use**
  *
- * Use for the three record kinds that stand on their own — stored relations,
- * recorded frames, and screened candidates. Each is read for one organization
- * and nothing narrower, because none of them hangs off another record.
+ * Use as the scope for the three record kinds that stand on their own — stored
+ * relations, recorded frames, and screened candidates. Each is read for one
+ * organization and nothing narrower, because none of them hangs off another
+ * record.
  *
  * **Gotchas**
  *

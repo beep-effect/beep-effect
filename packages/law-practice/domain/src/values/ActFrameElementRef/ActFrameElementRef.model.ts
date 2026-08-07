@@ -96,7 +96,7 @@ export type ActFramePart = typeof ActFramePart.Type;
  *
  * **When to use**
  *
- * Use wherever a record must say which element of a frame it is about: an
+ * Use when a record must say which element of a frame it is about: an
  * exercise asserting one precondition, a validator finding naming one slot, a
  * correction declaring which element it touched.
  *

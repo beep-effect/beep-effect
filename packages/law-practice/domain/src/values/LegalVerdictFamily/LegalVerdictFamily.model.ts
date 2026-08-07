@@ -21,7 +21,7 @@ const LegalVerdictFamilyBase = LiteralKit([
  *
  * **When to use**
  *
- * Use on law-side records that carry an attorney's assignment. The vocabulary
+ * Use with law-side records that carry an attorney's assignment. The vocabulary
  * is law-practice language and belongs only to records this slice owns.
  *
  * **Details**

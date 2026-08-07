@@ -355,3 +355,32 @@ cause both of them were circling.
   the same exercise a rung earlier, when the transition lists were still open. Route
   the two findings to the follow-on that lands `SlotCorrespondence`, which is already
   the named owner of the frame surface's remaining donor shape.
+
+### "Mirror the precedent exactly" and the new-only duplication gate pull in opposite directions
+
+- **What happened:** the rung-2 durability brief instructed the second durable
+  repository to mirror `CandorRecord.repo.ts` — "mirror exactly", "byte-identical
+  behavior" — which is the right instruction for a shipped idiom, and the
+  resulting adapter was byte-identical where the two stores genuinely agree. Full
+  yeet verify then failed on `fallow:audit` with two **introduced** clone groups
+  (`dup:1c03c232`, `dup:ea995f46`) covering exactly the mirrored block: the
+  `decodeRows` pipe and the `decodeAppended` body. Following the instruction is
+  what tripped the gate.
+- **Evidence:** `bun run beep quality fallow audit --check` before the fix, two
+  findings attributed `introduced`, both spanning
+  `packages/law-practice/server/src/CandorRecord/CandorRecord.repo.ts:88-110`
+  against `.../LegalPositionRecord/LegalPositionRecord.repo.ts:106-128`. The gate
+  only fires on the **second** consumer, so the first copy of an idiom is always
+  free and the second always pays — regardless of which one is better placed to
+  design the shared shape.
+- **Prevention:** the outcome was right (the extraction into
+  `src/internal/RepoSupport.ts` is better code than either copy), so this is not
+  an argument for suppression. It is an argument for saying so up front. Precedent
+  and yeet guidance should carry the pairing explicitly: *mirror the precedent's
+  semantics, and when the second consumer lands, extract the shared body in the
+  same change and treat editing the first consumer as authorized
+  cleanup-on-touch.* Today an agent is told to mirror, does, and discovers at the
+  final gate that mirroring was the thing being measured — after the mirroring
+  work is already done. Naming the extraction as part of "land the second
+  consumer" turns a late blocking failure into a planned step, and would also
+  stop agents from reading the gate as a reason to diverge from a good idiom.
