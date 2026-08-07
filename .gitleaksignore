@@ -83,3 +83,8 @@ goals/repo-crispening-orchestration/ops/inventory/S5/beep__shared-domain.json:ge
 # --squash` records upstream-relative paths, so the `.repos/effect/` allowlist
 # in .gitleaks.toml cannot match them.
 3d37b37f7710fa096e25e1711243e480917bf999:packages/effect/src/Config.ts:generic-api-key:1482
+
+# False positives in the immutable Effect subtree squash used by the
+# 4.0.0-beta.104 refresh. Same Config.redacted JSDoc sample, now at line 1484.
+cb5d50cf0a7e6ca0cf7b31be33f2ed931b36e92e:packages/effect/src/Config.ts:generic-api-key:1484
+.repos/effect/packages/effect/src/Config.ts:generic-api-key:1484
