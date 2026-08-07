@@ -4,6 +4,66 @@ Dated decision log for the memory architecture standard. Records decisions as th
 
 ---
 
+## 2026-08-06: Operator Dev-Memory Role Passes to basic-memory + codegraph (Cognee Role Retirement)
+
+**Context:** An external bake-off dated 2026-08-06 — twelve adversarial
+code-level dossiers with `path:line` evidence, a practitioner sentiment
+sweep, and live trials against this repository at `a1550127dc` (180
+packages, 5,336 TypeScript files) — tested the durable dev-memory and
+codebase-KG candidates against the standing keyless constraint and the
+"shared across all four coding agents" requirement. Verdict memo:
+`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md`, evidence under
+`.../_research/bakeoff/`. Cognee failed the shared-store requirement
+structurally: its MCP memory fragments are agent-scoped, its locks are
+process-local and unsafe across concurrent agent processes, and it phones
+home with a persistent id.
+
+**Decision (role retirement, not boundary supersession):** Cognee's
+always-on operator dev-memory role — assigned by the 2026-07-08 entry and
+restated on 2026-07-25 and 2026-08-01 — passes to two tools. **basic-memory**
+(AGPL-3.0, internal tooling only) is the durable cross-agent dev-memory:
+one shared store at `~/YeeBois/memory/beep-shared`, project `beep-shared`,
+read and written by Claude Code, Codex CLI, Grok CLI, and Cursor.
+**codegraph** (MIT) is the deterministic code knowledge graph, run as
+`codegraph serve --mcp` with `DO_NOT_TRACK=1` and
+`CODEGRAPH_NO_UPDATE_CHECK=1`. Both are keyless end to end. Cognee remains
+installed and available for document-KG experiments and loses no other role;
+its user-level configuration is not deleted. Graphiti stays retired per
+2026-07-25 and does not return — its LLM-mandatory ingestion violates the
+keyless rule structurally. Adoption detail, store conventions, wiring, and
+the pilot review live in
+[`07-shared-memory-adoption.md`](./07-shared-memory-adoption.md).
+
+**Boundary (not superseded):** the 2026-08-01 operator/product authority
+boundary is unchanged and remains binding. This entry moves operator memory
+between operator-level tools only. Product tables stay the professional
+runtime's sole authority and never become an operator-memory backend;
+operator memory — now basic-memory rather than Cognee — never becomes
+product authority.
+
+**Consequences:**
+
+- `06-agent-memory-operations.md` is amended: basic-memory (project
+  `beep-shared`) is the durable dev-memory recall path, codegraph is the
+  code-structure query path, and Cognee moves to "available for document-KG
+  experiments, not the default". The 2026-07-08 role-update blockquote in
+  `05-context-graph-capability-assessment.md` carries a supersession
+  pointer.
+- The repository `.mcp.json` gains its first memory servers (`basic-memory`,
+  `codegraph`); the equivalent Codex, Grok, and Cursor registrations are
+  machine-local operator configuration and are documented rather than
+  tracked.
+- No memory data is migrated; `beep-shared` starts empty. The store is
+  local-only and carries a hard confidentiality rule against any
+  pre-publication patent or OIP client material.
+- The pilot is reviewed 2026-08-20 on cross-CLI recall, codegraph replacing
+  grep-storms, and zero store corruption; the fallback on failure is Layer-1
+  file memory alone.
+- An Effect-native `@beep/memory` port of basic-memory's store model plus
+  Graphiti's temporal schema is recorded as medium-term intent, not
+  scheduled work.
+- Origin: `goals/shared-memory-code-kg-wiring`
+
 ## 2026-08-01: Drafting Episodes Are Product Records; Cognee May Project Them (Clarification)
 
 **Context:** The legal-patent-kg-deepening campaign's /adhd

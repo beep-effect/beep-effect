@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "shared-memory-code-kg-wiring",
+    "title": "Shared Memory & Code-KG Wiring",
+    "status": "completed-retained",
+    "created": "2026-08-06",
+    "updated": "2026-08-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/shared-memory-code-kg-wiring",
+  "lifecycle": "completed-retained",
+  "mission": "Wire basic-memory (shared cross-CLI memory) and codegraph (deterministic code-KG) into all four coding agents, retire cognee as the durable dev-memory, and land the standards update.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/memory-architecture/README.md",
+    "goals/shared-memory-code-kg-wiring/README.md",
+    "goals/shared-memory-code-kg-wiring/SPEC.md",
+    "goals/shared-memory-code-kg-wiring/PLAN.md",
+    "goals/shared-memory-code-kg-wiring/GOAL.md",
+    "goals/shared-memory-code-kg-wiring/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/shared-memory-code-kg-wiring/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/shared-memory-code-kg-wiring/GOAL.md)\" -le 4000",
+    "jq . goals/shared-memory-code-kg-wiring/ops/manifest.json",
+    "rg -n \"shared-memory-code-kg-wiring|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/shared-memory-code-kg-wiring",
+    "git diff --check -- goals/shared-memory-code-kg-wiring",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The external bake-off evidence at ~/YeeBois/research/codebase_graph_and_memory is unavailable and a decision depends on it.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
