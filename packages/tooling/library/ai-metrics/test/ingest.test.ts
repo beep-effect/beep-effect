@@ -15,8 +15,11 @@ import {
   AiMetricsLabelQueueInput,
   AiMetricsMirrorBundleInput,
   AiMetricsOtlpAttributeValue,
+  AiMetricsOtlpEndpointSpec,
   AiMetricsOtlpExportError,
   AiMetricsOtlpExportInput,
+  AiMetricsOtlpSpanProjection,
+  AiMetricsOtlpSpanProjectionBatch,
   AiMetricsOtlpSpanSender,
   AiMetricsOutcomeLabelInput,
   AiMetricsParquetExportMode,
@@ -92,7 +95,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import type { AiMetricsOtlpSpanProjection } from "@beep/repo-ai-metrics";
 import type { TUnsafe } from "@beep/types";
 
 const provideScopedLayer =
@@ -1823,6 +1825,84 @@ volumes:
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
+  );
+
+  it.effect(
+    "delivers projections to a real OTLP endpoint as chunked protobuf",
+    Effect.fn(function* () {
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          const requests: Array<{ readonly contentType: string }> = [];
+          const server = Bun.serve({
+            fetch: (request) => {
+              A.appendInPlace(requests, { contentType: request.headers.get("content-type") ?? "" });
+              const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+              return new Response(null, { status: rejecting ? 415 : 200 });
+            },
+            hostname: "127.0.0.1",
+            port: 0,
+          });
+          return { requests, server };
+        }),
+        Effect.fnUntraced(function* ({ requests, server }) {
+          const endpointFor = (path: string) =>
+            AiMetricsOtlpEndpointSpec.make({
+              baseUrl: `http://127.0.0.1:${server.port}`,
+              protocol: "http/protobuf",
+              resourceAttributes: { "beep.test": "otlp-wire" },
+              signalScope: "traces_only",
+              traceUrl: `http://127.0.0.1:${server.port}${path}`,
+            });
+          const inputFor = (path: string) =>
+            AiMetricsOtlpExportInput.make({
+              duckDbPath: "unused.duckdb",
+              endpoint: endpointFor(path),
+              target: AiMetricsDeployTarget.Enum.local,
+            });
+          // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
+          // thousands of turns, and one request that large is the backpressure collapse this
+          // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
+          const projections = A.makeBy(1200, (index) =>
+            AiMetricsOtlpSpanProjection.make({
+              attributes: { "ai_metrics.line_number": index + 1, "openinference.span.kind": "CHAIN" },
+              parentSpanId: "aabbccddeeff0011",
+              spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
+              spanName: "ai_metrics.agent.turn",
+              traceId: "0123456789abcdef0123456789abcdef",
+            })
+          );
+          const batch = AiMetricsOtlpSpanProjectionBatch.make({
+            projections,
+            sessionSpanCount: 0,
+            turnIds: [],
+            turnSpanCount: projections.length,
+          });
+
+          // The live sender, not a stub: real ReadableSpan construction through the real
+          // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
+          // with HTTP 415, which is also what the rejection path below asserts.
+          const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
+            provideScopedLayer(AiMetricsOtlpSpanSender.layer)
+          );
+
+          expect(exported.spanCount).toBe(1200);
+          expect(requests.length).toBe(3);
+          expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
+
+          // A collector that rejects the batch must surface as a typed failure, never a
+          // silent success. That confirmation is the whole reason delivery moved off
+          // fire-and-forget span emission.
+          const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
+            provideScopedLayer(AiMetricsOtlpSpanSender.layer),
+            Effect.flip
+          );
+
+          expect(rejected.message).toContain("did not accept the exported spans");
+        }),
+        ({ server }) => Effect.promise(() => server.stop(true))
+      );
+    }),
+    AI_METRICS_LONG_TEST_TIMEOUT
   );
 
   it.effect(
