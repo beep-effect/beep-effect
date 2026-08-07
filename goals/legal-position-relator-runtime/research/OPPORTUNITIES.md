@@ -59,6 +59,23 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
 
 ## 2026-08-07 — P3 yeet (hosted checks)
 
+### The ai-metrics coverage ratchet rows exceed what the suite measures (inherited)
+
+- **What happened:** once past the runner OOMs, the Coverage Regression lane hits
+  a numeric ratchet drop in `@beep/repo-ai-metrics` (measured lines 85.85,
+  statements 85.78, branches 72.51, functions 69.24 vs baselines
+  86.29/86.28/73.38/69.81) — a package byte-identical to `main` on this branch
+  (`git diff origin/main HEAD -- packages/tooling/library/ai-metrics` is empty),
+  with the baseline last written by #602 at this branch's base. Every PR that
+  marks ai-metrics affected (any foundation-package change) inherits this red;
+  recent `main` commits were docs-only, so affected-scoping never re-measured it
+  there.
+- **Evidence:** local `bun run beep ci lane coverage` failure output (this
+  session, 2026-08-07); baseline provenance `git log -- standards/coverage.regression-baseline.jsonc`.
+- **Prevention:** fixed forward in PR #617 (re-baseline to measured values with a
+  small variance margin); durable fix is re-measuring ratcheted rows in the same
+  run that writes them.
+
 ### Hosted runners OOM-kill heavy check/build/coverage tasks (exit 137), varying by attempt
 
 - **What happened:** PR #616's `Check`, `Test Integration`, and `Coverage Regression`
