@@ -772,7 +772,10 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
+      // Serial by lane-level override: two concurrent beta.104 giants
+      // (epistemic/server + tooling/tool/cli) OOM-killed a 16 GB runner even
+      // at the CI cap of 2. The lane's 120-minute timeout absorbs serial.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
           label: "ci:codegen:generate",
@@ -821,7 +824,9 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
+      // Serial like check/test-integration: the epistemic client+server build
+      // pair OOM-killed the lane at 2 on the beta.104 tree.
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=1"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
@@ -889,7 +894,12 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-      "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
+      // Serial like the check lane: epistemic/server's build plus any other
+      // heavy task exceeded 16 GB at the CI cap of 2. check.yml raises this
+      // lane's timeout to cover the serial graph.
+      "test-integration": () => [
+        turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration", "--concurrency=1"], options),
+      ],
       "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
     })
 );
