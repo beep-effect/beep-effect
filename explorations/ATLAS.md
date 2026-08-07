@@ -71,7 +71,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   contradiction-semantics cluster re-routed to ride with
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
-  day). Both opened wedges are now fully GRADUATED: the first 2026-08-04 into
+  day). The first two wedges are fully GRADUATED: the first 2026-08-04 into
   [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
   (graduation PR #560 merged 2026-08-05; implementation PR #575 merged
   2026-08-06), and the second — opened 2026-08-05 carrying the
@@ -90,11 +90,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `ClaimLimitationSupportSet` promotion gate (a submachine sharing
   `RuntimeApprovalGate`, merged in by the 2026-08-01 reconciliation grill),
   with deterministic retrieval disclosed through a machine-readable answer
-  annex and memory engines (Cognee first) behind a `MemoryProjection` port as
-  lossy rebuildable projections with recent-raw fallback — the resolved
+  annex and memory engines behind an engine-agnostic `MemoryProjection` port
+  as lossy rebuildable projections with recent-raw fallback — the resolved
   remo2/remo3 boundaries binding (no persistent graph store; no projection
-  becomes authority). Eleven nuggets seeded verbatim; two research lanes
-  locked; the align session is Benjamin's.
+  becomes authority; the 2026-08-06 operator dev-memory role change leaves
+  the product/operator boundary untouched). Eleven nuggets seeded verbatim;
+  two research lanes locked; the align session is Benjamin's.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill

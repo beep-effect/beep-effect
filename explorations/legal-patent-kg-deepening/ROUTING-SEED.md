@@ -20,12 +20,12 @@ dup-skip`.
 
 | Cluster | Route | Target | Wave | New slug? |
 |---|---|---|---|---|
-| Legal positions, relators, and authorized transitions (`T1-F1,T1-F2,T1-F7,T1-F9,T4-F6,P100,R25`) | **mixed** *(packet OPENED 2026-08-05)* | [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) | P1 | `legal-position-relator-runtime` |
+| Legal positions, relators, and authorized transitions (`T1-F1,T1-F2,T1-F7,T1-F9,T4-F6,P100,R25`) | **mixed** *(packet OPENED 2026-08-05, GRADUATED 2026-08-06 into `goals/legal-position-relator-runtime`)* | [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) | P1 | `legal-position-relator-runtime` |
 | Legal rule, time, source identity, and controlled transformation (`T1-F4,T1-F5,T1-F6,T3-F1,T3-F2,T3-F3,T3-F6,T4-F5,P101`) | **new-exploration** | `legal-rule-time-identity` *(proposed slug, not a path yet)* | P2 | `legal-rule-time-identity` |
 | Legal contradiction scope, priority, and correction deltas (`T1-F3,T3-F9,T4-F8`) | **mixed** *(re-routed 2026-08-04 → rides with `legal-position-relator-runtime`; compose, don't widen; carrier packet OPENED 2026-08-05)* | [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) | P1 | — |
 | Semantic registry, qualified mappings, and extraction admission (`T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8`) | **extend-goal** *(grill resolved: schema-first now, M4 SHACL later)* | `goals/semantic-foundation` | P2 | — |
 | Functional patent profiles and drift-safe ingestion (`T2-F1,T2-F8,T2-F9`) | **mixed** | `explorations/uspto-patent-driver-depth` | P1 | — |
-| Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** *(packet OPENED 2026-08-04)* | [`explorations/patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) | P1 | `patent-citation-candor-gate` |
+| Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** *(packet OPENED 2026-08-04, GRADUATED into `goals/patent-citation-candor-gate`)* | [`explorations/patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) | P1 | `patent-citation-candor-gate` |
 | Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **merged 2026-08-01** → first rung of `patent-drafting-episode-ledger` *(carrier packet OPENED 2026-08-06)* | [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) | P1 | — |
 | Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3` + merged `T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** *(grill resolved: remo2 rows-first + in-memory RDF lane; remo3 product-records + Cognee projection; packet OPENED 2026-08-06)* | [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) | P1 | `patent-drafting-episode-ledger` |
 | Rejected admission and ODRL profile claims (`T4-R1,T4-R2`) | **dup-skip** | `explorations/legal-patent-kg-deepening` | P3 | — |
@@ -47,7 +47,7 @@ end of this file.
 
 - **Route / Wave:** mixed · P1
 - **Nuggets:** `T1-F1`, `T1-F2`, `T1-F7`, `T1-F9`, `T4-F6`, `P100`, `R25`
-- **Primary target:** [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) *(packet OPENED 2026-08-05; was a proposed slug with no repo path)*
+- **Primary target:** [`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md) *(packet OPENED 2026-08-05, GRADUATED 2026-08-06 into `goals/legal-position-relator-runtime`; was a proposed slug with no repo path)*
 - **Coordinate with:** `goals/semantic-foundation`, `goals/epistemic-bitemporal-edge-core`, `explorations/agent-governance-control-plane`, `explorations/uspto-patent-driver-depth`
 - **Net-new (no existing home):**
   - `[T1-F1,T1-F2,T1-F9]` A closed `HohfeldPosition` domain, correlative bimap, and n-ary `LegalPositionRelator` aggregate. A source-only `rg` over `packages/**/src/**/*.{ts,tsx}` returned zero `Hohfeld` or `LegalPositionRelator` symbols on 2026-08-01.
@@ -218,8 +218,8 @@ end of this file.
   - `[T3-F4,T3-F5]` `goals/practice-kg-mcp` already owns a read-only IP-law KG surface with deterministic docket rows and span-grounded candidates at `SPEC.md:8-12` and `:33-41`.
 - **Rationale:** `[T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3]` need a law-owned authoritative episode and answer contract that consumes, but does not duplicate, generic memory and retrieval bricks.
 - **⚠ Cautions:**
-  - `[remo2]` **route grill:** `MatterProjection` challenges the standing no-graph-store boundary and MUST go through `/grill-with-docs` with Benjamin. No projection may become authority.
-  - `[remo3,ADHD-3]` **route grill:** Cognee's role touches the 2026-07-25 memory decision and MUST go through `/grill-with-docs` with Benjamin. Product drafting records may be repo-native while Cognee remains durable operator dev-memory; neither role changes silently.
+  - RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): `[remo2]` **route grill:** `MatterProjection` challenges the standing no-graph-store boundary and MUST go through `/grill-with-docs` with Benjamin. No projection may become authority.
+  - RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): `[remo3,ADHD-3]` **route grill:** Cognee's role touches the 2026-07-25 memory decision and MUST go through `/grill-with-docs` with Benjamin. Product drafting records may be repo-native while Cognee remains durable operator dev-memory; neither role changes silently.
   - `[T3-F5]` The inference-event retrieval result lacks a reification ablation; reproduce before claiming causality.
   - `[T1-F10]` The anti-hub result is a small benchmark, so start with a study fixture.
 

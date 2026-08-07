@@ -46,8 +46,9 @@ reference only) before any adoption.
 
 To be populated by research Lane B (bounded public-source grounding: the
 35 U.S.C. § 112(a)/§ 132 + MPEP § 2163/§ 608.04 written-description/new-matter
-frame; the public episode-memory and retrieval papers behind the six
-primary-cluster nuggets' distillates) →
+frame; the public papers behind all eleven nuggets' distillates — the six
+primary-cluster episode/retrieval sources plus the absorbed rung's drafting
+traceability/evaluation/routing studies) →
 `research/02-drafting-episode-frame.md`.
 
 ## 4. In-repo capability references
@@ -58,6 +59,11 @@ capture (from the routing seed's grounded rows):
 - `@beep/agents-use-cases` — `ProfessionalRuntime` contracts
   (`RuntimeCandidateDraft`, `RuntimeApprovalGate`, `RuntimeEvidenceRef`,
   activities, usage) and the law-patent-intake runtime fixture — compose.
+  Anchor correction (2026-08-06): the seed's `:428-490` span covers
+  `RuntimeCandidateDraft` (`:428-446`) and `RuntimeApprovalGate`
+  (`:473-491`) only; `RuntimeEvidenceRef` sits at `:209-222`,
+  `RuntimeActivity` at `:608-623`, `RuntimeUsageRecord` at `:645-655` —
+  Lane A re-grounds every anchor.
 - `@beep/epistemic-use-cases` — `ExecutionLedger` append-only/hash-chain
   service precedent — precedent, never rebuilt.
 - `@beep/law-practice-domain` — `Claim` model (number, independent flag,
@@ -97,6 +103,9 @@ capture (from the routing seed's grounded rows):
   `goals/hybrid-retrieval-fusion-core`, `goals/practice-kg-mcp`,
   `goals/citation-verified-span-substrate`.
 - Memory-architecture boundary:
-  `standards/memory-architecture/04-decision-log.md` (2026-08-01 entry).
+  `standards/memory-architecture/04-decision-log.md` (2026-08-01 entry;
+  its 2026-08-06 role-retirement entry passes operator dev-memory from
+  Cognee to basic-memory + codegraph with the operator/product boundary
+  explicitly unchanged).
 - This packet's decision log: [`../DECISIONS.md`](../DECISIONS.md); capture:
   [`../CAPTURE.md`](../CAPTURE.md).

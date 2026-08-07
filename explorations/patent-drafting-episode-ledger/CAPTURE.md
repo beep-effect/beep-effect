@@ -19,9 +19,12 @@ P1, proposed slug `patent-drafting-episode-ledger` — this packet). Absorbed:
 rung; `ClaimLimitationSupport` is a submachine of the `DraftingEpisode`
 state machine sharing the same `RuntimeApprovalGate`). Machine row:
 [`routing-seed.json`](../legal-patent-kg-deepening/routing-seed.json) (the
-merged clusters are a single row). Third wedge per the 2026-08-01
-reconciliation grill order; opened 2026-08-06 on Benjamin's call after the
-second wedge (`legal-position-relator-runtime`) graduated.
+merged clusters are a single row). Third wedge of the phase-2 sequence —
+the first-wedge order was fixed by the 2026-08-01 reconciliation grill with
+the other P1 wedges queued behind it, and the relator-second ordering was
+recorded 2026-08-04 (parent `DECISIONS.md`, queued-wedge unblock
+milestone); opened 2026-08-06 on Benjamin's call after the second wedge
+(`legal-position-relator-runtime`) graduated.
 
 ### Nuggets (from the parent 46-row ledger)
 
@@ -188,7 +191,15 @@ reconciliation grill (parent
 No projection ever becomes authority; the episode ledger is a law-practice
 product record — repo-native, authoritative, append-only.
 
-### Cautions (carried forward verbatim from the routing seed)
+Same-day note: later on 2026-08-06 the operator dev-memory role passed from
+Cognee to basic-memory + codegraph
+(`standards/memory-architecture/04-decision-log.md`, 2026-08-06
+role-retirement entry), which keeps the 2026-08-01 operator/product
+authority boundary explicitly unchanged. "Cognee" in the quoted seed-time
+decisions reads as the operator memory engine of record at seed time; this
+wedge's `MemoryProjection` port is engine-agnostic.
+
+### Cautions (carried forward verbatim from the routing seed's `routing-seed.json` form)
 
 - "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance):
   [remo2] route grill: MatterProjection challenges the standing

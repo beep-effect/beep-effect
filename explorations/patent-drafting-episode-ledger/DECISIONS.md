@@ -43,15 +43,18 @@ and § 608.04 — drawing the never-compute boundary precisely: anchor fidelity
 never decides written-description support, implicit disclosure, terminology
 equivalence, or new matter; the attorney disposition is the legal judgment,
 append-only (T4-F1/ADHD-2 cautions). (b) The episode-memory/retrieval
-research frame — re-open the public papers behind the six episode/retrieval
-nuggets' distillates (the agent-memory benchmark behind T3-F10's raw-episode
-authority and recent-raw fallback, the legal GraphRAG deterministic-resolution
-and answer-policy sources behind T3-F4, the inference-event study behind
-T3-F5, the atomic normative-row/anti-hub benchmark behind T1-F10, and the
-patent-drafting traceability/evaluation/routing studies behind T4-F1..F4) —
-to draw exact boundary language for raw-episode authority vs lossy
-projection, the fallback trigger, answer-annex fields, and the
-hypothesis-only status of the T3-F5 and T1-F10 retrieval claims →
+research frame — re-open the public papers behind the eleven nuggets'
+distillates: the six primary-cluster episode/retrieval sources (the
+agent-memory benchmark behind T3-F10's raw-episode authority and recent-raw
+fallback, the legal GraphRAG deterministic-resolution and answer-policy
+sources behind T3-F4, the inference-event study behind T3-F5, the atomic
+normative-row/anti-hub benchmark behind T1-F10, the patent-drafting
+episode-ledger memory sources behind T4-F7, and ADHD-3's underlying frames)
+plus the absorbed rung's drafting traceability/evaluation/routing studies
+behind T4-F1..F4 and ADHD-2 — to draw exact boundary language for
+raw-episode authority vs lossy projection, the fallback trigger,
+answer-annex fields, and the hypothesis-only status of the T3-F5 and
+T1-F10 retrieval claims →
 `research/02-drafting-episode-frame.md`. On top of both lanes, `RESEARCH.md`
 is authored as the canonical stage-1 synthesis before the packet advances to
 align; all three land together in PR 2. No client or pre-publication material
@@ -88,9 +91,14 @@ rows-first `PracticeKgQuery`, lineage via disposable in-memory `@beep/rdf`
 sessions through the bounded `SparqlQueryService`, no persistent graph
 store, no projection becomes authority; remo3 — `DraftingEpisode` ledgers
 are law-practice product records (repo-native, authoritative, append-only),
-Cognee stays operator dev-memory and may carry only a lossy rebuildable
-projection with recent-raw-episode fallback
-(`standards/memory-architecture/04-decision-log.md`, 2026-08-01). The wedge
+operator dev-memory stays operator-level and may carry only a lossy
+rebuildable projection with recent-raw-episode fallback
+(`standards/memory-architecture/04-decision-log.md`, 2026-08-01 — that
+log's 2026-08-06 entry passes the operator dev-memory role from Cognee to
+basic-memory + codegraph while keeping the operator/product authority
+boundary explicitly unchanged, so this wedge's `MemoryProjection` port is
+engine-agnostic and "Cognee" in the seed-time quotes reads as the operator
+memory engine of record at seed time). The wedge
 never blocks on sibling goals and never forks their contracts; the graduated
 candor and relator goal SPECs are stable reference points, not dependencies.
 
