@@ -25,7 +25,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
-import * as HashSet from "effect/HashSet";
+import { HashSet } from "effect";
 import * as S from "effect/Schema";
 import { ActFrameElementLabel } from "../../values/ActFrameElementRef/index.ts";
 import { HohfeldPosition } from "../../values/HohfeldPosition/index.ts";

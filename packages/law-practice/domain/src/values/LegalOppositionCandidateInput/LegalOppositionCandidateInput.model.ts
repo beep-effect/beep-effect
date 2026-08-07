@@ -8,7 +8,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as HashSet from "effect/HashSet";
+import { HashSet } from "effect";
 import * as S from "effect/Schema";
 import { LegalActDescription } from "../LegalActContent/index.ts";
 import { LegalScopeContext } from "../LegalScopeContext/index.ts";
