@@ -103,8 +103,12 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
-// goals/quality-speedup/research/instantiation-census.md §5.
-const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
+// goals/quality-speedup/research/instantiation-census.md §5. The effect
+// 4.0.0-beta.104 refresh made the biggest tsgo compiles heavier still: at
+// --concurrency=4 the check/test-integration lanes OOM-killed (exit 137) three
+// hosted attempts in a row (db-admin, epistemic/server, ontology/client), so
+// the CI cap now matches the root cap.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
