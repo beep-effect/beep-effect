@@ -1985,6 +1985,26 @@ volumes:
             expect(turns).toEqual([{ turnId: "turn-late" }]);
             expect(sessions).toEqual([{ agentSessionId: "session-shared" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+
+          // ...and the row must not then leak. It is still tagged with run-early, which is
+          // already gone, so a prune scoped to the current run set would never match it
+          // again once its last turn goes -- an empty session row surviving forever and
+          // pinning its agent task alive through the task GC.
+          yield* runAiMetricsRetentionDelete(
+            AiMetricsRetentionSelector.make({ beforeEpochMillis: 200, dataRoot }),
+            false
+          );
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            const turns = yield* duckdb.query(`SELECT turn_id AS "turnId" FROM ai_metrics_turns`);
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+
+            expect(turns).toEqual([]);
+            expect(sessions).toEqual([]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
