@@ -7,8 +7,10 @@ import {
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
+  baselineEntriesLostByReplacement,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
+  CoverageUncoveredCounts,
   collectEffectTsgoDiagnosticLines,
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
@@ -30,6 +32,7 @@ import {
   githubCheckRepoSanityLanesForTesting,
   KnipFinding,
   lintFixChangedStepForTesting,
+  mergeCoverageBaselinePackagesForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   promotedFallowGithubCheckLaneIdsForTesting,
@@ -58,6 +61,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -92,6 +96,13 @@ const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBase
     statements: metric,
     branches: metric,
     functions: metric,
+  });
+const coverageUncovered = (count: number): CoverageUncoveredCounts =>
+  CoverageUncoveredCounts.make({
+    lines: count,
+    statements: count,
+    branches: count,
+    functions: count,
   });
 const coverageRegressionBaseline = CoverageRegressionBaseline.make({
   schema_version: 1,
@@ -1351,6 +1362,106 @@ describe("quality task adapter", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
       []
     );
+  });
+
+  it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
+    // 50% as 50/100 covered, so 50 lines uncovered.
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          lines: 50,
+          statements: 50,
+          branches: 50,
+          functions: 50,
+          uncovered: O.some(coverageUncovered(50)),
+        }),
+      },
+    });
+    const compare = (actual: CoveragePackageBaseline) =>
+      compareCoverageRegressionSnapshotsForTesting(before, [{ packageName: "@beep/existing", baseline: actual }], false)
+        .failures;
+
+    // Deleted 10 covered lines: 40/90 = 44.4%, a real drop, but the 50
+    // uncovered lines are untouched. Nothing stopped being tested.
+    expect(
+      compare(
+        CoveragePackageBaseline.make({
+          path: "packages/existing",
+          lines: 44.44,
+          statements: 44.44,
+          branches: 44.44,
+          functions: 44.44,
+          uncovered: O.some(coverageUncovered(50)),
+        })
+      )
+    ).toEqual([]);
+
+    // Added 10 untested lines: 50/110 = 45.5%, and uncovered rose to 60.
+    expect(
+      compare(
+        CoveragePackageBaseline.make({
+          path: "packages/existing",
+          lines: 45.45,
+          statements: 45.45,
+          branches: 45.45,
+          functions: 45.45,
+          uncovered: O.some(coverageUncovered(60)),
+        })
+      )
+    ).toEqual(
+      A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
+        expect.objectContaining({ packageName: "@beep/existing", metric })
+      )
+    );
+  });
+
+  it("keeps the percentage-only rule when either side predates the uncovered counts", () => {
+    const failures = compareCoverageRegressionSnapshotsForTesting(
+      coverageRegressionBaseline,
+      [{ packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 49) }],
+      false
+    ).failures;
+
+    expect(A.length(failures)).toBe(4);
+  });
+
+  it("merges a scoped snapshot over the committed packages instead of replacing them", () => {
+    const merged = mergeCoverageBaselinePackagesForTesting(
+      {
+        "@beep/existing": coveragePackageBaseline("packages/existing", 50),
+        "@beep/untouched": coveragePackageBaseline("packages/untouched", 70),
+      },
+      [{ packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 80) }]
+    );
+
+    expect(R.keys(merged).sort()).toEqual(["@beep/existing", "@beep/untouched"]);
+    expect(merged["@beep/existing"]?.lines).toBe(80);
+    expect(merged["@beep/untouched"]?.lines).toBe(70);
+  });
+
+  it("names the live baseline entries an unscoped replacement would delete", () => {
+    const previous = ["@beep/a", "@beep/b", "@beep/c"];
+
+    // Unmeasured but still in the workspace: replacing would delete them.
+    expect(baselineEntriesLostByReplacement(previous, ["@beep/a"], previous)).toEqual(["@beep/b", "@beep/c"]);
+
+    // A full run loses nothing.
+    expect(baselineEntriesLostByReplacement(previous, previous, previous)).toEqual([]);
+
+    // @beep/c was deleted from the workspace, so pruning its entry is the point
+    // of an unscoped regeneration, not an accident.
+    expect(baselineEntriesLostByReplacement(previous, ["@beep/a", "@beep/b"], ["@beep/a", "@beep/b"])).toEqual([]);
+
+    // Equal counts are not equal sets: swapping one package for another measures
+    // the same number while still deleting @beep/c's entry.
+    expect(
+      baselineEntriesLostByReplacement(previous, ["@beep/a", "@beep/b", "@beep/d"], [...previous, "@beep/d"])
+    ).toEqual(["@beep/c"]);
+
+    // First write, with nothing committed yet.
+    expect(baselineEntriesLostByReplacement([], ["@beep/a"], ["@beep/a"])).toEqual([]);
   });
 
   it("builds the integration lane command with shared SQL environment", () => {

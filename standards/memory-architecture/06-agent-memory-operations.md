@@ -5,10 +5,18 @@ This runbook implements the authoritative external-memory decision in
 It records mutable operator and session details only; changes here do not amend
 that decision.
 
+> **Amendment (2026-08-06).** The durable dev-memory role moved from Cognee to
+> basic-memory + codegraph; see
+> [`07-shared-memory-adoption.md`](./07-shared-memory-adoption.md) and the
+> 2026-08-06 entry in [`04-decision-log.md`](./04-decision-log.md). The
+> sections below are updated to match; the operator/product boundary is
+> unchanged.
+
 ## Provisioning and operating envelope
 
-- Cognee and the read-frozen Graphiti service are operator-level MCP facilities,
-  supplied by user plugin/settings rather than the repository `.mcp.json`.
+- basic-memory and codegraph are registered in the repository `.mcp.json`;
+  Cognee and the read-frozen Graphiti service remain operator-level MCP
+  facilities, supplied by user plugin/settings.
 - Run Cognee only in its embedded/local or all-Postgres profile, never the full
   compose stack. Treat its semantic state as a bounded cache with TTL, pruning,
   consolidation, and node-set scoping; it is not an authority source.
@@ -17,9 +25,13 @@ that decision.
 
 ## Recall routing
 
-- Prefer Cognee for durable dev-memory recall. Use `graphiti-memory` only for
-  historical reads while the decision log's write freeze and decommissioning
-  milestone remain in force.
+- Prefer basic-memory (project `beep-shared`) for durable dev-memory recall
+  and for writing anything worth recalling in a later session.
+- Prefer codegraph for code-structure questions — symbol definitions, callers,
+  dependency edges — before falling back to repository-wide text search.
+- Cognee is available for document-KG experiments; it is no longer the default
+  recall path. Use `graphiti-memory` only for historical reads while the
+  decision log's write freeze and decommissioning milestone remain in force.
 - Start or recover the historical Graphiti read proxy with
   `bun run graphiti:proxy` or `bun run graphiti:proxy:ensure`.
 - Graphiti reads scope `group_ids` to `beep_dev`: pass `["beep_dev"]` when the

@@ -40,6 +40,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
+  align-stage: deep-dive of the Lynx project's Legal Knowledge Graph ontology
+  (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded
+  against beep-effect's semantic/KG capability (successor strand to graduated
+  `legal-ontology-landscape`, which cited Lynx in one line only). Research
+  landed 2026-08-06: Lynx is a pattern donor, not a vocabulary donor — five
+  ranked opportunities in `research/05-value-assessment.md` (lead: attributed
+  multi-claim span annotation; `lkg.ttl` as first VETTED vendor slice); zero
+  patent/IP modelling in the whole corpus, so semantic-foundation M2/M3 gaps
+  stay open. Next: grill the five open questions.
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
