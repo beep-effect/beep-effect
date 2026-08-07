@@ -20,9 +20,8 @@ import {
   legalActContentEquivalence,
   oppositePosition,
 } from "@beep/law-practice-domain";
-import { Effect, Equal, Layer } from "effect";
+import { Effect, Equal, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LegalPositionRelatorAdmissionError } from "./LegalPositionRelatorPolicy.errors.ts";
