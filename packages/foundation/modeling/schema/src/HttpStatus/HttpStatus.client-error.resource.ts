@@ -36,6 +36,16 @@ export const Gone = S.Literal(410).pipe(
 
 /**
  * {@inheritDoc Gone}
+ *
+ * **Example** (Assign Gone status code)
+ *
+ * ```ts
+ * import type { Gone } from "@beep/schema/HttpStatus"
+ *
+ * const status: Gone = 410
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -66,6 +76,16 @@ export const LengthRequired = S.Literal(411).pipe(
 
 /**
  * {@inheritDoc LengthRequired}
+ *
+ * **Example** (Assign LengthRequired status)
+ *
+ * ```ts
+ * import type { LengthRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: LengthRequired = 411
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -96,6 +116,16 @@ export const PreconditionFailed = S.Literal(412).pipe(
 
 /**
  * {@inheritDoc PreconditionFailed}
+ *
+ * **Example** (Assign PreconditionFailed status)
+ *
+ * ```ts
+ * import type { PreconditionFailed } from "@beep/schema/HttpStatus"
+ *
+ * const status: PreconditionFailed = 412
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -130,6 +160,16 @@ export const PayloadTooLarge = S.Literal(413).pipe(
 
 /**
  * {@inheritDoc PayloadTooLarge}
+ *
+ * **Example** (Assign PayloadTooLarge status)
+ *
+ * ```ts
+ * import type { PayloadTooLarge } from "@beep/schema/HttpStatus"
+ *
+ * const status: PayloadTooLarge = 413
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -161,6 +201,16 @@ export const UriTooLong = S.Literal(414).pipe(
 
 /**
  * {@inheritDoc UriTooLong}
+ *
+ * **Example** (Assign UriTooLong status code)
+ *
+ * ```ts
+ * import type { UriTooLong } from "@beep/schema/HttpStatus"
+ *
+ * const status: UriTooLong = 414
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -192,6 +242,16 @@ export const UnsupportedMediaType = S.Literal(415).pipe(
 
 /**
  * {@inheritDoc UnsupportedMediaType}
+ *
+ * **Example** (Assign UnsupportedMediaType status)
+ *
+ * ```ts
+ * import type { UnsupportedMediaType } from "@beep/schema/HttpStatus"
+ *
+ * const status: UnsupportedMediaType = 415
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -223,6 +283,16 @@ export const RangeNotSatisfiable = S.Literal(416).pipe(
 
 /**
  * {@inheritDoc RangeNotSatisfiable}
+ *
+ * **Example** (Assign RangeNotSatisfiable status)
+ *
+ * ```ts
+ * import type { RangeNotSatisfiable } from "@beep/schema/HttpStatus"
+ *
+ * const status: RangeNotSatisfiable = 416
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -253,6 +323,16 @@ export const ExpectationFailed = S.Literal(417).pipe(
 
 /**
  * {@inheritDoc ExpectationFailed}
+ *
+ * **Example** (Assign ExpectationFailed status)
+ *
+ * ```ts
+ * import type { ExpectationFailed } from "@beep/schema/HttpStatus"
+ *
+ * const status: ExpectationFailed = 417
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -283,6 +363,16 @@ export const ImATeapot = S.Literal(418).pipe(
 
 /**
  * {@inheritDoc ImATeapot}
+ *
+ * **Example** (Assign ImATeapot status code)
+ *
+ * ```ts
+ * import type { ImATeapot } from "@beep/schema/HttpStatus"
+ *
+ * const status: ImATeapot = 418
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

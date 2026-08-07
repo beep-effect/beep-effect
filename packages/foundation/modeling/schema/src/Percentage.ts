@@ -44,6 +44,17 @@ export const Percentage = S.Finite.check(
 
 /**
  * {@inheritDoc Percentage}
+ *
+ * **Example** (Type annotation with decode)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Percentage } from "@beep/schema/Percentage"
+ *
+ * const discount: Percentage = S.decodeUnknownSync(Percentage)(25)
+ * console.log(discount) // 25
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

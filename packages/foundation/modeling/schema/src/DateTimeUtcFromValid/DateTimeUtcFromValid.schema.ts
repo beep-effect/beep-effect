@@ -48,6 +48,16 @@ export const DateTimeInputKind = LiteralKit([
 
 /**
  * {@inheritDoc DateTimeInputKind}
+ *
+ * **Example** (Annotating kind type)
+ *
+ * ```ts
+ * import type { DateTimeInputKind } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const kind: DateTimeInputKind = "string"
+ * console.log(kind)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -169,6 +179,16 @@ export const DateTimeInputString = S.String.check(DateTimeInputStringCheck).pipe
 
 /**
  * {@inheritDoc DateTimeInputString}
+ *
+ * **Example** (Annotating string input type)
+ *
+ * ```ts
+ * import type { DateTimeInputString } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const value: DateTimeInputString = "2024-01-01T00:00:00.000Z"
+ * console.log(value)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -206,6 +226,16 @@ export const DateTimeInputNumber = S.Finite.check(DateTimeInputNumberCheck).pipe
 
 /**
  * {@inheritDoc DateTimeInputNumber}
+ *
+ * **Example** (Annotating number input type)
+ *
+ * ```ts
+ * import type { DateTimeInputNumber } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const value: DateTimeInputNumber = 1_704_067_200_000
+ * console.log(value)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -242,6 +272,16 @@ export const DateTimeInputDate = S.Date.pipe(
 
 /**
  * {@inheritDoc DateTimeInputDate}
+ *
+ * **Example** (Annotating Date input type)
+ *
+ * ```ts
+ * import type { DateTimeInputDate } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const value: DateTimeInputDate = new Date("2024-01-01T00:00:00.000Z")
+ * console.log(value.toISOString())
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -277,6 +317,17 @@ export const DateTimeInputDateTime = S.Union([S.DateTimeUtc, S.DateTimeZoned]).p
 
 /**
  * {@inheritDoc DateTimeInputDateTime}
+ *
+ * **Example** (Annotating DateTime input type)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import type { DateTimeInputDateTime } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const value: DateTimeInputDateTime = DateTime.makeUnsafe("2024-01-01T00:00:00.000Z")
+ * console.log(DateTime.formatIso(value))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -418,6 +469,16 @@ export const DateTimeInput = S.Union([
 
 /**
  * {@inheritDoc DateTimeInput}
+ *
+ * **Example** (Annotating DateTimeInput type)
+ *
+ * ```ts
+ * import type { DateTimeInput } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const input: DateTimeInput = "2024-01-01T00:00:00.000Z"
+ * console.log(input)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -498,6 +559,17 @@ export const DateTimeUtcFromValid = DateTimeInput.pipe(
 
 /**
  * {@inheritDoc DateTimeUtcFromValid}
+ *
+ * **Example** (Annotating UTC DateTime type)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import type { DateTimeUtcFromValid } from "@beep/schema/DateTimeUtcFromValid"
+ *
+ * const utc: DateTimeUtcFromValid = DateTime.makeUnsafe("2024-01-01T00:00:00.000Z")
+ * console.log(DateTime.formatIso(utc))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

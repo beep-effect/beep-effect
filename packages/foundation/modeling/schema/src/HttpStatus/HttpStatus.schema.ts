@@ -74,6 +74,16 @@ export declare namespace HttpStatus {
 
 /**
  * {@inheritDoc HttpStatus}
+ *
+ * **Example** (Annotate numeric status type)
+ *
+ * ```ts
+ * import type { HttpStatus } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus = 100
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

@@ -31,15 +31,25 @@ export const HttpProtocol = LiteralKit(["http", "https"]).pipe(
 
 /**
  * {@inheritDoc HttpProtocol}
+ *
+ * **Example** (Type protocol and check options)
+ *
+ * ```ts
+ * import { HttpProtocol } from "@beep/schema/HttpProtocol"
+ *
+ * const protocol: HttpProtocol = "https"
+ * console.log(HttpProtocol.Options.includes(protocol))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
 export type HttpProtocol = typeof HttpProtocol.Type;
 
 /**
- * Alias for {@link HttpProtocol} (compat export name).
+ * {@inheritDoc HttpProtocol}
  *
- * **Example** (Check an https protocol literal)
+ * **Example** (Check https via Schema)
  *
  * ```ts
  * import { Schema } from "@beep/schema/HttpProtocol"
@@ -54,6 +64,16 @@ export const Schema = HttpProtocol;
 
 /**
  * {@inheritDoc HttpProtocol}
+ *
+ * **Example** (Type protocol Schema value)
+ *
+ * ```ts
+ * import type { Schema } from "@beep/schema/HttpProtocol"
+ *
+ * const protocol: Schema = "https"
+ * console.log(protocol)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

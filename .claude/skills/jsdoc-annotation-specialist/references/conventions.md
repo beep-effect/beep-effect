@@ -21,10 +21,9 @@ appears outside an Example.
 
 ## Carrier and kind split
 
-Use titled Example sections for all new and touched code. A legacy `@example` tag
-is grandfathered in untouched files. When a file's documentation is touched,
-migrate its legacy carriers without mass-editing untouched files. Move `@remarks`
-content into Details or Gotchas. New `@remarks` is forbidden.
+Use titled Example sections everywhere. The legacy `@example` and `@remarks`
+carriers are retired repo-wide: the zero-legacy ratchet fails on any occurrence in
+`packages/**/src`. Move `@remarks` content into Details or Gotchas.
 
 Examples are required for value-level exports: functions, constants, classes,
 schemas, services, layers, and other runtime values. Pure type-level exports need

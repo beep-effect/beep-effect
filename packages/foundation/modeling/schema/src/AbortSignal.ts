@@ -53,6 +53,18 @@ export const AbortSig = S.declare(isAbortSignal).pipe(
 
 /**
  * {@inheritDoc AbortSig}
+ *
+ * **Example** (Type AbortSignal value)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AbortSig } from "@beep/schema/AbortSignal"
+ *
+ * const controller = new AbortController()
+ * const signal: AbortSig = S.decodeUnknownSync(AbortSig)(controller.signal)
+ * console.log(signal.aborted) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

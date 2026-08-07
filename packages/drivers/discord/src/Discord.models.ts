@@ -109,6 +109,16 @@ export const DiscordHttpStatus = S.Finite.check(
 
 /**
  * {@inheritDoc DiscordHttpStatus}
+ *
+ * **Example** (Type-annotate status value)
+ *
+ * ```ts
+ * import type { DiscordHttpStatus } from "@beep/discord"
+ *
+ * const status: DiscordHttpStatus = 200
+ * console.log(status)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

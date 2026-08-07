@@ -115,6 +115,16 @@ export const BoolDefaultFalse = boolWithDefault(false).pipe(
 
 /**
  * {@inheritDoc BoolDefaultFalse}
+ *
+ * **Example** (BoolDefaultFalse type annotation)
+ *
+ * ```ts
+ * import type { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
+ *
+ * const visible: BoolDefaultFalse = false
+ * console.log(visible)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -145,6 +155,16 @@ export const BoolDefaultTrue = boolWithDefault(true).pipe(
 
 /**
  * {@inheritDoc BoolDefaultTrue}
+ *
+ * **Example** (BoolDefaultTrue type annotation)
+ *
+ * ```ts
+ * import type { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
+ *
+ * const enabled: BoolDefaultTrue = true
+ * console.log(enabled)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

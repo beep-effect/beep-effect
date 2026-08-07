@@ -37,6 +37,17 @@ export const ContinentCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.Cont
 
 /**
  * {@inheritDoc ContinentCode}
+ *
+ * **Example** (Type annotated continent code)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContinentCode } from "@beep/schema/ContinentCode"
+ *
+ * const code: ContinentCode = S.decodeUnknownSync(ContinentCode)("150")
+ * console.log(code) // "150"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -70,6 +81,17 @@ export const ContinentName = LiteralKit(
 
 /**
  * {@inheritDoc ContinentName}
+ *
+ * **Example** (Type annotated continent name)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContinentName } from "@beep/schema/ContinentCode"
+ *
+ * const name: ContinentName = S.decodeUnknownSync(ContinentName)("Europe")
+ * console.log(name) // "Europe"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

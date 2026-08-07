@@ -27,6 +27,17 @@ export const CountryName = TerritoryNameSchema;
 
 /**
  * {@inheritDoc CountryName}
+ *
+ * **Example** (Type country name value)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CountryName } from "@beep/schema/CountryName"
+ *
+ * const name: CountryName = S.decodeUnknownSync(CountryName)("United States")
+ * console.log(name) // "United States"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

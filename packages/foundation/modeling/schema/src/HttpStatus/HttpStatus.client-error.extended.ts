@@ -32,6 +32,16 @@ export const MisdirectedRequest = S.Literal(421).pipe(
 
 /**
  * {@inheritDoc MisdirectedRequest}
+ *
+ * **Example** (Assign MisdirectedRequest status)
+ *
+ * ```ts
+ * import type { MisdirectedRequest } from "@beep/schema/HttpStatus"
+ *
+ * const status: MisdirectedRequest = 421
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -64,6 +74,16 @@ export const UnprocessableEntity = S.Literal(422).pipe(
 
 /**
  * {@inheritDoc UnprocessableEntity}
+ *
+ * **Example** (Assign UnprocessableEntity status)
+ *
+ * ```ts
+ * import type { UnprocessableEntity } from "@beep/schema/HttpStatus"
+ *
+ * const status: UnprocessableEntity = 422
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -92,6 +112,16 @@ export const Locked = S.Literal(423).pipe(
 
 /**
  * {@inheritDoc Locked}
+ *
+ * **Example** (Assign Locked status)
+ *
+ * ```ts
+ * import type { Locked } from "@beep/schema/HttpStatus"
+ *
+ * const status: Locked = 423
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -122,6 +152,16 @@ export const FailedDependency = S.Literal(424).pipe(
 
 /**
  * {@inheritDoc FailedDependency}
+ *
+ * **Example** (Assign FailedDependency status)
+ *
+ * ```ts
+ * import type { FailedDependency } from "@beep/schema/HttpStatus"
+ *
+ * const status: FailedDependency = 424
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -152,6 +192,16 @@ export const TooEarly = S.Literal(425).pipe(
 
 /**
  * {@inheritDoc TooEarly}
+ *
+ * **Example** (Assign TooEarly status)
+ *
+ * ```ts
+ * import type { TooEarly } from "@beep/schema/HttpStatus"
+ *
+ * const status: TooEarly = 425
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -183,6 +233,16 @@ export const UpgradeRequired = S.Literal(426).pipe(
 
 /**
  * {@inheritDoc UpgradeRequired}
+ *
+ * **Example** (Assign UpgradeRequired status)
+ *
+ * ```ts
+ * import type { UpgradeRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: UpgradeRequired = 426
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -216,6 +276,16 @@ export const PreconditionRequired = S.Literal(428).pipe(
 
 /**
  * {@inheritDoc PreconditionRequired}
+ *
+ * **Example** (Assign PreconditionRequired status)
+ *
+ * ```ts
+ * import type { PreconditionRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: PreconditionRequired = 428
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -255,6 +325,16 @@ export const TooManyRequests = S.Literal(429).pipe(
 
 /**
  * {@inheritDoc TooManyRequests}
+ *
+ * **Example** (Assign TooManyRequests status)
+ *
+ * ```ts
+ * import type { TooManyRequests } from "@beep/schema/HttpStatus"
+ *
+ * const status: TooManyRequests = 429
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -286,6 +366,16 @@ export const RequestHeaderFieldsTooLarge = S.Literal(431).pipe(
 
 /**
  * {@inheritDoc RequestHeaderFieldsTooLarge}
+ *
+ * **Example** (Assign header fields status)
+ *
+ * ```ts
+ * import type { RequestHeaderFieldsTooLarge } from "@beep/schema/HttpStatus"
+ *
+ * const status: RequestHeaderFieldsTooLarge = 431
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -317,6 +407,16 @@ export const UnavailableForLegalReasons = S.Literal(451).pipe(
 
 /**
  * {@inheritDoc UnavailableForLegalReasons}
+ *
+ * **Example** (Assign legal reasons status)
+ *
+ * ```ts
+ * import type { UnavailableForLegalReasons } from "@beep/schema/HttpStatus"
+ *
+ * const status: UnavailableForLegalReasons = 451
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

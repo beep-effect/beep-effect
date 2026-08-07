@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-07T00:44:40.082Z",
+  "generatedAt": "2026-08-07T04:45:16.330Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,9 +65,9 @@
     "cleanPackages": 68,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 63,
-    "publicModules": 2413,
-    "publicExports": 15867,
-    "openModules": 401,
+    "publicModules": 2414,
+    "publicExports": 15884,
+    "openModules": 402,
     "openExports": 157,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 542,
+    "multiple-description-paragraphs": 543,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -56722,8 +56722,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2353,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2353-qualitycommand",
+          "line": 2351,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2351-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -90584,8 +90584,8 @@
           "line": 158,
           "anchor": "packages-tooling-tool-docgen-src-cli-ts-158-docgencommand",
           "currentTags": [
-            "@effects",
             "@internal",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -91024,8 +91024,8 @@
           "line": 555,
           "anchor": "packages-tooling-tool-docgen-src-configuration-ts-555-load",
           "currentTags": [
-            "@effects",
             "@internal",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -91591,9 +91591,9 @@
           "line": 137,
           "anchor": "packages-tooling-tool-docgen-src-parser-ts-137-parsecomment",
           "currentTags": [
+            "@internal",
             "@param",
             "@returns",
-            "@internal",
             "@category",
             "@since"
           ],
@@ -91754,9 +91754,9 @@
           "line": 676,
           "anchor": "packages-tooling-tool-docgen-src-parser-ts-676-getconstructordeclarationsignature",
           "currentTags": [
+            "@internal",
             "@param",
             "@returns",
-            "@internal",
             "@category",
             "@since"
           ],
@@ -91848,9 +91848,9 @@
           "line": 855,
           "anchor": "packages-tooling-tool-docgen-src-parser-ts-855-parsefile",
           "currentTags": [
+            "@internal",
             "@param",
             "@returns",
-            "@internal",
             "@category",
             "@since"
           ],
@@ -119910,8 +119910,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 316,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-316-session",
+          "line": 317,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-317-session",
           "currentTags": [
             "@category",
             "@since"
@@ -119932,8 +119932,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 356,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-356-sessionchangeapplication",
+          "line": 357,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-357-sessionchangeapplication",
           "currentTags": [
             "@category",
             "@since"
@@ -119954,8 +119954,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 388,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-388-createsessioninput",
+          "line": 389,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-389-createsessioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -119976,8 +119976,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 417,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-417-emptysessionchangedelta",
+          "line": 418,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-418-emptysessionchangedelta",
           "currentTags": [
             "@category",
             "@since"
@@ -119998,8 +119998,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 439,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-439-emptysessiongraphpartitions",
+          "line": 440,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-440-emptysessiongraphpartitions",
           "currentTags": [
             "@category",
             "@since"
@@ -120020,8 +120020,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 545,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-545-classifysessiondatasetpartitions",
+          "line": 546,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-546-classifysessiondatasetpartitions",
           "currentTags": [
             "@category",
             "@since"
@@ -120042,8 +120042,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 581,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-581-datasetforpartition",
+          "line": 582,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-582-datasetforpartition",
           "currentTags": [
             "@category",
             "@since"
@@ -120064,8 +120064,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 634,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-634-combinesessionchangedelta",
+          "line": 635,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-635-combinesessionchangedelta",
           "currentTags": [
             "@category",
             "@since"
@@ -120086,8 +120086,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 674,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-674-changedeltaforoperation",
+          "line": 675,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-675-changedeltaforoperation",
           "currentTags": [
             "@category",
             "@since"
@@ -120108,8 +120108,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 728,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-728-applychangetopartitions",
+          "line": 729,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-729-applychangetopartitions",
           "currentTags": [
             "@category",
             "@since"
@@ -120130,8 +120130,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 764,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-764-createsession",
+          "line": 765,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-765-createsession",
           "currentTags": [
             "@category",
             "@since"
@@ -120152,8 +120152,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 807,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-807-appendchange",
+          "line": 808,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-808-appendchange",
           "currentTags": [
             "@category",
             "@since"
@@ -120174,8 +120174,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 853,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-853-appendchanges",
+          "line": 854,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-854-appendchanges",
           "currentTags": [
             "@category",
             "@since"
@@ -120196,8 +120196,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 892,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-892-invertchangeoperation",
+          "line": 893,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-893-invertchangeoperation",
           "currentTags": [
             "@category",
             "@since"
@@ -120218,8 +120218,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 934,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-934-derivesessiongraphpartitions",
+          "line": 935,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-935-derivesessiongraphpartitions",
           "currentTags": [
             "@category",
             "@since"
@@ -120240,8 +120240,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 983,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-983-applychangeoperationswithdelta",
+          "line": 984,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-984-applychangeoperationswithdelta",
           "currentTags": [
             "@category",
             "@since"
@@ -120262,8 +120262,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 1041,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-1041-derivenamedgraphs",
+          "line": 1042,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-1042-derivenamedgraphs",
           "currentTags": [
             "@category",
             "@since"
@@ -210824,8 +210824,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 308,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-308-empty",
+          "line": 309,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-309-empty",
           "currentTags": [
             "@category",
             "@since"
@@ -210846,8 +210846,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 386,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-386-fromdocumentannotated",
+          "line": 387,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-387-fromdocumentannotated",
           "currentTags": [
             "@effects",
             "@category",
@@ -210869,8 +210869,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 547,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-547-addposannotations",
+          "line": 548,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-548-addposannotations",
           "currentTags": [
             "@category",
             "@since"
@@ -210891,8 +210891,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 572,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-572-addlemmaannotations",
+          "line": 573,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-573-addlemmaannotations",
           "currentTags": [
             "@category",
             "@since"
@@ -210913,8 +210913,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 597,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-597-addentityannotations",
+          "line": 598,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-598-addentityannotations",
           "currentTags": [
             "@category",
             "@since"
@@ -210935,8 +210935,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 627,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-627-adddependencyannotations",
+          "line": 628,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-628-adddependencyannotations",
           "currentTags": [
             "@category",
             "@since"
@@ -210957,8 +210957,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 676,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-676-getposnodes",
+          "line": 677,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-677-getposnodes",
           "currentTags": [
             "@category",
             "@since"
@@ -210979,8 +210979,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 697,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-697-getentitynodes",
+          "line": 698,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-698-getentitynodes",
           "currentTags": [
             "@category",
             "@since"
@@ -211001,8 +211001,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 718,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-718-getlemmanodes",
+          "line": 719,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-719-getlemmanodes",
           "currentTags": [
             "@category",
             "@since"
@@ -211023,8 +211023,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 739,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-739-gettextnodes",
+          "line": 740,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-740-gettextnodes",
           "currentTags": [
             "@category",
             "@since"
@@ -211045,8 +211045,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 760,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-760-filterentitiesbytype",
+          "line": 761,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-761-filterentitiesbytype",
           "currentTags": [
             "@category",
             "@since"
@@ -211067,8 +211067,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 786,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-786-filterbypostag",
+          "line": 787,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-787-filterbypostag",
           "currentTags": [
             "@category",
             "@since"
@@ -211089,8 +211089,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 812,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-812-countnodesbytype",
+          "line": 813,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-813-countnodesbytype",
           "currentTags": [
             "@category",
             "@since"
@@ -211111,8 +211111,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 848,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-848-toarray",
+          "line": 849,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-849-toarray",
           "currentTags": [
             "@category",
             "@since"
@@ -211133,8 +211133,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 865,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-865-nodecount",
+          "line": 866,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-866-nodecount",
           "currentTags": [
             "@category",
             "@since"
@@ -211155,8 +211155,8 @@
           "exportKind": "const",
           "filePath": "src/Graph/AnnotatedTextGraph.ts",
           "repoPath": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-          "line": 881,
-          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-881-getroots",
+          "line": 882,
+          "anchor": "packages-foundation-capability-nlp-processing-src-graph-annotatedtextgraph-ts-882-getroots",
           "currentTags": [
             "@category",
             "@since"
@@ -258860,9 +258860,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 7,
-        "publicModuleCount": 7,
-        "publicExportCount": 72
+        "sourceFileCount": 8,
+        "publicModuleCount": 8,
+        "publicExportCount": 89
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -258871,7 +258871,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 1,
+        "openModules": 2,
         "openExports": 19,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -258884,7 +258884,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 20,
+          "multiple-description-paragraphs": 21,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -258921,6 +258921,32 @@
           "documentationShapeViolations": [],
           "exportCount": 7,
           "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 1,
+          "anchor": "infra-src-cirunners-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 16,
+          "remediationStatus": "open"
         },
         {
           "docKind": "packageDocumentation",
@@ -259054,7 +259080,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         }
       ],
@@ -259206,6 +259232,358 @@
           "anchor": "infra-src-aimetrics-ts-495-aimetricsstack",
           "currentTags": [
             "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersRunnerTagKey",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 93,
+          "anchor": "infra-src-cirunners-ts-93-cirunnersrunnertagkey",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersRunnerTagValue",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 109,
+          "anchor": "infra-src-cirunners-ts-109-cirunnersrunnertagvalue",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersInfraTagValue",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 127,
+          "anchor": "infra-src-cirunners-ts-127-cirunnersinfratagvalue",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersLaunchTemplateName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 144,
+          "anchor": "infra-src-cirunners-ts-144-cirunnerslaunchtemplatename",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersWorkerSecurityGroupName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 160,
+          "anchor": "infra-src-cirunners-ts-160-cirunnersworkersecuritygroupname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersReaperFunctionName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 176,
+          "anchor": "infra-src-cirunners-ts-176-cirunnersreaperfunctionname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersPulumiConfigValues",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 362,
+          "anchor": "infra-src-cirunners-ts-362-cirunnerspulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersPulumiConfigValues",
+          "exportKind": "type",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 399,
+          "anchor": "infra-src-cirunners-ts-399-cirunnerspulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersNetworkConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 444,
+          "anchor": "infra-src-cirunners-ts-444-cirunnersnetworkconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersImageConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 472,
+          "anchor": "infra-src-cirunners-ts-472-cirunnersimageconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersWorkerConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 497,
+          "anchor": "infra-src-cirunners-ts-497-cirunnersworkerconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersReaperConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 523,
+          "anchor": "infra-src-cirunners-ts-523-cirunnersreaperconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersStackArgs",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 546,
+          "anchor": "infra-src-cirunners-ts-546-cirunnersstackargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCiRunnersStackArgsFromConfigValues",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 588,
+          "anchor": "infra-src-cirunners-ts-588-makecirunnersstackargsfromconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "loadCiRunnersStackArgs",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 645,
+          "anchor": "infra-src-cirunners-ts-645-loadcirunnersstackargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersStack",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 844,
+          "anchor": "infra-src-cirunners-ts-844-cirunnersstack",
+          "currentTags": [
             "@category",
             "@since"
           ],
@@ -260654,12 +261032,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./CiRunners.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "infra/src/index.ts",
+          "line": 58,
+          "anchor": "infra-src-index-ts-58-export-from-cirunners-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./OipWeb.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 57,
-          "anchor": "infra-src-index-ts-57-export-from-oipweb-ts",
+          "line": 72,
+          "anchor": "infra-src-index-ts-72-export-from-oipweb-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -260681,8 +261081,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 71,
-          "anchor": "infra-src-index-ts-71-export-from-openclaw-ts",
+          "line": 86,
+          "anchor": "infra-src-index-ts-86-export-from-openclaw-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -260704,8 +261104,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 85,
-          "anchor": "infra-src-index-ts-85-export-from-openclawartifacts-ts",
+          "line": 100,
+          "anchor": "infra-src-index-ts-100-export-from-openclawartifacts-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -260727,8 +261127,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 99,
-          "anchor": "infra-src-index-ts-99-export-from-storybook-ts",
+          "line": 114,
+          "anchor": "infra-src-index-ts-114-export-from-storybook-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -260750,8 +261150,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 113,
-          "anchor": "infra-src-index-ts-113-export-from-vercel-ts",
+          "line": 128,
+          "anchor": "infra-src-index-ts-128-export-from-vercel-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -378719,8 +379119,8 @@
           "exportKind": "function",
           "filePath": "src/components/button.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/button.tsx",
-          "line": 86,
-          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-86-button",
+          "line": 87,
+          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-87-button",
           "currentTags": [
             "@category",
             "@since"
@@ -378741,8 +379141,8 @@
           "exportKind": "const",
           "filePath": "src/components/button.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/button.tsx",
-          "line": 31,
-          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-31-buttonvariants",
+          "line": 32,
+          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-32-buttonvariants",
           "currentTags": [
             "@category",
             "@since"
@@ -394981,9 +395381,9 @@
           "line": 28,
           "anchor": "packages-tooling-policy-pack-repo-configs-src-next-internal-ts-28-schemaissuetoerror",
           "currentTags": [
+            "@internal",
             "@param",
             "@returns",
-            "@internal",
             "@category",
             "@since"
           ],
@@ -395006,9 +395406,9 @@
           "line": 48,
           "anchor": "packages-tooling-policy-pack-repo-configs-src-next-internal-ts-48-isfunctionvalue",
           "currentTags": [
+            "@internal",
             "@param",
             "@returns",
-            "@internal",
             "@category",
             "@since"
           ],

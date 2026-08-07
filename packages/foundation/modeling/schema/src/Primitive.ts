@@ -34,6 +34,17 @@ export const Primitive = S.Union([S.String, S.Finite, S.Boolean, S.BigInt, S.Nul
 
 /**
  * {@inheritDoc Primitive}
+ *
+ * **Example** (Typed primitive string value)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Primitive } from "@beep/schema/Primitive"
+ *
+ * const value: Primitive = S.decodeUnknownSync(Primitive)("hello")
+ * console.log(value) // "hello"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

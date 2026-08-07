@@ -41,6 +41,16 @@ export const InternalServerError = S.Literal(500).pipe(
 
 /**
  * {@inheritDoc InternalServerError}
+ *
+ * **Example** (Assign typed status 500)
+ *
+ * ```ts
+ * import type { InternalServerError } from "@beep/schema/HttpStatus"
+ *
+ * const status: InternalServerError = 500
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -71,6 +81,16 @@ export const NotImplemented = S.Literal(501).pipe(
 
 /**
  * {@inheritDoc NotImplemented}
+ *
+ * **Example** (Assign typed status 501)
+ *
+ * ```ts
+ * import type { NotImplemented } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotImplemented = 501
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -103,6 +123,16 @@ export const BadGateway = S.Literal(502).pipe(
 
 /**
  * {@inheritDoc BadGateway}
+ *
+ * **Example** (Assign typed status 502)
+ *
+ * ```ts
+ * import type { BadGateway } from "@beep/schema/HttpStatus"
+ *
+ * const status: BadGateway = 502
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -135,6 +165,16 @@ export const ServiceUnavailable = S.Literal(503).pipe(
 
 /**
  * {@inheritDoc ServiceUnavailable}
+ *
+ * **Example** (Assign typed status 503)
+ *
+ * ```ts
+ * import type { ServiceUnavailable } from "@beep/schema/HttpStatus"
+ *
+ * const status: ServiceUnavailable = 503
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -169,6 +209,16 @@ export const GatewayTimeout = S.Literal(504).pipe(
 
 /**
  * {@inheritDoc GatewayTimeout}
+ *
+ * **Example** (Assign typed status 504)
+ *
+ * ```ts
+ * import type { GatewayTimeout } from "@beep/schema/HttpStatus"
+ *
+ * const status: GatewayTimeout = 504
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -199,6 +249,16 @@ export const HttpVersionNotSupported = S.Literal(505).pipe(
 
 /**
  * {@inheritDoc HttpVersionNotSupported}
+ *
+ * **Example** (Assign typed status 505)
+ *
+ * ```ts
+ * import type { HttpVersionNotSupported } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpVersionNotSupported = 505
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -232,6 +292,16 @@ export const VariantAlsoNegotiates = S.Literal(506).pipe(
 
 /**
  * {@inheritDoc VariantAlsoNegotiates}
+ *
+ * **Example** (Assign typed status 506)
+ *
+ * ```ts
+ * import type { VariantAlsoNegotiates } from "@beep/schema/HttpStatus"
+ *
+ * const status: VariantAlsoNegotiates = 506
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -262,6 +332,16 @@ export const InsufficientStorage = S.Literal(507).pipe(
 
 /**
  * {@inheritDoc InsufficientStorage}
+ *
+ * **Example** (Assign typed status 507)
+ *
+ * ```ts
+ * import type { InsufficientStorage } from "@beep/schema/HttpStatus"
+ *
+ * const status: InsufficientStorage = 507
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -291,6 +371,16 @@ export const LoopDetected = S.Literal(508).pipe(
 
 /**
  * {@inheritDoc LoopDetected}
+ *
+ * **Example** (Assign typed status 508)
+ *
+ * ```ts
+ * import type { LoopDetected } from "@beep/schema/HttpStatus"
+ *
+ * const status: LoopDetected = 508
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -321,6 +411,16 @@ export const NotExtended = S.Literal(510).pipe(
 
 /**
  * {@inheritDoc NotExtended}
+ *
+ * **Example** (Assign typed status 510)
+ *
+ * ```ts
+ * import type { NotExtended } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotExtended = 510
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -353,6 +453,16 @@ export const NetworkAuthenticationRequired = S.Literal(511).pipe(
 
 /**
  * {@inheritDoc NetworkAuthenticationRequired}
+ *
+ * **Example** (Assign typed status 511)
+ *
+ * ```ts
+ * import type { NetworkAuthenticationRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: NetworkAuthenticationRequired = 511
+ * console.log(status)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

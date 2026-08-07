@@ -169,6 +169,17 @@ export type ToIsoString = ToIsoStr;
 
 /**
  * {@inheritDoc ToIsoString}
+ *
+ * **Example** (ToIsoStr type annotation)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ToIsoStr } from "@beep/schema/Timestamp"
+ *
+ * const iso: ToIsoStr = S.decodeUnknownSync(ToIsoStr)("2024-01-01T00:00:00.123Z")
+ * console.log(iso)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

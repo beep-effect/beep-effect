@@ -89,6 +89,17 @@ export const NativePathToPosixPath = S.String.pipe(
 
 /**
  * {@inheritDoc NativePathToPosixPath}
+ *
+ * **Example** (Typed native-to-POSIX conversion)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NativePathToPosixPath } from "@beep/schema/PosixPath"
+ *
+ * const p: typeof NativePathToPosixPath.Type = S.decodeUnknownSync(NativePathToPosixPath)("C:\\Users\\docs")
+ * console.log(p) // "C:/Users/docs"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

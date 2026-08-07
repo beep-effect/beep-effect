@@ -32,6 +32,16 @@ export const CardinalDirection = LiteralKit(["north", "south", "east", "west"]).
 );
 /**
  * {@inheritDoc CardinalDirection}
+ *
+ * **Example** (Type-check north direction)
+ *
+ * ```ts
+ * import { CardinalDirection } from "@beep/schema/CardinalDirection"
+ *
+ * const direction: CardinalDirection = "north"
+ * console.log(CardinalDirection.Options.includes(direction))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -59,15 +69,25 @@ export const CardinalDirectionAbbrev = LiteralKit(["N", "S", "E", "W"]).pipe(
 
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
+ *
+ * **Example** (Type-check N abbreviation)
+ *
+ * ```ts
+ * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
+ *
+ * const abbrev: CardinalDirectionAbbrev = "N"
+ * console.log(CardinalDirectionAbbrev.Options.includes(abbrev))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
 export type CardinalDirectionAbbrev = typeof CardinalDirectionAbbrev.Type;
 
 /**
- * Alias for {@link CardinalDirection} (compat export name).
+ * {@inheritDoc CardinalDirection}
  *
- * **Example** (Check a north literal)
+ * **Example** (Check Schema Options includes)
  *
  * ```ts
  * import { Schema } from "@beep/schema/CardinalDirection"
@@ -82,15 +102,25 @@ export const Schema = CardinalDirection;
 
 /**
  * {@inheritDoc CardinalDirection}
+ *
+ * **Example** (Assign Schema type north)
+ *
+ * ```ts
+ * import type { Schema } from "@beep/schema/CardinalDirection"
+ *
+ * const direction: Schema = "north"
+ * console.log(direction)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export type Schema = CardinalDirection;
 
 /**
- * Alias for {@link CardinalDirectionAbbrev} (compat export name).
+ * {@inheritDoc CardinalDirectionAbbrev}
  *
- * **Example** (Check an N abbrev literal)
+ * **Example** (Check Abbrev Options includes)
  *
  * ```ts
  * import { Abbrev } from "@beep/schema/CardinalDirection"
@@ -105,6 +135,16 @@ export const Abbrev = CardinalDirectionAbbrev;
 
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
+ *
+ * **Example** (Assign Abbrev type N)
+ *
+ * ```ts
+ * import type { Abbrev } from "@beep/schema/CardinalDirection"
+ *
+ * const abbrev: Abbrev = "N"
+ * console.log(abbrev)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

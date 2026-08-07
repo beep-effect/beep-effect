@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-07T00:44:40.082Z
+Generated: 2026-08-07T04:45:16.330Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 63 |
-| publicModules | 2413 |
-| publicExports | 15867 |
-| openModules | 401 |
+| publicModules | 2414 |
+| publicExports | 15884 |
+| openModules | 402 |
 | openExports | 157 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 542 |
+| multiple-description-paragraphs | 543 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -147,7 +147,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 90 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 91 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
 | 92 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 310 | 9 | 0 |
-| 93 | `@beep/infra` | `infra` | needs-remediation | 7 | 72 | 1 | 19 |
+| 93 | `@beep/infra` | `infra` | needs-remediation | 8 | 89 | 2 | 19 |
 | 94 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 95 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 96 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
@@ -879,6 +879,7 @@ Module findings:
 Path: `infra`
 
 Module findings:
+- `src/CiRunners.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:

@@ -119,3 +119,38 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
 - **Prevention:** a `beep quality jsdoc-check <path>...` subcommand that runs
   `documentationShapeViolations` on explicit paths would make scoped agent verification a
   one-liner.
+
+### A post-closeout "fix" commit silently deleted 146 migrated Example blocks
+
+- **What happened:** after P3 closed the packet, commit `78ac876c26` ("clear jsdoc-carrier
+  fallow attribution and JSDoc baseline", subject-only message) hand-deleted 1,462 lines /
+  ~146 titled Example sections across 52 files — `{@inheritDoc}` type-level companions the
+  codemod had just migrated — leaving the shipped conservation proof
+  (`data/jsdoc-migrate.proof-manifest.jsonc`, `conservationViolations: 0`) describing a tree
+  that no longer existed, with `extract.jsonl`/`titles.jsonl` records dangling. The deletion
+  was law-permissible (type-level Examples are optional) but forced by nothing: restoring
+  all 52 files reproduced `fallow audit --check --base origin/main` exit 0 / `introduced: 0`
+  — the same commit's `fallow-ignore-next-line` suppressions and `.fallowrc.jsonc` waiver
+  were what actually cleared the attribution.
+- **Evidence:** adversarial audit of PR #608 (workflow `wf_34316a3a-e48`); restore verified
+  by fallow audit, `jsdoc-ratchet` both scopes exit 0, and `@beep/schema` docgen exit 0.
+  The deletion also self-inflicted the baseline bump it papered over:
+  `multiple-description-paragraphs` returned to 543 matching the committed baseline once
+  the docs were restored.
+- **Prevention:** the zero-hand-edits invariant applies until merge, not until closeout;
+  any post-closeout commit touching migrated files must re-run `jsdoc-migrate verify` and
+  disclose doc deletions in the commit body.
+
+### The generated-inclusive scope was proof-only until it was wired into CI
+
+- **What happened:** SPEC row 6's `--include-generated` check existed but no CI lane, script,
+  or yeet step invoked it — the acp `schema.gen.ts` allowlist was unenforced, nothing would
+  have caught a new legacy carrier in any other generated file, and nothing would force the
+  allowlist's removal at acp-resync time. Separately, `apps/**` holds 282 legacy carriers in
+  91 files that no gate scans at all (`git ls-files packages` corpus).
+- **Evidence:** `rg include-generated .github packages/tooling/tool/cli/src/commands/Ci`
+  had zero hits before this fix; audit finding "generated-inclusive proof is inert".
+- **Prevention:** the hosted `ci:jsdoc-ratchet:ratchet` step now passes
+  `--include-generated` (superset scope: everything the non-generated scan catches, plus
+  generated files minus the one allowlisted residual). The `apps/**` scope gap is a
+  candidate follow-up: extend the corpus or add an apps-scoped totals metric.
