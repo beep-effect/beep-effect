@@ -31,3 +31,22 @@ Receipts recorded at the moment friction happened, per the repo's friction-first
 - **Prevention:** treat subtree-bump + adaptation as one atomic push — publish through
   `beep yeet publish` (which proves before pushing) instead of pushing the subtree merge
   directly.
+
+## 2026-08-07 — beta.104 made `epistemic/server` uncompilable on 16 GB hosted runners
+
+- **Doing:** driving PR #607's hosted checks green after the effect `4.0.0-beta.104` refresh.
+- **Evidence:** eight hosted attempts across five heads. Concurrency caps were walked 4 → 3 → 2 →
+  1 (commits `9eaf6d469b`, `de86011973`, `9d0c39d45f`); at every level the killed task list
+  shrank until, fully serial, a **single** task still exit-137s: `packages/epistemic/server`
+  `bun run build` (`tsc -b`) alone starves a 16 GB `ubuntu-24.04` runner (Test Integration
+  10:24→10:37, Coverage 10:24→11:05, both killed on exactly that task; Check's serial tsgo pass
+  ran 57 min then "runner lost communication"; Docgen's runner died at `--parallel=2`).
+  Local proofs pass because the workstation has 96 GB — the pressure is invisible off-runner.
+  Push-event lanes stay green only because they ride the remote turbo cache; PR lanes compile
+  cold by security design (`cache-write: "false"`, no `TURBO_TOKEN`).
+- **Prevention / unlock:** (a) short-term: a swap-file step in `check.yml` before the heavy
+  lanes, or larger runners — workflow edits were outside this session's write surface; (b) real
+  fix: the epistemic-slice type-instantiation explosion under beta.104 belongs to the
+  box-typecheck-cost / instantiation-census campaign — `epistemic/server`, `epistemic/client`,
+  `epistemic/ui`, `db-admin`, `ontology/client`, `tooling/tool/cli`, and `apps/storybook` were
+  the recurring kill set; (c) worth deciding: a read-only remote-cache lane for PRs.
