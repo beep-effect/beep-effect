@@ -2,10 +2,15 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated 2026-08-06 into
+[`goals/epistemic-contradiction-detection`](../../goals/epistemic-contradiction-detection/README.md)
+and [`goals/agentic-governance-laws`](../../goals/agentic-governance-laws/README.md); the packet
+remains as provenance for the 26 amendments and the mining corpus.
 
 ## Spark
 
@@ -18,12 +23,12 @@ own, plus a handful of rules that cost one SPEC sentence today and a migration l
 
 ## Next Open Question
 
-**Does [`BRIEF.md`](./BRIEF.md) match the picture in Benjamin's head?** The brief for the two Q1
-graduations is drafted and has passed an adversarial verification round against current main
-(corrections folded in; log in [`DECISIONS.md`](./DECISIONS.md) and the RESEARCH.md addendum).
-Shape exits only on his confirmation. After that: the amendment-application pass over
-[`research/AMENDMENTS.json`](./research/AMENDMENTS.json) — Q2/Q7 settle the fusion-core wording,
-Q4 the retirement-reason wording, Q9 the modality placement, Q10 the standards paragraph.
+None — the packet is graduated. The remaining exploration-owned work is the
+**amendment-application pass** over [`research/AMENDMENTS.json`](./research/AMENDMENTS.json),
+which travels as its own PR ladder (spec-delta docs-PR carrying the Q10 standards paragraph,
+then the three code-change PRs: WinkCorpus tie-break, DocText bracket, LawScan non-vacuity fix)
+— Q2/Q7 settle the fusion-core wording, Q4 the retirement-reason wording, Q9 the modality
+placement. Implementation questions now belong to the two graduated goal packets.
 
 ## What came out of it
 
@@ -95,3 +100,8 @@ mining's "seven through one choke point" was an error; see the RESEARCH.md adden
   dependency turned into a stated v1 default, Q6 routed to packet B's standards edit, Q2 schema
   naming corrected in DECISIONS.md. All six mined code/spec citations verified intact on
   current main.
+- 2026-08-06 (graduate): Benjamin confirmed the BRIEF (finish-up instruction); MAP.md decomposed
+  the two Q1 graduations; `goals/epistemic-contradiction-detection` and
+  `goals/agentic-governance-laws` scaffolded from `goals/_template` with provenance back-links;
+  manifest → `graduate`/`graduated`; ATLAS entry moved Active → Graduated. The
+  amendment-application pass stays exploration-owned and ships as its own PR ladder.
