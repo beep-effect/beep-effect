@@ -26,8 +26,8 @@ dup-skip`.
 | Semantic registry, qualified mappings, and extraction admission (`T1-F8,T2-F3,T2-F4,T2-F5,T2-F6,T2-F7,T2-F10,T3-F8`) | **extend-goal** *(grill resolved: schema-first now, M4 SHACL later)* | `goals/semantic-foundation` | P2 | — |
 | Functional patent profiles and drift-safe ingestion (`T2-F1,T2-F8,T2-F9`) | **mixed** | `explorations/uspto-patent-driver-depth` | P1 | — |
 | Patent citation events and candor disposition (`T2-F2,T3-F7,ADHD-1`) | **mixed** *(packet OPENED 2026-08-04)* | [`explorations/patent-citation-candor-gate`](../patent-citation-candor-gate/README.md) | P1 | `patent-citation-candor-gate` |
-| Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **merged 2026-08-01** → first rung of `patent-drafting-episode-ledger` | `patent-drafting-episode-ledger` | P1 | — |
-| Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3` + merged `T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** *(grill resolved: remo2 rows-first + in-memory RDF lane; remo3 product-records + Cognee projection)* | `patent-drafting-episode-ledger` *(proposed slug, not a path yet)* | P1 | `patent-drafting-episode-ledger` |
+| Claim-limitation support and governed patent drafting (`T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **merged 2026-08-01** → first rung of `patent-drafting-episode-ledger` *(carrier packet OPENED 2026-08-06)* | [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) | P1 | — |
+| Drafting episodes, deterministic retrieval, and rebuildable projections (`T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3` + merged `T4-F1,T4-F2,T4-F3,T4-F4,ADHD-2`) | **mixed** *(grill resolved: remo2 rows-first + in-memory RDF lane; remo3 product-records + Cognee projection; packet OPENED 2026-08-06)* | [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) | P1 | `patent-drafting-episode-ledger` |
 | Rejected admission and ODRL profile claims (`T4-R1,T4-R2`) | **dup-skip** | `explorations/legal-patent-kg-deepening` | P3 | — |
 
 Route mix (as amended 2026-08-04): mixed×5 (one re-routed 2026-08-04 to ride
@@ -36,7 +36,7 @@ dup-skip×1, merged×1 — matching `routing-seed.json`, where the re-routed
 contradiction cluster is encoded as `mixed`. Proposed slug count: **four** after
 the reconciliation grill (`legal-position-relator-runtime` — opened 2026-08-05,
 `legal-rule-time-identity`, `patent-citation-candor-gate` — opened 2026-08-04,
-`patent-drafting-episode-ledger`). All three grill annotations (`remo1`,
+`patent-drafting-episode-ledger` — opened 2026-08-06). All three grill annotations (`remo1`,
 `remo2`, `remo3`) are resolved, and the contradiction-cluster route decision
 landed in the 2026-08-04 phase-2 grill — see the amendment sections at the
 end of this file.
@@ -183,7 +183,7 @@ end of this file.
 
 - **Route / Wave:** merged → first rung of `patent-drafting-episode-ledger` · P1
 - **Nuggets:** `T4-F1`, `T4-F2`, `T4-F3`, `T4-F4`, `ADHD-2`
-- **Primary target:** `patent-drafting-episode-ledger` *(proposed slug; no repo path is asserted; was `patent-drafting-promotion-gates` before the merge)*
+- **Primary target:** [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) *(carrier packet OPENED 2026-08-06; was `patent-drafting-promotion-gates` before the 2026-08-01 merge, then a proposed slug with no repo path)*
 - **Coordinate with:** `goals/agentic-professional-runtime`, `goals/citation-verified-span-substrate`, `goals/law-docketing-patent-spine`
 - **Net-new (no existing home):**
   - `[T4-F1,ADHD-2]` `ClaimLimitationSupportSet`, ordered limitations, dependency closure, unresolved support states, and attorney disposition; source-only `rg` returned zero `ClaimLimitationSupport` symbols.
@@ -201,9 +201,9 @@ end of this file.
 
 ### Drafting episodes, deterministic retrieval, and rebuildable projections
 
-- **Route / Wave:** mixed · P1 · **grill[remo2,remo3]**
+- **Route / Wave:** mixed · P1 · **grill[remo2,remo3]** *(both RESOLVED 2026-08-01)*
 - **Nuggets:** `T1-F10`, `T3-F4`, `T3-F5`, `T3-F10`, `T4-F7`, `ADHD-3`; standing-decision challenges `remo2`, `remo3`
-- **Primary target:** `patent-drafting-episode-ledger` *(proposed slug; no repo path is asserted)*
+- **Primary target:** [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md) *(packet OPENED 2026-08-06; was a proposed slug with no repo path)*
 - **Coordinate with:** `explorations/agent-memory-tiers-bitemporal-edges`, `goals/agentic-professional-runtime`, `goals/hybrid-retrieval-fusion-core`, `goals/practice-kg-mcp`
 - **Net-new (no existing home):**
   - `[T4-F7,ADHD-3]` A law-owned, payload-bearing `DraftingEpisode` event union and replay fold; source-only `rg` returned zero `DraftingEpisode` symbols.
@@ -296,3 +296,18 @@ Q/A/rationale in [`DECISIONS.md`](./DECISIONS.md), 2026-08-04 entries):
    the day the candor wedge's graduation PR #560 merged.
    `patent-drafting-episode-ledger` and the FunctionalUnit extension into
    `explorations/uspto-patent-driver-depth` remain queued on his call.
+
+## Phase-2 amendments, continued (2026-08-06)
+
+1. **Third wedge OPENED.**
+   [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+   exists at capture stage, seeded from the merged "Drafting episodes,
+   deterministic retrieval, and rebuildable projections" row (which absorbed
+   "Claim-limitation support and governed patent drafting" as its first rung
+   in the 2026-08-01 reconciliation grill; the resolved remo2/remo3
+   boundaries are carried into the wedge verbatim as binding); wedge-scoped
+   decisions are pre-seeded in its `DECISIONS.md`, and parent align
+   questions 11 (the `T3-F4` half), 12, 14, 15, and 16 are carried into its
+   `openQuestions`. Opened on Benjamin's call the day the relator wedge's
+   graduation PR #590 merged. The FunctionalUnit extension into
+   `explorations/uspto-patent-driver-depth` remains queued on his call.
