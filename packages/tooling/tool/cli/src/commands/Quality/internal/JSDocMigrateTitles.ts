@@ -476,6 +476,14 @@ const titlesPromptWithRetryNote = (
     ? jsdocMigrateTitlesPrompt(pending)
     : `${jsdocMigrateTitlesPrompt(pending)}\nYour previous response was rejected: ${previousProblem}. Return only the corrected JSON array.`;
 
+const errorMessage = (error: QualityScriptCommandError): string =>
+  typeof error.message === "string" ? error.message : String(error);
+
+const titleRetryBackoffMs = (message: string, tryIndex: number): number => {
+  const authCooldown = message.includes("auth_unavailable") || message.includes("HTTP 5");
+  return (authCooldown ? 2_000 : 400) * (tryIndex + 1);
+};
+
 const requestTitlesForFile = Effect.fn("JSDocMigrateTitles.requestTitlesForFile")(function* (
   proxyUrl: string,
   model: string,
@@ -498,22 +506,18 @@ const requestTitlesForFile = Effect.fn("JSDocMigrateTitles.requestTitlesForFile"
     return yield* jsdocMigrateTitleRecordsFromResponse(content, pending);
   });
 
-  let lastError: QualityScriptCommandError | undefined;
   // More attempts than the schema-only path: proxy auth cooldowns and rate limits
   // show up as transient HTTP failures under concurrent title traffic.
+  let lastError: QualityScriptCommandError | undefined;
   for (let tryIndex = 0; tryIndex < 6; tryIndex += 1) {
-    const outcome = yield* attempt(tryIndex === 0 ? undefined : (lastError?.message ?? "previous attempt failed")).pipe(
-      Effect.result
-    );
+    const outcome = yield* attempt(
+      tryIndex === 0 ? undefined : errorMessage(lastError ?? migrateTitlesError("previous attempt failed"))
+    ).pipe(Effect.result);
     if (outcome._tag === "Success") {
       return outcome.success;
     }
     lastError = outcome.failure;
-    const message =
-      lastError !== undefined && typeof lastError.message === "string" ? lastError.message : String(lastError);
-    const authCooldown = message.includes("auth_unavailable") || message.includes("HTTP 5");
-    const backoffMs = authCooldown ? 2_000 * (tryIndex + 1) : 400 * (tryIndex + 1);
-    yield* Effect.sleep(`${backoffMs} millis`);
+    yield* Effect.sleep(`${titleRetryBackoffMs(errorMessage(lastError), tryIndex)} millis`);
   }
   return yield* lastError ?? migrateTitlesError("Title request failed.");
 });
