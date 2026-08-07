@@ -287,3 +287,71 @@ cause both of them were circling.
   (nobody reviews a 178KB generated snapshot's whitespace) or run the formatter
   from the `generate` script so the artifact lands formatted. As it stands every
   migration author must know to run `lint:fix` on a file they did not write.
+
+### A package's `check` does not typecheck its own `test/` directory
+
+- **What happened:** the competency-question suite type-checked clean at package
+  scope and shipped two v3-era API names. `packages/law-practice/server/tsconfig.json`
+  declares `"include": ["src"]`, so `bun run check` never reads `test/**`. Only the
+  root `tsconfig.json` covers tests (`"./packages/**/test/**/*.ts"`), and there is
+  no package-scoped script that reaches it — the effect-first verification ritual
+  ("run the owning package's `check` and tests") therefore returns green on a test
+  file it did not look at.
+- **Evidence:** `bun run --cwd packages/law-practice/server check` exited 0 while
+  `bunx tsgo -p tsconfig.json --noEmit` at the repo root reported
+  `packages/law-practice/server/test/CompetencyQuestions.test.ts(166,11): error TS2551:
+  Property 'string' does not exist on type '...effect/dist/Order'. Did you mean 'String'?`
+  at two call sites. `bunx vitest run` was green in the same state, because vitest
+  strips types rather than checking them, so both gates an agent is told to run
+  agreed the file was fine.
+- **Prevention:** give each package a `check:test` script over a `tsconfig.test.json`
+  that includes `test/**` and references the package build, and make the yeet/skill
+  verification line name it. Absent that, the honest fallback is a root-scoped
+  `tsgo -p tsconfig.json --noEmit` filtered to the touched file — which is what
+  caught this — and the skill should say so, because "package check + package test,
+  both green" is currently not evidence that a test file compiles.
+
+### `withConstantDefault` reaches the constructor path, never the decode path
+
+- **What happened:** thirty of the suite's thirty-two tests failed on
+  `SchemaError: Missing key at ["candidateRouting"]` while seeding a
+  `CorrectionDelta` fixture that omitted the field. The field carries
+  `SchemaUtils.withConstantDefault<CandidateRouting>("contradiction-candidate-input")`
+  and its annotation reads "unresolved is the default", with the model's own JSDoc
+  promising that an unresolved difference "stays visible as an input **by
+  omission**". That safety holds for `CorrectionDelta.make({...})` and does not
+  hold for a decoded row, which is the path every persisted record takes.
+- **Evidence:**
+  `packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.model.ts:77-81`
+  for the default and the "by omission" prose; the in-repo proof of the default
+  (`packages/law-practice/domain/test/LegalPositionTransitions.test.ts:244-249`)
+  exercises it only through `S.Struct({...}).make({})`, so nothing currently
+  distinguishes the two paths. Fixture repaired by writing the field out; no `src`
+  was changed.
+- **Prevention:** state the reachable path in the annotation of any field carrying a
+  constant default — "applied on construction; required when decoding" — or add the
+  decode-path assertion beside the constructor one so the difference is visible in a
+  test rather than discovered in a fixture. A default whose safety story is about
+  persisted records should be proven against the persisted-record path.
+
+### A ported competency question found a declarable-but-unaddressable frame outcome
+
+- **What happened:** expressing UFO-L's create/alter/extinguish question against the
+  shipped `ActFrame` surfaced an asymmetry. `PositionDerivationKind` is a three-member
+  vocabulary (`create`, `alter`, `extinguish`) and `derivationKind` is a non-empty set
+  over it, but the frame carries only `creates` and `terminates` transition lists. A
+  recorder can therefore declare that an act **alters** a position and has nowhere to
+  say *which* position it alters — the declaration is representable and its referent
+  is not. Separately, `cq-atom-roles` asks for "the name or short description" of each
+  role and `ActFrameSlot` carries `label`, `kind`, and `source` but no description, so
+  the ported answer covers the name half only.
+- **Evidence:** `packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts:38`
+  (the three-member kind) against `.../ActFrame/ActFrame.model.ts:129-149` (two
+  transition lists); `ActFrameSlot` at `.../ActFrame.values.ts:293-308`. Recorded as
+  findings during P2 CQ fixture authoring; **no `src` change was made**, per the
+  fixtures-only scope.
+- **Prevention:** competency questions are worth running against a vocabulary *while*
+  it is being designed, not only after it ships — this pair would have been caught by
+  the same exercise a rung earlier, when the transition lists were still open. Route
+  the two findings to the follow-on that lands `SlotCorrespondence`, which is already
+  the named owner of the frame surface's remaining donor shape.
