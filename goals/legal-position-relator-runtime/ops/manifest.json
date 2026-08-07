@@ -56,12 +56,12 @@
     {
       "id": "P1",
       "name": "Rung 1: domain proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rung 2: transitions, correction contract, durability",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

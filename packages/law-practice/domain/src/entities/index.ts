@@ -56,6 +56,13 @@ export * from "./LegalClient/index.ts";
  */
 export * from "./LegalContact/index.ts";
 /**
+ * Legal position relator entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./LegalPositionRelator/index.ts";
+/**
  * Matter entity and value-object exports.
  *
  * @category entities
@@ -69,6 +76,13 @@ export * from "./Matter/index.ts";
  * @since 0.0.0
  */
 export * from "./OfficeAction/index.ts";
+/**
+ * Party entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./Party/index.ts";
 /**
  * Patent asset entity and value-object exports.
  *

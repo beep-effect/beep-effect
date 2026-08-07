@@ -1899,6 +1899,9 @@
       ],
       "@beep/law-practice-use-cases/CandorRecord": [
         "./packages/law-practice/use-cases/src/CandorRecord/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LegalPositionRelatorPolicy": [
+        "./packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts"
       ]
     }
   }
