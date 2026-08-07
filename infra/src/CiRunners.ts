@@ -421,14 +421,64 @@ const CiRunnersNetworkZonesWithinRegionCheck = S.makeFilter<typeof ciRunnersNetw
   }
 );
 
+type CidrRange = {
+  readonly start: number;
+  readonly end: number;
+};
+
+// Ipv4Cidr guarantees the dotted-quad/prefix shape, so the numeric range math
+// needs no re-validation. Math (not bitwise) keeps the 32-bit values unsigned.
+const cidrRange = (cidr: string): CidrRange => {
+  const [quadText = "", prefixText = ""] = Str.split(cidr, "/");
+  const value = A.reduce(Str.split(quadText, "."), 0, (total, part) => total * 256 + Number(part));
+  const size = 2 ** (32 - Number(prefixText));
+  const start = Math.floor(value / size) * size;
+  return { start, end: start + size - 1 };
+};
+
+const cidrRangeContains = (outer: CidrRange, inner: CidrRange): boolean =>
+  Bool.and(outer.start <= inner.start, inner.end <= outer.end);
+
+const CiRunnersSubnetsWithinVpcCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
+  (network) => {
+    const vpc = cidrRange(network.vpcCidr);
+    return Bool.and(
+      cidrRangeContains(vpc, cidrRange(network.publicSubnetACidr)),
+      cidrRangeContains(vpc, cidrRange(network.publicSubnetBCidr))
+    );
+  },
+  {
+    identifier: $I`CiRunnersSubnetsWithinVpcCheck`,
+    title: "Subnets Within VPC",
+    description: "Both public subnet CIDR blocks must be contained within the VPC CIDR block.",
+    message: "Expected both public subnet CIDR blocks to be contained within the VPC CIDR block",
+  }
+);
+
+const CiRunnersSubnetsDisjointCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
+  (network) => {
+    const subnetA = cidrRange(network.publicSubnetACidr);
+    const subnetB = cidrRange(network.publicSubnetBCidr);
+    return Bool.or(subnetA.end < subnetB.start, subnetB.end < subnetA.start);
+  },
+  {
+    identifier: $I`CiRunnersSubnetsDisjointCheck`,
+    title: "Subnets Disjoint",
+    description: "The two public subnet CIDR blocks must not overlap each other.",
+    message: "Expected the two public subnet CIDR blocks not to overlap",
+  }
+);
+
 /**
  * Dedicated egress-only VPC geometry for the CI runner fleet.
  *
  * **Details**
  *
- * A class-level check rejects availability zones outside the configured
- * region, so a partial override such as `awsRegion` alone fails fast at
- * config-load time instead of deep inside `pulumi up`.
+ * Class-level checks reject availability zones outside the configured
+ * region, subnet CIDR blocks that fall outside the VPC CIDR block, and
+ * subnet CIDR blocks that overlap each other — so a partial override such
+ * as `awsRegion` or `vpcCidr` alone fails fast at config-load time instead
+ * of deep inside `pulumi up` after earlier resources have provisioned.
  *
  * **Example** (Apply the network defaults)
  *
@@ -442,7 +492,9 @@ const CiRunnersNetworkZonesWithinRegionCheck = S.makeFilter<typeof ciRunnersNetw
  * @since 0.0.0
  */
 export class CiRunnersNetworkConfig extends S.Class<CiRunnersNetworkConfig>($I`CiRunnersNetworkConfig`)(
-  ciRunnersNetworkConfigStruct.pipe(S.check(CiRunnersNetworkZonesWithinRegionCheck)),
+  ciRunnersNetworkConfigStruct.pipe(
+    S.check(CiRunnersNetworkZonesWithinRegionCheck, CiRunnersSubnetsWithinVpcCheck, CiRunnersSubnetsDisjointCheck)
+  ),
   $I.annote("CiRunnersNetworkConfig", {
     description: "Dedicated egress-only VPC geometry for the CI runner fleet.",
   })
@@ -845,6 +897,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Dedicated fleet VPC identifier.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly vpcId: pulumi.Output<string>;
@@ -852,6 +905,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Dedicated fleet VPC CIDR block.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly vpcCidr: pulumi.Output<string>;
@@ -859,6 +913,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * AWS region hosting the fleet.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly region: pulumi.Output<string>;
@@ -866,6 +921,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Public subnet id in the first availability zone.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly publicSubnetAId: pulumi.Output<string>;
@@ -873,6 +929,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Public subnet id in the second availability zone.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly publicSubnetBId: pulumi.Output<string>;
@@ -880,6 +937,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Zero-ingress worker security group id.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly workerSecurityGroupId: pulumi.Output<string>;
@@ -887,6 +945,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Worker launch template id.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly launchTemplateId: pulumi.Output<string>;
@@ -894,6 +953,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Stable AWS-side launch template name for the future controller.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly launchTemplateName: pulumi.Output<string>;
@@ -902,6 +962,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Latest launch template version; the controller passes this number to
    * RunInstances because default-version promotion is deliberate.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly launchTemplateLatestVersion: pulumi.Output<number>;
@@ -909,6 +970,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * AMI id the launch template resolved (pinned override or SSM lookup).
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly resolvedAmiId: pulumi.Output<string>;
@@ -916,6 +978,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Worker EC2 instance type.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly instanceType: pulumi.Output<string>;
@@ -923,6 +986,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * Name of the reaper Lambda enforcing the fleet TTL.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly reaperFunctionName: pulumi.Output<string>;
@@ -930,6 +994,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   /**
    * CloudWatch Logs group receiving VPC flow logs.
    *
+   * @category resources
    * @since 0.0.0
    */
   public readonly flowLogGroupName: pulumi.Output<string>;
