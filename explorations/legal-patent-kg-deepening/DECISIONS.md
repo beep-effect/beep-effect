@@ -334,3 +334,31 @@ candor open: ownership grounding needed a question, not a grounding — legal
 vocabulary stays in a legal consumer domain (campaign constraint 8), but
 `packages/law-practice/domain` versus a separate legal consumer core package
 is genuinely undecided and is carried as a named align question.
+
+## 2026-08-06 — phase-2: episode-ledger wedge opened (pointer)
+
+**Question:** When does `patent-drafting-episode-ledger` (the merged
+drafting-episodes + claim-limitation-support row, the campaign's third
+wedge) open, and with what wedge posture?
+
+**Answer:** Benjamin called it 2026-08-06, the day the relator wedge's
+graduation PR #590 merged. The packet is open at
+`explorations/patent-drafting-episode-ledger` (capture stage) with
+wedge-scoped decisions pre-seeded in its `DECISIONS.md` — two research
+lanes (repo composition inventory over the runtime/ledger/law-practice and
+remo2/remo3 surfaces; bounded public-source grounding over the
+written-description/new-matter legal frame and the episode-memory/retrieval
+research frame, scoped at open); live-source + SPEC-bound composition
+against the four composed goals with the resolved remo2/remo3 boundaries
+binding; Opus 5 orchestration carrying the 2026-08-04 supersession,
+reconfirmed at this open; two-stage PR cadence. Links, not copies. Parent
+align questions 11 (the `T3-F4` half), 12, 14, 15, and 16 are carried into
+the wedge's `openQuestions`.
+
+**Rationale:** The queued wedges were unblocked 2026-08-04 and the wedge's
+routing was fixed by the 2026-08-01 slug merge; only timing stayed
+Benjamin's call. One delta from the relator open: ownership needed no
+question — the resolved remo3 grill already fixes `DraftingEpisode` ledgers
+as law-practice product records (repo-native, authoritative, append-only),
+so the wedge opens with align questions about shape (episode set, rebuild
+proof, answer annex, support schema, routing modes), not home.
