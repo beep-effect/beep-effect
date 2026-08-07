@@ -35,6 +35,7 @@
     "./CandorPolicy": "./src/CandorPolicy/index.ts",
     "./CandorRecord": "./src/CandorRecord/index.ts",
     "./IrToLaw": "./src/IrToLaw/index.ts",
+    "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./test": "./src/test.ts",

@@ -417,6 +417,13 @@ export * from "./KindCode/index.ts";
  */
 export * from "./LegalActContent/index.ts";
 /**
+ * Legal opposition candidate input value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalOppositionCandidateInput/index.ts";
+/**
  * Legal role value-object exports.
  *
  * **Example** (Import the legal role value objects)
