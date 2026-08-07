@@ -39,14 +39,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. First action: re-verify the live surfaces in
-`research/SOURCES.md` §4, then make the binding rung-2 handoff pick from the
-four shapes enumerated in `SPEC.md` Constraints, with an `architecture-guardian`
-check and a read of the spike SPEC's Exception Ledger row.
+P1 Rung 1 (domain proof) — in progress. P0 completed 2026-08-06: all 15
+`research/SOURCES.md` §4 anchors re-verified CURRENT against `main`
+([`research/01-surface-reverification.md`](./research/01-surface-reverification.md)),
+and the rung-2 candidate handoff was **deferred with standing evidence**
+([`research/02-handoff-shape-evidence.md`](./research/02-handoff-shape-evidence.md)),
+architecture-guardian-checked — SPEC decision 13. Zero new `@beep/epistemic-*`
+import sites in `packages/law-practice/*`; the Exception Ledger stays "None".
 
 ## Latest Evidence
 
-Not started. Graduated 2026-08-06 from
+P0 complete (2026-08-06): surfaces re-verification + four-shape handoff
+evidence promoted into `research/`, deferral recorded as SPEC decision 13 with
+guardian conditions absorbed. Graduated 2026-08-06 from
 [`explorations/legal-position-relator-runtime`](../../explorations/legal-position-relator-runtime/README.md)
 — BRIEF approved 2026-08-06 after a three-lens adversarial Opus review (39
 findings folded, 5 P1); ten binding decisions (four wedge-scoped, six align);

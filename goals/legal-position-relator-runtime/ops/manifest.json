@@ -33,7 +33,11 @@
     "goals/legal-position-relator-runtime/GOAL.md",
     "goals/legal-position-relator-runtime/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/01-surface-reverification.md",
+    "research/02-handoff-shape-evidence.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -47,12 +51,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Rung 1: domain proof",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
