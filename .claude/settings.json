@@ -100,7 +100,7 @@
       "Edit(**/.claude/settings.json)"
     ]
   },
-  "enabledMcpjsonServers": [],
+  "enabledMcpjsonServers": ["basic-memory", "codegraph"],
   "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
   "hooks": {
     "PreToolUse": [
