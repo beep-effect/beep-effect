@@ -14,6 +14,7 @@ import { EpistemicEdgeMigrationTarget } from "./migrations/EpistemicEdge.ts";
 import { EpistemicExecutionLedgerMigrationTarget } from "./migrations/EpistemicExecutionLedger.ts";
 import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
 import { LawPracticeCandorGateMigrationTarget } from "./migrations/LawPracticeCandorGate.ts";
+import { LawPracticeLegalPositionMigrationTarget } from "./migrations/LawPracticeLegalPosition.ts";
 import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts";
 import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 
@@ -31,6 +32,7 @@ export {
   EpistemicExecutionLedgerMigrationTarget,
   EpistemicUsageMigrationTarget,
   LawPracticeCandorGateMigrationTarget,
+  LawPracticeLegalPositionMigrationTarget,
   WorkspaceThreadMigrationTarget,
 };
 
@@ -58,6 +60,7 @@ export const DbAdminMigrationTargets = [
   EpistemicContradictionTriageMigrationTarget,
   EpistemicExecutionLedgerMigrationTarget,
   LawPracticeCandorGateMigrationTarget,
+  LawPracticeLegalPositionMigrationTarget,
 ] as const;
 
 /**
