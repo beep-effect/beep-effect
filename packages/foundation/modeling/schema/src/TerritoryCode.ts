@@ -37,17 +37,6 @@ export const TerritoryCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.Terr
 
 /**
  * {@inheritDoc TerritoryCode}
- *
- * **Example** (Type decoded territory code)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { TerritoryCode } from "@beep/schema/TerritoryCode"
- *
- * const code: TerritoryCode = S.decodeUnknownSync(TerritoryCode)("US")
- * console.log(code) // "US"
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -81,17 +70,6 @@ export const TerritoryName = LiteralKit(
 
 /**
  * {@inheritDoc TerritoryName}
- *
- * **Example** (Type decoded territory name)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { TerritoryName } from "@beep/schema/TerritoryCode"
- *
- * const name: TerritoryName = S.decodeUnknownSync(TerritoryName)("United States")
- * console.log(name) // "United States"
- * ```
- *
  * @category models
  * @since 0.0.0
  */

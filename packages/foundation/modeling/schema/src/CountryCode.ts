@@ -97,17 +97,6 @@ export const CountryCode: CountryCodeWithStatics = TerritoryCodeSchema.pipe(
 
 /**
  * {@inheritDoc CountryCode}
- *
- * **Example** (Type country code value)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { CountryCode } from "@beep/schema/CountryCode"
- *
- * const code: CountryCode = S.decodeUnknownSync(CountryCode)("US")
- * console.log(code) // "US"
- * ```
- *
  * @category models
  * @since 0.0.0
  */

@@ -93,19 +93,6 @@ export const TomlTextToUnknown = S.String.pipe(
 
 /**
  * {@inheritDoc TomlTextToUnknown}
- *
- * **Example** (Typed TOML decode result)
- *
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { TomlTextToUnknown } from "@beep/schema/Toml"
- *
- * const program = S.decodeUnknownEffect(TomlTextToUnknown)("port = 8080")
- * const parsed: typeof TomlTextToUnknown.Type = await Effect.runPromise(program)
- * console.log(parsed.port)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

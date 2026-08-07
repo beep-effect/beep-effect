@@ -79,17 +79,6 @@ export const HeaderValueInput = S.Union([S.Boolean, HeaderArray, HeaderTransform
 
 /**
  * {@inheritDoc HeaderValueInput}
- *
- * **Example** (Type header value input)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { HeaderValueInput } from "@beep/schema/ParserOptions"
- *
- * const headers: HeaderValueInput = S.decodeUnknownSync(HeaderValueInput)(true)
- * console.log(headers)
- * ```
- *
  * @category configuration
  * @since 0.0.0
  */

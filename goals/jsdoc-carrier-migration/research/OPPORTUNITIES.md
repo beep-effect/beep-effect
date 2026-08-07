@@ -120,26 +120,31 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   `documentationShapeViolations` on explicit paths would make scoped agent verification a
   one-liner.
 
-### A post-closeout "fix" commit silently deleted 146 migrated Example blocks
+### A gate-forced deletion of 146 migrated Example blocks shipped with zero disclosure
 
-- **What happened:** after P3 closed the packet, commit `78ac876c26` ("clear jsdoc-carrier
-  fallow attribution and JSDoc baseline", subject-only message) hand-deleted 1,462 lines /
-  ~146 titled Example sections across 52 files — `{@inheritDoc}` type-level companions the
-  codemod had just migrated — leaving the shipped conservation proof
-  (`data/jsdoc-migrate.proof-manifest.jsonc`, `conservationViolations: 0`) describing a tree
-  that no longer existed, with `extract.jsonl`/`titles.jsonl` records dangling. The deletion
-  was law-permissible (type-level Examples are optional) but forced by nothing: restoring
-  all 52 files reproduced `fallow audit --check --base origin/main` exit 0 / `introduced: 0`
-  — the same commit's `fallow-ignore-next-line` suppressions and `.fallowrc.jsonc` waiver
-  were what actually cleared the attribution.
-- **Evidence:** adversarial audit of PR #608 (workflow `wf_34316a3a-e48`); restore verified
-  by fallow audit, `jsdoc-ratchet` both scopes exit 0, and `@beep/schema` docgen exit 0.
-  The deletion also self-inflicted the baseline bump it papered over:
-  `multiple-description-paragraphs` returned to 543 matching the committed baseline once
-  the docs were restored.
-- **Prevention:** the zero-hand-edits invariant applies until merge, not until closeout;
-  any post-closeout commit touching migrated files must re-run `jsdoc-migrate verify` and
-  disclose doc deletions in the commit body.
+- **What happened:** commit `78ac876c26` (subject-only message about "fallow attribution")
+  hand-deleted 1,462 lines / ~146 titled Example sections across 52 files — all
+  `{@inheritDoc}` type-level companions the codemod had just migrated. The deletion turned
+  out to be REQUIRED: `lint:jsdoc` runs `bunx eslint . --max-warnings=0`, and
+  `eslint-plugin-tsdoc` raises `tsdoc-inheritdoc-incompatible-summary` for any summary
+  content in an `{@inheritDoc}` block. On main the examples were `@example` block tags
+  (legal beside `@inheritDoc`); the carrier conversion moved them into the summary as
+  `**Example**` sections (illegal). The migration itself created 144 warnings that redded
+  Lint Policy, and the deletion was the minimal law-permissible fix (type-level Examples
+  are optional).
+- **Evidence:** restoring all 52 files reproduced exactly 144
+  `tsdoc-inheritdoc-incompatible-summary` warnings and only those; re-deleting returned
+  eslint to exit 0. The post-closeout audit initially called the deletion "forced by
+  nothing" because it checked docgen and the ratchet but not the eslint tsdoc step — the
+  restore was reverted once the true forcing function surfaced.
+- **Residue:** the shipped conservation proof (`data/jsdoc-migrate.proof-manifest.jsonc`,
+  `conservationViolations: 0`) predates the deletion and describes ~146 blocks that no
+  longer exist; their `extract.jsonl`/`titles.jsonl` records are orphaned. Accepted as-is:
+  the frozen data is an input artifact, and this receipt is the record.
+- **Prevention:** the codemod should special-case `{@inheritDoc}` blocks (leave the
+  `@example` tag, or drop the example into quarantine) instead of emitting a shape a
+  sibling gate forbids; and any gate-forced doc deletion must name its gate in the commit
+  body at the time, not leave archaeology to an audit.
 
 ### The generated-inclusive scope was proof-only until it was wired into CI
 

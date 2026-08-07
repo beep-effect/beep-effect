@@ -85,16 +85,6 @@ export declare namespace HttpStatus5XX {
 
 /**
  * {@inheritDoc HttpStatus5XX}
- *
- * **Example** (Annotate 5XX status type)
- *
- * ```ts
- * import type { HttpStatus5XX } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatus5XX = 500
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

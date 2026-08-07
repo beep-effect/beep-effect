@@ -38,16 +38,6 @@ export const Continue = S.Literal(100).pipe(
 
 /**
  * {@inheritDoc Continue}
- *
- * **Example** (Annotate status as Continue)
- *
- * ```ts
- * import type { Continue } from "@beep/schema/HttpStatus"
- *
- * const status: Continue = 100
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -78,16 +68,6 @@ export const SwitchingProtocols = S.Literal(101).pipe(
 
 /**
  * {@inheritDoc SwitchingProtocols}
- *
- * **Example** (Annotate status as SwitchingProtocols)
- *
- * ```ts
- * import type { SwitchingProtocols } from "@beep/schema/HttpStatus"
- *
- * const status: SwitchingProtocols = 101
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -119,16 +99,6 @@ export const Processing = S.Literal(102).pipe(
 
 /**
  * {@inheritDoc Processing}
- *
- * **Example** (Annotate status as Processing)
- *
- * ```ts
- * import type { Processing } from "@beep/schema/HttpStatus"
- *
- * const status: Processing = 102
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -159,16 +129,6 @@ export const EarlyHints = S.Literal(103).pipe(
 
 /**
  * {@inheritDoc EarlyHints}
- *
- * **Example** (Annotate status as EarlyHints)
- *
- * ```ts
- * import type { EarlyHints } from "@beep/schema/HttpStatus"
- *
- * const status: EarlyHints = 103
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -231,16 +191,6 @@ export declare namespace HttpStatus1XX {
 
 /**
  * {@inheritDoc HttpStatus1XX}
- *
- * **Example** (Annotate status as HttpStatus1XX)
- *
- * ```ts
- * import type { HttpStatus1XX } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatus1XX = 100
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

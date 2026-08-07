@@ -37,16 +37,6 @@ export const DateInputToDateTime = S.Union([S.Null, S.Undefined, S.String]).pipe
 
 /**
  * {@inheritDoc DateInputToDateTime}
- *
- * **Example** (Type ISO string input)
- *
- * ```ts
- * import type { DateInputToDateTime } from "@beep/schema/DateTimeUtcFromValid"
- *
- * const input: DateInputToDateTime = "2024-01-01T00:00:00.000Z"
- * console.log(input)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

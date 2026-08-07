@@ -100,17 +100,6 @@ export const PromiseSchema = S.declare<globalThis.Promise<unknown>>(isPromise, p
 
 /**
  * {@inheritDoc PromiseSchema}
- *
- * **Example** (Typing a promise value)
- *
- * ```ts
- * import type { PromiseSchema } from "@beep/schema/PromiseSchema"
- *
- * const task: PromiseSchema = globalThis.Promise.resolve("done")
- *
- * console.log(task instanceof globalThis.Promise)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

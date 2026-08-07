@@ -84,16 +84,6 @@ export declare namespace HttpStatusUnofficial {
 
 /**
  * {@inheritDoc HttpStatusUnofficial}
- *
- * **Example** (Assign unofficial status value)
- *
- * ```ts
- * import type { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatusUnofficial = 430
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

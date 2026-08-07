@@ -30,30 +30,20 @@ export const Sex = LiteralKit(["male", "female"]).pipe(
 );
 /**
  * {@inheritDoc Sex}
- *
- * **Example** (Assign female Sex type)
- *
- * ```ts
- * import { Sex } from "@beep/schema/Sex"
- *
- * const sex: Sex = "female"
- * console.log(Sex.Options.includes(sex))
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
 export type Sex = typeof Sex.Type;
 
 /**
- * {@inheritDoc Sex}
+ * Alias for {@link Sex} (compat export name).
  *
- * **Example** (Check Schema Options includes)
+ * **Example** (Check a male literal)
  *
  * ```ts
  * import { Schema } from "@beep/schema/Sex"
  *
- * console.log(Schema.Options.includes("female"))
+ * console.log(Schema.Options.includes("male"))
  * ```
  *
  * @category validation
@@ -63,16 +53,6 @@ export const Schema = Sex;
 
 /**
  * {@inheritDoc Sex}
- *
- * **Example** (Type Schema as female)
- *
- * ```ts
- * import type { Schema } from "@beep/schema/Sex"
- *
- * const sex: Schema = "female"
- * console.log(sex)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

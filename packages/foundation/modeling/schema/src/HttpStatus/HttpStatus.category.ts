@@ -48,16 +48,6 @@ export const HttpStatusCategory = MappedLiteralKit([
 
 /**
  * {@inheritDoc HttpStatusCategory}
- *
- * **Example** (Type 4XX status category)
- *
- * ```ts
- * import type { HttpStatusCategory } from "@beep/schema/HttpStatus"
- *
- * const category: HttpStatusCategory = "4XX"
- * console.log(category)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
