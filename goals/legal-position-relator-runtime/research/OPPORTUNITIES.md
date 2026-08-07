@@ -57,6 +57,34 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   a main-thread-recordable paperwork lane (evidence promotion, ledger, packet updates) to
   absorb the window.
 
+## 2026-08-07 — P3 yeet (hosted checks)
+
+### Hosted runners OOM-kill heavy check/build/coverage tasks (exit 137), varying by attempt
+
+- **What happened:** PR #616's `Check`, `Test Integration`, and `Coverage Regression`
+  jobs failed with `exited (137)` (SIGKILL, runner memory pressure) across four run
+  attempts of run 31164902913, each attempt killing a *different* package set —
+  attempt 1: db-admin/epistemic-server/epistemic-ui/workspace-server (Check),
+  epistemic-server/epistemic-ui (TI); attempt 2: db-admin/editor/epistemic-server/
+  workspace-server; attempt 4 (Coverage rerun): repo-cli#coverage,
+  epistemic-server#build, ontology-server#coverage. None of these packages is
+  touched by the branch, and the identical tree passed all 21 local yeet-verify
+  lanes. Test Integration converged green on its single sanctioned rerun; Check and
+  Coverage stayed red after theirs.
+- **Evidence:** `gh run view --job 92831338045 --log` / `--job 92844563799 --log`
+  (exit 137 lines); local proof: `.beep/yeet/runs/feat_legal-position-relator-runtime-52d272670197/verdict.json`
+  (outcome success, all lanes passed); fleet-wide intermittency:
+  `gh run list` shows the same fail-then-pass pattern on
+  `feat/evidence-loop-p0-and-fixes` and `explore/graphnosis-prior-art` the same
+  morning.
+- **Prevention:** this is the owned-runner migration's problem statement made
+  concrete (PR #603 groundwork; Blacksmith exit ordered 2026-08-06): the current
+  runners under-provision memory for `turbo run check/build/coverage` fan-out.
+  Until the owned runners land, the check workflows could cap turbo concurrency
+  (the local pipeline uses `--concurrency=3` for exactly this reason) or the
+  monitor's flake fingerprints could learn the exit-137 signature so the rerun
+  protocol attributes it as environment rather than "needs code fix".
+
 ## 2026-08-06 — P1 rung 1, stage 2 (policy contract)
 
 ### Adding one in-slice concept forces a full repo-wide docgen proof
