@@ -2376,7 +2376,10 @@ const resolveGoalSlug = Effect.fn("Knowledge.resolveGoalSlug")(function* (
 ) {
   const manifestPath = goalManifestPath(slug);
   const entry = HashMap.get(pathIndex, manifestPath);
-  if (O.isNone(entry)) {
+  // A manifest tracked as a symlink or a gitlink is recorded in `skipped` and never followed, so it
+  // is unavailable as an identity source rather than readable. Reading it anyway would fail the
+  // whole census on a blob the scan already decided not to open.
+  if (O.isNone(entry) || !isRegularBlob(entry.value)) {
     return KnowledgeRefMissing.make({});
   }
   const text = yield* Effect.flatMap(oracle.readBytes(manifestPath), (bytes) => decodeUtf8(bytes, manifestPath));
@@ -2427,7 +2430,9 @@ const entryPathOrder = Order.mapInput(Order.String, (entry: KnowledgeTrackedEntr
  * A blob whose bytes fail strict UTF-8 decoding is skipped and the run still succeeds; a goal
  * manifest that fails to parse or decode is an operational failure instead. The difference is
  * deliberate: the census may not silently downgrade an undecodable identity source into a missing
- * one, because that is exactly the split-brain state it exists to detect.
+ * one, because that is exactly the split-brain state it exists to detect. A manifest tracked as a
+ * symlink or gitlink is a third case: the scan never opens it, so it is unavailable rather than
+ * undecodable, and the reference resolves as missing while the link itself is recorded in `skipped`.
  *
  * **Example** (Census an empty tree)
  *

@@ -416,6 +416,26 @@ describe("knowledge refs negative controls", () => {
     })
   );
 
+  it.effect("a goal manifest tracked as a symlink is skipped, not followed, and does not resolve", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture(
+        {
+          "docs/guide.md": "Tracks repo://goal/example-packet today.\n",
+          "goals/example-packet/ops/manifest.json": goalManifestText("example-packet"),
+        },
+        {
+          modes: { "goals/example-packet/ops/manifest.json": "120000" },
+          // The archive drops link entries, so a run that succeeds never tried to read it.
+          unreadable: ["goals/example-packet/ops/manifest.json"],
+        }
+      );
+      expect(A.map(report.skipped, (blob) => `${blob.reason} ${blob.path}`)).toEqual([
+        "symlink goals/example-packet/ops/manifest.json",
+      ]);
+      expect(verdicts(inDocument(report, "docs/guide.md"))).toEqual(["broken-target/missing"]);
+    })
+  );
+
   it.effect("a gitlink is skipped", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture(
