@@ -104,11 +104,13 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
 // goals/quality-speedup/research/instantiation-census.md §5. The effect
-// 4.0.0-beta.104 refresh made the biggest tsgo compiles heavier still: at
-// --concurrency=4 the check/test-integration lanes OOM-killed (exit 137) three
-// hosted attempts in a row (db-admin, epistemic/server, ontology/client), so
-// the CI cap now matches the root cap.
-const CI_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+// 4.0.0-beta.104 refresh made the biggest compiles heavier still: the
+// check/test-integration lanes OOM-killed (exit 137) at --concurrency=4 three
+// hosted attempts in a row, and again at 3 when the scheduler co-placed three
+// giants (epistemic/server, epistemic/ui, storybook). Two giants fit a 16 GB
+// runner; three do not — so the CI cap is 2. The check lane's 120-minute
+// timeout absorbs the slowdown.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
