@@ -57,9 +57,8 @@ export interface JsonStringCodec<Sch extends S.Codec<unknown, unknown>> {
  * Build the {@link JsonStringCodec} for a schema, collapsing the
  * decode/encode-through-`fromJsonString` pair into one value.
  *
- * @param schema - Schema whose JSON-string boundary is declared.
- * @returns Decode (`Effect`/`Option`) and encode helpers over JSON text.
- * @example
+ * **Example** (Round-trip encode and decode)
+ *
  * ```ts
  * import { JsonStringCodec } from "@beep/repo-cli/internal/schema/JsonCodec"
  * import { Effect } from "effect"
@@ -70,6 +69,9 @@ export interface JsonStringCodec<Sch extends S.Codec<unknown, unknown>> {
  * const roundTrip = codec.encode({ x: 1, y: 2 }).pipe(Effect.flatMap(codec.decode))
  * console.log(Effect.runSync(roundTrip))
  * ```
+ *
+ * @param schema - Schema whose JSON-string boundary is declared.
+ * @returns Decode (`Effect`/`Option`) and encode helpers over JSON text.
  * @category constructors
  * @since 0.0.0
  */
@@ -86,13 +88,13 @@ export const JsonStringCodec = <Sch extends S.Codec<unknown, unknown>>(schema: S
  * Decode JSON text through a schema, mapping any `SchemaError` to a caller-owned
  * error at the boundary.
  *
+ * **Details**
+ *
  * Dual: data-first `decodeOrFail(schema, toError)` or data-last
  * `decodeOrFail(toError)(schema)`.
  *
- * @param schema - Schema to decode the JSON text into.
- * @param toError - Maps a JSON/schema decode failure into the domain error.
- * @returns A decoder from JSON text to the schema type in the caller's error channel.
- * @example
+ * **Example** (Decode JSON with domain error)
+ *
  * ```ts
  * import { decodeOrFail } from "@beep/repo-cli/internal/schema/JsonCodec"
  * import { Effect } from "effect"
@@ -102,6 +104,10 @@ export const JsonStringCodec = <Sch extends S.Codec<unknown, unknown>>(schema: S
  * const decode = decodeOrFail(Config, (error) => new Error(`bad config: ${error.message}`))
  * console.log(Effect.runSync(decode('{ "port": 8080 }')))
  * ```
+ *
+ * @param schema - Schema to decode the JSON text into.
+ * @param toError - Maps a JSON/schema decode failure into the domain error.
+ * @returns A decoder from JSON text to the schema type in the caller's error channel.
  * @category combinators
  * @since 0.0.0
  */

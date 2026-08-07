@@ -64,7 +64,8 @@ const SpeechInputContext = createContext<SpeechInputContextValue | null>(null);
 /**
  * Use speech input hook.
  *
- * @example
+ * **Example** (Import useSpeechInput hook)
+ *
  * ```tsx
  * import { useSpeechInput } from "@beep/ui/components/speech-input"
  *
@@ -159,7 +160,8 @@ const buildEvent = ({
 /**
  * Speech input component.
  *
- * @example
+ * **Example** (Import SpeechInput component)
+ *
  * ```tsx
  * import { SpeechInput } from "@beep/ui/components/speech-input"
  *
@@ -327,7 +329,8 @@ type SpeechInputRecordButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>
 /**
  * Speech input record button component.
  *
- * @example
+ * **Example** (Import record button)
+ *
  * ```tsx
  * import { SpeechInputRecordButton } from "@beep/ui/components/speech-input"
  *
@@ -393,7 +396,8 @@ type SpeechInputPreviewProps = ComponentPropsWithoutRef<"div"> & {
 /**
  * Speech input preview component.
  *
- * @example
+ * **Example** (Import preview component)
+ *
  * ```tsx
  * import { SpeechInputPreview } from "@beep/ui/components/speech-input"
  *
@@ -446,7 +450,8 @@ type SpeechInputCancelButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>
 /**
  * Speech input cancel button component.
  *
- * @example
+ * **Example** (Import cancel button)
+ *
  * ```tsx
  * import { SpeechInputCancelButton } from "@beep/ui/components/speech-input"
  *

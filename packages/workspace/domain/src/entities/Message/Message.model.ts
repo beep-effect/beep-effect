@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/Message/Message.model");
 /**
  * Workspace message author role.
  *
- * @example
+ * **Example** (Check MessageRole user)
+ *
  * ```ts
  * import { MessageRole } from "@beep/workspace-domain/entities/Message"
  *
@@ -36,7 +37,8 @@ export const MessageRole = LiteralKit(["system", "user", "assistant", "agent", "
 /**
  * Runtime type for {@link MessageRole}.
  *
- * @example
+ * **Example** (Assign MessageRole type)
+ *
  * ```ts
  * import type { MessageRole } from "@beep/workspace-domain/entities/Message"
  *
@@ -52,7 +54,8 @@ export type MessageRole = typeof MessageRole.Type;
 /**
  * Md-aligned message content in a workspace turn.
  *
- * @example
+ * **Example** (Log Message table name)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-domain"
  *

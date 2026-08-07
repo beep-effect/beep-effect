@@ -58,13 +58,15 @@ interface ExecutionFold {
 /**
  * Structural service contract for applying operations to graph leaves.
  *
- * @remarks
+ * **Details**
+ *
  * `execute` samples the current leaf set, applies the operation to those leaves,
  * and returns a type-erased result because cached values may come from different
  * concrete operations. Operation failures are collected in the result's `errors`
  * array; storage failures surface through the `ExecutionError` channel.
  *
- * @example
+ * **Example** (Access execute method)
+ *
  * ```ts
  * import type { GraphExecutorShape } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  *
@@ -73,8 +75,8 @@ interface ExecutionFold {
  * console.log(readExecute)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface GraphExecutorShape {
   readonly estimateCost: {
@@ -105,20 +107,22 @@ export interface GraphExecutorShape {
 /**
  * Service tag for the graph-operation execution engine.
  *
- * @remarks
+ * **Details**
+ *
  * Provide this service together with a {@link ResultStore.ResultStore} when
  * calling `execute`, because execution reads the store at run time to reuse or
  * write cached leaf results.
  *
- * @example
+ * **Example** (Log service key)
+ *
  * ```ts
  * import { GraphExecutor } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  *
  * console.log(GraphExecutor.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class GraphExecutor extends Context.Service<GraphExecutor, GraphExecutorShape>()($I`GraphExecutor`) {}
 
@@ -473,12 +477,14 @@ const makeGraphExecutor = Effect.succeed(
 /**
  * Live {@link GraphExecutor} layer.
  *
- * @remarks
+ * **Details**
+ *
  * The layer constructs only the executor service. Effects returned from
  * `GraphExecutor.execute` still require a {@link ResultStore.ResultStore}
  * environment so callers can choose the cache implementation per run.
  *
- * @example
+ * **Example** (Estimate cost with layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { GraphExecutorLive } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
@@ -496,20 +502,22 @@ const makeGraphExecutor = Effect.succeed(
  * cost.complexity
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const GraphExecutorLive: Layer.Layer<GraphExecutor> = Layer.effect(GraphExecutor, makeGraphExecutor);
 
 /**
  * Test layer providing both the executor and its in-memory result store.
  *
- * @remarks
+ * **Details**
+ *
  * Use this layer for examples and tests that run `execute` directly. It starts
  * with an empty cache and satisfies the executor's run-time
  * {@link ResultStore.ResultStore} requirement.
  *
- * @example
+ * **Example** (Validate with test layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { GraphExecutorTest } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
@@ -527,8 +535,8 @@ export const GraphExecutorLive: Layer.Layer<GraphExecutor> = Layer.effect(GraphE
  * validation.warnings.length
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const GraphExecutorTest: Layer.Layer<GraphExecutor | ResultStore.ResultStore> = Layer.merge(
   GraphExecutorLive,

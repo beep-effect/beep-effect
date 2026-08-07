@@ -78,7 +78,8 @@ const messageMedium = (method: string) =>
  * Oxlint rule that reports Effect Schema decoder and encoder compiler calls
  * created inside function bodies instead of hoisted module constants.
  *
- * @example
+ * **Example** (Schema compile rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -87,6 +88,7 @@ const messageMedium = (method: string) =>
  *
  * strictEqual(description?.includes("hoist them to module scope"), true)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

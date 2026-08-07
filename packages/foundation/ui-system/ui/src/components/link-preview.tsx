@@ -275,7 +275,8 @@ const getFallbackMetadata = (href: string): UrlMetadata => {
 /**
  * Link preview component.
  *
- * @example
+ * **Example** (Import LinkPreview component)
+ *
  * ```tsx
  * import { LinkPreview } from "@beep/ui/components/link-preview"
  *

@@ -30,7 +30,8 @@ const withDiscordErrorReasonCodecStatics = <Sch extends S.Top & S.ConstraintDeco
 /**
  * Literal vocabulary for recoverable failures at the Discord REST boundary.
  *
- * @example
+ * **Example** (Check transport reason predicate)
+ *
  * ```ts
  * import { DiscordErrorReason } from "@beep/discord"
  *
@@ -52,7 +53,8 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
 /**
  * {@inheritDoc DiscordErrorReason}
  *
- * @example
+ * **Example** (Assign typed reason literal)
+ *
  * ```ts
  * import type { DiscordErrorReason } from "@beep/discord"
  *
@@ -68,12 +70,14 @@ export type DiscordErrorReason = typeof DiscordErrorReason.Type;
 /**
  * Redacted technical failure raised by the Discord REST driver.
  *
- * @remarks
+ * **Details**
+ *
  * `DiscordError` keeps the recovery reason, HTTP method, path, status, and a
  * sanitized cause string while avoiding bot tokens and raw Discord response
  * bodies.
  *
- * @example
+ * **Example** (Create DiscordError with make)
+ *
  * ```ts
  * import { DiscordError } from "@beep/discord"
  * import * as O from "effect/Option"

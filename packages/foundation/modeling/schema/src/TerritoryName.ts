@@ -10,7 +10,8 @@ import { TerritoryName as TerritoryNameSchema } from "./TerritoryCode.ts";
 /**
  * CLDR territory display-name schema.
  *
- * @example
+ * **Example** (Decode territory display name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TerritoryName } from "@beep/schema/TerritoryName"
@@ -19,15 +20,16 @@ import { TerritoryName as TerritoryNameSchema } from "./TerritoryCode.ts";
  * console.log(name) // "United States"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TerritoryName = TerritoryNameSchema;
 
 /**
  * {@inheritDoc TerritoryName}
  *
- * @example
+ * **Example** (Type-annotated territory name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TerritoryName } from "@beep/schema/TerritoryName"
@@ -36,7 +38,7 @@ export const TerritoryName = TerritoryNameSchema;
  * console.log(name) // "United States"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TerritoryName = typeof TerritoryName.Type;

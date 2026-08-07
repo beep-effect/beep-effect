@@ -10,7 +10,8 @@ import { $SchemaId } from "@beep/identity";
 /**
  * Internal identity composer for HTTP status schemas.
  *
- * @example
+ * **Example** (Creating identity composer)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity"
  *

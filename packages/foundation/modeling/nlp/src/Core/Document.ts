@@ -30,7 +30,8 @@ const getRangeEnd = (
 /**
  * Stable non-empty identifier for a text document moving through NLP pipelines.
  *
- * @example
+ * **Example** (Make a DocumentId)
+ *
  * ```ts
  * import { DocumentId } from "@beep/nlp/Core/Document"
  *
@@ -52,7 +53,8 @@ export const DocumentId = S.NonEmptyString.pipe(
 /**
  * Runtime TypeScript type decoded by the {@link DocumentId} schema.
  *
- * @example
+ * **Example** (Type a DocumentId parameter)
+ *
  * ```ts
  * import type { DocumentId } from "@beep/nlp/Core/Document"
  *
@@ -68,7 +70,8 @@ export type DocumentId = typeof DocumentId.Type;
 /**
  * Zero-based position of a document inside an ordered corpus or batch.
  *
- * @example
+ * **Example** (Advance a DocumentIndex)
+ *
  * ```ts
  * import type { DocumentIndex } from "@beep/nlp/Core/Document"
  *
@@ -84,7 +87,8 @@ export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
 /**
  * Construct a branded document index after validating it is non-negative.
  *
- * @example
+ * **Example** (Validate non-negative index)
+ *
  * ```ts
  * import { documentIndex } from "@beep/nlp/Core/Document"
  *
@@ -102,7 +106,8 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
 /**
  * Schema that decodes non-negative numbers into {@link DocumentIndex} values.
  *
- * @example
+ * **Example** (Decode index via schema)
+ *
  * ```ts
  * import { DocumentIndex } from "@beep/nlp/Core/Document"
  *
@@ -169,11 +174,13 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
 /**
  * Immutable document containing source text plus aligned tokens and sentences.
  *
- * @remarks
+ * **Details**
+ *
  * `tokens` and `sentences` preserve source order. Filtering operations rebuild
  * sentence token spans so derived documents remain internally consistent.
  *
- * @example
+ * **Example** (Construct empty Document)
+ *
  * ```ts
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"

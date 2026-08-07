@@ -48,7 +48,8 @@ class SelectedRowFieldShapeError extends TaggedErrorClass<SelectedRowFieldShapeE
  * Raised when an entity field input fails validation while building an
  * entity schema class.
  *
- * @example
+ * **Example** (Make field input error)
+ *
  * ```ts
  * import { EntityFieldInputError } from "../../src/EntitySchema/EntitySchema.shape.ts"
  *
@@ -74,7 +75,8 @@ export class EntityFieldInputError extends TaggedErrorClass<EntityFieldInputErro
  * Raised when EntitySchema definition metadata fails to attach to a schema
  * class.
  *
- * @example
+ * **Example** (Make attachment error)
+ *
  * ```ts
  * import { EntitySchemaAttachmentError } from "../../src/EntitySchema/EntitySchema.shape.ts"
  *
@@ -172,7 +174,8 @@ const astAbsence: (input: AST.AST) => AstAbsence = Match.type<AST.AST>().pipe(
 /**
  * Encoded absence shape for one schema field.
  *
- * @example
+ * **Example** (Decode encoded field shape)
+ *
  * ```ts
  * import { EncodedFieldShape } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -188,8 +191,8 @@ const astAbsence: (input: AST.AST) => AstAbsence = Match.type<AST.AST>().pipe(
  * console.log(shape.absenceKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const EncodedFieldShape = EncodedAbsenceKindSchema.mapMembers((members) => {
   const make = <T extends EncodedAbsenceKind>(literal: S.Literal<T>) =>
@@ -217,7 +220,8 @@ export const EncodedFieldShape = EncodedAbsenceKindSchema.mapMembers((members) =
 /**
  * Runtime type for encoded field shape metadata.
  *
- * @example
+ * **Example** (Type annotated field shape)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EncodedFieldShape } from "@beep/schema/EntitySchema"
@@ -233,15 +237,16 @@ export const EncodedFieldShape = EncodedAbsenceKindSchema.mapMembers((members) =
  * console.log(value.absenceKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EncodedFieldShape = typeof EncodedFieldShape.Type;
 
 /**
  * Return the encoded AST for a schema field.
  *
- * @example
+ * **Example** (Get encoded field AST)
+ *
  * ```ts
  * import { encodedAstFor } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -250,8 +255,8 @@ export type EncodedFieldShape = typeof EncodedFieldShape.Type;
  * console.log(ast._tag)
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const encodedAstFor = (field: S.Top): AST.AST => AST.toEncoded(field.ast);
 
@@ -286,7 +291,8 @@ const absenceKindFor = (shape: Omit<EncodedFieldShape, "absenceKind">): EncodedA
 /**
  * Derive encoded nullability and optionality from the encoded schema AST.
  *
- * @example
+ * **Example** (Derive nullability shape)
+ *
  * ```ts
  * import { encodedFieldShape } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -295,8 +301,8 @@ const absenceKindFor = (shape: Omit<EncodedFieldShape, "absenceKind">): EncodedA
  * console.log(shape.allowsNull)
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const encodedFieldShape = (field: S.Top): EncodedFieldShape => {
   const ast = encodedAstFor(field);
@@ -315,7 +321,8 @@ export const encodedFieldShape = (field: S.Top): EncodedFieldShape => {
 /**
  * Derive and validate selected-row absence semantics for one field.
  *
- * @example
+ * **Example** (Validate selected-row shape)
+ *
  * ```ts
  * import { selectedRowFieldShape } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -324,8 +331,8 @@ export const encodedFieldShape = (field: S.Top): EncodedFieldShape => {
  * console.log(shape.absenceKind)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const selectedRowFieldShape: {
   (key: string, field: S.Top): EncodedFieldShape;
@@ -344,7 +351,8 @@ export const selectedRowFieldShape: {
 /**
  * True when a field's encoded side allows null.
  *
- * @example
+ * **Example** (Check encoded nullability)
+ *
  * ```ts
  * import { isEncodedNullable } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -352,15 +360,16 @@ export const selectedRowFieldShape: {
  * console.log(isEncodedNullable(S.NullOr(S.String)))
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isEncodedNullable = (field: S.Top): boolean => encodedFieldShape(field).allowsNull;
 
 /**
  * True when a field's encoded side is optional.
  *
- * @example
+ * **Example** (Check encoded optionality)
+ *
  * ```ts
  * import { isEncodedOptional } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -368,7 +377,7 @@ export const isEncodedNullable = (field: S.Top): boolean => encodedFieldShape(fi
  * console.log(isEncodedOptional(S.optionalKey(S.String)))
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isEncodedOptional = (field: S.Top): boolean => encodedFieldShape(field).isOptional;

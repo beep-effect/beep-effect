@@ -18,14 +18,18 @@ import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.
 const $I = $OntologyId.create("TaxonomyRegistry");
 const iriEquivalence = S.toEquivalence(IRIReference);
 
-/** Document metadata supplied to the package-local librarian projection.
- * @example
+/**
+ *  Document metadata supplied to the package-local librarian projection.
+ *
+ * **Example** (Make LibrarianInput with metadata)
+ *
  * ```ts
  * import { LibrarianInput } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * const input = LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "received", fileName: "mail.eml", matter: "aurora" })
  * console.log(input.documentClass)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -40,12 +44,16 @@ export class LibrarianInput extends S.Class<LibrarianInput>($I`LibrarianInput`)(
   $I.annote("LibrarianInput", { description: "Document metadata used to project one registry-backed filing decision." })
 ) {}
 
-/** One filing path projected for a semantic storage root.
- * @example
+/**
+ *  One filing path projected for a semantic storage root.
+ *
+ * **Example** (Create local vault FilingPath)
+ *
  * ```ts
  * import { FilingPath } from "@beep/ontology/TaxonomyRegistry"
  * console.log(FilingPath.make({ kind: "local-vault", path: "vault/acme/matter/mail" }).kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -54,13 +62,17 @@ export class FilingPath extends S.Class<FilingPath>($I`FilingPath`)(
   $I.annote("FilingPath", { description: "A projected path paired with its semantic filing-root kind." })
 ) {}
 
-/** Registry-backed classification and filing-path projection.
- * @example
+/**
+ *  Registry-backed classification and filing-path projection.
+ *
+ * **Example** (Access filingPaths from output)
+ *
  * ```ts
  * import type { LibrarianOutput } from "@beep/ontology/TaxonomyRegistry"
  * const show = (output: LibrarianOutput) => output.filingPaths
  * console.log(show)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -71,13 +83,17 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
   })
 ) {}
 
-/** Raised when a requested concept is absent from loaded registry data.
- * @example
+/**
+ *  Raised when a requested concept is absent from loaded registry data.
+ *
+ * **Example** (Make concept-not-found error)
+ *
  * ```ts
  * import { TaxonomyConceptNotFound } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://ns.beep.sh/missing") })._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -89,13 +105,17 @@ export class TaxonomyConceptNotFound extends TaggedErrorClass<TaxonomyConceptNot
   })
 ) {}
 
-/** Raised when a concept does not admit the requested document class.
- * @example
+/**
+ *  Raised when a concept does not admit the requested document class.
+ *
+ * **Example** (Make unsupported-class error)
+ *
  * ```ts
  * import { UnsupportedDocumentClass } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(UnsupportedDocumentClass.make({ conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "filed" }).documentClass)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -110,8 +130,11 @@ export class UnsupportedDocumentClass extends TaggedErrorClass<UnsupportedDocume
 const pathFor = (input: LibrarianInput, concept: TaxonomyConcept, rootSegment: string): string =>
   A.join([rootSegment, input.client, input.matter, concept.filingSegment, input.documentClass, input.fileName], "/");
 
-/** Project document metadata through loaded registry data without placement I/O.
- * @example
+/**
+ *  Project document metadata through loaded registry data without placement I/O.
+ *
+ * **Example** (Run loop returning Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { IRIReference } from "@beep/rdf"
@@ -120,6 +143,7 @@ const pathFor = (input: LibrarianInput, concept: TaxonomyConcept, rootSegment: s
  * const result = runLibrarianLoop(SemanticFoundationSeed, LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/correspondence"), documentClass: "received", fileName: "mail.eml", matter: "aurora" }))
  * console.log(Effect.isEffect(result)) // true
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */

@@ -35,7 +35,8 @@ const EthereumValidatorPublicKeyChecks = S.makeFilterGroup(
 /**
  * Branded schema for canonical Ethereum validator public keys.
  *
- * @example
+ * **Example** (Decode validator public key)
+ *
  * ```ts
  * import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"
@@ -46,8 +47,8 @@ const EthereumValidatorPublicKeyChecks = S.makeFilterGroup(
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublicKeyChecks)
   .annotate({
@@ -63,7 +64,8 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
 /**
  * Type for {@link EthereumValidatorPublicKey}.
  *
- * @example
+ * **Example** (Type validator public key)
+ *
  * ```ts
  * import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"
@@ -74,15 +76,16 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EthereumValidatorPublicKey = typeof EthereumValidatorPublicKey.Type;
 
 /**
  * Redacted schema for canonical Ethereum validator public keys.
  *
- * @example
+ * **Example** (Make redacted public key)
+ *
  * ```ts
  * import { EthereumValidatorPublicKeyRedacted } from "@beep/schema/EthereumValidatorPublicKey"
  *
@@ -92,8 +95,8 @@ export type EthereumValidatorPublicKey = typeof EthereumValidatorPublicKey.Type;
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pipe(
   S.RedactedFromValue,
@@ -108,7 +111,8 @@ export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pip
 /**
  * Type for {@link EthereumValidatorPublicKeyRedacted}.
  *
- * @example
+ * **Example** (Type redacted public key)
+ *
  * ```ts
  * import { EthereumValidatorPublicKeyRedacted } from "@beep/schema/EthereumValidatorPublicKey"
  *
@@ -118,8 +122,8 @@ export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pip
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EthereumValidatorPublicKeyRedacted = typeof EthereumValidatorPublicKeyRedacted.Type;
 

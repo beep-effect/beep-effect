@@ -17,15 +17,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * from the client’s side. Common causes are URLs with invalid syntax, deceptive
  * request routing, large file size, etc.
  *
- * @example
+ * **Example** (Log BadRequest literal)
+ *
  * ```ts
  * import { BadRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(BadRequest.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BadRequest = S.Literal(400).pipe(
   $I.annoteSchema("BadRequest", {
@@ -38,7 +39,8 @@ export const BadRequest = S.Literal(400).pipe(
 /**
  * {@inheritDoc BadRequest}
  *
- * @example
+ * **Example** (Assign BadRequest type)
+ *
  * ```ts
  * import type { BadRequest } from "@beep/schema/HttpStatus"
  *
@@ -46,8 +48,8 @@ export const BadRequest = S.Literal(400).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type BadRequest = typeof BadRequest.Type;
 
@@ -60,15 +62,16 @@ export type BadRequest = typeof BadRequest.Type;
  * {@link https://www.siteground.com/kb/error-401/
  * | troubleshooting the HTTP 401 error.}
  *
- * @example
+ * **Example** (Log Unauthorized literal)
+ *
  * ```ts
  * import { Unauthorized } from "@beep/schema/HttpStatus"
  *
  * console.log(Unauthorized.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Unauthorized = S.Literal(401).pipe(
   $I.annoteSchema("Unauthorized", {
@@ -88,7 +91,8 @@ export const Unauthorized = S.Literal(401).pipe(
 /**
  * {@inheritDoc Unauthorized}
  *
- * @example
+ * **Example** (Assign Unauthorized type)
+ *
  * ```ts
  * import type { Unauthorized } from "@beep/schema/HttpStatus"
  *
@@ -96,8 +100,8 @@ export const Unauthorized = S.Literal(401).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Unauthorized = typeof Unauthorized.Type;
 
@@ -106,15 +110,16 @@ export type Unauthorized = typeof Unauthorized.Type;
  * to be used in the future by payment systems. The purpose of the code is to
  * indicate that the content is not available due to a failed payment.
  *
- * @example
+ * **Example** (Log PaymentRequired literal)
+ *
  * ```ts
  * import { PaymentRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(PaymentRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PaymentRequired = S.Literal(402).pipe(
   $I.annoteSchema("PaymentRequired", {
@@ -127,7 +132,8 @@ export const PaymentRequired = S.Literal(402).pipe(
 /**
  * {@inheritDoc PaymentRequired}
  *
- * @example
+ * **Example** (Assign PaymentRequired type)
+ *
  * ```ts
  * import type { PaymentRequired } from "@beep/schema/HttpStatus"
  *
@@ -135,8 +141,8 @@ export const PaymentRequired = S.Literal(402).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PaymentRequired = typeof PaymentRequired.Type;
 
@@ -150,15 +156,16 @@ export type PaymentRequired = typeof PaymentRequired.Type;
  * For more information, read this article about the HTTP 403 error and how to
  * fix it.
  *
- * @example
+ * **Example** (Log Forbidden literal)
+ *
  * ```ts
  * import { Forbidden } from "@beep/schema/HttpStatus"
  *
  * console.log(Forbidden.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Forbidden = S.Literal(403).pipe(
   $I.annoteSchema("Forbidden", {
@@ -171,7 +178,8 @@ export const Forbidden = S.Literal(403).pipe(
 /**
  * {@inheritDoc Forbidden}
  *
- * @example
+ * **Example** (Assign Forbidden type)
+ *
  * ```ts
  * import type { Forbidden } from "@beep/schema/HttpStatus"
  *
@@ -179,8 +187,8 @@ export const Forbidden = S.Literal(403).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Forbidden = typeof Forbidden.Type;
 
@@ -191,15 +199,16 @@ export type Forbidden = typeof Forbidden.Type;
  * The error could also be caused by a website misconfiguration. Read the
  * following guide for troubleshooting the HTTP error 404.
  *
- * @example
+ * **Example** (Log NotFound literal)
+ *
  * ```ts
  * import { NotFound } from "@beep/schema/HttpStatus"
  *
  * console.log(NotFound.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NotFound = S.Literal(404).pipe(
   $I.annoteSchema("NotFound", {
@@ -212,7 +221,8 @@ export const NotFound = S.Literal(404).pipe(
 /**
  * {@inheritDoc NotFound}
  *
- * @example
+ * **Example** (Assign NotFound type)
+ *
  * ```ts
  * import type { NotFound } from "@beep/schema/HttpStatus"
  *
@@ -220,8 +230,8 @@ export const NotFound = S.Literal(404).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NotFound = typeof NotFound.Type;
 
@@ -229,15 +239,16 @@ export type NotFound = typeof NotFound.Type;
  * 405 “Method Not Allowed” – The server understands the requested method, but
  * the target resource doesn’t support it.
  *
- * @example
+ * **Example** (Log MethodNotAllowed literal)
+ *
  * ```ts
  * import { MethodNotAllowed } from "@beep/schema/HttpStatus"
  *
  * console.log(MethodNotAllowed.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MethodNotAllowed = S.Literal(405).pipe(
   $I.annoteSchema("MethodNotAllowed", {
@@ -250,7 +261,8 @@ export const MethodNotAllowed = S.Literal(405).pipe(
 /**
  * {@inheritDoc MethodNotAllowed}
  *
- * @example
+ * **Example** (Assign MethodNotAllowed type)
+ *
  * ```ts
  * import type { MethodNotAllowed } from "@beep/schema/HttpStatus"
  *
@@ -258,8 +270,8 @@ export const MethodNotAllowed = S.Literal(405).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type MethodNotAllowed = typeof MethodNotAllowed.Type;
 
@@ -267,15 +279,16 @@ export type MethodNotAllowed = typeof MethodNotAllowed.Type;
  * 406 “Not Acceptable” – The requested resource generated content that doesn’t
  * meet the criteria of the user-agent who requested it.
  *
- * @example
+ * **Example** (Log NotAcceptable literal)
+ *
  * ```ts
  * import { NotAcceptable } from "@beep/schema/HttpStatus"
  *
  * console.log(NotAcceptable.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NotAcceptable = S.Literal(406).pipe(
   $I.annoteSchema("NotAcceptable", {
@@ -288,7 +301,8 @@ export const NotAcceptable = S.Literal(406).pipe(
 /**
  * {@inheritDoc NotAcceptable}
  *
- * @example
+ * **Example** (Assign NotAcceptable type)
+ *
  * ```ts
  * import type { NotAcceptable } from "@beep/schema/HttpStatus"
  *
@@ -296,8 +310,8 @@ export const NotAcceptable = S.Literal(406).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NotAcceptable = typeof NotAcceptable.Type;
 
@@ -306,15 +320,16 @@ export type NotAcceptable = typeof NotAcceptable.Type;
  * communication between the browser and the server and it requires
  * authentication.
  *
- * @example
+ * **Example** (Log ProxyAuthenticationRequired literal)
+ *
  * ```ts
  * import { ProxyAuthenticationRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(ProxyAuthenticationRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ProxyAuthenticationRequired = S.Literal(407).pipe(
   $I.annoteSchema("ProxyAuthenticationRequired", {
@@ -327,7 +342,8 @@ export const ProxyAuthenticationRequired = S.Literal(407).pipe(
 /**
  * {@inheritDoc ProxyAuthenticationRequired}
  *
- * @example
+ * **Example** (Assign ProxyAuthenticationRequired type)
+ *
  * ```ts
  * import type { ProxyAuthenticationRequired } from "@beep/schema/HttpStatus"
  *
@@ -335,8 +351,8 @@ export const ProxyAuthenticationRequired = S.Literal(407).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ProxyAuthenticationRequired = typeof ProxyAuthenticationRequired.Type;
 
@@ -348,15 +364,16 @@ export type ProxyAuthenticationRequired = typeof ProxyAuthenticationRequired.Typ
  * It should be noted that servers may close the connection without sending a
  * message.
  *
- * @example
+ * **Example** (Log RequestTimeout literal)
+ *
  * ```ts
  * import { RequestTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestTimeout.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RequestTimeout = S.Literal(408).pipe(
   $I.annoteSchema("RequestTimeout", {
@@ -369,7 +386,8 @@ export const RequestTimeout = S.Literal(408).pipe(
 /**
  * {@inheritDoc RequestTimeout}
  *
- * @example
+ * **Example** (Assign RequestTimeout type)
+ *
  * ```ts
  * import type { RequestTimeout } from "@beep/schema/HttpStatus"
  *
@@ -377,8 +395,8 @@ export const RequestTimeout = S.Literal(408).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type RequestTimeout = typeof RequestTimeout.Type;
 
@@ -388,15 +406,16 @@ export type RequestTimeout = typeof RequestTimeout.Type;
  * of this error is when multiple edits of the same file are submitted to the
  * server and the edits conflict with each other.
  *
- * @example
+ * **Example** (Log Conflict literal)
+ *
  * ```ts
  * import { Conflict } from "@beep/schema/HttpStatus"
  *
  * console.log(Conflict.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Conflict = S.Literal(409).pipe(
   $I.annoteSchema("Conflict", {
@@ -409,7 +428,8 @@ export const Conflict = S.Literal(409).pipe(
 /**
  * {@inheritDoc Conflict}
  *
- * @example
+ * **Example** (Assign Conflict type)
+ *
  * ```ts
  * import type { Conflict } from "@beep/schema/HttpStatus"
  *
@@ -417,7 +437,7 @@ export const Conflict = S.Literal(409).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Conflict = typeof Conflict.Type;

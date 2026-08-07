@@ -8,98 +8,105 @@
 /**
  * Product-facing persisted entity base constructor.
  *
- * @example
+ * **Example** (Access createdAt column name)
+ *
  * ```ts
  * import { BaseEntity } from "@beep/shared-domain/entity"
  *
  * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export * as BaseEntity from "./BaseEntity.ts";
 /**
  * Entity identifier constructor namespace.
  *
- * @example
+ * **Example** (Access EntityIdValue export)
+ *
  * ```ts
  * import { EntityId } from "@beep/shared-domain/entity"
  *
  * console.log(EntityId.EntityIdValue)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export * as EntityId from "./EntityId.ts";
 /**
  * Polymorphic entity reference namespace.
  *
- * @example
+ * **Example** (Access EntityRef export)
+ *
  * ```ts
  * import { EntityRef } from "@beep/shared-domain/entity"
  *
  * console.log(EntityRef.EntityRef)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as EntityRef from "./EntityRef.ts";
 /**
  * Canonical actor principal namespace.
  *
- * @example
+ * **Example** (Access Principal export)
+ *
  * ```ts
  * import { Principal } from "@beep/shared-domain/entity"
  *
  * console.log(Principal.Principal)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as Principal from "./Principal.ts";
 /**
  * URL-safe public entity identifier constructor namespace.
  *
- * @example
+ * **Example** (Access PublicEntityId factory)
+ *
  * ```ts
  * import { PublicEntityId } from "@beep/shared-domain/entity"
  *
  * console.log(PublicEntityId.factory)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as PublicEntityId from "./PublicEntityId.ts";
 /**
  * Shared entity primitives namespace.
  *
- * @example
+ * **Example** (Access VectorClock primitive)
+ *
  * ```ts
  * import { primitives } from "@beep/shared-domain/entity"
  *
  * console.log(primitives.VectorClock)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export * as primitives from "./primitives.ts";
 /**
  * Canonical source-kind namespace.
  *
- * @example
+ * **Example** (Access SourceKind export)
+ *
  * ```ts
  * import { SourceKind } from "@beep/shared-domain/entity"
  *
  * console.log(SourceKind.SourceKind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export * as SourceKind from "./SourceKind.ts";

@@ -8,7 +8,8 @@
 /**
  * Internal generated data modules.
  *
- * @example
+ * **Example** (Importing Calendar month values)
+ *
  * ```typescript
  * import { Calendar } from "@beep/data/internal"
  *

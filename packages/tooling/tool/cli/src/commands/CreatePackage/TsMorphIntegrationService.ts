@@ -17,7 +17,8 @@ const $I = $RepoCliId.create("commands/CreatePackage/TsMorphIntegrationService")
 /**
  * Supported AST mutation categories required by create-package.
  *
- * @example
+ * **Example** (Validate mutation kind value)
+ *
  * ```ts
  * import { TsMorphMutationKind } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -25,6 +26,7 @@ const $I = $RepoCliId.create("commands/CreatePackage/TsMorphIntegrationService")
  * const value = "add-identity-composer"
  * console.log(S.is(TsMorphMutationKind)(value)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,8 +117,8 @@ class TsMorphMutationWireDataAccess extends S.Class<TsMorphMutationWireDataAcces
 /**
  * Input descriptor for one AST mutation.
  *
- * @returns Tagged union schema keyed by `kind`.
- * @example
+ * **Example** (Validate mutation input schema)
+ *
  * ```ts
  * import { TsMorphMutation } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -124,6 +126,8 @@ class TsMorphMutationWireDataAccess extends S.Class<TsMorphMutationWireDataAcces
  * const value = "add-identity-composer"
  * console.log(S.is(TsMorphMutation)(value)) // true
  * ```
+ *
+ * @returns Tagged union schema keyed by `kind`.
  * @category models
  * @since 0.0.0
  */
@@ -202,7 +206,8 @@ export type TsMorphMutationOutcome = typeof TsMorphMutationOutcome.Type;
 /**
  * Batch mutation result.
  *
- * @example
+ * **Example** (Validate batch mutation result)
+ *
  * ```ts
  * import { TsMorphIntegrationResult } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -210,6 +215,7 @@ export type TsMorphMutationOutcome = typeof TsMorphMutationOutcome.Type;
  * const candidate = { changed: false, filePath: "packages/example/src/index.ts" }
  * console.log(S.is(TsMorphIntegrationResult)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -228,12 +234,14 @@ export class TsMorphIntegrationResult extends S.Class<TsMorphIntegrationResult>(
 /**
  * Adapter boundary for concrete ts-morph-morph implementations.
  *
- * @example
+ * **Example** (Cast adapter type value)
+ *
  * ```ts
  * import type { TsMorphMutationAdapter } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TsMorphMutationAdapter
  * console.log(value) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -244,12 +252,14 @@ export type TsMorphMutationAdapter = {
 /**
  * Service contract expected by create-package orchestration.
  *
- * @example
+ * **Example** (Cast service shape type)
+ *
  * ```ts
  * import type { TsMorphIntegrationServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TsMorphIntegrationServiceShape
  * console.log(value) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -263,7 +273,8 @@ export type TsMorphIntegrationServiceShape = {
 /**
  * Service tag for ts-morph integration orchestration.
  *
- * @example
+ * **Example** (Resolve Effect service tag)
+ *
  * ```ts
  * import { TsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -271,6 +282,7 @@ export type TsMorphIntegrationServiceShape = {
  * const program = Effect.service(TsMorphIntegrationService)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -293,15 +305,17 @@ const UnsupportedTsMorphAdapter: TsMorphMutationAdapter = {
 /**
  * Construct a ts-morph-morph integration service with an optional adapter.
  *
- * @param adapter - Adapter used to apply ts-morph-morph mutations.
- * @returns Integration service for previewing and applying mutations.
- * @example
+ * **Example** (Create service and preview)
+ *
  * ```ts
  * import { createTsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
  *
  * const service = createTsMorphIntegrationService()
  * console.log(service.previewMutations([])) // []
  * ```
+ *
+ * @param adapter - Adapter used to apply ts-morph-morph mutations.
+ * @returns Integration service for previewing and applying mutations.
  * @category models
  * @since 0.0.0
  */

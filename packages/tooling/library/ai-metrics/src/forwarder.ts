@@ -63,7 +63,8 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 /**
  * Error raised by the durable AI metrics forwarder.
  *
- * @example
+ * **Example** (Construct forwarder error)
+ *
  * ```ts
  * import { AiMetricsForwarderError } from "@beep/repo-ai-metrics"
  * const error = AiMetricsForwarderError.make({
@@ -72,6 +73,7 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
  * })
  * console.log(error)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -89,7 +91,8 @@ export class AiMetricsForwarderError extends TaggedErrorClass<AiMetricsForwarder
 /**
  * Input for the durable AI metrics forwarder.
  *
- * @example
+ * **Example** (Build forwarder input)
+ *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
  * import { Redacted } from "effect"
@@ -102,6 +105,7 @@ export class AiMetricsForwarderError extends TaggedErrorClass<AiMetricsForwarder
  * })
  * console.log(input.parquetExportMode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -144,7 +148,8 @@ export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I
 /**
  * Per-source coverage selected by one durable forwarder run.
  *
- * @example
+ * **Example** (Make source coverage)
+ *
  * ```ts
  * import { AiMetricsForwarderSourceCoverage } from "@beep/repo-ai-metrics"
  *
@@ -156,6 +161,7 @@ export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I
  * })
  * console.log(coverage.limitedByMaxFiles)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -180,7 +186,8 @@ export class AiMetricsForwarderSourceCoverage extends S.Class<AiMetricsForwarder
 /**
  * Successful derived OTLP export status attached to a forwarder run.
  *
- * @example
+ * **Example** (Make exported OTLP status)
+ *
  * ```ts
  * import { AiMetricsForwarderOtlpExported } from "@beep/repo-ai-metrics"
  *
@@ -195,6 +202,7 @@ export class AiMetricsForwarderSourceCoverage extends S.Class<AiMetricsForwarder
  * })
  * console.log(exported.spanCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -218,7 +226,8 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
 /**
  * Failed derived OTLP export status attached to a forwarder run.
  *
- * @example
+ * **Example** (Make failed OTLP status)
+ *
  * ```ts
  * import { AiMetricsForwarderOtlpExportFailed } from "@beep/repo-ai-metrics"
  *
@@ -231,6 +240,7 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
  * })
  * console.log(failed.message)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -252,7 +262,8 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
 /**
  * Tagged derived OTLP export status attached to a forwarder run.
  *
- * @example
+ * **Example** (Check OTLP export tag)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderOtlpExport,
@@ -271,6 +282,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  * const isForwarderOtlpExport = AiMetricsForwarderOtlpExport.is(exported)
  * console.log(isForwarderOtlpExport)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -288,12 +300,14 @@ export const AiMetricsForwarderOtlpExport = S.Union([
 /**
  * Runtime type for {@link AiMetricsForwarderOtlpExport}.
  *
- * @example
+ * **Example** (Access export status field)
+ *
  * ```ts
  * import type { AiMetricsForwarderOtlpExport } from "@beep/repo-ai-metrics"
  * const status: AiMetricsForwarderOtlpExport["status"] = "exported"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -302,7 +316,8 @@ export type AiMetricsForwarderOtlpExport = typeof AiMetricsForwarderOtlpExport.T
 /**
  * Safe result emitted by one durable AI metrics forwarder run.
  *
- * @example
+ * **Example** (Make forwarder run result)
+ *
  * ```ts
  * import { AiMetricsForwarderRunResult } from "@beep/repo-ai-metrics"
  *
@@ -320,6 +335,7 @@ export type AiMetricsForwarderOtlpExport = typeof AiMetricsForwarderOtlpExport.T
  * })
  * console.log(result.turnCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -350,7 +366,8 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
 /**
  * Input for rendering a workstation-owned forwarder timer.
  *
- * @example
+ * **Example** (Build timer input)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerInput } from "@beep/repo-ai-metrics"
  *
@@ -362,6 +379,7 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
  * })
  * console.log(input.intervalMinutes)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -392,7 +410,8 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
 /**
  * Rendered systemd user units for the workstation-owned forwarder timer.
  *
- * @example
+ * **Example** (Make timer plan)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerPlan } from "@beep/repo-ai-metrics"
  *
@@ -407,6 +426,7 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
  * })
  * console.log(plan.timerUnitName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -482,9 +502,8 @@ const shellCommandFromArgv: (argv: ReadonlyArray<string>) => string = flow(A.map
 /**
  * Render a systemd user timer that repeatedly runs the forwarder with locking and status evidence.
  *
- * @param input - Timer rendering input with service names, command text, status path, and secret references.
- * @returns A render-only systemd timer/service plan for operator installation.
- * @example
+ * **Example** (Render systemd timer plan)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderTimerInput,
@@ -501,6 +520,9 @@ const shellCommandFromArgv: (argv: ReadonlyArray<string>) => string = flow(A.map
  * )
  * console.log(plan.serviceUnitName)
  * ```
+ *
+ * @param input - Timer rendering input with service names, command text, status path, and secret references.
+ * @returns A render-only systemd timer/service plan for operator installation.
  * @category services
  * @since 0.0.0
  */
@@ -821,12 +843,8 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
 /**
  * Run durable ingest: encrypted raw archive, DuckDB projection, and Parquet export.
  *
- * @effects
- * - Scans local Codex, Claude, and OpenClaw source locations.
- * - Reads selected source files and writes encrypted raw archive objects.
- * - Writes config snapshot artifacts before and after derived storage succeeds.
- * - Upserts derived rows into DuckDB and optionally refreshes Parquet exports.
- * @example
+ * **Example** (Run durable metrics forwarder)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderInput,
@@ -841,6 +859,12 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * const program = runAiMetricsForwarder(input)
  * console.log(program)
  * ```
+ *
+ * @effects
+ * - Scans local Codex, Claude, and OpenClaw source locations.
+ * - Reads selected source files and writes encrypted raw archive objects.
+ * - Writes config snapshot artifacts before and after derived storage succeeds.
+ * - Upserts derived rows into DuckDB and optionally refreshes Parquet exports.
  * @category services
  * @since 0.0.0
  */
@@ -927,7 +951,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
 /**
  * Render a durable forwarder run result as JSON.
  *
- * @example
+ * **Example** (Serialize run result JSON)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderRunResult,
@@ -949,6 +974,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
  * const program = forwarderRunResultToJson(result)
  * console.log(program)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -965,7 +991,8 @@ export const forwarderRunResultToJson: (
 /**
  * Render a forwarder timer plan as JSON.
  *
- * @example
+ * **Example** (Serialize timer plan JSON)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerPlan, forwarderTimerPlanToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -985,6 +1012,7 @@ export const forwarderRunResultToJson: (
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -21,14 +21,15 @@ import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
 /**
  * A MappedLiteralKit of all HTTP status codes.
  *
- * @category validation
- * @example
+ * **Example** (Count HTTP status pairs)
+ *
  * ```ts
  * import { HttpStatus } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus.Pairs.length)
  * ```
  *
+ * @category validation
  * @since 0.0.0
  */
 export const HttpStatus = MappedLiteralKit([
@@ -47,7 +48,8 @@ export const HttpStatus = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode encoded status name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatus } from "@beep/schema/HttpStatus"
@@ -73,7 +75,8 @@ export declare namespace HttpStatus {
 /**
  * {@inheritDoc HttpStatus}
  *
- * @example
+ * **Example** (Annotate numeric status type)
+ *
  * ```ts
  * import type { HttpStatus } from "@beep/schema/HttpStatus"
  *
@@ -89,14 +92,15 @@ export type HttpStatus = typeof HttpStatus.Type;
 /**
  * Canonical alias for the complete HTTP status schema.
  *
- * @category validation
- * @example
+ * **Example** (Count schema status pairs)
+ *
  * ```ts
  * import { Schema } from "@beep/schema/HttpStatus"
  *
  * console.log(Schema.Pairs.length)
  * ```
  *
+ * @category validation
  * @since 0.0.0
  */
 export const Schema = HttpStatus;
@@ -104,7 +108,8 @@ export const Schema = HttpStatus;
 /**
  * Runtime type extracted from {@link Schema}.
  *
- * @example
+ * **Example** (Decode with Schema alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { Schema as HttpStatusValue } from "@beep/schema/HttpStatus"

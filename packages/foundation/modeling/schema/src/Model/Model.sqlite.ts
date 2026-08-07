@@ -10,7 +10,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
 /**
  * Interface for an SQLite boolean field using `0 | 1` in the database and `boolean` in JSON.
  *
- * @example
+ * **Example** (Type BooleanSqlite field)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -18,8 +19,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface BooleanSqlite
   extends VariantSchema.Field<{
@@ -35,7 +36,8 @@ export interface BooleanSqlite
  * A schema for sqlite booleans that are represented as `0 | 1` in database
  * variants and `boolean` in JSON variants.
  *
- * @example
+ * **Example** (BooleanSqlite in model class)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -46,8 +48,8 @@ export interface BooleanSqlite
  * console.log(Task.fields.done)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const BooleanSqlite: BooleanSqlite = Field({
   select: S.BooleanFromBit,

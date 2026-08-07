@@ -21,7 +21,8 @@ const WindowsDotSegmentKit = LiteralKit([".", ".."]);
 /**
  * Literal union for Windows dot-segment markers.
  *
- * @example
+ * **Example** (Decode parent directory marker)
+ *
  * ```ts
  * import { WindowsDotSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -30,8 +31,8 @@ const WindowsDotSegmentKit = LiteralKit([".", ".."]);
  * console.log(parent)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsDotSegment = WindowsDotSegmentKit.pipe(
   $I.annoteSchema("WindowsDotSegment", {
@@ -42,7 +43,8 @@ export const WindowsDotSegment = WindowsDotSegmentKit.pipe(
 /**
  * Type for {@link WindowsDotSegment}.
  *
- * @example
+ * **Example** (Type annotated parent marker)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsDotSegment } from "@beep/schema/FilePath"
@@ -51,8 +53,8 @@ export const WindowsDotSegment = WindowsDotSegmentKit.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsDotSegment = typeof WindowsDotSegment.Type;
 
@@ -60,7 +62,8 @@ export type WindowsDotSegment = typeof WindowsDotSegment.Type;
  * Branded schema for Windows path segments that are plain names rather than
  * separators or dot-segment markers.
  *
- * @example
+ * **Example** (Decode plain path segment)
+ *
  * ```ts
  * import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -69,8 +72,8 @@ export type WindowsDotSegment = typeof WindowsDotSegment.Type;
  * console.log(segment)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -111,7 +114,8 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
 /**
  * Type for {@link ValidWindowsPlainPathSegment}.
  *
- * @example
+ * **Example** (Type annotated plain segment)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
@@ -120,8 +124,8 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidWindowsPlainPathSegment = typeof ValidWindowsPlainPathSegment.Type;
 
@@ -131,7 +135,8 @@ const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashS
 /**
  * Branded schema for Windows root segments such as UNC server and share names.
  *
- * @example
+ * **Example** (Decode UNC server name)
+ *
  * ```ts
  * import { ValidWindowsRootSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -140,8 +145,8 @@ const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashS
  * console.log(server)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
   S.makeFilter(P.not(isWindowsDotSegment), {
@@ -161,7 +166,8 @@ export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
 /**
  * Type for {@link ValidWindowsRootSegment}.
  *
- * @example
+ * **Example** (Type annotated root segment)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsRootSegment } from "@beep/schema/FilePath"
@@ -170,8 +176,8 @@ export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidWindowsRootSegment = typeof ValidWindowsRootSegment.Type;
 
@@ -179,7 +185,8 @@ export type ValidWindowsRootSegment = typeof ValidWindowsRootSegment.Type;
  * Branded schema for Windows path segments that may be either plain segments or
  * dot-segment markers.
  *
- * @example
+ * **Example** (Decode current directory marker)
+ *
  * ```ts
  * import { ValidWindowsPathSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -188,8 +195,8 @@ export type ValidWindowsRootSegment = typeof ValidWindowsRootSegment.Type;
  * console.log(segment)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsPlainPathSegment]).pipe(
   S.brand("ValidWindowsPathSegment"),
@@ -202,7 +209,8 @@ export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsP
 /**
  * Type for {@link ValidWindowsPathSegment}.
  *
- * @example
+ * **Example** (Type annotated path segment)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsPathSegment } from "@beep/schema/FilePath"
@@ -211,15 +219,16 @@ export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsP
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidWindowsPathSegment = typeof ValidWindowsPathSegment.Type;
 
 /**
  * Branded schema for a non-empty Windows path segment list.
  *
- * @example
+ * **Example** (Decode non-empty segment list)
+ *
  * ```ts
  * import { WindowsSegments } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -228,8 +237,8 @@ export type ValidWindowsPathSegment = typeof ValidWindowsPathSegment.Type;
  * console.log(segments.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
   S.brand("WindowsSegments"),
@@ -242,7 +251,8 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
 /**
  * Type for {@link WindowsSegments}.
  *
- * @example
+ * **Example** (Type annotated segment list)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsSegments } from "@beep/schema/FilePath"
@@ -251,8 +261,8 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsSegments = typeof WindowsSegments.Type;
 
@@ -260,7 +270,8 @@ export type WindowsSegments = typeof WindowsSegments.Type;
  * Branded schema for the tail segment list of a UNC file path after the server
  * and share segments.
  *
- * @example
+ * **Example** (Decode UNC rest segments)
+ *
  * ```ts
  * import { ValidWindowsUncRest } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -269,8 +280,8 @@ export type WindowsSegments = typeof WindowsSegments.Type;
  * console.log(rest.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
   S.brand("ValidWindowsUncRest"),
@@ -283,7 +294,8 @@ export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe
 /**
  * Type for {@link ValidWindowsUncRest}.
  *
- * @example
+ * **Example** (Type annotated UNC rest)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsUncRest } from "@beep/schema/FilePath"
@@ -292,15 +304,16 @@ export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidWindowsUncRest = typeof ValidWindowsUncRest.Type;
 
 /**
  * Branded schema for a full UNC segment list `[server, share, ...rest]`.
  *
- * @example
+ * **Example** (Decode full UNC segments)
+ *
  * ```ts
  * import { ValidWindowsUncSegments } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -309,8 +322,8 @@ export type ValidWindowsUncRest = typeof ValidWindowsUncRest.Type;
  * console.log(segments[0])
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ValidWindowsUncSegments = S.TupleWithRest(
   S.Tuple([ValidWindowsRootSegment, ValidWindowsRootSegment, ValidWindowsPathSegment]),
@@ -326,7 +339,8 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
 /**
  * Type for {@link ValidWindowsUncSegments}.
  *
- * @example
+ * **Example** (Type annotated UNC segments)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsUncSegments } from "@beep/schema/FilePath"
@@ -335,7 +349,7 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
  * console.log(value[0])
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidWindowsUncSegments = typeof ValidWindowsUncSegments.Type;

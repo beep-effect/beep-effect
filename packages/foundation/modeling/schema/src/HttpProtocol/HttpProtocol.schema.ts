@@ -12,7 +12,8 @@ const $I = $SchemaId.create("HttpProtocol");
 /**
  * An HTTP protocol ("http" or "https")
  *
- * @example
+ * **Example** (Check https in options)
+ *
  * ```ts
  * import { HttpProtocol } from "@beep/schema/HttpProtocol"
  *
@@ -31,7 +32,8 @@ export const HttpProtocol = LiteralKit(["http", "https"]).pipe(
 /**
  * {@inheritDoc HttpProtocol}
  *
- * @example
+ * **Example** (Type protocol and check options)
+ *
  * ```ts
  * import { HttpProtocol } from "@beep/schema/HttpProtocol"
  *
@@ -47,7 +49,8 @@ export type HttpProtocol = typeof HttpProtocol.Type;
 /**
  * {@inheritDoc HttpProtocol}
  *
- * @example
+ * **Example** (Check https via Schema)
+ *
  * ```ts
  * import { Schema } from "@beep/schema/HttpProtocol"
  *
@@ -62,7 +65,8 @@ export const Schema = HttpProtocol;
 /**
  * {@inheritDoc HttpProtocol}
  *
- * @example
+ * **Example** (Type protocol Schema value)
+ *
  * ```ts
  * import type { Schema } from "@beep/schema/HttpProtocol"
  *

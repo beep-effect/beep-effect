@@ -14,7 +14,8 @@ const make = EntityId.factory("epistemic", $I);
 /**
  * Candidate claim entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -31,7 +32,8 @@ export const CandidateClaimId = make("candidate_claim", {
 /**
  * Runtime type for {@link CandidateClaimId}.
  *
- * @example
+ * **Example** (Decode CandidateClaimId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -52,7 +54,8 @@ export type CandidateClaimId = typeof CandidateClaimId.Type;
 /**
  * Evidence entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -69,7 +72,8 @@ export const EvidenceId = make("evidence", {
 /**
  * Runtime type for {@link EvidenceId}.
  *
- * @example
+ * **Example** (Decode EvidenceId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -90,7 +94,8 @@ export type EvidenceId = typeof EvidenceId.Type;
 /**
  * Activity entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -107,7 +112,8 @@ export const ActivityId = make("activity", {
 /**
  * Runtime type for {@link ActivityId}.
  *
- * @example
+ * **Example** (Decode ActivityId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -128,7 +134,8 @@ export type ActivityId = typeof ActivityId.Type;
 /**
  * Usage record entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -145,7 +152,8 @@ export const UsageRecordId = make("usage_record", {
 /**
  * Runtime type for {@link UsageRecordId}.
  *
- * @example
+ * **Example** (Decode UsageRecordId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -166,7 +174,8 @@ export type UsageRecordId = typeof UsageRecordId.Type;
 /**
  * Bitemporal epistemic edge version entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -183,7 +192,8 @@ export const EdgeVersionId = make("edge_version", {
 /**
  * Runtime type for {@link EdgeVersionId}.
  *
- * @example
+ * **Example** (Decode EdgeVersionId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -204,7 +214,8 @@ export type EdgeVersionId = typeof EdgeVersionId.Type;
 /**
  * Durable claim disposition entity identifier.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -221,7 +232,8 @@ export const ClaimDispositionId = make("claim_disposition", {
 /**
  * Runtime type for {@link ClaimDispositionId}.
  *
- * @example
+ * **Example** (Decode ClaimDispositionId value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

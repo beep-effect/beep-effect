@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for blockchain wallet address schemas.
  *
- * @example
+ * **Example** (Import CryptoWalletAddress namespace)
+ *
  * ```ts
  * import * as CryptoWalletAddress from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"

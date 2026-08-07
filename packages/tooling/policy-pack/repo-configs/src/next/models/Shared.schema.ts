@@ -18,7 +18,8 @@ const FileSizeByte = LiteralKit(["b", "B"]);
 /**
  * File-size suffix accepted by Next.js size limit strings.
  *
- * @example
+ * **Example** (Decode mb file suffix)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -26,6 +27,7 @@ const FileSizeByte = LiteralKit(["b", "B"]);
  * const program = S.decodeUnknownEffect(FileSizeSuffix)("mb")
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -40,12 +42,14 @@ export const FileSizeSuffix = S.TemplateLiteral([FileSizeScale, FileSizeByte]).p
 /**
  * File-size suffix accepted by Next.js size limit strings.
  *
- * @example
+ * **Example** (Type-check MB suffix)
+ *
  * ```ts
  * import type { FileSizeSuffix } from "@beep/repo-configs/next/models/Shared.schema"
  * const suffix = "MB" satisfies FileSizeSuffix
  * console.log(suffix)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,7 +73,8 @@ const SizeLimitText = S.TemplateLiteral([S.Finite, FileSizeSuffix]).check(
 /**
  * Non-negative numeric or suffixed string size limit accepted by Next.js.
  *
- * @example
+ * **Example** (Decode 2mb size limit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -77,6 +82,7 @@ const SizeLimitText = S.TemplateLiteral([S.Finite, FileSizeSuffix]).check(
  * const program = S.decodeUnknownEffect(SizeLimit)("2mb")
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -92,12 +98,14 @@ export const SizeLimit = S.Union([NonNegativeSizeLimitNumber, SizeLimitText]).pi
 /**
  * Non-negative numeric or suffixed string size limit accepted by Next.js.
  *
- * @example
+ * **Example** (Type-check 2mb size limit)
+ *
  * ```ts
  * import type { SizeLimit } from "@beep/repo-configs/next/models/Shared.schema"
  * const limit = "2mb" satisfies SizeLimit
  * console.log(limit)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

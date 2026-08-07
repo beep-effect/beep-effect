@@ -15,15 +15,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * resource. For example, search engines should remove the resource’s
  * information from their databases.
  *
- * @example
+ * **Example** (Log Gone literal)
+ *
  * ```ts
  * import { Gone } from "@beep/schema/HttpStatus"
  *
  * console.log(Gone.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Gone = S.Literal(410).pipe(
   $I.annoteSchema("Gone", {
@@ -36,7 +37,8 @@ export const Gone = S.Literal(410).pipe(
 /**
  * {@inheritDoc Gone}
  *
- * @example
+ * **Example** (Assign Gone status code)
+ *
  * ```ts
  * import type { Gone } from "@beep/schema/HttpStatus"
  *
@@ -44,8 +46,8 @@ export const Gone = S.Literal(410).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Gone = typeof Gone.Type;
 
@@ -53,15 +55,16 @@ export type Gone = typeof Gone.Type;
  * 411 “Length Required” – The length of the request’s content is not specified
  * and the resource on the server requires it.
  *
- * @example
+ * **Example** (Log LengthRequired literal)
+ *
  * ```ts
  * import { LengthRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(LengthRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const LengthRequired = S.Literal(411).pipe(
   $I.annoteSchema("LengthRequired", {
@@ -74,7 +77,8 @@ export const LengthRequired = S.Literal(411).pipe(
 /**
  * {@inheritDoc LengthRequired}
  *
- * @example
+ * **Example** (Assign LengthRequired status)
+ *
  * ```ts
  * import type { LengthRequired } from "@beep/schema/HttpStatus"
  *
@@ -82,8 +86,8 @@ export const LengthRequired = S.Literal(411).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type LengthRequired = typeof LengthRequired.Type;
 
@@ -91,15 +95,16 @@ export type LengthRequired = typeof LengthRequired.Type;
  * 412 “Precondition failed” – The headers of the request specify certain
  * preconditions that the server fails to meet.
  *
- * @example
+ * **Example** (Log PreconditionFailed literal)
+ *
  * ```ts
  * import { PreconditionFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(PreconditionFailed.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PreconditionFailed = S.Literal(412).pipe(
   $I.annoteSchema("PreconditionFailed", {
@@ -112,7 +117,8 @@ export const PreconditionFailed = S.Literal(412).pipe(
 /**
  * {@inheritDoc PreconditionFailed}
  *
- * @example
+ * **Example** (Assign PreconditionFailed status)
+ *
  * ```ts
  * import type { PreconditionFailed } from "@beep/schema/HttpStatus"
  *
@@ -120,8 +126,8 @@ export const PreconditionFailed = S.Literal(412).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PreconditionFailed = typeof PreconditionFailed.Type;
 
@@ -133,15 +139,16 @@ export type PreconditionFailed = typeof PreconditionFailed.Type;
  * problem, read this guide about the “413 Entity Too Large” Error in
  * WordPress.
  *
- * @example
+ * **Example** (Log PayloadTooLarge literal)
+ *
  * ```ts
  * import { PayloadTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(PayloadTooLarge.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PayloadTooLarge = S.Literal(413).pipe(
   $I.annoteSchema("PayloadTooLarge", {
@@ -154,7 +161,8 @@ export const PayloadTooLarge = S.Literal(413).pipe(
 /**
  * {@inheritDoc PayloadTooLarge}
  *
- * @example
+ * **Example** (Assign PayloadTooLarge status)
+ *
  * ```ts
  * import type { PayloadTooLarge } from "@beep/schema/HttpStatus"
  *
@@ -162,8 +170,8 @@ export const PayloadTooLarge = S.Literal(413).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PayloadTooLarge = typeof PayloadTooLarge.Type;
 
@@ -172,15 +180,16 @@ export type PayloadTooLarge = typeof PayloadTooLarge.Type;
  * process it. Usually, this is the result of a GET request containing too much
  * data and therefore must be changed to a POST request.
  *
- * @example
+ * **Example** (Log UriTooLong literal)
+ *
  * ```ts
  * import { UriTooLong } from "@beep/schema/HttpStatus"
  *
  * console.log(UriTooLong.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UriTooLong = S.Literal(414).pipe(
   $I.annoteSchema("UriTooLong", {
@@ -193,7 +202,8 @@ export const UriTooLong = S.Literal(414).pipe(
 /**
  * {@inheritDoc UriTooLong}
  *
- * @example
+ * **Example** (Assign UriTooLong status code)
+ *
  * ```ts
  * import type { UriTooLong } from "@beep/schema/HttpStatus"
  *
@@ -201,8 +211,8 @@ export const UriTooLong = S.Literal(414).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UriTooLong = typeof UriTooLong.Type;
 
@@ -211,15 +221,16 @@ export type UriTooLong = typeof UriTooLong.Type;
  * server doesn’t support. For instance, you try to upload an image file in
  * .jpg format, but the server doesn’t support it.
  *
- * @example
+ * **Example** (Log UnsupportedMediaType literal)
+ *
  * ```ts
  * import { UnsupportedMediaType } from "@beep/schema/HttpStatus"
  *
  * console.log(UnsupportedMediaType.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UnsupportedMediaType = S.Literal(415).pipe(
   $I.annoteSchema("UnsupportedMediaType", {
@@ -232,7 +243,8 @@ export const UnsupportedMediaType = S.Literal(415).pipe(
 /**
  * {@inheritDoc UnsupportedMediaType}
  *
- * @example
+ * **Example** (Assign UnsupportedMediaType status)
+ *
  * ```ts
  * import type { UnsupportedMediaType } from "@beep/schema/HttpStatus"
  *
@@ -240,8 +252,8 @@ export const UnsupportedMediaType = S.Literal(415).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UnsupportedMediaType = typeof UnsupportedMediaType.Type;
 
@@ -250,15 +262,16 @@ export type UnsupportedMediaType = typeof UnsupportedMediaType.Type;
  * resource that the server can’t provide. This error can occur when your
  * browser asks for a portion of a file that is outside of the end of the file.
  *
- * @example
+ * **Example** (Log RangeNotSatisfiable literal)
+ *
  * ```ts
  * import { RangeNotSatisfiable } from "@beep/schema/HttpStatus"
  *
  * console.log(RangeNotSatisfiable.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RangeNotSatisfiable = S.Literal(416).pipe(
   $I.annoteSchema("RangeNotSatisfiable", {
@@ -271,7 +284,8 @@ export const RangeNotSatisfiable = S.Literal(416).pipe(
 /**
  * {@inheritDoc RangeNotSatisfiable}
  *
- * @example
+ * **Example** (Assign RangeNotSatisfiable status)
+ *
  * ```ts
  * import type { RangeNotSatisfiable } from "@beep/schema/HttpStatus"
  *
@@ -279,8 +293,8 @@ export const RangeNotSatisfiable = S.Literal(416).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type RangeNotSatisfiable = typeof RangeNotSatisfiable.Type;
 
@@ -288,15 +302,16 @@ export type RangeNotSatisfiable = typeof RangeNotSatisfiable.Type;
  * 417 “Expectation Failed” – The server fails to meet the requirements set in
  * the request’s expected header field.
  *
- * @example
+ * **Example** (Log ExpectationFailed literal)
+ *
  * ```ts
  * import { ExpectationFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(ExpectationFailed.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ExpectationFailed = S.Literal(417).pipe(
   $I.annoteSchema("ExpectationFailed", {
@@ -309,7 +324,8 @@ export const ExpectationFailed = S.Literal(417).pipe(
 /**
  * {@inheritDoc ExpectationFailed}
  *
- * @example
+ * **Example** (Assign ExpectationFailed status)
+ *
  * ```ts
  * import type { ExpectationFailed } from "@beep/schema/HttpStatus"
  *
@@ -317,8 +333,8 @@ export const ExpectationFailed = S.Literal(417).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ExpectationFailed = typeof ExpectationFailed.Type;
 
@@ -326,15 +342,16 @@ export type ExpectationFailed = typeof ExpectationFailed.Type;
  * 418 “I’m a teapot.” – This error is returned by teapots requested to brew
  * coffee. It is an April’s Fool joke dating back to 1998.
  *
- * @example
+ * **Example** (Log ImATeapot literal)
+ *
  * ```ts
  * import { ImATeapot } from "@beep/schema/HttpStatus"
  *
  * console.log(ImATeapot.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ImATeapot = S.Literal(418).pipe(
   $I.annoteSchema("ImATeapot", {
@@ -347,7 +364,8 @@ export const ImATeapot = S.Literal(418).pipe(
 /**
  * {@inheritDoc ImATeapot}
  *
- * @example
+ * **Example** (Assign ImATeapot status code)
+ *
  * ```ts
  * import type { ImATeapot } from "@beep/schema/HttpStatus"
  *
@@ -355,7 +373,7 @@ export const ImATeapot = S.Literal(418).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ImATeapot = typeof ImATeapot.Type;

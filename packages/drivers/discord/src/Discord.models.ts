@@ -16,7 +16,8 @@ const $I = $DiscordId.create("Discord.models");
 /**
  * Discord's public REST v10 base URL.
  *
- * @example
+ * **Example** (Log Discord API URL)
+ *
  * ```ts
  * import { DISCORD_API_URL } from "@beep/discord"
  *
@@ -59,7 +60,8 @@ const DiscordSnowflake = S.String.check(
 /**
  * Numeric HTTP status code used in Discord proof and error payloads.
  *
- * @example
+ * **Example** (Decode HTTP status code)
+ *
  * ```ts
  * import { DiscordHttpStatus } from "@beep/discord"
  * import * as S from "effect/Schema"
@@ -108,7 +110,8 @@ export const DiscordHttpStatus = S.Finite.check(
 /**
  * {@inheritDoc DiscordHttpStatus}
  *
- * @example
+ * **Example** (Type-annotate status value)
+ *
  * ```ts
  * import type { DiscordHttpStatus } from "@beep/discord"
  *
@@ -152,12 +155,14 @@ const DiscordHttpSuccessStatus = DiscordHttpStatus.check(
 /**
  * Runtime configuration accepted by {@link Discord.makeLayer}.
  *
- * @remarks
+ * **Details**
+ *
  * Omit `baseUrl` for Discord's public v10 API. Tests and local adapters can
  * provide a replacement base URL; the service decodes configuration before
  * request construction so trailing slashes are stripped from request paths.
  *
- * @example
+ * **Example** (Make config with baseUrl)
+ *
  * ```ts
  * import { DiscordConfigInput } from "@beep/discord"
  *
@@ -168,7 +173,7 @@ const DiscordHttpSuccessStatus = DiscordHttpStatus.check(
  * console.log(config.baseUrl)
  * ```
  *
- * @see {@link Discord.makeLayer}
+ * @see {@link Discord.makeLayer} for the Discord service layer.
  * @category models
  * @since 0.0.0
  */
@@ -186,7 +191,8 @@ export class DiscordConfigInput extends S.Class<DiscordConfigInput>($I`DiscordCo
 /**
  * Request payload for proving a Discord channel can be reached.
  *
- * @example
+ * **Example** (Make channel request)
+ *
  * ```ts
  * import { DiscordChannelRequest } from "@beep/discord"
  *
@@ -216,11 +222,13 @@ export class DiscordChannelRequest extends S.Class<DiscordChannelRequest>($I`Dis
 /**
  * Request payload for creating a Discord proof message.
  *
- * @remarks
+ * **Details**
+ *
  * The service sends the content with `allowed_mentions.parse` set to an empty
  * array so proof messages do not notify users, roles, or everyone mentions.
  *
- * @example
+ * **Example** (Make create message request)
+ *
  * ```ts
  * import { DiscordCreateMessageRequest } from "@beep/discord"
  *
@@ -254,12 +262,14 @@ export class DiscordCreateMessageRequest extends S.Class<DiscordCreateMessageReq
 /**
  * Sanitized metadata returned after a successful channel lookup.
  *
- * @remarks
+ * **Details**
+ *
  * The proof keeps the channel identifier, HTTP status, and optional guild/name
  * metadata needed for liveness evidence without retaining the raw Discord
  * response payload.
  *
- * @example
+ * **Example** (Make channel proof)
+ *
  * ```ts
  * import { DiscordChannelProof } from "@beep/discord"
  * import * as O from "effect/Option"
@@ -306,11 +316,13 @@ export class DiscordChannelProof extends S.Class<DiscordChannelProof>($I`Discord
 /**
  * Sanitized metadata returned after a successful proof message creation.
  *
- * @remarks
+ * **Details**
+ *
  * The proof records identifiers, HTTP status, and Discord's optional timestamp
  * while excluding message content and authorization data.
  *
- * @example
+ * **Example** (Make message proof)
+ *
  * ```ts
  * import { DiscordMessageProof } from "@beep/discord"
  * import * as O from "effect/Option"

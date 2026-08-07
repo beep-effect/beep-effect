@@ -2,11 +2,14 @@
  * Schema-backed binary file extension literals and byte heuristics for
  * excluding non-text formats from textual processing.
  *
+ * **Details**
+ *
  * This module centralizes the binary file extensions used by text-oriented
  * tooling and provides lightweight helpers for checking file paths and byte
  * samples before attempting textual comparison.
  *
- * @example
+ * **Example** (Decode extension and helpers)
+ *
  * ```typescript
  * import * as S from "effect/Schema";
  * import { BinaryFileExtension, hasBinaryExtension, isBinaryContent } from "@beep/schema/BinaryFileExtension";
@@ -157,10 +160,13 @@ const isNonPrintableByte = (byte: number): boolean => byte < 32 && byte !== 9 &&
  * Schema for dotted binary file extensions that should be excluded from
  * text-based processing.
  *
+ * **Details**
+ *
  * The literal members include the leading `.` so they match normalized path
  * extensions directly.
  *
- * @example
+ * **Example** (Decode PDF extension)
+ *
  * ```typescript
  * import * as S from "effect/Schema";
  * import { BinaryFileExtension } from "@beep/schema/BinaryFileExtension";
@@ -169,8 +175,8 @@ const isNonPrintableByte = (byte: number): boolean => byte < 32 && byte !== 9 &&
  * console.log(extension); // ".pdf"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BinaryFileExtension = LiteralKit(binaryFileExtensionOptions).pipe(
   $I.annoteSchema("BinaryFileExtension", {
@@ -183,7 +189,8 @@ const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.Options)
 /**
  * Union of literals accepted by {@link BinaryFileExtension}.
  *
- * @example
+ * **Example** (Annotate extension union type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BinaryFileExtension } from "@beep/schema/BinaryFileExtension"
@@ -192,15 +199,16 @@ const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.Options)
  * console.log(ext) // ".png"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BinaryFileExtension = typeof BinaryFileExtension.Type;
 
 /**
  * Schema-derived guard for individual binary file extensions.
  *
- * @example
+ * **Example** (Guard dotted extensions)
+ *
  * ```typescript
  * import { isBinaryFileExtension } from "@beep/schema/BinaryFileExtension";
  *
@@ -210,8 +218,8 @@ export type BinaryFileExtension = typeof BinaryFileExtension.Type;
  *
  * @param value - The value to test as a binary file extension.
  * @returns Whether the value is a supported dotted binary file extension.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isBinaryFileExtension = (value: string): value is BinaryFileExtension =>
   HashSet.has(binaryFileExtensionSet, value);
@@ -219,10 +227,13 @@ export const isBinaryFileExtension = (value: string): value is BinaryFileExtensi
 /**
  * Detects whether a file path ends in a known binary file extension.
  *
+ * **Details**
+ *
  * The extracted extension is normalized to lowercase before membership is
  * checked against {@link BinaryFileExtension}.
  *
- * @example
+ * **Example** (Detect path binary extension)
+ *
  * ```typescript
  * import { hasBinaryExtension } from "@beep/schema/BinaryFileExtension";
  *
@@ -232,8 +243,8 @@ export const isBinaryFileExtension = (value: string): value is BinaryFileExtensi
  *
  * @param filePath - The file path or file name whose extension should be checked.
  * @returns `true` when the normalized dotted extension is known to be binary.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export function hasBinaryExtension(filePath: string): boolean {
   return HashSet.has(binaryFileExtensionSet, extractNormalizedExtension(filePath));
@@ -242,11 +253,14 @@ export function hasBinaryExtension(filePath: string): boolean {
 /**
  * Detects whether a byte sample looks like binary content.
  *
+ * **Details**
+ *
  * The heuristic returns `true` when the inspected sample contains a null byte
  * or when more than 10% of sampled bytes are non-printable ASCII bytes other
  * than tab, line feed, and carriage return.
  *
- * @example
+ * **Example** (Detect binary byte samples)
+ *
  * ```typescript
  * import { isBinaryContent } from "@beep/schema/BinaryFileExtension";
  *
@@ -259,8 +273,8 @@ export function hasBinaryExtension(filePath: string): boolean {
  *
  * @param bytes - The bytes to inspect for binary content markers.
  * @returns `true` when the inspected bytes look binary, otherwise `false`.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export function isBinaryContent(bytes: Uint8Array): boolean {
   const sample = pipe(bytes, A.fromIterable, A.take(BINARY_CONTENT_SAMPLE_SIZE));

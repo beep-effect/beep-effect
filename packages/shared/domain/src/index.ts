@@ -8,7 +8,8 @@
 /**
  * Shared domain package version.
  *
- * @example
+ * **Example** (Import and check VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/shared-domain"
  *
@@ -25,140 +26,150 @@ export const VERSION = "0.0.0" as const;
 /**
  * Shared-kernel aggregate concepts.
  *
- * @example
+ * **Example** (Import Aggregates namespace)
+ *
  * ```ts
  * import { Aggregates } from "@beep/shared-domain"
  *
  * console.log(Aggregates)
  * ```
  *
- * @since 0.0.0
  * @category aggregates
+ * @since 0.0.0
  */
 export * as Aggregates from "./aggregates/index.ts";
 /**
  * Shared-kernel entity concepts.
  *
- * @example
+ * **Example** (Log organization table name)
+ *
  * ```ts
  * import { Entities } from "@beep/shared-domain"
  *
  * console.log(Entities.Organization.Model.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category entities
+ * @since 0.0.0
  */
 export * as Entities from "./entities/index.ts";
 /**
  * Product-facing persisted entity base constructor.
  *
- * @example
+ * **Example** (Inspect createdAt column name)
+ *
  * ```ts
  * import { BaseEntity } from "@beep/shared-domain"
  *
  * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export * as BaseEntity from "./entity/BaseEntity.ts";
 /**
  * Entity identifier constructor namespace.
  *
- * @example
+ * **Example** (Log EntityIdValue export)
+ *
  * ```ts
  * import { EntityId } from "@beep/shared-domain"
  *
  * console.log(EntityId.EntityIdValue)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export * as EntityId from "./entity/EntityId.ts";
 /**
  * Polymorphic entity reference namespace.
  *
- * @example
+ * **Example** (Log EntityRef schema)
+ *
  * ```ts
  * import { EntityRef } from "@beep/shared-domain"
  *
  * console.log(EntityRef.EntityRef)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as EntityRef from "./entity/EntityRef.ts";
 /**
  * Canonical actor principal namespace.
  *
- * @example
+ * **Example** (Log Principal schema)
+ *
  * ```ts
  * import { Principal } from "@beep/shared-domain"
  *
  * console.log(Principal.Principal)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as Principal from "./entity/Principal.ts";
 /**
  * URL-safe public entity identifier constructor namespace.
  *
- * @example
+ * **Example** (Log PublicEntityId factory)
+ *
  * ```ts
  * import { PublicEntityId } from "@beep/shared-domain"
  *
  * console.log(PublicEntityId.factory)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export * as PublicEntityId from "./entity/PublicEntityId.ts";
 /**
  * Canonical source-kind namespace.
  *
- * @example
+ * **Example** (Log SourceKind schema)
+ *
  * ```ts
  * import { SourceKind } from "@beep/shared-domain"
  *
  * console.log(SourceKind.SourceKind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export * as SourceKind from "./entity/SourceKind.ts";
 /**
  * Entity-id registry namespace.
  *
- * @example
+ * **Example** (Log organization id resource)
+ *
  * ```ts
  * import { Identity } from "@beep/shared-domain"
  *
  * console.log(Identity.Shared.OrganizationId.resource)
  * ```
  *
- * @since 0.0.0
  * @category entity-ids
+ * @since 0.0.0
  */
 export * as Identity from "./identity/index.ts";
 /**
  * Shared-kernel value objects.
  *
- * @example
+ * **Example** (Format today's local date)
+ *
  * ```ts
  * import { Values } from "@beep/shared-domain"
  *
  * console.log(Values.LocalDate.today().toISOString())
  * ```
  *
- * @since 0.0.0
  * @category value-objects
+ * @since 0.0.0
  */
 export * as Values from "./values/index.ts";

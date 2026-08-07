@@ -8,7 +8,8 @@
 /**
  * Deterministic fixture assistant-turn kernel Layer and its pure block helper.
  *
- * @example
+ * **Example** (Fixture blocks for turns)
+ *
  * ```ts
  * import { fixtureBlocksFor } from "@beep/agents-use-cases/proof"
  *
@@ -28,7 +29,8 @@ export {
 /**
  * In-memory runtime SDK facade backed by deterministic proof fixtures.
  *
- * @example
+ * **Example** (In-memory runtime SDK facade)
+ *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
  *
@@ -43,7 +45,8 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
 /**
  * Runtime fixture schema and deterministic runner used by proof harnesses.
  *
- * @example
+ * **Example** (Run deterministic runtime fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { Effect } from "effect"
@@ -84,7 +87,8 @@ export {
 /**
  * Public runtime SDK contracts reused by proof helpers.
  *
- * @example
+ * **Example** (Make runtime scope contract)
+ *
  * ```ts
  * import { RuntimeScope } from "@beep/agents-use-cases/proof"
  *

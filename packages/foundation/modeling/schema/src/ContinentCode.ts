@@ -16,7 +16,8 @@ const $I = $SchemaId.create("ContinentCode");
 /**
  * CLDR top-level territory containment code schema.
  *
- * @example
+ * **Example** (Decode CLDR continent code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentCode } from "@beep/schema/ContinentCode"
@@ -25,8 +26,8 @@ const $I = $SchemaId.create("ContinentCode");
  * console.log(code) // "019"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ContinentCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.ContinentDataByCode)).pipe(
   $I.annoteSchema("ContinentCode", {
@@ -37,7 +38,8 @@ export const ContinentCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.Cont
 /**
  * {@inheritDoc ContinentCode}
  *
- * @example
+ * **Example** (Type annotated continent code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentCode } from "@beep/schema/ContinentCode"
@@ -46,8 +48,8 @@ export const ContinentCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.Cont
  * console.log(code) // "150"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ContinentCode = typeof ContinentCode.Type;
 
@@ -56,7 +58,8 @@ const continentNameByCodeEntries = Struct.entriesNonEmpty(TerritoriesData.Contin
 /**
  * CLDR top-level territory containment display-name schema.
  *
- * @example
+ * **Example** (Decode continent display name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentName } from "@beep/schema/ContinentCode"
@@ -65,8 +68,8 @@ const continentNameByCodeEntries = Struct.entriesNonEmpty(TerritoriesData.Contin
  * console.log(name) // "Americas"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ContinentName = LiteralKit(
   Struct.keysNonEmpty(Struct.reverse(TerritoriesData.ContinentDataNameByCode))
@@ -79,7 +82,8 @@ export const ContinentName = LiteralKit(
 /**
  * {@inheritDoc ContinentName}
  *
- * @example
+ * **Example** (Type annotated continent name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentName } from "@beep/schema/ContinentCode"
@@ -88,15 +92,16 @@ export const ContinentName = LiteralKit(
  * console.log(name) // "Europe"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ContinentName = typeof ContinentName.Type;
 
 /**
  * Reversible CLDR continent code/name codec.
  *
- * @example
+ * **Example** (Map code to continent name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentNameFromCode } from "@beep/schema/ContinentCode"
@@ -105,8 +110,8 @@ export type ContinentName = typeof ContinentName.Type;
  * console.log(name) // "Americas"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ContinentNameFromCode = MappedLiteralKit(continentNameByCodeEntries).pipe(
   $I.annoteSchema("ContinentNameFromCode", {
@@ -117,7 +122,8 @@ export const ContinentNameFromCode = MappedLiteralKit(continentNameByCodeEntries
 /**
  * Reverse codec from CLDR continent display name to CLDR code.
  *
- * @example
+ * **Example** (Map name to continent code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentCodeFromName } from "@beep/schema/ContinentCode"
@@ -126,7 +132,7 @@ export const ContinentNameFromCode = MappedLiteralKit(continentNameByCodeEntries
  * console.log(code) // "150"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ContinentCodeFromName = ContinentNameFromCode.To;

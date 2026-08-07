@@ -14,7 +14,8 @@ const $I = $LawPracticeDomainId.create("values/SeniorityTier.model");
 /**
  * Lawyer seniority tier used for staffing and responsibility labels.
  *
- * @example
+ * **Example** (Guard partner and senior-associate)
+ *
  * ```ts
  * import { SeniorityTier } from "@beep/law-practice-domain"
  *
@@ -41,7 +42,8 @@ export const SeniorityTier = LiteralKit([
 /**
  * Decoded lawyer seniority tier.
  *
- * @example
+ * **Example** (Assign partner tier type)
+ *
  * ```ts
  * import type { SeniorityTier } from "@beep/law-practice-domain"
  *

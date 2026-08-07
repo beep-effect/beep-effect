@@ -16,12 +16,13 @@ const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.mod
  * Structured date components. Month and day are optional to support year-only
  * dates.
  *
+ * **Details**
+ *
  * A missing `month` or `day` decodes to `None`, so a bare-year citation date is
  * modeled as `{ year, month: None, day: None }`.
  *
- * **Example**
+ * **Example** (Year-month with missing day)
  *
- * @example
  * ```ts
  * import { ParsedDate } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -67,7 +68,8 @@ export class ParsedDate extends S.Class<ParsedDate>($I`ParsedDate`)(
 /**
  * Companion namespace for `ParsedDate`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { ParsedDate } from "@beep/law-practice-domain"
  *
@@ -81,9 +83,8 @@ export declare namespace ParsedDate {
   /**
    * Wire-encoded representation of a decoded {@link ParsedDate}.
    *
-   * **Example**
+   * **Example** (Wire type alias)
    *
-   * @example
    * ```ts
    * import type { ParsedDate } from "@beep/law-practice-domain"
    *
@@ -99,13 +100,14 @@ export declare namespace ParsedDate {
 /**
  * Date in both ISO string and structured format.
  *
+ * **Details**
+ *
  * Pairs an ISO 8601 `iso` string with its {@link ParsedDate} component
  * breakdown, so consumers can render the canonical string or branch on the
  * individual year/month/day components.
  *
- * **Example**
+ * **Example** (ISO with parsed components)
  *
- * @example
  * ```ts
  * import { ParsedDate, StructuredDate } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -143,7 +145,8 @@ export class StructuredDate extends S.Class<StructuredDate>($I`StructuredDate`)(
 /**
  * Companion namespace for `StructuredDate`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { StructuredDate } from "@beep/law-practice-domain"
  *
@@ -157,9 +160,8 @@ export declare namespace StructuredDate {
   /**
    * Wire-encoded representation of a decoded {@link StructuredDate}.
    *
-   * **Example**
+   * **Example** (Wire type alias)
    *
-   * @example
    * ```ts
    * import type { StructuredDate } from "@beep/law-practice-domain"
    *

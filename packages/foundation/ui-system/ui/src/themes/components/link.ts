@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Link theme theme value.
  *
- * @example
+ * **Example** (Import link theme)
+ *
  * ```ts
  * import { linkTheme } from "@beep/ui/themes/components/link"
  *

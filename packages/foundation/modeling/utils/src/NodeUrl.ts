@@ -44,10 +44,13 @@ const NodeUrl = (): typeof import("node:url") => {
 /**
  * Converts a `file:` URL into a platform path string.
  *
+ * **Details**
+ *
  * Wraps Node's `fileURLToPath` in `Effect.try`, translating thrown errors
  * into a typed `BadArgument`.
  *
- * @example
+ * **Example** (Convert file URL to path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
@@ -60,7 +63,8 @@ const NodeUrl = (): typeof import("node:url") => {
  * console.log(program)
  * ```
  *
- * @example
+ * **Example** (Recover from invalid URL)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
@@ -95,10 +99,13 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
 /**
  * Converts a platform path string into a `file:` URL.
  *
+ * **Details**
+ *
  * Wraps Node's `pathToFileURL` in `Effect.try`, translating thrown errors
  * into a typed `BadArgument`.
  *
- * @example
+ * **Example** (Convert path to file URL)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { toFileUrl } from "@beep/utils/NodeUrl"
@@ -111,7 +118,8 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  * console.log(program)
  * ```
  *
- * @example
+ * **Example** (Recover from empty path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { toFileUrl } from "@beep/utils/NodeUrl"
@@ -144,7 +152,8 @@ export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArg
 /**
  * Converts a `file:` URL back into a platform path string.
  *
- * @example
+ * **Example** (Convert file URL to path)
+ *
  * ```ts
  * import { fileURLToPath } from "@beep/utils/NodeUrl"
  *

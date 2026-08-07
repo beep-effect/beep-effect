@@ -72,7 +72,8 @@ const isMakeDataFirstArgs = (
 /**
  * Create a POS pattern element.
  *
- * @example
+ * **Example** (Create multi-tag POS element)
+ *
  * ```ts
  * import { pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -80,8 +81,8 @@ const isMakeDataFirstArgs = (
  * console.log(element.value) // ["ADJ", "NOUN"]
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function pos(first: UniversalPOSTag | "", ...rest: ReadonlyArray<UniversalPOSTag | "">): POSPatternElement;
 export function pos(tags: ReadonlyArray<UniversalPOSTag | "">): POSPatternElement;
@@ -98,7 +99,8 @@ export function pos(
 /**
  * Create an entity pattern element.
  *
- * @example
+ * **Example** (Create multi-type entity element)
+ *
  * ```ts
  * import { entity } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -106,8 +108,8 @@ export function pos(
  * console.log(element._tag) // "EntityPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function entity(first: NamedEntityType | "", ...rest: ReadonlyArray<NamedEntityType | "">): EntityPatternElement;
 export function entity(types: ReadonlyArray<NamedEntityType | "">): EntityPatternElement;
@@ -124,7 +126,8 @@ export function entity(
 /**
  * Create a literal pattern element.
  *
- * @example
+ * **Example** (Create multi-value literal element)
+ *
  * ```ts
  * import { literal } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -132,8 +135,8 @@ export function entity(
  * console.log(element.value[0]) // "Effect"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function literal(first: string, ...rest: ReadonlyArray<string>): LiteralPatternElement;
 export function literal(values: ReadonlyArray<string>): LiteralPatternElement;
@@ -147,7 +150,8 @@ export function literal(firstOrValues: string | ReadonlyArray<string>, ...rest: 
 /**
  * Create an optional POS pattern element.
  *
- * @example
+ * **Example** (Create optional POS element)
+ *
  * ```ts
  * import { optionalPos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -155,8 +159,8 @@ export function literal(firstOrValues: string | ReadonlyArray<string>, ...rest: 
  * console.log(element.value[0]) // ""
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function optionalPos(first: UniversalPOSTag, ...rest: ReadonlyArray<UniversalPOSTag>): POSPatternElement;
 export function optionalPos(tags: ReadonlyArray<UniversalPOSTag>): POSPatternElement;
@@ -173,7 +177,8 @@ export function optionalPos(
 /**
  * Create an optional entity pattern element.
  *
- * @example
+ * **Example** (Create optional entity element)
+ *
  * ```ts
  * import { optionalEntity } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -181,8 +186,8 @@ export function optionalPos(
  * console.log(element.value) // ["", "EMAIL"]
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function optionalEntity(first: NamedEntityType, ...rest: ReadonlyArray<NamedEntityType>): EntityPatternElement;
 export function optionalEntity(types: ReadonlyArray<NamedEntityType>): EntityPatternElement;
@@ -199,7 +204,8 @@ export function optionalEntity(
 /**
  * Create an optional literal pattern element.
  *
- * @example
+ * **Example** (Create optional literal element)
+ *
  * ```ts
  * import { optionalLiteral } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -207,8 +213,8 @@ export function optionalEntity(
  * console.log(element.value) // ["", "Inc."]
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export function optionalLiteral(first: string, ...rest: ReadonlyArray<string>): LiteralPatternElement;
 export function optionalLiteral(values: ReadonlyArray<string>): LiteralPatternElement;
@@ -228,7 +234,8 @@ export function optionalLiteral(
 /**
  * Construct a pattern from an id and ordered elements.
  *
- * @example
+ * **Example** (Build pattern with id)
+ *
  * ```ts
  * import { literal, make } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -236,8 +243,8 @@ export function optionalLiteral(
  * console.log(pattern.id) // "company-suffix"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const make: {
   (id: string, elements: ReadonlyArray<PatternElement>): Pattern;
@@ -251,7 +258,8 @@ export const make: {
 /**
  * Add a mark range to a pattern.
  *
- * @example
+ * **Example** (Add mark range to pattern)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { hasMark, literal, make, withMark } from "@beep/nlp/Core/PatternBuilders"
@@ -261,8 +269,8 @@ export const make: {
  * console.log(hasMark(marked)) // true
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const withMark: PatternDual<MarkRange> = dual(
   2,
@@ -272,7 +280,8 @@ export const withMark: PatternDual<MarkRange> = dual(
 /**
  * Remove a mark range from a pattern.
  *
- * @example
+ * **Example** (Remove mark from pattern)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { hasMark, literal, make, withMark, withoutMark } from "@beep/nlp/Core/PatternBuilders"
@@ -284,8 +293,8 @@ export const withMark: PatternDual<MarkRange> = dual(
  * console.log(hasMark(withoutMark(pattern))) // false
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const withoutMark: {
   (): (pattern: Pattern) => Pattern;
@@ -298,7 +307,8 @@ export const withoutMark: {
 /**
  * Append elements to a pattern.
  *
- * @example
+ * **Example** (Append elements to pattern)
+ *
  * ```ts
  * import { addElements, elements, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -307,8 +317,8 @@ export const withoutMark: {
  * console.log(elements(expanded).length) // 2
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const addElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
   2,
@@ -321,7 +331,8 @@ export const addElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
 /**
  * Prepend elements to a pattern.
  *
- * @example
+ * **Example** (Prepend elements to pattern)
+ *
  * ```ts
  * import { elements, literal, make, pos, prependElements } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -330,8 +341,8 @@ export const addElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
  * console.log(elements(expanded)[0]?._tag) // "POSPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const prependElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
   2,
@@ -344,7 +355,8 @@ export const prependElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
 /**
  * Replace the pattern id.
  *
- * @example
+ * **Example** (Replace pattern identifier)
+ *
  * ```ts
  * import { literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -352,8 +364,8 @@ export const prependElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
  * console.log(withId(pattern, "new-id").id) // "new-id"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const withId: PatternDual<string> = dual(
   2,
@@ -363,7 +375,8 @@ export const withId: PatternDual<string> = dual(
 /**
  * Test whether a pattern has a mark.
  *
- * @example
+ * **Example** (Detect unmarked pattern)
+ *
  * ```ts
  * import { literal, make, hasMark } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -371,15 +384,16 @@ export const withId: PatternDual<string> = dual(
  * console.log(hasMark(pattern)) // false
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const hasMark = (pattern: Pattern): boolean => O.isSome(pattern.mark);
 
 /**
  * Get a pattern's mark if present.
  *
- * @example
+ * **Example** (Read mark range option)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema"
@@ -392,15 +406,16 @@ export const hasMark = (pattern: Pattern): boolean => O.isSome(pattern.mark);
  * console.log(O.getOrThrow(getMark(pattern))[0]) // 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getMark = (pattern: Pattern): O.Option<MarkRange> => pattern.mark;
 
 /**
  * Count pattern elements.
  *
- * @example
+ * **Example** (Count pattern element slots)
+ *
  * ```ts
  * import { length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -408,15 +423,16 @@ export const getMark = (pattern: Pattern): O.Option<MarkRange> => pattern.mark;
  * console.log(length(pattern)) // 2
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const length = (pattern: Pattern): number => Chunk.size(pattern.elements);
 
 /**
  * Materialize pattern elements as a readonly array.
  *
- * @example
+ * **Example** (Materialize elements as array)
+ *
  * ```ts
  * import { elements, literal, make } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -424,15 +440,16 @@ export const length = (pattern: Pattern): number => Chunk.size(pattern.elements)
  * console.log(elements(pattern)[0]?._tag) // "LiteralPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const elements = (pattern: Pattern): ReadonlyArray<PatternElement> => toElements(pattern);
 
 /**
  * Get an element by index.
  *
- * @example
+ * **Example** (Lookup element by index)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { elementAt, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
@@ -441,8 +458,8 @@ export const elements = (pattern: Pattern): ReadonlyArray<PatternElement> => toE
  * console.log(O.map(elementAt(pattern, 1), (element) => element._tag)) // some("LiteralPatternElement")
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const elementAt: {
   (pattern: Pattern, index: number): O.Option<PatternElement>;
@@ -455,7 +472,8 @@ export const elementAt: {
 /**
  * Test whether a pattern is empty.
  *
- * @example
+ * **Example** (Detect empty pattern)
+ *
  * ```ts
  * import { isEmpty, make } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -463,15 +481,16 @@ export const elementAt: {
  * console.log(isEmpty(pattern)) // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isEmpty = (pattern: Pattern): boolean => Chunk.isEmpty(pattern.elements);
 
 /**
  * Get the first pattern element.
  *
- * @example
+ * **Example** (Get first pattern element)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
@@ -480,15 +499,16 @@ export const isEmpty = (pattern: Pattern): boolean => Chunk.isEmpty(pattern.elem
  * console.log(O.map(head(pattern), (element) => element._tag)) // some("POSPatternElement")
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const head = elementAt(0);
 
 /**
  * Get the last pattern element.
  *
- * @example
+ * **Example** (Get last pattern element)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { last, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
@@ -497,15 +517,16 @@ export const head = elementAt(0);
  * console.log(O.map(last(pattern), (element) => element._tag)) // some("LiteralPatternElement")
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const last = (pattern: Pattern): O.Option<PatternElement> => elementAt(pattern, length(pattern) - 1);
 
 /**
  * Map pattern elements.
  *
- * @example
+ * **Example** (Map elements to new literals)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { elementAt, literal, make, mapElements } from "@beep/nlp/Core/PatternBuilders"
@@ -515,8 +536,8 @@ export const last = (pattern: Pattern): O.Option<PatternElement> => elementAt(pa
  * console.log(O.map(elementAt(mapped, 0), (element) => element.value[0])) // some("Globex")
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const mapElements: PatternDual<(element: PatternElement, index: number) => PatternElement> = dual(
   2,
@@ -529,7 +550,8 @@ export const mapElements: PatternDual<(element: PatternElement, index: number) =
 /**
  * Filter pattern elements.
  *
- * @example
+ * **Example** (Keep only literal elements)
+ *
  * ```ts
  * import { filterElements, length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -538,8 +560,8 @@ export const mapElements: PatternDual<(element: PatternElement, index: number) =
  * console.log(length(literalsOnly)) // 1
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const filterElements: PatternDual<(element: PatternElement, index: number) => boolean> = dual(
   2,
@@ -552,7 +574,8 @@ export const filterElements: PatternDual<(element: PatternElement, index: number
 /**
  * Take the first `count` elements.
  *
- * @example
+ * **Example** (Take first N elements)
+ *
  * ```ts
  * import { length, literal, make, pos, take } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -560,8 +583,8 @@ export const filterElements: PatternDual<(element: PatternElement, index: number
  * console.log(length(take(pattern, 1))) // 1
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const take: PatternDual<number> = dual(
   2,
@@ -574,7 +597,8 @@ export const take: PatternDual<number> = dual(
 /**
  * Drop the first `count` elements.
  *
- * @example
+ * **Example** (Drop first N elements)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { drop, head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
@@ -583,8 +607,8 @@ export const take: PatternDual<number> = dual(
  * console.log(O.getOrThrow(head(drop(pattern, 1))).value[0]) // "brief"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const drop: PatternDual<number> = dual(
   2,
@@ -597,7 +621,8 @@ export const drop: PatternDual<number> = dual(
 /**
  * Combine two patterns into a new one.
  *
- * @example
+ * **Example** (Merge patterns under new id)
+ *
  * ```ts
  * import { combine, length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -606,8 +631,8 @@ export const drop: PatternDual<number> = dual(
  * console.log(length(combine(left, right, { id: "noun-phrase" }))) // 2
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const combine: {
   (left: Pattern, right: Pattern, options: { readonly id: string }): Pattern;
@@ -621,22 +646,24 @@ export const combine: {
 /**
  * Functional patch over a pattern.
  *
- * @example
+ * **Example** (Reference PatternPatch type)
+ *
  * ```ts
  * import type { PatternPatch } from "@beep/nlp/Core/PatternBuilders"
  *
  * type Example = PatternPatch
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PatternPatch = (pattern: Pattern) => Pattern;
 
 /**
  * Apply a patch to a pattern.
  *
- * @example
+ * **Example** (Apply withId patch)
+ *
  * ```ts
  * import { applyPatch, literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -645,8 +672,8 @@ export type PatternPatch = (pattern: Pattern) => Pattern;
  * console.log(patched.id) // "published"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const applyPatch: PatternDual<PatternPatch> = dual(
   2,
@@ -656,7 +683,8 @@ export const applyPatch: PatternDual<PatternPatch> = dual(
 /**
  * Compose multiple patches from left to right.
  *
- * @example
+ * **Example** (Compose patches left-to-right)
+ *
  * ```ts
  * import { composePatches, literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -664,8 +692,8 @@ export const applyPatch: PatternDual<PatternPatch> = dual(
  * console.log(patch(make("draft", [literal("Effect")])).id) // "second"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const composePatches = (...patches: ReadonlyArray<PatternPatch>): PatternPatch =>
   A.reduce(patches, identity satisfies PatternPatch, (acc, patch) => (pattern) => patch(acc(pattern)));
@@ -673,7 +701,8 @@ export const composePatches = (...patches: ReadonlyArray<PatternPatch>): Pattern
 /**
  * Replace a literal element at a given index.
  *
- * @example
+ * **Example** (Replace literal at index)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { applyPatch, elementAt, literal, make, patchReplaceLiteralAt } from "@beep/nlp/Core/PatternBuilders"
@@ -683,8 +712,8 @@ export const composePatches = (...patches: ReadonlyArray<PatternPatch>): Pattern
  * console.log(O.getOrThrow(elementAt(patched, 1)).value[0]) // "LLC"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const patchReplaceLiteralAt: {
   (index: number, replacer: (values: ReadonlyArray<string>) => PatternElement): PatternPatch;
@@ -704,7 +733,8 @@ export const patchReplaceLiteralAt: {
 /**
  * Replace all literal elements.
  *
- * @example
+ * **Example** (Lowercase all literal values)
+ *
  * ```ts
  * import { applyPatch, elements, literal, make, patchReplaceAllLiterals } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -713,8 +743,8 @@ export const patchReplaceLiteralAt: {
  * console.log(elements(patched)[0]?.value[0]) // "acme"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const patchReplaceAllLiterals =
   (replacer: LiteralReplacer): PatternPatch =>
@@ -729,7 +759,8 @@ const toLiteralReplacer = (replacement: PatternElement | LiteralReplacer): Liter
 /**
  * Generalize literal elements into other element kinds.
  *
- * @example
+ * **Example** (Generalize literals to POS)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { generalizeLiterals, head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
@@ -739,8 +770,8 @@ const toLiteralReplacer = (replacement: PatternElement | LiteralReplacer): Liter
  * console.log(O.map(head(generalized), (element) => element._tag)) // some("POSPatternElement")
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const generalizeLiterals: {
   (to: PatternElement): (pattern: Pattern) => Pattern;

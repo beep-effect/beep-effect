@@ -18,7 +18,8 @@ import type { FieldOption } from "../core/Options.ts";
  * label/description/options; binding props (`value`/`onValueChange`) are owned
  * by the field.
  *
- * @example
+ * **Example** (Satisfies ToggleGroupFieldProps shape)
+ *
  * ```ts
  * import type { ToggleGroupFieldProps } from "@beep/form/fields/ToggleGroupField"
  *
@@ -47,7 +48,8 @@ export interface ToggleGroupFieldProps
  * Schema-bound single-select toggle group. The form value stays a single
  * `string`; the base-ui group value array is collapsed to its first element.
  *
- * @example
+ * **Example** (Schema-bound alignment toggle group)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { ToggleGroupField } from "@beep/form/fields/ToggleGroupField"

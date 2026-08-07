@@ -16,7 +16,8 @@ import type React from "react";
  * Props for {@link SliderField}: `Slider` props plus label/description; binding
  * props (`value`/`onValueChange`/`onBlur`/`name`) are owned by the field.
  *
- * @example
+ * **Example** (Slider props min max step)
+ *
  * ```ts
  * import type { SliderFieldProps } from "@beep/form/fields/SliderField"
  *
@@ -44,7 +45,8 @@ export interface SliderFieldProps
  * Schema-bound slider. The form value stays a single `number`; the base-ui
  * thumb value array is collapsed to its first element on change.
  *
- * @example
+ * **Example** (Bound volume slider field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

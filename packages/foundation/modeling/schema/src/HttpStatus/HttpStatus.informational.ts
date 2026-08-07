@@ -17,15 +17,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * 100 “Continue” – The server has received the headers of the request.
  * It now tells your browser to proceed with sending the body of the request.
  *
- * @example
+ * **Example** (Log Continue literal value)
+ *
  * ```ts
  * import { Continue } from "@beep/schema/HttpStatus"
  *
  * console.log(Continue.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Continue = S.Literal(100).pipe(
   $I.annoteSchema("Continue", {
@@ -38,7 +39,8 @@ export const Continue = S.Literal(100).pipe(
 /**
  * {@inheritDoc Continue}
  *
- * @example
+ * **Example** (Annotate status as Continue)
+ *
  * ```ts
  * import type { Continue } from "@beep/schema/HttpStatus"
  *
@@ -46,8 +48,8 @@ export const Continue = S.Literal(100).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Continue = typeof Continue.Type;
 
@@ -55,15 +57,16 @@ export type Continue = typeof Continue.Type;
  * 101 “Switching Protocols” – The requesting client (browser) asked the server to
  * change the protocols, and the server fulfilled the request.
  *
- * @example
+ * **Example** (Log SwitchingProtocols literal)
+ *
  * ```ts
  * import { SwitchingProtocols } from "@beep/schema/HttpStatus"
  *
  * console.log(SwitchingProtocols.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SwitchingProtocols = S.Literal(101).pipe(
   $I.annoteSchema("SwitchingProtocols", {
@@ -76,7 +79,8 @@ export const SwitchingProtocols = S.Literal(101).pipe(
 /**
  * {@inheritDoc SwitchingProtocols}
  *
- * @example
+ * **Example** (Annotate status as SwitchingProtocols)
+ *
  * ```ts
  * import type { SwitchingProtocols } from "@beep/schema/HttpStatus"
  *
@@ -84,8 +88,8 @@ export const SwitchingProtocols = S.Literal(101).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SwitchingProtocols = typeof SwitchingProtocols.Type;
 
@@ -94,15 +98,16 @@ export type SwitchingProtocols = typeof SwitchingProtocols.Type;
  * requests, which may take a longer time to be completed. It indicates that
  * the server has received the request and is currently processing it.
  *
- * @example
+ * **Example** (Log Processing literal value)
+ *
  * ```ts
  * import { Processing } from "@beep/schema/HttpStatus"
  *
  * console.log(Processing.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Processing = S.Literal(102).pipe(
   $I.annoteSchema("Processing", {
@@ -115,7 +120,8 @@ export const Processing = S.Literal(102).pipe(
 /**
  * {@inheritDoc Processing}
  *
- * @example
+ * **Example** (Annotate status as Processing)
+ *
  * ```ts
  * import type { Processing } from "@beep/schema/HttpStatus"
  *
@@ -123,8 +129,8 @@ export const Processing = S.Literal(102).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Processing = typeof Processing.Type;
 
@@ -132,15 +138,16 @@ export type Processing = typeof Processing.Type;
  * 103 “Early Hints” – The server returns some response headers before the
  * final HTTP response is sent.
  *
- * @example
+ * **Example** (Log EarlyHints literal value)
+ *
  * ```ts
  * import { EarlyHints } from "@beep/schema/HttpStatus"
  *
  * console.log(EarlyHints.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EarlyHints = S.Literal(103).pipe(
   $I.annoteSchema("EarlyHints", {
@@ -153,7 +160,8 @@ export const EarlyHints = S.Literal(103).pipe(
 /**
  * {@inheritDoc EarlyHints}
  *
- * @example
+ * **Example** (Annotate status as EarlyHints)
+ *
  * ```ts
  * import type { EarlyHints } from "@beep/schema/HttpStatus"
  *
@@ -161,8 +169,8 @@ export const EarlyHints = S.Literal(103).pipe(
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type EarlyHints = typeof EarlyHints.Type;
 
@@ -171,15 +179,16 @@ export type EarlyHints = typeof EarlyHints.Type;
  * generate content and only update clients on the progress of their requests.
  * This information is sent in the headers of the HTTP response.
  *
- * @example
+ * **Example** (Count informational status pairs)
+ *
  * ```ts
  * import { HttpStatus1XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus1XX.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatus1XX = MappedLiteralKit([
   ["Continue", Continue.literal],
@@ -196,7 +205,8 @@ export const HttpStatus1XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus1XX} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode Encoded Continue name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatus1XX } from "@beep/schema/HttpStatus"
@@ -222,7 +232,8 @@ export declare namespace HttpStatus1XX {
 /**
  * {@inheritDoc HttpStatus1XX}
  *
- * @example
+ * **Example** (Annotate status as HttpStatus1XX)
+ *
  * ```ts
  * import type { HttpStatus1XX } from "@beep/schema/HttpStatus"
  *

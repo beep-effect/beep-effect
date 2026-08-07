@@ -24,7 +24,8 @@ const DocumentChild = S.Union([HtmlElement, Comment]).pipe(
 /**
  * Any node permitted as an element or fragment child.
  *
- * @example
+ * **Example** (Validate text child node)
+ *
  * ```ts
  * import { HtmlChildNode } from "@beep/html/Html.contract"
  * import { Text } from "@beep/html/Html.nodes"
@@ -41,7 +42,8 @@ export const HtmlChildNode = HtmlChild;
 /**
  * Decoded type of {@link HtmlChildNode}.
  *
- * @example
+ * **Example** (Access child node tag)
+ *
  * ```ts
  * import type { HtmlChildNode } from "@beep/html/Html.contract"
  *
@@ -57,10 +59,13 @@ export type HtmlChildNode = HtmlChild.Type;
 /**
  * Node kind structurally permitted directly beneath an HTML document.
  *
+ * **Details**
+ *
  * Full cardinality and ordering are proven by `conform`; this schema captures
  * the narrower child domain of comments plus the document element.
  *
- * @example
+ * **Example** (Validate comment document child)
+ *
  * ```ts
  * import { HtmlDocumentChild } from "@beep/html/Html.contract"
  * import { Comment } from "@beep/html/Html.nodes"
@@ -77,7 +82,8 @@ export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
 /**
  * Decoded type of {@link HtmlDocumentChild}.
  *
- * @example
+ * **Example** (Decode comment as document child)
+ *
  * ```ts
  * import { HtmlDocumentChild } from "@beep/html/Html.contract"
  * import { Comment } from "@beep/html/Html.nodes"
@@ -99,12 +105,15 @@ export type HtmlDocumentChild = typeof HtmlDocumentChild.Type;
 /**
  * Canonical HTML document root schema.
  *
+ * **Details**
+ *
  * Unlike the broad generated `Document` model used for lossless decoding and
  * diagnostics, this boundary admits only comments and the `html` document
  * element as direct children. Cardinality and ordering remain the responsibility
  * of `conform`.
  *
- * @example
+ * **Example** (Make document with html child)
+ *
  * ```ts
  * import { HtmlDocument } from "@beep/html/Html.contract"
  * import { Html } from "@beep/html/Html.model"
@@ -130,7 +139,8 @@ export class HtmlDocument extends S.TaggedClass<HtmlDocument>($I`HtmlDocument`)(
 /**
  * Canonical public name for the HTML fragment root schema.
  *
- * @example
+ * **Example** (Make empty HTML fragment)
+ *
  * ```ts
  * import { HtmlFragment } from "@beep/html/Html.contract"
  *
@@ -146,7 +156,8 @@ export const HtmlFragment = Fragment;
 /**
  * Decoded type of {@link HtmlFragment}.
  *
- * @example
+ * **Example** (Count fragment children)
+ *
  * ```ts
  * import type { HtmlFragment } from "@beep/html/Html.contract"
  *

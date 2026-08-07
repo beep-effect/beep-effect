@@ -26,15 +26,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * that prevents it from processing a request. Like the 4XX codes, you
  * will see an error page on your browser when a 5XX error is triggered.
  *
- * @example
+ * **Example** (Count 5XX status pairs)
+ *
  * ```ts
  * import { HttpStatus5XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus5XX.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatus5XX = MappedLiteralKit([
   ["InternalServerError", InternalServerError.literal],
@@ -58,7 +59,8 @@ export const HttpStatus5XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus5XX} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode 5XX encoded name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatus5XX } from "@beep/schema/HttpStatus"
@@ -84,7 +86,8 @@ export declare namespace HttpStatus5XX {
 /**
  * {@inheritDoc HttpStatus5XX}
  *
- * @example
+ * **Example** (Annotate 5XX status type)
+ *
  * ```ts
  * import type { HttpStatus5XX } from "@beep/schema/HttpStatus"
  *

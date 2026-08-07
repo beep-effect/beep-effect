@@ -31,15 +31,19 @@ const REFS_HEADS_PREFIX = "refs/heads/";
 /**
  * Local-only files copied from the main checkout into a fresh worktree.
  *
+ * **Details**
+ *
  * These are gitignored per-worktree files that a fresh `git worktree add` does
  * not carry over; restoring them makes a new worktree immediately usable.
  *
- * @example
+ * **Example** (Count local file entries)
+ *
  * ```ts
  * import { WORKTREE_LOCAL_FILE_ENTRIES } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -48,14 +52,16 @@ export const WORKTREE_LOCAL_FILE_ENTRIES = [".env", ".claude/settings.local.json
 /**
  * Default branch name created for a new worktree when `--branch` is omitted.
  *
- * @param name - Worktree name used as the branch suffix.
- * @returns The default branch name in the form `feat/<name>`.
- * @example
+ * **Example** (Default branch from name)
+ *
  * ```ts
  * import { defaultWorktreeBranch } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(defaultWorktreeBranch("feature-x"))
  * ```
+ *
+ * @param name - Worktree name used as the branch suffix.
+ * @returns The default branch name in the form `feat/<name>`.
  * @category utilities
  * @since 0.0.0
  */
@@ -64,15 +70,17 @@ export const defaultWorktreeBranch = (name: string): string => `feat/${name}`;
 /**
  * Build the `git worktree add` argument vector for a target path and branch.
  *
- * @param targetPath - Absolute path of the worktree to create.
- * @param branch - Branch to create and check out in the new worktree.
- * @returns The `git` argument vector (excluding the `git` executable).
- * @example
+ * **Example** (Build worktree add args)
+ *
  * ```ts
  * import { worktreeAddArgs } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(worktreeAddArgs("/repo-worktrees/feature-x", "feat/feature-x"))
  * ```
+ *
+ * @param targetPath - Absolute path of the worktree to create.
+ * @param branch - Branch to create and check out in the new worktree.
+ * @returns The `git` argument vector (excluding the `git` executable).
  * @category utilities
  * @since 0.0.0
  */
@@ -87,15 +95,17 @@ export const worktreeAddArgs: {
 /**
  * Build the `git worktree remove` argument vector, optionally forced.
  *
- * @param targetPath - Absolute path of the worktree to remove.
- * @param force - Whether to pass `--force` so removal ignores dirty state.
- * @returns The `git` argument vector (excluding the `git` executable).
- * @example
+ * **Example** (Build forced remove args)
+ *
  * ```ts
  * import { worktreeRemoveArgs } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(worktreeRemoveArgs("/repo-worktrees/feature-x", true))
  * ```
+ *
+ * @param targetPath - Absolute path of the worktree to remove.
+ * @param force - Whether to pass `--force` so removal ignores dirty state.
+ * @returns The `git` argument vector (excluding the `git` executable).
  * @category utilities
  * @since 0.0.0
  */
@@ -111,14 +121,16 @@ export const worktreeRemoveArgs: {
 /**
  * Suggested command an operator can run to delete a retired branch.
  *
- * @param branch - Branch left behind after a worktree is removed.
- * @returns The `git branch -D <branch>` command string.
- * @example
+ * **Example** (Format branch delete command)
+ *
  * ```ts
  * import { branchDeleteCommand } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(branchDeleteCommand("feat/feature-x"))
  * ```
+ *
+ * @param branch - Branch left behind after a worktree is removed.
+ * @returns The `git branch -D <branch>` command string.
  * @category utilities
  * @since 0.0.0
  */
@@ -127,7 +139,8 @@ export const branchDeleteCommand = (branch: string): string => `git branch -D ${
 /**
  * One parsed entry from `git worktree list --porcelain`.
  *
- * @example
+ * **Example** (Make worktree list entry)
+ *
  * ```ts
  * import { WorktreeListEntry } from "@beep/repo-cli/commands/Worktree"
  *
@@ -141,6 +154,7 @@ export const branchDeleteCommand = (branch: string): string => `git branch -D ${
  * })
  * console.log(entry.path)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -161,7 +175,8 @@ export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeLis
 /**
  * Resolved worktree layout for the invoking repository.
  *
- * @example
+ * **Example** (Make worktree context)
+ *
  * ```ts
  * import { WorktreeContext } from "@beep/repo-cli/commands/Worktree"
  *
@@ -173,6 +188,7 @@ export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeLis
  * })
  * console.log(context.worktreesRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -191,13 +207,15 @@ export class WorktreeContext extends S.Class<WorktreeContext>($I`WorktreeContext
 /**
  * Outcome of copying one local-only file into a fresh worktree.
  *
- * @example
+ * **Example** (Make copy outcome)
+ *
  * ```ts
  * import { WorktreeCopyOutcome } from "@beep/repo-cli/commands/Worktree"
  *
  * const outcome = WorktreeCopyOutcome.make({ entry: ".env", status: "copied" })
  * console.log(outcome.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -215,7 +233,8 @@ export class WorktreeCopyOutcome extends S.Class<WorktreeCopyOutcome>($I`Worktre
 /**
  * Per-worktree diagnostic row emitted by `worktree doctor`.
  *
- * @example
+ * **Example** (Make doctor entry)
+ *
  * ```ts
  * import { WorktreeDoctorEntry } from "@beep/repo-cli/commands/Worktree"
  *
@@ -232,6 +251,7 @@ export class WorktreeCopyOutcome extends S.Class<WorktreeCopyOutcome>($I`Worktre
  * })
  * console.log(entry.clean)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -255,7 +275,8 @@ export class WorktreeDoctorEntry extends S.Class<WorktreeDoctorEntry>($I`Worktre
 /**
  * Read-only report produced by `worktree doctor`.
  *
- * @example
+ * **Example** (Make doctor report)
+ *
  * ```ts
  * import { WorktreeDoctorReport } from "@beep/repo-cli/commands/Worktree"
  *
@@ -267,6 +288,7 @@ export class WorktreeDoctorEntry extends S.Class<WorktreeDoctorEntry>($I`Worktre
  * })
  * console.log(report.worktreesRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -321,15 +343,17 @@ const applyPorcelainAttribute = (current: PorcelainAccumulator, line: string): v
 /**
  * Parse `git worktree list --porcelain` output into structured entries.
  *
- * @param porcelain - Raw stdout from `git worktree list --porcelain`.
- * @returns One entry per worktree block, in listing order.
- * @example
+ * **Example** (Parse porcelain listing)
+ *
  * ```ts
  * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
  *
  * const entries = parseWorktreePorcelain("worktree /repo\nHEAD abc123\nbranch refs/heads/main\n")
  * console.log(entries.length)
  * ```
+ *
+ * @param porcelain - Raw stdout from `git worktree list --porcelain`.
+ * @returns One entry per worktree block, in listing order.
  * @category parsing
  * @since 0.0.0
  */
@@ -418,17 +442,21 @@ const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
 /**
  * Resolve the worktree layout for the invoking repository.
  *
+ * **Details**
+ *
  * The invoking root is discovered from `startFrom` (default: `process.cwd()`).
  * The main checkout and worktrees root are derived from
  * `git worktree list --porcelain`, so the canonical
  * `<main-checkout>-worktrees` sibling directory is stable from any worktree.
  *
- * @example
+ * **Example** (Resolve context from path)
+ *
  * ```ts
  * import { resolveWorktreeContext } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(resolveWorktreeContext("/repo"))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -460,10 +488,13 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
 /**
  * Add a sibling worktree under the resolved worktrees root.
  *
+ * **Details**
+ *
  * Refuses when the target directory already exists. Does not bootstrap; see
  * {@link copyLocalFiles} and the `worktree new` command handler.
  *
- * @example
+ * **Example** (Add named sibling worktree)
+ *
  * ```ts
  * import { addWorktree, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
  *
@@ -475,6 +506,7 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
  * })
  * console.log(addWorktree(context, "feature-x", "feat/feature-x"))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -506,15 +538,19 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
 /**
  * Copy local-only files from the main checkout into a fresh worktree.
  *
+ * **Details**
+ *
  * Each entry in {@link WORKTREE_LOCAL_FILE_ENTRIES} is copied when present and
  * skipped otherwise; directories are copied recursively.
  *
- * @example
+ * **Example** (Copy local files into worktree)
+ *
  * ```ts
  * import { copyLocalFiles } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(copyLocalFiles("/repo", "/repo-worktrees/feature-x"))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -585,10 +621,13 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
 /**
  * Build the read-only `worktree doctor` report for a resolved context.
  *
+ * **Details**
+ *
  * Inspects only worktrees under the worktrees root: branch, clean/dirty status,
  * presence of bootstrap files, and prunable metadata.
  *
- * @example
+ * **Example** (Build doctor report for context)
+ *
  * ```ts
  * import { worktreeDoctorReportForContext, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
  *
@@ -600,6 +639,7 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
  * })
  * console.log(worktreeDoctorReportForContext(context))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -854,7 +894,8 @@ const worktreeDoctorCommand = Command.make(
 /**
  * Worktree command group.
  *
- * @example
+ * **Example** (Run worktree command group)
+ *
  * ```ts
  * import { worktreeCommand } from "@beep/repo-cli/commands/Worktree"
  * import { Command } from "effect/unstable/cli"
@@ -863,6 +904,7 @@ const worktreeDoctorCommand = Command.make(
  * const run = Command.run(worktreeCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

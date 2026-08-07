@@ -27,7 +27,8 @@ const currencyNameOptionsNonEmpty = cast<
 /**
  * Schema for active ISO 4217 currency code literals.
  *
- * @example
+ * **Example** (Decode USD currency code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurrencyCode } from "@beep/schema/CurrencyCode"
@@ -50,7 +51,8 @@ const currencyCodeSet = HashSet.fromIterable(CurrencyCode.Options);
 /**
  * {@inheritDoc CurrencyCode}
  *
- * @example
+ * **Example** (Type annotated USD decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurrencyCode } from "@beep/schema/CurrencyCode"
@@ -67,7 +69,8 @@ export type CurrencyCode = typeof CurrencyCode.Type;
 /**
  * Schema for active ISO 4217 currency display-name literals.
  *
- * @example
+ * **Example** (Decode US Dollar name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurrencyName } from "@beep/schema/CurrencyCode"
@@ -88,7 +91,8 @@ export const CurrencyName = LiteralKit(currencyNameOptionsNonEmpty).pipe(
 /**
  * {@inheritDoc CurrencyName}
  *
- * @example
+ * **Example** (Type annotated Euro name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurrencyName } from "@beep/schema/CurrencyCode"
@@ -105,7 +109,8 @@ export type CurrencyName = typeof CurrencyName.Type;
 /**
  * Type guard for {@link CurrencyCode}.
  *
- * @example
+ * **Example** (Validate currency code guard)
+ *
  * ```ts
  * import { isCurrencyCode } from "@beep/schema/CurrencyCode"
  *
@@ -121,7 +126,8 @@ export const isCurrencyCode = (value: string): value is CurrencyCode => HashSet.
 /**
  * ISO 4217 constant for United States Dollar.
  *
- * @example
+ * **Example** (Compare USD constant)
+ *
  * ```ts
  * import { USD } from "@beep/schema/CurrencyCode"
  *
@@ -135,7 +141,8 @@ export const USD: CurrencyCode = CurrencyCode.make("USD");
 /**
  * ISO 4217 constant for Euro.
  *
- * @example
+ * **Example** (Compare EUR constant)
+ *
  * ```ts
  * import { EUR } from "@beep/schema/CurrencyCode"
  *
@@ -149,7 +156,8 @@ export const EUR: CurrencyCode = CurrencyCode.make("EUR");
 /**
  * ISO 4217 constant for British Pound Sterling.
  *
- * @example
+ * **Example** (Compare GBP constant)
+ *
  * ```ts
  * import { GBP } from "@beep/schema/CurrencyCode"
  *
@@ -163,7 +171,8 @@ export const GBP: CurrencyCode = CurrencyCode.make("GBP");
 /**
  * ISO 4217 constant for Japanese Yen.
  *
- * @example
+ * **Example** (Compare JPY constant)
+ *
  * ```ts
  * import { JPY } from "@beep/schema/CurrencyCode"
  *
@@ -177,7 +186,8 @@ export const JPY: CurrencyCode = CurrencyCode.make("JPY");
 /**
  * ISO 4217 constant for Swiss Franc.
  *
- * @example
+ * **Example** (Compare CHF constant)
+ *
  * ```ts
  * import { CHF } from "@beep/schema/CurrencyCode"
  *
@@ -191,7 +201,8 @@ export const CHF: CurrencyCode = CurrencyCode.make("CHF");
 /**
  * ISO 4217 constant for Canadian Dollar.
  *
- * @example
+ * **Example** (Compare CAD constant)
+ *
  * ```ts
  * import { CAD } from "@beep/schema/CurrencyCode"
  *
@@ -205,7 +216,8 @@ export const CAD: CurrencyCode = CurrencyCode.make("CAD");
 /**
  * ISO 4217 constant for Australian Dollar.
  *
- * @example
+ * **Example** (Compare AUD constant)
+ *
  * ```ts
  * import { AUD } from "@beep/schema/CurrencyCode"
  *
@@ -219,7 +231,8 @@ export const AUD: CurrencyCode = CurrencyCode.make("AUD");
 /**
  * ISO 4217 constant for Chinese Yuan.
  *
- * @example
+ * **Example** (Compare CNY constant)
+ *
  * ```ts
  * import { CNY } from "@beep/schema/CurrencyCode"
  *
@@ -233,7 +246,8 @@ export const CNY: CurrencyCode = CurrencyCode.make("CNY");
 /**
  * ISO 4217 constant for Hong Kong Dollar.
  *
- * @example
+ * **Example** (Compare HKD constant)
+ *
  * ```ts
  * import { HKD } from "@beep/schema/CurrencyCode"
  *
@@ -247,7 +261,8 @@ export const HKD: CurrencyCode = CurrencyCode.make("HKD");
 /**
  * ISO 4217 constant for Singapore Dollar.
  *
- * @example
+ * **Example** (Compare SGD constant)
+ *
  * ```ts
  * import { SGD } from "@beep/schema/CurrencyCode"
  *

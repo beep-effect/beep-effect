@@ -194,7 +194,8 @@ const registerDescriptor = (
 /**
  * Descriptor profile represented by a conforming `srcset` value.
  *
- * @example
+ * **Example** (Width profile membership check)
+ *
  * ```ts
  * import { SrcsetProfile } from "@beep/html/Html.srcset"
  *
@@ -213,7 +214,8 @@ export const SrcsetProfile = LiteralKit(["width", "density"]).pipe(
 /**
  * Decoded type of {@link SrcsetProfile}.
  *
- * @example
+ * **Example** (Density profile type assignment)
+ *
  * ```ts
  * import type { SrcsetProfile } from "@beep/html/Html.srcset"
  *
@@ -231,10 +233,13 @@ export type SrcsetProfile = typeof SrcsetProfile.Type;
  * its descriptor profile. The URL callback keeps URL syntax ownership at the
  * caller's HTML boundary.
  *
+ * **Details**
+ *
  * A descriptorless candidate belongs to the density profile and is equivalent
  * to `1x` for duplicate detection.
  *
- * @example
+ * **Example** (Inspect density srcset profile)
+ *
  * ```ts
  * import { inspectSrcset } from "@beep/html/Html.srcset"
  * import * as O from "effect/Option"

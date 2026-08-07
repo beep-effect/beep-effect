@@ -344,11 +344,14 @@ type WinkNlpToolkitLiveError = typeof WinkNlpToolkitLiveError.Type;
 /**
  * Live toolkit handler layer backed by the wink NLP runtime.
  *
+ * **Details**
+ *
  * Provide this layer to programs that execute `NlpToolkit` tools; it wires
  * tokenization, similarity, vectorization, corpus management, and utility
  * services behind the typed toolkit handlers.
  *
- * @example
+ * **Example** (Provide layer to export tools)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkNlpToolkitLive } from "@beep/wink"

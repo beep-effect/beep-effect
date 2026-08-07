@@ -123,12 +123,15 @@ const sparseKeywordOption =
  * (accept everything) and `false` (reject everything) wherever a schema is
  * expected, so every recursive position in {@link Node} uses this union.
  *
+ * **Details**
+ *
  * The `toArbitrary` annotation is load-bearing: effect `4.0.0-beta.98` cannot
  * derive arbitraries for recursion through Option/Union fields (its suspend
  * bounding only short-circuits at empty-collection cuts such as `S.Array`),
  * so generation is depth-gated here instead of relying on derivation.
  *
- * @example
+ * **Example** (Decode boolean and object schemas)
+ *
  * ```ts
  * import { SubSchema } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -151,7 +154,8 @@ export const SubSchema = S.Union([S.Boolean, S.suspend((): S.Codec<Node.Type, No
 /**
  * Runtime type for {@link SubSchema}.
  *
- * @example
+ * **Example** (Assign boolean SubSchema value)
+ *
  * ```ts
  * import type { SubSchema } from "@beep/schema/JSONSchema"
  *
@@ -167,7 +171,8 @@ export type SubSchema = typeof SubSchema.Type;
 /**
  * Types for {@link SubSchema}.
  *
- * @example
+ * **Example** (Type and Encoded SubSchema values)
+ *
  * ```ts
  * import type { SubSchema } from "@beep/schema/JSONSchema"
  *
@@ -254,7 +259,8 @@ const Vocabulary = S.Record(S.String, S.Boolean)
  * `Option.none` and `extensions` to `{}` — or decode raw documents through
  * {@link NodeCodec}.
  *
- * @example
+ * **Example** (Construct Node with optional keywords)
+ *
  * ```ts
  * import { Node } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
@@ -395,7 +401,8 @@ export class Node extends S.Class<Node>($I`Node`)(
 /**
  * Types for {@link Node}.
  *
- * @example
+ * **Example** (Decode wire object via NodeCodec)
+ *
  * ```ts
  * import { Node, NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -526,7 +533,8 @@ const mergeWire = ({ extensions = {}, ...known }: PartitionedWire): { readonly [
  * canonical keywords validated field-by-field, everything else preserved in
  * `extensions` — and encodes back to the identical flat wire form.
  *
- * @example
+ * **Example** (Decode flat schema with extensions)
+ *
  * ```ts
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -553,7 +561,8 @@ export const NodeCodec = S.Record(S.String, S.Unknown).pipe(
  * Runtime type for {@link NodeCodec}: decoded values are {@link Node}
  * instances.
  *
- * @example
+ * **Example** (Decode object into Node instance)
+ *
  * ```ts
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -573,7 +582,8 @@ export type NodeCodec = typeof NodeCodec.Type;
  * record hoisted out of the schema. Output of `S.toJsonSchemaDocument`
  * decodes directly into this class.
  *
- * @example
+ * **Example** (Decode draft-2020-12 document envelope)
+ *
  * ```ts
  * import { Document } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -622,7 +632,8 @@ export class Document extends S.Class<Document>($I`Document`)(
 /**
  * Types for {@link Document}.
  *
- * @example
+ * **Example** (Decode Document from Encoded wire)
+ *
  * ```ts
  * import { Document } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -675,7 +686,8 @@ const decodeUriFragment = O.liftThrowable(decodeURIComponent);
  * consumes today; multi-segment pointers, anchors, dynamic references, and
  * remote URIs deliberately resolve to `Option.none`, as do missing keys.
  *
- * @example
+ * **Example** (Resolve escaped local $defs key)
+ *
  * ```ts
  * import { resolveLocalRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
@@ -712,7 +724,8 @@ export const resolveLocalRef: {
  * the exact shape MCP tool schemas use. Returns `Option.none` when either
  * keyword is absent or the reference does not point into the sibling `$defs`.
  *
- * @example
+ * **Example** (Resolve sibling $ref into $defs)
+ *
  * ```ts
  * import { NodeCodec, resolveNodeRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
@@ -739,7 +752,8 @@ export const resolveNodeRef = (node: Node.Type): O.Option<SubSchema.Type> =>
  * mirroring effect's `JsonSchema.resolveTopLevel$ref`. Returns `Option.none`
  * when the root schema has no `$ref` or the target is missing.
  *
- * @example
+ * **Example** (Resolve document top-level $ref)
+ *
  * ```ts
  * import { Document, resolveDocumentRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"

@@ -28,7 +28,8 @@ const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "remov
 /**
  * Identifier of a supported, pure line transform stage.
  *
- * @example
+ * **Example** (Parse stage from string)
+ *
  * ```ts
  * import { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -52,7 +53,8 @@ export const PipelineStage = PipelineStageBase.pipe(
 /**
  * Type for {@link PipelineStage}.
  *
- * @example
+ * **Example** (Type array of stages)
+ *
  * ```ts
  * import type { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -60,15 +62,16 @@ export const PipelineStage = PipelineStageBase.pipe(
  * console.log(stages.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PipelineStage = typeof PipelineStage.Type;
 
 /**
  * A single pipeline failure entry describing the item, message, and stage.
  *
- * @example
+ * **Example** (Construct pipeline error)
+ *
  * ```ts
  * import { PipelineError } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -76,8 +79,8 @@ export type PipelineStage = typeof PipelineStage.Type;
  * console.log(error.stage)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PipelineError extends S.Class<PipelineError>($I`PipelineError`)(
   {
@@ -99,7 +102,8 @@ export class PipelineError extends S.Class<PipelineError>($I`PipelineError`)(
 /**
  * Outcome of running a line-transform pipeline over a file.
  *
- * @example
+ * **Example** (Construct pipeline result)
+ *
  * ```ts
  * import { PipelineResult } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -114,8 +118,8 @@ export class PipelineError extends S.Class<PipelineError>($I`PipelineError`)(
  * console.log(result.processed)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
   {
@@ -146,7 +150,8 @@ export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
 /**
  * Options for running a line-transform pipeline.
  *
- * @example
+ * **Example** (Construct process options)
+ *
  * ```ts
  * import { PipelineProcessOptions } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -154,8 +159,8 @@ export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
  * console.log(options.maxLines)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PipelineProcessOptions extends S.Class<PipelineProcessOptions>($I`PipelineProcessOptions`)(
   {
@@ -189,13 +194,16 @@ const applyStages = (stages: ReadonlyArray<PipelineStage>, value: string): strin
 /**
  * Run an ordered list of line transforms over the lines of a file.
  *
+ * **Details**
+ *
  * Lines are read via {@link readLines} (optionally skipping blanks), each
  * surviving line is folded through `stages`, and aggregate counts plus duration
  * are returned. `maxLines` caps how many lines are considered; `stopOnError`
  * stops processing after the first failure (the built-in stages never fail, so
  * this only affects future custom stages).
  *
- * @example
+ * **Example** (Process file with stages)
+ *
  * ```ts
  * import { processFile } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
@@ -205,9 +213,8 @@ const applyStages = (stages: ReadonlyArray<PipelineStage>, value: string): strin
  * @effects Reads the Effect `Clock` before and after processing, and reads file
  * content through {@link readLines}, which requires `FileSystem` and `Path` and
  * can fail with `PlatformError`.
- *
- * @since 0.0.0
  * @category processes
+ * @since 0.0.0
  */
 export const processFile = Effect.fn("Pipeline.processFile")(function* (
   filePath: string,

@@ -21,7 +21,8 @@ import {
 /**
  * Complete nine-tool read-only practice KG toolkit declaration.
  *
- * @example
+ * **Example** (Count toolkit tools)
+ *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
@@ -46,7 +47,8 @@ export const PracticeKgToolkit = Toolkit.make(
 /**
  * Type of {@link PracticeKgToolkit}.
  *
- * @example
+ * **Example** (Assign typed toolkit value)
+ *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  * import type { PracticeKgToolkit as PracticeKgToolkitType } from "@beep/law-practice-use-cases/server"

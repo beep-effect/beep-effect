@@ -62,7 +62,8 @@ const LastPartIndex = S.Int.check(
 /**
  * Byte input accepted by Box upload adapters.
  *
- * @example
+ * **Example** (Stream byte input example)
+ *
  * ```ts
  * import { Stream } from "effect"
  * import type { BoxByteInput } from "@beep/box"
@@ -79,7 +80,8 @@ export type BoxByteInput = typeof BoxByteInputValue.Type;
 /**
  * Byte stream returned by Box download adapters.
  *
- * @example
+ * **Example** (Empty byte stream example)
+ *
  * ```ts
  * import { Stream } from "effect"
  * import type { BoxByteStream } from "@beep/box"
@@ -96,7 +98,8 @@ export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
 /**
  * Technical accumulator used by the Box chunked-upload reducer helper.
  *
- * @example
+ * **Example** (Make part accumulator)
+ *
  * ```ts
  * import { BoxPartAccumulator } from "@beep/box"
  * import { NonNegativeInt } from "@beep/schema"
@@ -183,7 +186,8 @@ class BoxUploadWithPreflightCheckRequestBody extends S.Class<BoxUploadWithPrefli
 /**
  * Payload for `avatars.createUserAvatar`.
  *
- * @example
+ * **Example** (Create avatar payload)
+ *
  * ```ts
  * import type { BoxCreateUserAvatarPayload } from "@beep/box"
  *
@@ -215,7 +219,8 @@ export class BoxCreateUserAvatarPayload extends S.Class<BoxCreateUserAvatarPaylo
 /**
  * Payload for `avatars.getUserAvatar`.
  *
- * @example
+ * **Example** (Get avatar payload)
+ *
  * ```ts
  * import type { BoxGetUserAvatarPayload } from "@beep/box"
  *
@@ -239,7 +244,8 @@ export class BoxGetUserAvatarPayload extends S.Class<BoxGetUserAvatarPayload>($I
 /**
  * Payload for `downloads.downloadFile`.
  *
- * @example
+ * **Example** (Download file payload)
+ *
  * ```ts
  * import type { BoxDownloadFilePayload } from "@beep/box"
  *
@@ -263,7 +269,8 @@ export class BoxDownloadFilePayload extends S.Class<BoxDownloadFilePayload>($I`B
 /**
  * Payload for `files.getFileThumbnailById`.
  *
- * @example
+ * **Example** (Thumbnail by id payload)
+ *
  * ```ts
  * import type { BoxGetFileThumbnailByIdPayload } from "@beep/box"
  *
@@ -290,7 +297,8 @@ export class BoxGetFileThumbnailByIdPayload extends S.Class<BoxGetFileThumbnailB
 /**
  * Payload for `uploads.uploadFileVersion`.
  *
- * @example
+ * **Example** (Upload file version payload)
+ *
  * ```ts
  * import type { BoxUploadFileVersionPayload } from "@beep/box"
  *
@@ -323,7 +331,8 @@ export class BoxUploadFileVersionPayload extends S.Class<BoxUploadFileVersionPay
 /**
  * Payload for `uploads.uploadFile`.
  *
- * @example
+ * **Example** (Upload file payload)
+ *
  * ```ts
  * import type { BoxUploadFilePayload } from "@beep/box"
  *
@@ -357,7 +366,8 @@ export class BoxUploadFilePayload extends S.Class<BoxUploadFilePayload>($I`BoxUp
 /**
  * Payload for `uploads.uploadWithPreflightCheck`.
  *
- * @example
+ * **Example** (Preflight upload payload)
+ *
  * ```ts
  * import type { BoxUploadWithPreflightCheckPayload } from "@beep/box"
  *
@@ -394,7 +404,8 @@ export class BoxUploadWithPreflightCheckPayload extends S.Class<BoxUploadWithPre
 /**
  * Payload for `chunkedUploads.uploadFilePartByUrl`.
  *
- * @example
+ * **Example** (Upload part by URL)
+ *
  * ```ts
  * import { HttpsUrl } from "@beep/schema"
  * import type { BoxUploadFilePartByUrlPayload } from "@beep/box"
@@ -430,7 +441,8 @@ export class BoxUploadFilePartByUrlPayload extends S.Class<BoxUploadFilePartByUr
 /**
  * Payload for `chunkedUploads.uploadFilePart`.
  *
- * @example
+ * **Example** (Upload file part payload)
+ *
  * ```ts
  * import type { BoxUploadFilePartPayload } from "@beep/box"
  *
@@ -463,7 +475,8 @@ export class BoxUploadFilePartPayload extends S.Class<BoxUploadFilePartPayload>(
 /**
  * Payload for `chunkedUploads.reducer`.
  *
- * @example
+ * **Example** (Chunked upload reducer payload)
+ *
  * ```ts
  * import { BoxPartAccumulator } from "@beep/box"
  * import { NonNegativeInt } from "@beep/schema"
@@ -500,7 +513,8 @@ export class BoxChunkedUploadReducerPayload extends S.Class<BoxChunkedUploadRedu
 /**
  * Payload for `chunkedUploads.uploadBigFile`.
  *
- * @example
+ * **Example** (Upload big file payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import type { BoxUploadBigFilePayload } from "@beep/box"
@@ -532,7 +546,8 @@ export class BoxUploadBigFilePayload extends S.Class<BoxUploadBigFilePayload>($I
 /**
  * Payload for `events.getEventStream`.
  *
- * @example
+ * **Example** (Empty event stream payload)
+ *
  * ```ts
  * import type { BoxGetEventStreamPayload } from "@beep/box"
  *
@@ -556,7 +571,8 @@ export class BoxGetEventStreamPayload extends S.Class<BoxGetEventStreamPayload>(
 /**
  * Payload for `zipDownloads.getZipDownloadContent`.
  *
- * @example
+ * **Example** (Zip download content payload)
+ *
  * ```ts
  * import { HttpsUrl } from "@beep/schema"
  * import type { BoxGetZipDownloadContentPayload } from "@beep/box"
@@ -583,7 +599,8 @@ export class BoxGetZipDownloadContentPayload extends S.Class<BoxGetZipDownloadCo
 /**
  * Payload for `zipDownloads.downloadZip`.
  *
- * @example
+ * **Example** (Download zip payload)
+ *
  * ```ts
  * import type { BoxDownloadZipPayload } from "@beep/box"
  *
@@ -612,7 +629,8 @@ export class BoxDownloadZipPayload extends S.Class<BoxDownloadZipPayload>($I`Box
 /**
  * Hand-written streaming operation groups for the Box SDK.
  *
- * @example
+ * **Example** (Streaming managers keys)
+ *
  * ```ts
  * import type { BoxStreamingOperations } from "@beep/box"
  *
@@ -1025,7 +1043,8 @@ const runEventStreamSdkCall = <Payload>(
 /**
  * Build hand-written Box byte/event operation groups from a SDK client.
  *
- * @example
+ * **Example** (Build streaming operations)
+ *
  * ```ts
  * import { makeStreamingOperations } from "@beep/box"
  * import { Effect } from "effect"

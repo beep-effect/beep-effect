@@ -16,7 +16,8 @@ const $I = $SchemaId.create("DateTimeUtcFromValid");
 /**
  * Nullable string input accepted by date-picker adapters.
  *
- * @example
+ * **Example** (Decode null date input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateInputToDateTime } from "@beep/schema/DateTimeUtcFromValid"
@@ -37,7 +38,8 @@ export const DateInputToDateTime = S.Union([S.Null, S.Undefined, S.String]).pipe
 /**
  * {@inheritDoc DateInputToDateTime}
  *
- * @example
+ * **Example** (Type ISO string input)
+ *
  * ```ts
  * import type { DateInputToDateTime } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -53,7 +55,8 @@ export type DateInputToDateTime = typeof DateInputToDateTime.Type;
 /**
  * Time zone token accepted by UI date/time adapters.
  *
- * @example
+ * **Example** (Assign UTC timezone token)
+ *
  * ```ts
  * import type { DateTimeAdapterTimezone } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -69,7 +72,8 @@ export type DateTimeAdapterTimezone = string;
 /**
  * Applies an adapter timezone token to a DateTime value.
  *
- * @example
+ * **Example** (Apply UTC to DateTime)
+ *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import { applyTimezone } from "@beep/schema/DateTimeUtcFromValid"
@@ -103,7 +107,8 @@ export const applyTimezone: {
 /**
  * Creates an Effect DateTime for a nullable adapter value and timezone.
  *
- * @example
+ * **Example** (Create DateTime with timezone)
+ *
  * ```ts
  * import { createDateTimeWithTimezone } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -132,7 +137,8 @@ export const createDateTimeWithTimezone: {
 /**
  * Creates an invalid DateTime-shaped value for picker validation paths.
  *
- * @example
+ * **Example** (Create invalid DateTime value)
+ *
  * ```ts
  * import { createInvalidDateTime } from "@beep/schema/DateTimeUtcFromValid"
  *

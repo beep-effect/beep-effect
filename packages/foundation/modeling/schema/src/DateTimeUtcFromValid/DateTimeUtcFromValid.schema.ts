@@ -18,7 +18,8 @@ const $I = $SchemaId.create("DateTimeUtcFromValid");
 /**
  * Literal discriminator values used by tagged date-time input representations.
  *
- * @example
+ * **Example** (Decoding Instant discriminator)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputKind } from "@beep/schema/DateTimeUtcFromValid"
@@ -28,8 +29,8 @@ const $I = $SchemaId.create("DateTimeUtcFromValid");
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInputKind = LiteralKit([
   "number",
@@ -48,7 +49,8 @@ export const DateTimeInputKind = LiteralKit([
 /**
  * {@inheritDoc DateTimeInputKind}
  *
- * @example
+ * **Example** (Annotating kind type)
+ *
  * ```ts
  * import type { DateTimeInputKind } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -56,8 +58,8 @@ export const DateTimeInputKind = LiteralKit([
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInputKind = typeof DateTimeInputKind.Type;
 
@@ -148,10 +150,13 @@ const DateTimeInputTimeZoneId = S.String.check(DateTimeInputTimeZoneIdCheck).pip
 /**
  * Valid string input accepted by Effect `DateTime.make`.
  *
+ * **Details**
+ *
  * The schema also exposes a tagged representation used when encoding through
  * {@link DateTimeUtcFromValid}.
  *
- * @example
+ * **Example** (Decoding and tagging string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputString } from "@beep/schema/DateTimeUtcFromValid"
@@ -162,8 +167,8 @@ const DateTimeInputTimeZoneId = S.String.check(DateTimeInputTimeZoneIdCheck).pip
  * console.log(tagged._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInputString = S.String.check(DateTimeInputStringCheck).pipe(
   $I.annoteSchema("DateTimeInputString", {
@@ -175,7 +180,8 @@ export const DateTimeInputString = S.String.check(DateTimeInputStringCheck).pipe
 /**
  * {@inheritDoc DateTimeInputString}
  *
- * @example
+ * **Example** (Annotating string input type)
+ *
  * ```ts
  * import type { DateTimeInputString } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -183,18 +189,21 @@ export const DateTimeInputString = S.String.check(DateTimeInputStringCheck).pipe
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInputString = typeof DateTimeInputString.Type;
 
 /**
  * Valid numeric epoch-millisecond input accepted by Effect `DateTime.make`.
  *
+ * **Details**
+ *
  * The schema also exposes a tagged representation used by callers that need a
  * discriminated transport shape.
  *
- * @example
+ * **Example** (Decoding and tagging number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputNumber } from "@beep/schema/DateTimeUtcFromValid"
@@ -205,8 +214,8 @@ export type DateTimeInputString = typeof DateTimeInputString.Type;
  * console.log(tagged._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInputNumber = S.Finite.check(DateTimeInputNumberCheck).pipe(
   $I.annoteSchema("DateTimeInputNumber", {
@@ -218,7 +227,8 @@ export const DateTimeInputNumber = S.Finite.check(DateTimeInputNumberCheck).pipe
 /**
  * {@inheritDoc DateTimeInputNumber}
  *
- * @example
+ * **Example** (Annotating number input type)
+ *
  * ```ts
  * import type { DateTimeInputNumber } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -226,17 +236,20 @@ export const DateTimeInputNumber = S.Finite.check(DateTimeInputNumberCheck).pipe
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInputNumber = typeof DateTimeInputNumber.Type;
 
 /**
  * Valid JavaScript `Date` input accepted by Effect `DateTime.make`.
  *
+ * **Details**
+ *
  * The schema also exposes a tagged representation for encoded transport.
  *
- * @example
+ * **Example** (Decoding and tagging Date)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputDate } from "@beep/schema/DateTimeUtcFromValid"
@@ -247,8 +260,8 @@ export type DateTimeInputNumber = typeof DateTimeInputNumber.Type;
  * console.log(tagged._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInputDate = S.Date.pipe(
   $I.annoteSchema("DateTimeInputDate", {
@@ -260,7 +273,8 @@ export const DateTimeInputDate = S.Date.pipe(
 /**
  * {@inheritDoc DateTimeInputDate}
  *
- * @example
+ * **Example** (Annotating Date input type)
+ *
  * ```ts
  * import type { DateTimeInputDate } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -268,17 +282,20 @@ export const DateTimeInputDate = S.Date.pipe(
  * console.log(value.toISOString())
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInputDate = typeof DateTimeInputDate.Type;
 
 /**
  * Existing Effect `DateTime` values accepted by {@link DateTimeUtcFromValid}.
  *
+ * **Details**
+ *
  * Zoned values decode to the same instant in UTC.
  *
- * @example
+ * **Example** (Decoding DateTime input)
+ *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as S from "effect/Schema"
@@ -289,8 +306,8 @@ export type DateTimeInputDate = typeof DateTimeInputDate.Type;
  * console.log(DateTime.formatIso(value))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInputDateTime = S.Union([S.DateTimeUtc, S.DateTimeZoned]).pipe(
   $I.annoteSchema("DateTimeInputDateTime", {
@@ -301,7 +318,8 @@ export const DateTimeInputDateTime = S.Union([S.DateTimeUtc, S.DateTimeZoned]).p
 /**
  * {@inheritDoc DateTimeInputDateTime}
  *
- * @example
+ * **Example** (Annotating DateTime input type)
+ *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import type { DateTimeInputDateTime } from "@beep/schema/DateTimeUtcFromValid"
@@ -310,15 +328,16 @@ export const DateTimeInputDateTime = S.Union([S.DateTimeUtc, S.DateTimeZoned]).p
  * console.log(DateTime.formatIso(value))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInputDateTime = typeof DateTimeInputDateTime.Type;
 
 /**
  * Tagged Effect `DateTime.Instant` transport value.
  *
- * @example
+ * **Example** (Creating Instant tagged value)
+ *
  * ```ts
  * import { DateTimeInputInstant } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -326,8 +345,8 @@ export type DateTimeInputDateTime = typeof DateTimeInputDateTime.Type;
  * console.log(value._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export class DateTimeInputInstant extends S.TaggedClass<DateTimeInputInstant>($I`DateTimeInputInstant`)(
   "Instant",
@@ -342,7 +361,8 @@ export class DateTimeInputInstant extends S.TaggedClass<DateTimeInputInstant>($I
 /**
  * Tagged Effect `DateTime.InstantWithZone` transport value.
  *
- * @example
+ * **Example** (Creating InstantWithZone tagged value)
+ *
  * ```ts
  * import { DateTimeInputInstantWithZone } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -353,8 +373,8 @@ export class DateTimeInputInstant extends S.TaggedClass<DateTimeInputInstant>($I
  * console.log(value._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export class DateTimeInputInstantWithZone extends S.TaggedClass<DateTimeInputInstantWithZone>(
   $I`DateTimeInputInstantWithZone`
@@ -375,10 +395,13 @@ const DateTimePartKey = S.optionalKey(DateTimePart);
 /**
  * Tagged `Partial<DateTime.Parts>` transport value.
  *
+ * **Details**
+ *
  * Missing fields default the same way Effect `DateTime.make` defaults partial
  * parts: from the Unix epoch in UTC.
  *
- * @example
+ * **Example** (Creating Parts tagged value)
+ *
  * ```ts
  * import { DateTimeInputParts } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -386,8 +409,8 @@ const DateTimePartKey = S.optionalKey(DateTimePart);
  * console.log(value._tag)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export class DateTimeInputParts extends S.TaggedClass<DateTimeInputParts>($I`DateTimeInputParts`)(
   "Parts",
@@ -408,10 +431,13 @@ export class DateTimeInputParts extends S.TaggedClass<DateTimeInputParts>($I`Dat
 /**
  * Union of raw and tagged values accepted by {@link DateTimeUtcFromValid}.
  *
+ * **Details**
+ *
  * Raw `DateTime.Input` values are supported for decoding. Tagged string,
  * number, and Date wrappers provide deterministic encoded representations.
  *
- * @example
+ * **Example** (Decoding DateTimeInput union)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInput } from "@beep/schema/DateTimeUtcFromValid"
@@ -421,8 +447,8 @@ export class DateTimeInputParts extends S.TaggedClass<DateTimeInputParts>($I`Dat
  * console.log(input)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeInput = S.Union([
   DateTimeInputString,
@@ -444,7 +470,8 @@ export const DateTimeInput = S.Union([
 /**
  * {@inheritDoc DateTimeInput}
  *
- * @example
+ * **Example** (Annotating DateTimeInput type)
+ *
  * ```ts
  * import type { DateTimeInput } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -452,8 +479,8 @@ export const DateTimeInput = S.Union([
  * console.log(input)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeInput = typeof DateTimeInput.Type;
 
@@ -491,11 +518,14 @@ const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput, 
 /**
  * Bidirectional schema transformation from valid DateTime input to `DateTime.Utc`.
  *
+ * **Details**
+ *
  * Decoding accepts raw Effect `DateTime.Input` values and this module's tagged
  * primitive/object transport values. Encoding produces a canonical tagged ISO
  * string representation so the encoded value is deterministic.
  *
- * @example
+ * **Example** (Decoding and encoding UTC)
+ *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as S from "effect/Schema"
@@ -511,8 +541,8 @@ const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput, 
  * console.log(encoded)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DateTimeUtcFromValid = DateTimeInput.pipe(
   S.decodeTo(
@@ -530,7 +560,8 @@ export const DateTimeUtcFromValid = DateTimeInput.pipe(
 /**
  * {@inheritDoc DateTimeUtcFromValid}
  *
- * @example
+ * **Example** (Annotating UTC DateTime type)
+ *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import type { DateTimeUtcFromValid } from "@beep/schema/DateTimeUtcFromValid"
@@ -539,7 +570,7 @@ export const DateTimeUtcFromValid = DateTimeInput.pipe(
  * console.log(DateTime.formatIso(utc))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DateTimeUtcFromValid = typeof DateTimeUtcFromValid.Type;

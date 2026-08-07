@@ -91,12 +91,15 @@ const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (c
 /**
  * Branded schema for Markdown document strings accepted by the active parser.
  *
+ * **Details**
+ *
  * Validation uses `Bun.markdown.html` when Bun is available. In runtimes without
  * Bun, it falls back to the platform-agnostic `micromark` parser with GFM
  * extensions. Markdown is intentionally permissive, so plain text and empty
  * strings are valid when the active parser accepts them.
  *
- * @example
+ * **Example** (Decode Markdown document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
@@ -122,7 +125,8 @@ export const Markdown = S.String.pipe(
 /**
  * Branded Markdown document string type extracted from {@link Markdown}.
  *
- * @example
+ * **Example** (Annotate Markdown document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
@@ -139,10 +143,13 @@ export type Markdown = typeof Markdown.Type;
 /**
  * Schema factory that renders Markdown text into HTML using `Bun.markdown.html`.
  *
+ * **Details**
+ *
  * Returns a schema transformation from Markdown source text to rendered HTML
  * text. Encoding back to Markdown is not supported.
  *
- * @example
+ * **Example** (Render Markdown to HTML)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -177,7 +184,8 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  * Builds a decoder that renders Markdown text to HTML and then decodes the
  * result through a target schema.
  *
- * @example
+ * **Example** (Decode Markdown through schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

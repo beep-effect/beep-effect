@@ -39,10 +39,13 @@ const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks)
 /**
  * Absolute local root path for a workspace document vault.
  *
+ * **Details**
+ *
  * Decoding normalizes trailing path separators, so `"/tmp/vault/"` and
  * `"/tmp/vault"` decode to the same value.
  *
- * @example
+ * **Example** (Decode trailing-slash vault path)
+ *
  * ```ts
  * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
  * import * as S from "effect/Schema"
@@ -67,7 +70,8 @@ export const WorkspaceVaultRootPath = S.String.pipe(
 /**
  * {@inheritDoc WorkspaceVaultRootPath}
  *
- * @example
+ * **Example** (Typed vault path decode)
+ *
  * ```ts
  * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
  * import * as S from "effect/Schema"

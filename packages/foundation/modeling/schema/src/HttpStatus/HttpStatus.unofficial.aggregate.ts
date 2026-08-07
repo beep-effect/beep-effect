@@ -26,15 +26,16 @@ import {
  * services. The following codes are used in some of the most popular online
  * services.
  *
- * @example
+ * **Example** (Log unofficial pairs length)
+ *
  * ```ts
  * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatusUnofficial.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatusUnofficial = MappedLiteralKit([
   ["RequestHeaderFieldsTooLargeShopify", RequestHeaderFieldsTooLargeShopify.literal],
@@ -57,7 +58,8 @@ export const HttpStatusUnofficial = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatusUnofficial} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode unofficial status code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
@@ -83,7 +85,8 @@ export declare namespace HttpStatusUnofficial {
 /**
  * {@inheritDoc HttpStatusUnofficial}
  *
- * @example
+ * **Example** (Assign unofficial status value)
+ *
  * ```ts
  * import type { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
  *

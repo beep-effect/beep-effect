@@ -38,7 +38,8 @@ const observeTokenizer = (operation: string) =>
 /**
  * Typed failure used when wink sentence spans cannot be aligned to token indexes.
  *
- * @example
+ * **Example** (Creating a span failure)
+ *
  * ```ts
  * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
  * import { SentenceSpanFailure } from "@beep/wink"
@@ -353,7 +354,8 @@ const makeWinkTokenization = Effect.gen(function* () {
 /**
  * Engine-dependent layer implementing the core tokenization service with wink.
  *
- * @example
+ * **Example** (Providing wink tokenization layer)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { Tokenization } from "@beep/nlp-processing/Core"
@@ -378,7 +380,8 @@ export const WinkTokenization = Layer.effect(Tokenization, makeWinkTokenization)
 /**
  * Live tokenization layer with the wink engine already provided.
  *
- * @example
+ * **Example** (Using live wink tokenization)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Tokenization } from "@beep/nlp-processing/Core"

@@ -22,7 +22,8 @@ import type * as O from "effect/Option";
 /**
  * The canonical codec statics attached by {@link withCodecStatics}.
  *
- * @example
+ * **Example** (Accepting CodecStatics parameter)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import type { CodecStatics } from "@beep/schema/SchemaUtils/withCodecStatics"
@@ -68,7 +69,8 @@ export interface CodecStatics<Sch extends S.Top> {
  * `.pipe()` (it is unary, so `Schema.pipe(withCodecStatics)` and
  * `withCodecStatics(Schema)` are equivalent).
  *
- * @example
+ * **Example** (Attaching statics via pipe)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

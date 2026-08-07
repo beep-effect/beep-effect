@@ -18,7 +18,8 @@ const $I = $SchemaId.create("UnitInterval");
 /**
  * Schema for a real number in the closed unit interval `[0, 1]` (inclusive).
  *
- * @example
+ * **Example** (Decode unit interval value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
@@ -44,7 +45,8 @@ export const UnitInterval = S.Finite.check(
 /**
  * {@inheritDoc UnitInterval}
  *
- * @example
+ * **Example** (Annotate decoded confidence)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
@@ -53,15 +55,16 @@ export const UnitInterval = S.Finite.check(
  * console.log(confidence) // 0.5
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UnitInterval = typeof UnitInterval.Type;
 
 /**
  * Type guard for {@link UnitInterval}.
  *
- * @example
+ * **Example** (Check unit interval bounds)
+ *
  * ```ts
  * import { isUnitInterval } from "@beep/schema/UnitInterval"
  *
@@ -69,15 +72,16 @@ export type UnitInterval = typeof UnitInterval.Type;
  * console.log(isUnitInterval(1.5)) // false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isUnitInterval = UnitInterval.is;
 
 /**
  * UnitInterval constant for `0` (the empty/none bound).
  *
- * @example
+ * **Example** (Use ZERO with complement)
+ *
  * ```ts
  * import { ZERO, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
@@ -93,7 +97,8 @@ export const ZERO: UnitInterval = UnitInterval.make(0);
 /**
  * UnitInterval constant for `1` (the full/certain bound).
  *
- * @example
+ * **Example** (Use ONE with complement)
+ *
  * ```ts
  * import { ONE, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
@@ -109,14 +114,15 @@ export const ONE: UnitInterval = UnitInterval.make(1);
 /**
  * The complement of a unit-interval value (`1 - value`).
  *
- * @example
+ * **Example** (Complement of ONE)
+ *
  * ```ts
  * import { complement, ONE } from "@beep/schema/UnitInterval"
  *
  * console.log(complement(ONE)) // 0
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const complement = (value: UnitInterval): UnitInterval => UnitInterval.make(1 - value);

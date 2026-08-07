@@ -19,7 +19,8 @@ const $I = $EpistemicUseCasesId.create("ClaimLifecycle/ClaimLifecycle.service");
 /**
  * Service shape for the claim lifecycle transition.
  *
- * @example
+ * **Example** (Shape with advance function)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -45,7 +46,8 @@ export interface ClaimTransitionShape {
 /**
  * Claim lifecycle transition service tag.
  *
- * @example
+ * **Example** (Provide ClaimTransition service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -78,7 +80,8 @@ export class ClaimTransition extends Context.Service<ClaimTransition, ClaimTrans
  * derives the next claim deterministically from the current claim and a gate
  * verdict.
  *
- * @example
+ * **Example** (Advance admitted candidate claim)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CandidateClaim, ClaimGateResult } from "@beep/epistemic-domain"

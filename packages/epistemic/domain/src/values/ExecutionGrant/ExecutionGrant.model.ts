@@ -29,7 +29,8 @@ const $I = $EpistemicDomainId.create("values/ExecutionGrant/ExecutionGrant.model
  * incident record shows exfiltration composes through *any* permitted sink,
  * not through one protocol.
  *
- * @example
+ * **Example** (Access network-egress enum)
+ *
  * ```ts
  * import { SinkClass } from "@beep/epistemic-domain"
  *
@@ -49,7 +50,8 @@ export const SinkClass = LiteralKit(["network-egress", "mcp-write"]).pipe(
 /**
  * Runtime type for {@link SinkClass}.
  *
- * @example
+ * **Example** (Assign mcp-write type)
+ *
  * ```ts
  * import type { SinkClass } from "@beep/epistemic-domain"
  *
@@ -69,10 +71,13 @@ export type SinkClass = typeof SinkClass.Type;
  * only `external-network` is genuinely exercised by the first fixture. Stated
  * here so the axis is never mistaken for validated.
  *
+ * **Details**
+ *
  * The destination→audience mapping is owned by a resolver at the boundary; a
  * caller can never self-declare a friendlier audience.
  *
- * @example
+ * **Example** (Access external-network enum)
+ *
  * ```ts
  * import { SinkAudience } from "@beep/epistemic-domain"
  *
@@ -92,7 +97,8 @@ export const SinkAudience = LiteralKit(["local-workspace", "external-network"]).
 /**
  * Runtime type for {@link SinkAudience}.
  *
- * @example
+ * **Example** (Assign external-network type)
+ *
  * ```ts
  * import type { SinkAudience } from "@beep/epistemic-domain"
  *
@@ -110,7 +116,8 @@ export type SinkAudience = typeof SinkAudience.Type;
  * workspace-root selector for MCP writes. Exists only on the grant side of the
  * boundary — execution records never carry a raw destination, only its digest.
  *
- * @example
+ * **Example** (Decode destination URL)
+ *
  * ```ts
  * import { SinkDestination } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -132,7 +139,8 @@ export const SinkDestination = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link SinkDestination}.
  *
- * @example
+ * **Example** (Make destination value)
+ *
  * ```ts
  * import { SinkDestination } from "@beep/epistemic-domain"
  *
@@ -149,7 +157,8 @@ export type SinkDestination = typeof SinkDestination.Type;
  * A governed sink: (class, audience, destination). The triple that makes an
  * outbound POST and a workspace write comparable under one policy.
  *
- * @example
+ * **Example** (Decode execution sink)
+ *
  * ```ts
  * import { ExecutionSink } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -188,7 +197,8 @@ export class ExecutionSink extends S.Class<ExecutionSink>($I`ExecutionSink`)(
  * Purpose a grant was issued for. Opaque to the evaluator; recorded only via
  * the grant-set digest, never as ledger text.
  *
- * @example
+ * **Example** (Make grant purpose)
+ *
  * ```ts
  * import { GrantPurpose } from "@beep/epistemic-domain"
  *
@@ -209,7 +219,8 @@ export const GrantPurpose = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link GrantPurpose}.
  *
- * @example
+ * **Example** (Assign grant purpose type)
+ *
  * ```ts
  * import { GrantPurpose } from "@beep/epistemic-domain"
  *
@@ -225,7 +236,8 @@ export type GrantPurpose = typeof GrantPurpose.Type;
 /**
  * Resource selector the grant covers. Opaque to the evaluator in v1.
  *
- * @example
+ * **Example** (Make grant resource)
+ *
  * ```ts
  * import { GrantResource } from "@beep/epistemic-domain"
  *
@@ -246,7 +258,8 @@ export const GrantResource = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link GrantResource}.
  *
- * @example
+ * **Example** (Assign grant resource type)
+ *
  * ```ts
  * import { GrantResource } from "@beep/epistemic-domain"
  *
@@ -264,7 +277,8 @@ export type GrantResource = typeof GrantResource.Type;
  * request whose operation matches no grant is denied fail-closed; there is no
  * wildcard operation.
  *
- * @example
+ * **Example** (Make grant operation)
+ *
  * ```ts
  * import { GrantOperation } from "@beep/epistemic-domain"
  *
@@ -285,7 +299,8 @@ export const GrantOperation = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link GrantOperation}.
  *
- * @example
+ * **Example** (Assign grant operation type)
+ *
  * ```ts
  * import { GrantOperation } from "@beep/epistemic-domain"
  *
@@ -304,7 +319,8 @@ export type GrantOperation = typeof GrantOperation.Type;
  * analysis: a record that cannot name its policy revision cannot prove which
  * policy allowed the action (exploration decision 3, consequence a).
  *
- * @example
+ * **Example** (Decode policy revision)
+ *
  * ```ts
  * import { PolicyRevision } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -326,7 +342,8 @@ export const PolicyRevision = SemanticVersion.pipe(
 /**
  * Runtime type for {@link PolicyRevision}.
  *
- * @example
+ * **Example** (Assign policy revision type)
+ *
  * ```ts
  * import { PolicyRevision } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -345,7 +362,8 @@ export type PolicyRevision = typeof PolicyRevision.Type;
  * token/cost accounting is a constant fixture today, so a spend ceiling would
  * be theatre; the field exists so records are complete when enforcement lands.
  *
- * @example
+ * **Example** (Decode grant budget)
+ *
  * ```ts
  * import { GrantBudget } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -375,7 +393,8 @@ export class GrantBudget extends S.Class<GrantBudget>($I`GrantBudget`)(
  * against one sink until expiry, under a pinned policy revision. Grants are
  * `effect/Schema` values held only by the boundary — never a bearer credential.
  *
- * @example
+ * **Example** (Decode execution grant)
+ *
  * ```ts
  * import { ExecutionGrant } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"

@@ -8,13 +8,14 @@
 /**
  * Claim disposition status value exports.
  *
- * @example
+ * **Example** (Log rejected disposition status)
+ *
  * ```ts
  * import { ClaimDispositionStatus } from "@beep/epistemic-domain/values"
  *
  * console.log(ClaimDispositionStatus.Enum.rejected)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -22,7 +23,8 @@ export * from "./ClaimDispositionStatus/index.ts";
 /**
  * Claim gate verdict value exports.
  *
- * @example
+ * **Example** (Decode gate severity value)
+ *
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -30,7 +32,7 @@ export * from "./ClaimDispositionStatus/index.ts";
  * const severity = S.decodeUnknownSync(ClaimGateSeverity)("violation")
  * console.log(severity)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -38,13 +40,14 @@ export * from "./ClaimGate/index.ts";
 /**
  * Claim lifecycle value exports.
  *
- * @example
+ * **Example** (Log admitted lifecycle status)
+ *
  * ```ts
  * import { ClaimLifecycle } from "@beep/epistemic-domain/values"
  *
  * console.log(ClaimLifecycle.Enum.admitted)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -52,7 +55,8 @@ export * from "./ClaimLifecycle/index.ts";
 /**
  * Claim projection read-model exports.
  *
- * @example
+ * **Example** (Decode claim state counts)
+ *
  * ```ts
  * import { ClaimStateCounts } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -65,7 +69,7 @@ export * from "./ClaimLifecycle/index.ts";
  * })
  * console.log(counts.admitted)
  * ```
-
+ *
  * @category read-models
  * @since 0.0.0
  */
@@ -80,7 +84,8 @@ export * from "./Contradiction/index.ts";
 /**
  * Edge endpoint value exports.
  *
- * @example
+ * **Example** (Decode claim edge endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -88,7 +93,7 @@ export * from "./Contradiction/index.ts";
  * const endpoint = S.decodeUnknownSync(EdgeEndpoint)({ kind: "claim", claimId: 1 })
  * console.log(endpoint.kind)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -96,13 +101,14 @@ export * from "./EdgeEndpoint/index.ts";
 /**
  * Edge relation vocabulary exports.
  *
- * @example
+ * **Example** (Log supports edge relation)
+ *
  * ```ts
  * import { EdgeRelation } from "@beep/epistemic-domain/values"
  *
  * console.log(EdgeRelation.Enum.supports)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -110,13 +116,14 @@ export * from "./EdgeRelation/index.ts";
 /**
  * Epistemic fixture-key value exports.
  *
- * @example
+ * **Example** (Create epistemic fixture key)
+ *
  * ```ts
  * import { EpistemicFixtureKey } from "@beep/epistemic-domain/values"
  *
  * console.log(EpistemicFixtureKey.make("claim.patentability"))
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -124,7 +131,8 @@ export * from "./EpistemicFixtureKey/index.ts";
 /**
  * Evidence span value exports.
  *
- * @example
+ * **Example** (Decode confidence value)
+ *
  * ```ts
  * import { Confidence } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -132,7 +140,7 @@ export * from "./EpistemicFixtureKey/index.ts";
  * const confidence = S.decodeUnknownSync(Confidence)(0.88)
  * console.log(confidence)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -140,7 +148,8 @@ export * from "./EvidenceSpan/index.ts";
 /**
  * Evidence-verification manifestation value exports.
  *
- * @example
+ * **Example** (Validate manifestation key length)
+ *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values"
  *
@@ -154,13 +163,14 @@ export * from "./EvidenceVerification/index.ts";
 /**
  * Execution grant value exports.
  *
- * @example
+ * **Example** (Log network-egress sink class)
+ *
  * ```ts
  * import { SinkClass } from "@beep/epistemic-domain/values"
  *
  * console.log(SinkClass.Enum["network-egress"])
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -168,13 +178,14 @@ export * from "./ExecutionGrant/index.ts";
 /**
  * Execution ledger record value exports.
  *
- * @example
+ * **Example** (Log completed settlement status)
+ *
  * ```ts
  * import { ExecutionSettlement } from "@beep/epistemic-domain/values"
  *
  * console.log(ExecutionSettlement.Enum.completed)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -182,13 +193,14 @@ export * from "./ExecutionRecord/index.ts";
 /**
  * Execution verdict value exports.
  *
- * @example
+ * **Example** (Log denial reason enum)
+ *
  * ```ts
  * import { DenialReason } from "@beep/epistemic-domain/values"
  *
  * console.log(DenialReason.Enum["destination-not-granted"])
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -196,7 +208,8 @@ export * from "./ExecutionVerdict/index.ts";
 /**
  * Grant set value exports.
  *
- * @example
+ * **Example** (Decode draft grant set)
+ *
  * ```ts
  * import { DraftGrantSet } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -208,7 +221,7 @@ export * from "./ExecutionVerdict/index.ts";
  * })
  * console.log(draft.state)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -216,7 +229,8 @@ export * from "./GrantSet/index.ts";
 /**
  * Logical edge identity and digest exports.
  *
- * @example
+ * **Example** (Decode logical edge identity)
+ *
  * ```ts
  * import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values"
  * import * as S from "effect/Schema"
@@ -232,7 +246,7 @@ export * from "./GrantSet/index.ts";
  * })
  * console.log(logicalEdgeKey(identity).length)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

@@ -16,7 +16,8 @@ declare module "@mui/material/Autocomplete" {
 /**
  * Autocomplete theme theme value.
  *
- * @example
+ * **Example** (Import autocomplete theme)
+ *
  * ```ts
  * import { autocompleteTheme } from "@beep/ui/themes/components/autocomplete"
  *

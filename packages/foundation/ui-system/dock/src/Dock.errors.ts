@@ -14,7 +14,8 @@ const $I = $DockId.create("Dock.errors");
 /**
  * Business reason for rejecting a dock command.
  *
- * @example
+ * **Example** (Make panel-not-found reason)
+ *
  * ```ts
  * import { DockRejectionReason } from "@beep/dock"
  *
@@ -48,7 +49,8 @@ export const DockRejectionReason = LiteralKit([
 /**
  * Decoded business reason for rejecting a dock command.
  *
- * @example
+ * **Example** (Annotate rejection reason type)
+ *
  * ```ts
  * import { DockRejectionReason } from "@beep/dock"
  *
@@ -64,7 +66,8 @@ export type DockRejectionReason = typeof DockRejectionReason.Type;
 /**
  * Typed expected command rejection that leaves state untouched.
  *
- * @example
+ * **Example** (Make rejected command error)
+ *
  * ```ts
  * import { CommandId, DockCommandRejected } from "@beep/dock"
  *
@@ -90,7 +93,8 @@ export class DockCommandRejected extends TaggedErrorClass<DockCommandRejected>($
 /**
  * Workspace invariant failure reason.
  *
- * @example
+ * **Example** (Make duplicate-panel-id reason)
+ *
  * ```ts
  * import { DockInvariantReason } from "@beep/dock"
  *
@@ -116,7 +120,8 @@ export const DockInvariantReason = LiteralKit([
 /**
  * Decoded workspace invariant failure reason.
  *
- * @example
+ * **Example** (Annotate invariant reason type)
+ *
  * ```ts
  * import { DockInvariantReason } from "@beep/dock"
  *
@@ -132,7 +137,8 @@ export type DockInvariantReason = typeof DockInvariantReason.Type;
 /**
  * Typed workspace invariant failure detected before publication.
  *
- * @example
+ * **Example** (Make invariant violation error)
+ *
  * ```ts
  * import { DockInvariantViolation } from "@beep/dock"
  *
@@ -157,7 +163,8 @@ export class DockInvariantViolation extends TaggedErrorClass<DockInvariantViolat
 /**
  * External schema boundary for rejected unknown input.
  *
- * @example
+ * **Example** (Make command boundary value)
+ *
  * ```ts
  * import { DockInputBoundary } from "@beep/dock"
  *
@@ -176,7 +183,8 @@ export const DockInputBoundary = LiteralKit(["command", "snapshot"]).annotate(
 /**
  * Decoded external schema boundary for rejected unknown input.
  *
- * @example
+ * **Example** (Annotate input boundary type)
+ *
  * ```ts
  * import { DockInputBoundary } from "@beep/dock"
  *
@@ -192,7 +200,8 @@ export type DockInputBoundary = typeof DockInputBoundary.Type;
 /**
  * Typed decoding failure at a public input boundary.
  *
- * @example
+ * **Example** (Make snapshot input error)
+ *
  * ```ts
  * import { DockInputError } from "@beep/dock"
  *
@@ -217,7 +226,8 @@ export class DockInputError extends TaggedErrorClass<DockInputError>($I`DockInpu
 /**
  * Snapshot-store operation that may fail.
  *
- * @example
+ * **Example** (Make save operation value)
+ *
  * ```ts
  * import { DockPersistenceOperation } from "@beep/dock"
  *
@@ -236,7 +246,8 @@ export const DockPersistenceOperation = LiteralKit(["load", "save"]).annotate(
 /**
  * Decoded snapshot-store operation that may fail.
  *
- * @example
+ * **Example** (Annotate persistence operation type)
+ *
  * ```ts
  * import { DockPersistenceOperation } from "@beep/dock"
  *
@@ -252,7 +263,8 @@ export type DockPersistenceOperation = typeof DockPersistenceOperation.Type;
 /**
  * Typed failure from a replaceable snapshot-store adapter.
  *
- * @example
+ * **Example** (Make save persistence error)
+ *
  * ```ts
  * import { DockPersistenceError } from "@beep/dock"
  *
@@ -277,7 +289,8 @@ export class DockPersistenceError extends TaggedErrorClass<DockPersistenceError>
 /**
  * Typed absence of a requested persisted snapshot.
  *
- * @example
+ * **Example** (Make missing snapshot error)
+ *
  * ```ts
  * import { DockSnapshotMissing } from "@beep/dock"
  *
@@ -301,7 +314,8 @@ export class DockSnapshotMissing extends TaggedErrorClass<DockSnapshotMissing>($
 /**
  * Tagged union of typed transition failures.
  *
- * @example
+ * **Example** (Create command rejected member)
+ *
  * ```ts
  * import { CommandId, DockCommandRejected, DockTransitionError } from "@beep/dock"
  *
@@ -322,7 +336,8 @@ export const DockTransitionError = S.Union([DockCommandRejected, DockInvariantVi
 /**
  * Decoded tagged union of typed transition failures.
  *
- * @example
+ * **Example** (Type transition error union)
+ *
  * ```ts
  * import { CommandId, DockCommandRejected, DockTransitionError } from "@beep/dock"
  *

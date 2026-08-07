@@ -8,7 +8,8 @@
 /**
  * Claim disposition boundary command exports.
  *
- * @example
+ * **Example** (Check appendClaimDisposition export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-use-cases/ClaimDisposition"
@@ -23,7 +24,8 @@ export * from "./ClaimDisposition.commands.ts";
 /**
  * Claim disposition repository port exports.
  *
- * @example
+ * **Example** (Check ClaimDispositionRepository export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-use-cases/ClaimDisposition"
@@ -38,7 +40,8 @@ export * from "./ClaimDisposition.ports.ts";
 /**
  * Claim gate outcome resolution exports.
  *
- * @example
+ * **Example** (Check makeClaimGateOutcomeResolver export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-use-cases/ClaimDisposition"

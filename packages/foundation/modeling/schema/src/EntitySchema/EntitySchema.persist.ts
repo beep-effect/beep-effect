@@ -13,7 +13,8 @@ import type { EntityFieldInput, EntityFieldInputs, SelectedFieldOf } from "./Ent
 /**
  * Physical storage kind projected by table adapters.
  *
- * @example
+ * **Example** (Decode text storage kind)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { StorageKind } from "@beep/schema/EntitySchema"
@@ -22,8 +23,8 @@ import type { EntityFieldInput, EntityFieldInputs, SelectedFieldOf } from "./Ent
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const StorageKind = LiteralKit([
   "blob",
@@ -44,7 +45,8 @@ export const StorageKind = LiteralKit([
 /**
  * Runtime type for {@link StorageKind}.
  *
- * @example
+ * **Example** (Annotate text storage kind)
+ *
  * ```ts
  * import type { StorageKind } from "@beep/schema/EntitySchema"
  *
@@ -52,15 +54,16 @@ export const StorageKind = LiteralKit([
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type StorageKind = typeof StorageKind.Type;
 
 /**
  * Lifecycle strategy for a persisted field.
  *
- * @example
+ * **Example** (Decode provided value strategy)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValueStrategy } from "@beep/schema/EntitySchema"
@@ -69,8 +72,8 @@ export type StorageKind = typeof StorageKind.Type;
  * console.log(strategy)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ValueStrategy = LiteralKit([
   "computedByService",
@@ -91,7 +94,8 @@ export const ValueStrategy = LiteralKit([
 /**
  * Runtime type for {@link ValueStrategy}.
  *
- * @example
+ * **Example** (Annotate provided value strategy)
+ *
  * ```ts
  * import type { ValueStrategy } from "@beep/schema/EntitySchema"
  *
@@ -99,15 +103,16 @@ export const ValueStrategy = LiteralKit([
  * console.log(strategy)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValueStrategy = typeof ValueStrategy.Type;
 
 /**
  * Compatibility alias for lifecycle strategy.
  *
- * @example
+ * **Example** (Decode provided persist strategy)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PersistStrategy } from "@beep/schema/EntitySchema"
@@ -116,15 +121,16 @@ export type ValueStrategy = typeof ValueStrategy.Type;
  * console.log(strategy)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const PersistStrategy = ValueStrategy;
 
 /**
  * Runtime type for {@link PersistStrategy}.
  *
- * @example
+ * **Example** (Annotate provided persist strategy)
+ *
  * ```ts
  * import type { PersistStrategy } from "@beep/schema/EntitySchema"
  *
@@ -132,15 +138,16 @@ export const PersistStrategy = ValueStrategy;
  * console.log(strategy)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistStrategy = ValueStrategy;
 
 /**
  * Storage-neutral index hint kind.
  *
- * @example
+ * **Example** (Decode unique index hint)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { IndexHintKind } from "@beep/schema/EntitySchema"
@@ -149,8 +156,8 @@ export type PersistStrategy = ValueStrategy;
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const IndexHintKind = LiteralKit(["btree", "gin", "hash", "lookup", "unique"]).pipe(
   $I.annoteSchema("IndexHintKind", {
@@ -161,7 +168,8 @@ export const IndexHintKind = LiteralKit(["btree", "gin", "hash", "lookup", "uniq
 /**
  * Runtime type for {@link IndexHintKind}.
  *
- * @example
+ * **Example** (Annotate unique index hint)
+ *
  * ```ts
  * import type { IndexHintKind } from "@beep/schema/EntitySchema"
  *
@@ -169,8 +177,8 @@ export const IndexHintKind = LiteralKit(["btree", "gin", "hash", "lookup", "uniq
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type IndexHintKind = typeof IndexHintKind.Type;
 
@@ -189,15 +197,16 @@ const IndexHintBase = IndexHintKind.toTaggedUnion("kind")({
 /**
  * Storage-neutral index hint values and schema.
  *
- * @example
+ * **Example** (Log unique index constant)
+ *
  * ```ts
  * import { IndexHint } from "@beep/schema/EntitySchema"
  *
  * console.log(IndexHint.unique)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const IndexHint = Struct.assign(IndexHintBase, {
   btree: { kind: "btree" } as const,
@@ -210,7 +219,8 @@ export const IndexHint = Struct.assign(IndexHintBase, {
 /**
  * Runtime type for {@link IndexHint}.
  *
- * @example
+ * **Example** (Assign btree index hint)
+ *
  * ```ts
  * import { IndexHint } from "@beep/schema/EntitySchema"
  * import type { IndexHint as IndexHintValue } from "@beep/schema/EntitySchema"
@@ -219,15 +229,16 @@ export const IndexHint = Struct.assign(IndexHintBase, {
  * console.log(hint.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type IndexHint = typeof IndexHint.Type;
 
 /**
  * Encoded absence classification for a field.
  *
- * @example
+ * **Example** (Decode optionalKey absence)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EncodedAbsenceKind } from "@beep/schema/EntitySchema"
@@ -236,8 +247,8 @@ export type IndexHint = typeof IndexHint.Type;
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const EncodedAbsenceKind = LiteralKit([
   "required",
@@ -258,7 +269,8 @@ export const EncodedAbsenceKind = LiteralKit([
 /**
  * Runtime type for {@link EncodedAbsenceKind}.
  *
- * @example
+ * **Example** (Annotate optionalKey absence)
+ *
  * ```ts
  * import type { EncodedAbsenceKind } from "@beep/schema/EntitySchema"
  *
@@ -266,15 +278,16 @@ export const EncodedAbsenceKind = LiteralKit([
  * console.log(absence)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EncodedAbsenceKind = typeof EncodedAbsenceKind.Type;
 
 /**
  * Options accepted by persistence descriptor constructors.
  *
- * @example
+ * **Example** (Build typed persist options)
+ *
  * ```ts
  * import { IndexHint } from "@beep/schema/EntitySchema"
  * import type { PersistOptions } from "@beep/schema/EntitySchema"
@@ -287,8 +300,8 @@ export type EncodedAbsenceKind = typeof EncodedAbsenceKind.Type;
  * console.log(options.columnName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistOptions<
   Strategy extends PersistStrategy = "provided",
@@ -326,7 +339,8 @@ type PersistDescriptorShape<
 /**
  * Descriptor for one persisted entity field.
  *
- * @example
+ * **Example** (Build text field descriptor)
+ *
  * ```ts
  * import type { PersistDescriptor } from "@beep/schema/EntitySchema"
  *
@@ -338,8 +352,8 @@ type PersistDescriptorShape<
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistDescriptor<
   TStorageKind extends StorageKind = StorageKind,
@@ -355,7 +369,8 @@ export type PersistDescriptor<
 /**
  * Companion types for {@link PersistDescriptor}.
  *
- * @example
+ * **Example** (Satisfy Any descriptor type)
+ *
  * ```ts
  * import type { PersistDescriptor } from "@beep/schema/EntitySchema"
  *
@@ -363,8 +378,8 @@ export type PersistDescriptor<
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export namespace PersistDescriptor {
   /**
@@ -412,7 +427,8 @@ const attachPersistDescriptorStatics = <Schema extends S.ConstraintDecoder<Persi
 /**
  * Schema-backed discriminated persistence descriptor.
  *
- * @example
+ * **Example** (Decode text field descriptor)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PersistDescriptor } from "@beep/schema/EntitySchema"
@@ -421,8 +437,8 @@ const attachPersistDescriptorStatics = <Schema extends S.ConstraintDecoder<Persi
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const PersistDescriptor: S.ConstraintDecoder<PersistDescriptor.Any> & PersistDescriptorStatics =
   attachPersistDescriptorStatics(
@@ -436,7 +452,8 @@ export const PersistDescriptor: S.ConstraintDecoder<PersistDescriptor.Any> & Per
 /**
  * Persistence descriptor narrowed by storage kind and value strategy.
  *
- * @example
+ * **Example** (Narrow provided text descriptor)
+ *
  * ```ts
  * import type { PersistDescriptorByValueStrategy } from "@beep/schema/EntitySchema"
  *
@@ -448,8 +465,8 @@ export const PersistDescriptor: S.ConstraintDecoder<PersistDescriptor.Any> & Per
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistDescriptorByValueStrategy<Descriptor extends PersistDescriptor.Any = PersistDescriptor> =
   Descriptor extends unknown
@@ -466,7 +483,8 @@ export type PersistDescriptorByValueStrategy<Descriptor extends PersistDescripto
 /**
  * Entity-id schema shape accepted by persisted entity factories.
  *
- * @example
+ * **Example** (Read entityType from shape)
+ *
  * ```ts
  * import type { EntityIdLike } from "@beep/schema/EntitySchema"
  *
@@ -475,8 +493,8 @@ export type PersistDescriptorByValueStrategy<Descriptor extends PersistDescripto
  * console.log(entityType)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityIdLike = S.Codec<unknown, number> & {
   readonly Type: unknown;
@@ -518,7 +536,8 @@ type PersistDescriptorForEncoded<Encoded> = undefined extends Encoded
 /**
  * Persistence descriptor type permitted for one schema field.
  *
- * @example
+ * **Example** (Type descriptor for String)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { PersistDescriptorFor } from "@beep/schema/EntitySchema"
@@ -528,8 +547,8 @@ type PersistDescriptorForEncoded<Encoded> = undefined extends Encoded
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistDescriptorFor<Schema extends S.Top> = Schema["~encoded.optionality"] extends "optional"
   ? never
@@ -542,7 +561,8 @@ export type PersistDescriptorFor<Schema extends S.Top> = Schema["~encoded.option
 /**
  * Persistence descriptor type permitted for one entity field input.
  *
- * @example
+ * **Example** (Type input descriptor for String)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { PersistDescriptorForInput } from "@beep/schema/EntitySchema"
@@ -552,15 +572,16 @@ export type PersistDescriptorFor<Schema extends S.Top> = Schema["~encoded.option
  * console.log(descriptor.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistDescriptorForInput<Field extends EntityFieldInput> = PersistDescriptorFor<SelectedFieldOf<Field>>;
 
 /**
  * Exact persisted descriptor map permitted for a field map.
  *
- * @example
+ * **Example** (Map name field descriptor)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { PersistedFor } from "@beep/schema/EntitySchema"
@@ -570,8 +591,8 @@ export type PersistDescriptorForInput<Field extends EntityFieldInput> = PersistD
  * console.log(persisted.name.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistedFor<FieldMap extends EntityFieldInputs> = {
   readonly [K in keyof FieldMap]: PersistDescriptorForInput<FieldMap[K]>;
@@ -580,7 +601,8 @@ export type PersistedFor<FieldMap extends EntityFieldInputs> = {
 /**
  * Any persisted descriptor map.
  *
- * @example
+ * **Example** (Assign any persisted map)
+ *
  * ```ts
  * import type { PersistedMap } from "@beep/schema/EntitySchema"
  *
@@ -590,8 +612,8 @@ export type PersistedFor<FieldMap extends EntityFieldInputs> = {
  * console.log(persisted.name?.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PersistedMap = Readonly<Record<string, PersistDescriptor>>;
 
@@ -607,7 +629,8 @@ type NoExtraPersistedKeys<FieldMap extends EntityFieldInputs, Persisted extends 
 /**
  * Persisted map that matches a field map and rejects keys outside that field map.
  *
- * @example
+ * **Example** (Check name field persisted map)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { CheckedPersistedFor, PersistedFor } from "@beep/schema/EntitySchema"
@@ -618,8 +641,8 @@ type NoExtraPersistedKeys<FieldMap extends EntityFieldInputs, Persisted extends 
  * console.log(checked.name.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CheckedPersistedFor<
   FieldMap extends EntityFieldInputs,

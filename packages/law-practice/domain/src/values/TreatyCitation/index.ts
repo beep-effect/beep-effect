@@ -9,9 +9,8 @@
 /**
  * TreatyCitation model exports.
  *
- * **Example**
+ * **Example** (Import TreatyCitation export)
  *
- * @example
  * ```ts
  * import { TreatyCitation } from "@beep/law-practice-domain/values";
  * ```

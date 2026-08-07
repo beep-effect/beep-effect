@@ -42,13 +42,15 @@ const defaultDataRoot = ".beep/ai-metrics";
 /**
  * Stable default pointer used to locate the latest checked-in JSDoc worker-eval evidence.
  *
- * @example
+ * **Example** (Default worker-eval report path)
+ *
  * ```ts
  * import { DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH } from "@beep/repo-ai-metrics"
  *
  * const reportPath = DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH
  * console.log(reportPath.endsWith("/ops/manifest.json"))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -81,12 +83,14 @@ query AgentEffectivenessPhoenixInventory {
 /**
  * Status emitted by agent-effectiveness reports.
  *
- * @example
+ * **Example** (Check passed status guard)
+ *
  * ```ts
  * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessStatus.is.passed("passed"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -99,13 +103,15 @@ export const AgentEffectivenessStatus = LiteralKit(["passed", "warning", "failed
 /**
  * Runtime type for `AgentEffectivenessStatus`.
  *
- * @example
+ * **Example** (Type status as passed)
+ *
  * ```ts
  * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
  *
  * const status: AgentEffectivenessStatus = "passed"
  * console.log(AgentEffectivenessStatus.is.passed(status))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -114,12 +120,14 @@ export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
 /**
  * Primitive annotation value allowed in local Phase 1 plans.
  *
- * @example
+ * **Example** (Validate numeric annotation value)
+ *
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessAnnotationValue.is(0.98))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -133,13 +141,15 @@ export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.
 /**
  * Runtime type for `AgentEffectivenessAnnotationValue`.
  *
- * @example
+ * **Example** (Type annotation value number)
+ *
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
  *
  * const value: AgentEffectivenessAnnotationValue = 0.98
  * console.log(AgentEffectivenessAnnotationValue.is(value))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,7 +158,8 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 /**
  * Error raised by agent-effectiveness report helpers.
  *
- * @example
+ * **Example** (Construct effectiveness error)
+ *
  * ```ts
  * import { AgentEffectivenessError } from "@beep/repo-ai-metrics"
  *
@@ -158,6 +169,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
  * })
  * console.log(error._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -175,11 +187,13 @@ export class AgentEffectivenessError extends TaggedErrorClass<AgentEffectiveness
 /**
  * Input for the Phase 1 agent-effectiveness doctor.
  *
- * @example
+ * **Example** (Make empty doctor input)
+ *
  * ```ts
  * import { AgentEffectivenessDoctorInput } from "@beep/repo-ai-metrics"
  * console.log(AgentEffectivenessDoctorInput.make({}).target)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -216,11 +230,13 @@ export class AgentEffectivenessDoctorInput extends S.Class<AgentEffectivenessDoc
 /**
  * Input for building a dry-run annotation plan.
  *
- * @example
+ * **Example** (Make annotation plan input)
+ *
  * ```ts
  * import { AgentEffectivenessAnnotationPlanInput } from "@beep/repo-ai-metrics"
  * console.log(AgentEffectivenessAnnotationPlanInput.make({}).annotationLimit)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -250,7 +266,8 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
 /**
  * Summary for one Phoenix project.
  *
- * @example
+ * **Example** (Create Phoenix project summary)
+ *
  * ```ts
  * import { AgentEffectivenessPhoenixProject } from "@beep/repo-ai-metrics"
  *
@@ -265,6 +282,7 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
  * })
  * console.log(project.hasTraces)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -288,7 +306,8 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
 /**
  * Read-only Phoenix health and inventory section.
  *
- * @example
+ * **Example** (Create Phoenix health section)
+ *
  * ```ts
  * import { AgentEffectivenessPhoenixSection } from "@beep/repo-ai-metrics"
  *
@@ -306,6 +325,7 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
  * })
  * console.log(section.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -332,7 +352,8 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
 /**
  * Source coverage row derived from AI-metrics storage.
  *
- * @example
+ * **Example** (Create source coverage row)
+ *
  * ```ts
  * import { AgentEffectivenessSourceCoverage } from "@beep/repo-ai-metrics"
  *
@@ -346,6 +367,7 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
  * })
  * console.log(coverage.acceptedEvents / coverage.totalLines)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -368,7 +390,8 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
 /**
  * Latest forwarder summary from derived AI-metrics storage.
  *
- * @example
+ * **Example** (Create forwarder summary)
+ *
  * ```ts
  * import { AgentEffectivenessForwarderSummary } from "@beep/repo-ai-metrics"
  *
@@ -383,6 +406,7 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
  * })
  * console.log(summary.turnCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -406,7 +430,8 @@ export class AgentEffectivenessForwarderSummary extends S.Class<AgentEffectivene
 /**
  * Latest scorecard summary from derived AI-metrics storage.
  *
- * @example
+ * **Example** (Create scorecard summary)
+ *
  * ```ts
  * import { AgentEffectivenessScorecardSummary } from "@beep/repo-ai-metrics"
  *
@@ -424,6 +449,7 @@ export class AgentEffectivenessForwarderSummary extends S.Class<AgentEffectivene
  * })
  * console.log(summary.completionReady)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -450,7 +476,8 @@ export class AgentEffectivenessScorecardSummary extends S.Class<AgentEffectivene
 /**
  * AI-metrics local evidence section for the doctor report.
  *
- * @example
+ * **Example** (Create AI-metrics section)
+ *
  * ```ts
  * import { AgentEffectivenessAiMetricsSection } from "@beep/repo-ai-metrics"
  *
@@ -468,6 +495,7 @@ export class AgentEffectivenessScorecardSummary extends S.Class<AgentEffectivene
  * })
  * console.log(section.unavailableMetrics)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -494,7 +522,8 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
 /**
  * JSDoc worker-eval section for the doctor report.
  *
- * @example
+ * **Example** (Create JSDoc worker section)
+ *
  * ```ts
  * import { AgentEffectivenessJsdocWorkerSection } from "@beep/repo-ai-metrics"
  *
@@ -513,6 +542,7 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
  * })
  * console.log(section.completedPackets === section.selectedPackets)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -540,7 +570,8 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
 /**
  * Aggregate summary emitted by the doctor report.
  *
- * @example
+ * **Example** (Create doctor summary)
+ *
  * ```ts
  * import { AgentEffectivenessDoctorSummary } from "@beep/repo-ai-metrics"
  *
@@ -552,6 +583,7 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
  * })
  * console.log(summary.unavailable.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -572,7 +604,8 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
 /**
  * Phase 1 agent-effectiveness doctor report.
  *
- * @example
+ * **Example** (Build full doctor report)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAiMetricsSection,
@@ -634,6 +667,7 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  * })
  * console.log(report.summary.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -658,7 +692,8 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
 /**
  * One local-only annotation row that could be written to Phoenix later.
  *
- * @example
+ * **Example** (Create planned annotation row)
+ *
  * ```ts
  * import { AgentEffectivenessPlannedAnnotation } from "@beep/repo-ai-metrics"
  *
@@ -674,6 +709,7 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
  * })
  * console.log(annotation.metadata.configSnapshotId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -701,7 +737,8 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
 /**
  * Dry-run annotation plan for Phase 1.
  *
- * @example
+ * **Example** (Build dry-run annotation plan)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlan,
@@ -784,6 +821,7 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  * })
  * console.log(plan.annotations.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -806,7 +844,8 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
 /**
  * One validation finding for an annotation plan.
  *
- * @example
+ * **Example** (Create annotation check finding)
+ *
  * ```ts
  * import { AgentEffectivenessAnnotationCheckFinding } from "@beep/repo-ai-metrics"
  *
@@ -817,6 +856,7 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
  * })
  * console.log(finding.code)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -836,7 +876,8 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Class<AgentEffec
 /**
  * Report emitted by `agent-effectiveness annotations check`.
  *
- * @example
+ * **Example** (Create annotation check report)
+ *
  * ```ts
  * import { AgentEffectivenessAnnotationCheckReport } from "@beep/repo-ai-metrics"
  *
@@ -849,6 +890,7 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Class<AgentEffec
  * })
  * console.log(report.findings.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -870,13 +912,15 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
 /**
  * Dedicated Phoenix project namespace for the agent-effectiveness loop.
  *
- * @example
+ * **Example** (Phoenix project name constant)
+ *
  * ```ts
  * import { AGENT_EFFECTIVENESS_PHOENIX_PROJECT } from "@beep/repo-ai-metrics"
  *
  * const projectName = AGENT_EFFECTIVENESS_PHOENIX_PROJECT
  * console.log(projectName === "beep-agent-effectiveness")
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -885,13 +929,15 @@ export const AGENT_EFFECTIVENESS_PHOENIX_PROJECT = "beep-agent-effectiveness";
 /**
  * Confirmation token required before live Phoenix writes.
  *
- * @example
+ * **Example** (Write confirmation token check)
+ *
  * ```ts
  * import { AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION } from "@beep/repo-ai-metrics"
  *
  * const confirmed = AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION === "agent-effectiveness-phoenix-write"
  * console.log(confirmed)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -900,12 +946,14 @@ export const AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION = "agent-effectivene
 /**
  * Phoenix dataset kinds owned by the agent-effectiveness loop.
  *
- * @example
+ * **Example** (Access dataset kind enum)
+ *
  * ```ts
  * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessDatasetKind.Enum["agent-loop-health"])
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -924,13 +972,15 @@ export const AgentEffectivenessDatasetKind = LiteralKit([
 /**
  * Type for {@link AgentEffectivenessDatasetKind}.
  *
- * @example
+ * **Example** (Type dataset kind value)
+ *
  * ```ts
  * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
  *
  * const kind: AgentEffectivenessDatasetKind = "agent-loop-health"
  * console.log(AgentEffectivenessDatasetKind.is["agent-loop-health"](kind))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -939,13 +989,15 @@ export type AgentEffectivenessDatasetKind = typeof AgentEffectivenessDatasetKind
 /**
  * One sanitized example destined for a Phoenix dataset.
  *
- * @example
+ * **Example** (Create dataset example)
+ *
  * ```ts
  * import { AgentEffectivenessDatasetExample } from "@beep/repo-ai-metrics"
  *
  * const example = AgentEffectivenessDatasetExample.make({ id: "loop", input: { status: "passed" } })
  * console.log(example.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -976,7 +1028,8 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
 /**
  * One repo-owned Phoenix dataset specification.
  *
- * @example
+ * **Example** (Create dataset specification)
+ *
  * ```ts
  * import { AgentEffectivenessDatasetSpec } from "@beep/repo-ai-metrics"
  *
@@ -988,6 +1041,7 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
  * })
  * console.log(spec.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1008,7 +1062,8 @@ export class AgentEffectivenessDatasetSpec extends S.Class<AgentEffectivenessDat
 /**
  * Full Phoenix dataset bundle derived from a doctor report.
  *
- * @example
+ * **Example** (Create dataset bundle)
+ *
  * ```ts
  * import { AgentEffectivenessDatasetBundle } from "@beep/repo-ai-metrics"
  *
@@ -1020,6 +1075,7 @@ export class AgentEffectivenessDatasetSpec extends S.Class<AgentEffectivenessDat
  * })
  * console.log(bundle.projectName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1040,12 +1096,14 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
 /**
  * Prompt roles used by repo-owned agent-effectiveness prompt templates.
  *
- * @example
+ * **Example** (Access prompt role enum)
+ *
  * ```ts
  * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessPromptRole.Enum.user)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1058,13 +1116,15 @@ export const AgentEffectivenessPromptRole = LiteralKit(["system", "user"]).pipe(
 /**
  * Type for {@link AgentEffectivenessPromptRole}.
  *
- * @example
+ * **Example** (Type prompt role value)
+ *
  * ```ts
  * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
  *
  * const role: AgentEffectivenessPromptRole = "user"
  * console.log(AgentEffectivenessPromptRole.is.user(role))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1073,13 +1133,15 @@ export type AgentEffectivenessPromptRole = typeof AgentEffectivenessPromptRole.T
 /**
  * One repo-owned Phoenix prompt message.
  *
- * @example
+ * **Example** (Create prompt message)
+ *
  * ```ts
  * import { AgentEffectivenessPromptMessage } from "@beep/repo-ai-metrics"
  *
  * const message = AgentEffectivenessPromptMessage.make({ content: "Review {{caseId}}", role: "user" })
  * console.log(message.role)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1098,7 +1160,8 @@ export class AgentEffectivenessPromptMessage extends S.Class<AgentEffectivenessP
 /**
  * Repo-owned Phoenix prompt specification.
  *
- * @example
+ * **Example** (Create prompt specification)
+ *
  * ```ts
  * import { AgentEffectivenessPromptSpec } from "@beep/repo-ai-metrics"
  *
@@ -1110,6 +1173,7 @@ export class AgentEffectivenessPromptMessage extends S.Class<AgentEffectivenessP
  * })
  * console.log(spec.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1130,7 +1194,8 @@ export class AgentEffectivenessPromptSpec extends S.Class<AgentEffectivenessProm
 /**
  * Full repo-owned Phoenix prompt bundle.
  *
- * @example
+ * **Example** (Create prompt bundle)
+ *
  * ```ts
  * import { AgentEffectivenessPromptBundle } from "@beep/repo-ai-metrics"
  *
@@ -1142,6 +1207,7 @@ export class AgentEffectivenessPromptSpec extends S.Class<AgentEffectivenessProm
  * })
  * console.log(bundle.projectName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1162,7 +1228,8 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
 /**
  * Deterministic experiment plan entry.
  *
- * @example
+ * **Example** (Create experiment specification)
+ *
  * ```ts
  * import { AgentEffectivenessExperimentSpec } from "@beep/repo-ai-metrics"
  *
@@ -1173,6 +1240,7 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
  * })
  * console.log(spec.datasetName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1196,7 +1264,8 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
 /**
  * Deterministic experiment bundle derived from dataset specs.
  *
- * @example
+ * **Example** (Create experiment bundle)
+ *
  * ```ts
  * import { AgentEffectivenessExperimentBundle } from "@beep/repo-ai-metrics"
  *
@@ -1208,6 +1277,7 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
  * })
  * console.log(bundle.projectName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1240,13 +1310,15 @@ type AgentEffectivenessPhoenixSyncNewOptions = {
 /**
  * Input for syncing agent-effectiveness evidence to Phoenix.
  *
- * @example
+ * **Example** (Make dry-run sync input)
+ *
  * ```ts
  * import { AgentEffectivenessPhoenixSyncInput } from "@beep/repo-ai-metrics"
  *
  * const input = AgentEffectivenessPhoenixSyncInput.make({ dryRun: true })
  * console.log(input.dryRun)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1289,7 +1361,8 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
 /**
  * Result from a guarded Phoenix sync attempt.
  *
- * @example
+ * **Example** (Create Phoenix sync result)
+ *
  * ```ts
  * import { AgentEffectivenessPhoenixSyncResult } from "@beep/repo-ai-metrics"
  *
@@ -1308,6 +1381,7 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
  * })
  * console.log(result.mutationPolicy)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2123,12 +2197,8 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
 /**
  * Build the report-only Phase 1 agent-effectiveness doctor report.
  *
- * @effects
- * - Reads Phoenix health and GraphQL inventory unless `noPhoenix` disables the probe.
- * - Reads the local AI-metrics DuckDB file when derived storage exists.
- * - Reads the JSDoc worker-eval manifest or report from the selected path.
- * - Captures the current clock time for the report timestamp.
- * @example
+ * **Example** (Build doctor report effect)
+ *
  * ```ts
  * import { AgentEffectivenessDoctorInput, makeAgentEffectivenessDoctorReport } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -2138,6 +2208,12 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
  * const status = Effect.map(program, (report) => report.summary.status)
  * console.log(status)
  * ```
+ *
+ * @effects
+ * - Reads Phoenix health and GraphQL inventory unless `noPhoenix` disables the probe.
+ * - Reads the local AI-metrics DuckDB file when derived storage exists.
+ * - Reads the JSDoc worker-eval manifest or report from the selected path.
+ * - Captures the current clock time for the report timestamp.
  * @category services
  * @since 0.0.0
  */
@@ -2469,11 +2545,8 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
 /**
  * Build a sanitized local-only annotation plan.
  *
- * @effects
- * - Builds the doctor report, including its Phoenix, DuckDB, worker-eval, and clock reads.
- * - Reads outcome-label and benchmark-run rows from derived DuckDB storage when available.
- * - Performs no Phoenix mutation; the result is a local dry-run annotation plan.
- * @example
+ * **Example** (Build annotation plan effect)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlanInput,
@@ -2490,6 +2563,11 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
  * const annotationCount = Effect.map(program, (plan) => plan.annotations.length)
  * console.log(annotationCount)
  * ```
+ *
+ * @effects
+ * - Builds the doctor report, including its Phoenix, DuckDB, worker-eval, and clock reads.
+ * - Reads outcome-label and benchmark-run rows from derived DuckDB storage when available.
+ * - Performs no Phoenix mutation; the result is a local dry-run annotation plan.
  * @category services
  * @since 0.0.0
  */
@@ -2693,9 +2771,8 @@ const jsdocWorkerDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffect
 /**
  * Build the Phoenix dataset bundle from a doctor report.
  *
- * @param doctor - Doctor report used to derive sanitized aggregate Phoenix datasets.
- * @returns Phoenix dataset bundle generated from the doctor report.
- * @example
+ * **Example** (Derive dataset bundle)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessDoctorInput,
@@ -2710,6 +2787,9 @@ const jsdocWorkerDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffect
  * const datasetNames = Effect.map(program, (bundle) => bundle.datasets.map((dataset) => dataset.name))
  * console.log(datasetNames)
  * ```
+ *
+ * @param doctor - Doctor report used to derive sanitized aggregate Phoenix datasets.
+ * @returns Phoenix dataset bundle generated from the doctor report.
  * @category services
  * @since 0.0.0
  */
@@ -2732,9 +2812,8 @@ export const makeAgentEffectivenessDatasetBundle: (
 /**
  * Build the repo-owned Phoenix prompt bundle.
  *
- * @param generatedAt - ISO timestamp to assign to the generated prompt bundle.
- * @returns Repo-owned Phoenix prompt bundle for agent-effectiveness review.
- * @example
+ * **Example** (Build prompt bundle)
+ *
  * ```ts
  * import { makeAgentEffectivenessPromptBundle } from "@beep/repo-ai-metrics"
  *
@@ -2742,6 +2821,9 @@ export const makeAgentEffectivenessDatasetBundle: (
  * const promptNames = bundle.prompts.map((prompt) => prompt.name)
  * console.log(promptNames)
  * ```
+ *
+ * @param generatedAt - ISO timestamp to assign to the generated prompt bundle.
+ * @returns Repo-owned Phoenix prompt bundle for agent-effectiveness review.
  * @category services
  * @since 0.0.0
  */
@@ -2789,9 +2871,8 @@ export const makeAgentEffectivenessPromptBundle: (generatedAt: string) => AgentE
 /**
  * Build deterministic experiment specs from a dataset bundle.
  *
- * @param datasetBundle - Dataset bundle used to derive one experiment per dataset.
- * @returns Deterministic Phoenix experiment bundle for the supplied datasets.
- * @example
+ * **Example** (Derive experiment bundle)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessDatasetBundle,
@@ -2807,6 +2888,9 @@ export const makeAgentEffectivenessPromptBundle: (generatedAt: string) => AgentE
  * const experimentBundle = makeAgentEffectivenessExperimentBundle(datasetBundle)
  * console.log(experimentBundle.experiments.length)
  * ```
+ *
+ * @param datasetBundle - Dataset bundle used to derive one experiment per dataset.
+ * @returns Deterministic Phoenix experiment bundle for the supplied datasets.
  * @category services
  * @since 0.0.0
  */
@@ -2996,14 +3080,13 @@ const unconfirmedSyncResult = ({
 /**
  * Sync agent-effectiveness datasets, prompts, experiments, and resolved annotations to Phoenix.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This function defaults to dry-run. Live writes require
  * {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}.
- * @effects
- * - In dry-run mode, reads local doctor and annotation evidence but does not mutate Phoenix.
- * - In confirmed live mode, creates or appends Phoenix datasets, creates prompts and experiments, and writes valid trace/session/span annotations.
- * - Blocks live writes unless the confirmation token matches {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}.
- * @example
+ *
+ * **Example** (Dry-run Phoenix sync)
+ *
  * ```ts
  * import { AgentEffectivenessPhoenixSyncInput, syncAgentEffectivenessPhoenix } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -3013,6 +3096,11 @@ const unconfirmedSyncResult = ({
  * const mutationPolicy = Effect.map(program, (result) => result.mutationPolicy)
  * console.log(mutationPolicy)
  * ```
+ *
+ * @effects
+ * - In dry-run mode, reads local doctor and annotation evidence but does not mutate Phoenix.
+ * - In confirmed live mode, creates or appends Phoenix datasets, creates prompts and experiments, and writes valid trace/session/span annotations.
+ * - Blocks live writes unless the confirmation token matches {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}.
  * @category services
  * @since 0.0.0
  */
@@ -3365,9 +3453,8 @@ const duplicateAnnotationIdFindings = (
 /**
  * Check a local annotation plan for Phase 1 privacy and schema safety.
  *
- * @param plan - Local annotation plan to inspect for private or forbidden payload fields.
- * @returns Report-only validation summary that never mutates Phoenix or local evidence.
- * @example
+ * **Example** (Check annotation plan safety)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlanInput,
@@ -3382,6 +3469,9 @@ const duplicateAnnotationIdFindings = (
  * const status = Effect.map(program, (report) => report.status)
  * console.log(status)
  * ```
+ *
+ * @param plan - Local annotation plan to inspect for private or forbidden payload fields.
+ * @returns Report-only validation summary that never mutates Phoenix or local evidence.
  * @category services
  * @since 0.0.0
  */
@@ -3407,7 +3497,8 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
 /**
  * Encode a doctor report as JSON.
  *
- * @example
+ * **Example** (Encode doctor report JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessDoctorInput,
@@ -3422,6 +3513,7 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
  * const hasSchemaVersion = Effect.map(program, (json) => json.includes("agent-effectiveness-doctor/v1"))
  * console.log(hasSchemaVersion)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3442,7 +3534,8 @@ export const agentEffectivenessDoctorReportToJson: (
 /**
  * Encode an annotation plan as JSON.
  *
- * @example
+ * **Example** (Encode annotation plan JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlanInput,
@@ -3457,6 +3550,7 @@ export const agentEffectivenessDoctorReportToJson: (
  * const hasMutationPolicy = Effect.map(program, (json) => json.includes("local-only-no-phoenix-mutation"))
  * console.log(hasMutationPolicy)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3477,7 +3571,8 @@ export const agentEffectivenessAnnotationPlanToJson: (
 /**
  * Encode an annotation-check report as JSON.
  *
- * @example
+ * **Example** (Encode check report JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationCheckReport,
@@ -3495,6 +3590,7 @@ export const agentEffectivenessAnnotationPlanToJson: (
  * const json = Effect.runPromise(agentEffectivenessAnnotationCheckReportToJson(report))
  * console.log(json)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3516,7 +3612,8 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
 /**
  * Encode a dataset bundle as JSON.
  *
- * @example
+ * **Example** (Encode dataset bundle JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessDatasetBundle,
@@ -3533,6 +3630,7 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
  * const json = Effect.runPromise(agentEffectivenessDatasetBundleToJson(bundle))
  * console.log(json)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3553,7 +3651,8 @@ export const agentEffectivenessDatasetBundleToJson: (
 /**
  * Encode a prompt bundle as JSON.
  *
- * @example
+ * **Example** (Encode prompt bundle JSON)
+ *
  * ```ts
  * import {
  *   agentEffectivenessPromptBundleToJson,
@@ -3565,6 +3664,7 @@ export const agentEffectivenessDatasetBundleToJson: (
  * const json = Effect.runPromise(agentEffectivenessPromptBundleToJson(bundle))
  * console.log(json)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3585,7 +3685,8 @@ export const agentEffectivenessPromptBundleToJson: (
 /**
  * Encode an experiment bundle as JSON.
  *
- * @example
+ * **Example** (Encode experiment bundle JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessDatasetBundle,
@@ -3604,6 +3705,7 @@ export const agentEffectivenessPromptBundleToJson: (
  * const json = Effect.runPromise(agentEffectivenessExperimentBundleToJson(bundle))
  * console.log(json)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -3624,7 +3726,8 @@ export const agentEffectivenessExperimentBundleToJson: (
 /**
  * Encode a Phoenix sync result as JSON.
  *
- * @example
+ * **Example** (Encode sync result JSON)
+ *
  * ```ts
  * import {
  *   AgentEffectivenessPhoenixSyncResult,
@@ -3648,6 +3751,7 @@ export const agentEffectivenessExperimentBundleToJson: (
  * const json = Effect.runPromise(agentEffectivenessPhoenixSyncResultToJson(result))
  * console.log(json)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */

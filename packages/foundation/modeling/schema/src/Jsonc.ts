@@ -17,7 +17,8 @@ const $I = $SchemaId.create("Jsonc");
 /**
  * Typed representation of a single JSONC parse diagnostic produced by `jsonc-parser`.
  *
- * @example
+ * **Example** (Decode parse diagnostic object)
+ *
  * ```ts
  * import { JsoncParseDiagnostic } from "@beep/schema/Jsonc"
  * import * as S from "effect/Schema"
@@ -74,7 +75,8 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
  * Schema transformation that decodes a JSONC string (JSON with comments and
  * trailing commas) into an unknown parsed value.
  *
- * @example
+ * **Example** (Decode JSONC text to unknown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -104,7 +106,8 @@ export const JsoncTextToUnknown = S.String.pipe(
 /**
  * {@inheritDoc JsoncTextToUnknown}
  *
- * @example
+ * **Example** (Typed JSONC decode result)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -124,7 +127,8 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  * Builds a decoder that parses JSONC text and then decodes the result through a
  * target schema.
  *
- * @example
+ * **Example** (Decode JSONC into schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

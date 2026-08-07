@@ -8,7 +8,8 @@
 /**
  * Package version for `@beep/phoenix`.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/phoenix"
  *
@@ -23,7 +24,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * Runtime configuration exports for the Phoenix driver.
  *
- * @example
+ * **Example** (Make empty Phoenix config)
+ *
  * ```ts
  * import { PhoenixConfigInput } from "@beep/phoenix"
  *
@@ -38,7 +40,8 @@ export * from "./Phoenix.config.ts";
 /**
  * Error exports for the Phoenix driver.
  *
- * @example
+ * **Example** (Create operation Phoenix error)
+ *
  * ```ts
  * import { PhoenixError } from "@beep/phoenix"
  *
@@ -53,7 +56,8 @@ export * from "./Phoenix.errors.ts";
 /**
  * Model exports for the Phoenix driver.
  *
- * @example
+ * **Example** (Make dataset name selector)
+ *
  * ```ts
  * import { PhoenixDatasetSelector } from "@beep/phoenix"
  *
@@ -68,7 +72,8 @@ export * from "./Phoenix.models.ts";
 /**
  * Service exports for the Phoenix driver.
  *
- * @example
+ * **Example** (Access Phoenix service layer)
+ *
  * ```ts
  * import { Phoenix } from "@beep/phoenix"
  *

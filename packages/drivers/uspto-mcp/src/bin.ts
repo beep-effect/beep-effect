@@ -18,15 +18,16 @@ import { makeServerLayer, UsptoMcpServerConfig } from "./Server.ts";
 /**
  * The server identity advertised to MCP clients by this entrypoint.
  *
- * @example
+ * **Example** (Log server config name)
+ *
  * ```ts
  * import { SERVER_CONFIG } from "@beep/uspto-mcp/bin"
  *
  * console.log(SERVER_CONFIG.name)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const SERVER_CONFIG = UsptoMcpServerConfig.make({ name: "beep-uspto", version: "0.0.0" });
 
@@ -34,15 +35,16 @@ export const SERVER_CONFIG = UsptoMcpServerConfig.make({ name: "beep-uspto", ver
  * Launch the stdio MCP server. Kept behind an explicit function so importing
  * `@beep/uspto-mcp/bin` for metadata never starts a long-lived stdio process.
  *
- * @example
+ * **Example** (Check run function type)
+ *
  * ```ts
  * import { runUsptoMcpServer } from "@beep/uspto-mcp/bin"
  *
  * console.log(typeof runUsptoMcpServer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const runUsptoMcpServer = (): void => {
   Layer.launch(makeServerLayer(SERVER_CONFIG).pipe(Layer.provide(NodeStdio.layer))).pipe(NodeRuntime.runMain);

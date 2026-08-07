@@ -12,22 +12,24 @@ const $I = $SchemaId.create("DomDragEvent");
 /**
  * Type guard for DragEvent.
  *
- * @example
+ * **Example** (Guard a DragEvent)
+ *
  * ```ts
  * import { isDragEvent } from "@beep/schema/DomDragEvent"
  *
  * console.log(isDragEvent(new DragEvent("dragstart")))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isDragEvent = (u: unknown): u is DragEvent => u instanceof DragEvent;
 
 /**
  * A DragEvent.
  *
- * @example
+ * **Example** (Decode a DragEvent)
+ *
  * ```ts
  * import { DOMDragEvent } from "@beep/schema/DomDragEvent"
  * import * as S from "effect/Schema"
@@ -36,8 +38,8 @@ export const isDragEvent = (u: unknown): u is DragEvent => u instanceof DragEven
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMDragEvent = S.declare(isDragEvent).pipe(
   $I.annoteSchema("DOMDragEvent", {
@@ -48,7 +50,8 @@ export const DOMDragEvent = S.declare(isDragEvent).pipe(
 /**
  * Type for {@link DOMDragEvent}.
  *
- * @example
+ * **Example** (Annotate decoded DragEvent)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DOMDragEvent } from "@beep/schema/DomDragEvent"
@@ -57,8 +60,8 @@ export const DOMDragEvent = S.declare(isDragEvent).pipe(
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DOMDragEvent = typeof DOMDragEvent.Type;
 

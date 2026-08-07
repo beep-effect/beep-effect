@@ -16,10 +16,13 @@ const $I = $LawPracticeDomainId.create("entities/Claim/Claim.model");
 /**
  * Patent claim entity for a single numbered claim under a patent asset.
  *
+ * **Details**
+ *
  * Carries the claim number, full claim text, and independent/dependent marker
  * while linking back to the patent asset fixture that owns it.
  *
- * @example
+ * **Example** (Decode a Claim entity)
+ *
  * ```ts
  * import { Claim } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

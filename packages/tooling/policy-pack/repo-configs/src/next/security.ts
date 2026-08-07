@@ -8,12 +8,14 @@
 /**
  * Secure header helpers for shared Next.js configuration.
  *
- * @example
+ * **Example** (Basic withSecureHeaders usage)
+ *
  * ```ts
  * import { withSecureHeaders } from "@beep/repo-configs/next/security"
  * const config = withSecureHeaders({ reactStrictMode: true })
  * console.log(config)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

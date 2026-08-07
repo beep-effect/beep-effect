@@ -50,15 +50,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * credentials, etc. Your browser will usually produce a page with a particular
  * error code.
  *
- * @example
+ * **Example** (Log pairs length)
+ *
  * ```ts
  * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus4XX.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatus4XX = MappedLiteralKit([
   ["BadRequest", BadRequest.literal],
@@ -104,7 +105,8 @@ export const HttpStatus4XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus4XX} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode Encoded BadRequest)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
@@ -130,7 +132,8 @@ export declare namespace HttpStatus4XX {
 /**
  * {@inheritDoc HttpStatus4XX}
  *
- * @example
+ * **Example** (Type-annotate status code)
+ *
  * ```ts
  * import type { HttpStatus4XX } from "@beep/schema/HttpStatus"
  *
@@ -138,7 +141,7 @@ export declare namespace HttpStatus4XX {
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type HttpStatus4XX = typeof HttpStatus4XX.Type;

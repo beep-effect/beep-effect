@@ -9,9 +9,8 @@
 /**
  * StateRuleCitation model exports.
  *
- * **Example**
+ * **Example** (Importing StateRuleCitation exports)
  *
- * @example
  * ```ts
  * import { StateRuleCitation } from "@beep/law-practice-domain/values";
  * ```

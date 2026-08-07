@@ -22,10 +22,13 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
 /**
  * Number of UTF-16 code units in each nominal source-text page.
  *
+ * **Details**
+ *
  * Page boundaries move back by one code unit when the nominal boundary would
  * split a surrogate pair.
  *
- * @example
+ * **Example** (Compute nominal page count)
+ *
  * ```ts
  * import { SOURCE_TEXT_PAGE_CODE_UNITS } from "@beep/file-processing/SourceText"
  *
@@ -42,7 +45,8 @@ export const SOURCE_TEXT_PAGE_CODE_UNITS = 65_536;
 /**
  * Stable extractor name for canonical UTF-8 text and Markdown sources.
  *
- * @example
+ * **Example** (Build extractor identity string)
+ *
  * ```ts
  * import {
  *   UTF8_SOURCE_TEXT_EXTRACTOR_NAME,
@@ -62,7 +66,8 @@ export const UTF8_SOURCE_TEXT_EXTRACTOR_NAME = "utf8";
 /**
  * Version of the strict UTF-8 decoding contract used for source text.
  *
- * @example
+ * **Example** (Build extractor identity string)
+ *
  * ```ts
  * import {
  *   UTF8_SOURCE_TEXT_EXTRACTOR_NAME,
@@ -82,7 +87,8 @@ export const UTF8_SOURCE_TEXT_EXTRACTOR_VERSION = "1";
 /**
  * Failure reasons exposed by source-text resolution and paging.
  *
- * @example
+ * **Example** (Check reason membership)
+ *
  * ```ts
  * import { SourceTextResolverErrorReason } from "@beep/file-processing/SourceText"
  *
@@ -111,7 +117,8 @@ export const SourceTextResolverErrorReason = LiteralKit([
 /**
  * Type for {@link SourceTextResolverErrorReason}.
  *
- * @example
+ * **Example** (Type a failure reason)
+ *
  * ```ts
  * import type { SourceTextResolverErrorReason } from "@beep/file-processing/SourceText"
  *
@@ -127,7 +134,8 @@ export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason
 /**
  * Typed, fail-closed source-text resolution failure.
  *
- * @example
+ * **Example** (Create source-unavailable error)
+ *
  * ```ts
  * import { SourceTextResolverError } from "@beep/file-processing/SourceText"
  *
@@ -152,7 +160,8 @@ export class SourceTextResolverError extends TaggedErrorClass<SourceTextResolver
   /**
    * Construct a source-text resolver failure.
    *
-   * @example
+   * **Example** (Create page-out-of-range error)
+   *
    * ```ts
    * import { SourceTextResolverError } from "@beep/file-processing/SourceText"
    *
@@ -178,7 +187,8 @@ export class SourceTextResolverError extends TaggedErrorClass<SourceTextResolver
 /**
  * Request to resolve the complete canonical text pinned by a provenance identity.
  *
- * @example
+ * **Example** (Inspect identity field)
+ *
  * ```ts
  * import { ResolveSourceTextRequest } from "@beep/file-processing/SourceText"
  *
@@ -200,7 +210,8 @@ export class ResolveSourceTextRequest extends S.Class<ResolveSourceTextRequest>(
 /**
  * Complete canonical source text retained inside the server boundary.
  *
- * @example
+ * **Example** (Inspect text field)
+ *
  * ```ts
  * import { ResolvedSourceText } from "@beep/file-processing/SourceText"
  *
@@ -317,12 +328,14 @@ const SourceTextPageSchema = SourceTextPageStruct.mapFields(identity)
 /**
  * Bounded, surrogate-safe page from a complete canonical source.
  *
- * @remarks
+ * **Details**
+ *
  * Offsets are absolute half-open UTF-16 code-unit offsets into the complete
  * canonical text. Adjacent pages are contiguous even when a nominal boundary
  * must move to avoid splitting a surrogate pair.
  *
- * @example
+ * **Example** (Inspect startOffset field)
+ *
  * ```ts
  * import { SourceTextPage } from "@beep/file-processing/SourceText"
  *
@@ -342,7 +355,8 @@ export class SourceTextPage extends S.Class<SourceTextPage>($I`SourceTextPage`)(
 /**
  * Service shape implemented by authority-owning source providers.
  *
- * @example
+ * **Example** (Select resolver method key)
+ *
  * ```ts
  * import type { SourceTextResolverShape } from "@beep/file-processing/SourceText"
  *
@@ -361,7 +375,8 @@ export interface SourceTextResolverShape {
 /**
  * Runtime-neutral port for resolving verified canonical source text.
  *
- * @example
+ * **Example** (Read service key)
+ *
  * ```ts
  * import { SourceTextResolver } from "@beep/file-processing/SourceText"
  *
@@ -439,12 +454,14 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
 /**
  * Slice a complete canonical source into a bounded, surrogate-safe page.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Empty sources have one empty page at index zero. A page index outside the
  * computed page count fails through {@link SourceTextResolverError}; text is
  * never truncated or fuzzy-relocated.
  *
- * @example
+ * **Example** (Load first page)
+ *
  * ```ts
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
@@ -472,12 +489,14 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  * Locate the surrogate-safe page containing one absolute UTF-16 code-unit
  * offset.
  *
- * @remarks
+ * **Details**
+ *
  * This is the authoritative way to open an anchor's first page. Nominal
  * division by {@link SOURCE_TEXT_PAGE_CODE_UNITS} is insufficient because an
  * earlier page boundary can move backward to avoid splitting a surrogate pair.
  *
- * @example
+ * **Example** (Load page for offset)
+ *
  * ```ts
  * import {
  *   pageSourceTextContainingOffset

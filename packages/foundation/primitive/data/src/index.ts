@@ -12,7 +12,8 @@
 /**
  * Blockchain network metadata namespace.
  *
- * @example
+ * **Example** (Ethereum network ticker)
+ *
  * ```typescript
  * import { Blockchain } from "@beep/data"
  *
@@ -26,7 +27,8 @@ export * as Blockchain from "./Blockchain.ts";
 /**
  * Calendar constants namespace.
  *
- * @example
+ * **Example** (ISO month value lookup)
+ *
  * ```typescript
  * import { Calendar } from "@beep/data"
  *
@@ -40,7 +42,8 @@ export * as Calendar from "./Calendar.ts";
 /**
  * ISO 4217 currency constants namespace.
  *
- * @example
+ * **Example** (USD currency name lookup)
+ *
  * ```typescript
  * import { CurrencyCodes } from "@beep/data"
  *
@@ -54,7 +57,8 @@ export * as CurrencyCodes from "./CurrencyCodes.ts";
 /**
  * Keyboard shortcut constants namespace.
  *
- * @example
+ * **Example** (Find copy keyboard shortcut)
+ *
  * ```typescript
  * import { KeyboardShortcuts } from "@beep/data"
  *
@@ -72,7 +76,8 @@ export * as KeyboardShortcuts from "./KeyboardShortcuts.ts";
 /**
  * MIME type lookup utilities namespace.
  *
- * @example
+ * **Example** (Lookup JSON MIME type)
+ *
  * ```typescript
  * import { MimeTypesData } from "@beep/data"
  *
@@ -86,7 +91,8 @@ export * as MimeTypesData from "./MimeTypes.ts";
 /**
  * Unicode CLDR territory and continent constants namespace.
  *
- * @example
+ * **Example** (US territory name lookup)
+ *
  * ```typescript
  * import { Territories } from "@beep/data"
  *
@@ -100,7 +106,8 @@ export * as Territories from "./Territories.ts";
 /**
  * IANA timezone constants namespace.
  *
- * @example
+ * **Example** (UTC timezone name lookup)
+ *
  * ```typescript
  * import { Timezones } from "@beep/data"
  *

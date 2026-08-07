@@ -12,13 +12,16 @@ import { AuthSnapshot, ProviderKind } from "./ProviderInstance.values.ts";
 /**
  * User-facing guidance for one provider kind and auth-probe outcome.
  *
+ * **Details**
+ *
  * Total and exhaustive: dispatches on the {@link AuthSnapshot} `status` tag via
  * the schema-derived match, then on {@link ProviderKind} via its LiteralKit
  * `$match`, so adding a snapshot variant or provider kind is a type error
  * until guidance exists for it. Unauthenticated instances are told the exact
  * login command; failed probes are pointed at the binary path.
  *
- * @example
+ * **Example** (Unauthenticated Claude login guidance)
+ *
  * ```ts
  * import { loginGuidance, UnauthenticatedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"

@@ -40,7 +40,8 @@ type WinkCustomEntityRecord = {
 /**
  * Branded runtime identifier for one initialized wink engine instance.
  *
- * @example
+ * **Example** (Create branded instance id)
+ *
  * ```ts
  * import { InstanceId } from "@beep/wink"
  *
@@ -62,7 +63,8 @@ export const InstanceId = S.NonEmptyString.pipe(
 /**
  * Runtime TypeScript type produced by the {@link InstanceId} schema.
  *
- * @example
+ * **Example** (Type annotated instance id)
+ *
  * ```ts
  * import { InstanceId } from "@beep/wink"
  * import type { InstanceId as InstanceIdType } from "@beep/wink"
@@ -79,7 +81,8 @@ export type InstanceId = typeof InstanceId.Type;
 /**
  * Serializable metadata for the current wink runtime and learned entity set.
  *
- * @example
+ * **Example** (Build serializable engine state)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { InstanceId, WinkEngineState } from "@beep/wink"
@@ -108,12 +111,14 @@ export class WinkEngineState extends S.Class<WinkEngineState>($I`WinkEngineState
 /**
  * In-memory state held by the live wink engine ref.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This type intentionally includes the live `wink-nlp` runtime object and is
  * therefore not serializable. Use {@link WinkEngineState} for metadata that can
  * cross process or persistence boundaries.
  *
- * @example
+ * **Example** (Read live runtime state)
+ *
  * ```ts
  * import { Effect, Ref } from "effect"
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
@@ -266,7 +271,8 @@ const makeWinkEngine = Effect.gen(function* () {
 /**
  * Service tag for direct access to the loaded `wink-nlp` runtime.
  *
- * @example
+ * **Example** (Count tokens via service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
@@ -287,7 +293,8 @@ export class WinkEngine extends Context.Service<WinkEngine, WinkEngineShape>()($
 /**
  * Live layer that loads `wink-nlp` with the bundled English lite web model.
  *
- * @example
+ * **Example** (Provide live engine layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"

@@ -15,6 +15,8 @@ import * as S from "effect/Schema";
 /**
  * Build a schema that decodes delimited text into a readonly string array.
  *
+ * **Details**
+ *
  * This helper follows the manual v4 migration pattern described in the Effect
  * Schema migration guide. It is not the old v3 `Schema.split` API. Instead, it
  * is a local utility that:
@@ -26,7 +28,8 @@ import * as S from "effect/Schema";
  * The transformation preserves ordinary split and join semantics. It does not
  * trim entries, drop empty segments, or normalize whitespace.
  *
- * @example
+ * **Example** (Splitting delimited text)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { split } from "@beep/schema/SchemaUtils/split";

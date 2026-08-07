@@ -34,7 +34,8 @@ type TaggedErrorInputWithoutTag<Input> = Input extends void ? Input : Omit<Input
 /**
  * Input type for constructing a tagged error, omitting the discriminator `_tag`.
  *
- * @example
+ * **Example** (Construct error without tag)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TaggedErrorClass, type TaggedErrorNewInput } from "@beep/schema/TaggedErrorClass"
@@ -61,7 +62,8 @@ export type TaggedErrorNewInput<ErrorClass extends TaggedErrorClassInput> = Tagg
 /**
  * Tagged error class type derived from a fields object.
  *
- * @example
+ * **Example** (Derive class from fields)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TaggedErrorClass, type TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass"
@@ -95,7 +97,8 @@ export type TaggedErrorClassFromFields<
 /**
  * Tagged error class type derived from a struct schema.
  *
- * @example
+ * **Example** (Derive class from schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TaggedErrorClass, type TaggedErrorClassFromSchema } from "@beep/schema/TaggedErrorClass"
@@ -127,7 +130,8 @@ export type TaggedErrorClassFromSchema<
 /**
  * Factory interface returned by {@link TaggedErrorClass} that accepts a tag, fields, and optional annotations.
  *
- * @example
+ * **Example** (Reuse factory for same shape)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TaggedErrorClass, type TaggedErrorClassFactory } from "@beep/schema/TaggedErrorClass"
@@ -167,7 +171,8 @@ export interface TaggedErrorClassFactory<Self, Brand = {}> {
 /**
  * Callable constructor type for building tagged error classes.
  *
- * @example
+ * **Example** (Assign constructor type alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TaggedErrorClass, type TaggedErrorClassConstructor } from "@beep/schema/TaggedErrorClass"
@@ -294,12 +299,15 @@ const preserveFieldEquivalenceOnExtend = (errorClass: UnsafeTaggedErrorClass): U
 /**
  * Create a tagged error class with `_tag` discrimination and constructor input inferred from the schema.
  *
+ * **Details**
+ *
  * Delegates class construction and extension to `S.TaggedErrorClass`. The
  * local delta is a declared-field equivalence fallback that ignores transient
  * `Error` metadata, follows recursive `extend(...)` calls, and yields to an
  * explicit caller-supplied `toEquivalence` annotation.
  *
- * @example
+ * **Example** (Fail Effect with tagged error)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
@@ -317,7 +325,8 @@ const preserveFieldEquivalenceOnExtend = (errorClass: UnsafeTaggedErrorClass): U
  * console.log(exit._tag)
  * ```
  *
- * @example
+ * **Example** (Catch into tagged DbError)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"

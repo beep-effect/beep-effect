@@ -37,7 +37,8 @@ type XAiErrorOptionsInput = {
 /**
  * Technical error reasons emitted by the xAI driver.
  *
- * @example
+ * **Example** (Assign response status reason)
+ *
  * ```ts
  * import type { XAiErrorReason } from "@beep/xai"
  *
@@ -62,7 +63,8 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
 /**
  * Type for {@link XAiErrorReason}.
  *
- * @example
+ * **Example** (Assign transport reason type)
+ *
  * ```ts
  * import type { XAiErrorReason } from "@beep/xai"
  *
@@ -78,7 +80,8 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
 /**
  * Technical failure raised by the xAI driver boundary.
  *
- * @example
+ * **Example** (Create error from descriptor)
+ *
  * ```ts
  * import { XAiError, XAI_ENDPOINTS } from "@beep/xai"
  *
@@ -107,7 +110,8 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
   /**
    * Create a driver error scoped to a documented xAI endpoint.
    *
-   * @example
+   * **Example** (Create endpoint scoped error)
+   *
    * ```ts
    * import { XAiError, XAI_ENDPOINTS } from "@beep/xai"
    *
@@ -138,7 +142,8 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
   /**
    * Create a configuration error before a specific endpoint exists.
    *
-   * @example
+   * **Example** (Create configuration error)
+   *
    * ```ts
    * import { XAiError } from "@beep/xai"
    *
@@ -200,7 +205,8 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
 /**
  * Options used when constructing xAI driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { XAiErrorOptions } from "@beep/xai"
  * import * as O from "effect/Option"

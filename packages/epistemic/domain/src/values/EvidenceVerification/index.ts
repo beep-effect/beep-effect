@@ -8,7 +8,8 @@
 /**
  * Evidence-verification manifestation schemas and helpers.
  *
- * @example
+ * **Example** (Validate manifestation key)
+ *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
  *

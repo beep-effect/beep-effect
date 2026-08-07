@@ -76,7 +76,8 @@ const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({
  * context onto rpc envelopes; absent ⇒ {@link Layer.empty}, so the exporter is
  * opt-in and dev/tests without a collector are unaffected.
  *
- * @example
+ * **Example** (Verify is a Layer)
+ *
  * ```ts
  * import { ClientObservabilityLive } from "@beep/agents-client"
  * import { Layer } from "effect"

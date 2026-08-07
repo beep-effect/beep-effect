@@ -497,7 +497,8 @@ const boundariesCommand = Command.make(
 /**
  * Fallow quality-tooling command group.
  *
- * @example
+ * **Example** (Run fallow command group)
+ *
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
  * import { Command } from "effect/unstable/cli"
@@ -506,6 +507,7 @@ const boundariesCommand = Command.make(
  * const run = Command.run(fallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

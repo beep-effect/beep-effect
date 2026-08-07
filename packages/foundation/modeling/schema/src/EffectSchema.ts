@@ -33,10 +33,13 @@ const effectAnnotations = {
 /**
  * Type guard that checks whether a value is an Effect runtime value.
  *
+ * **Details**
+ *
  * This reuses {@link Effect.isEffect}, the canonical Effect guard, so schema
  * validation stays aligned with the library's own effect detection semantics.
  *
- * @example
+ * **Example** (Check Effect runtime values)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { isEffect } from "@beep/schema/EffectSchema"
@@ -51,7 +54,6 @@ const effectAnnotations = {
  * @returns Whether the value is an Effect runtime value.
  * @effects
  * Inspects the runtime value only; it does not execute the supplied Effect.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -62,7 +64,8 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
 /**
  * Declared schema for Effect runtime values.
  *
- * @example
+ * **Example** (Decode Effect runtime values)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -76,7 +79,6 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  *
  * @effects
  * Validates Effect runtime values without executing them.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -92,7 +94,8 @@ export const EffectSchema = <Success, Failure, Dependencies>(): AnnotatedSchema<
 /**
  * {@inheritDoc EffectSchema}
  *
- * @example
+ * **Example** (Annotate EffectSchema type parameters)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

@@ -34,7 +34,8 @@ declare module "@mui/material/FormControl" {
 /**
  * Text field theme theme value.
  *
- * @example
+ * **Example** (Import and log theme)
+ *
  * ```ts
  * import { textFieldTheme } from "@beep/ui/themes/components/text-field"
  *

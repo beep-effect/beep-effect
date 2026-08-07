@@ -13,7 +13,8 @@ const $I = $RepoUtilsId.create("Random");
 /**
  * Service that yields random byte arrays.
  *
- * @example
+ * **Example** (Default RandomValues service)
+ *
  * ```ts
  * import { RandomValues } from "@beep/utils/Random"
  *

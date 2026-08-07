@@ -80,10 +80,13 @@ class LegacyUrlPolicy extends S.Class<LegacyUrlPolicy>($I`UrlPolicy`)(
 /**
  * Legacy URL destination policy constructor for a rendering sink.
  *
+ * **Details**
+ *
  * An empty `allowedProtocols` list preserves compatibility behavior: active
  * script/data protocols are blocked, but other absolute protocols pass through.
  *
- * @example
+ * **Example** (Make HTTPS-only policy)
+ *
  * ```ts
  * import { UrlPolicy } from "@beep/md/Md.escape"
  *
@@ -101,7 +104,8 @@ export const UrlPolicy = LegacyUrlPolicy;
 /**
  * Instance type constructed by the deprecated {@link UrlPolicy} adapter.
  *
- * @example
+ * **Example** (Type constructed policy instance)
+ *
  * ```ts
  * import { UrlPolicy } from "@beep/md/Md.escape"
  * import type { UrlPolicy as UrlPolicyType } from "@beep/md/Md.escape"
@@ -138,7 +142,8 @@ const NormalizedUrlScheme = S.Trim.pipe(
  * Historical URL behavior: reject active script/data protocols while retaining
  * all other absolute and relative destinations.
  *
- * @example
+ * **Example** (Create compatibility policy)
+ *
  * ```ts
  * import { CompatibilityUrlPolicy } from "@beep/md/Md.escape"
  *
@@ -159,11 +164,14 @@ export class CompatibilityUrlPolicy extends S.TaggedClass<CompatibilityUrlPolicy
 /**
  * Explicit allow-list URL policy.
  *
+ * **Details**
+ *
  * Schemes decode to lowercase once at the schema boundary. Relative,
  * protocol-relative, and backslash-relative behavior is modeled independently
  * so callers cannot accidentally inherit browser-ambiguous behavior.
  *
- * @example
+ * **Example** (Make HTTPS allow-list)
+ *
  * ```ts
  * import { AllowListUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -199,7 +207,8 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
  * Canonical schema-owned URL policy used by Markdown and downstream editor
  * codecs.
  *
- * @example
+ * **Example** (Decode allow-list policy)
+ *
  * ```ts
  * import { UrlPolicySpec } from "@beep/md/Md.escape"
  * import { Result } from "effect"
@@ -222,7 +231,8 @@ export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicy
 /**
  * Type for {@link UrlPolicySpec}.
  *
- * @example
+ * **Example** (Assign compatibility policy type)
+ *
  * ```ts
  * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
  * import type { UrlPolicySpec } from "@beep/md/Md.escape"
@@ -239,7 +249,8 @@ export type UrlPolicySpec = typeof UrlPolicySpec.Type;
 /**
  * Canonical compatibility policy.
  *
- * @example
+ * **Example** (Read compatibility policy tag)
+ *
  * ```ts
  * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -254,7 +265,8 @@ export const CompatibilityUrlPolicySpec = CompatibilityUrlPolicy.make({});
 /**
  * Canonical browser-safe policy retained for editor links and images.
  *
- * @example
+ * **Example** (Include artifact scheme)
+ *
  * ```ts
  * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -273,7 +285,8 @@ export const BrowserSafeUrlPolicySpec = AllowListUrlPolicySpec.make({
 /**
  * Canonical product-agnostic web policy.
  *
- * @example
+ * **Example** (Exclude artifact scheme)
+ *
  * ```ts
  * import { StrictWebUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -292,7 +305,8 @@ export const StrictWebUrlPolicySpec = AllowListUrlPolicySpec.make({
 /**
  * Canonical user-authored link policy.
  *
- * @example
+ * **Example** (Include tel scheme)
+ *
  * ```ts
  * import { UserContentLinkUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -311,7 +325,8 @@ export const UserContentLinkUrlPolicySpec = AllowListUrlPolicySpec.make({
 /**
  * Canonical user-authored image policy.
  *
- * @example
+ * **Example** (List HTTPS image schemes)
+ *
  * ```ts
  * import { UserContentImageUrlPolicySpec } from "@beep/md/Md.escape"
  *
@@ -330,10 +345,13 @@ export const UserContentImageUrlPolicySpec = AllowListUrlPolicySpec.make({
 /**
  * Schema accepted while compatibility URL policy adapters remain supported.
  *
+ * **Details**
+ *
  * New code should decode or construct {@link UrlPolicySpec}; the legacy
  * {@link UrlPolicy} member keeps existing renderer options wire-compatible.
  *
- * @example
+ * **Example** (Decode compatibility policy input)
+ *
  * ```ts
  * import { UrlPolicyInput } from "@beep/md/Md.escape"
  * import { Result } from "effect"
@@ -356,7 +374,8 @@ export const UrlPolicyInput = S.Union([UrlPolicySpec, LegacyUrlPolicySchema]).pi
 /**
  * Type for {@link UrlPolicyInput}.
  *
- * @example
+ * **Example** (Type browser-safe policy input)
+ *
  * ```ts
  * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  * import type { UrlPolicyInput } from "@beep/md/Md.escape"
@@ -373,7 +392,8 @@ export type UrlPolicyInput = typeof UrlPolicyInput.Type;
 /**
  * Compatibility URL policy matching the historical `@beep/md` sanitizer.
  *
- * @example
+ * **Example** (Read allowRelative flag)
+ *
  * ```ts
  * import { CompatUrlPolicy } from "@beep/md/Md.escape"
  *
@@ -389,7 +409,8 @@ export const CompatUrlPolicy = LegacyUrlPolicySchema.make({});
 /**
  * Browser anchor/image URL policy for HTML sinks.
  *
- * @example
+ * **Example** (Include artifact protocol)
+ *
  * ```ts
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  *
@@ -409,7 +430,8 @@ export const BrowserSafeUrlPolicy = LegacyUrlPolicySchema.make({
 /**
  * Strict web URL policy for product-agnostic web output.
  *
- * @example
+ * **Example** (Exclude artifact protocol)
+ *
  * ```ts
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
  *
@@ -542,9 +564,12 @@ const normalizeLegacyScheme = flow(Str.trim, Str.toLowerCase, (scheme) =>
 /**
  * Normalizes a legacy policy adapter into the canonical tagged policy once.
  *
+ * **Details**
+ *
  * Empty legacy protocol arrays intentionally retain compatibility semantics.
  *
- * @example
+ * **Example** (Normalize legacy HTTPS policy)
+ *
  * ```ts
  * import { normalizeUrlPolicy, UrlPolicy } from "@beep/md/Md.escape"
  *
@@ -638,11 +663,14 @@ const urlSafetyCandidates = (destination: string): ReadonlyArray<string> => {
  * Evaluates a URL destination against a canonical or legacy policy without
  * mutating the destination.
  *
+ * **Details**
+ *
  * HTML character references and repeated percent encoding are evaluated as
  * alternate protocol candidates so downstream codecs share the same
  * browser-safe decision.
  *
- * @example
+ * **Example** (Allow and reject destinations)
+ *
  * ```ts
  * import { StrictWebUrlPolicySpec, isUrlDestinationAllowedWithPolicy } from "@beep/md/Md.escape"
  *
@@ -671,7 +699,8 @@ export const isUrlDestinationAllowedWithPolicy: {
 /**
  * Evaluates a URL destination using the historical compatibility policy.
  *
- * @example
+ * **Example** (Reject javascript destination)
+ *
  * ```ts
  * import { isUrlDestinationAllowed } from "@beep/md/Md.escape"
  *
@@ -686,7 +715,8 @@ export const isUrlDestinationAllowed = isUrlDestinationAllowedWithPolicy(Compati
 /**
  * Joins rendered Markdown blocks with one blank line between blocks.
  *
- * @example
+ * **Example** (Join title and body)
+ *
  * ```ts
  * import { joinBlocks } from "@beep/md/Md.escape"
  *
@@ -706,7 +736,8 @@ export const joinBlocks = (blocks: string | ReadonlyArray<string>): Markdown => 
 /**
  * Prefixes every line of text with the provided marker.
  *
- * @example
+ * **Example** (Prefix lines as blockquote)
+ *
  * ```ts
  * import { prefixLines } from "@beep/md/Md.escape"
  *
@@ -727,7 +758,8 @@ export const prefixLines: {
 /**
  * Escapes Markdown control characters in plain text.
  *
- * @example
+ * **Example** (Escape hash character)
+ *
  * ```ts
  * import { escapeMarkdownText } from "@beep/md/Md.escape"
  *
@@ -743,9 +775,12 @@ export const escapeMarkdownText = Str.replace(/([\\`*_{}[\]()#+\-.|<>~])/g, "\\$
 /**
  * Normalizes URL-like destinations before rendering Markdown or HTML output.
  *
+ * **Details**
+ *
  * Unsafe active protocols are replaced with a harmless fragment destination.
  *
- * @example
+ * **Example** (Replace javascript with fragment)
+ *
  * ```ts
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
@@ -766,9 +801,12 @@ export const sanitizeUrlDestinationWithPolicy: {
 /**
  * Normalizes URL-like destinations before rendering Markdown or HTML output.
  *
+ * **Details**
+ *
  * Unsafe active protocols are replaced with a harmless fragment destination.
  *
- * @example
+ * **Example** (Replace javascript with fragment)
+ *
  * ```ts
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
@@ -783,7 +821,8 @@ export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(Compatibi
 /**
  * Escapes Markdown link or image destination delimiters.
  *
- * @example
+ * **Example** (Escape parenthesis in destination)
+ *
  * ```ts
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
@@ -805,7 +844,8 @@ export const escapeMarkdownDestinationWithPolicy: {
  * Escapes Markdown link or image destination delimiters with the compatibility
  * URL policy.
  *
- * @example
+ * **Example** (Escape parenthesis in destination)
+ *
  * ```ts
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
@@ -824,7 +864,8 @@ export const escapeMarkdownDestination = flow(
 /**
  * Escapes a URL-like destination for use inside an HTML attribute.
  *
- * @example
+ * **Example** (Percent-encode space)
+ *
  * ```ts
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
@@ -844,7 +885,8 @@ export const escapeHtmlUrlAttributeWithPolicy: {
 /**
  * Escapes a URL for an HTML attribute using the browser-safe URL policy.
  *
- * @example
+ * **Example** (Escape ampersand in attribute)
+ *
  * ```ts
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
@@ -863,7 +905,8 @@ export const escapeHtmlUrlAttribute = flow(
 /**
  * Returns the length of the longest contiguous backtick run in text.
  *
- * @example
+ * **Example** (Measure longest backtick run)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  * import { maxBackticks } from "@beep/md/Md.escape"
@@ -890,7 +933,8 @@ export const maxBackticks: (text: string) => number = flow(
 /**
  * Builds a Markdown inline code span with an adaptive backtick fence.
  *
- * @example
+ * **Example** (Fence nested backtick code)
+ *
  * ```ts
  * import { renderInlineCode } from "@beep/md/Md.escape"
  *
@@ -921,10 +965,13 @@ export const renderInlineCode = (text: string): string => {
 /**
  * Builds a Markdown fenced code block with an adaptive backtick fence.
  *
+ * **Details**
+ *
  * The info string is folded through {@link CodeFenceLanguage} so only a single
  * safe language token is ever emitted; non-conforming values are dropped.
  *
- * @example
+ * **Example** (Render TypeScript code fence)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  * import { renderFencedCode } from "@beep/md/Md.escape"
@@ -950,7 +997,8 @@ export const renderFencedCode: {
 /**
  * Type guard for rendered string arrays accepted by {@link joinBlocks}.
  *
- * @example
+ * **Example** (Guard rendered string array)
+ *
  * ```ts
  * import { isStringArray } from "@beep/md/Md.escape"
  *

@@ -18,14 +18,15 @@ const $I = $LawPracticeDomainId.create("values/StringCitationGroup/StringCitatio
  * A string-citation group (#857): citations chained for one proposition
  * ("See A; B; C").
  *
+ * **Details**
+ *
  * Members reference all members (including self) by stable {@link CitationId} in
  * document order, so the group survives consumer filter/sort/map of the result
  * set. `signal` is the group's leading {@link CitationSignal}, modeled as
  * `Option<CitationSignal>` with a `None` constructor default.
  *
- * **Example**
+ * **Example** (Make string citation group)
  *
- * @example
  * ```ts
  * import { CitationId, StringCitationGroup } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
@@ -62,7 +63,8 @@ export class StringCitationGroup extends S.Class<StringCitationGroup>($I`StringC
 /**
  * Companion namespace for `StringCitationGroup`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { StringCitationGroup } from "@beep/law-practice-domain"
  *
@@ -76,9 +78,8 @@ export declare namespace StringCitationGroup {
   /**
    * Wire-encoded representation of a decoded {@link StringCitationGroup}.
    *
-   * **Example**
+   * **Example** (Wire Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { StringCitationGroup } from "@beep/law-practice-domain"
    *

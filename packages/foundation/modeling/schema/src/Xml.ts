@@ -68,7 +68,8 @@ const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: s
  * Schema transformation that decodes XML text into an unknown parsed document
  * using `fast-xml-parser`.
  *
- * @example
+ * **Example** (Decode XML text document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -98,7 +99,8 @@ export const XmlTextToUnknown = S.String.pipe(
 /**
  * {@inheritDoc XmlTextToUnknown}
  *
- * @example
+ * **Example** (Type decoded XML document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -118,7 +120,8 @@ export type XmlTextToUnknown = typeof XmlTextToUnknown.Type;
  * Builds a decoder that parses XML text and then decodes the result through a
  * target schema.
  *
- * @example
+ * **Example** (Decode XML into schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

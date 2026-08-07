@@ -14,7 +14,8 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.err
 /**
  * Operational failure raised while scoring a SkillOpt eval fixture.
  *
- * @example
+ * **Example** (Create eval scorer error)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScorerError } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
@@ -23,6 +24,7 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.err
  * })
  * console.log(error.file)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -53,13 +55,15 @@ export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEff
 /**
  * Namespace containing option types for {@link AgentEffectivenessEvalScorerError}.
  *
- * @example
+ * **Example** (Define scorer error options)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScorerError } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.errors"
  *
  * const options: AgentEffectivenessEvalScorerError.Options = { file: "fixtures/task" }
  * console.log(options.file) // "fixtures/task"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

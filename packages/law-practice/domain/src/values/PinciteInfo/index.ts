@@ -9,9 +9,8 @@
 /**
  * PinciteInfo model exports.
  *
- * **Example**
+ * **Example** (Import PinciteInfo export)
  *
- * @example
  * ```ts
  * import { PinciteInfo } from "@beep/law-practice-domain/values";
  * ```

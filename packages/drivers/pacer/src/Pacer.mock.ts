@@ -46,7 +46,8 @@ const decodeLogoutRequestJson = S.decodeUnknownEffect(S.fromJsonString(CsoLogout
 /**
  * Authentication behavior served by the PACER mock transport.
  *
- * @example
+ * **Example** (Log success auth option)
+ *
  * ```ts
  * import { PacerAuthOption } from "@beep/pacer"
  *
@@ -65,7 +66,8 @@ export const PacerAuthOption = LiteralKit(["success", "invalid"]).pipe(
 /**
  * Type for {@link PacerAuthOption}.
  *
- * @example
+ * **Example** (Assign invalid auth type)
+ *
  * ```ts
  * import { PacerAuthOption } from "@beep/pacer"
  * import type { PacerAuthOption as PacerAuthOptionType } from "@beep/pacer"
@@ -82,7 +84,8 @@ export type PacerAuthOption = typeof PacerAuthOption.Type;
 /**
  * Batch lifecycle behavior served by the PACER mock transport.
  *
- * @example
+ * **Example** (Log complete batch option)
+ *
  * ```ts
  * import { PacerBatchOption } from "@beep/pacer"
  *
@@ -101,7 +104,8 @@ export const PacerBatchOption = LiteralKit(["complete", "failed"]).pipe(
 /**
  * Type for {@link PacerBatchOption}.
  *
- * @example
+ * **Example** (Assign failed batch type)
+ *
  * ```ts
  * import { PacerBatchOption } from "@beep/pacer"
  * import type { PacerBatchOption as PacerBatchOptionType } from "@beep/pacer"
@@ -118,7 +122,8 @@ export type PacerBatchOption = typeof PacerBatchOption.Type;
 /**
  * Stored report deletion behavior served by the PACER mock transport.
  *
- * @example
+ * **Example** (Log success delete option)
+ *
  * ```ts
  * import { PacerDeleteReportOption } from "@beep/pacer"
  *
@@ -137,7 +142,8 @@ export const PacerDeleteReportOption = LiteralKit(["success", "failed"]).pipe(
 /**
  * Type for {@link PacerDeleteReportOption}.
  *
- * @example
+ * **Example** (Assign failed delete type)
+ *
  * ```ts
  * import { PacerDeleteReportOption } from "@beep/pacer"
  * import type { PacerDeleteReportOption as PacerDeleteReportOptionType } from "@beep/pacer"
@@ -154,7 +160,8 @@ export type PacerDeleteReportOption = typeof PacerDeleteReportOption.Type;
 /**
  * Logout behavior served by the PACER mock transport.
  *
- * @example
+ * **Example** (Log success logout option)
+ *
  * ```ts
  * import { PacerLogoutOption } from "@beep/pacer"
  *
@@ -173,7 +180,8 @@ export const PacerLogoutOption = LiteralKit(["success", "invalid"]).pipe(
 /**
  * Type for {@link PacerLogoutOption}.
  *
- * @example
+ * **Example** (Assign invalid logout type)
+ *
  * ```ts
  * import { PacerLogoutOption } from "@beep/pacer"
  * import type { PacerLogoutOption as PacerLogoutOptionType } from "@beep/pacer"
@@ -190,7 +198,8 @@ export type PacerLogoutOption = typeof PacerLogoutOption.Type;
 /**
  * Case search behavior served by the PACER mock transport.
  *
- * @example
+ * **Example** (Log invalid-parameter cases option)
+ *
  * ```ts
  * import { PacerCasesOption } from "@beep/pacer"
  *
@@ -209,7 +218,8 @@ export const PacerCasesOption = LiteralKit(["success", "invalid-parameter", "una
 /**
  * Type for {@link PacerCasesOption}.
  *
- * @example
+ * **Example** (Assign never-last cases type)
+ *
  * ```ts
  * import { PacerCasesOption } from "@beep/pacer"
  * import type { PacerCasesOption as PacerCasesOptionType } from "@beep/pacer"
@@ -226,7 +236,8 @@ export type PacerCasesOption = typeof PacerCasesOption.Type;
 /**
  * Selects which scenario the mock serves.
  *
- * @example
+ * **Example** (Make unauthorized mock options)
+ *
  * ```ts
  * import { PacerMockOptions } from "@beep/pacer"
  *
@@ -547,7 +558,8 @@ const mockResponse = (context: PacerMockRouteContext): Effect.Effect<HttpClientR
  * Build a mock `HttpClient` layer for the chosen scenario. The case pages and
  * party rows are sampled from their schemas once per layer.
  *
- * @example
+ * **Example** (Build success mock client)
+ *
  * ```ts
  * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
  *
@@ -573,7 +585,8 @@ export const makePacerMockHttpClient = (options: PacerMockOptionsInput = {}): La
 /**
  * The default happy-path mock `HttpClient` layer.
  *
- * @example
+ * **Example** (Use default mock client)
+ *
  * ```ts
  * import { makePacerLayer, mockPacerConfig, PacerMockHttpClient } from "@beep/pacer"
  *

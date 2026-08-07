@@ -8,13 +8,14 @@
 /**
  * Workspace domain entity namespaces.
  *
- * @example
+ * **Example** (Import entity namespaces)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -22,13 +23,14 @@ export * as Entities from "./entities/index.ts";
 /**
  * Root workspace domain entity exports.
  *
- * @example
+ * **Example** (Import root entity exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -36,13 +38,14 @@ export * from "./entities/index.ts";
 /**
  * Workspace domain value namespaces.
  *
- * @example
+ * **Example** (Import value namespaces)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -50,13 +53,14 @@ export * as Values from "./values/index.ts";
 /**
  * Root workspace domain value exports.
  *
- * @example
+ * **Example** (Import root value exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

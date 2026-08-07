@@ -12,7 +12,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
 /**
  * Interface for a binary UUID v4 field auto-generated on insert.
  *
- * @example
+ * **Example** (Branded UuidV4Insert field type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -23,8 +24,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface UuidV4Insert<B extends string>
   extends VariantSchema.Field<{
@@ -37,15 +38,16 @@ export interface UuidV4Insert<B extends string>
 /**
  * Schema for `Uint8Array` values, used as the base for binary UUID fields.
  *
- * @example
+ * **Example** (Log Uint8Array schema)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
  * console.log(Model.Uint8Array)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Uint8Array: S.instanceOf<Uint8Array<ArrayBuffer>> = S.Uint8Array as S.instanceOf<
   globalThis.Uint8Array<ArrayBuffer>
@@ -54,7 +56,8 @@ export const Uint8Array: S.instanceOf<Uint8Array<ArrayBuffer>> = S.Uint8Array as
 /**
  * Wrap a branded `Uint8Array` schema in an `Overridable` that generates a UUID v4 by default.
  *
- * @example
+ * **Example** (Overridable UUID with brand)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -65,8 +68,8 @@ export const Uint8Array: S.instanceOf<Uint8Array<ArrayBuffer>> = S.Uint8Array as
  * console.log(overridable)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const UuidV4WithGenerate = <B extends string>(
   schema: S.brand<S.instanceOf<Uint8Array<ArrayBuffer>>, B>
@@ -78,7 +81,8 @@ export const UuidV4WithGenerate = <B extends string>(
 /**
  * A field that represents a binary UUID v4 that is generated on inserts.
  *
- * @example
+ * **Example** (UuidV4Insert in model class)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -92,8 +96,8 @@ export const UuidV4WithGenerate = <B extends string>(
  * console.log(Blob.fields.id)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const UuidV4Insert = <const B extends string>(
   schema: S.brand<S.instanceOf<Uint8Array<ArrayBuffer>>, B>

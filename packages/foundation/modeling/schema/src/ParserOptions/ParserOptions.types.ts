@@ -14,7 +14,8 @@ const $I = $SchemaId.create("ParserOptions");
 /**
  * An array containing possibly nullish strings.
  *
- * @example
+ * **Example** (Decode header array)
+ *
  * ```ts
  * import { HeaderArray } from "../../src/ParserOptions/ParserOptions.types.ts"
  * import * as S from "effect/Schema"
@@ -38,7 +39,8 @@ export const HeaderArray = pipe(
 /**
  * {@inheritDoc HeaderArray}
  *
- * @example
+ * **Example** (Type header array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HeaderArray } from "../../src/ParserOptions/ParserOptions.types.ts"
@@ -56,7 +58,8 @@ export type HeaderArray = typeof HeaderArray.Type;
  * An identity function taking an array containing possibly nullish strings
  * and returning it.
  *
- * @example
+ * **Example** (Implement header transform)
+ *
  * ```ts
  * import { HeaderTransformFunction } from "../../src/ParserOptions/ParserOptions.types.ts"
  *
@@ -79,7 +82,8 @@ export const HeaderTransformFunction = Fn({
 /**
  * {@inheritDoc HeaderTransformFunction}
  *
- * @example
+ * **Example** (Type header transform)
+ *
  * ```ts
  * import { HeaderTransformFunction } from "../../src/ParserOptions/ParserOptions.types.ts"
  *

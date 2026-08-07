@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for CSV parsers.
  *
- * @example
+ * **Example** (Import CsvParser namespace)
+ *
  * ```ts
  * import * as CsvParser from "@beep/schema/CsvParser"
  *

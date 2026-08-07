@@ -106,7 +106,8 @@ const sparqlResultPanel = (error: O.Option<string>, result: O.Option<RunOntology
 /**
  * Query profile, examples, editor, execution action, and result preview.
  *
- * @example
+ * **Example** (Import OntologySparqlRegion)
+ *
  * ```tsx
  * import { OntologySparqlRegion } from "@beep/ontology-ui"
  *

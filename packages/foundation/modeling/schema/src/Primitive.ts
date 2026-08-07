@@ -12,7 +12,8 @@ const $I = $SchemaId.create("Primitive");
 /**
  * Schema for JavaScript primitive types (`string | number | boolean | bigint | null | undefined`).
  *
- * @example
+ * **Example** (Decode string number null)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Primitive } from "@beep/schema/Primitive"
@@ -34,7 +35,8 @@ export const Primitive = S.Union([S.String, S.Finite, S.Boolean, S.BigInt, S.Nul
 /**
  * {@inheritDoc Primitive}
  *
- * @example
+ * **Example** (Typed primitive string value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Primitive } from "@beep/schema/Primitive"

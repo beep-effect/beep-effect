@@ -23,7 +23,8 @@ const UsptoErrorReasonKit = LiteralKit([
 /**
  * Technical USPTO driver failure reasons.
  *
- * @example
+ * **Example** (Log UsptoErrorReason values)
+ *
  * ```ts
  * import { UsptoErrorReason } from "@beep/uspto"
  *
@@ -47,7 +48,8 @@ export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
 /**
  * Type for {@link UsptoErrorReason}.
  *
- * @example
+ * **Example** (Assign typed transport reason)
+ *
  * ```ts
  * import type { UsptoErrorReason } from "@beep/uspto"
  *
@@ -83,7 +85,8 @@ class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`
 /**
  * Technical failure raised inside the USPTO driver boundary.
  *
- * @example
+ * **Example** (Create error from transport)
+ *
  * ```ts
  * import { UsptoError } from "@beep/uspto"
  *
@@ -142,7 +145,8 @@ export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
 /**
  * Create a USPTO technical error with a typed reason.
  *
- * @example
+ * **Example** (Make response-decoding error)
+ *
  * ```ts
  * import { makeUsptoError } from "@beep/uspto"
  *

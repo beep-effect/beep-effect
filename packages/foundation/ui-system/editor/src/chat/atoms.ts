@@ -45,7 +45,8 @@ import type { AttachmentPort } from "./config.ts";
  * defaults-filled features here; other atoms read `sendOn` and the flags from
  * it. Defaults to {@link ComposerFeatures.make} so an unmounted read is valid.
  *
- * @example
+ * **Example** (Reading send-on policy)
+ *
  * ```tsx
  * import { featuresAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -70,7 +71,8 @@ export const featuresAtom = Atom.family((_editor: LexicalEditor) =>
  * counter): the typeahead `onOpen` fires on every query change, so a `+1/-1`
  * counter would never rebalance.
  *
- * @example
+ * **Example** (Closing typeahead menus)
+ *
  * ```tsx
  * import { menusOpenAtom } from "@beep/editor/chat/atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -94,7 +96,8 @@ export const menusOpenAtom = Atom.family((_editor: LexicalEditor) =>
  * Per-editor derived flag: whether any typeahead menu is open. Subscribes to
  * {@link menusOpenAtom}.
  *
- * @example
+ * **Example** (Reading menu-open flag)
+ *
  * ```tsx
  * import { anyMenuOpenAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -123,7 +126,8 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
  * listbox nested in a listbox is an invalid ARIA hierarchy); this attribute
  * gives DOM queries a handle on the real menu without re-introducing the role.
  *
- * @example
+ * **Example** (Marking typeahead menu)
+ *
  * ```ts
  * import { TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat/atoms"
  *
@@ -140,7 +144,8 @@ export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
 /**
  * Marks a rendered typeahead container as belonging to `editor`.
  *
- * @example
+ * **Example** (Building menu marker)
+ *
  * ```ts
  * import { TYPEAHEAD_MENU_ATTRIBUTE, typeaheadMenuMarker } from "@beep/editor/chat/atoms"
  * import { createEditor } from "lexical"
@@ -159,6 +164,8 @@ export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, strin
 /**
  * The DOM id of a typeahead option, scoped to its editor.
  *
+ * **Details**
+ *
  * Lexical points the editor root's `aria-activedescendant` at a hardcoded
  * `typeahead-item-${index}`. With two composers on one page both menus emitted the
  * same ids, and `aria-activedescendant` resolves document-wide — first match wins — so
@@ -166,7 +173,8 @@ export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, strin
  * other composer's menu. The id carries its editor now, and
  * {@link typeaheadActiveDescendant} repoints each editor at its own.
  *
- * @example
+ * **Example** (Scoped option DOM id)
+ *
  * ```ts
  * import { typeaheadOptionId } from "@beep/editor/chat/atoms"
  * import { createEditor } from "lexical"
@@ -186,7 +194,8 @@ export const typeaheadOptionId: {
  * Points an editor's `aria-activedescendant` at the option it has actually
  * highlighted, overriding the document-wide id Lexical writes.
  *
- * @example
+ * **Example** (Inspecting active descendant)
+ *
  * ```ts
  * import { typeaheadActiveDescendant } from "@beep/editor/chat/atoms"
  *
@@ -212,13 +221,16 @@ export const typeaheadActiveDescendant: {
 /**
  * Whether a typeahead surface is genuinely on screen for `editor`.
  *
+ * **Details**
+ *
  * {@link menusOpenAtom} is plugin-reported state and can go stale — a menu whose
  * trigger text vanished may never fire `onClose` — so anything that *suppresses*
  * behavior on its behalf, above all Enter-to-send, must confirm against the DOM.
  * Trusting the flag alone let a stale `true` swallow every Enter with no menu
  * visible and no way to send the draft.
  *
- * @example
+ * **Example** (Checking menu visibility)
+ *
  * ```ts
  * import { isTypeaheadMenuVisible } from "@beep/editor/chat/atoms"
  * import { createEditor } from "lexical"
@@ -248,7 +260,8 @@ export const isTypeaheadMenuVisible = (editor: LexicalEditor): boolean => {
  * Per-editor captured attachments. Writable; the composer pushes captured files
  * and revokes object URLs on removal/unmount.
  *
- * @example
+ * **Example** (Rendering attachment chips)
+ *
  * ```tsx
  * import { attachmentsAtom } from "@beep/editor/chat/atoms"
  * import { AttachmentChips } from "@beep/editor/chat/attachments"
@@ -274,7 +287,8 @@ export const attachmentsAtom = Atom.family((_editor: LexicalEditor) =>
  * union so rendering can exhaustively distinguish capture validation from a
  * rejected consumer port without exposing raw causes.
  *
- * @example
+ * **Example** (Reading failure tag)
+ *
  * ```tsx
  * import { attachmentFailureAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -300,7 +314,8 @@ export const attachmentFailureAtom = Atom.family((_editor: LexicalEditor) =>
  * the same bound without threading it through React props. Defaults to
  * {@link DEFAULT_MAX_ATTACHMENT_BYTES}.
  *
- * @example
+ * **Example** (Displaying size limit)
+ *
  * ```tsx
  * import { maxAttachmentBytesAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -326,7 +341,8 @@ export const maxAttachmentBytesAtom = Atom.family((_editor: LexicalEditor) =>
  * validation and notifies the app with accepted files only. Defaults to a no-op
  * so an unseeded read is valid (e.g. in Storybook with no provider).
  *
- * @example
+ * **Example** (Invoking upload port)
+ *
  * ```tsx
  * import { onAttachAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -371,7 +387,8 @@ const closeAttachmentLifecycle = (
  * capture/remove *logic* lives in the runtime rather than in component handlers
  * (per the repo atom-first law).
  *
- * @example
+ * **Example** (Defining runtime mutation)
+ *
  * ```ts
  * import { composerRuntime } from "@beep/editor/chat/atoms"
  * import { Effect } from "effect"
@@ -400,7 +417,8 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * The size bound is read from {@link maxAttachmentBytesAtom}. Both the footer
  * picker and the drag-drop binding drive this same path.
  *
- * @example
+ * **Example** (Capturing attachment files)
+ *
  * ```tsx
  * import { captureAttachmentsFn } from "@beep/editor/chat/atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -416,7 +434,6 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * @effects Invokes the per-editor upload-port callback with accepted files and
  * appends successfully decoded attachments to {@link attachmentsAtom}; rejected
  * files are logged.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -496,6 +513,8 @@ export const captureAttachmentsFn = composerRuntime.fn<{
 /**
  * Per-editor attachment lifetime and object-URL sweep.
  *
+ * **Details**
+ *
  * Lexical reports every root-element transition synchronously, including the
  * current root when the binding mounts. Each non-null root installs a fresh
  * abort controller consumed by {@link captureAttachmentsFn}; a null transition
@@ -504,7 +523,8 @@ export const captureAttachmentsFn = composerRuntime.fn<{
  * so registry disposal performs the same idempotent sweep without reading or
  * writing a disposed registry.
  *
- * @example
+ * **Example** (Mounting lifetime sweep)
+ *
  * ```tsx
  * import { attachmentSweepBindingAtom } from "@beep/editor/chat/atoms"
  * import { useAtomMount } from "@effect/atom-react"
@@ -520,7 +540,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
  * @effects Aborts the mount-lifetime signal retained by pending attachment-port
  * work, revokes outstanding object URLs, and clears the per-editor attachment
  * collection on teardown.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -556,7 +575,8 @@ export const attachmentSweepBindingAtom = Atom.family((editor: LexicalEditor) =>
  * `{ editor, id }` revokes the removed attachment's object URL (if found) and
  * filters it out of {@link attachmentsAtom}, entirely inside the runtime.
  *
- * @example
+ * **Example** (Removing one attachment)
+ *
  * ```tsx
  * import { removeAttachmentFn } from "@beep/editor/chat/atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -571,7 +591,6 @@ export const attachmentSweepBindingAtom = Atom.family((editor: LexicalEditor) =>
  *
  * @effects Revokes the removed attachment's object URL before writing the
  * filtered attachment list back to {@link attachmentsAtom}.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -598,7 +617,8 @@ export const removeAttachmentFn = composerRuntime.fn<{
  * callback code. Editor surfaces dispatch this via `useAtomSet`, so errors are
  * observed without leaving the atom-first boundary.
  *
- * @example
+ * **Example** (Logging editor errors)
+ *
  * ```tsx
  * import { logEditorErrorFn } from "@beep/editor/chat/atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -610,7 +630,6 @@ export const removeAttachmentFn = composerRuntime.fn<{
  * ```
  *
  * @effects Logs Lexical editor errors through the composer's Effect runtime.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -621,13 +640,16 @@ export const logEditorErrorFn = composerRuntime.fn<unknown>()((error) =>
 /**
  * Why the composer refused to send, if it did.
  *
+ * **Details**
+ *
  * A send used to be abandoned silently when the editor state failed to decode
  * against the wire schema: Enter and the Send button both did nothing, with no
  * error, no toast, and no log — the composer simply went dead while the draft
  * sat there intact. Whatever the schema gap turns out to be, refusing to send is
  * never allowed to be invisible.
  *
- * @example
+ * **Example** (Showing blocked reason)
+ *
  * ```tsx
  * import { sendBlockedAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -657,7 +679,8 @@ const SEND_UNBOUND_MESSAGE =
  * registers a Lexical update listener (torn down via the atom finalizer) and
  * pushes the new length with `get.setSelf` on every change.
  *
- * @example
+ * **Example** (Live character count)
+ *
  * ```tsx
  * import { characterCountAtom } from "@beep/editor/chat/atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -701,6 +724,8 @@ const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sen
  * `KEY_ENTER_COMMAND` at `COMMAND_PRIORITY_HIGH` (torn down via the atom
  * finalizer) and applies the configured send policy:
  *
+ * **Details**
+ *
  * - during IME composition (`isComposing` / keyCode 229), consume the Lexical
  *   command only when a visible menu would otherwise select an option; with no
  *   visible menu, yield to the ordinary composition path,
@@ -712,7 +737,8 @@ const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sen
  * never re-registers the command. Menu ownership is read from the
  * editor-scoped visible-menu marker at event time.
  *
- * @example
+ * **Example** (Mounting enter-to-send)
+ *
  * ```tsx
  * import { sendKeyBindingAtom } from "@beep/editor/chat/atoms"
  * import { useAtomMount } from "@effect/atom-react"
@@ -796,7 +822,8 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
  * writable state atom (a bare function initial value makes `Atom.make` build a
  * derived read atom instead).
  *
- * @example
+ * **Example** (Boxing a send handler)
+ *
  * ```ts
  * import type { SendHandlerBox } from "@beep/editor/chat/atoms"
  *
@@ -820,12 +847,15 @@ export interface SendHandlerBox {
  * a no-op: {@link sendCommandBindingAtom} compares against it by identity and
  * reports an unbound composer instead of silently discarding the send.
  *
+ * **Details**
+ *
  * A send that goes nowhere and says nothing is indistinguishable from a broken
  * app — Enter and the Send button simply stop working, with the draft still
  * sitting there — so the unbound case is made loud at the one place that can
  * detect it.
  *
- * @example
+ * **Example** (Calling unbound sentinel)
+ *
  * ```ts
  * import { unboundSend } from "@beep/editor/chat/atoms"
  *
@@ -844,7 +874,8 @@ export const unboundSend = (): void => undefined;
  * clears the editor in place). The composer writes the consumer's `onSend` here;
  * the default is a no-op that reports no dispatch.
  *
- * @example
+ * **Example** (Seeding send handler)
+ *
  * ```tsx
  * import { onSendAtom } from "@beep/editor/chat/atoms"
  * import { useAtomInitialValues } from "@effect/atom-react"
@@ -876,7 +907,8 @@ export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<Send
  * paragraph re-selected — keeping focus and a valid selection (`registerRichText`
  * does not handle `CLEAR_EDITOR_COMMAND`). An out-of-schema state is skipped.
  *
- * @example
+ * **Example** (Mounting send command)
+ *
  * ```tsx
  * import { sendCommandBindingAtom } from "@beep/editor/chat/atoms"
  * import { useAtomMount } from "@effect/atom-react"
@@ -892,7 +924,6 @@ export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<Send
  * @effects Registers `SEND_MESSAGE_COMMAND`; on successful dispatch it clears
  * editor content, revokes captured attachment URLs, and empties
  * {@link attachmentsAtom}.
- *
  * @category atoms
  * @since 0.0.0
  */

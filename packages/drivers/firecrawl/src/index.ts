@@ -8,7 +8,8 @@
 /**
  * Firecrawl driver configuration exports.
  *
- * @example
+ * **Example** (Import FirecrawlConfigInput)
+ *
  * ```ts
  * import { FirecrawlConfigInput } from "@beep/firecrawl"
  *
@@ -22,7 +23,8 @@ export * from "./Firecrawl.config.ts";
 /**
  * Firecrawl technical error exports.
  *
- * @example
+ * **Example** (Import FirecrawlError)
+ *
  * ```ts
  * import { FirecrawlError } from "@beep/firecrawl"
  *
@@ -36,7 +38,8 @@ export * from "./Firecrawl.errors.ts";
 /**
  * Firecrawl payload, success, failure, and watcher model exports.
  *
- * @example
+ * **Example** (Import FirecrawlScrapePayload)
+ *
  * ```ts
  * import { FirecrawlScrapePayload } from "@beep/firecrawl"
  *
@@ -50,7 +53,8 @@ export * from "./Firecrawl.models.ts";
 /**
  * Firecrawl service and Layer exports.
  *
- * @example
+ * **Example** (Import Firecrawl service)
+ *
  * ```ts
  * import { Firecrawl } from "@beep/firecrawl"
  *
@@ -65,7 +69,8 @@ export * from "./Firecrawl.service.ts";
 /**
  * Package version for `@beep/firecrawl`.
  *
- * @example
+ * **Example** (Import package VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/firecrawl"
  *

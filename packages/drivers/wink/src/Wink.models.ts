@@ -36,7 +36,8 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
 /**
  * Branded identifier for a learned wink custom-entity group.
  *
- * @example
+ * **Example** (Create from unknown string)
+ *
  * ```ts
  * import { EntityGroupName } from "@beep/wink"
  *
@@ -58,7 +59,8 @@ export const EntityGroupName = S.NonEmptyString.pipe(
 /**
  * Runtime TypeScript type produced by {@link EntityGroupName}.
  *
- * @example
+ * **Example** (Annotate branded group name)
+ *
  * ```ts
  * import { EntityGroupName } from "@beep/wink"
  * import type { EntityGroupName as EntityGroupNameType } from "@beep/wink"
@@ -75,7 +77,8 @@ export type EntityGroupName = typeof EntityGroupName.Type;
 /**
  * One wink custom-entity training example expressed as bracket-pattern elements.
  *
- * @example
+ * **Example** (Make training example)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CustomEntityExample } from "@beep/wink"
@@ -128,7 +131,8 @@ const sameCustomEntityExample = S.toEquivalence(CustomEntityExample);
 /**
  * Collection of custom-entity examples learned as one logical wink entity group.
  *
- * @example
+ * **Example** (Build custom entity group)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CustomEntityExample, EntityGroupName, WinkEngineCustomEntities } from "@beep/wink"

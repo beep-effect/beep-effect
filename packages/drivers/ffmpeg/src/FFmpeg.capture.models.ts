@@ -28,7 +28,8 @@ const $I = $FfmpegId.create("FFmpeg.capture.models");
 /**
  * Positive finite duration measured in seconds.
  *
- * @example
+ * **Example** (Making a PositiveSeconds value)
+ *
  * ```ts
  * import { PositiveSeconds } from "@beep/ffmpeg"
  *
@@ -56,7 +57,8 @@ export const PositiveSeconds = S.Finite.check(
 /**
  * Positive finite duration measured in seconds.
  *
- * @example
+ * **Example** (Typing a PositiveSeconds value)
+ *
  * ```ts
  * import { PositiveSeconds } from "@beep/ffmpeg"
  * import type { PositiveSeconds as PositiveSecondsValue } from "@beep/ffmpeg"
@@ -73,7 +75,8 @@ export type PositiveSeconds = typeof PositiveSeconds.Type;
 /**
  * Non-negative integer file size measured in bytes.
  *
- * @example
+ * **Example** (Making a FileSizeBytes value)
+ *
  * ```ts
  * import { FileSizeBytes } from "@beep/ffmpeg"
  *
@@ -101,7 +104,8 @@ export const FileSizeBytes = S.Int.check(
 /**
  * Non-negative integer file size measured in bytes.
  *
- * @example
+ * **Example** (Typing a FileSizeBytes value)
+ *
  * ```ts
  * import { FileSizeBytes } from "@beep/ffmpeg"
  * import type { FileSizeBytes as FileSizeBytesValue } from "@beep/ffmpeg"
@@ -118,7 +122,8 @@ export type FileSizeBytes = typeof FileSizeBytes.Type;
 /**
  * Positive integer tile-grid count for contact sheets.
  *
- * @example
+ * **Example** (Making a TileCount value)
+ *
  * ```ts
  * import { TileCount } from "@beep/ffmpeg"
  *
@@ -146,7 +151,8 @@ export const TileCount = S.Int.check(
 /**
  * Positive integer tile-grid count for contact sheets.
  *
- * @example
+ * **Example** (Typing a TileCount value)
+ *
  * ```ts
  * import { TileCount } from "@beep/ffmpeg"
  * import type { TileCount as TileCountValue } from "@beep/ffmpeg"
@@ -163,7 +169,8 @@ export type TileCount = typeof TileCount.Type;
 /**
  * JPEG quantizer quality passed to ffmpeg as `-q:v` (1 best, 31 worst).
  *
- * @example
+ * **Example** (Making a JpegQuality value)
+ *
  * ```ts
  * import { JpegQuality } from "@beep/ffmpeg"
  *
@@ -206,7 +213,8 @@ export const JpegQuality = S.Int.check(
 /**
  * JPEG quantizer quality passed to ffmpeg as `-q:v` (1 best, 31 worst).
  *
- * @example
+ * **Example** (Typing a JpegQuality value)
+ *
  * ```ts
  * import { JpegQuality } from "@beep/ffmpeg"
  * import type { JpegQuality as JpegQualityValue } from "@beep/ffmpeg"
@@ -223,7 +231,8 @@ export type JpegQuality = typeof JpegQuality.Type;
 /**
  * Non-negative integer pixel offset from a frame edge.
  *
- * @example
+ * **Example** (Making a PixelOffset value)
+ *
  * ```ts
  * import { PixelOffset } from "@beep/ffmpeg"
  *
@@ -251,7 +260,8 @@ export const PixelOffset = S.Int.check(
 /**
  * Non-negative integer pixel offset from a frame edge.
  *
- * @example
+ * **Example** (Typing a PixelOffset value)
+ *
  * ```ts
  * import { PixelOffset } from "@beep/ffmpeg"
  * import type { PixelOffset as PixelOffsetValue } from "@beep/ffmpeg"
@@ -268,7 +278,8 @@ export type PixelOffset = typeof PixelOffset.Type;
 /**
  * Mean luma sample value in the closed 0-255 range.
  *
- * @example
+ * **Example** (Making a LumaValue value)
+ *
  * ```ts
  * import { LumaValue } from "@beep/ffmpeg"
  *
@@ -311,7 +322,8 @@ export const LumaValue = S.Finite.check(
 /**
  * Mean luma sample value in the closed 0-255 range.
  *
- * @example
+ * **Example** (Typing a LumaValue value)
+ *
  * ```ts
  * import { LumaValue } from "@beep/ffmpeg"
  * import type { LumaValue as LumaValueValue } from "@beep/ffmpeg"
@@ -328,10 +340,13 @@ export type LumaValue = typeof LumaValue.Type;
 /**
  * Container metadata key accepted by the write-container-metadata operation.
  *
+ * **Details**
+ *
  * The pattern guard blocks `=`, whitespace, and other separator characters so
  * a key can never smuggle extra ffmpeg `-metadata` assignments.
  *
- * @example
+ * **Example** (Decoding a SafeMetadataKey)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeMetadataKey } from "@beep/ffmpeg"
@@ -360,7 +375,8 @@ export const SafeMetadataKey = S.String.check(
 /**
  * Container metadata key accepted by the write-container-metadata operation.
  *
- * @example
+ * **Example** (Typing a SafeMetadataKey)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeMetadataKey } from "@beep/ffmpeg"
@@ -377,7 +393,8 @@ export type SafeMetadataKey = typeof SafeMetadataKey.Type;
 /**
  * Dithering modes accepted by ffmpeg's `paletteuse` GIF filter.
  *
- * @example
+ * **Example** (Reading GifDither enum member)
+ *
  * ```ts
  * import { GifDither } from "@beep/ffmpeg"
  *
@@ -405,7 +422,8 @@ export const GifDither = LiteralKit([
 /**
  * Dithering modes accepted by ffmpeg's `paletteuse` GIF filter.
  *
- * @example
+ * **Example** (Typing a GifDither value)
+ *
  * ```ts
  * import { GifDither } from "@beep/ffmpeg"
  * import type { GifDither as GifDitherValue } from "@beep/ffmpeg"
@@ -422,9 +440,12 @@ export type GifDither = typeof GifDither.Type;
 /**
  * Encoder presets available to the extract-clip operation.
  *
+ * **Details**
+ *
  * `h264` targets mp4 outputs; `vp9` targets webm outputs.
  *
- * @example
+ * **Example** (Reading ClipCodec enum member)
+ *
  * ```ts
  * import { ClipCodec } from "@beep/ffmpeg"
  *
@@ -443,7 +464,8 @@ export const ClipCodec = LiteralKit(["h264", "vp9"]).pipe(
 /**
  * Encoder presets available to the extract-clip operation.
  *
- * @example
+ * **Example** (Typing a ClipCodec value)
+ *
  * ```ts
  * import { ClipCodec } from "@beep/ffmpeg"
  * import type { ClipCodec as ClipCodecValue } from "@beep/ffmpeg"
@@ -460,10 +482,13 @@ export type ClipCodec = typeof ClipCodec.Type;
 /**
  * A single container metadata key/value assignment.
  *
+ * **Details**
+ *
  * Values are passed to ffmpeg as one argv element (`-metadata KEY=value`), so
  * they never pass through a shell; only the key needs the injection guard.
  *
- * @example
+ * **Example** (Making a MetadataPair)
+ *
  * ```ts
  * import { MetadataPair } from "@beep/ffmpeg"
  *
@@ -495,7 +520,8 @@ export class MetadataPair extends S.Class<MetadataPair>($I`MetadataPair`)(
 /**
  * Request to extract one frame at an exact timestamp.
  *
- * @example
+ * **Example** (Building ExtractFrameAtRequest)
+ *
  * ```ts
  * import { ExtractFrameAtRequest } from "@beep/ffmpeg"
  *
@@ -546,7 +572,8 @@ export class ExtractFrameAtRequest extends S.Class<ExtractFrameAtRequest>($I`Ext
 /**
  * A frame extracted at a requested timestamp.
  *
- * @example
+ * **Example** (Making a TimestampedFrame)
+ *
  * ```ts
  * import { TimestampedFrame } from "@beep/ffmpeg"
  *
@@ -599,7 +626,8 @@ export class TimestampedFrame extends S.Class<TimestampedFrame>($I`TimestampedFr
 /**
  * Request to extract frames at an explicit list of timestamps.
  *
- * @example
+ * **Example** (Building ExtractFramesAtRequest)
+ *
  * ```ts
  * import { ExtractFramesAtRequest } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -684,7 +712,8 @@ export class ExtractFramesAtRequest extends S.Class<ExtractFramesAtRequest>($I`E
 /**
  * Options recorded in an extract-frames-at manifest.
  *
- * @example
+ * **Example** (Making manifest options)
+ *
  * ```ts
  * import { ExtractFramesAtManifestOptions } from "@beep/ffmpeg"
  *
@@ -727,7 +756,8 @@ export class ExtractFramesAtManifestOptions extends S.Class<ExtractFramesAtManif
 /**
  * JSON manifest written by an extract-frames-at run.
  *
- * @example
+ * **Example** (Building extract-frames-at manifest)
+ *
  * ```ts
  * import {
  *   ExtractFramesAtManifest,
@@ -809,7 +839,8 @@ export class ExtractFramesAtManifest extends S.Class<ExtractFramesAtManifest>($I
 /**
  * Result returned after timestamped frames have been committed.
  *
- * @example
+ * **Example** (Making ExtractFramesAtResult)
+ *
  * ```ts
  * import { ExtractFramesAtResult } from "@beep/ffmpeg"
  *
@@ -862,12 +893,15 @@ export class ExtractFramesAtResult extends S.Class<ExtractFramesAtResult>($I`Ext
 /**
  * Request to cut a re-encoded clip out of a video.
  *
+ * **Details**
+ *
  * Uses input-side `-ss` plus output `-t` (never `-to`) so clip timestamps
  * restart at zero. When `durationSeconds` is absent no `-t` is emitted and the
  * clip runs to the end of the source — the remux path duration-less recordings
  * depend on to preserve their full span.
  *
- * @example
+ * **Example** (Building ExtractClipRequest)
+ *
  * ```ts
  * import { ExtractClipRequest } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -935,7 +969,8 @@ export class ExtractClipRequest extends S.Class<ExtractClipRequest>($I`ExtractCl
 /**
  * Result returned after a clip has been committed.
  *
- * @example
+ * **Example** (Making ExtractClipResult)
+ *
  * ```ts
  * import { ExtractClipResult } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -991,7 +1026,8 @@ export class ExtractClipResult extends S.Class<ExtractClipResult>($I`ExtractClip
 /**
  * Request to render a palette-optimized GIF from a video window.
  *
- * @example
+ * **Example** (Building RenderGifRequest)
+ *
  * ```ts
  * import { RenderGifRequest } from "@beep/ffmpeg"
  *
@@ -1069,10 +1105,13 @@ export class RenderGifRequest extends S.Class<RenderGifRequest>($I`RenderGifRequ
 /**
  * Result returned after a GIF has been committed.
  *
+ * **Details**
+ *
  * The driver surfaces `fileSizeBytes` and never silently re-encodes; callers
  * own any downscale-and-retry budget decisions.
  *
- * @example
+ * **Example** (Making RenderGifResult)
+ *
  * ```ts
  * import { RenderGifResult } from "@beep/ffmpeg"
  *
@@ -1113,10 +1152,13 @@ export class RenderGifResult extends S.Class<RenderGifResult>($I`RenderGifResult
 /**
  * Request to render a tiled contact sheet spanning a whole video.
  *
+ * **Details**
+ *
  * Use a `.jpg` destination (the default recommendation) — JPEG keeps sheets
  * inside vision-judge payload budgets where PNG sheets have already failed.
  *
- * @example
+ * **Example** (Building contact sheet request)
+ *
  * ```ts
  * import { RenderContactSheetRequest } from "@beep/ffmpeg"
  *
@@ -1189,7 +1231,8 @@ export class RenderContactSheetRequest extends S.Class<RenderContactSheetRequest
 /**
  * Result returned after a contact sheet has been committed.
  *
- * @example
+ * **Example** (Making contact sheet result)
+ *
  * ```ts
  * import { RenderContactSheetResult } from "@beep/ffmpeg"
  *
@@ -1242,10 +1285,13 @@ export class RenderContactSheetResult extends S.Class<RenderContactSheetResult>(
 /**
  * Request to remux a video with additional container metadata.
  *
+ * **Details**
+ *
  * Streams are copied (`-map 0 -c copy`); nothing is re-encoded. This is the
  * provenance channel for webm/mkv/mp4 artifacts where exiftool cannot write.
  *
- * @example
+ * **Example** (Building metadata write request)
+ *
  * ```ts
  * import { MetadataPair, WriteContainerMetadataRequest } from "@beep/ffmpeg"
  *
@@ -1307,7 +1353,8 @@ export class WriteContainerMetadataRequest extends S.Class<WriteContainerMetadat
 /**
  * Result returned after a metadata remux has been committed.
  *
- * @example
+ * **Example** (Making metadata write result)
+ *
  * ```ts
  * import { WriteContainerMetadataResult } from "@beep/ffmpeg"
  *
@@ -1350,10 +1397,13 @@ export class WriteContainerMetadataResult extends S.Class<WriteContainerMetadata
 /**
  * Request to sample mean luma over a crop region of every frame.
  *
+ * **Details**
+ *
  * Backs sync-beacon detection: the capture pipeline flashes a corner region
  * and reads the per-frame luminance curve to align wall-clock and video time.
  *
- * @example
+ * **Example** (Building luminance probe request)
+ *
  * ```ts
  * import { ProbeRegionLuminanceRequest } from "@beep/ffmpeg"
  *
@@ -1408,7 +1458,8 @@ export class ProbeRegionLuminanceRequest extends S.Class<ProbeRegionLuminanceReq
 /**
  * Mean luma of one frame's crop region.
  *
- * @example
+ * **Example** (Making a LuminanceSample)
+ *
  * ```ts
  * import { LuminanceSample } from "@beep/ffmpeg"
  *
@@ -1445,7 +1496,8 @@ export class LuminanceSample extends S.Class<LuminanceSample>($I`LuminanceSample
 /**
  * Result returned after sampling region luminance across a video.
  *
- * @example
+ * **Example** (Making luminance probe result)
+ *
  * ```ts
  * import { ProbeRegionLuminanceResult } from "@beep/ffmpeg"
  *
@@ -1477,7 +1529,8 @@ export class ProbeRegionLuminanceResult extends S.Class<ProbeRegionLuminanceResu
 /**
  * Decode an unknown value into an extract-frame-at request.
  *
- * @example
+ * **Example** (Decoding extract-frame-at request)
+ *
  * ```ts
  * import { decodeExtractFrameAtRequest } from "@beep/ffmpeg"
  *
@@ -1497,7 +1550,8 @@ export const decodeExtractFrameAtRequest = ExtractFrameAtRequest.decodeEffect;
 /**
  * Decode an unknown value into an extract-frames-at request.
  *
- * @example
+ * **Example** (Decoding extract-frames-at request)
+ *
  * ```ts
  * import { decodeExtractFramesAtRequest } from "@beep/ffmpeg"
  *
@@ -1517,7 +1571,8 @@ export const decodeExtractFramesAtRequest = ExtractFramesAtRequest.decodeEffect;
 /**
  * Decode an unknown value into an extract-clip request.
  *
- * @example
+ * **Example** (Decoding extract-clip request)
+ *
  * ```ts
  * import { decodeExtractClipRequest } from "@beep/ffmpeg"
  *
@@ -1537,7 +1592,8 @@ export const decodeExtractClipRequest = ExtractClipRequest.decodeEffect;
 /**
  * Decode an unknown value into a render-gif request.
  *
- * @example
+ * **Example** (Decoding render-gif request)
+ *
  * ```ts
  * import { decodeRenderGifRequest } from "@beep/ffmpeg"
  *
@@ -1558,7 +1614,8 @@ export const decodeRenderGifRequest = RenderGifRequest.decodeEffect;
 /**
  * Decode an unknown value into a render-contact-sheet request.
  *
- * @example
+ * **Example** (Decoding contact-sheet request)
+ *
  * ```ts
  * import { decodeRenderContactSheetRequest } from "@beep/ffmpeg"
  *
@@ -1577,7 +1634,8 @@ export const decodeRenderContactSheetRequest = RenderContactSheetRequest.decodeE
 /**
  * Decode an unknown value into a write-container-metadata request.
  *
- * @example
+ * **Example** (Decoding metadata write request)
+ *
  * ```ts
  * import { decodeWriteContainerMetadataRequest } from "@beep/ffmpeg"
  *
@@ -1597,7 +1655,8 @@ export const decodeWriteContainerMetadataRequest = WriteContainerMetadataRequest
 /**
  * Decode an unknown value into a probe-region-luminance request.
  *
- * @example
+ * **Example** (Decoding luminance probe request)
+ *
  * ```ts
  * import { decodeProbeRegionLuminanceRequest } from "@beep/ffmpeg"
  *
@@ -1619,7 +1678,8 @@ export const decodeProbeRegionLuminanceRequest = ProbeRegionLuminanceRequest.dec
 /**
  * Encode an extract-frames-at manifest into its JSON-safe shape.
  *
- * @example
+ * **Example** (Encoding extract-frames-at manifest)
+ *
  * ```ts
  * import {
  *   encodeExtractFramesAtManifest,

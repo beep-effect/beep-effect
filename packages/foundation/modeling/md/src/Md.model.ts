@@ -20,7 +20,8 @@ const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
 /**
  * Single safe Markdown fenced-code info-string token.
  *
- * @example
+ * **Example** (Decode language token)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -50,7 +51,8 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
 /**
  * Type for {@link CodeFenceLanguage}.
  *
- * @example
+ * **Example** (Type decoded language)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -68,11 +70,14 @@ export type CodeFenceLanguage = typeof CodeFenceLanguage.Type;
 /**
  * Bare 11-character YouTube video id used by {@link YouTube} embeds.
  *
+ * **Details**
+ *
  * Constraining the id to the safe character class rejects malformed UTF-16
  * (e.g. lone surrogates) at the schema boundary, so downstream consumers that
  * percent-encode the id cannot be crashed by a `URIError`.
  *
- * @example
+ * **Example** (Decode video id)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -102,7 +107,8 @@ export const YouTubeVideoId = S.String.check(
 /**
  * Safe Markdown footnote identifier.
  *
- * @example
+ * **Example** (Parse footnote identifier)
+ *
  * ```ts
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
@@ -131,7 +137,8 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
 /**
  * Type for {@link FootnoteIdentifier}.
  *
- * @example
+ * **Example** (Type footnote identifier)
+ *
  * ```ts
  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
@@ -148,7 +155,8 @@ export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
 /**
  * Markdown table column alignment.
  *
- * @example
+ * **Example** (Decode center alignment)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -170,7 +178,8 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
 /**
  * Type for {@link TableAlignment}.
  *
- * @example
+ * **Example** (Assign right alignment)
+ *
  * ```ts
  * import type { TableAlignment } from "@beep/md/Md.model"
  *
@@ -186,7 +195,8 @@ export type TableAlignment = typeof TableAlignment.Type;
 /**
  * Common typed admonition kinds.
  *
- * @example
+ * **Example** (Decode warning kind)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -208,7 +218,8 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
 /**
  * Type for {@link AdmonitionKind}.
  *
- * @example
+ * **Example** (Assign tip kind)
+ *
  * ```ts
  * import type { AdmonitionKind } from "@beep/md/Md.model"
  *
@@ -224,7 +235,8 @@ export type AdmonitionKind = typeof AdmonitionKind.Type;
 /**
  * Generic block embed kind.
  *
- * @example
+ * **Example** (Decode video kind)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -246,7 +258,8 @@ export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown
 /**
  * Type for {@link EmbedKind}.
  *
- * @example
+ * **Example** (Assign image kind)
+ *
  * ```ts
  * import type { EmbedKind } from "@beep/md/Md.model"
  *
@@ -263,7 +276,8 @@ export type EmbedKind = typeof EmbedKind.Type;
  * Recursive inline child list used by inline containers and text-bearing block
  * nodes.
  *
- * @example
+ * **Example** (Decode text children)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -285,7 +299,8 @@ export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.
 /**
  * Type for {@link InlineChildren}.
  *
- * @example
+ * **Example** (Type text children)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { InlineChildren } from "@beep/md/Md.model"
@@ -302,7 +317,8 @@ export type InlineChildren = typeof InlineChildren.Type;
 /**
  * Companion namespace for {@link InlineChildren}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { InlineChildren } from "@beep/md/Md.model"
@@ -329,7 +345,8 @@ export declare namespace InlineChildren {
 /**
  * Plain escaped inline text.
  *
- * @example
+ * **Example** (Make text node)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  *
@@ -355,7 +372,8 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
 /**
  * Companion namespace for {@link Text}.
  *
- * @example
+ * **Example** (Type text node)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  *
@@ -384,7 +402,8 @@ export declare namespace Text {
 /**
  * Trusted raw Markdown inline content.
  *
- * @example
+ * **Example** (Make raw markdown)
+ *
  * ```ts
  * import { RawMarkdown } from "@beep/md/Md.model"
  *
@@ -410,7 +429,8 @@ export class RawMarkdown extends S.TaggedClass<RawMarkdown>($I`RawMarkdown`)(
 /**
  * Companion namespace for {@link RawMarkdown}.
  *
- * @example
+ * **Example** (Type raw markdown)
+ *
  * ```ts
  * import { RawMarkdown } from "@beep/md/Md.model"
  *
@@ -439,9 +459,12 @@ export declare namespace RawMarkdown {
 /**
  * Raw HTML inline content for adapters that opt into trusted HTML rendering.
  *
+ * **Details**
+ *
  * The built-in HTML adapter escapes this value by default.
  *
- * @example
+ * **Example** (Make raw HTML)
+ *
  * ```ts
  * import { RawHtml } from "@beep/md/Md.model"
  *
@@ -468,7 +491,8 @@ export class RawHtml extends S.TaggedClass<RawHtml>($I`RawHtml`)(
 /**
  * Companion namespace for {@link RawHtml}.
  *
- * @example
+ * **Example** (Type raw HTML)
+ *
  * ```ts
  * import { RawHtml } from "@beep/md/Md.model"
  *
@@ -497,7 +521,8 @@ export declare namespace RawHtml {
 /**
  * Strong inline content.
  *
- * @example
+ * **Example** (Make strong node)
+ *
  * ```ts
  * import { Strong, Text } from "@beep/md/Md.model"
  *
@@ -523,7 +548,8 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 /**
  * Companion namespace for {@link Strong}.
  *
- * @example
+ * **Example** (Type strong node)
+ *
  * ```ts
  * import { Strong, Text } from "@beep/md/Md.model"
  *
@@ -555,7 +581,8 @@ export declare namespace Strong {
 /**
  * Emphasized inline content.
  *
- * @example
+ * **Example** (Make emphasis node)
+ *
  * ```ts
  * import { Em, Text } from "@beep/md/Md.model"
  *
@@ -581,7 +608,8 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
 /**
  * Companion namespace for {@link Em}.
  *
- * @example
+ * **Example** (Type emphasis node)
+ *
  * ```ts
  * import { Em, Text } from "@beep/md/Md.model"
  *
@@ -613,7 +641,8 @@ export declare namespace Em {
 /**
  * Deleted inline content.
  *
- * @example
+ * **Example** (Make deleted node)
+ *
  * ```ts
  * import { Del, Text } from "@beep/md/Md.model"
  *
@@ -639,7 +668,8 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
 /**
  * Companion namespace for {@link Del}.
  *
- * @example
+ * **Example** (Type deleted node)
+ *
  * ```ts
  * import { Del, Text } from "@beep/md/Md.model"
  *
@@ -671,7 +701,8 @@ export declare namespace Del {
 /**
  * Inline code span.
  *
- * @example
+ * **Example** (Make inline code)
+ *
  * ```ts
  * import { Code } from "@beep/md/Md.model"
  *
@@ -697,7 +728,8 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
- * @example
+ * **Example** (Type inline code)
+ *
  * ```ts
  * import { Code } from "@beep/md/Md.model"
  *
@@ -726,7 +758,8 @@ export declare namespace Code {
 /**
  * Inline hyperlink.
  *
- * @example
+ * **Example** (Make hyperlink node)
+ *
  * ```ts
  * import { A, Text } from "@beep/md/Md.model"
  *
@@ -758,7 +791,8 @@ export class A extends S.TaggedClass<A>($I`A`)(
 /**
  * Companion namespace for {@link A}.
  *
- * @example
+ * **Example** (Type hyperlink node)
+ *
  * ```ts
  * import { A, Text } from "@beep/md/Md.model"
  *
@@ -794,7 +828,8 @@ export declare namespace A {
 /**
  * Inline image.
  *
- * @example
+ * **Example** (Make image node)
+ *
  * ```ts
  * import { Img } from "@beep/md/Md.model"
  *
@@ -826,7 +861,8 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
 /**
  * Companion namespace for {@link Img}.
  *
- * @example
+ * **Example** (Type image node)
+ *
  * ```ts
  * import { Img } from "@beep/md/Md.model"
  *
@@ -862,7 +898,8 @@ export declare namespace Img {
 /**
  * Inline line break.
  *
- * @example
+ * **Example** (Make line break)
+ *
  * ```ts
  * import { Br } from "@beep/md/Md.model"
  *
@@ -884,7 +921,8 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
 /**
  * Companion namespace for {@link Br}.
  *
- * @example
+ * **Example** (Type line break)
+ *
  * ```ts
  * import { Br } from "@beep/md/Md.model"
  *
@@ -912,7 +950,8 @@ export declare namespace Br {
 /**
  * Inline TeX math content.
  *
- * @example
+ * **Example** (Make inline math)
+ *
  * ```ts
  * import { InlineMath } from "@beep/md/Md.model"
  *
@@ -938,7 +977,8 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
 /**
  * Companion namespace for {@link InlineMath}.
  *
- * @example
+ * **Example** (Encode inline math)
+ *
  * ```ts
  * import type { InlineMath } from "@beep/md/Md.model"
  *
@@ -967,7 +1007,8 @@ export declare namespace InlineMath {
 /**
  * Inline footnote reference.
  *
- * @example
+ * **Example** (Make footnote reference)
+ *
  * ```ts
  * import { FootnoteReference } from "@beep/md/Md.model"
  *
@@ -993,7 +1034,8 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
 /**
  * Companion namespace for {@link FootnoteReference}.
  *
- * @example
+ * **Example** (Encode footnote reference)
+ *
  * ```ts
  * import type { FootnoteReference } from "@beep/md/Md.model"
  *
@@ -1025,7 +1067,8 @@ export declare namespace FootnoteReference {
 /**
  * Discriminated union of inline Markdown AST nodes.
  *
- * @example
+ * **Example** (Decode inline union)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1063,7 +1106,8 @@ export const Inline = S.Union([
 /**
  * Runtime type for {@link Inline}.
  *
- * @example
+ * **Example** (Type inline node)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { Inline } from "@beep/md/Md.model"
@@ -1080,7 +1124,8 @@ export type Inline = typeof Inline.Type;
 /**
  * Companion namespace for {@link Inline}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { Inline } from "@beep/md/Md.model"
@@ -1131,7 +1176,8 @@ export declare namespace Inline {
 /**
  * Recursive block child list used by document and block quote containers.
  *
- * @example
+ * **Example** (Decode block children)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1155,7 +1201,8 @@ export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Enc
 /**
  * Type for {@link BlockChildren}.
  *
- * @example
+ * **Example** (Type block children)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  * import type { BlockChildren } from "@beep/md/Md.model"
@@ -1172,7 +1219,8 @@ export type BlockChildren = typeof BlockChildren.Type;
 /**
  * Companion namespace for {@link BlockChildren}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  * import type { BlockChildren } from "@beep/md/Md.model"
@@ -1201,7 +1249,8 @@ export declare namespace BlockChildren {
  * block children preserve nested document structure such as paragraphs, code
  * blocks, and nested lists.
  *
- * @example
+ * **Example** (Decode list item child)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1225,7 +1274,8 @@ export const ListItemChild = S.suspend(
 /**
  * Runtime type for {@link ListItemChild}.
  *
- * @example
+ * **Example** (Type list item child)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { ListItemChild } from "@beep/md/Md.model"
@@ -1242,7 +1292,8 @@ export type ListItemChild = typeof ListItemChild.Type;
 /**
  * Companion namespace for {@link ListItemChild}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { ListItemChild } from "@beep/md/Md.model"
@@ -1269,7 +1320,8 @@ export declare namespace ListItemChild {
 /**
  * List item children used by ordered, unordered, and task list items.
  *
- * @example
+ * **Example** (Decode list item children)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1291,7 +1343,8 @@ export const ListItemChildren = S.Array(ListItemChild).pipe(
 /**
  * Type for {@link ListItemChildren}.
  *
- * @example
+ * **Example** (Type list item children)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { ListItemChildren } from "@beep/md/Md.model"
@@ -1308,7 +1361,8 @@ export type ListItemChildren = typeof ListItemChildren.Type;
 /**
  * Companion namespace for {@link ListItemChildren}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { Text } from "@beep/md/Md.model"
  * import type { ListItemChildren } from "@beep/md/Md.model"
@@ -1335,7 +1389,8 @@ export declare namespace ListItemChildren {
 /**
  * Paragraph block.
  *
- * @example
+ * **Example** (Make paragraph node)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  *
@@ -1361,7 +1416,8 @@ export class P extends S.TaggedClass<P>($I`P`)(
 /**
  * Companion namespace for {@link P}.
  *
- * @example
+ * **Example** (Type paragraph node)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  *
@@ -1393,7 +1449,8 @@ export declare namespace P {
 /**
  * Heading level from one (largest) to six (smallest).
  *
- * @example
+ * **Example** (Decode heading level)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1415,7 +1472,8 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 /**
  * Type for {@link HeadingLevel}.
  *
- * @example
+ * **Example** (Type heading level)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1433,7 +1491,8 @@ export type HeadingLevel = typeof HeadingLevel.Type;
 /**
  * Heading block carrying its level alongside inline content.
  *
- * @example
+ * **Example** (Make heading node)
+ *
  * ```ts
  * import { Heading, Text } from "@beep/md/Md.model"
  *
@@ -1465,7 +1524,8 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
 /**
  * Companion namespace for {@link Heading}.
  *
- * @example
+ * **Example** (Type heading node)
+ *
  * ```ts
  * import { Heading, Text } from "@beep/md/Md.model"
  *
@@ -1499,7 +1559,8 @@ export declare namespace Heading {
 /**
  * List item node used by ordered, unordered, and task lists.
  *
- * @example
+ * **Example** (Make list item)
+ *
  * ```ts
  * import { Li, Text } from "@beep/md/Md.model"
  *
@@ -1527,7 +1588,8 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
 /**
  * Companion namespace for {@link Li}.
  *
- * @example
+ * **Example** (Type list item)
+ *
  * ```ts
  * import { Li, Text } from "@beep/md/Md.model"
  *
@@ -1559,7 +1621,8 @@ export declare namespace Li {
 /**
  * List children used by ordered and unordered list blocks.
  *
- * @example
+ * **Example** (Decode list children)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1583,7 +1646,8 @@ export const ListChildren = S.Array(Li).pipe(
 /**
  * Type for {@link ListChildren}.
  *
- * @example
+ * **Example** (Type list children)
+ *
  * ```ts
  * import { Li, Text } from "@beep/md/Md.model"
  * import type { ListChildren } from "@beep/md/Md.model"
@@ -1600,7 +1664,8 @@ export type ListChildren = typeof ListChildren.Type;
 /**
  * Companion namespace for {@link ListChildren}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { Li, Text } from "@beep/md/Md.model"
  * import type { ListChildren } from "@beep/md/Md.model"
@@ -1627,7 +1692,8 @@ export declare namespace ListChildren {
 /**
  * Unordered list block.
  *
- * @example
+ * **Example** (Make unordered list)
+ *
  * ```ts
  * import { Li, Text, Ul } from "@beep/md/Md.model"
  *
@@ -1653,7 +1719,8 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
 /**
  * Companion namespace for {@link Ul}.
  *
- * @example
+ * **Example** (Type unordered list)
+ *
  * ```ts
  * import { Li, Text, Ul } from "@beep/md/Md.model"
  *
@@ -1685,7 +1752,8 @@ export declare namespace Ul {
 /**
  * Ordered list block.
  *
- * @example
+ * **Example** (Make ordered list)
+ *
  * ```ts
  * import { Li, Ol, Text } from "@beep/md/Md.model"
  *
@@ -1714,7 +1782,8 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
 /**
  * Companion namespace for {@link Ol}.
  *
- * @example
+ * **Example** (Type ordered list)
+ *
  * ```ts
  * import { Li, Ol, Text } from "@beep/md/Md.model"
  *
@@ -1748,7 +1817,8 @@ export declare namespace Ol {
 /**
  * GFM task list item.
  *
- * @example
+ * **Example** (Make task item)
+ *
  * ```ts
  * import { TaskItem, Text } from "@beep/md/Md.model"
  *
@@ -1779,7 +1849,8 @@ export class TaskItem extends S.TaggedClass<TaskItem>($I`TaskItem`)(
 /**
  * Companion namespace for {@link TaskItem}.
  *
- * @example
+ * **Example** (Type task item)
+ *
  * ```ts
  * import { TaskItem, Text } from "@beep/md/Md.model"
  *
@@ -1813,10 +1884,13 @@ export declare namespace TaskItem {
 /**
  * Canonical schema-derived task-list constructor input.
  *
+ * **Details**
+ *
  * Unlike the deprecated shorthand union accepted by `Md.taskList`, every value
  * carries the `taskItem` discriminator and fully normalized child nodes.
  *
- * @example
+ * **Example** (Check task item spec)
+ *
  * ```ts
  * import { TaskItem, TaskListItemSpec, Text } from "@beep/md/Md.model"
  *
@@ -1837,7 +1911,8 @@ export const TaskListItemSpec = TaskItem.pipe(
 /**
  * Type for {@link TaskListItemSpec}.
  *
- * @example
+ * **Example** (Type task item spec)
+ *
  * ```ts
  * import { TaskItem, Text } from "@beep/md/Md.model"
  * import type { TaskListItemSpec } from "@beep/md/Md.model"
@@ -1854,7 +1929,8 @@ export type TaskListItemSpec = typeof TaskListItemSpec.Type;
 /**
  * Task item children used by GFM task list blocks.
  *
- * @example
+ * **Example** (Decode task item children)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1878,7 +1954,8 @@ export const TaskItemChildren = S.Array(TaskItem).pipe(
 /**
  * Type for {@link TaskItemChildren}.
  *
- * @example
+ * **Example** (Type task item children)
+ *
  * ```ts
  * import { TaskItem, Text } from "@beep/md/Md.model"
  * import type { TaskItemChildren } from "@beep/md/Md.model"
@@ -1895,7 +1972,8 @@ export type TaskItemChildren = typeof TaskItemChildren.Type;
 /**
  * Companion namespace for {@link TaskItemChildren}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { TaskItem, Text } from "@beep/md/Md.model"
  * import type { TaskItemChildren } from "@beep/md/Md.model"
@@ -1922,7 +2000,8 @@ export declare namespace TaskItemChildren {
 /**
  * GFM task list block.
  *
- * @example
+ * **Example** (Make task list)
+ *
  * ```ts
  * import { TaskItem, TaskList, Text } from "@beep/md/Md.model"
  *
@@ -1948,7 +2027,8 @@ export class TaskList extends S.TaggedClass<TaskList>($I`TaskList`)(
 /**
  * Companion namespace for {@link TaskList}.
  *
- * @example
+ * **Example** (Type task list)
+ *
  * ```ts
  * import { TaskItem, TaskList, Text } from "@beep/md/Md.model"
  *
@@ -1982,7 +2062,8 @@ export declare namespace TaskList {
 /**
  * Block quote container.
  *
- * @example
+ * **Example** (Make block quote)
+ *
  * ```ts
  * import { BlockQuote, P, Text } from "@beep/md/Md.model"
  *
@@ -2008,7 +2089,8 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
 /**
  * Companion namespace for {@link BlockQuote}.
  *
- * @example
+ * **Example** (Type block quote)
+ *
  * ```ts
  * import { BlockQuote, P, Text } from "@beep/md/Md.model"
  *
@@ -2040,7 +2122,8 @@ export declare namespace BlockQuote {
 /**
  * Fenced code block.
  *
- * @example
+ * **Example** (Make fenced code)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Pre } from "@beep/md/Md.model"
@@ -2083,7 +2166,8 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
 /**
  * Companion namespace for {@link Pre}.
  *
- * @example
+ * **Example** (Type fenced code)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Pre } from "@beep/md/Md.model"
@@ -2122,7 +2206,8 @@ export declare namespace Pre {
 /**
  * Table cell containing inline Markdown content.
  *
- * @example
+ * **Example** (Make table cell)
+ *
  * ```ts
  * import { TableCell, Text } from "@beep/md/Md.model"
  *
@@ -2150,7 +2235,8 @@ export class TableCell extends S.TaggedClass<TableCell>($I`TableCell`)(
 /**
  * Companion namespace for {@link TableCell}.
  *
- * @example
+ * **Example** (Type table cell)
+ *
  * ```ts
  * import { TableCell, Text } from "@beep/md/Md.model"
  *
@@ -2182,7 +2268,8 @@ export declare namespace TableCell {
 /**
  * Table row containing cells in column order.
  *
- * @example
+ * **Example** (Make table row)
+ *
  * ```ts
  * import { TableCell, TableRow, Text } from "@beep/md/Md.model"
  *
@@ -2210,7 +2297,8 @@ export class TableRow extends S.TaggedClass<TableRow>($I`TableRow`)(
 /**
  * Companion namespace for {@link TableRow}.
  *
- * @example
+ * **Example** (Type table row)
+ *
  * ```ts
  * import { TableCell, TableRow, Text } from "@beep/md/Md.model"
  *
@@ -2242,7 +2330,8 @@ export declare namespace TableRow {
 /**
  * Markdown table block.
  *
- * @example
+ * **Example** (Make table block)
+ *
  * ```ts
  * import { Table, TableCell, TableRow, Text } from "@beep/md/Md.model"
  *
@@ -2277,7 +2366,8 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 /**
  * Companion namespace for {@link Table}.
  *
- * @example
+ * **Example** (Type table block)
+ *
  * ```ts
  * import { Table, TableCell, TableRow, Text } from "@beep/md/Md.model"
  *
@@ -2316,7 +2406,8 @@ export declare namespace Table {
 /**
  * YouTube video embed block.
  *
- * @example
+ * **Example** (Make YouTube embed)
+ *
  * ```ts
  * import { YouTube } from "@beep/md/Md.model"
  *
@@ -2342,7 +2433,8 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
 /**
  * Companion namespace for {@link YouTube}.
  *
- * @example
+ * **Example** (Type YouTube embed)
+ *
  * ```ts
  * import { YouTube } from "@beep/md/Md.model"
  *
@@ -2371,7 +2463,8 @@ export declare namespace YouTube {
 /**
  * Display TeX math block.
  *
- * @example
+ * **Example** (Make math block)
+ *
  * ```ts
  * import { MathBlock } from "@beep/md/Md.model"
  *
@@ -2397,7 +2490,8 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
 /**
  * Companion namespace for {@link MathBlock}.
  *
- * @example
+ * **Example** (Encode math block)
+ *
  * ```ts
  * import type { MathBlock } from "@beep/md/Md.model"
  *
@@ -2426,7 +2520,8 @@ export declare namespace MathBlock {
 /**
  * Footnote definition block.
  *
- * @example
+ * **Example** (Make footnote definition)
+ *
  * ```ts
  * import { FootnoteDefinition, P, Text } from "@beep/md/Md.model"
  *
@@ -2458,7 +2553,8 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
 /**
  * Companion namespace for {@link FootnoteDefinition}.
  *
- * @example
+ * **Example** (Encode footnote definition)
+ *
  * ```ts
  * import type { FootnoteDefinition } from "@beep/md/Md.model"
  *
@@ -2496,7 +2592,8 @@ export declare namespace FootnoteDefinition {
 /**
  * Typed admonition block.
  *
- * @example
+ * **Example** (Make admonition block)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Admonition, P, Text } from "@beep/md/Md.model"
@@ -2533,7 +2630,8 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
 /**
  * Companion namespace for {@link Admonition}.
  *
- * @example
+ * **Example** (Encode admonition block)
+ *
  * ```ts
  * import type { Admonition } from "@beep/md/Md.model"
  *
@@ -2569,7 +2667,8 @@ export declare namespace Admonition {
 /**
  * Safe generalized block embed.
  *
- * @example
+ * **Example** (Make embed block)
+ *
  * ```ts
  * import { Embed } from "@beep/md/Md.model"
  *
@@ -2604,7 +2703,8 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
 /**
  * Companion namespace for {@link Embed}.
  *
- * @example
+ * **Example** (Encode embed block)
+ *
  * ```ts
  * import type { Embed } from "@beep/md/Md.model"
  *
@@ -2642,7 +2742,8 @@ export declare namespace Embed {
 /**
  * Horizontal rule block.
  *
- * @example
+ * **Example** (Make horizontal rule)
+ *
  * ```ts
  * import { Hr } from "@beep/md/Md.model"
  *
@@ -2664,7 +2765,8 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
 /**
  * Companion namespace for {@link Hr}.
  *
- * @example
+ * **Example** (Type horizontal rule)
+ *
  * ```ts
  * import { Hr } from "@beep/md/Md.model"
  *
@@ -2692,7 +2794,8 @@ export declare namespace Hr {
 /**
  * Discriminated union of block Markdown AST nodes.
  *
- * @example
+ * **Example** (Decode block union)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2732,7 +2835,8 @@ export const Block = S.Union([
 /**
  * Runtime type for {@link Block}.
  *
- * @example
+ * **Example** (Type block node)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  * import type { Block } from "@beep/md/Md.model"
@@ -2749,7 +2853,8 @@ export type Block = typeof Block.Type;
 /**
  * Companion namespace for {@link Block}.
  *
- * @example
+ * **Example** (Use namespace Type)
+ *
  * ```ts
  * import { P, Text } from "@beep/md/Md.model"
  * import type { Block } from "@beep/md/Md.model"
@@ -2804,7 +2909,8 @@ export declare namespace Block {
 /**
  * Root Markdown document AST.
  *
- * @example
+ * **Example** (Make document root)
+ *
  * ```ts
  * import { Document, P, Text } from "@beep/md/Md.model"
  *
@@ -2833,7 +2939,8 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
 /**
  * Companion namespace for {@link Document}.
  *
- * @example
+ * **Example** (Type document root)
+ *
  * ```ts
  * import { Document, P, Text } from "@beep/md/Md.model"
  *

@@ -16,7 +16,8 @@ import type React from "react";
 /**
  * Props for a numeric star rating backed by radio-group semantics.
  *
- * @example
+ * **Example** (Satisfy RatingProps shape)
+ *
  * ```ts
  * import type { RatingProps } from "@beep/ui/components/rating"
  *
@@ -42,7 +43,8 @@ export interface RatingProps
 /**
  * Accessible star rating control.
  *
- * @example
+ * **Example** (Render satisfaction rating)
+ *
  * ```tsx
  * import { Rating } from "@beep/ui/components/rating"
  *

@@ -1181,7 +1181,8 @@ const archiveCommand = Command.make("archive", {}, () =>
 /**
  * AI metrics root command.
  *
- * @example
+ * **Example** (Run AI metrics command)
+ *
  * ```ts
  * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
  * import { Command } from "effect/unstable/cli"
@@ -1190,6 +1191,7 @@ const archiveCommand = Command.make("archive", {}, () =>
  * const run = Command.run(aiMetricsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

@@ -38,7 +38,8 @@ const sliderValues = (
 /**
  * Slider component.
  *
- * @example
+ * **Example** (Import Slider component)
+ *
  * ```tsx
  * import { Slider } from "@beep/ui/components/slider"
  *

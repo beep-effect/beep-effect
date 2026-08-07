@@ -9,7 +9,8 @@
 /**
  * Package version for the workspace use-case role.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/workspace-use-cases"
  *

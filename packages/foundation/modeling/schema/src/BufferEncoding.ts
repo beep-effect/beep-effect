@@ -12,7 +12,8 @@ const $I = $SchemaId.create("BufferEncoding");
 /**
  * Schema for Node.js `BufferEncoding` string literals (`"utf8"`, `"hex"`, `"base64"`, etc.).
  *
- * @example
+ * **Example** (Decode utf8 encoding)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BuffEncoding } from "@beep/schema/BufferEncoding"
@@ -46,7 +47,8 @@ export const BuffEncoding = LiteralKit([
 /**
  * {@inheritDoc BuffEncoding}
  *
- * @example
+ * **Example** (Type hex as BuffEncoding)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BuffEncoding } from "@beep/schema/BufferEncoding"
@@ -63,7 +65,8 @@ export type BuffEncoding = typeof BuffEncoding.Type;
 /**
  * {@inheritDoc BuffEncoding}
  *
- * @example
+ * **Example** (Type hex as BufferEncoding)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BuffEncoding } from "@beep/schema/BufferEncoding"

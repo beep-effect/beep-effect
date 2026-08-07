@@ -28,7 +28,8 @@ import { characterCountAtom, sendKeyBindingAtom } from "./atoms.ts";
  * `keyCode === 229` events; non-IME Enter while a typeahead menu is open selects
  * the option.
  *
- * @example
+ * **Example** (Mount Enter-to-send plugin)
+ *
  * ```tsx
  * import { SendPlugin } from "@beep/editor/chat/send"
  *
@@ -51,7 +52,8 @@ export function SendPlugin(): null {
  * types. Deterministic and testable (no token estimation). Backed by the
  * per-editor {@link characterCountAtom}.
  *
- * @example
+ * **Example** (Display live character count)
+ *
  * ```tsx
  * import { useCharacterCount } from "@beep/editor/chat/send"
  *

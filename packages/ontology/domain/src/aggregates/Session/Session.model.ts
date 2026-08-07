@@ -1,7 +1,8 @@
 /**
  * Ontology session aggregate model.
  *
- * @remarks
+ * **Details**
+ *
  * The session keeps imported RDF values in a pure domain model. N3/Turtle IO is
  * owned by server and driver packages.
  *
@@ -43,13 +44,17 @@ type PartitionedQuad = {
   readonly quad: Quad;
 };
 
-/** Authenticated actor IRI retained on an ontology change journal entry.
- * @example
+/**
+ *  Authenticated actor IRI retained on an ontology change journal entry.
+ *
+ * **Example** (Make actor from IRI)
+ *
  * ```ts
  * import { OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session"
  * const actor = OntologyChangeActor.make("urn:beep:desktop-mcp-client:1")
  * console.log(actor)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,14 +65,18 @@ export const OntologyChangeActor = S.NonEmptyString.pipe(
   })
 );
 
-/** Type for {@link OntologyChangeActor}.
- * @example
+/**
+ *  Type for {@link OntologyChangeActor}.
+ *
+ * **Example** (Annotate actor with type)
+ *
  * ```ts
  * import { OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session"
  * import type { OntologyChangeActor as OntologyChangeActorType } from "@beep/ontology-domain/aggregates/Session"
  * const actor: OntologyChangeActorType = OntologyChangeActor.make("urn:beep:desktop-mcp-client:1")
  * console.log(actor)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -121,7 +130,8 @@ const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
 /**
  * Typed ontology change operation over RDF quads.
  *
- * @example
+ * **Example** (Create addQuad operation)
+ *
  * ```ts
  * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -139,8 +149,8 @@ const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
  * console.log(change.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ChangeOperation = Object.assign(
   ChangeOperationBase.pipe(
@@ -158,7 +168,8 @@ export const ChangeOperation = Object.assign(
 /**
  * Type for {@link ChangeOperation}.
  *
- * @example
+ * **Example** (Type removeQuad operation)
+ *
  * ```ts
  * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -176,15 +187,16 @@ export const ChangeOperation = Object.assign(
  * console.log(change.partition)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ChangeOperation = typeof ChangeOperation.Type;
 
 /**
  * Derived RDF datasets for every ontology session named graph partition.
  *
- * @example
+ * **Example** (Empty session graph partitions)
+ *
  * ```ts
  * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -193,8 +205,8 @@ export type ChangeOperation = typeof ChangeOperation.Type;
  * console.log(partitions.asserted.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SessionGraphPartitions extends S.Class<SessionGraphPartitions>($I`SessionGraphPartitions`)(
   {
@@ -212,7 +224,8 @@ export class SessionGraphPartitions extends S.Class<SessionGraphPartitions>($I`S
 /**
  * Named graph view derived from a session partition.
  *
- * @example
+ * **Example** (Make named graph partition)
+ *
  * ```ts
  * import { NamedGraphPartition } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset, makeNamedNode } from "@beep/rdf/Rdf"
@@ -227,8 +240,8 @@ export class SessionGraphPartitions extends S.Class<SessionGraphPartitions>($I`S
  * console.log(namedGraph.graph.value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NamedGraphPartition extends S.Class<NamedGraphPartition>($I`NamedGraphPartition`)(
   {
@@ -245,7 +258,8 @@ export class NamedGraphPartition extends S.Class<NamedGraphPartition>($I`NamedGr
 /**
  * Real dataset delta produced by applying ontology change operations.
  *
- * @example
+ * **Example** (Make empty change delta)
+ *
  * ```ts
  * import { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -257,8 +271,8 @@ export class NamedGraphPartition extends S.Class<NamedGraphPartition>($I`NamedGr
  * console.log(delta.added.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SessionChangeDelta extends S.Class<SessionChangeDelta>($I`SessionChangeDelta`)(
   {
@@ -280,7 +294,8 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
 /**
  * Ontology workbench session with base dataset and ordered change log.
  *
- * @example
+ * **Example** (Make ontology session)
+ *
  * ```ts
  * import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -295,8 +310,8 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
  * console.log(session.changeLog.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Session extends S.Class<Session>($I`Session`)(
   {
@@ -313,7 +328,8 @@ export class Session extends S.Class<Session>($I`Session`)(
 /**
  * Applied session batch with the updated session and real dataset delta.
  *
- * @example
+ * **Example** (Make change application result)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, emptySessionChangeDelta, SessionChangeApplication, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -334,8 +350,8 @@ export class Session extends S.Class<Session>($I`Session`)(
  * console.log(applied.operations.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SessionChangeApplication extends S.Class<SessionChangeApplication>($I`SessionChangeApplication`)(
   {
@@ -351,7 +367,8 @@ export class SessionChangeApplication extends S.Class<SessionChangeApplication>(
 /**
  * Input for creating an ontology session.
  *
- * @example
+ * **Example** (Make create session input)
+ *
  * ```ts
  * import { CreateSessionInput, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -365,8 +382,8 @@ export class SessionChangeApplication extends S.Class<SessionChangeApplication>(
  * console.log(input.baseDataset.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class CreateSessionInput extends S.Class<CreateSessionInput>($I`CreateSessionInput`)(
   {
@@ -384,7 +401,8 @@ const emptyDataset = () => makeDataset([]);
 /**
  * Empty session change delta.
  *
- * @example
+ * **Example** (Empty session change delta)
+ *
  * ```ts
  * import { emptySessionChangeDelta } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -393,8 +411,8 @@ const emptyDataset = () => makeDataset([]);
  * console.log(delta.removed.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const emptySessionChangeDelta = (): SessionChangeDelta =>
   SessionChangeDelta.make({
@@ -405,7 +423,8 @@ export const emptySessionChangeDelta = (): SessionChangeDelta =>
 /**
  * Empty partition set.
  *
- * @example
+ * **Example** (Empty graph partition set)
+ *
  * ```ts
  * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -414,8 +433,8 @@ export const emptySessionChangeDelta = (): SessionChangeDelta =>
  * console.log(partitions.inferred.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const emptySessionGraphPartitions = (): SessionGraphPartitions =>
   SessionGraphPartitions.make({
@@ -505,7 +524,13 @@ const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
 /**
  * Classify an ingested RDF dataset into asserted and SHACL-shape partitions.
  *
- * @example
+ * **Details**
+ *
+ * This classifier is shared by base-document ingestion and typed
+ * change-batch validation so SHACL closure follows one routing rule.
+ *
+ * **Example** (Classify empty RDF dataset)
+ *
  * ```ts
  * import { classifySessionDatasetPartitions } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -514,8 +539,6 @@ const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
  * console.log(partitions.asserted.quads.length) // 0
  * ```
  *
- * @remarks This classifier is shared by base-document ingestion and typed
- * change-batch validation so SHACL closure follows one routing rule.
  * @category utilities
  * @since 0.0.0
  */
@@ -542,7 +565,8 @@ export const classifySessionDatasetPartitions = (
 /**
  * Read the dataset for a partition.
  *
- * @example
+ * **Example** (Read asserted partition dataset)
+ *
  * ```ts
  * import { datasetForPartition, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -551,8 +575,8 @@ export const classifySessionDatasetPartitions = (
  * console.log(asserted.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const datasetForPartition: {
   (partition: GraphPartition): (partitions: SessionGraphPartitions) => Dataset;
@@ -591,7 +615,8 @@ const applyChangeToDataset = (dataset: Dataset, change: ChangeOperation): Datase
 /**
  * Combine two real session deltas.
  *
- * @example
+ * **Example** (Combine two session deltas)
+ *
  * ```ts
  * import { combineSessionChangeDelta, emptySessionChangeDelta, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -603,8 +628,8 @@ const applyChangeToDataset = (dataset: Dataset, change: ChangeOperation): Datase
  * console.log(combined.added.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const combineSessionChangeDelta: {
   (right: SessionChangeDelta): (left: SessionChangeDelta) => SessionChangeDelta;
@@ -621,7 +646,8 @@ export const combineSessionChangeDelta: {
 /**
  * Compute the real dataset delta for one change operation before it is applied.
  *
- * @example
+ * **Example** (Delta for addQuad operation)
+ *
  * ```ts
  * import { changeDeltaForOperation, ChangeOperation, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -642,8 +668,8 @@ export const combineSessionChangeDelta: {
  * console.log(delta.added.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const changeDeltaForOperation: {
   (change: ChangeOperation): (partitions: SessionGraphPartitions) => SessionChangeDelta;
@@ -671,7 +697,8 @@ export const changeDeltaForOperation: {
 /**
  * Apply one change operation to partitioned session datasets.
  *
- * @example
+ * **Example** (Apply addQuad to partitions)
+ *
  * ```ts
  * import { applyChangeToPartitions, ChangeOperation, emptySessionGraphPartitions, graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -695,8 +722,8 @@ export const changeDeltaForOperation: {
  * console.log(next.ontologies.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const applyChangeToPartitions: {
   (change: ChangeOperation): (partitions: SessionGraphPartitions) => SessionGraphPartitions;
@@ -714,7 +741,8 @@ export const applyChangeToPartitions: {
 /**
  * Create an ontology session from a base asserted dataset.
  *
- * @example
+ * **Example** (Create session from input)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -730,8 +758,8 @@ export const applyChangeToPartitions: {
  * console.log(session.id)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createSession = (input: CreateSessionInput): Session =>
   Session.make({
@@ -744,7 +772,8 @@ export const createSession = (input: CreateSessionInput): Session =>
 /**
  * Append a typed change operation to a session.
  *
- * @example
+ * **Example** (Append single change operation)
+ *
  * ```ts
  * import { appendChange, ChangeOperation, CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -772,8 +801,8 @@ export const createSession = (input: CreateSessionInput): Session =>
  * console.log(updated.changeLog.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const appendChange: {
   (change: ChangeOperation): (session: Session) => Session;
@@ -790,7 +819,8 @@ export const appendChange: {
 /**
  * Append a batch of typed change operations to a session.
  *
- * @example
+ * **Example** (Append batch of changes)
+ *
  * ```ts
  * import { appendChanges, ChangeOperation, CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -817,8 +847,8 @@ export const appendChange: {
  * console.log(updated.changeLog.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const appendChanges: {
   (changes: ReadonlyArray<ChangeOperation>): (session: Session) => Session;
@@ -835,7 +865,8 @@ export const appendChanges: {
 /**
  * Invert one authored change operation for undo/redo.
  *
- * @example
+ * **Example** (Invert addQuad operation)
+ *
  * ```ts
  * import { ChangeOperation, invertChangeOperation } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -855,8 +886,8 @@ export const appendChanges: {
  * console.log(inverted.kind)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const invertChangeOperation = (change: ChangeOperation): ChangeOperation =>
   ChangeOperation.match(change, {
@@ -879,7 +910,8 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
 /**
  * Derive named graph partition datasets from session base and change log.
  *
- * @example
+ * **Example** (Derive partitions from session)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, deriveSessionGraphPartitions, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -896,8 +928,8 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
  * console.log(partitions.asserted.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const deriveSessionGraphPartitions = (session: Session): SessionGraphPartitions => {
   const base = classifySessionDatasetPartitions(session.baseDataset);
@@ -917,7 +949,8 @@ export const deriveSessionGraphPartitions = (session: Session): SessionGraphPart
 /**
  * Apply a batch of operations and return the updated session plus real delta.
  *
- * @example
+ * **Example** (Apply operations with delta)
+ *
  * ```ts
  * import { applyChangeOperationsWithDelta, ChangeOperation, CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
@@ -944,8 +977,8 @@ export const deriveSessionGraphPartitions = (session: Session): SessionGraphPart
  * console.log(applied.delta.added.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const applyChangeOperationsWithDelta: {
   (operations: ReadonlyArray<ChangeOperation>): (session: Session) => SessionChangeApplication;
@@ -984,7 +1017,8 @@ const makeNamedGraphPartition = (partitions: SessionGraphPartitions, partition: 
 /**
  * Derive all named graph views for a session.
  *
- * @example
+ * **Example** (Derive session named graphs)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, deriveNamedGraphs, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -1001,8 +1035,8 @@ const makeNamedGraphPartition = (partitions: SessionGraphPartitions, partition: 
  * console.log(namedGraphs.length)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const deriveNamedGraphs = (session: Session): ReadonlyArray<NamedGraphPartition> => {
   const partitions = deriveSessionGraphPartitions(session);

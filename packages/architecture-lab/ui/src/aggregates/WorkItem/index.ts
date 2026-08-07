@@ -1,7 +1,8 @@
 /**
  * WorkItem UI read-model exports.
  *
- * @example
+ * **Example** (WorkItem summary view model)
+ *
  * ```ts
  * import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/public"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"

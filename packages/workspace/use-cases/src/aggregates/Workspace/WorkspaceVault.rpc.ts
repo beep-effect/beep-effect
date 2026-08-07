@@ -13,7 +13,8 @@ import { SetWorkspaceVaultInput, WorkspaceVaultActionError, WorkspaceVaultConfig
 /**
  * RPC for reading the configured workspace vault path.
  *
- * @example
+ * **Example** (Check GetWorkspaceVault registration)
+ *
  * ```ts
  * import { GetWorkspaceVaultRpc, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public"
  *
@@ -33,7 +34,8 @@ export const GetWorkspaceVaultRpc = Rpc.make("GetWorkspaceVault", {
 /**
  * RPC for persisting the configured workspace vault path.
  *
- * @example
+ * **Example** (Check SetWorkspaceVault registration)
+ *
  * ```ts
  * import { SetWorkspaceVaultRpc, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public"
  *
@@ -53,7 +55,8 @@ export const SetWorkspaceVaultRpc = Rpc.make("SetWorkspaceVault", {
 /**
  * Workspace vault RPC group exposed to app clients.
  *
- * @example
+ * **Example** (Test request key presence)
+ *
  * ```ts
  * import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public"
  *

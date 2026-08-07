@@ -25,7 +25,8 @@ const $I = $AnthropicId.create("Anthropic.repair");
 /**
  * Small Claude model used for forced-tool repair calls.
  *
- * @example
+ * **Example** (Configure repair model option)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_MODEL, AnthropicLanguageModelOptions } from "@beep/anthropic"
@@ -45,7 +46,8 @@ export const ANTHROPIC_REPAIR_MODEL = "claude-haiku-4-5" as const;
 /**
  * Maximum output-token budget used for repair calls.
  *
- * @example
+ * **Example** (Set repair max tokens)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
@@ -66,7 +68,8 @@ export const ANTHROPIC_REPAIR_MAX_TOKENS = 4096 as const;
 /**
  * Maximum acquisition attempts used by the repair execution plan.
  *
- * @example
+ * **Example** (Build exponential backoff delays)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_ATTEMPTS, ANTHROPIC_REPAIR_RETRY_BASE_DELAY_MILLIS } from "@beep/anthropic"
@@ -87,7 +90,8 @@ export const ANTHROPIC_REPAIR_ATTEMPTS = 2 as const;
 /**
  * Initial delay, in milliseconds, for repair-call acquisition retries.
  *
- * @example
+ * **Example** (Compute second retry delay)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_RETRY_BASE_DELAY_MILLIS } from "@beep/anthropic"
@@ -110,12 +114,14 @@ const toRepairError =
 /**
  * Build the Anthropic repair-call execution plan with repair-specific defaults.
  *
- * @remarks
+ * **Details**
+ *
  * The plan retries only retryable Effect AI provider failures and supplies a
  * repair-sized language-model layer; callers do not need to provide
  * `LanguageModel` separately.
  *
- * @example
+ * **Example** (Create plan with options)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicRepairPlan } from "@beep/anthropic"
@@ -150,11 +156,13 @@ export const makeAnthropicRepairPlan = (
 /**
  * Collect streamed forced-tool params into one JSON string.
  *
- * @remarks
+ * **Details**
+ *
  * Collection stops at the first `tool-params-end` part; later deltas are
  * ignored so callers can feed the result directly to a schema decoder.
  *
- * @example
+ * **Example** (Collect streamed tool params)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { collectToolParamsJson } from "@beep/anthropic"
@@ -190,7 +198,8 @@ export const collectToolParamsJson = <Tools extends Record<string, Tool.Any>, E,
 /**
  * Tool-parameter JSON plus provider-reported usage from one Anthropic repair call.
  *
- * @example
+ * **Example** (Make tool JSON response)
+ *
  * ```ts
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Response } from "effect/unstable/ai"
@@ -229,12 +238,14 @@ const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>>(
 /**
  * Collect forced-tool params and the terminal provider usage from a streamed repair response.
  *
- * @remarks
+ * **Details**
+ *
  * Tool-parameter collection stops at the first `tool-params-end`, while the
  * stream itself is consumed through its terminal `finish` part so usage is not
  * discarded.
  *
- * @example
+ * **Example** (Collect params and usage)
+ *
  * ```ts
  * import { collectToolParamsJsonWithUsage } from "@beep/anthropic"
  * import { Effect, Stream } from "effect"
@@ -278,12 +289,14 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
 /**
  * Run a forced-tool Anthropic call and return its tool-params JSON and usage.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This uses `streamText` and consumes the tool params whole because the
  * non-streaming tool-use path is unsafe for the currently pinned Effect AI
  * Anthropic provider.
  *
- * @example
+ * **Example** (Run forced-tool repair call)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { generateAnthropicToolJson } from "@beep/anthropic"
@@ -312,7 +325,6 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
  * - Runs a streamed Anthropic language-model request when the returned Effect is executed.
  * - Collects tool-parameter deltas until the provider emits `tool-params-end`.
  * - Consumes the terminal `finish` part so provider usage remains attributable.
- *
  * @category combinators
  * @since 0.0.0
  */

@@ -21,7 +21,8 @@ const $I = $ObsId.create("ObsProtocol.models");
 /**
  * The obs-websocket RPC version this driver negotiates.
  *
- * @example
+ * **Example** (Log negotiated RPC version)
+ *
  * ```ts
  * import { OBS_RPC_VERSION } from "@beep/obs"
  *
@@ -53,7 +54,8 @@ const ObsRequestTypeBase = LiteralKit([
 /**
  * The obs-websocket request-type subset this driver may send.
  *
- * @example
+ * **Example** (Check StartRecord request type)
+ *
  * ```ts
  * import { ObsRequestType } from "@beep/obs"
  *
@@ -73,7 +75,8 @@ export const ObsRequestType = ObsRequestTypeBase.pipe(
 /**
  * The obs-websocket request-type subset this driver may send.
  *
- * @example
+ * **Example** (Assign GetVersion request type)
+ *
  * ```ts
  * import type { ObsRequestType } from "@beep/obs"
  *
@@ -101,7 +104,8 @@ const ObsOutputStateBase = LiteralKit([
 /**
  * obs-websocket `ObsOutputState` enum values.
  *
- * @example
+ * **Example** (Check output started state)
+ *
  * ```ts
  * import { ObsOutputState } from "@beep/obs"
  *
@@ -121,7 +125,8 @@ export const ObsOutputState = ObsOutputStateBase.pipe(
 /**
  * obs-websocket `ObsOutputState` enum values.
  *
- * @example
+ * **Example** (Assign output started state)
+ *
  * ```ts
  * import type { ObsOutputState } from "@beep/obs"
  *
@@ -138,7 +143,8 @@ export type ObsOutputState = typeof ObsOutputState.Type;
  * Authentication challenge carried by the `Hello` message when the
  * obs-websocket server requires a password.
  *
- * @example
+ * **Example** (Make auth challenge payload)
+ *
  * ```ts
  * import { ObsAuthChallenge } from "@beep/obs"
  *
@@ -170,7 +176,8 @@ export class ObsAuthChallenge extends S.Class<ObsAuthChallenge>($I`ObsAuthChalle
 /**
  * `Hello` (OpCode 0) payload sent by obs-websocket on connection.
  *
- * @example
+ * **Example** (Make Hello connection payload)
+ *
  * ```ts
  * import { ObsHello } from "@beep/obs"
  *
@@ -214,7 +221,8 @@ export class ObsHello extends S.Class<ObsHello>($I`ObsHello`)(
 /**
  * `Identify` (OpCode 1) payload sent by the client in response to `Hello`.
  *
- * @example
+ * **Example** (Make Identify client payload)
+ *
  * ```ts
  * import { ObsIdentify } from "@beep/obs"
  *
@@ -252,7 +260,8 @@ export class ObsIdentify extends S.Class<ObsIdentify>($I`ObsIdentify`)(
 /**
  * `Identified` (OpCode 2) payload confirming the session is ready.
  *
- * @example
+ * **Example** (Make Identified session payload)
+ *
  * ```ts
  * import { ObsIdentified } from "@beep/obs"
  *
@@ -279,7 +288,8 @@ export class ObsIdentified extends S.Class<ObsIdentified>($I`ObsIdentified`)(
 /**
  * `Event` (OpCode 5) payload describing an OBS event.
  *
- * @example
+ * **Example** (Make Event envelope payload)
+ *
  * ```ts
  * import { ObsEventEnvelope } from "@beep/obs"
  *
@@ -317,7 +327,8 @@ export class ObsEventEnvelope extends S.Class<ObsEventEnvelope>($I`ObsEventEnvel
 /**
  * `Request` (OpCode 6) payload sent by the client.
  *
- * @example
+ * **Example** (Make Request envelope payload)
+ *
  * ```ts
  * import { ObsRequestEnvelope } from "@beep/obs"
  *
@@ -355,7 +366,8 @@ export class ObsRequestEnvelope extends S.Class<ObsRequestEnvelope>($I`ObsReques
 /**
  * `RequestStatus` object carried by every `RequestResponse`.
  *
- * @example
+ * **Example** (Make request status object)
+ *
  * ```ts
  * import { ObsRequestStatus } from "@beep/obs"
  *
@@ -393,7 +405,8 @@ export class ObsRequestStatus extends S.Class<ObsRequestStatus>($I`ObsRequestSta
 /**
  * `RequestResponse` (OpCode 7) payload answering a client request.
  *
- * @example
+ * **Example** (Make RequestResponse envelope)
+ *
  * ```ts
  * import { ObsRequestResponseEnvelope, ObsRequestStatus } from "@beep/obs"
  *
@@ -440,7 +453,8 @@ export class ObsRequestResponseEnvelope extends S.Class<ObsRequestResponseEnvelo
 /**
  * `Hello` base-envelope message (`op: 0`).
  *
- * @example
+ * **Example** (Make Hello op message)
+ *
  * ```ts
  * import { ObsHello, ObsHelloMessage } from "@beep/obs"
  *
@@ -472,7 +486,8 @@ export class ObsHelloMessage extends S.Class<ObsHelloMessage>($I`ObsHelloMessage
 /**
  * `Identify` base-envelope message (`op: 1`).
  *
- * @example
+ * **Example** (Make Identify op message)
+ *
  * ```ts
  * import { ObsIdentify, ObsIdentifyMessage } from "@beep/obs"
  *
@@ -504,7 +519,8 @@ export class ObsIdentifyMessage extends S.Class<ObsIdentifyMessage>($I`ObsIdenti
 /**
  * `Identified` base-envelope message (`op: 2`).
  *
- * @example
+ * **Example** (Make Identified op message)
+ *
  * ```ts
  * import { ObsIdentified, ObsIdentifiedMessage } from "@beep/obs"
  *
@@ -536,7 +552,8 @@ export class ObsIdentifiedMessage extends S.Class<ObsIdentifiedMessage>($I`ObsId
 /**
  * `Event` base-envelope message (`op: 5`).
  *
- * @example
+ * **Example** (Make Event op message)
+ *
  * ```ts
  * import { ObsEventEnvelope, ObsEventMessage } from "@beep/obs"
  *
@@ -570,7 +587,8 @@ export class ObsEventMessage extends S.Class<ObsEventMessage>($I`ObsEventMessage
 /**
  * `Request` base-envelope message (`op: 6`).
  *
- * @example
+ * **Example** (Make Request op message)
+ *
  * ```ts
  * import { ObsRequestEnvelope, ObsRequestMessage } from "@beep/obs"
  *
@@ -604,7 +622,8 @@ export class ObsRequestMessage extends S.Class<ObsRequestMessage>($I`ObsRequestM
 /**
  * `RequestResponse` base-envelope message (`op: 7`).
  *
- * @example
+ * **Example** (Make RequestResponse op message)
+ *
  * ```ts
  * import { ObsRequestResponseEnvelope, ObsRequestResponseMessage, ObsRequestStatus } from "@beep/obs"
  *
@@ -643,7 +662,8 @@ export class ObsRequestResponseMessage extends S.Class<ObsRequestResponseMessage
  * Messages the obs-websocket server sends to this client, discriminated by
  * the envelope `op` code.
  *
- * @example
+ * **Example** (Guard incoming message shape)
+ *
  * ```ts
  * import { ObsIncomingMessage } from "@beep/obs"
  *
@@ -669,7 +689,8 @@ export const ObsIncomingMessage = S.Union([
 /**
  * Messages the obs-websocket server sends to this client.
  *
- * @example
+ * **Example** (Read incoming message op)
+ *
  * ```ts
  * import type { ObsIncomingMessage } from "@beep/obs"
  *
@@ -686,7 +707,8 @@ export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
  * Messages this client sends to the obs-websocket server, discriminated by
  * the envelope `op` code.
  *
- * @example
+ * **Example** (Guard outgoing message shape)
+ *
  * ```ts
  * import { ObsOutgoingMessage } from "@beep/obs"
  *
@@ -707,7 +729,8 @@ export const ObsOutgoingMessage = S.Union([ObsIdentifyMessage, ObsRequestMessage
 /**
  * Messages this client sends to the obs-websocket server.
  *
- * @example
+ * **Example** (Read outgoing message op)
+ *
  * ```ts
  * import type { ObsOutgoingMessage } from "@beep/obs"
  *
@@ -723,7 +746,8 @@ export type ObsOutgoingMessage = typeof ObsOutgoingMessage.Type;
 /**
  * Decode a raw obs-websocket JSON text frame into an {@link ObsIncomingMessage}.
  *
- * @example
+ * **Example** (Decode incoming JSON frame)
+ *
  * ```ts
  * import { decodeObsIncomingMessageJson } from "@beep/obs"
  *
@@ -740,7 +764,8 @@ export const decodeObsIncomingMessageJson = S.decodeUnknownEffect(S.fromJsonStri
  * Encode an {@link ObsIncomingMessage} into a JSON text frame. Primarily
  * useful for tests that fake the obs-websocket server side.
  *
- * @example
+ * **Example** (Encode incoming JSON frame)
+ *
  * ```ts
  * import { encodeObsIncomingMessageJson, ObsIdentified, ObsIdentifiedMessage } from "@beep/obs"
  *
@@ -759,7 +784,8 @@ export const encodeObsIncomingMessageJson = S.encodeEffect(S.fromJsonString(ObsI
  * Decode a raw obs-websocket JSON text frame into an {@link ObsOutgoingMessage}.
  * Primarily useful for tests that fake the obs-websocket server side.
  *
- * @example
+ * **Example** (Decode outgoing JSON frame)
+ *
  * ```ts
  * import { decodeObsOutgoingMessageJson } from "@beep/obs"
  *
@@ -777,7 +803,8 @@ export const decodeObsOutgoingMessageJson = S.decodeUnknownEffect(S.fromJsonStri
 /**
  * Encode an {@link ObsOutgoingMessage} into a JSON text frame for the wire.
  *
- * @example
+ * **Example** (Encode outgoing JSON frame)
+ *
  * ```ts
  * import { encodeObsOutgoingMessageJson, ObsIdentify, ObsIdentifyMessage } from "@beep/obs"
  *
@@ -795,7 +822,8 @@ export const encodeObsOutgoingMessageJson = S.encodeEffect(S.fromJsonString(ObsO
 /**
  * `RecordStateChanged` event data payload.
  *
- * @example
+ * **Example** (Make record state data)
+ *
  * ```ts
  * import { ObsRecordStateChangedData } from "@beep/obs"
  * import * as O from "effect/Option"
@@ -841,7 +869,8 @@ export class ObsRecordStateChangedData extends S.Class<ObsRecordStateChangedData
  * recording clock anchor: the driver captures the receipt wall-clock time as
  * `recordStartEpochMs`.
  *
- * @example
+ * **Example** (Make record state event)
+ *
  * ```ts
  * import { ObsRecordStateChangedEvent } from "@beep/obs"
  * import * as O from "effect/Option"
@@ -891,7 +920,8 @@ export class ObsRecordStateChangedEvent extends S.Class<ObsRecordStateChangedEve
  * Passthrough driver event for obs-websocket event types the driver does not
  * model. Nothing is dropped: the raw envelope fields ride along.
  *
- * @example
+ * **Example** (Make unknown passthrough event)
+ *
  * ```ts
  * import { ObsUnknownEvent } from "@beep/obs"
  * import * as O from "effect/Option"
@@ -936,7 +966,8 @@ export class ObsUnknownEvent extends S.Class<ObsUnknownEvent>($I`ObsUnknownEvent
  * Driver events published on the protocol event stream: typed
  * `RecordStateChanged` transitions plus lossless unknown-event passthrough.
  *
- * @example
+ * **Example** (Read driver event type)
+ *
  * ```ts
  * import type { ObsEvent } from "@beep/obs"
  *
@@ -957,7 +988,8 @@ export const ObsEvent = S.Union([ObsRecordStateChangedEvent, ObsUnknownEvent]).p
 /**
  * Driver events published on the protocol event stream.
  *
- * @example
+ * **Example** (Read protocol event type)
+ *
  * ```ts
  * import type { ObsEvent } from "@beep/obs"
  *
@@ -973,7 +1005,8 @@ export type ObsEvent = typeof ObsEvent.Type;
 /**
  * `GetVersion` response payload subset.
  *
- * @example
+ * **Example** (Make GetVersion info payload)
+ *
  * ```ts
  * import { ObsVersionInfo } from "@beep/obs"
  *
@@ -1040,7 +1073,8 @@ export class ObsVersionInfo extends S.Class<ObsVersionInfo>($I`ObsVersionInfo`)(
 /**
  * `GetRecordStatus` response payload.
  *
- * @example
+ * **Example** (Make GetRecordStatus payload)
+ *
  * ```ts
  * import { ObsRecordStatus } from "@beep/obs"
  *
@@ -1096,7 +1130,8 @@ export class ObsRecordStatus extends S.Class<ObsRecordStatus>($I`ObsRecordStatus
  * `StopRecord` response payload. The `outputPath` here is authoritative for
  * the committed recording file.
  *
- * @example
+ * **Example** (Make StopRecord result path)
+ *
  * ```ts
  * import { ObsStopRecordResult } from "@beep/obs"
  *
@@ -1125,7 +1160,8 @@ export class ObsStopRecordResult extends S.Class<ObsStopRecordResult>($I`ObsStop
 /**
  * `GetRecordDirectory` response payload.
  *
- * @example
+ * **Example** (Make record directory payload)
+ *
  * ```ts
  * import { ObsRecordDirectory } from "@beep/obs"
  *
@@ -1155,7 +1191,8 @@ export class ObsRecordDirectory extends S.Class<ObsRecordDirectory>($I`ObsRecord
  * `CreateScene` response payload. `sceneUuid` is modeled as an `Option`
  * because older servers may omit it.
  *
- * @example
+ * **Example** (Make CreateScene response)
+ *
  * ```ts
  * import { ObsCreatedScene } from "@beep/obs"
  *
@@ -1185,7 +1222,8 @@ export class ObsCreatedScene extends S.Class<ObsCreatedScene>($I`ObsCreatedScene
 /**
  * One scene summary entry from `GetSceneList`.
  *
- * @example
+ * **Example** (Make scene summary entry)
+ *
  * ```ts
  * import { ObsSceneSummary } from "@beep/obs"
  *
@@ -1224,7 +1262,8 @@ export class ObsSceneSummary extends S.Class<ObsSceneSummary>($I`ObsSceneSummary
 /**
  * `GetSceneList` response payload subset.
  *
- * @example
+ * **Example** (Make GetSceneList payload)
+ *
  * ```ts
  * import { ObsSceneList } from "@beep/obs"
  * import * as O from "effect/Option"
@@ -1260,7 +1299,8 @@ export class ObsSceneList extends S.Class<ObsSceneList>($I`ObsSceneList`)(
  * `CreateInput` response payload. `inputUuid` is modeled as an `Option`
  * because older servers may omit it.
  *
- * @example
+ * **Example** (Make CreateInput response)
+ *
  * ```ts
  * import { ObsCreatedInput } from "@beep/obs"
  *
@@ -1295,7 +1335,8 @@ export class ObsCreatedInput extends S.Class<ObsCreatedInput>($I`ObsCreatedInput
 /**
  * `GetInputSettings` response payload.
  *
- * @example
+ * **Example** (Make input settings info)
+ *
  * ```ts
  * import { ObsInputSettingsInfo } from "@beep/obs"
  *
@@ -1333,7 +1374,8 @@ export class ObsInputSettingsInfo extends S.Class<ObsInputSettingsInfo>($I`ObsIn
  * `GetSceneItemList` response payload. Scene items stay as raw records —
  * the driver only inspects them opportunistically.
  *
- * @example
+ * **Example** (Make scene item list)
+ *
  * ```ts
  * import { ObsSceneItemList } from "@beep/obs"
  *

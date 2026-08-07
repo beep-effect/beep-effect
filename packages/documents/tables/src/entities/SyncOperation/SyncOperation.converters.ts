@@ -13,7 +13,8 @@ import type { syncOperationTable } from "./SyncOperation.table.ts";
 /**
  * Selected documents SyncOperation row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { syncOperationTable, SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
  *
@@ -31,7 +32,8 @@ export type SyncOperationRow = typeof syncOperationTable.$inferSelect;
 /**
  * Insertable documents SyncOperation row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { syncOperationTable, SyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation"
  *
@@ -52,12 +54,15 @@ const decodeSyncOperationRow = S.decodeUnknownSync(SyncOperation);
 /**
  * Convert a SyncOperation entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link syncOperationTable}, whose metadata carries the
  * physical SQL column names. The database-managed `id` (SERIAL) is dropped so
  * the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert drops managed id)
+ *
  * ```ts
  * import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
@@ -104,7 +109,8 @@ export const toSyncOperationInsert = (syncOperation: SyncOperation): SyncOperati
 /**
  * Convert a selected persistence row into a SyncOperation entity.
  *
- * @example
+ * **Example** (Convert row to entity)
+ *
  * ```ts
  * import { fromSyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"

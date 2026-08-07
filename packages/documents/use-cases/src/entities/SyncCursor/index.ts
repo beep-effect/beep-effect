@@ -9,7 +9,8 @@
  * Empty public SyncCursor namespace placeholder; the repository port is
  * server-only and exported from `@beep/documents-use-cases/entities/SyncCursor/server`.
  *
- * @example
+ * **Example** (Import SyncCursor namespace)
+ *
  * ```ts
  * import * as SyncCursor from "@beep/documents-use-cases/entities/SyncCursor"
  *

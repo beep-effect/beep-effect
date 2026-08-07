@@ -10,16 +10,18 @@ import * as S from "effect/Schema";
 /**
  * Preserve a schema decoder issue or error at the public SchemaError boundary.
  *
- * @internal
- * @param cause - Schema issue or error reported by an Effect schema decoder.
- * @returns Schema error suitable for Result and decoding boundaries.
- * @example
+ * **Example** (Convert issue to SchemaError)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { schemaIssueToError } from "@beep/repo-configs/next/internal"
  * const error = schemaIssueToError(new S.SchemaError(new S.InvalidValue(undefined, { message: "bad" })))
  * console.log(error instanceof S.SchemaError)
  * ```
+ *
+ * @param cause - Schema issue or error reported by an Effect schema decoder.
+ * @returns Schema error suitable for Result and decoding boundaries.
+ * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -29,15 +31,17 @@ export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]
 /**
  * Guard unknown values that must be callable plugin/config hooks.
  *
- * @internal
- * @param value - Unknown value to test for callability.
- * @returns Whether the value is a JavaScript function.
- * @example
+ * **Example** (Test function callability)
+ *
  * ```ts
  * import { isFunctionValue } from "@beep/repo-configs/next/internal"
  * console.log(isFunctionValue(() => undefined))
  * console.log(isFunctionValue("not a function"))
  * ```
+ *
+ * @param value - Unknown value to test for callability.
+ * @returns Whether the value is a JavaScript function.
+ * @internal
  * @category predicates
  * @since 0.0.0
  */

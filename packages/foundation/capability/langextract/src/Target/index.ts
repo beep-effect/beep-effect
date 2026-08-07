@@ -14,7 +14,8 @@ const $I = $LangExtractId.create("Target");
 /**
  * V1 target kinds understood by the provider-neutral extraction contract.
  *
- * @example
+ * **Example** (Check entity kind)
+ *
  * ```ts
  * import { ExtractionTargetKind } from "@beep/langextract/Target"
  *
@@ -33,7 +34,8 @@ export const ExtractionTargetKind = LiteralKit(["entity", "relation", "attribute
 /**
  * {@inheritDoc ExtractionTargetKind}
  *
- * @example
+ * **Example** (Annotate entity kind type)
+ *
  * ```ts
  * import type { ExtractionTargetKind } from "@beep/langextract/Target"
  *
@@ -49,7 +51,8 @@ export type ExtractionTargetKind = typeof ExtractionTargetKind.Type;
 /**
  * A single extraction target requested from a language model.
  *
- * @example
+ * **Example** (Make entity extraction target)
+ *
  * ```ts
  * import { ExtractionTarget } from "@beep/langextract/Target"
  *
@@ -74,7 +77,8 @@ export class ExtractionTarget extends S.Class<ExtractionTarget>($I`ExtractionTar
 /**
  * Example extraction included in a few-shot prompt.
  *
- * @example
+ * **Example** (Make labeled extraction item)
+ *
  * ```ts
  * import { ExtractionExampleItem } from "@beep/langextract/Target"
  *
@@ -98,7 +102,8 @@ export class ExtractionExampleItem extends S.Class<ExtractionExampleItem>($I`Ext
 /**
  * Few-shot example for a source text and expected extractions.
  *
- * @example
+ * **Example** (Make few-shot example)
+ *
  * ```ts
  * import { ExtractionExample, ExtractionExampleItem } from "@beep/langextract/Target"
  *

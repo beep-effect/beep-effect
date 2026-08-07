@@ -13,13 +13,15 @@ import * as Str from "effect/String";
 /**
  * Maximum body size accepted for an explicit closeout review-thread reply.
  *
- * @example
+ * **Example** (Verify max body size)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CLOSEOUT_REPLY_BODY_MAX_CHARS } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(CLOSEOUT_REPLY_BODY_MAX_CHARS, 16 * 1024)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -28,13 +30,15 @@ export const CLOSEOUT_REPLY_BODY_MAX_CHARS = 16 * 1024;
 /**
  * GraphQL mutation used to reply to a pull request review thread.
  *
- * @example
+ * **Example** (Verify reply mutation string)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { REPLY_THREAD_MUTATION } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(REPLY_THREAD_MUTATION.includes("addPullRequestReviewThreadReply"), true)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -44,13 +48,15 @@ export const REPLY_THREAD_MUTATION =
 /**
  * GraphQL mutation used to resolve a pull request review thread.
  *
- * @example
+ * **Example** (Verify resolve mutation string)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { RESOLVE_THREAD_MUTATION } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(RESOLVE_THREAD_MUTATION.includes("resolveReviewThread"), true)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -79,11 +85,8 @@ const caseSensitiveTokens: (value: string) => ReadonlyArray<string> = flow(
 /**
  * Plan explicit closeout write actions from CLI flag values.
  *
- * @param input - Known thread ids plus reply and resolve flag values from the
- * closeout command.
- * @returns Planned write intents, or an error explaining why no writes should
- * run.
- * @example
+ * **Example** (Plan reply and resolve)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -99,6 +102,11 @@ const caseSensitiveTokens: (value: string) => ReadonlyArray<string> = flow(
  * strictEqual(O.isNone(plan.error), true)
  * strictEqual(plan.intents.length, 2)
  * ```
+ *
+ * @param input - Known thread ids plus reply and resolve flag values from the
+ * closeout command.
+ * @returns Planned write intents, or an error explaining why no writes should
+ * run.
  * @category utilities
  * @since 0.0.0
  */
@@ -151,7 +159,8 @@ export const closeoutWritePlan = (
 /**
  * Plan explicit closeout write actions from CLI flag values.
  *
- * @example
+ * **Example** (Plan resolve-only intent)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -167,6 +176,7 @@ export const closeoutWritePlan = (
  * strictEqual(O.isNone(plan.error), true)
  * strictEqual(plan.intents[0]?.kind, "resolve")
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */

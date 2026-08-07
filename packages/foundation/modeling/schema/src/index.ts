@@ -11,7 +11,8 @@ export * from "./Number.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Read package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/schema"
  *
@@ -219,7 +220,8 @@ export * from "./Html.ts";
 /**
  * HTTP method schemas and literal-kit helpers.
  *
- * @example
+ * **Example** (Check HTTP method literal)
+ *
  * ```ts
  * import { HttpMethod } from "@beep/schema"
  *
@@ -245,7 +247,8 @@ export * from "./Int64.ts";
  * class, lossless wire codec, `boolean | Node` subschema union, document
  * envelope, and local `$ref` resolvers.
  *
- * @example
+ * **Example** (Decode JSON Schema node)
+ *
  * ```ts
  * import { JSONSchema } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -336,7 +339,8 @@ export * from "./PascalStr.ts";
 /**
  * Transport-layer port number schemas and codecs.
  *
- * @example
+ * **Example** (Decode port from string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -346,8 +350,8 @@ export * from "./PascalStr.ts";
  * console.log(port) // 443
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export * from "./Port.ts";
 /**
@@ -378,7 +382,8 @@ export * from "./RegExp.ts";
 /**
  * Nominal safe-object schema and object-keyword normalization codec.
  *
- * @example
+ * **Example** (Decode safe object value)
+ *
  * ```ts
  * import { SafeObject } from "@beep/schema"
  * import { Effect } from "effect"

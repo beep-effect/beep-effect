@@ -21,12 +21,13 @@ const $I = $SchemaId.create("Float32Array");
 /**
  * Schema that accepts native `Float32Array` instances.
  *
+ * **Details**
+ *
  * This is useful for internal boundaries that already operate on typed arrays
  * and only need runtime schema validation plus reusable schema metadata.
  *
- * @category validation
- * @since 0.0.0
- * @example
+ * **Example** (Decode native Float32Array)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float32Arr } from "@beep/schema/Float32Array";
@@ -36,6 +37,9 @@ const $I = $SchemaId.create("Float32Array");
  *
  * console.log(value.length); // 3
  * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const Float32Arr = S.instanceOf<globalThis.Float32ArrayConstructor, globalThis.Float32Array>(
   globalThis.Float32Array
@@ -53,7 +57,8 @@ export const Float32Arr = S.instanceOf<globalThis.Float32ArrayConstructor, globa
 /**
  * Type for {@link Float32Arr}.
  *
- * @example
+ * **Example** (Type decoded Float32Array)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float32Arr } from "@beep/schema/Float32Array";
@@ -71,13 +76,14 @@ export type Float32Arr = typeof Float32Arr.Type;
  * Bidirectional schema that decodes arrays of numbers into `Float32Array`
  * values.
  *
+ * **Details**
+ *
  * Decoding allocates a new `Float32Array` from the provided numeric array.
  * Encoding converts the typed array back into a standard array of numbers so it
  * can be transported through JSON-friendly boundaries.
  *
- * @category validation
- * @since 0.0.0
- * @example
+ * **Example** (Decode and encode arrays)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float32ArrayFromArray } from "@beep/schema/Float32Array";
@@ -91,6 +97,9 @@ export type Float32Arr = typeof Float32Arr.Type;
  * console.log(value instanceof Float32Array); // true
  * console.log(encoded); // [0.5, 1.25, 2.75]
  * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const Float32ArrayFromArray = S.Finite.pipe(
   S.Array,
@@ -110,7 +119,8 @@ export const Float32ArrayFromArray = S.Finite.pipe(
 /**
  * Type for {@link Float32ArrayFromArray}.
  *
- * @example
+ * **Example** (Type decoded Float32Array)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float32ArrayFromArray } from "@beep/schema/Float32Array";
@@ -127,7 +137,8 @@ export type Float32ArrayFromArray = typeof Float32ArrayFromArray.Type;
 /**
  * Namespace members for {@link Float32ArrayFromArray}.
  *
- * @example
+ * **Example** (Use Encoded payload type)
+ *
  * ```ts
  * import { type Float32ArrayFromArray } from "@beep/schema/Float32Array";
  *
@@ -142,12 +153,13 @@ export declare namespace Float32ArrayFromArray {
   /**
    * Encoded representation accepted by {@link Float32ArrayFromArray}.
    *
+   * **Details**
+   *
    * This stays as a plain array of numbers, so JSON payloads can represent
    * typed-array content without a custom wire format.
    *
-   * @category models
-   * @since 0.0.0
-   * @example
+   * **Example** (Declare encoded number array)
+   *
    * ```ts
    * import { type Float32ArrayFromArray } from "@beep/schema/Float32Array";
    *
@@ -155,6 +167,9 @@ export declare namespace Float32ArrayFromArray {
    *
    * console.log(payload.length); // 3
    * ```
+   *
+   * @category models
+   * @since 0.0.0
    */
   export type Encoded = typeof Float32ArrayFromArray.Encoded;
 }
@@ -163,13 +178,16 @@ export declare namespace Float32ArrayFromArray {
  * Model field helper for storing `Float32Array` values in variant-based model
  * schemas.
  *
+ * **Details**
+ *
  * Database-facing `insert` and `update` variants require native
  * `Float32Array` instances, while `jsonCreate` and `jsonUpdate` accept plain
  * numeric arrays through {@link Float32ArrayFromArray}. This field does not
  * define a `json` variant, allowing read-side JSON serialization to be chosen
  * explicitly by the surrounding model.
  *
- * @example
+ * **Example** (Access insert field schema)
+ *
  * ```ts
  * import { Float32ArrayField } from "@beep/schema/Float32Array";
  * import * as S from "effect/Schema";

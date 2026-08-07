@@ -144,7 +144,8 @@ const sanitizeNGramResult = (
 /**
  * Typed failure for `wink-nlp-utils` string, token, and n-gram helpers.
  *
- * @example
+ * **Example** (Create error from cause)
+ *
  * ```ts
  * import { WinkUtilsError } from "@beep/wink"
  *
@@ -303,7 +304,8 @@ const makeWinkUtils = Effect.gen(function* () {
 /**
  * Service wrapping `wink-nlp-utils` string cleanup, phonetic, and n-gram helpers.
  *
- * @example
+ * **Example** (Remove HTML tags)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"
@@ -324,7 +326,8 @@ export class WinkUtils extends Context.Service<WinkUtils, WinkUtilsShape>()($I`W
 /**
  * Live layer for the `wink-nlp-utils` wrappers.
  *
- * @example
+ * **Example** (Bag of n-grams)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"
