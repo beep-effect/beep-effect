@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { DEFAULT_AI_METRICS_DATA_ROOT } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
@@ -173,7 +172,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
   $I`RunAgentEffectivenessEvalScoreCommandOptions`
 )(
   {
-    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))),
+    dataRoot: S.String,
     dir: S.String,
     json: S.Boolean,
     record: S.Boolean,
@@ -193,7 +192,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  * import { runAgentEffectivenessEvalScoreCommand } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer"
  *
  * const program = runAgentEffectivenessEvalScoreCommand({
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   dir: "fixtures/task",
  *   json: true,
  *   record: false,
@@ -206,7 +205,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  * @since 0.0.0
  */
 export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivenessEvalScorer.runCommand")(function* ({
-  dataRoot = DEFAULT_AI_METRICS_DATA_ROOT,
+  dataRoot,
   dir,
   json,
   record,

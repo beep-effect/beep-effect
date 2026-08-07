@@ -6,11 +6,12 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { isNestedGitRoot } from "./identity-registry.ts";
 import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 
@@ -18,31 +19,306 @@ const $I = $RepoAiMetricsId.create("config-snapshot");
 
 const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant"] as const;
 const AGENT_DOC_NAMES = ["AGENTS.md", "CLAUDE.md"] as const;
+const SESSION_SCOPE_PATHS: ReadonlyArray<string> = [
+  ".claude/settings.json",
+  ".claude/settings.local.json",
+  ".codex/config.toml",
+  "AGENTS.md",
+  "CLAUDE.md",
+];
 const EXCLUDED_DIR_NAMES = [
   ".beep",
   ".cache",
   ".git",
+  ".idea",
   ".next",
   ".repos",
   ".turbo",
+  ".venv",
+  "build",
   "coverage",
   "dist",
+  "ide",
+  "logs",
   "node_modules",
   "outputs",
+  "projects",
+  "shell-snapshots",
+  "statsig",
+  "target",
+  "todos",
 ] as const;
+const DEFAULT_MAX_DEPTH = 8;
+const DEFAULT_MAX_FILES = 1000;
+const DEFAULT_MAX_FILE_BYTES = 512 * 1024;
+const DEFAULT_MAX_TOTAL_BYTES = 8 * 1024 * 1024;
 
 /**
- * Input for repo-local agent configuration snapshotting.
+ * Whether a snapshotted file is per-root baseline guidance or session-effective configuration.
  *
- * @example
+ * **Details**
+ *
+ * Session scope is the small fixed set an agent session actually runs under at
+ * the scan root: the two agent guides plus the Claude and Codex settings files.
+ * Everything else inside the bounds — skills, agents, hooks, nested-package
+ * guides — is baseline guidance for the root. Splitting them lets an attribution
+ * query tell "the operator changed their settings" apart from "the repo grew a
+ * skill", which the single `configHash` cannot.
+ *
+ * **Example** (Filtering a snapshot to session-effective files)
+ *
+ * ```ts
+ * import { AiMetricsConfigScope } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsConfigScope.Enum.session) // "session"
+ * console.log(AiMetricsConfigScope.is.session("baseline")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsConfigScope = LiteralKit(["baseline", "session"]).pipe(
+  $I.annoteSchema("AiMetricsConfigScope", {
+    description: "Whether a snapshotted config file is per-root baseline guidance or session-effective config.",
+  })
+);
+
+/**
+ * Decoded scope literal carried by each snapshotted configuration file.
+ *
+ * @see {@link AiMetricsConfigScope} for the runtime schema, its guards, and its enum keys.
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsConfigScope = typeof AiMetricsConfigScope.Type;
+
+/**
+ * Named stage of the config snapshot pipeline, recorded for timing attribution.
+ *
+ * **Example** (Naming a stage)
+ *
+ * ```ts
+ * import { AiMetricsConfigSnapshotStage } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsConfigSnapshotStage.Enum.enumerate) // "enumerate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsConfigSnapshotStage = LiteralKit(["enumerate", "read", "hash", "diff", "write"]).pipe(
+  $I.annoteSchema("AiMetricsConfigSnapshotStage", {
+    description: "Named stage of the AI metrics config snapshot pipeline.",
+  })
+);
+
+/**
+ * Decoded stage literal carried by each config snapshot timing row.
+ *
+ * @see {@link AiMetricsConfigSnapshotStage} for the runtime schema, its guards, and its enum keys.
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsConfigSnapshotStage = typeof AiMetricsConfigSnapshotStage.Type;
+
+/**
+ * Wall-clock cost and volume of one config snapshot stage.
+ *
+ * **Example** (Reading a stage timing)
+ *
+ * ```ts
+ * import { AiMetricsConfigSnapshotStageTiming } from "@beep/repo-ai-metrics"
+ *
+ * const timing = AiMetricsConfigSnapshotStageTiming.make({
+ *   byteCount: 0,
+ *   durationMillis: 4,
+ *   fileCount: 254,
+ *   stage: "enumerate"
+ * })
+ *
+ * console.log(timing.stage) // enumerate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsConfigSnapshotStageTiming extends S.Class<AiMetricsConfigSnapshotStageTiming>(
+  $I`AiMetricsConfigSnapshotStageTiming`
+)(
+  {
+    byteCount: S.Finite,
+    durationMillis: S.Finite,
+    fileCount: S.Finite,
+    stage: AiMetricsConfigSnapshotStage,
+  },
+  $I.annote("AiMetricsConfigSnapshotStageTiming", {
+    description: "Duration, file count, and byte count for one AI metrics config snapshot stage.",
+  })
+) {}
+
+/**
+ * Hard bounds applied to a config snapshot walk.
+ *
+ * **Details**
+ *
+ * The defaults sit at roughly four times the measured legitimate surface of a
+ * beep clone: 254 files and about 2 MiB. They exist so an unbounded subtree —
+ * a linked worktree carrying its own `node_modules`, a vendored checkout — can
+ * never turn one snapshot into a multi-megabyte manifest again.
+ *
+ * **Example** (Tightening the walk for a test fixture)
+ *
+ * ```ts
+ * import { AiMetricsConfigSnapshotBudget } from "@beep/repo-ai-metrics"
+ *
+ * const budget = AiMetricsConfigSnapshotBudget.make({ maxFiles: 3 })
+ *
+ * console.log(budget.maxDepth) // 8
+ * console.log(budget.maxFiles) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsConfigSnapshotBudget extends S.Class<AiMetricsConfigSnapshotBudget>(
+  $I`AiMetricsConfigSnapshotBudget`
+)(
+  {
+    maxDepth: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_DEPTH)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_DEPTH))
+    ),
+    maxFileBytes: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILE_BYTES)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILE_BYTES))
+    ),
+    maxFiles: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILES))
+    ),
+    maxTotalBytes: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_TOTAL_BYTES)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_TOTAL_BYTES))
+    ),
+  },
+  $I.annote("AiMetricsConfigSnapshotBudget", {
+    description: "Depth, file-count, per-file byte, and total byte bounds applied to a config snapshot walk.",
+  })
+) {}
+
+const defaultConfigSnapshotBudget = AiMetricsConfigSnapshotBudget.make({});
+
+/**
+ * Why a config snapshot walk stopped short of the full tree.
+ *
+ * **Example** (Naming the bound that fired)
+ *
+ * ```ts
+ * import { AiMetricsConfigSnapshotTruncationReason } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]) // "max-files"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsConfigSnapshotTruncationReason = LiteralKit(["max-files", "max-total-bytes", "max-depth"]).pipe(
+  $I.annoteSchema("AiMetricsConfigSnapshotTruncationReason", {
+    description: "Bound that stopped an AI metrics config snapshot walk short of the full tree.",
+  })
+);
+
+/**
+ * Decoded truncation reason carried by a config snapshot bounds report.
+ *
+ * @see {@link AiMetricsConfigSnapshotTruncationReason} for the runtime schema, its guards, and its enum keys.
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsConfigSnapshotTruncationReason = typeof AiMetricsConfigSnapshotTruncationReason.Type;
+
+/**
+ * What the bounds actually did to one config snapshot walk.
+ *
+ * **Details**
+ *
+ * `excludedNestedRootPaths` is the audit trail for the nested-git-root boundary:
+ * every path listed here is somebody else's canonical root, recorded in the
+ * identity registry rather than folded into this root's snapshot.
+ * `skippedOversizeFileCount` keeps oversize files visible instead of letting
+ * them vanish silently.
+ *
+ * **Example** (An unbounded-but-clean walk)
+ *
+ * ```ts
+ * import {
+ *   AiMetricsConfigSnapshotBoundsReport,
+ *   AiMetricsConfigSnapshotBudget
+ * } from "@beep/repo-ai-metrics"
+ *
+ * const bounds = AiMetricsConfigSnapshotBoundsReport.make({
+ *   budget: AiMetricsConfigSnapshotBudget.make({}),
+ *   excludedNestedRootPaths: [".claude/worktrees/wt1"],
+ *   skippedOversizeFileCount: 0,
+ *   totalBytes: 2048,
+ *   truncated: false
+ * })
+ *
+ * console.log(bounds.truncated) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsConfigSnapshotBoundsReport extends S.Class<AiMetricsConfigSnapshotBoundsReport>(
+  $I`AiMetricsConfigSnapshotBoundsReport`
+)(
+  {
+    budget: AiMetricsConfigSnapshotBudget.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultConfigSnapshotBudget)),
+      S.withDecodingDefaultKey(Effect.succeed(defaultConfigSnapshotBudget))
+    ),
+    excludedNestedRootPaths: S.Array(S.String),
+    skippedOversizeFileCount: S.Finite,
+    totalBytes: S.Finite,
+    truncated: S.Boolean,
+    truncationReason: S.optionalKey(AiMetricsConfigSnapshotTruncationReason),
+  },
+  $I.annote("AiMetricsConfigSnapshotBoundsReport", {
+    description: "Budget, nested-root exclusions, and truncation outcome for one AI metrics config snapshot walk.",
+  })
+) {}
+
+const emptyConfigSnapshotBoundsReport = AiMetricsConfigSnapshotBoundsReport.make({
+  budget: defaultConfigSnapshotBudget,
+  excludedNestedRootPaths: [],
+  skippedOversizeFileCount: 0,
+  totalBytes: 0,
+  truncated: false,
+});
+
+/**
+ * Repo root, label, and bounds that define one agent-configuration snapshot run.
+ *
+ * **Details**
+ *
+ * `budget` and `label` carry both constructor and decoding defaults, so a caller
+ * that knows only the repo root still gets the standard bounds and the
+ * `repo-local-agent-config` label. `previousSnapshotPath` names the manifest the
+ * run diffs against; leaving it unset makes every included file an addition.
+ *
+ * **Example** (Snapshotting a repo root under the default bounds)
+ *
  * ```ts
  * import { AiMetricsConfigSnapshotInput } from "@beep/repo-ai-metrics"
  *
- * const input = AiMetricsConfigSnapshotInput.make({
- *   repoRoot: "/repo"
- * })
- * console.log(input.label)
+ * const input = AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" })
+ *
+ * console.log(input.label) // "repo-local-agent-config"
+ * console.log(input.budget.maxFiles) // 1000
  * ```
+ *
+ * @see {@link AiMetricsConfigSnapshotBudget} for the bounds this input carries.
  * @category models
  * @since 0.0.0
  */
@@ -50,6 +326,10 @@ export class AiMetricsConfigSnapshotInput extends S.Class<AiMetricsConfigSnapsho
   $I`AiMetricsConfigSnapshotInput`
 )(
   {
+    budget: AiMetricsConfigSnapshotBudget.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultConfigSnapshotBudget)),
+      S.withDecodingDefaultKey(Effect.succeed(defaultConfigSnapshotBudget))
+    ),
     label: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("repo-local-agent-config")),
       S.withDecodingDefaultKey(Effect.succeed("repo-local-agent-config"))
@@ -63,9 +343,17 @@ export class AiMetricsConfigSnapshotInput extends S.Class<AiMetricsConfigSnapsho
 ) {}
 
 /**
- * Diff between the current and previous AI metrics config snapshot.
+ * Path-level difference between the current config snapshot and the previous one.
  *
- * @example
+ * **Details**
+ *
+ * The four arrays partition the union of both snapshots' paths, so a path
+ * appears in exactly one of them. A path that a tightened bound stopped
+ * including shows up in `removedPaths`, which is why a large `removedPaths` is
+ * the expected signature of a boundary change rather than of deleted guidance.
+ *
+ * **Example** (Reading what changed between two snapshots)
+ *
  * ```ts
  * import { AiMetricsConfigSnapshotDiff } from "@beep/repo-ai-metrics"
  *
@@ -75,8 +363,11 @@ export class AiMetricsConfigSnapshotInput extends S.Class<AiMetricsConfigSnapsho
  *   removedPaths: [],
  *   unchangedPaths: [".codex/config.toml"]
  * })
- * console.log(diff.addedPaths)
+ *
+ * console.log(diff.addedPaths) // [ "AGENTS.md" ]
+ * console.log(diff.unchangedPaths.length) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,19 +391,32 @@ const emptyConfigSnapshotDiff = AiMetricsConfigSnapshotDiff.make({
 });
 
 /**
- * One file included in an AI metrics config snapshot.
+ * One agent-configuration file included in a snapshot, with its content hash and scope.
  *
- * @example
+ * **Details**
+ *
+ * `relativePath` is relative to the scan root, so two machines snapshotting the
+ * same revision produce comparable manifests. `scope` defaults to `baseline`,
+ * which is what lets manifests written before the baseline/session split keep
+ * decoding.
+ *
+ * **Example** (Recording a session-scoped guide)
+ *
  * ```ts
  * import { AiMetricsConfigSnapshotFile } from "@beep/repo-ai-metrics"
  *
  * const file = AiMetricsConfigSnapshotFile.make({
  *   contentHash: "sha256:fixture",
  *   relativePath: "AGENTS.md",
+ *   scope: "session",
  *   sizeBytes: 2048
  * })
- * console.log(file.relativePath)
+ *
+ * console.log(file.relativePath) // "AGENTS.md"
+ * console.log(file.scope) // "session"
  * ```
+ *
+ * @see {@link AiMetricsConfigScope} for what separates session-effective config from baseline guidance.
  * @category models
  * @since 0.0.0
  */
@@ -120,6 +424,10 @@ export class AiMetricsConfigSnapshotFile extends S.Class<AiMetricsConfigSnapshot
   {
     contentHash: S.String,
     relativePath: S.String,
+    scope: AiMetricsConfigScope.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsConfigScope.Enum.baseline)),
+      S.withDecodingDefaultKey(Effect.succeed(AiMetricsConfigScope.Enum.baseline))
+    ),
     sizeBytes: S.Finite,
   },
   $I.annote("AiMetricsConfigSnapshotFile", {
@@ -128,9 +436,19 @@ export class AiMetricsConfigSnapshotFile extends S.Class<AiMetricsConfigSnapshot
 ) {}
 
 /**
- * Complete repo-local agent configuration snapshot result.
+ * Complete manifest of one bounded agent-configuration snapshot run.
  *
- * @example
+ * **Details**
+ *
+ * `snapshot.configHash` keeps its original meaning — a hash over the whole
+ * included set — while `baselineHash` and `sessionHash` split that same set so a
+ * query can tell an operator settings change apart from a repo guidance change.
+ * `bounds` and `stageTimings` carry constructor and decoding defaults, so a
+ * manifest written before those fields existed still decodes and simply reports
+ * an empty bounds report and no timings.
+ *
+ * **Example** (An empty first snapshot)
+ *
  * ```ts
  * import {
  *   AiMetricsConfigSnapshotDiff,
@@ -155,8 +473,13 @@ export class AiMetricsConfigSnapshotFile extends S.Class<AiMetricsConfigSnapshot
  *     snapshotId: "config-1"
  *   })
  * })
- * console.log(result.fileCount)
+ *
+ * console.log(result.fileCount) // 0
+ * console.log(result.bounds.truncated) // false
+ * console.log(result.stageTimings.length) // 0
  * ```
+ *
+ * @see {@link AiMetricsConfigSnapshotBoundsReport} for how to read a truncated walk.
  * @category models
  * @since 0.0.0
  */
@@ -164,12 +487,28 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
   $I`AiMetricsConfigSnapshotResult`
 )(
   {
+    baselineHash: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultKey(Effect.succeed(""))
+    ),
+    bounds: AiMetricsConfigSnapshotBoundsReport.pipe(
+      S.withConstructorDefault(Effect.succeed(emptyConfigSnapshotBoundsReport)),
+      S.withDecodingDefaultKey(Effect.succeed(emptyConfigSnapshotBoundsReport))
+    ),
     excludedDirectoryNames: S.Array(S.String),
     diff: AiMetricsConfigSnapshotDiff.pipe(S.withDecodingDefaultKey(Effect.succeed(emptyConfigSnapshotDiff))),
     fileCount: S.Finite,
     files: S.Array(AiMetricsConfigSnapshotFile),
     previousSnapshotId: S.optionalKey(S.String),
+    sessionHash: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultKey(Effect.succeed(""))
+    ),
     snapshot: ConfigSnapshot,
+    stageTimings: S.Array(AiMetricsConfigSnapshotStageTiming).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<AiMetricsConfigSnapshotStageTiming>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<AiMetricsConfigSnapshotStageTiming>()))
+    ),
   },
   $I.annote("AiMetricsConfigSnapshotResult", {
     description: "Config snapshot manifest used to attribute AI-agent metrics to repo guidance changes.",
@@ -177,9 +516,16 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
 ) {}
 
 /**
- * Error raised by config snapshot helpers.
+ * Typed failure raised while enumerating, reading, or persisting a config snapshot.
  *
- * @example
+ * **Details**
+ *
+ * The snapshot walk never swallows a filesystem failure into a partial manifest:
+ * a manifest that silently lost files would be indistinguishable from one whose
+ * guidance was deleted, and attribution would blame the wrong change.
+ *
+ * **Example** (Constructing the failure)
+ *
  * ```ts
  * import { AiMetricsConfigSnapshotError } from "@beep/repo-ai-metrics"
  *
@@ -187,8 +533,11 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
  *   cause: "read failed",
  *   message: "Failed to read agent guidance file."
  * })
- * console.log(error.message)
+ *
+ * console.log(error._tag) // "AiMetricsConfigSnapshotError"
+ * console.log(error.message) // "Failed to read agent guidance file."
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -226,128 +575,219 @@ const statOption = Effect.fn("AiMetrics.configSnapshot.statOption")(function* (p
   return yield* fs.stat(pathName).pipe(Effect.option);
 });
 
-const collectFilesUnder = Effect.fn("AiMetrics.collectConfigFilesUnder")(function* (
-  root: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
+interface ConfigSnapshotEnumeration {
+  readonly excludedNestedRootPaths: ReadonlyArray<string>;
+  readonly paths: ReadonlyArray<string>;
+  readonly truncationReason: O.Option<AiMetricsConfigSnapshotTruncationReason>;
+}
+
+interface ConfigSnapshotReadFile {
+  readonly content: string;
+  readonly relativePath: string;
+  readonly sizeBytes: number;
+}
+
+interface ConfigSnapshotRead {
+  readonly files: ReadonlyArray<ConfigSnapshotReadFile>;
+  readonly skippedOversizeFileCount: number;
+  readonly totalBytes: number;
+  readonly truncationReason: O.Option<AiMetricsConfigSnapshotTruncationReason>;
+}
+
+const isSessionScopePath = (relativePath: string): boolean => A.contains(SESSION_SCOPE_PATHS, relativePath);
+
+const scopeFor = (relativePath: string): AiMetricsConfigScope =>
+  isSessionScopePath(relativePath) ? AiMetricsConfigScope.Enum.session : AiMetricsConfigScope.Enum.baseline;
+
+const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths")(function* (
+  repoRoot: string,
+  budget: AiMetricsConfigSnapshotBudget
+): Effect.fn.Return<ConfigSnapshotEnumeration, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
-  const rootInfo = yield* statOption(root);
+  const pathsRef = yield* Ref.make(A.empty<string>());
+  const excludedRef = yield* Ref.make(A.empty<string>());
+  const truncationRef = yield* Ref.make(O.none<AiMetricsConfigSnapshotTruncationReason>());
+  const markTruncated = (reason: AiMetricsConfigSnapshotTruncationReason) =>
+    Ref.update(
+      truncationRef,
+      O.orElse(() => O.some(reason))
+    );
 
-  if (O.isNone(rootInfo) || rootInfo.value.type !== "Directory") {
-    return A.empty<string>();
+  const walk = Effect.fnUntraced(function* (
+    currentPath: string,
+    depth: number,
+    includeFile: (basename: string) => boolean
+  ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+    if (A.length(yield* Ref.get(pathsRef)) >= budget.maxFiles) {
+      return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
+    }
+
+    const info = yield* statOption(currentPath);
+    if (O.isNone(info)) {
+      return;
+    }
+
+    // A `File` the filter rejects falls through to the directory guard below, which
+    // returns for any non-`Directory` type — the same early exit the collected branch takes.
+    if (info.value.type === "File" && includeFile(pathApi.basename(currentPath))) {
+      return yield* Ref.update(pathsRef, (paths) => A.append(paths, currentPath));
+    }
+
+    if (info.value.type !== "Directory") {
+      return;
+    }
+
+    if (depth >= budget.maxDepth) {
+      return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]);
+    }
+
+    const entries = pipe(
+      yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>)),
+      A.sort(Order.String)
+    );
+    for (const entry of entries) {
+      yield* walkEntry(currentPath, entry, depth, includeFile);
+    }
+  });
+
+  // Split out of `walk` so the per-entry decision — excluded name, nested repo root, or
+  // recurse — carries its own nesting budget instead of compounding the loop's.
+  const walkEntry = Effect.fnUntraced(function* (
+    parentPath: string,
+    entry: string,
+    depth: number,
+    includeFile: (basename: string) => boolean
+  ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+    if (isExcludedDirectoryName(entry)) {
+      return;
+    }
+
+    const childPath = pathApi.join(parentPath, entry);
+    if (yield* isNestedGitRoot({ dirPath: childPath, scanRoot: repoRoot })) {
+      return yield* Ref.update(excludedRef, (paths) =>
+        A.append(paths, normalizeRepoPath(pathApi, repoRoot, childPath))
+      );
+    }
+
+    return yield* walk(childPath, depth + 1, includeFile);
+  });
+
+  // Repo-root agent docs are enumerated before the config roots, and the order is load-bearing.
+  // `walk` short-circuits on `maxFiles` up front and the collected paths are only sorted at the
+  // end, so whatever is walked last is what a full budget drops. A single pathological directory
+  // under a config root — a non-git leftover beneath `.claude/worktrees`, say — could therefore
+  // exhaust the budget and starve `AGENTS.md`/`CLAUDE.md` out of the snapshot entirely. That is
+  // worse than truncation: both are session-scope paths, so losing them silently changes the
+  // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
+  yield* walk(repoRoot, 0, isAgentDocName);
+  for (const rootName of CONFIG_ROOTS) {
+    yield* walk(pathApi.join(repoRoot, rootName), 0, () => true);
   }
 
-  const walk = Effect.fnUntraced(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    const info = yield* statOption(currentPath);
-    if (O.isNone(info)) {
-      return A.empty<string>();
-    }
-
-    if (info.value.type === "File") {
-      return A.of(currentPath);
-    }
-
-    if (info.value.type !== "Directory") {
-      return A.empty<string>();
-    }
-
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
-    for (const entry of entries) {
-      if (isExcludedDirectoryName(entry)) {
-        continue;
-      }
-      files = A.appendAll(files, yield* walk(pathApi.join(currentPath, entry)));
-    }
-
-    return files;
-  });
-
-  return yield* walk(root);
+  return {
+    excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),
+    paths: pipe(yield* Ref.get(pathsRef), A.dedupe, A.sort(Order.String)),
+    truncationReason: yield* Ref.get(truncationRef),
+  };
 });
 
-const collectAgentDocFiles = Effect.fn("AiMetrics.collectAgentDocFiles")(function* (
-  repoRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
+const readSnapshotFiles = Effect.fn("AiMetrics.readConfigSnapshotFiles")(function* (
+  repoRoot: string,
+  paths: ReadonlyArray<string>,
+  budget: AiMetricsConfigSnapshotBudget
+): Effect.fn.Return<ConfigSnapshotRead, AiMetricsConfigSnapshotError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
+  let files = A.empty<ConfigSnapshotReadFile>();
+  let skippedOversizeFileCount = 0;
+  let totalBytes = 0;
+  let truncationReason = O.none<AiMetricsConfigSnapshotTruncationReason>();
 
-  const walk = Effect.fnUntraced(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    const info = yield* statOption(currentPath);
-    if (O.isNone(info)) {
-      return A.empty<string>();
+  for (const filePath of paths) {
+    const info = yield* fs.stat(filePath).pipe(
+      Effect.mapError((cause) =>
+        AiMetricsConfigSnapshotError.make({
+          cause,
+          message: "Failed to stat config snapshot file.",
+        })
+      )
+    );
+    const sizeBytes = globalThis.Number(info.size);
+    if (sizeBytes > budget.maxFileBytes) {
+      skippedOversizeFileCount = skippedOversizeFileCount + 1;
+      continue;
     }
-
-    if (info.value.type === "File") {
-      return isAgentDocName(pathApi.basename(currentPath)) ? A.of(currentPath) : A.empty<string>();
+    if (totalBytes + sizeBytes > budget.maxTotalBytes) {
+      truncationReason = O.orElse(truncationReason, () =>
+        O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"])
+      );
+      break;
     }
+    const content = yield* fs.readFileString(filePath).pipe(
+      Effect.mapError((cause) =>
+        AiMetricsConfigSnapshotError.make({
+          cause,
+          message: "Failed to read config snapshot file.",
+        })
+      )
+    );
+    totalBytes = totalBytes + sizeBytes;
+    files = A.append(files, {
+      content,
+      relativePath: normalizeRepoPath(pathApi, repoRoot, filePath),
+      sizeBytes,
+    });
+  }
 
-    if (info.value.type !== "Directory") {
-      return A.empty<string>();
-    }
-
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
-    for (const entry of entries) {
-      if (isExcludedDirectoryName(entry)) {
-        continue;
-      }
-      files = A.appendAll(files, yield* walk(pathApi.join(currentPath, entry)));
-    }
-
-    return files;
-  });
-
-  return yield* walk(repoRoot);
+  return { files, skippedOversizeFileCount, totalBytes, truncationReason };
 });
 
-const candidateSnapshotPaths = Effect.fn("AiMetrics.candidateSnapshotPaths")(function* (repoRoot: string) {
-  const pathApi = yield* Path.Path;
-  const configFiles = yield* Effect.forEach(
-    CONFIG_ROOTS,
-    (rootName) => collectFilesUnder(pathApi.join(repoRoot, rootName)),
-    { concurrency: 4 }
+const hashSnapshotFiles = Effect.fn("AiMetrics.hashConfigSnapshotFiles")(function* (
+  files: ReadonlyArray<ConfigSnapshotReadFile>
+) {
+  return pipe(
+    yield* Effect.forEach(
+      files,
+      Effect.fnUntraced(function* (file: ConfigSnapshotReadFile) {
+        return AiMetricsConfigSnapshotFile.make({
+          contentHash: yield* hashPublicTextSha256(file.content),
+          relativePath: file.relativePath,
+          scope: scopeFor(file.relativePath),
+          sizeBytes: file.sizeBytes,
+        });
+      }),
+      { concurrency: 16 }
+    ),
+    A.sort(byRelativePathAscending)
   );
-  const agentDocs = yield* collectAgentDocFiles(repoRoot);
-
-  return pipe(A.flatten(configFiles), A.appendAll(agentDocs), A.dedupe, A.sort(Order.String));
-});
-
-const makeSnapshotFile = Effect.fn("AiMetrics.makeSnapshotFile")(function* (repoRoot: string, filePath: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const pathApi = yield* Path.Path;
-  const info = yield* fs.stat(filePath).pipe(
-    Effect.mapError((cause) =>
-      AiMetricsConfigSnapshotError.make({
-        cause,
-        message: "Failed to stat config snapshot file.",
-      })
-    )
-  );
-  const content = yield* fs.readFileString(filePath).pipe(
-    Effect.mapError((cause) =>
-      AiMetricsConfigSnapshotError.make({
-        cause,
-        message: "Failed to read config snapshot file.",
-      })
-    )
-  );
-
-  return AiMetricsConfigSnapshotFile.make({
-    contentHash: yield* hashPublicTextSha256(content),
-    relativePath: normalizeRepoPath(pathApi, repoRoot, filePath),
-    sizeBytes: globalThis.Number(info.size),
-  });
 });
 
 const snapshotHashInput: (files: ReadonlyArray<AiMetricsConfigSnapshotFile>) => string = flow(
   A.map((file) => `${file.relativePath}\u0000${file.contentHash}`),
   A.join("\n")
 );
+
+const scopedSnapshotHash = Effect.fn("AiMetrics.scopedConfigSnapshotHash")(function* (
+  prefix: string,
+  files: ReadonlyArray<AiMetricsConfigSnapshotFile>,
+  scope: AiMetricsConfigScope
+) {
+  return yield* hashPublicTextSha256(
+    `${prefix}\n${snapshotHashInput(A.filter(files, (file) => file.scope === scope))}`
+  );
+});
+
+const elapsedSince = (startedAtMillis: number): Effect.Effect<number> =>
+  Effect.map(Clock.currentTimeMillis, (nowMillis) => nowMillis - startedAtMillis);
+
+const stageTiming = (
+  stage: AiMetricsConfigSnapshotStage,
+  durationMillis: number,
+  fileCount: number,
+  byteCount: number
+): AiMetricsConfigSnapshotStageTiming =>
+  AiMetricsConfigSnapshotStageTiming.make({ byteCount, durationMillis, fileCount, stage });
 
 const fileByRelativePath = (
   files: ReadonlyArray<AiMetricsConfigSnapshotFile>,
@@ -455,75 +895,162 @@ const readPreviousSnapshot = Effect.fn("AiMetrics.readPreviousConfigSnapshot")(f
 });
 
 /**
- * Build a deterministic snapshot of repo-owned agent-facing configuration.
+ * Build a deterministic, bounded snapshot of repo-owned agent-facing configuration.
  *
- * @effects
- * - Traverses repo-local agent configuration roots and agent guide files.
- * - Reads included files to compute deterministic content hashes.
- * - Optionally reads a previous snapshot artifact for diff attribution.
- * @example
+ * **Details**
+ *
+ * The walk stops at every nested git root it meets, so a linked worktree living
+ * inside the scan root is recorded as an exclusion rather than folded into this
+ * root's manifest. Depth, file-count, per-file byte, and total byte budgets from
+ * {@link AiMetricsConfigSnapshotBudget} bound what survives the boundary, and
+ * every included file is tagged `session` or `baseline` so attribution can tell
+ * an operator settings change apart from repo guidance drift.
+ *
+ * **Gotchas**
+ *
+ * The first bounded snapshot taken after an unbounded one reports every file the
+ * old walk wrongly included as removed, and produces a new `configHash`. That is
+ * the bound landing, not data loss. Enumeration is sorted before truncation, so
+ * a truncated snapshot is deterministic rather than filesystem-order dependent.
+ *
+ * **Example** (Snapshotting a repo root)
+ *
  * ```ts
  * import { AiMetricsConfigSnapshotInput, makeAiMetricsConfigSnapshot } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ *
  * const program = makeAiMetricsConfigSnapshot(
  *   AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" })
  * ).pipe(Effect.provide(NodeServices.layer))
+ *
  * console.log(program)
  * ```
+ *
+ * @param input - Repo root, label, budget, and optional previous snapshot pointer.
+ * @returns The snapshot manifest, its bounds report, and per-stage timings.
  * @category services
  * @since 0.0.0
  */
-export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsConfigSnapshot")(function* (
-  input: AiMetricsConfigSnapshotInput
-) {
-  const pathApi = yield* Path.Path;
-  const repoRoot = pathApi.resolve(input.repoRoot);
-  const paths = yield* candidateSnapshotPaths(repoRoot);
-  const files = pipe(
-    yield* Effect.forEach(paths, (filePath) => makeSnapshotFile(repoRoot, filePath), { concurrency: 16 }),
-    A.sort(byRelativePathAscending)
-  );
-  const snapshotHash = yield* hashPublicTextSha256(`ai-metrics-config-snapshot-v1\n${snapshotHashInput(files)}`);
-  const relativePaths = A.map(files, (file) => file.relativePath);
-  const previous = yield* readPreviousSnapshot(input.previousSnapshotPath);
-  const previousFiles = pipe(
-    previous,
-    O.map((snapshot) => snapshot.files),
-    O.getOrElse(A.empty<AiMetricsConfigSnapshotFile>)
-  );
-  const diff = snapshotDiff(files, previousFiles);
-  const changedPaths = changedPathsFor(diff);
-  const previousSnapshotId = pipe(
-    previous,
-    O.map((snapshot) => snapshot.snapshot.snapshotId)
-  );
+export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsConfigSnapshot")(
+  function* (input: AiMetricsConfigSnapshotInput) {
+    const pathApi = yield* Path.Path;
+    const repoRoot = pathApi.resolve(input.repoRoot);
 
-  return AiMetricsConfigSnapshotResult.make({
-    excludedDirectoryNames: EXCLUDED_DIR_NAMES,
-    diff,
-    fileCount: A.length(files),
-    files,
-    ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
-    snapshot: ConfigSnapshot.make({
-      changedPaths,
-      configHash: snapshotHash,
-      includedPaths: relativePaths,
-      label: input.label,
+    const enumerateStartedAt = yield* Clock.currentTimeMillis;
+    const enumeration = yield* enumerateSnapshotPaths(repoRoot, input.budget);
+    const enumerateMillis = yield* elapsedSince(enumerateStartedAt);
+
+    const readStartedAt = yield* Clock.currentTimeMillis;
+    const read = yield* readSnapshotFiles(repoRoot, enumeration.paths, input.budget);
+    const readMillis = yield* elapsedSince(readStartedAt);
+
+    const hashStartedAt = yield* Clock.currentTimeMillis;
+    const files = yield* hashSnapshotFiles(read.files);
+    const snapshotHash = yield* hashPublicTextSha256(`ai-metrics-config-snapshot-v1\n${snapshotHashInput(files)}`);
+    const baselineHash = yield* scopedSnapshotHash(
+      "ai-metrics-config-baseline-v1",
+      files,
+      AiMetricsConfigScope.Enum.baseline
+    );
+    const sessionHash = yield* scopedSnapshotHash(
+      "ai-metrics-config-session-v1",
+      files,
+      AiMetricsConfigScope.Enum.session
+    );
+    const hashMillis = yield* elapsedSince(hashStartedAt);
+
+    const diffStartedAt = yield* Clock.currentTimeMillis;
+    const previous = yield* readPreviousSnapshot(input.previousSnapshotPath);
+    const previousFiles = pipe(
+      previous,
+      O.map((snapshot) => snapshot.files),
+      O.getOrElse(A.empty<AiMetricsConfigSnapshotFile>)
+    );
+    const diff = snapshotDiff(files, previousFiles);
+    const diffMillis = yield* elapsedSince(diffStartedAt);
+
+    const writeStartedAt = yield* Clock.currentTimeMillis;
+    const relativePaths = A.map(files, (file) => file.relativePath);
+    const changedPaths = changedPathsFor(diff);
+    const previousSnapshotId = pipe(
+      previous,
+      O.map((snapshot) => snapshot.snapshot.snapshotId)
+    );
+    const truncationReason = O.orElse(enumeration.truncationReason, () => read.truncationReason);
+    const bounds = AiMetricsConfigSnapshotBoundsReport.make({
+      budget: input.budget,
+      excludedNestedRootPaths: enumeration.excludedNestedRootPaths,
+      skippedOversizeFileCount: read.skippedOversizeFileCount,
+      totalBytes: read.totalBytes,
+      truncated: O.isSome(truncationReason),
+      ...(O.isSome(truncationReason) ? { truncationReason: truncationReason.value } : {}),
+    });
+    const writeMillis = yield* elapsedSince(writeStartedAt);
+
+    return AiMetricsConfigSnapshotResult.make({
+      baselineHash,
+      bounds,
+      excludedDirectoryNames: EXCLUDED_DIR_NAMES,
+      diff,
+      fileCount: A.length(files),
+      files,
       ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
-      snapshotId: `config-${snapshotHash}`,
-    }),
-  });
-});
+      sessionHash,
+      snapshot: ConfigSnapshot.make({
+        changedPaths,
+        configHash: snapshotHash,
+        includedPaths: relativePaths,
+        label: input.label,
+        ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
+        snapshotId: `config-${snapshotHash}`,
+      }),
+      stageTimings: [
+        stageTiming(AiMetricsConfigSnapshotStage.Enum.enumerate, enumerateMillis, A.length(enumeration.paths), 0),
+        stageTiming(AiMetricsConfigSnapshotStage.Enum.read, readMillis, A.length(read.files), read.totalBytes),
+        stageTiming(AiMetricsConfigSnapshotStage.Enum.hash, hashMillis, A.length(files), read.totalBytes),
+        stageTiming(AiMetricsConfigSnapshotStage.Enum.diff, diffMillis, A.length(files), 0),
+        stageTiming(AiMetricsConfigSnapshotStage.Enum.write, writeMillis, A.length(files), read.totalBytes),
+      ],
+    });
+  },
+  (effect, input) =>
+    effect.pipe(
+      Effect.tap((result) =>
+        Effect.annotateCurrentSpan({
+          "ai_metrics.config_snapshot.excluded_nested_root_count": A.length(result.bounds.excludedNestedRootPaths),
+          "ai_metrics.config_snapshot.file_count": result.fileCount,
+          "ai_metrics.config_snapshot.total_bytes": result.bounds.totalBytes,
+          "ai_metrics.config_snapshot.truncated": result.bounds.truncated,
+        })
+      ),
+      Effect.withSpan("repo_ai_metrics.config_snapshot.make", {
+        attributes: {
+          "ai_metrics.config_snapshot.max_files": input.budget.maxFiles,
+          "ai_metrics.config_snapshot.max_total_bytes": input.budget.maxTotalBytes,
+        },
+      })
+    )
+);
 
 /**
  * Persist a config snapshot manifest and latest pointer for future diff attribution.
  *
- * @effects
- * - Creates the config snapshot output directory when missing.
- * - Writes a versioned manifest named by `snapshotId`.
- * - Writes and atomically promotes `latest.json` when `commitLatest` is true.
- * @example
+ * **Details**
+ *
+ * The manifest is named by `snapshotId` and kept forever; `latest.json` is the
+ * moving pointer the next run diffs against. The pointer is written to a `.tmp`
+ * sibling and promoted with a rename, so a crash mid-write leaves the previous
+ * pointer intact rather than a half-written one that fails to decode.
+ *
+ * **Gotchas**
+ *
+ * Pass `commitLatest: false` to archive a manifest without moving the diff
+ * baseline — a dry run that promotes the pointer makes the following real run
+ * report an empty diff.
+ *
+ * **Example** (Writing a manifest and promoting the pointer)
+ *
  * ```ts
  * import {
  *   AiMetricsConfigSnapshotDiff,
@@ -533,6 +1060,7 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ *
  * const result = AiMetricsConfigSnapshotResult.make({
  *   excludedDirectoryNames: [],
  *   diff: AiMetricsConfigSnapshotDiff.make({
@@ -550,12 +1078,20 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
  *     snapshotId: "config-1"
  *   })
  * })
+ *
  * const program = writeAiMetricsConfigSnapshotArtifacts({
- *   outputDir: ".beep/ai-metrics/config",
+ *   outputDir: "/home/dev/.local/state/beep/ai-metrics/config-snapshots",
  *   result
  * }).pipe(Effect.provide(NodeServices.layer))
- * console.log(program)
+ *
+ * Effect.runPromise(program).then((paths) => console.log(paths.manifestPath))
+ * // /home/dev/.local/state/beep/ai-metrics/config-snapshots/config-1.json
  * ```
+ *
+ * @effects
+ * - Creates the config snapshot output directory when missing.
+ * - Writes a versioned manifest named by `snapshotId`.
+ * - Writes and atomically promotes `latest.json` when `commitLatest` is true.
  * @category services
  * @since 0.0.0
  */
@@ -615,9 +1151,16 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
 );
 
 /**
- * Render a config snapshot result as JSON.
+ * Encode a config snapshot manifest as the JSON text written to disk.
  *
- * @example
+ * **Details**
+ *
+ * Encoding goes through the schema rather than `JSON.stringify`, so the text is
+ * exactly what {@link AiMetricsConfigSnapshotResult} decodes back and optional
+ * keys that are absent stay absent instead of becoming `undefined`.
+ *
+ * **Example** (Encoding a manifest before writing it)
+ *
  * ```ts
  * import {
  *   AiMetricsConfigSnapshotDiff,
@@ -627,29 +1170,30 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const json = Effect.runPromise(
- *   configSnapshotToJson(
- *     AiMetricsConfigSnapshotResult.make({
- *       excludedDirectoryNames: [],
- *       diff: AiMetricsConfigSnapshotDiff.make({
- *         addedPaths: [],
- *         modifiedPaths: [],
- *         removedPaths: [],
- *         unchangedPaths: []
- *       }),
- *       fileCount: 0,
- *       files: [],
- *       snapshot: ConfigSnapshot.make({
- *         changedPaths: [],
- *         configHash: "config-hash",
- *         label: "repo-local-agent-config",
- *         snapshotId: "config-1"
- *       })
- *     })
- *   )
- * )
- * console.log(json)
+ * const result = AiMetricsConfigSnapshotResult.make({
+ *   excludedDirectoryNames: [],
+ *   diff: AiMetricsConfigSnapshotDiff.make({
+ *     addedPaths: [],
+ *     modifiedPaths: [],
+ *     removedPaths: [],
+ *     unchangedPaths: []
+ *   }),
+ *   fileCount: 0,
+ *   files: [],
+ *   snapshot: ConfigSnapshot.make({
+ *     changedPaths: [],
+ *     configHash: "config-hash",
+ *     label: "repo-local-agent-config",
+ *     snapshotId: "config-1"
+ *   })
+ * })
+ *
+ * const json = Effect.runSync(configSnapshotToJson(result))
+ *
+ * console.log(json.includes("config-hash")) // true
  * ```
+ *
+ * @see {@link writeAiMetricsConfigSnapshotArtifacts} for the writer that persists this text.
  * @category utilities
  * @since 0.0.0
  */

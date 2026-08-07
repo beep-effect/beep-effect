@@ -14,7 +14,7 @@ import {
 } from "@beep/repo-ai-metrics";
 import { pipe } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { aiMetricsDataRootEnvVar, aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
 import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.ts";
@@ -209,7 +209,6 @@ const rawArchiveKeySecretRefFlag = Flag.string("raw-archive-key-secret-ref").pip
   Flag.withDescription("Secret reference that resolves BEEP_AI_METRICS_RAW_ARCHIVE_KEY for non-local install targets"),
   Flag.optional
 );
-const dataRootFlag = Flag.string("data-root").pipe(Flag.withDescription("AI metrics data root"), Flag.optional);
 const remoteRootFlag = Flag.string("remote-root").pipe(
   Flag.withDefault(defaultP7MirrorRemoteRoot),
   Flag.withDescription("Remote AI metrics mirror root")
@@ -571,7 +570,7 @@ const forwarderRunCommand = Command.make(
         rawArchiveKeySecretRef,
         repoRoot,
         // Local forwarder runs always self-prune the per-run Parquet snapshots so the
-        // `.beep/ai-metrics/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
+        // `<data-root>/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
         // --max-snapshot-exports. Snapshot retention history is opt-in on the `timer` command instead.
         retentionEnforce: true,
         retentionMaxSnapshotExports,
@@ -895,7 +894,7 @@ const labelCommand = Command.make("label", {}, () =>
   printLines([
     "AI metrics label commands:",
     "- bun run beep ai-metrics label queue",
-    "- bun run beep ai-metrics label queue --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key",
+    `- bun run beep ai-metrics label queue --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
     "- bun run beep ai-metrics label add --task <id> --passed true --rating 5",
   ])
 ).pipe(
@@ -932,7 +931,7 @@ const reportCommand = Command.make("report", {}, () =>
   printLines([
     "AI metrics report commands:",
     "- bun run beep ai-metrics report weekly",
-    "- bun run beep ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key",
+    `- bun run beep ai-metrics report weekly --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
   ])
 ).pipe(Command.withDescription("AI metrics report workflow"), Command.withSubcommands([reportWeeklyCommand]));
 
@@ -1002,7 +1001,7 @@ const mirrorStatusCommand = Command.make(
 const mirrorCommand = Command.make("mirror", {}, () =>
   printLines([
     "AI metrics mirror commands:",
-    "- bun run beep ai-metrics mirror build --target dankserver --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics mirror build --target dankserver --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics mirror sync --bundle latest",
     "- bun run beep ai-metrics mirror status",
   ])
@@ -1129,9 +1128,9 @@ const retentionRestoreDrillCommand = Command.make(
 const retentionCommand = Command.make("retention", {}, () =>
   printLines([
     "AI metrics retention commands:",
-    "- bun run beep ai-metrics retention list --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics retention list --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics retention restore-drill --restore-root /tmp/ai-metrics-restore --before <iso>",
-    "- bun run beep ai-metrics retention enforce --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics retention enforce --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics retention delete --before <iso>",
     "- bun run beep ai-metrics retention compact --before <iso>",
   ])
@@ -1171,7 +1170,7 @@ const archiveCommand = Command.make("archive", {}, () =>
   printLines([
     "AI metrics archive commands:",
     "- bun run beep ai-metrics archive drill",
-    `- BEEP_AI_METRICS_RAW_ARCHIVE_KEY="$(op read 'op://TBK/ai-metrics/raw-archive-key')" bun run beep ai-metrics archive drill --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
+    `- BEEP_AI_METRICS_RAW_ARCHIVE_KEY="$(op read 'op://TBK/ai-metrics/raw-archive-key')" bun run beep ai-metrics archive drill --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
   ])
 ).pipe(
   Command.withDescription("AI metrics archive verification workflow"),
@@ -1179,17 +1178,27 @@ const archiveCommand = Command.make("archive", {}, () =>
 );
 
 /**
- * AI metrics root command.
+ * Root of the `ai-metrics` command tree: ingest, storage, export, and retention.
  *
- * @example
+ * **Details**
+ *
+ * Invoked with no subcommand it prints the available subcommands rather than
+ * doing work, so an operator can discover the surface without risking a run.
+ * Every subcommand accepts `--data-root`, which falls back to
+ * `BEEP_AI_METRICS_DATA_ROOT` and then to the XDG state store.
+ *
+ * **Example** (Mounting the command tree in a CLI entrypoint)
+ *
  * ```ts
  * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
- * import { Command } from "effect/unstable/cli"
  * import { Effect } from "effect"
+ * import { Command } from "effect/unstable/cli"
  *
  * const run = Command.run(aiMetricsCommand, { version: "0.0.0" })
+ *
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

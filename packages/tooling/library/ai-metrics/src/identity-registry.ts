@@ -1,0 +1,837 @@
+/**
+ * Filesystem-derived identity registry for AI metrics canonical roots.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
+import { Clock, Effect, FileSystem, MutableHashMap, Order, Path, pipe } from "effect";
+import * as S from "effect/Schema";
+import { AiMetricsTranscriptSource } from "./models.ts";
+import {
+  AiMetricsHashSaltStatus,
+  hashPrivateIdentifier,
+  hashPublicTextSha256,
+  resolveAiMetricsHashSaltStatus,
+} from "./privacy.ts";
+import type { PlatformError } from "effect";
+
+const $I = $RepoAiMetricsId.create("identity-registry");
+
+const identityRegistryVersion = "ai-metrics-identity-registry/v1";
+const identityDirName = "identity";
+const registryFileName = "registry.json";
+const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
+const gitDirPointerPattern = /^gitdir:\s*(.+)$/mu;
+const headRefPattern = /^ref:\s*(.+)$/mu;
+const commitShaPattern = /^[0-9a-f]{40}$/u;
+const originUrlPattern = /\[remote\s+"origin"\][^[]*?^[ \t]*url[ \t]*=[ \t]*([^\n]+)$/mu;
+
+/**
+ * Whether a canonical root is a primary clone or a linked git worktree.
+ *
+ * **Details**
+ *
+ * The distinction is load-bearing for snapshot bounding: a linked worktree
+ * living inside its parent clone is its own canonical root, so the parent's
+ * config snapshot must stop at its boundary rather than walking into it.
+ *
+ * **Example** (Branching on the root kind)
+ *
+ * ```ts
+ * import { AiMetricsRootKind } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsRootKind.Enum["linked-worktree"]) // "linked-worktree"
+ * console.log(AiMetricsRootKind.is["primary-clone"]("linked-worktree")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsRootKind = LiteralKit(["primary-clone", "linked-worktree"]).pipe(
+  $I.annoteSchema("AiMetricsRootKind", {
+    description: "Whether a canonical AI metrics root is a primary clone or a linked git worktree.",
+  })
+);
+
+/**
+ * Decoded kind literal carried by a canonical AI metrics root.
+ *
+ * @see {@link AiMetricsRootKind} for the runtime schema, its guards, and its enum keys.
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsRootKind = typeof AiMetricsRootKind.Type;
+
+/**
+ * One canonical root: a clone or linked worktree, identified independently of the data root.
+ *
+ * **Details**
+ *
+ * Every identifier is a digest. `cloneIdHash` is the salted digest of the
+ * resolved root path and is byte-identical to the `repoRootHash` the forwarder
+ * already writes into DuckDB, so derived rows join to registry rows with no
+ * migration. `repositoryIdHash` is an unsalted digest of the normalized
+ * `origin` URL, which makes the same repository recognizable across clones and
+ * machines; `worktreeIdHash` separates linked worktrees that share it.
+ *
+ * **Example** (Reading a registry row)
+ *
+ * ```ts
+ * import { AiMetricsCanonicalRoot } from "@beep/repo-ai-metrics"
+ *
+ * const root = AiMetricsCanonicalRoot.make({
+ *   cloneIdHash: "clone-hash",
+ *   excludedFromParentSnapshot: false,
+ *   firstSeenAtEpochMillis: 1,
+ *   kind: "primary-clone",
+ *   lastSeenAtEpochMillis: 2,
+ *   repositoryIdHash: "repository-hash",
+ *   rootId: "root-clone-hash",
+ *   worktreeIdHash: "worktree-hash"
+ * })
+ *
+ * console.log(root.kind) // primary-clone
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsCanonicalRoot extends S.Class<AiMetricsCanonicalRoot>($I`AiMetricsCanonicalRoot`)(
+  {
+    cloneIdHash: S.String,
+    excludedFromParentSnapshot: S.Boolean,
+    firstSeenAtEpochMillis: S.Finite,
+    kind: AiMetricsRootKind,
+    lastSeenAtEpochMillis: S.Finite,
+    parentRootId: S.optionalKey(S.String),
+    repositoryIdHash: S.String,
+    revision: S.optionalKey(S.String),
+    rootId: S.String,
+    worktreeIdHash: S.String,
+  },
+  $I.annote("AiMetricsCanonicalRoot", {
+    description: "Clone, repository, worktree, and revision identity for one canonical AI metrics root.",
+  })
+) {}
+
+/**
+ * A machine, root, and agent-brand triple: the source instance producing transcripts.
+ *
+ * **Details**
+ *
+ * Hostname is deliberately absent. Reading it would require a `node:` builtin
+ * import, which the repo's node-builtin gate forbids in typechecked `src`, so
+ * the salted digest of the home directory is the machine proxy — the same value
+ * source discovery already records as `homeDirHash`.
+ *
+ * **Example** (Reading a source instance row)
+ *
+ * ```ts
+ * import { AiMetricsSourceInstance } from "@beep/repo-ai-metrics"
+ *
+ * const instance = AiMetricsSourceInstance.make({
+ *   homeDirHash: "home-hash",
+ *   instanceIdHash: "instance-hash",
+ *   lastSeenAtEpochMillis: 2,
+ *   rootId: "root-clone-hash",
+ *   sourceKind: "codex"
+ * })
+ *
+ * console.log(instance.sourceKind) // codex
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I`AiMetricsSourceInstance`)(
+  {
+    homeDirHash: S.String,
+    instanceIdHash: S.String,
+    lastSeenAtEpochMillis: S.Finite,
+    rootId: S.String,
+    sourceKind: AiMetricsTranscriptSource,
+  },
+  $I.annote("AiMetricsSourceInstance", {
+    description: "One machine, canonical root, and agent brand triple producing AI metrics transcripts.",
+  })
+) {}
+
+/**
+ * The persisted registry of canonical roots and source instances.
+ *
+ * **Details**
+ *
+ * `hashSaltStatus` is stamped so a store re-salted between runs is detectable:
+ * every digest in the file changes meaning when the salt changes, and a reader
+ * that cannot tell would silently treat the same root as two.
+ *
+ * **Example** (An empty registry)
+ *
+ * ```ts
+ * import { AiMetricsIdentityRegistry } from "@beep/repo-ai-metrics"
+ *
+ * const registry = AiMetricsIdentityRegistry.make({
+ *   generatedAtEpochMillis: 1,
+ *   hashSaltStatus: "provided",
+ *   registryVersion: "ai-metrics-identity-registry/v1",
+ *   roots: [],
+ *   sourceInstances: []
+ * })
+ *
+ * console.log(registry.registryVersion) // ai-metrics-identity-registry/v1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsIdentityRegistry extends S.Class<AiMetricsIdentityRegistry>($I`AiMetricsIdentityRegistry`)(
+  {
+    generatedAtEpochMillis: S.Finite,
+    hashSaltStatus: AiMetricsHashSaltStatus,
+    registryVersion: S.Literal(identityRegistryVersion),
+    roots: S.Array(AiMetricsCanonicalRoot),
+    sourceInstances: S.Array(AiMetricsSourceInstance),
+  },
+  $I.annote("AiMetricsIdentityRegistry", {
+    description: "Persisted registry of canonical AI metrics roots and the source instances writing to them.",
+  })
+) {}
+
+/**
+ * Input for deriving one canonical root's identity.
+ *
+ * **Example** (Deriving identity for the current clone)
+ *
+ * ```ts
+ * import { AiMetricsCanonicalRootInput } from "@beep/repo-ai-metrics"
+ *
+ * const input = AiMetricsCanonicalRootInput.make({
+ *   hashSalt: "salt",
+ *   rootPath: "/work/repo"
+ * })
+ *
+ * console.log(input.rootPath) // /work/repo
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsCanonicalRootInput extends S.Class<AiMetricsCanonicalRootInput>($I`AiMetricsCanonicalRootInput`)(
+  {
+    hashSalt: S.optionalKey(S.String),
+    rootPath: S.String,
+  },
+  $I.annote("AiMetricsCanonicalRootInput", {
+    description: "Root path and optional hash salt used to derive one canonical AI metrics root identity.",
+  })
+) {}
+
+/**
+ * Input for merging one root and its source instances into the persisted registry.
+ *
+ * **Example** (Recording the current run's identity)
+ *
+ * ```ts
+ * import { AiMetricsIdentityRegistryUpsertInput } from "@beep/repo-ai-metrics"
+ *
+ * const input = AiMetricsIdentityRegistryUpsertInput.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *   homeDir: "/home/dev",
+ *   rootPath: "/work/repo",
+ *   sourceKinds: ["codex", "claude"]
+ * })
+ *
+ * console.log(input.sourceKinds.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsIdentityRegistryUpsertInput extends S.Class<AiMetricsIdentityRegistryUpsertInput>(
+  $I`AiMetricsIdentityRegistryUpsertInput`
+)(
+  {
+    dataRoot: S.String,
+    hashSalt: S.optionalKey(S.String),
+    homeDir: S.String,
+    rootPath: S.String,
+    sourceKinds: S.Array(AiMetricsTranscriptSource).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<AiMetricsTranscriptSource>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<AiMetricsTranscriptSource>()))
+    ),
+  },
+  $I.annote("AiMetricsIdentityRegistryUpsertInput", {
+    description: "Data root, home directory, root path, and agent brands merged into the AI metrics identity registry.",
+  })
+) {}
+
+/**
+ * Typed failure raised by identity registry helpers.
+ *
+ * **Example** (Constructing the failure)
+ *
+ * ```ts
+ * import { AiMetricsIdentityRegistryError } from "@beep/repo-ai-metrics"
+ *
+ * const error = AiMetricsIdentityRegistryError.make({
+ *   cause: "ENOENT",
+ *   message: "AI metrics canonical root is not a git root."
+ * })
+ *
+ * console.log(error._tag) // AiMetricsIdentityRegistryError
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AiMetricsIdentityRegistryError extends TaggedErrorClass<AiMetricsIdentityRegistryError>(
+  $I`AiMetricsIdentityRegistryError`
+)(
+  "AiMetricsIdentityRegistryError",
+  {
+    cause: S.Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annote("AiMetricsIdentityRegistryError", {
+    description: "Typed failure raised while deriving or persisting AI metrics root identity.",
+  })
+) {}
+
+const encodeIdentityRegistryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
+const decodeIdentityRegistryJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
+
+const byRootId: Order.Order<AiMetricsCanonicalRoot> = Order.mapInput(Order.String, (root) => root.rootId);
+const byInstanceIdHash: Order.Order<AiMetricsSourceInstance> = Order.mapInput(
+  Order.String,
+  (instance) => instance.instanceIdHash
+);
+
+const identityRegistryFailure = (message: string) => (cause: unknown) =>
+  AiMetricsIdentityRegistryError.make({ cause, message });
+
+const hashPrivate = (value: string, hashSalt: string | undefined) =>
+  hashPrivateIdentifier(value, hashSalt).pipe(
+    Effect.mapError(identityRegistryFailure("Failed to hash an AI metrics identity value."))
+  );
+
+const hashPublic = (value: string) =>
+  hashPublicTextSha256(value).pipe(
+    Effect.mapError(identityRegistryFailure("Failed to hash an AI metrics identity value."))
+  );
+
+const isAbsolutePath = (value: string): boolean => absolutePathPattern.test(value);
+
+const firstMatch = (pattern: RegExp, content: string): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(pattern.exec(content)),
+    O.flatMapNullishOr((match) => match[1])
+  );
+
+const isNotFound = (error: PlatformError.PlatformError): boolean => error.reason._tag === "NotFound";
+
+// Absence is the only read outcome that honestly means "no file". `Effect.option` would also
+// swallow `PermissionDenied` and `BadResource` (what reading a directory yields), so an existing
+// but unreadable `registry.json` would decode as an empty registry and the next upsert would
+// overwrite it — silently discarding every other canonical root and its `firstSeen` history.
+// A decode failure on an existing file already fails loudly; these now agree.
+const readFileOption = Effect.fn("AiMetrics.identityRegistry.readFileOption")(function* (
+  filePath: string
+): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readFileString(filePath).pipe(
+    Effect.map(O.some),
+    Effect.catchIf(isNotFound, () => Effect.succeed(O.none<string>())),
+    Effect.mapError(identityRegistryFailure("Failed to read an AI metrics identity file."))
+  );
+});
+
+interface GitRootProbe {
+  readonly commonGitDir: string;
+  readonly gitDir: string;
+  readonly kind: AiMetricsRootKind;
+  readonly worktreeName: string;
+}
+
+const probeGitRoot = Effect.fn("AiMetrics.identityRegistry.probeGitRoot")(function* (
+  rootPath: string
+): Effect.fn.Return<GitRootProbe, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathApi = yield* Path.Path;
+  const gitPath = pathApi.join(rootPath, ".git");
+  const info = yield* fs.stat(gitPath).pipe(Effect.option);
+
+  if (O.isNone(info)) {
+    return yield* AiMetricsIdentityRegistryError.make({
+      cause: gitPath,
+      message: "AI metrics canonical root is not a git root.",
+    });
+  }
+
+  if (info.value.type === "Directory") {
+    return { commonGitDir: gitPath, gitDir: gitPath, kind: AiMetricsRootKind.Enum["primary-clone"], worktreeName: "" };
+  }
+
+  if (info.value.type !== "File") {
+    return yield* AiMetricsIdentityRegistryError.make({
+      cause: gitPath,
+      message: "AI metrics canonical root is not a git root.",
+    });
+  }
+
+  const pointer = pipe(
+    yield* readFileOption(gitPath),
+    O.flatMap((content) => firstMatch(gitDirPointerPattern, content)),
+    O.map(Str.trim)
+  );
+
+  if (O.isNone(pointer)) {
+    return yield* AiMetricsIdentityRegistryError.make({
+      cause: gitPath,
+      message: "AI metrics linked worktree pointer does not name a git directory.",
+    });
+  }
+
+  const gitDir = isAbsolutePath(pointer.value)
+    ? pathApi.resolve(pointer.value)
+    : pathApi.resolve(rootPath, pointer.value);
+
+  return {
+    commonGitDir: pathApi.dirname(pathApi.dirname(gitDir)),
+    gitDir,
+    kind: AiMetricsRootKind.Enum["linked-worktree"],
+    worktreeName: pathApi.basename(gitDir),
+  };
+});
+
+const normalizeRemoteUrl = (url: string): string => {
+  const withoutHostPrefix = pipe(
+    Str.trim(url),
+    Str.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//u, ""),
+    Str.replace(/^[^/@]+@/u, ""),
+    Str.replace(/^([^/:]+):/u, "$1/"),
+    Str.replace(/\.git$/u, ""),
+    Str.replace(/\/+$/u, "")
+  );
+  const segments = pipe(withoutHostPrefix, Str.split("/"));
+
+  return pipe(
+    A.head(segments),
+    O.map((host) => pipe(A.appendAll(A.of(Str.toLowerCase(host)), A.drop(segments, 1)), A.join("/"))),
+    O.getOrElse(() => withoutHostPrefix)
+  );
+};
+
+const resolveRepositoryIdHash = Effect.fn("AiMetrics.identityRegistry.resolveRepositoryIdHash")(function* (
+  commonGitDir: string,
+  hashSalt: string | undefined
+): Effect.fn.Return<string, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
+  const pathApi = yield* Path.Path;
+  const config = yield* readFileOption(pathApi.join(commonGitDir, "config"));
+  const originUrl = pipe(
+    config,
+    O.flatMap((content) => firstMatch(originUrlPattern, content)),
+    O.map(Str.trim),
+    O.filter((value) => !Str.isEmpty(value))
+  );
+
+  return yield* pipe(
+    originUrl,
+    O.match({
+      onNone: () => hashPrivate(commonGitDir, hashSalt),
+      onSome: (value) => hashPublic(normalizeRemoteUrl(value)),
+    })
+  );
+});
+
+const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(function* (
+  gitDir: string,
+  commonGitDir: string
+): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
+  const pathApi = yield* Path.Path;
+  const head = pipe(yield* readFileOption(pathApi.join(gitDir, "HEAD")), O.map(Str.trim));
+
+  if (O.isNone(head)) {
+    return O.none<string>();
+  }
+
+  if (commitShaPattern.test(head.value)) {
+    return O.some(head.value);
+  }
+
+  const ref = pipe(firstMatch(headRefPattern, head.value), O.map(Str.trim));
+  if (O.isNone(ref)) {
+    return O.none<string>();
+  }
+
+  const loose = pipe(yield* readFileOption(pathApi.join(commonGitDir, ref.value)), O.map(Str.trim));
+  if (O.isSome(loose) && commitShaPattern.test(loose.value)) {
+    return loose;
+  }
+
+  const packed = yield* readFileOption(pathApi.join(commonGitDir, "packed-refs"));
+
+  return pipe(
+    packed,
+    O.map(Str.split("\n")),
+    O.getOrElse(A.empty<string>),
+    A.map((line) => pipe(Str.trim(line), Str.split(/\s+/u))),
+    A.findFirst((fields) => fields[1] === ref.value),
+    O.flatMap((fields) =>
+      pipe(
+        O.fromNullishOr(fields[0]),
+        O.filter((sha) => commitShaPattern.test(sha))
+      )
+    )
+  );
+});
+
+/**
+ * Report whether a directory is a git root distinct from the walk's own scan root.
+ *
+ * **When to use**
+ *
+ * Use as the descent boundary for any walk rooted at a clone. A directory that
+ * holds a `.git` entry is somebody else's canonical root; walking into it
+ * attributes their files to this root and, for a linked worktree holding its own
+ * `node_modules`, costs hundreds of thousands of directory entries per run.
+ *
+ * **Example** (Refusing to descend into a nested worktree)
+ *
+ * ```ts
+ * import { isNestedGitRoot } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = isNestedGitRoot({
+ *   dirPath: "/work/repo/.claude/worktrees/wt1",
+ *   scanRoot: "/work/repo"
+ * }).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((nested: boolean) => console.log(nested)) // true
+ * ```
+ *
+ * @param args - Candidate directory and the root the current walk started from.
+ * @returns `true` when `dirPath` is a git root other than `scanRoot`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isNestedGitRoot: (args: {
+  readonly dirPath: string;
+  readonly scanRoot: string;
+}) => Effect.Effect<boolean, never, FileSystem.FileSystem | Path.Path> = Effect.fn("AiMetrics.isNestedGitRoot")(
+  function* ({ dirPath, scanRoot }) {
+    const fs = yield* FileSystem.FileSystem;
+    const pathApi = yield* Path.Path;
+
+    if (pathApi.resolve(dirPath) === pathApi.resolve(scanRoot)) {
+      return false;
+    }
+
+    return yield* fs.exists(pathApi.join(dirPath, ".git")).pipe(Effect.orElseSucceed(() => false));
+  }
+);
+
+/**
+ * Derive one canonical root's identity from the filesystem alone.
+ *
+ * **Details**
+ *
+ * Reads `.git` (directory for a primary clone, pointer file for a linked
+ * worktree), the common git directory's `config` for the `origin` URL, and
+ * `HEAD` plus loose refs and `packed-refs` for the revision. No subprocess is
+ * spawned, so the package keeps its zero-subprocess surface.
+ *
+ * **Gotchas**
+ *
+ * `repositoryIdHash` falls back to a salted digest of the common git directory
+ * when the clone has no `origin` remote, which makes that clone's repository
+ * identity local rather than global. A rewritten remote URL likewise re-keys the
+ * repository. Exact identity would require shelling out to `git`; that is a
+ * deliberate non-goal. `revision` is omitted rather than faked when `HEAD`
+ * cannot be resolved, and dirty-tree state is never recorded.
+ *
+ * **Example** (Identifying the clone a run is writing from)
+ *
+ * ```ts
+ * import { AiMetricsCanonicalRootInput, makeAiMetricsCanonicalRoot } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = makeAiMetricsCanonicalRoot(
+ *   AiMetricsCanonicalRootInput.make({ hashSalt: "salt", rootPath: "/work/repo" })
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((root) => console.log(root.kind)) // primary-clone
+ * ```
+ *
+ * @param input - Root path and optional hash salt.
+ * @returns The canonical root row for `rootPath`.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeAiMetricsCanonicalRoot: (
+  input: AiMetricsCanonicalRootInput
+) => Effect.Effect<AiMetricsCanonicalRoot, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> =
+  Effect.fn("AiMetrics.makeAiMetricsCanonicalRoot")(function* (input) {
+    const pathApi = yield* Path.Path;
+    const nowEpochMillis = yield* Clock.currentTimeMillis;
+    const rootPath = pathApi.resolve(input.rootPath);
+    const probe = yield* probeGitRoot(rootPath);
+    const cloneIdHash = yield* hashPrivate(rootPath, input.hashSalt);
+    const isLinkedWorktree = probe.kind === AiMetricsRootKind.Enum["linked-worktree"];
+    const parentRootId = isLinkedWorktree
+      ? O.some(`root-${yield* hashPrivate(pathApi.dirname(probe.commonGitDir), input.hashSalt)}`)
+      : O.none<string>();
+    const revision = yield* resolveRevision(probe.gitDir, probe.commonGitDir);
+
+    return AiMetricsCanonicalRoot.make({
+      cloneIdHash,
+      excludedFromParentSnapshot: isLinkedWorktree,
+      firstSeenAtEpochMillis: nowEpochMillis,
+      kind: probe.kind,
+      lastSeenAtEpochMillis: nowEpochMillis,
+      ...O.getSomesStruct({ parentRootId }),
+      repositoryIdHash: yield* resolveRepositoryIdHash(probe.commonGitDir, input.hashSalt),
+      ...O.getSomesStruct({ revision }),
+      rootId: `root-${cloneIdHash}`,
+      worktreeIdHash: yield* hashPrivate(`${probe.commonGitDir} ${probe.worktreeName}`, input.hashSalt),
+    });
+  });
+
+const identityRegistryPath = (pathApi: Path.Path, dataRoot: string): string =>
+  pathApi.join(dataRoot, identityDirName, registryFileName);
+
+/**
+ * Read the persisted identity registry, or an empty registry when none exists yet.
+ *
+ * **Details**
+ *
+ * A missing registry file is a normal first-run state, not a failure. A file
+ * that exists but does not decode *is* a failure: a store whose recorded
+ * provenance cannot be read is exactly what this registry exists to prevent.
+ *
+ * **Example** (Reading the registry beside a data root)
+ *
+ * ```ts
+ * import { readAiMetricsIdentityRegistry } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = readAiMetricsIdentityRegistry(
+ *   "/home/dev/.local/state/beep/ai-metrics"
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((registry) => console.log(registry.roots.length))
+ * ```
+ *
+ * @param dataRoot - Resolved AI metrics data root owning `identity/registry.json`.
+ * @returns The decoded registry, or an empty one when the file is absent.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const readAiMetricsIdentityRegistry: (
+  dataRoot: string
+) => Effect.Effect<AiMetricsIdentityRegistry, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> =
+  Effect.fn("AiMetrics.readAiMetricsIdentityRegistry")(function* (dataRoot) {
+    const pathApi = yield* Path.Path;
+    const nowEpochMillis = yield* Clock.currentTimeMillis;
+    const content = yield* readFileOption(identityRegistryPath(pathApi, dataRoot));
+
+    if (O.isNone(content)) {
+      return AiMetricsIdentityRegistry.make({
+        generatedAtEpochMillis: nowEpochMillis,
+        hashSaltStatus: resolveAiMetricsHashSaltStatus(undefined),
+        registryVersion: identityRegistryVersion,
+        roots: A.empty<AiMetricsCanonicalRoot>(),
+        sourceInstances: A.empty<AiMetricsSourceInstance>(),
+      });
+    }
+
+    return yield* decodeIdentityRegistryJson(content.value).pipe(
+      Effect.mapError(identityRegistryFailure("Failed to decode the AI metrics identity registry."))
+    );
+  });
+
+const withFirstSeen = (root: AiMetricsCanonicalRoot, firstSeenAtEpochMillis: number): AiMetricsCanonicalRoot =>
+  AiMetricsCanonicalRoot.make({
+    cloneIdHash: root.cloneIdHash,
+    excludedFromParentSnapshot: root.excludedFromParentSnapshot,
+    firstSeenAtEpochMillis,
+    kind: root.kind,
+    lastSeenAtEpochMillis: root.lastSeenAtEpochMillis,
+    ...O.getSomesStruct({ parentRootId: O.fromUndefinedOr(root.parentRootId) }),
+    repositoryIdHash: root.repositoryIdHash,
+    ...O.getSomesStruct({ revision: O.fromUndefinedOr(root.revision) }),
+    rootId: root.rootId,
+    worktreeIdHash: root.worktreeIdHash,
+  });
+
+/**
+ * Render an identity registry as the JSON persisted beside the data root.
+ *
+ * **Example** (Encoding an empty registry)
+ *
+ * ```ts
+ * import { AiMetricsIdentityRegistry, identityRegistryToJson } from "@beep/repo-ai-metrics"
+ * import { Effect } from "effect"
+ *
+ * const json = Effect.runSync(
+ *   identityRegistryToJson(
+ *     AiMetricsIdentityRegistry.make({
+ *       generatedAtEpochMillis: 1,
+ *       hashSaltStatus: "provided",
+ *       registryVersion: "ai-metrics-identity-registry/v1",
+ *       roots: [],
+ *       sourceInstances: []
+ *     })
+ *   )
+ * )
+ *
+ * console.log(json.includes("ai-metrics-identity-registry/v1")) // true
+ * ```
+ *
+ * @param registry - Registry to encode.
+ * @returns The registry's canonical JSON encoding.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const identityRegistryToJson: (
+  registry: AiMetricsIdentityRegistry
+) => Effect.Effect<string, AiMetricsIdentityRegistryError> = Effect.fn("AiMetrics.identityRegistryToJson")(
+  function* (registry) {
+    return yield* encodeIdentityRegistryJson(registry).pipe(
+      Effect.mapError(identityRegistryFailure("Failed to encode the AI metrics identity registry as JSON."))
+    );
+  }
+);
+
+/**
+ * Merge one canonical root and its source instances into the registry and persist it atomically.
+ *
+ * **Details**
+ *
+ * The merge is keyed by `rootId` and `instanceIdHash`. `firstSeenAtEpochMillis`
+ * survives an upsert; `lastSeenAtEpochMillis` and `revision` are overwritten by
+ * the current run. Both arrays are sorted before encoding, so a run that changes
+ * nothing but the timestamps produces a byte-stable file. The write goes to
+ * `registry.json.tmp` and is promoted with a rename, the same idiom the config
+ * snapshot pointer uses.
+ *
+ * **Gotchas**
+ *
+ * The registry records identity; it does not gate ingest. It is still written
+ * before the run's data so a failure here fails the run loudly rather than
+ * leaving a store whose provenance cannot be reconstructed.
+ *
+ * **Example** (Recording the current run before ingest)
+ *
+ * ```ts
+ * import {
+ *   AiMetricsIdentityRegistryUpsertInput,
+ *   upsertAiMetricsIdentityRegistry
+ * } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = upsertAiMetricsIdentityRegistry(
+ *   AiMetricsIdentityRegistryUpsertInput.make({
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     homeDir: "/home/dev",
+ *     rootPath: "/work/repo",
+ *     sourceKinds: ["codex", "claude"]
+ *   })
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((registry) => console.log(registry.sourceInstances.length)) // 2
+ * ```
+ *
+ * @param input - Data root, home directory, root path, and agent brands to record.
+ * @returns The registry as persisted, including the merged root.
+ * @category services
+ * @since 0.0.0
+ */
+export const upsertAiMetricsIdentityRegistry: (
+  input: AiMetricsIdentityRegistryUpsertInput
+) => Effect.Effect<AiMetricsIdentityRegistry, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> =
+  Effect.fn("AiMetrics.upsertAiMetricsIdentityRegistry")(function* (input) {
+    const fs = yield* FileSystem.FileSystem;
+    const pathApi = yield* Path.Path;
+    const nowEpochMillis = yield* Clock.currentTimeMillis;
+    const existing = yield* readAiMetricsIdentityRegistry(input.dataRoot);
+    const root = yield* makeAiMetricsCanonicalRoot(
+      AiMetricsCanonicalRootInput.make({
+        ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+        rootPath: input.rootPath,
+      })
+    );
+    // Resolved before hashing, exactly as `makeAiMetricsSourceDiscoveryResult` does. The two
+    // digests are joined across the registry and a discovery result, so `/home/dev` and
+    // `/home/dev/` have to reach the hash as the same bytes or the join silently finds nothing.
+    const homeDir = pathApi.resolve(input.homeDir);
+    const homeDirHash = yield* hashPrivate(homeDir, input.hashSalt);
+    const rootPath = pathApi.resolve(input.rootPath);
+    const instances = yield* Effect.forEach(input.sourceKinds, (sourceKind) =>
+      Effect.map(hashPrivate(`${homeDir} ${rootPath} ${sourceKind}`, input.hashSalt), (instanceIdHash) =>
+        AiMetricsSourceInstance.make({
+          homeDirHash,
+          instanceIdHash,
+          lastSeenAtEpochMillis: nowEpochMillis,
+          rootId: root.rootId,
+          sourceKind,
+        })
+      )
+    );
+
+    const rootsById = MutableHashMap.empty<string, AiMetricsCanonicalRoot>();
+    for (const existingRoot of existing.roots) {
+      MutableHashMap.set(rootsById, existingRoot.rootId, existingRoot);
+    }
+    MutableHashMap.set(
+      rootsById,
+      root.rootId,
+      withFirstSeen(
+        root,
+        pipe(
+          MutableHashMap.get(rootsById, root.rootId),
+          O.map((previous) => previous.firstSeenAtEpochMillis),
+          O.getOrElse(() => root.firstSeenAtEpochMillis)
+        )
+      )
+    );
+
+    const instancesById = MutableHashMap.empty<string, AiMetricsSourceInstance>();
+    for (const existingInstance of existing.sourceInstances) {
+      MutableHashMap.set(instancesById, existingInstance.instanceIdHash, existingInstance);
+    }
+    for (const instance of instances) {
+      MutableHashMap.set(instancesById, instance.instanceIdHash, instance);
+    }
+
+    const registry = AiMetricsIdentityRegistry.make({
+      generatedAtEpochMillis: nowEpochMillis,
+      hashSaltStatus: resolveAiMetricsHashSaltStatus(input.hashSalt),
+      registryVersion: identityRegistryVersion,
+      roots: pipe(A.fromIterable(MutableHashMap.values(rootsById)), A.sort(byRootId)),
+      sourceInstances: pipe(A.fromIterable(MutableHashMap.values(instancesById)), A.sort(byInstanceIdHash)),
+    });
+
+    const content = yield* identityRegistryToJson(registry);
+    const registryPath = identityRegistryPath(pathApi, input.dataRoot);
+    const registryTmpPath = `${registryPath}.tmp`;
+    yield* fs
+      .makeDirectory(pathApi.dirname(registryPath), { recursive: true })
+      .pipe(Effect.mapError(identityRegistryFailure("Failed to create the AI metrics identity registry directory.")));
+    yield* fs
+      .writeFileString(registryTmpPath, content)
+      .pipe(Effect.mapError(identityRegistryFailure("Failed to write the AI metrics identity registry.")));
+    yield* fs
+      .rename(registryTmpPath, registryPath)
+      .pipe(Effect.mapError(identityRegistryFailure("Failed to promote the AI metrics identity registry.")));
+
+    return registry;
+  });

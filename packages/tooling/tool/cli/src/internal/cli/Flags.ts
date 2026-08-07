@@ -6,20 +6,36 @@
  */
 
 import { A, flow, P, Str, Text } from "@beep/utils";
+import { Config } from "effect";
 import { Flag } from "effect/unstable/cli";
 
 /**
  * `--json` flag with a caller-supplied description.
  *
- * @param description - Help text for the flag.
- * @returns A boolean `--json` flag.
- * @example
+ * **When to use**
+ *
+ * Use when a command's JSON output needs wording specific to what it emits.
+ * Commands that just want the standard flag should reach for {@link jsonFlag}
+ * instead of re-describing it.
+ *
+ * **Details**
+ *
+ * The description is the text that appears beside `--json` in generated `--help`
+ * output; the flag name and boolean type are fixed, so every command's JSON
+ * switch is spelled the same way regardless of how it is described.
+ *
+ * **Example** (Describing the JSON output of one command)
+ *
  * ```ts
  * import { jsonFlagWith } from "@beep/repo-cli/internal/cli/Flags"
  *
- * const flag = jsonFlagWith("Emit the report as JSON")
+ * const flag = jsonFlagWith("Emit the doctor report as JSON")
+ *
  * console.log(flag.kind) // "flag"
+ * console.log(flag._tag) // "Single"
  * ```
+ *
+ * @see {@link jsonFlag} for the shared flag most commands should use.
  * @category flags
  * @since 0.0.0
  */
@@ -28,28 +44,111 @@ export const jsonFlagWith = (description: string) => Flag.boolean("json").pipe(F
 /**
  * Standard `--json` flag used by commands that support machine-readable output.
  *
- * @example
+ * **Details**
+ *
+ * A shared value rather than a factory, so every command that opts into JSON
+ * output presents identical help text. That uniformity is the point: `--json`
+ * means the same thing everywhere in the CLI.
+ *
+ * **Example** (Adding the standard JSON switch to a command)
+ *
  * ```ts
  * import { jsonFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
  * console.log(jsonFlag.kind) // "flag"
+ * console.log(jsonFlag._tag) // "Single"
  * ```
+ *
+ * @see {@link jsonFlagWith} for a command that needs its own wording.
  * @category flags
  * @since 0.0.0
  */
 export const jsonFlag = jsonFlagWith("Emit machine-readable JSON output");
 
 /**
+ * Environment variable that carries the AI metrics data root.
+ *
+ * **Details**
+ *
+ * Named once here because both the `ai-metrics` and `agent-effectiveness`
+ * command groups read the same store, and the string appears in help text as
+ * well as in the flag's config fallback.
+ *
+ * **Example** (Naming the environment rung in help text)
+ *
+ * ```ts
+ * import { aiMetricsDataRootEnvVar } from "@beep/repo-cli/internal/cli/Flags"
+ *
+ * console.log(aiMetricsDataRootEnvVar) // BEEP_AI_METRICS_DATA_ROOT
+ * ```
+ *
+ * @category flags
+ * @since 0.0.0
+ */
+export const aiMetricsDataRootEnvVar = "BEEP_AI_METRICS_DATA_ROOT";
+
+/**
+ * Optional `--data-root` flag with the AI metrics environment rung beneath it.
+ *
+ * **Details**
+ *
+ * Shared by every command group that reads the AI metrics store, so the flag,
+ * its environment fallback, and its help text cannot drift apart between
+ * groups. Resolution beneath the flag — the XDG default and the deploy-target
+ * default — belongs to `resolveAiMetricsDataRoot` in `@beep/repo-ai-metrics`.
+ *
+ * **Gotchas**
+ *
+ * The combinator order is load-bearing: `withFallbackConfig` re-fails with the
+ * original `MissingOption`, and `optional` must sit outside it to catch that
+ * failure. Applying `optional` first would swallow the miss and make the
+ * environment rung unreachable while still compiling.
+ *
+ * **Example** (Wiring the flag into a command)
+ *
+ * ```ts
+ * import { aiMetricsDataRootFlag } from "@beep/repo-cli/internal/cli/Flags"
+ *
+ * console.log(aiMetricsDataRootFlag.kind) // "flag"
+ * ```
+ *
+ * @category flags
+ * @since 0.0.0
+ */
+export const aiMetricsDataRootFlag = Flag.string("data-root").pipe(
+  Flag.withFallbackConfig(Config.string(aiMetricsDataRootEnvVar)),
+  Flag.withDescription(
+    `AI metrics data root, or ${aiMetricsDataRootEnvVar}; defaults to \${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
+  ),
+  Flag.optional
+);
+
+/**
  * `--package` / `-p` flag selecting a workspace package.
  *
- * @param description - Help text; defaults to the workspace-selector wording.
- * @returns A string `--package` flag with the `p` alias.
- * @example
+ * **Details**
+ *
+ * The flag accepts either a package name or a repo-relative path, which is why
+ * the default wording names both — a caller who narrows the description should
+ * keep that dual form unless the command genuinely accepts only one.
+ *
+ * **Gotchas**
+ *
+ * This is a factory, not a flag. Unlike {@link jsonFlag} it must be called, and
+ * calling it twice yields two independent flags rather than a shared one.
+ *
+ * **Example** (Taking the default wording and overriding it)
+ *
  * ```ts
  * import { packageFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(packageFlag().kind) // "flag"
+ * const standard = packageFlag()
+ * const narrowed = packageFlag("Package whose documentation should be rebuilt")
+ *
+ * console.log(standard.kind) // "flag"
+ * console.log(narrowed.kind) // "flag"
  * ```
+ *
  * @category flags
  * @since 0.0.0
  */
@@ -59,14 +158,23 @@ export const packageFlag = (description = "Target a workspace package by name or
 /**
  * `--output` / `-o` flag selecting an output file path.
  *
- * @param description - Help text; defaults to the output-path wording.
- * @returns A string `--output` flag with the `o` alias.
- * @example
+ * **Details**
+ *
+ * The flag only carries the path a command was asked to write to. Whether that
+ * path is created, overwritten, or refused is the command's decision — pair it
+ * with {@link forceFlag} when overwriting an existing file needs consent.
+ *
+ * **Example** (Naming an output path for a report command)
+ *
  * ```ts
  * import { outputFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(outputFlag().kind) // "flag"
+ * const flag = outputFlag("Write the generated manifest to this path")
+ *
+ * console.log(flag.kind) // "flag"
  * ```
+ *
+ * @see {@link forceFlag} for the companion flag that permits overwriting.
  * @category flags
  * @since 0.0.0
  */
@@ -76,14 +184,23 @@ export const outputFlag = (description = "Write output to a specific file path")
 /**
  * `--verbose` flag toggling additional diagnostic output.
  *
- * @param description - Help text; defaults to the diagnostic-output wording.
- * @returns A boolean `--verbose` flag.
- * @example
+ * **Details**
+ *
+ * Verbosity is about how much a command explains itself, not about what it does,
+ * so a command's behaviour and exit code should be identical with and without
+ * it. Diagnostics belong on stderr so that `--verbose` stays composable with
+ * {@link jsonFlag} rather than corrupting machine-readable output.
+ *
+ * **Example** (Adding diagnostics to a long-running command)
+ *
  * ```ts
  * import { verboseFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(verboseFlag().kind) // "flag"
+ * const flag = verboseFlag("Print each package as it is checked")
+ *
+ * console.log(flag.kind) // "flag"
  * ```
+ *
  * @category flags
  * @since 0.0.0
  */
@@ -93,14 +210,28 @@ export const verboseFlag = (description = "Print additional diagnostic output") 
 /**
  * `--dry-run` flag previewing changes without writing.
  *
- * @param description - Help text; defaults to the preview wording.
- * @returns A boolean `--dry-run` flag.
- * @example
+ * **Details**
+ *
+ * A dry run should do all the work of a real run except the writes, so that what
+ * it reports is what a real run would do. A preview that takes a shortcut and
+ * reports an intention it never computed is worse than no preview at all.
+ *
+ * **Gotchas**
+ *
+ * The flag only carries the operator's intent; nothing here enforces it. Each
+ * command is responsible for actually suppressing its own writes, and for
+ * defaulting the flag in the direction that makes an unspecified run safe.
+ *
+ * **Example** (Previewing a destructive command)
+ *
  * ```ts
  * import { dryRunFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(dryRunFlag().kind) // "flag"
+ * const flag = dryRunFlag("Report the files that would be rewritten")
+ *
+ * console.log(flag.kind) // "flag"
  * ```
+ *
  * @category flags
  * @since 0.0.0
  */
@@ -110,14 +241,29 @@ export const dryRunFlag = (description = "Preview changes without writing files"
 /**
  * `--force` flag permitting destructive overwrites.
  *
- * @param description - Help text; defaults to the overwrite wording.
- * @returns A boolean `--force` flag.
- * @example
+ * **Details**
+ *
+ * This is the operator's consent to lose existing data, so a command should
+ * refuse rather than overwrite when it is absent. Describing what specifically
+ * gets destroyed is worth the words — "Overwrite existing output" tells a reader
+ * less than naming the file or directory that disappears.
+ *
+ * **Gotchas**
+ *
+ * `--force` and {@link dryRunFlag} are independent switches, and a command given
+ * both should preview rather than destroy. Deciding that precedence is the
+ * command's job; neither flag encodes it.
+ *
+ * **Example** (Consenting to replace an existing bundle)
+ *
  * ```ts
  * import { forceFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(forceFlag().kind) // "flag"
+ * const flag = forceFlag("Replace the existing bundle directory if one is present")
+ *
+ * console.log(flag.kind) // "flag"
  * ```
+ *
  * @category flags
  * @since 0.0.0
  */
@@ -127,16 +273,29 @@ export const forceFlag = (description = "Overwrite existing output") =>
 /**
  * Split a comma-separated flag value, trimming entries and dropping empties.
  *
- * @remarks
- * Re-exports `Text.splitCommaSeparatedTrimmed`, which the fallow-quality and
- * yeet fallow-feedback adapters each open-code as `csvValues`.
+ * **Details**
  *
- * @example
+ * Names {@link Text.splitCommaSeparatedTrimmed} for CLI adapters, which the
+ * fallow-quality and yeet fallow-feedback adapters had each open-coded under
+ * this name. Trailing and doubled commas are tolerated rather than rejected,
+ * because a shell-assembled list such as `--only "$a,$b"` picks up empty
+ * segments whenever one variable is unset.
+ *
+ * **Gotchas**
+ *
+ * Entries keep their case. Use {@link normalizedTokens} when the values are
+ * matched against a fixed vocabulary rather than passed through.
+ *
+ * **Example** (Parsing a list that came from an unset shell variable)
+ *
  * ```ts
  * import { csvValues } from "@beep/repo-cli/internal/cli/Flags"
  *
  * console.log(csvValues(" a , b , , c ")) // ["a", "b", "c"]
+ * console.log(csvValues("")) // []
  * ```
+ *
+ * @see {@link normalizedTokens} for the case-folding variant.
  * @category coercion
  * @since 0.0.0
  */
@@ -146,12 +305,33 @@ export const csvValues: (value: string) => ReadonlyArray<string> = Text.splitCom
  * Split a comma-separated flag value into trimmed, lowercased, non-empty
  * tokens.
  *
- * @example
+ * **When to use**
+ *
+ * Use when flag values are matched against a fixed vocabulary — bot names, gate
+ * names, lane names — so that an operator typing `Renovate` and one typing
+ * `renovate` select the same thing.
+ *
+ * **Details**
+ *
+ * {@link csvValues} with case folding applied to each entry. Folding happens
+ * after trimming, so surrounding whitespace never survives into a comparison.
+ *
+ * **Gotchas**
+ *
+ * Lowercasing is unconditional, which makes this wrong for values that are
+ * passed through rather than compared — a case-sensitive path or package name
+ * loses information here. Reach for {@link csvValues} in that case.
+ *
+ * **Example** (Normalizing bot names typed with inconsistent case)
+ *
  * ```ts
  * import { normalizedTokens } from "@beep/repo-cli/internal/cli/Flags"
  *
  * console.log(normalizedTokens(" Renovate , DEPENDABOT ")) // ["renovate", "dependabot"]
+ * console.log(normalizedTokens("renovate,,renovate")) // ["renovate", "renovate"]
  * ```
+ *
+ * @see {@link csvValues} for the variant that preserves case.
  * @category coercion
  * @since 0.0.0
  */
@@ -164,12 +344,31 @@ export const normalizedTokens: (value: string) => ReadonlyArray<string> = flow(
 /**
  * Keep only the string entries of a variadic argument array.
  *
- * @example
+ * **Details**
+ *
+ * Narrows `ReadonlyArray<unknown>` to `ReadonlyArray<string>` by filtering on a
+ * type guard, so the result is typed rather than asserted. Variadic positional
+ * arguments arrive loosely typed, and this is the boundary where they become
+ * strings.
+ *
+ * **Gotchas**
+ *
+ * Non-string entries are dropped silently rather than reported, so the result
+ * can be shorter than the input and an empty result does not distinguish "no
+ * arguments" from "no string arguments". Compare lengths when that difference
+ * should be an error.
+ *
+ * **Example** (Narrowing a mixed variadic argument list)
+ *
  * ```ts
  * import { variadicStrings } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(variadicStrings(["a", 1, "b", null])) // ["a", "b"]
+ * const values = variadicStrings(["a", 1, "b", null])
+ *
+ * console.log(values) // ["a", "b"]
+ * console.log(values.length) // 2
  * ```
+ *
  * @category coercion
  * @since 0.0.0
  */

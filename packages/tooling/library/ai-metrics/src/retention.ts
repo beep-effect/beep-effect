@@ -25,7 +25,7 @@ import {
   AiMetricsDerivedTranscriptRecord,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
-import { aiMetricsDerivedDuckDbPath, DEFAULT_AI_METRICS_DATA_ROOT, withAiMetricsDuckDb } from "./duckdb.ts";
+import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "./duckdb.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from "./models.ts";
@@ -183,9 +183,17 @@ const validateRawArchivePath = (
 };
 
 /**
- * Error raised by P7 AI metrics retention workflows.
+ * Typed failure raised by retention inventory, delete, compaction, and restore-drill workflows.
  *
- * @example
+ * **Details**
+ *
+ * The retention surface deletes data, so it fails rather than degrades: a path
+ * that escapes the expected storage layout, an archive id that does not match
+ * the generated digest format, or an unreadable store all produce this error
+ * instead of a partial run.
+ *
+ * **Example** (Constructing the failure)
+ *
  * ```ts
  * import { AiMetricsRetentionError } from "@beep/repo-ai-metrics"
  *
@@ -193,8 +201,10 @@ const validateRawArchivePath = (
  *   cause: "duckdb unavailable",
  *   message: "Failed to read AI metrics retention inventory."
  * })
- * console.log(error.message)
+ *
+ * console.log(error._tag) // "AiMetricsRetentionError"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -212,21 +222,31 @@ export class AiMetricsRetentionError extends TaggedErrorClass<AiMetricsRetention
 /**
  * Time-window selector for AI metrics retention commands.
  *
- * @example
+ * **Gotchas**
+ *
+ * `dataRoot` is required. A default here would let a destructive retention run
+ * target a store the operator never named, which is the reverse of what a
+ * delete-and-compact surface should do.
+ *
+ * **Example** (Selecting a window in a resolved store)
+ *
  * ```ts
  * import { AiMetricsRetentionSelector } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsRetentionSelector.make({}).dataRoot)
+ *
+ * const selector = AiMetricsRetentionSelector.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ * })
+ *
+ * console.log(selector.dataRoot) // /home/dev/.local/state/beep/ai-metrics
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelector>($I`AiMetricsRetentionSelector`)(
   {
     beforeEpochMillis: S.optionalKey(S.Finite),
-    dataRoot: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT)),
-      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))
-    ),
+    dataRoot: S.String,
     sinceEpochMillis: S.optionalKey(S.Finite),
     untilEpochMillis: S.optionalKey(S.Finite),
   },
@@ -236,9 +256,18 @@ export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelect
 ) {}
 
 /**
- * Deploy-safe raw archive inventory row.
+ * One retained raw archive object, described without any filesystem path.
  *
- * @example
+ * **Details**
+ *
+ * The row carries `sourcePathHash` rather than a source path, so an inventory
+ * can be printed, logged, or shipped off-machine without leaking where the
+ * operator's transcripts live. The archive path is reconstructed from
+ * `archiveObjectId` and `sourceKind` at delete time and re-validated against the
+ * storage layout.
+ *
+ * **Example** (Reading an inventory row)
+ *
  * ```ts
  * import { AiMetricsRetentionRawArchiveItem } from "@beep/repo-ai-metrics"
  *
@@ -250,8 +279,11 @@ export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelect
  *   sourceKind: "codex",
  *   sourcePathHash: "source-hash"
  * })
- * console.log(item.sourceKind)
+ *
+ * console.log(item.sourceKind) // "codex"
+ * console.log(item.archiveObjectId) // "raw-0123456789abcdef"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -272,9 +304,16 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
 ) {}
 
 /**
- * Deploy-safe retained file inventory row.
+ * One retained derived export or report, addressed relative to the data root.
  *
- * @example
+ * **Details**
+ *
+ * `relativePath` is deliberately relative: it keeps the absolute store location
+ * out of printed inventories, and it is re-joined against the selector's
+ * `dataRoot` and re-checked for containment before anything is deleted.
+ *
+ * **Example** (Reading a retained export row)
+ *
  * ```ts
  * import { AiMetricsRetentionFileItem } from "@beep/repo-ai-metrics"
  *
@@ -282,8 +321,10 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
  *   modifiedAtEpochMillis: 1_717_000_000_000,
  *   relativePath: "derived/parquet/forwarder-1"
  * })
- * console.log(file.relativePath)
+ *
+ * console.log(file.relativePath) // "derived/parquet/forwarder-1"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -298,9 +339,17 @@ export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileIt
 ) {}
 
 /**
- * Path-safe inventory returned by `ai-metrics retention list`.
+ * Everything a selector matched across the raw, derived, and report trees.
  *
- * @example
+ * **Details**
+ *
+ * `explicitWindow` records whether the operator named a time window or fell
+ * through to the default, which is what lets a reviewer tell "this selected
+ * three objects" apart from "this selected the whole store". The `selected*`
+ * counts describe the match; the arrays carry the rows themselves.
+ *
+ * **Example** (Reading one selector's matches)
+ *
  * ```ts
  * import {
  *   AiMetricsRetentionFileItem,
@@ -332,8 +381,11 @@ export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileIt
  *   selectedRawArchiveObjectCount: 1,
  *   selectedReportCount: 0
  * })
- * console.log(inventory.selectedRawArchiveObjectCount)
+ *
+ * console.log(inventory.selectedRawArchiveObjectCount) // 1
+ * console.log(inventory.explicitWindow) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -354,9 +406,17 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
 ) {}
 
 /**
- * Result for delete or compaction retention commands.
+ * What a delete or compaction run removed, or would have removed.
  *
- * @example
+ * **Details**
+ *
+ * The counts mean the same thing under `dryRun: true` and `dryRun: false` — a
+ * dry run reports exactly what the real run would delete — so a plan can be
+ * reviewed and then executed without recounting. `explicitWindow` travels with
+ * the result so a reviewer can see whether the operator bounded the run.
+ *
+ * **Example** (Reviewing a dry run before executing it)
+ *
  * ```ts
  * import { AiMetricsRetentionMutationResult } from "@beep/repo-ai-metrics"
  *
@@ -369,8 +429,11 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
  *   mode: "delete",
  *   schemaVersion: "beep.ai_metrics.retention_mutation.v1"
  * })
- * console.log(result.dryRun)
+ *
+ * console.log(result.dryRun) // true
+ * console.log(result.deletedRawArchiveObjectCount) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -394,11 +457,24 @@ export class AiMetricsRetentionMutationResult extends S.Class<AiMetricsRetention
 /**
  * Policy for preventive local AI metrics retention enforcement.
  *
- * @example
+ * **Gotchas**
+ *
+ * `dataRoot` is required for the same reason it is on
+ * {@link AiMetricsRetentionSelector}: enforcement deletes snapshot exports, and
+ * a defaulted root would let it delete from a store the operator never named.
+ *
+ * **Example** (A dry-run policy against a resolved store)
+ *
  * ```ts
  * import { AiMetricsRetentionEnforcementPolicy } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsRetentionEnforcementPolicy.make({}).maxSnapshotExports)
+ *
+ * const policy = AiMetricsRetentionEnforcementPolicy.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ * })
+ *
+ * console.log(policy.maxSnapshotExports) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -406,10 +482,7 @@ export class AiMetricsRetentionEnforcementPolicy extends S.Class<AiMetricsRetent
   $I`AiMetricsRetentionEnforcementPolicy`
 )(
   {
-    dataRoot: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT)),
-      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))
-    ),
+    dataRoot: S.String,
     dryRun: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))
@@ -425,22 +498,33 @@ export class AiMetricsRetentionEnforcementPolicy extends S.Class<AiMetricsRetent
 ) {}
 
 /**
- * Result for preventive local AI metrics retention enforcement.
+ * How many per-run Parquet snapshots an enforcement pass kept and removed.
  *
- * @example
+ * **Details**
+ *
+ * `keptDerivedExportCount` is the newest `maxSnapshotExports` exports;
+ * everything older is counted in `deletedDerivedExportCount`. Reporting both
+ * makes an over-aggressive policy obvious before it is run without `dryRun`.
+ *
+ * **Example** (Checking what a policy would prune)
+ *
  * ```ts
  * import { AiMetricsRetentionEnforcementResult } from "@beep/repo-ai-metrics"
  *
  * const result = AiMetricsRetentionEnforcementResult.make({
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   deletedDerivedExportCount: 3,
  *   dryRun: true,
  *   keptDerivedExportCount: 2,
  *   maxSnapshotExports: 2,
  *   schemaVersion: "beep.ai_metrics.retention_enforcement.v1"
  * })
- * console.log(result.deletedDerivedExportCount)
+ *
+ * console.log(result.deletedDerivedExportCount) // 3
+ * console.log(result.keptDerivedExportCount === result.maxSnapshotExports) // true
  * ```
+ *
+ * @see {@link AiMetricsRetentionEnforcementPolicy} for the policy that produces this result.
  * @category models
  * @since 0.0.0
  */
@@ -461,21 +545,37 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
 ) {}
 
 /**
- * Input for a retained raw archive restore drill.
+ * Request to replay selected archive objects into a disposable store and verify them.
  *
- * @example
+ * **Details**
+ *
+ * A restore drill proves the encrypted archive is still decryptable and still
+ * hashes to the same content — the only way to learn that a backup is intact
+ * before needing it. `restoreRoot` must be disposable: the drill writes a fresh
+ * derived database there rather than touching the live store.
+ *
+ * **Gotchas**
+ *
+ * `hashSalt` must be the salt the objects were written with. A different salt
+ * produces a drill that decrypts fine and reports a hash mismatch, which reads
+ * like corruption.
+ *
+ * **Example** (Drilling one object into a scratch root)
+ *
  * ```ts
  * import { AiMetricsRetentionRestoreDrillInput, AiMetricsRetentionSelector } from "@beep/repo-ai-metrics"
  * import { Redacted } from "effect"
  *
  * const input = AiMetricsRetentionRestoreDrillInput.make({
- *   maxObjects: 1,
  *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *   restoreRoot: "/tmp/ai-metrics-restore",
- *   selector: AiMetricsRetentionSelector.make({ dataRoot: ".beep/ai-metrics" })
+ *   selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  * })
- * console.log(input.maxObjects)
+ *
+ * console.log(input.maxObjects) // 1
+ * console.log(input.selector.dataRoot) // /home/dev/.local/state/beep/ai-metrics
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -495,9 +595,18 @@ export class AiMetricsRetentionRestoreDrillInput extends S.Class<AiMetricsRetent
 ) {}
 
 /**
- * Result for a retained raw archive restore drill.
+ * Whether a restore drill replayed its objects and reproduced their content hashes.
  *
- * @example
+ * **Details**
+ *
+ * `hashMatches` is the drill's verdict: the replayed plaintext hashed to the
+ * same value recorded when it was archived. `transcriptTextPrinted` stays
+ * `false` on any normal run and exists so that a drill which did surface raw
+ * transcript text is visible in the record rather than only in a terminal
+ * scrollback.
+ *
+ * **Example** (Reading a successful drill)
+ *
  * ```ts
  * import { AiMetricsRetentionRestoreDrillResult } from "@beep/repo-ai-metrics"
  *
@@ -509,8 +618,12 @@ export class AiMetricsRetentionRestoreDrillInput extends S.Class<AiMetricsRetent
  *   schemaVersion: "beep.ai_metrics.retention_restore_drill.v1",
  *   transcriptTextPrinted: false
  * })
- * console.log(result.hashMatches)
+ *
+ * console.log(result.hashMatches) // true
+ * console.log(result.replayedObjectCount) // 1
  * ```
+ *
+ * @see {@link AiMetricsRetentionRestoreDrillInput} for the request that produces this result.
  * @category models
  * @since 0.0.0
  */
@@ -735,25 +848,41 @@ const planToInventory = (input: AiMetricsRetentionSelector, plan: RetentionPlan)
   });
 
 /**
- * List retained AI metrics raw archive objects and derived/report outputs.
+ * List everything a retention selector matches, without deleting anything.
+ *
+ * **When to use**
+ *
+ * Use when planning a delete or compaction run. The inventory is the review
+ * artifact: it names exactly the objects the same selector would remove.
+ *
+ * **Details**
+ *
+ * The DuckDB connection is opened and closed around the read, so the listing
+ * holds no lock afterwards. Rows come back path-free — hashes and data-root
+ * relative paths — which is what makes an inventory safe to paste into a review.
+ *
+ * **Example** (Reviewing what a window selects)
+ *
+ * ```ts
+ * import { AiMetricsRetentionSelector, listAiMetricsRetentionInventory } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = listAiMetricsRetentionInventory(
+ *   AiMetricsRetentionSelector.make({
+ *     beforeEpochMillis: 1_717_086_400_000,
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *   })
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((inventory) => console.log(inventory.selectedRawArchiveObjectCount))
+ * ```
  *
  * @effects
  * - Opens the derived DuckDB database under the selected data root.
  * - Reads retention rows from AI-metrics derived tables.
  * - Walks retained Parquet and report directories to build path-safe inventory rows.
- * @example
- * ```ts
- * import { AiMetricsRetentionSelector, listAiMetricsRetentionInventory } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- * const program = listAiMetricsRetentionInventory(
- *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
- *     dataRoot: ".beep/ai-metrics"
- *   })
- * )
- * const selectedCount = Effect.map(program, (inventory) => inventory.selectedRawArchiveObjectCount)
- * console.log(selectedCount)
- * ```
+ * @see {@link AiMetricsRetentionInventory} for how to read the returned rows.
  * @category services
  * @since 0.0.0
  */
@@ -904,25 +1033,40 @@ const listForwarderSnapshotExportDirs = Effect.fn("AiMetrics.retention.listForwa
 });
 
 /**
- * Enforce local AI metrics retention for old per-run Parquet snapshots.
+ * Keep only the newest per-run Parquet snapshots and prune the rest.
+ *
+ * **Details**
+ *
+ * Snapshots are ordered newest first by modification time, the first
+ * `maxSnapshotExports` are kept, and the remainder are removed. A negative
+ * `maxSnapshotExports` is clamped to zero rather than treated as unbounded, so
+ * a bad value can never mean "keep everything forever".
+ *
+ * **Gotchas**
+ *
+ * `dryRun` defaults to `true`. The default run reports what it would delete and
+ * touches nothing; pass `dryRun: false` deliberately to make it destructive.
+ *
+ * **Example** (Previewing a two-snapshot policy)
+ *
+ * ```ts
+ * import { AiMetricsRetentionEnforcementPolicy, enforceAiMetricsRetentionPolicy } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = enforceAiMetricsRetentionPolicy(
+ *   AiMetricsRetentionEnforcementPolicy.make({
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     maxSnapshotExports: 2
+ *   })
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((result) => console.log(result.deletedDerivedExportCount))
+ * ```
  *
  * @effects
  * - Reads the derived Parquet snapshot directory and file metadata.
  * - Removes old snapshot directories only when `dryRun` is `false`.
- * @example
- * ```ts
- * import { AiMetricsRetentionEnforcementPolicy, enforceAiMetricsRetentionPolicy } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- * const program = enforceAiMetricsRetentionPolicy(
- *   AiMetricsRetentionEnforcementPolicy.make({
- *     dataRoot: ".beep/ai-metrics",
- *     dryRun: true,
- *     maxSnapshotExports: 2
- *   })
- * )
- * const deletedCount = Effect.map(program, (result) => result.deletedDerivedExportCount)
- * console.log(deletedCount)
- * ```
  * @category services
  * @since 0.0.0
  */
@@ -1020,26 +1164,45 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
 });
 
 /**
- * Delete selected AI metrics raw, derived, and report data.
+ * Delete the raw archive objects, derived outputs, and reports a selector matches.
+ *
+ * **Details**
+ *
+ * Every archive path is rebuilt from its object id and re-checked for
+ * containment inside the selector's data root before deletion, so a tampered or
+ * stale inventory row cannot make the delete escape the store. Rows are removed
+ * from DuckDB in the same run, keeping the database and the filesystem
+ * consistent.
+ *
+ * **Gotchas**
+ *
+ * `dryRun` is a required positional argument, not a defaulted option. Pass
+ * `true` to plan; the counts returned are identical to what `false` would
+ * remove.
+ *
+ * **Example** (Planning a delete before running it)
+ *
+ * ```ts
+ * import { AiMetricsRetentionSelector, runAiMetricsRetentionDelete } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = runAiMetricsRetentionDelete(
+ *   AiMetricsRetentionSelector.make({
+ *     beforeEpochMillis: 1_717_086_400_000,
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *   }),
+ *   true
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((result) => console.log(result.deletedRawArchiveObjectCount))
+ * ```
  *
  * @effects
  * - Reads the selected retention plan from derived DuckDB storage.
  * - Deletes selected raw archive files and derived/report outputs only when `dryRun` is `false`.
  * - Deletes selected derived rows from DuckDB only when `dryRun` is `false`.
- * @example
- * ```ts
- * import { AiMetricsRetentionSelector, runAiMetricsRetentionDelete } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- * const program = runAiMetricsRetentionDelete(
- *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
- *     dataRoot: ".beep/ai-metrics"
- *   }),
- *   true
- * )
- * const plannedRawDeletes = Effect.map(program, (result) => result.deletedRawArchiveObjectCount)
- * console.log(plannedRawDeletes)
- * ```
+ * @see {@link runAiMetricsRetentionCompact} when only derived outputs should go and the raw archive must stay.
  * @category services
  * @since 0.0.0
  */
@@ -1062,25 +1225,41 @@ export const runAiMetricsRetentionDelete: {
 );
 
 /**
- * Compact selected AI metrics derived Parquet and report outputs.
+ * Reclaim space by removing derived exports and reports while keeping the raw archive.
+ *
+ * **When to use**
+ *
+ * Use when the store is large but the evidence must stay recoverable. Derived
+ * Parquet and reports are rebuildable from the encrypted raw archive; the
+ * archive itself is not rebuildable from anything.
+ *
+ * **Details**
+ *
+ * Compaction reports `deletedRawArchiveObjectCount: 0` by construction — it is
+ * the same mutation path as delete with the raw tree left untouched.
+ *
+ * **Example** (Planning a compaction)
+ *
+ * ```ts
+ * import { AiMetricsRetentionSelector, runAiMetricsRetentionCompact } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ *
+ * const program = runAiMetricsRetentionCompact(
+ *   AiMetricsRetentionSelector.make({
+ *     beforeEpochMillis: 1_717_086_400_000,
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *   }),
+ *   true
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((result) => console.log(result.deletedDerivedExportCount))
+ * ```
  *
  * @effects
  * - Reads the selected retention plan from derived DuckDB storage.
  * - Removes selected derived/report output files only when `dryRun` is `false`.
- * @example
- * ```ts
- * import { AiMetricsRetentionSelector, runAiMetricsRetentionCompact } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- * const program = runAiMetricsRetentionCompact(
- *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
- *     dataRoot: ".beep/ai-metrics"
- *   }),
- *   true
- * )
- * const plannedFileDeletes = Effect.map(program, (result) => result.deletedDerivedExportCount)
- * console.log(plannedFileDeletes)
- * ```
+ * @see {@link runAiMetricsRetentionDelete} when the raw archive objects must go too.
  * @category services
  * @since 0.0.0
  */
@@ -1103,32 +1282,52 @@ export const runAiMetricsRetentionCompact: {
 );
 
 /**
- * Restore selected encrypted raw archive objects into disposable derived storage.
+ * Prove the encrypted archive is still recoverable by replaying it into a scratch store.
  *
- * @effects
- * - Reads source retention rows from derived DuckDB storage.
- * - Reads and decrypts selected raw archive envelopes using `globalThis.crypto`.
- * - Creates restore directories, writes a disposable raw archive copy, and writes restored derived DuckDB storage.
- * - Hashes restored plaintext to prove retained archive integrity before replay.
- * @example
+ * **When to use**
+ *
+ * Use when a retention delete is planned, and on a schedule between deletes. An
+ * archive nobody has ever restored is an assumption, not a backup.
+ *
+ * **Details**
+ *
+ * Selected envelopes are decrypted, hashed, and compared against the content
+ * hash recorded at archive time; the replay then writes a fresh derived DuckDB
+ * database under `restoreRoot`. The live store is only read.
+ *
+ * **Gotchas**
+ *
+ * `restoreRoot` is written to and should be disposable. Pointing it at the live
+ * data root would have the drill build a second derived database inside the
+ * store it is supposed to be verifying.
+ *
+ * **Example** (Drilling one archived object)
+ *
  * ```ts
  * import {
  *   AiMetricsRetentionRestoreDrillInput,
  *   AiMetricsRetentionSelector,
  *   runAiMetricsRetentionRestoreDrill
  * } from "@beep/repo-ai-metrics"
+ * import { NodeServices } from "@effect/platform-node"
  * import { Effect, Redacted } from "effect"
+ *
  * const program = runAiMetricsRetentionRestoreDrill(
  *   AiMetricsRetentionRestoreDrillInput.make({
- *     maxObjects: 1,
  *     rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *     restoreRoot: "/tmp/ai-metrics-restore",
- *     selector: AiMetricsRetentionSelector.make({ dataRoot: ".beep/ai-metrics" })
+ *     selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  *   })
- * )
- * const replayedCount = Effect.map(program, (result) => result.replayedObjectCount)
- * console.log(replayedCount)
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((result) => console.log(result.hashMatches))
  * ```
+ *
+ * @effects
+ * - Reads source retention rows from derived DuckDB storage.
+ * - Reads and decrypts selected raw archive envelopes using `globalThis.crypto`.
+ * - Creates restore directories, writes a disposable raw archive copy, and writes restored derived DuckDB storage.
+ * - Hashes restored plaintext to prove retained archive integrity before replay.
  * @category services
  * @since 0.0.0
  */
@@ -1261,13 +1460,20 @@ const encodeMutationJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsReten
 const encodeRestoreDrillJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionRestoreDrillResult));
 
 /**
- * Render a retention inventory as JSON.
+ * Encode a retention inventory as the JSON the CLI emits under `--json`.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if inventory cannot be encoded.
- * @example
+ * **Details**
+ *
+ * Encoding goes through the schema, so the text round-trips back through
+ * {@link AiMetricsRetentionInventory} and carries `schemaVersion` for a
+ * downstream reader to gate on.
+ *
+ * **Example** (Encoding an empty inventory)
+ *
  * ```ts
  * import { AiMetricsRetentionInventory, aiMetricsRetentionInventoryToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ *
  * const inventory = AiMetricsRetentionInventory.make({
  *   derivedExports: [],
  *   explicitWindow: true,
@@ -1278,9 +1484,13 @@ const encodeRestoreDrillJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsR
  *   selectedRawArchiveObjectCount: 0,
  *   selectedReportCount: 0
  * })
- * const json = Effect.runPromise(aiMetricsRetentionInventoryToJson(inventory))
- * console.log(json)
+ *
+ * const json = Effect.runSync(aiMetricsRetentionInventoryToJson(inventory))
+ *
+ * console.log(json.includes("beep.ai_metrics.retention_inventory.v1")) // true
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if inventory cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1294,24 +1504,34 @@ export const aiMetricsRetentionInventoryToJson: (
 );
 
 /**
- * Render a retention enforcement result as JSON.
+ * Encode an enforcement result as the JSON the CLI emits under `--json`.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if enforcement result cannot be encoded.
- * @example
+ * **Details**
+ *
+ * The encoded text keeps `dataRoot`, so an automated pruning job's log records
+ * which store it acted on rather than only how much it removed.
+ *
+ * **Example** (Encoding a dry-run enforcement result)
+ *
  * ```ts
  * import { AiMetricsRetentionEnforcementResult, aiMetricsRetentionEnforcementToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ *
  * const result = AiMetricsRetentionEnforcementResult.make({
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   deletedDerivedExportCount: 1,
  *   dryRun: true,
  *   keptDerivedExportCount: 2,
  *   maxSnapshotExports: 2,
  *   schemaVersion: "beep.ai_metrics.retention_enforcement.v1"
  * })
- * const json = Effect.runPromise(aiMetricsRetentionEnforcementToJson(result))
- * console.log(json)
+ *
+ * const json = Effect.runSync(aiMetricsRetentionEnforcementToJson(result))
+ *
+ * console.log(json.includes("\"dryRun\":true")) // true
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if enforcement result cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1325,13 +1545,19 @@ export const aiMetricsRetentionEnforcementToJson: (
 );
 
 /**
- * Render a retention mutation result as JSON.
+ * Encode a delete or compaction result as the JSON the CLI emits under `--json`.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if mutation result cannot be encoded.
- * @example
+ * **Details**
+ *
+ * `mode` and `dryRun` both survive encoding, which is what lets an audit trail
+ * distinguish a reviewed plan from the destructive run that followed it.
+ *
+ * **Example** (Encoding a compaction plan)
+ *
  * ```ts
  * import { AiMetricsRetentionMutationResult, aiMetricsRetentionMutationToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ *
  * const result = AiMetricsRetentionMutationResult.make({
  *   deletedDerivedExportCount: 2,
  *   deletedRawArchiveObjectCount: 0,
@@ -1341,9 +1567,13 @@ export const aiMetricsRetentionEnforcementToJson: (
  *   mode: "compact",
  *   schemaVersion: "beep.ai_metrics.retention_mutation.v1"
  * })
- * const json = Effect.runPromise(aiMetricsRetentionMutationToJson(result))
- * console.log(json)
+ *
+ * const json = Effect.runSync(aiMetricsRetentionMutationToJson(result))
+ *
+ * console.log(json.includes("\"mode\":\"compact\"")) // true
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if mutation result cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1357,13 +1587,20 @@ export const aiMetricsRetentionMutationToJson: (
 );
 
 /**
- * Render a restore drill result as JSON.
+ * Encode a restore-drill result as the JSON that records the drill was run.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if restore-drill result cannot be encoded.
- * @example
+ * **Details**
+ *
+ * This encoded record is the durable evidence that the archive was recoverable
+ * on a given day. Keep it beside the store rather than only in a terminal, so a
+ * later incident can point at when integrity was last proven.
+ *
+ * **Example** (Encoding a passing drill)
+ *
  * ```ts
  * import { AiMetricsRetentionRestoreDrillResult, aiMetricsRetentionRestoreDrillToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ *
  * const result = AiMetricsRetentionRestoreDrillResult.make({
  *   derivedDuckDbPath: "/tmp/ai-metrics-restore/derived/ai-metrics.duckdb",
  *   hashMatches: true,
@@ -1372,9 +1609,13 @@ export const aiMetricsRetentionMutationToJson: (
  *   schemaVersion: "beep.ai_metrics.retention_restore_drill.v1",
  *   transcriptTextPrinted: false
  * })
- * const json = Effect.runPromise(aiMetricsRetentionRestoreDrillToJson(result))
- * console.log(json)
+ *
+ * const json = Effect.runSync(aiMetricsRetentionRestoreDrillToJson(result))
+ *
+ * console.log(json.includes("\"hashMatches\":true")) // true
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsRetentionError` if restore-drill result cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */

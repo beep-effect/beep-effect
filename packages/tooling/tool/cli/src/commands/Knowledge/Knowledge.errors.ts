@@ -47,9 +47,11 @@ export const KNOWLEDGE_HISTORY_REMEDIATION =
  *
  * **Details**
  *
- * Git, archive extraction, UTF-8 decoding, command-probe, and index-probe failures all raise this
+ * Git, archive extraction, UTF-8 decoding, probe-spawn, and probe-output failures all raise this
  * error rather than becoming synthetic findings. Emitting them as findings would let a broken
- * scanner look like a clean comparison, so they stay strictly in the error channel.
+ * scanner look like a clean comparison, so they stay strictly in the error channel. The one probe
+ * failure that is not automatically operational is {@link KnowledgeProbeBootError}, which the
+ * merge-base side degrades instead of raising.
  *
  * **Example** (Fail a scan closed)
  *
@@ -130,6 +132,48 @@ export class KnowledgeOperationalError extends TaggedErrorClass<KnowledgeOperati
    */
   static readonly mapError = Err.mapToError(this.new);
 }
+
+/**
+ * An archive-local probe process that exited non-zero without emitting its structured output.
+ *
+ * **Details**
+ *
+ * The probes import the scanned revision's own CLI modules, so a revision whose workspace imports no
+ * longer resolve — a deleted barrel export, an unparsable module — dies before it can report
+ * anything. This class is separate from {@link KnowledgeOperationalError} because the two sides of a
+ * comparison own the failure differently: on HEAD it is the branch author's own tree and is re-raised
+ * as operational, while on the merge-base it degrades the comparison's probe coverage and is recorded
+ * in the report instead of failing the run.
+ *
+ * **Gotchas**
+ *
+ * Only a non-zero exit is a boot failure. A probe that exits zero and prints output the scanner
+ * cannot parse is a scanner defect, and stays a {@link KnowledgeOperationalError} on both sides.
+ *
+ * **Example** (Report an unbootable probe)
+ *
+ * ```ts
+ * import { KnowledgeProbeBootError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
+ *
+ * const error = KnowledgeProbeBootError.make({
+ *   message: 'Archive-local probe "command-probe.ts" failed with exit 1.',
+ * })
+ *
+ * console.log(error._tag) // "KnowledgeProbeBootError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class KnowledgeProbeBootError extends TaggedErrorClass<KnowledgeProbeBootError>($I`KnowledgeProbeBootError`)(
+  "KnowledgeProbeBootError",
+  {
+    message: S.String,
+  },
+  $I.annote("KnowledgeProbeBootError", {
+    description: "An archive-local probe that exited non-zero before emitting structured output.",
+  })
+) {}
 
 /**
  * The gate failure raised once a rendered report contains introduced blocking findings.

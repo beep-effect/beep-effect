@@ -58,8 +58,19 @@ wall-clock, not work: the instrument-before-treat method in
 [`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so nothing
 downstream (notifications, escalation ladder, the P8 paired trial) can start
 until it accrues, and turning any of them on mid-window destroys it.
-`notifierRev` stays `log-only-0` throughout. P0 storage-cutover preparation may
-proceed in parallel by a separate actor.
+`notifierRev` stays `log-only-0` throughout.
+
+**P0 (storage cutover + identity registry) completed 2026-08-07** in parallel,
+as PLAN.md permitted: the 20G canonical store moved atomically to
+`${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics` with byte-identical
+census gates, the data-root precedence (`--data-root` →
+`BEEP_AI_METRICS_DATA_ROOT` → XDG default) replaced every clone-relative
+default, the identity registry and bounded config snapshots are live
+(25,741 → 256 snapshot files, five stage timings, nested worktrees excluded),
+and the codec↔writer hash-salt divergence noted below is resolved. Evidence:
+[`history/outputs/2026-08-07-p0-cutover.md`](./history/outputs/2026-08-07-p0-cutover.md).
+The cutover never touched the sibling `agent-evidence/` ledger — the P1
+baseline window is undisturbed.
 
 **Day-1 checks and both pre-baseline gates: closed 2026-08-06**
 (`research/2026-08-06-p1-instrument-live-handoff.md`). Verified against 1,329
