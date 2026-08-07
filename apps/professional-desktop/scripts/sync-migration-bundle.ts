@@ -19,7 +19,7 @@ const mode = Match.value(Bun.argv.includes("--check")).pipe(
   Match.orElse(() => "write" as const)
 );
 
-class StaleMigrationBundle extends S.TaggedErrorClass<StaleMigrationBundle>()("StaleMigrationBundle", {
+class StaleMigrationBundle extends S.TaggedError<StaleMigrationBundle>()("StaleMigrationBundle", {
   message: S.String,
   command: S.String,
 }) {}

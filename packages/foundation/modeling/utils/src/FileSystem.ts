@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("FileSystem");
 
-class NodeFileSystemUnavailableError extends S.TaggedErrorClass<NodeFileSystemUnavailableError>(
+class NodeFileSystemUnavailableError extends S.TaggedError<NodeFileSystemUnavailableError>(
   $I`NodeFileSystemUnavailableError`
 )(
   "NodeFileSystemUnavailableError",

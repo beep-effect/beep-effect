@@ -20,7 +20,7 @@ import type { Path as PlatformPath } from "effect";
 
 const $I = $UtilsId.create("Path");
 
-class NodePathUnavailableError extends S.TaggedErrorClass<NodePathUnavailableError>($I`NodePathUnavailableError`)(
+class NodePathUnavailableError extends S.TaggedError<NodePathUnavailableError>($I`NodePathUnavailableError`)(
   "NodePathUnavailableError",
   {
     module: S.Literal("node:path"),

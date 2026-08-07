@@ -294,7 +294,7 @@ const preserveFieldEquivalenceOnExtend = (errorClass: UnsafeTaggedErrorClass): U
 /**
  * Create a tagged error class with `_tag` discrimination and constructor input inferred from the schema.
  *
- * Delegates class construction and extension to `S.TaggedErrorClass`. The
+ * Delegates class construction and extension to `S.TaggedError`. The
  * local delta is a declared-field equivalence fallback that ignores transient
  * `Error` metadata, follows recursive `extend(...)` calls, and yields to an
  * explicit caller-supplied `toEquivalence` annotation.
@@ -345,7 +345,7 @@ export const TaggedErrorClass: TaggedErrorClassConstructor = (identifier?: undef
     schema: TaggedErrorFields | TaggedErrorStruct,
     annotations?: S.Annotations.Declaration<TUnsafe.Any, readonly [TaggedErrorStruct]>
   ) => {
-    const errorClass = S.TaggedErrorClass<TUnsafe.Any, TUnsafe.Any>(identifier)(
+    const errorClass = S.TaggedError<TUnsafe.Any, TUnsafe.Any>(identifier)(
       tagValue,
       schema as never,
       withFieldEquivalence(schema, annotations) as never
