@@ -59,6 +59,22 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
 
 ## 2026-08-07 — P3 yeet (hosted checks)
 
+### A silent `date -d` timezone-parse failure burned a held rerun budget at peak load
+
+- **What happened:** the orchestration plan held CI rerun budgets for the
+  overnight quiet window (both prior lane convergences happened before 9am
+  Chicago), but the wake timer's `date -d "2026-08-07 22:30 America/Chicago"`
+  parse failed silently, the `until` guard compared against an empty target and
+  fell through, and the Test Integration budget was spent at 1:22pm — peak
+  runner load — where it predictably OOM'd.
+- **Evidence:** timer task be2yuui3r (this session) completed ~9h early; TI job
+  92959257865 started 18:22Z and died exit-137 on the usual epistemic pair.
+- **Prevention:** the repo memory `completion-checks-that-fail-into-silence`
+  names this exact class. Validate computed timestamps before arming
+  (`[ "$TARGET" -gt "$NOW" ]` + echo the resolved date), use GNU date's
+  `TZ="..."` in-string form, and read the timer's first output line instead of
+  trusting the completion notification.
+
 ### The ai-metrics coverage ratchet rows exceed what the suite measures (inherited)
 
 - **What happened:** once past the runner OOMs, the Coverage Regression lane hits
