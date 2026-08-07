@@ -117,6 +117,59 @@ decompose settlements (11–12):
     crossing, and the binding pick is a **P0 output**, not a pre-authorized
     edit — see Constraints for the four evaluated shapes and what P0 must
     produce.
+13. **P0 ruling on the rung-2 candidate handoff (2026-08-06,
+    architecture-guardian-checked): deferred with standing evidence.** Mirrors
+    the sibling's owner rulings of 2026-08-05
+    (`goals/patent-citation-candor-gate/SPEC.md`, the entries opening "Owner
+    ruling on decision 9" and "Owner ruling on the live-gate criterion"). Rung 2
+    lands law-side artifacts only — durable append-only records,
+    `CorrectionDelta`, `PriorityBasis` — and implements no submission into the
+    triage repository. The constraint is stated in **import terms, not
+    invocation terms**: this goal adds zero new `@beep/epistemic-*` import
+    sites anywhere in `packages/law-practice/*` (the pre-existing drift
+    baseline stays exactly 13 sites across 4 files), and
+    `CorrectionDelta`/`PriorityBasis` are typed against law-practice domain and
+    shared-kernel vocabulary only. A law-owned "outbound port" typed in
+    epistemic vocabulary would exercise the bounded exception the moment it is
+    authored, live consumer or not; if the handoff shape cannot be expressed
+    without epistemic types, it is not authored in this goal. Alternatives, in
+    disqualification order: **foundation-mediated port inversion fails
+    admission condition 1** — the five conditions are gated by "admitted only
+    when **all** of the following hold" and any failure is a slice-boundary
+    breach (`standards/architecture/DECISIONS.md:1106-1115`, `:1122-1123`); a
+    triage port's types (`ContradictionAssessment`, `MatchBasis`, `BeliefPair`,
+    `ReceiptKey`) are the epistemic slice's language by name. The scoped
+    ratifying rationale (`:1142-1148`) and §2a's routing of async product facts
+    to events (`standards/architecture/10-cross-slice-coordination.md:47-49`)
+    corroborate second. **Emitted events**: no transport exists and the
+    contract home `shared/use-cases` does not exist
+    (`10-cross-slice-coordination.md:24-30`, `DECISIONS.md:993-998`) — a strict
+    superset of the promotion cost. **Promotion** fails the
+    ≥2-current-importers bar on a one-consumer surface
+    (`standards/architecture/02-shared-kernel.md:189`). **The bounded
+    exception's removal condition is not tripped**: the counting unit is a
+    consuming *vertical* crossing by tier (`DECISIONS.md:955-956`, `:965-970`);
+    law-practice is consumer #1, `apps/professional-desktop` is a blessed
+    composition root, `_internal/db-admin` is tooling — no third consumer
+    exists. The actual blocker is the exception row's Scope enumeration
+    (`goals/law-practice-office-action-spike/SPEC.md:258`), which does not name
+    `ContradictionTriage`; each Scope widening is a fresh owner decision, never
+    the extension of a standing licence. **No exception is exercised; this
+    goal's Exception Ledger stays "None".** Exactly two admissible futures, and
+    no third: (a) a follow-up widens the office-action-spike ledger row's Scope
+    to name `ContradictionTriage`, with owner sign-off, the consumer being
+    `packages/law-practice/server` calling
+    `ContradictionTriageRepository.submit` through the already-declared
+    `@beep/epistemic-use-cases/server`; or (b) an event contract once
+    `shared/use-cases` exists with ≥2 current consumers. Standing evidence:
+    [`research/02-handoff-shape-evidence.md`](./research/02-handoff-shape-evidence.md)
+    and
+    [`research/01-surface-reverification.md`](./research/01-surface-reverification.md)
+    (all 15 §4 anchors CURRENT on 2026-08-06). Citation discipline: whenever
+    `standards/ARCHITECTURE.md:632-636` or
+    `01-hexagonal-vertical-slices.md:71-74` is cited on this topic, pair it
+    with `10-cross-slice-coordination.md:36-51` and `DECISIONS.md:1095-1148` —
+    both baselines predate the 2026-07-25 third mechanism.
 
 ## Non-Goals
 
@@ -331,10 +384,15 @@ and the fourth — extending the slice's documented bounded epistemic exception 
 sits closer to tripping that exception's own removal condition than to being
 covered by it. None is picked here**; P0 makes the binding call with an
 `architecture-guardian` check and records it in this decision log together with
-the exact consumer and binding files that shape writes.
+the exact consumer and binding files that shape writes. **P0 outcome
+(2026-08-06): deferred — decision 13**, which also corrects the
+removal-condition reading below (the condition is not tripped; the blocker is
+the Scope enumeration).
 
 - **Emitted events — unavailable.** Zero slice `*.events.ts`,
-  `*.event-handlers.ts`, or `*.processes.ts` in `packages/**/src`; no bus, no
+  `*.event-handlers.ts`, or `*.processes.ts` in `packages/**/src` (the single
+  repo-wide `*.events.ts`, `packages/foundation/ui-system/dock/src/Dock.events.ts`,
+  is a UI POC, not a slice contract — P0 re-verification 2026-08-06); no bus, no
   dispatcher, no process manager. The cross-slice event contract would itself
   have to live in the non-existent `shared/use-cases`
   (`standards/architecture/10-cross-slice-coordination.md:24-30`), making this a
@@ -356,8 +414,8 @@ the exact consumer and binding files that shape writes.
   does. It also mandates a README record in both packages
   (`standards/architecture/DECISIONS.md:1117-1120`).
 - **Extending the slice's existing documented bounded exception.**
-  `packages/law-practice/use-cases/README.md:18-22` and
-  `packages/law-practice/server/README.md:15-21` record importing
+  `packages/law-practice/use-cases/README.md:18-21` and
+  `packages/law-practice/server/README.md:15-19` record importing
   `@beep/epistemic-*` as the slice's documented cross-slice bounded exception,
   and `packages/law-practice/use-cases/package.json:52-53` already declares
   `@beep/epistemic-domain` and `@beep/epistemic-use-cases` — so this adds **no
