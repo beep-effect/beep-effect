@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -39,9 +39,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Rung 2 (transitions, correction contract, durability) — in progress.
-P1 completed 2026-08-06: rung-1 domain schemas + `LegalPositionRelatorPolicy`
-landed with the failing-first-then-green proof
+Complete (2026-08-07) — all phases closed; the PR ships both rungs and this
+packet's closeout (reflection at
+[`history/reflections/2026-08-07-claude.md`](./history/reflections/2026-08-07-claude.md)).
+P2 completed 2026-08-07: rung-2
+transition/correction schemas (FLINT-attributed ActFrame, PowerExercise with
+required disposition, full decision-8 CorrectionDelta, PriorityBasis), the
+array-backed `@beep/schema` HashSet gap-fill, the five-table durable
+append-only storage trio, the second law-practice migration with its executed
+PGlite proof (`history/p2-pglite-proof.log`) and four AcceptedProofManifest
+entries, and the 32-test competency-question acceptance suite. The rung-2
+candidate handoff remains deferred per decision 13. P1 completed 2026-08-06:
+rung-1 domain schemas + `LegalPositionRelatorPolicy` landed with the
+failing-first-then-green proof
 (`history/p1-rung1-test-first-fail.log`, `history/p1-rung1-test-green.log`;
 18 tests, algebra proven by exhaustion). P0 completed 2026-08-06: all 15
 `research/SOURCES.md` §4 anchors re-verified CURRENT against `main`
