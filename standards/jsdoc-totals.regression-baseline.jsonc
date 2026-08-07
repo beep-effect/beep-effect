@@ -4,11 +4,11 @@
 // Comparison: fail-on-growth for every metric in tracked_totals.
 {
   "schema_version": 1,
-  "source_inventory": "standards/jsdoc-documentation.inventory.jsonc",
+  "source_inventory": ".beep/ci/jsdoc-documentation.inventory.jsonc",
   "regeneration_command": "bun run beep quality jsdoc-inventory",
   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
-  "generated_at": "2026-08-06T03:34:34.711Z",
+  "generated_at": "2026-08-07T04:57:05.302Z",
   "tracked_totals": {
     "packagesNeedingRemediation": 111,
     "missingExportExamples": 0,
@@ -17,7 +17,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 22,
-    "multiple-description-paragraphs": 1338,
+    "multiple-description-paragraphs": 1315,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 2,
@@ -29,6 +29,6 @@
     "malformed-example": 85,
     "duplicate-example": 0,
     "loose-ts-fence": 0,
-    "forbidden-remarks": 467
+    "forbidden-remarks": 455
   }
 }
