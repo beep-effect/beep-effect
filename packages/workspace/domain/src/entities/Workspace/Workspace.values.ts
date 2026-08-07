@@ -69,17 +69,6 @@ export const WorkspaceVaultRootPath = S.String.pipe(
 
 /**
  * {@inheritDoc WorkspaceVaultRootPath}
- *
- * **Example** (Typed vault path decode)
- *
- * ```ts
- * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
- * import * as S from "effect/Schema"
- *
- * const path: WorkspaceVaultRootPath = S.decodeUnknownSync(WorkspaceVaultRootPath)("/tmp/beep-documents-vault")
- * console.log(path)
- * ```
- *
  * @category value-objects
  * @since 0.0.0
  */

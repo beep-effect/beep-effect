@@ -27,17 +27,6 @@ export const TerritoryName = TerritoryNameSchema;
 
 /**
  * {@inheritDoc TerritoryName}
- *
- * **Example** (Type-annotated territory name)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { TerritoryName } from "@beep/schema/TerritoryName"
- *
- * const name: TerritoryName = S.decodeUnknownSync(TerritoryName)("United States")
- * console.log(name) // "United States"
- * ```
- *
  * @category models
  * @since 0.0.0
  */

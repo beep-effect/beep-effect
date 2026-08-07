@@ -222,16 +222,6 @@ export const BoolKeyDefaultFalse = boolKeyWithDefault(false).pipe(
 
 /**
  * {@inheritDoc BoolKeyDefaultFalse}
- *
- * **Example** (Type-level false default)
- *
- * ```ts
- * import type { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults"
- *
- * const visible: BoolKeyDefaultFalse = false
- * console.log(visible)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -263,16 +253,6 @@ export const BoolKeyDefaultTrue = boolKeyWithDefault(true).pipe(
 
 /**
  * {@inheritDoc BoolKeyDefaultTrue}
- *
- * **Example** (Type-level true default)
- *
- * ```ts
- * import type { BoolKeyDefaultTrue } from "@beep/schema/SchemaUtils/withKeyDefaults"
- *
- * const enabled: BoolKeyDefaultTrue = true
- * console.log(enabled)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

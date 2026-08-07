@@ -284,6 +284,7 @@ export class SessionChangeDelta extends S.Class<SessionChangeDelta>($I`SessionCh
   })
 ) {}
 
+// fallow-ignore-next-line code-duplication -- domain Session and use-cases ports both default PrefixMap empty; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 const emptyPrefixMap = (): PrefixMap => ({});
 
 const PrefixMapWithEmptyDefault = PrefixMap.pipe(

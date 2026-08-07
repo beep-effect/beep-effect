@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import { Config, Console, Effect, MutableHashMap, Order, pipe, Semaphore } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -360,7 +361,14 @@ const pendingTitleFileGroups = (
   );
 };
 
-/** Pack small single-file groups into multi-file proxy requests to cut round-trips. */
+/**
+ * Pack small single-file groups into multi-file proxy requests to cut round-trips.
+ *
+ * @param fileGroups - Per-file pending extract groups to pack.
+ * @param maxRecords - Maximum extract records allowed in one packed request.
+ * @param maxChars - Maximum combined blockText characters allowed in one request.
+ * @returns Packed request groups (one multi-file batch may replace many tiny files).
+ */
 const packTitleRequestGroups = (
   fileGroups: ReadonlyArray<PendingTitleFileGroup>,
   maxRecords = 12,
@@ -435,7 +443,12 @@ export class RunJSDocMigrateTitlesOptions extends S.Class<RunJSDocMigrateTitlesO
   })
 ) {}
 
-/** Default concurrent proxy requests for the titles stage (one request per file). */
+/**
+ * Default concurrent proxy requests for the titles stage (one request per packed group).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const defaultJSDocMigrateTitlesConcurrency = 4;
 
 const chatCompletionContent = (
@@ -477,7 +490,7 @@ const titlesPromptWithRetryNote = (
     : `${jsdocMigrateTitlesPrompt(pending)}\nYour previous response was rejected: ${previousProblem}. Return only the corrected JSON array.`;
 
 const errorMessage = (error: QualityScriptCommandError): string =>
-  typeof error.message === "string" ? error.message : String(error);
+  P.isString(error.message) ? error.message : String(error);
 
 const titleRetryBackoffMs = (message: string, tryIndex: number): number => {
   const authCooldown = message.includes("auth_unavailable") || message.includes("HTTP 5");
@@ -581,30 +594,25 @@ export const runJSDocMigrateTitles = Effect.fn("JSDocMigrateTitles.run")(functio
   // must not stall the rest of the pipeline (batch-of-N waits did that).
   const appendGate = yield* Semaphore.make(1);
   let appended = 0;
-  yield* Effect.forEach(
-    requestGroups,
-    (group) =>
-      Effect.gen(function* () {
-        const records = yield* requestTitlesForFile(proxyUrl, model, group.records);
-        const lines = yield* Effect.forEach(records, (record) =>
-          jsdocMigrateTitleCodec
-            .encode(record)
-            .pipe(
-              Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to encode ${record.anchor}.`))
-            )
-        );
-        yield* appendGate.withPermits(1)(
-          fs
-            .writeFileString(titlesPath, `${A.join(lines, "\n")}\n`, { flag: "a" })
-            .pipe(
-              Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to append to ${titlesPath}.`))
-            )
-        );
-        appended += records.length;
-        yield* Console.log(`[jsdoc-migrate] titles: ${group.filePath} -> ${records.length} record(s)`);
-      }),
-    { concurrency }
-  );
+  const appendTitlesForGroup = Effect.fnUntraced(function* (group: {
+    readonly filePath: string;
+    readonly records: ReadonlyArray<JSDocMigrateExtractRecord>;
+  }) {
+    const records = yield* requestTitlesForFile(proxyUrl, model, group.records);
+    const lines = yield* Effect.forEach(records, (record) =>
+      jsdocMigrateTitleCodec
+        .encode(record)
+        .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to encode ${record.anchor}.`)))
+    );
+    yield* appendGate.withPermits(1)(
+      fs
+        .writeFileString(titlesPath, `${A.join(lines, "\n")}\n`, { flag: "a" })
+        .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to append to ${titlesPath}.`)))
+    );
+    appended += records.length;
+    yield* Console.log(`[jsdoc-migrate] titles: ${group.filePath} -> ${records.length} record(s)`);
+  });
+  yield* Effect.forEach(requestGroups, appendTitlesForGroup, { concurrency });
   yield* Console.log(
     `[jsdoc-migrate] titles ok: pendingBlocks=${pending.length} files=${limitedFiles.length} requests=${requestGroups.length} appended=${appended} concurrency=${concurrency} -> ${titlesPath}`
   );

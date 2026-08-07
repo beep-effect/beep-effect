@@ -545,10 +545,10 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  * console.log(program)
  * ```
  *
+ * @internal
  * @effects
  * - Reads `package.json`, optional `docgen.json`, and any referenced TSConfig file from the current package.
  * - Fails with `DocgenError` when JSONC parsing, schema decoding, or file access fails.
- * @internal
  * @category configuration
  * @since 0.0.0
  */

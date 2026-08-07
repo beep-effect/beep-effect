@@ -173,20 +173,6 @@ export const WorkspaceVaultStoreError = S.Union([WorkspaceVaultStoreUnavailable,
 
 /**
  * {@inheritDoc WorkspaceVaultStoreError}
- *
- * **Example** (Annotate store error type)
- *
- * ```ts
- * import type { WorkspaceVaultStoreError } from "@beep/workspace-use-cases/public"
- * import { WorkspaceVaultRootInvalid } from "@beep/workspace-use-cases/public"
- *
- * const error: WorkspaceVaultStoreError = WorkspaceVaultRootInvalid.make({
- *   path: "/tmp/beep-documents-vault",
- *   reason: "Workspace vault root is not writable."
- * })
- * console.log(error._tag)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */

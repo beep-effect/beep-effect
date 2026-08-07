@@ -50,17 +50,6 @@ const currencyCodeSet = HashSet.fromIterable(CurrencyCode.Options);
 
 /**
  * {@inheritDoc CurrencyCode}
- *
- * **Example** (Type annotated USD decode)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { CurrencyCode } from "@beep/schema/CurrencyCode"
- *
- * const code: CurrencyCode = S.decodeUnknownSync(CurrencyCode)("USD")
- * console.log(code) // "USD"
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,17 +79,6 @@ export const CurrencyName = LiteralKit(currencyNameOptionsNonEmpty).pipe(
 
 /**
  * {@inheritDoc CurrencyName}
- *
- * **Example** (Type annotated Euro name)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { CurrencyName } from "@beep/schema/CurrencyCode"
- *
- * const name: CurrencyName = S.decodeUnknownSync(CurrencyName)("Euro")
- * console.log(name) // "Euro"
- * ```
- *
  * @category models
  * @since 0.0.0
  */

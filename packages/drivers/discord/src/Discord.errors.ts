@@ -52,16 +52,6 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
 
 /**
  * {@inheritDoc DiscordErrorReason}
- *
- * **Example** (Assign typed reason literal)
- *
- * ```ts
- * import type { DiscordErrorReason } from "@beep/discord"
- *
- * const reason: DiscordErrorReason = "response-status"
- * console.log(reason)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

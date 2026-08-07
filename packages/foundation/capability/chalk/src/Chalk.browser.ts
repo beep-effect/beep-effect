@@ -55,6 +55,7 @@ import type {
 const createChalk = makeCreateChalk(detectedSupportsColorBrowser.stdout);
 const createChalkStderr = makeCreateChalk(detectedSupportsColorBrowser.stderr);
 
+// fallow-ignore-next-line code-duplication -- browser/node chalk dual surfaces intentionally share the public model re-export block; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 /**
  * Recursive callable Chalk builder surface for browser-targeted bundles.
  *

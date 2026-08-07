@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication -- button and ui/button intentionally share CVA variant tables; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 "use client";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva } from "class-variance-authority";

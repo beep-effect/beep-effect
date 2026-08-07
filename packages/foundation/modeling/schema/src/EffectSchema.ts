@@ -93,18 +93,6 @@ export const EffectSchema = <Success, Failure, Dependencies>(): AnnotatedSchema<
 
 /**
  * {@inheritDoc EffectSchema}
- *
- * **Example** (Annotate EffectSchema type parameters)
- *
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { EffectSchema } from "@beep/schema/EffectSchema"
- *
- * const program: EffectSchema<string, never, never> = S.decodeUnknownSync(EffectSchema<string, never, never>())(Effect.succeed("done"))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
  * @category models
  * @since 0.0.0
  */

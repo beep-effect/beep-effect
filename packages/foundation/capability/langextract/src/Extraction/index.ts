@@ -76,16 +76,6 @@ export const LangExtractErrorReason = LiteralKit([
 
 /**
  * {@inheritDoc LangExtractErrorReason}
- *
- * **Example** (Type a failure reason)
- *
- * ```ts
- * import type { LangExtractErrorReason } from "@beep/langextract/Extraction"
- *
- * const reason: LangExtractErrorReason = "model-output-parse-failed"
- * console.log(reason)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -153,16 +143,6 @@ export const AlignmentStatus = LiteralKit(["match_exact", "match_lesser", "match
 
 /**
  * {@inheritDoc AlignmentStatus}
- *
- * **Example** (Type an alignment status)
- *
- * ```ts
- * import type { AlignmentStatus } from "@beep/langextract/Extraction"
- *
- * const status: AlignmentStatus = "match_exact"
- * console.log(status)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

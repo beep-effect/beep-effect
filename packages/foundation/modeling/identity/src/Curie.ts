@@ -405,16 +405,6 @@ export const CurieFromIri = CoreCurieSchema.pipe(
 
 /**
  * {@inheritDoc CurieFromIri}
- *
- * **Example** (Type-annotate IRI value)
- *
- * ```ts
- * import type { CurieFromIri } from "@beep/identity"
- *
- * const iri: CurieFromIri = "http://www.w3.org/2004/02/skos/core#prefLabel"
- * console.log(iri)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

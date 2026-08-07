@@ -54,31 +54,31 @@
     {
       "id": "P0",
       "name": "Law + packet (docs-only PR)",
-      "status": "done",
+      "status": "complete",
       "exit": ".patterns/jsdoc-documentation.md no longer contradicts the gate and explicitly authorizes the one-time mass migration; this packet is on main."
     },
     {
       "id": "P1",
       "name": "Codemod (beep quality jsdoc-migrate)",
-      "status": "done",
+      "status": "complete",
       "exit": "extract/titles/apply/verify ship with the per-block conservation law and a schema-versioned proof manifest; dry-run over the full corpus reports a residue count."
     },
     {
       "id": "P2",
       "name": "Generator templates",
-      "status": "done",
+      "status": "complete",
       "exit": "All 9 repo-owned emitters produce **Example** (Title) sections; the 18 generated files are regenerated and law-compliant."
     },
     {
       "id": "P3",
       "name": "Migration mega-PR",
-      "status": "done",
+      "status": "complete",
       "exit": "Zero legacy carriers in non-generated packages/**/src; gate swapped to repo-wide zero-legacy; totals baseline rewritten; law transitional section deleted."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "done",
+      "status": "complete",
       "exit": "Reflection landed and manifest flipped to completed-retained in the same PR as the final work."
     }
   ],

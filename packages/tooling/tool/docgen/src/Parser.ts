@@ -128,9 +128,9 @@ class ParsedComment extends S.Class<ParsedComment>($I`ParsedComment`)(
  * console.log(comment)
  * ```
  *
+ * @internal
  * @param text - Raw JSDoc text to parse.
  * @returns Parsed comment description and grouped tag values.
- * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -667,9 +667,9 @@ const parseProperties = (c: ast.ClassDeclaration) =>
  * console.log(getConstructorDeclarationSignature)
  * ```
  *
+ * @internal
  * @param constructorDeclaration - Constructor declaration to serialize.
  * @returns Constructor signature text suitable for generated docs.
- * @internal
  * @category parsing
  * @since 0.0.0
  */
@@ -846,9 +846,9 @@ export const parseModule = Effect.gen(function* () {
  * console.log(parseFile)
  * ```
  *
+ * @internal
  * @param project - Project used to resolve and parse source files.
  * @returns Function that parses one file into a module model.
- * @internal
  * @category parsing
  * @since 0.0.0
  */

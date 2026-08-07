@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-06",
+  "generatedOn": "2026-08-07",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -129,7 +129,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 46,
+      "line": 47,
       "owner": "@beep/graph-3d",
       "reason": "React hook boundary: the result carries React's RefObject (null until attached) and the not-yet-mounted handle/error as undefined, matching React ref and state conventions for the Storybook/spike consumers."
     },
@@ -139,7 +139,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 194,
+      "line": 201,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -507,16 +507,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
-      "symbol": "partitionMigratedOrphans",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 233,
-      "owner": "@beep/repo-cli",
-      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
       "symbol": "computeJSDocMigrateBinding",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -524,6 +514,16 @@
       "line": 178,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "symbol": "partitionMigratedOrphans",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 233,
+      "owner": "@beep/repo-cli",
+      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",

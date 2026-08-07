@@ -68,9 +68,13 @@ class JSDocLegacyFileFinding extends S.Class<JSDocLegacyFileFinding>($I`JSDocLeg
 
 /**
  * Generated residual paths still carrying legacy tags after P2 emitter conversion.
+ *
  * Documented in goals/jsdoc-carrier-migration progress C5 (acp schema.gen.ts
  * regeneration is a separate acp-resync; the emitter itself already emits titled sections).
  * Only consulted when `--include-generated` is set.
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [
   "packages/drivers/acp/src/_generated/schema.gen.ts",
@@ -539,6 +543,11 @@ export const isPackageSourceFile = (filePath: string): boolean =>
  *
  * Used by the zero-legacy scan when `--include-generated` is set so generator
  * outputs get their own compliance proof (non-generated scope cannot prove them).
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` for package source files under packages/…/src, including generated.
+ * @category predicates
+ * @since 0.0.0
  */
 export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean =>
   Str.startsWith("packages/")(filePath) &&

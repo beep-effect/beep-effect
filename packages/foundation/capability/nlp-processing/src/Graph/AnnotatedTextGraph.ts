@@ -273,6 +273,7 @@ export type AnnotatedTextGraph = Graph.DirectedGraph<AnnotatedNode, TextEdge>;
  */
 export type MutableAnnotatedTextGraph = Graph.MutableDirectedGraph<AnnotatedNode, TextEdge>;
 
+// fallow-ignore-next-line code-duplication -- AnnotatedTextGraph/TextGraph share node construction; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 const makeTextNode = (fields: {
   readonly text: string;
   readonly type: TextNode["type"];

@@ -131,16 +131,6 @@ export declare namespace HttpStatus4XX {
 
 /**
  * {@inheritDoc HttpStatus4XX}
- *
- * **Example** (Type-annotate status code)
- *
- * ```ts
- * import type { HttpStatus4XX } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatus4XX = 400
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

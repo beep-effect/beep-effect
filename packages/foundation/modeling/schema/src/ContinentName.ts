@@ -26,17 +26,6 @@ export const ContinentName = ContinentNameSchema;
 
 /**
  * {@inheritDoc ContinentName}
- *
- * **Example** (Type continent name value)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { ContinentName } from "@beep/schema/ContinentName"
- *
- * const name: ContinentName = S.decodeUnknownSync(ContinentName)("Europe")
- * console.log(name) // "Europe"
- * ```
- *
  * @category models
  * @since 0.0.0
  */

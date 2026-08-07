@@ -38,16 +38,6 @@ export const RequestHeaderFieldsTooLargeShopify = S.Literal(430).pipe(
 
 /**
  * {@inheritDoc RequestHeaderFieldsTooLargeShopify}
- *
- * **Example** (Type Shopify 430 status)
- *
- * ```ts
- * import type { RequestHeaderFieldsTooLargeShopify } from "@beep/schema/HttpStatus"
- *
- * const status: RequestHeaderFieldsTooLargeShopify = 430
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -79,16 +69,6 @@ export const LoginTimeout = S.Literal(440).pipe(
 
 /**
  * {@inheritDoc LoginTimeout}
- *
- * **Example** (Type LoginTimeout status)
- *
- * ```ts
- * import type { LoginTimeout } from "@beep/schema/HttpStatus"
- *
- * const status: LoginTimeout = 440
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -119,16 +99,6 @@ export const RequestHeaderTooLarge = S.Literal(494).pipe(
 
 /**
  * {@inheritDoc RequestHeaderTooLarge}
- *
- * **Example** (Type header too large)
- *
- * ```ts
- * import type { RequestHeaderTooLarge } from "@beep/schema/HttpStatus"
- *
- * const status: RequestHeaderTooLarge = 494
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -159,16 +129,6 @@ export const SslCertificateError = S.Literal(495).pipe(
 
 /**
  * {@inheritDoc SslCertificateError}
- *
- * **Example** (Type SSL certificate error)
- *
- * ```ts
- * import type { SslCertificateError } from "@beep/schema/HttpStatus"
- *
- * const status: SslCertificateError = 495
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -199,16 +159,6 @@ export const SslCertificateRequired = S.Literal(496).pipe(
 
 /**
  * {@inheritDoc SslCertificateRequired}
- *
- * **Example** (Type SSL certificate required)
- *
- * ```ts
- * import type { SslCertificateRequired } from "@beep/schema/HttpStatus"
- *
- * const status: SslCertificateRequired = 496
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -239,16 +189,6 @@ export const ClientClosedRequest = S.Literal(499).pipe(
 
 /**
  * {@inheritDoc ClientClosedRequest}
- *
- * **Example** (Type client closed request)
- *
- * ```ts
- * import type { ClientClosedRequest } from "@beep/schema/HttpStatus"
- *
- * const status: ClientClosedRequest = 499
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -280,16 +220,6 @@ export const WebServerReturnedAnUnknownError = S.Literal(520).pipe(
 
 /**
  * {@inheritDoc WebServerReturnedAnUnknownError}
- *
- * **Example** (Type unknown server error)
- *
- * ```ts
- * import type { WebServerReturnedAnUnknownError } from "@beep/schema/HttpStatus"
- *
- * const status: WebServerReturnedAnUnknownError = 520
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -321,16 +251,6 @@ export const WebServerIsDown = S.Literal(521).pipe(
 
 /**
  * {@inheritDoc WebServerIsDown}
- *
- * **Example** (Type web server down)
- *
- * ```ts
- * import type { WebServerIsDown } from "@beep/schema/HttpStatus"
- *
- * const status: WebServerIsDown = 521
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -361,16 +281,6 @@ export const SslHandshakeFailed = S.Literal(525).pipe(
 
 /**
  * {@inheritDoc SslHandshakeFailed}
- *
- * **Example** (Type SSL handshake failed)
- *
- * ```ts
- * import type { SslHandshakeFailed } from "@beep/schema/HttpStatus"
- *
- * const status: SslHandshakeFailed = 525
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -403,16 +313,6 @@ export const InvalidSslCertificate = S.Literal(526).pipe(
 
 /**
  * {@inheritDoc InvalidSslCertificate}
- *
- * **Example** (Type invalid SSL certificate)
- *
- * ```ts
- * import type { InvalidSslCertificate } from "@beep/schema/HttpStatus"
- *
- * const status: InvalidSslCertificate = 526
- * console.log(status)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

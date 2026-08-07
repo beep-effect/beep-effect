@@ -147,11 +147,11 @@ const options = {
  * console.log(helpProgram)
  * ```
  *
+ * @internal
  * @effects
  * - Decodes inline compiler-option JSON before loading package configuration.
  * - Prefixes `DocgenError` messages with the resolved package name.
  * - Runs the core docgen workflow with a scoped {@link Configuration.Configuration} layer.
- * @internal
  * @category cli-commands
  * @since 0.0.0
  */

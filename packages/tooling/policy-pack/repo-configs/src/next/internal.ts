@@ -19,9 +19,9 @@ import * as S from "effect/Schema";
  * console.log(error instanceof S.SchemaError)
  * ```
  *
+ * @internal
  * @param cause - Schema issue or error reported by an Effect schema decoder.
  * @returns Schema error suitable for Result and decoding boundaries.
- * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -39,9 +39,9 @@ export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]
  * console.log(isFunctionValue("not a function"))
  * ```
  *
+ * @internal
  * @param value - Unknown value to test for callability.
  * @returns Whether the value is a JavaScript function.
- * @internal
  * @category predicates
  * @since 0.0.0
  */

@@ -154,10 +154,10 @@ export class PurgeSummary extends S.Class<PurgeSummary>($I`PurgeSummary`)(
  * console.log("docgen metadata")
  * ```
  *
+ * @internal
  * @param rootDir - Absolute repo root directory.
  * @param removeLock - Whether to include root `bun.lock`.
  * @returns Deduplicated absolute paths to purge and workspace count.
- * @internal
  * @category utilities
  * @since 0.0.0
  */
