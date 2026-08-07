@@ -248,3 +248,42 @@ cause both of them were circling.
   invalidation to the packages whose own aliases moved. As it stands, every
   packet that adds a subpath — the normal way to ship a new concept — pays a
   full-repo docgen, which is the slowest gate in the loop.
+
+### A db-admin migration silently breaks a gate in `apps/professional-desktop`
+
+- **What happened:** generating the rung-2 delta migration left
+  `apps/professional-desktop`'s `codegen:check` red —
+  `StaleMigrationBundle: Professional Desktop migration bundle is stale` — because
+  `src/runtime/Migrations.gen.ts` embeds every `drizzle/*/migration.sql` verbatim
+  for the compiled sidecar. Nothing in the db-admin package signals this: its own
+  `check` (tsgo + `migrations:check`) is green with the bundle stale, and the
+  desktop app is outside the migration author's scope. The obligation is recorded
+  only in prose, in `packages/_internal/db-admin/AGENTS.md`, so an agent scoped to
+  db-admin who does not read that file ships a red required check.
+- **Evidence:** `bun run --cwd apps/professional-desktop codegen:check` failing at
+  `scripts/sync-migration-bundle.ts:121` immediately after
+  `bun run --cwd packages/_internal/db-admin check` passed; the fix is a purely
+  mechanical +169-line append to `Migrations.gen.ts`.
+- **Prevention:** the sync is derivable, so it should not be a human step at all —
+  either chain `codegen` into db-admin's own `generate` script, or add the
+  bundle-drift assertion to db-admin's `migrations:check` so the failure surfaces
+  in the package that caused it. Failing that, name the desktop re-sync in the
+  migration scope line of any packet that generates SQL.
+
+### drizzle-kit's generated `snapshot.json` does not satisfy `biome check`
+
+- **What happened:** `bun run generate` emitted a snapshot that failed the
+  package's own `lint` on formatting alone (single-element arrays expanded across
+  three lines where biome wants `"columns": ["id"]`), roughly 50 hunks in a
+  178KB generated file. `check` passes in that state because `migrations:check`
+  reads the snapshot semantically, so the ordering `generate → check → lint`
+  reports green then red on an artifact no human wrote.
+- **Evidence:** `bun run lint` reporting `Found 1 error` with a diff of
+  `"columns": [\n "id"\n ]` versus `"columns": ["id"]` in
+  `drizzle/20260807061034_law_practice_legal_position/snapshot.json`; the shipped
+  candor snapshot carries the biome-formatted shape, so the previous author paid
+  the same tax.
+- **Prevention:** either add `drizzle/**/snapshot.json` to biome's ignore list
+  (nobody reviews a 178KB generated snapshot's whitespace) or run the formatter
+  from the `generate` script so the artifact lands formatted. As it stands every
+  migration author must know to run `lint:fix` on a file they did not write.
