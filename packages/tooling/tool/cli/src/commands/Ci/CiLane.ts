@@ -659,7 +659,10 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
         options.base,
         "--head",
         options.head,
-        "--parallel=3",
+        // Hosted 16 GB runners OOM-killed the docgen lane at three concurrent
+        // example-compiler workers on the beta.104 tree; two fit. Local dev
+        // paths (Quality.command.ts) keep --parallel=3.
+        "--parallel=2",
       ]),
     ],
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],

@@ -192,7 +192,7 @@ describe("ciLaneStepsForTesting", () => {
       "origin/main",
       "--head",
       "HEAD",
-      "--parallel=3",
+      "--parallel=2",
     ]);
 
     const full = firstOf(
