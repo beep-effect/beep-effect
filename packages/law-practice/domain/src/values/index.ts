@@ -7,6 +7,13 @@
  */
 
 /**
+ * Act frame element reference value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ActFrameElementRef/index.ts";
+/**
  * Annotation-citation value-object exports.
  *
  * **Example** (Import the annotation-citation value objects)
@@ -436,6 +443,13 @@ export * from "./LegalRole/index.ts";
  */
 export * from "./LegalScopeContext/index.ts";
 /**
+ * Legal verdict family value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalVerdictFamily/index.ts";
+/**
  * Legislative-material-citation value-object exports.
  *
  * **Example** (Import the legislative-material-citation value objects)
@@ -474,6 +488,13 @@ export * from "./LocalOrdinanceCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./NeutralCitation/index.ts";
+/**
+ * Norm source reference value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./NormSourceReference/index.ts";
 /**
  * Observation version reference value-object exports.
  *
@@ -595,6 +616,13 @@ export * from "./PracticeKgEpistemicStatus/index.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKgProvenanceKind/index.ts";
+/**
+ * Priority basis value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PriorityBasis/index.ts";
 /**
  * Public-law-citation value-object exports.
  *

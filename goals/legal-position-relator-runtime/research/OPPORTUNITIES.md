@@ -112,3 +112,64 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   packet would be exactly the unrelated churn the SPEC forbids. It belongs in
   the same follow-up that adds the missing `SourceTextResolver` coupling record
   recorded above, since both are README-accuracy debt on the same file.
+
+### A `HashSet` field cannot sit directly on a persisted entity, and only a test run says so
+
+- **What happened:** `ActFrame.derivationKind` was authored as
+  `S.HashSet(PositionDerivationKind).check(...)` directly on the entity, per the
+  rung-2 brief's "S.HashSet is fine at domain tier". `bun run check` passed
+  clean. The first `bun run test` then failed every suite in the package at
+  import time with
+  `SelectedRowFieldShapeError: Persisted selected-row field 'derivationKind'
+  must encode SQL absence as null, not undefined, a missing key, or an
+  ambiguous declared schema` — thrown from
+  `EntitySchema.shape.ts:336` while the class was being constructed, so three
+  unrelated test files reported "0 test" and "Failed Suites 3".
+- **Evidence:** `packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts:334-338`;
+  the shape guard rejects any `declare`d schema because its encoded form is
+  ambiguous, and `S.HashSet` is a `declareConstructor`. Nesting the set one
+  level inside an `S.Class` (the shape rung 1's `LegalScopeContext` already
+  has) is what makes the field's encoded shape legible again.
+- **Prevention:** two cheap fixes. The error text names the storage rule but
+  not the cause a reader can act on — adding "a declared schema such as
+  `S.HashSet`/`S.HashMap` must be nested inside an `S.Class` to be persisted"
+  would convert a probe cycle into a read. Better still, the guard runs at
+  class-construction time rather than typecheck time, so a rule that `check`
+  can catch would have failed in seconds instead of after a full vitest boot.
+
+### `assertSchemaArbitraryDecodesToSelf` silently excludes every transforming schema
+
+- **What happened:** `bun run beep lint schema-first` raised
+  `SFV4-arbitrary-tests` against the new test file and recommended
+  `S.toArbitrary(sourceSchema)` coverage. The one exported helper,
+  `assertSchemaArbitraryDecodesToSelf`, feeds a Type-side arbitrary back into
+  `decodeUnknownSync`, so it only works where Type and Encoded coincide. Six of
+  the seven new value schemas carry `S.OptionFromNullOr` fields and failed with
+  a 300KB `_tag: 'Encoding'` dump that named the class, not the mismatch.
+- **Evidence:** `packages/tooling/test-kit/test-utils/src/Schema.ts:30-44`
+  against `packages/law-practice/domain/test/LawPracticeDomain.test.ts:60-71`,
+  which already hand-rolls a local `assertSchemaEncodedRoundTrips`
+  (arbitrary -> encode -> decode -> equivalence) for exactly this reason. This
+  packet's new test file now hand-rolls the same helper a second time.
+- **Prevention:** export `assertSchemaEncodedRoundTrips` from `@beep/test-utils`
+  beside its sibling and say in both docstrings which one fits a transforming
+  schema. Every package modelling optional fields hits this, and the lint rule
+  that asks for the coverage points at the helper that cannot provide it.
+
+### The schema catalog's inherited staleness cannot be paid down incrementally
+
+- **What happened:** this rung added roughly thirty exported schemas, so
+  `bun run beep lint schema-catalog` was expected to need a regen.
+  `--write` does bring the file current (entries=4531), but the resulting diff
+  is **6744 insertions and 695 deletions** — orders of magnitude beyond this
+  rung's own entries. Recording thirty new schemas is not separable from
+  landing thousands of lines of unrelated drift, so the catalog was left stale
+  and the new schemas are absent from it.
+- **Evidence:** `git diff --stat -- standards/schema-catalog.generated.jsonc`
+  after `bun run beep lint schema-catalog --write`, reverted immediately.
+- **Prevention:** the gate is currently all-or-nothing against a file that has
+  been drifting on `main`, which trains every packet to skip it and widens the
+  gap further. Either land one dedicated regen PR and keep the gate required
+  from then on, or teach the linter to compare only the entries a branch's
+  changed files own so a packet can record its own schemas without adopting the
+  backlog.

@@ -39,7 +39,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Rung 1 (domain proof) — in progress. P0 completed 2026-08-06: all 15
+P2 Rung 2 (transitions, correction contract, durability) — in progress.
+P1 completed 2026-08-06: rung-1 domain schemas + `LegalPositionRelatorPolicy`
+landed with the failing-first-then-green proof
+(`history/p1-rung1-test-first-fail.log`, `history/p1-rung1-test-green.log`;
+18 tests, algebra proven by exhaustion). P0 completed 2026-08-06: all 15
 `research/SOURCES.md` §4 anchors re-verified CURRENT against `main`
 ([`research/01-surface-reverification.md`](./research/01-surface-reverification.md)),
 and the rung-2 candidate handoff was **deferred with standing evidence**

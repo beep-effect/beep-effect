@@ -483,3 +483,71 @@ export const PowerExerciseId = make("power_exercise", {
  * @since 0.0.0
  */
 export type PowerExerciseId = typeof PowerExerciseId.Type;
+
+/**
+ * Act frame entity identifier.
+ *
+ * **Details**
+ *
+ * An act frame is one recorded reading of a norm as an act that moves legal
+ * positions. Because it is an interpretation rather than the norm itself, the
+ * id names whose reading it is, and a second reading of the same provision
+ * takes a fresh id rather than replacing the first.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.ActFrameId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const ActFrameId = make("act_frame", {
+  description: "Identifier for a law-practice act frame entity.",
+});
+
+/**
+ * Runtime type for {@link ActFrameId}.
+ *
+ * @see {@link ActFrameId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type ActFrameId = typeof ActFrameId.Type;
+
+/**
+ * Correction delta entity identifier.
+ *
+ * **Details**
+ *
+ * A correction delta records one proposed change to a recorded interpretation
+ * together with what a reviewer did about it. Deltas are append-only, so an id
+ * names one correction as it was proposed and reviewed; revising it appends a
+ * further delta naming the earlier id.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.CorrectionDeltaId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const CorrectionDeltaId = make("correction_delta", {
+  description: "Identifier for a law-practice correction delta entity.",
+});
+
+/**
+ * Runtime type for {@link CorrectionDeltaId}.
+ *
+ * @see {@link CorrectionDeltaId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type CorrectionDeltaId = typeof CorrectionDeltaId.Type;
