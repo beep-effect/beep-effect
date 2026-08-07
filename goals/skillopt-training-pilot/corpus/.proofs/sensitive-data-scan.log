@@ -1,2 +1,0 @@
-$ rg -in "(/home/elpresidank|YeeBois|/Users/|/tmp/|\.env|op://|secret|password|token|api[_-]?key|client|customer|sealed transcript)" goals/skillopt-training-pilot/corpus/tasks goals/skillopt-training-pilot/corpus/fixtures goals/skillopt-training-pilot/corpus/splits goals/skillopt-training-pilot/corpus/benchmark-cases.json goals/skillopt-training-pilot/corpus/DERIVATION.md .lane-summary.md
-no matches

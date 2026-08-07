@@ -1,8 +1,0 @@
-{
-  "findings": [],
-  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
-  "requiredCount": 0,
-  "round": 11,
-  "schemaVersion": "qa-inventory/v1",
-  "sessionRef": "session.json"
-}

@@ -1,6 +1,0 @@
-Redacted in the public PR while CSF-003 is unremediated.
-
-The detailed patch capture remains outside the repository at the raw capture
-location recorded in goals/codex-security-findings-2026-06/ops/manifest.json.
-Publish the remediation patch only in the same commit sequence that lands the
-fix and its targeted verification.

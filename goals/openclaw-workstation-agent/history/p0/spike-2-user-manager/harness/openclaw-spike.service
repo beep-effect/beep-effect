@@ -1,8 +1,0 @@
-[Unit]
-Description=OpenClaw P0 spike 2 unit (disposable; user-manager apply mechanics only)
-
-[Service]
-ExecStart=/usr/bin/sleep 300
-
-[Install]
-WantedBy=default.target

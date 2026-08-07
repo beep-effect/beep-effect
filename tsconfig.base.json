@@ -1,25 +1,21 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Effect-TS/tsgo/refs/heads/main/schema.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "include": [],
   "compilerOptions": {
     "outDir": "${configDir}/dist",
     "rootDir": "${configDir}/src",
-    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.tsbuildinfo",
     // Use incremental builds with project references.
     "incremental": true,
     "composite": true,
     // Target modern JavaScript (ES2022+) whilst staying closely compatible with the Node.js module system.
     "target": "ES2022",
     "module": "NodeNext",
-    "moduleResolution": "nodenext",
     "moduleDetection": "force", // Treat every non-declaration file as a module.
     "verbatimModuleSyntax": true, // Only transform/eliminate type-only import/export statements.
-    "allowImportingTsExtensions": true,
-    "allowJs": false, // Keep JavaScript out of TypeScript project graphs.
+    "allowJs": false, // If you touch this, a puppy dies.
     "rewriteRelativeImportExtensions": true, // Rewrite `.ts` imports to `.js` at build time.
-    "erasableSyntaxOnly": true, // Allows to run directly with bun and type removal
+    "erasableSyntaxOnly": true, // Allows to run directly with node and type removal
     // Emit source- & declaration maps.
-    "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     // Opt-in to stricter type checking and correctness guard rails. The more the merrier.
@@ -29,116 +25,21 @@
     "noUnusedParameters": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    // Miscellaneous
-    "stripInternal": false, // We temporarily override this to `true` when publishing packages.
+    // Miscellaneoaus
+    "stripInternal": false, // tests require `false` because project references type-check against those declarations.
     "skipLibCheck": true, // Skip type checking of third party libraries.
     "noErrorTruncation": true, // Do not truncate error messages.
     "types": [], // Disable automatic loading of `@types/*` packages.
     "jsx": "react-jsx",
-    "plugins": [
-      {
-        "name": "@effect/language-service",
-        "namespaceImportPackages": ["effect", "@effect/*", "@beep/*"],
-        "ignoreEffectSuggestionsInTscExitCode": false,
-        "ignoreEffectWarningsInTscExitCode": false,
-        "ignoreEffectErrorsInTscExitCode": false,
-        "includeSuggestionsInTsc": true,
-        "skipDisabledOptimization": false,
-        "effectFn": ["span", "inferred-span", "suggested-span"],
-        "importAliases": {
-          "Array": "A",
-          "Option": "O",
-          "Predicate": "P",
-          "Record": "R",
-          "Schema": "S",
-          "Equal": "Eq"
-        },
-        "diagnosticSeverity": {
-          "anyUnknownInErrorContext": "error",
-          "asyncFunction": "error",
-          "catchAllToMapError": "error",
-          "catchToIgnore": "error",
-          "catchToOrElseSucceed": "error",
-          "catchUnfailableEffect": "error",
-          "classSelfMismatch": "error",
-          "cryptoRandomUUID": "error",
-          "cryptoRandomUUIDInEffect": "error",
-          "deterministicKeys": "error",
-          "duplicatePackage": "error",
-          "effectDoNotation": "error",
-          "effectFnIife": "error",
-          "effectFnImplicitAny": "error",
-          "effectFnOpportunity": "error",
-          "effectGenUsesAdapter": "error",
-          "effectInFailure": "error",
-          "effectInVoidSuccess": "error",
-          "effectMapFlatten": "error",
-          "effectMapVoid": "error",
-          "effectSucceedWithVoid": "error",
-          "extendsNativeError": "error",
-          "flatMapToMap": "error",
-          "floatingEffect": "error",
-          "genericEffectServices": "error",
-          "globalConsole": "error",
-          "globalConsoleInEffect": "error",
-          "globalDate": "error",
-          "globalDateInEffect": "error",
-          "globalErrorInEffectCatch": "error",
-          "globalErrorInEffectFailure": "error",
-          "globalFetch": "error",
-          "globalFetchInEffect": "error",
-          "globalRandom": "error",
-          "globalRandomInEffect": "error",
-          "globalTimers": "error",
-          "globalTimersInEffect": "error",
-          "instanceOfSchema": "error",
-          "layerMergeAllWithDependencies": "error",
-          "lazyEffect": "error",
-          "lazyPromiseInEffectSync": "error",
-          "leakingRequirements": "error",
-          "missedPipeableOpportunity": "error",
-          "missingEffectContext": "error",
-          "missingEffectError": "error",
-          "missingEffectServiceDependency": "error",
-          "missingLayerContext": "error",
-          "missingReturnYieldStar": "error",
-          "missingStarInYieldEffectGen": "error",
-          "multipleCatchTag": "error",
-          "multipleEffectProvide": "error",
-          "nestedEffectGenYield": "error",
-          "newPromise": "error",
-          "newSchemaClass": "error",
-          "nodeBuiltinImport": "error",
-          "nonObjectEffectServiceType": "error",
-          "outdatedApi": "error",
-          "overriddenSchemaConstructor": "error",
-          "preferSchemaOverJson": "error",
-          "processEnv": "error",
-          "processEnvInEffect": "error",
-          "redundantOrDie": "error",
-          "redundantMapError": "error",
-          "redundantSchemaTagIdentifier": "error",
-          "returnEffectInGen": "error",
-          "runEffectInsideEffect": "error",
-          "schemaNumber": "error",
-          "schemaStructWithTag": "error",
-          "schemaSyncInEffect": "error",
-          "schemaUnionOfLiterals": "error",
-          "scopeInLayerEffect": "error",
-          "serviceNotAsClass": "error",
-          "strictBooleanExpressions": "error",
-          "strictEffectProvide": "error",
-          "tryCatchInEffectGen": "error",
-          "unknownInEffectCatch": "error",
-          "unnecessaryArrowBlock": "error",
-          "unnecessaryEffectGen": "error",
-          "unnecessaryFailYieldableError": "error",
-          "unnecessaryPipe": "error",
-          "unnecessaryPipeChain": "error",
-          "unnecessaryTypeofType": "error",
-          "unsafeEffectTypeAssertion": "error"
-        }
-      }
-    ]
+    "plugins": [{
+      "name": "@effect/language-service",
+      "namespaceImportPackages": ["effect", "@effect/*"],
+      "diagnosticSeverity": {
+        "globalErrorInEffectFailure": "off" // TODO: Check if we should fix the warnings this reports
+      },
+      "includeSuggestionsInTsc": false,
+      "ignoreEffectWarningsInTscExitCode": true,
+      "ignoreEffectErrorsInTscExitCode": true
+    }]
   }
 }

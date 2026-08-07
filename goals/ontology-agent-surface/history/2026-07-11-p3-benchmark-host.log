@@ -1,5 +1,0 @@
-| Triples | Open + rdfc-1.0 | Snapshot + reopen/rdfc-1.0 | SPARQL + reopen/rdfc-1.0 | Fingerprints agree | Snapshot resources | Query rows/limit |
-| ---: | ---: | ---: | ---: | :---: | ---: | :--- |
-| 1000 | 848.84 ms | 970.97 ms | 1272.85 ms | yes | 1000 | 200/200 (injected) |
-| 10000 | 8870.49 ms | 10403.48 ms | 11339.19 ms | yes | 10000 | 200/200 (injected) |
-| 100000 | 238902.77 ms | 253033.16 ms | 174966.11 ms | yes | 100000 | 200/200 (injected) |

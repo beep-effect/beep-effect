@@ -1,4 +1,0 @@
-tied-event old-sha256-prefix=59df7cc1 new-sha256-prefix=3b6cd0d9 reload-epoch=1785100796
-
-=== authenticated model completion after tied reload ===
-ASSERT-FAIL: completion failed the pinned gateway payload schema

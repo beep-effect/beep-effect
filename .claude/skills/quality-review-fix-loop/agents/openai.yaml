@@ -1,4 +1,0 @@
-interface:
-  display_name: "Quality Review Fix Loop"
-  short_description: "Run late-initiative quality, critic, fixer, and zero-blocker closure"
-  default_prompt: "Use $quality-review-fix-loop to close the current initiative from repo state. Inspect git status and the changed surface first, run the configured quality/reviewer/fixer loop, and stop before publishing unless explicitly asked."
