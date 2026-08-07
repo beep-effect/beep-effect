@@ -1212,7 +1212,10 @@ describe("ai-metrics command", () => {
             "--json",
           ]);
 
-          expect(output).toContain("Failed to select the latest AI metrics ingest run.");
+          // The export path now migrates the store before reading it, so a data root that
+          // was never ingested fails at that step rather than at the ingest-run lookup.
+          // Both are sanitized; this one is reached earlier and names the remedy.
+          expect(output).toContain("Failed to prepare the AI metrics derived DuckDB store for OTLP export");
           expect(output).not.toContain(dataRoot);
           expect(output).not.toContain(tmpDir);
         })
@@ -1357,7 +1360,9 @@ describe("ai-metrics command", () => {
                 "--json",
               ]);
 
-              expect(output).toContain("Failed to select the latest AI metrics ingest run.");
+              // Fails while preparing the store, still before any derived read and still
+              // before anything reaches the collector -- which is what this test guards.
+              expect(output).toContain("Failed to prepare the AI metrics derived DuckDB store for OTLP export");
               expect(requests).toHaveLength(0);
               expect(output).not.toContain("hash-salt-secret-ref");
               expect(output).not.toContain("raw-archive-key-secret-ref");

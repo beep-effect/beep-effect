@@ -93,9 +93,14 @@ workflows in skills.
 
 ## Agent Memory
 
-- Cognee is the durable always-on dev-memory; file memory (`CLAUDE.md` /
-  `MEMORY.md`) remains Layer 1. All memory decisions and operational detail
+- basic-memory (project `beep-shared`) is the durable always-on dev-memory
+  shared by all coding agents; file memory (`CLAUDE.md` / `MEMORY.md`) remains
+  Layer 1. codegraph answers code-structure questions (symbols, callers,
+  blast radius) before grep. All memory decisions and operational detail
   live in `standards/memory-architecture/`.
+- Fresh machine / clone / worktree: run `bash scripts/setup-agent-memory.sh`
+  once so the shared store and per-checkout `.codegraph/` index exist (see
+  `standards/memory-architecture/07-shared-memory-adoption.md` §Bootstrap).
 - If memory is unavailable in-session, fall back to repo-local docs, code
   search, and this file.
 
@@ -107,6 +112,9 @@ workflows in skills.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
   MCP server; the `chrome-devtools` MCP is slim and default-disabled, for
   perf-trace/computed-style introspection during QA sessions.
+- Codex Cloud security findings: export the CSV from the signed-in findings
+  view, then `bun run beep codex findings ingest --from <export.csv>`; prefer
+  the `codex-findings` skill. Never hand-build the packet.
 
 ## Context Economy
 
@@ -114,7 +122,7 @@ workflows in skills.
   enabled tools before working, not mid-task.
 - Always-loaded files (this file, skill frontmatter, settings) are the prompt
   cache prefix: batch edits to them, keep them lean; durable cross-session
-  knowledge belongs in file-memory or Cognee, not here.
+  knowledge belongs in file-memory or the shared basic-memory store, not here.
 - Continue related follow-ups on an existing subagent (SendMessage) instead
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as

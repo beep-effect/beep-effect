@@ -138,12 +138,16 @@ before automation can manage them; do that resolution as an explicit early task.
 over each, fail only on normalized HEAD-minus-base findings (rename detection preserves
 document identity, so Markdown reflow can neither hide nor fake a regression). In the
 HEAD archive with emptied `$HOME`/XDG: verify backticked tracked paths resolve; probe
-documented `bun run beep ...` commands by replacing their tails with `--help` (the CLI
+documented `bun run beep <command>` spans by replacing their tails with `--help` (the CLI
 parser becomes the doc oracle, nothing mutating executes); regenerate `goals/INDEX.md`
 and fail on diff; support exactly one explicit assertion form
 (`<!-- beep:assert path-exists <path> -->`). First step: a versioned `KnowledgeFinding`
 Effect Schema + golden test on paired base/HEAD fixture archives (edit, reflow, rename,
 command, assertion) proving only semantic additions surface.
+
+Authoring note (ratified doc-fix, not a normalizer change): the scanner probes every inline
+`bun run beep` span as a real command, so placeholder tails are written `<command>`, never
+`...` — a bare ellipsis resolves to no subcommand and reports `unknown-beep-command`.
 
 **Stage 2 — full `beep knowledge doctor`, hardened against gaming from day one:**
 

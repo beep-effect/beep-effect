@@ -577,10 +577,16 @@
     },
     "@beep/openai-compat": {
       "path": "packages/drivers/openai-compat",
-      "lines": 82.23,
-      "statements": 81.93,
+      "lines": 82.41,
+      "statements": 82.1,
       "branches": 62.62,
-      "functions": 73.04
+      "functions": 73.42,
+      "uncovered": {
+        "lines": 54,
+        "statements": 56,
+        "branches": 37,
+        "functions": 38
+      }
     },
     "@beep/openclaw": {
       "path": "packages/drivers/openclaw",

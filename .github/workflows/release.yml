@@ -24,11 +24,11 @@ jobs:
   release-pr:
     name: Release PR
     if: github.event_name == 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -76,7 +76,7 @@ jobs:
       - name: Create or update release pull request
         id: changesets-release
         if: steps.release-diff.outputs.has_release_diff == 'true'
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
         continue-on-error: true
         with:
           version: bun run changeset:version
@@ -110,8 +110,8 @@ jobs:
     name: Publish (Manual Approval Required)
     if: github.event_name == 'workflow_dispatch' && inputs.confirm_publish ==
       'PUBLISH'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     environment:
       # Configure this environment with required reviewers to enforce approval.
       name: release-publish
@@ -120,7 +120,7 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -130,7 +130,7 @@ jobs:
           cache-turbo: true
 
       - name: Configure npm registry access
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           registry-url: https://registry.npmjs.org
           node-version-file: .nvmrc

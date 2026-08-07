@@ -481,14 +481,19 @@ const derivedStorageMigrations = [
     // lands would see millions of NULLs and flush the whole history to Phoenix in one
     // burst -- the exact backpressure collapse this work exists to prevent.
     //
-    // The newest ingest run is deliberately excluded. Under the old scheme a run that
-    // committed turns and then died before exporting was rescued by the next run,
-    // which re-minted those rows under a fresh id and exported them -- so the content
-    // did reach Phoenix even though the original rows never did. The one case with no
-    // such rescue is the final run before this migration: if it crashed before
-    // exporting, nothing came after it. Leaving that run's turns unmarked costs at
-    // most one run's worth of re-exported spans if it had in fact succeeded, and
-    // avoids silently burying data if it had not.
+    // The newest ingest run is excluded. Under the old scheme a run that committed turns
+    // and then died before exporting was rescued by the next run, which re-minted those
+    // rows under a fresh id and exported them -- so the content did reach Phoenix even
+    // though the original rows never did. The one case with no such rescue is the final
+    // run before this migration: if it crashed before exporting, nothing came after it.
+    //
+    // This SQL is WRONG -- it should have excluded the newest run that actually committed
+    // turns -- and it is preserved verbatim anyway. It shipped in #578, and the ledger
+    // records a migration id, not its text, so any store that already applied it will
+    // never re-run it no matter what this string says. Editing it in place therefore
+    // fixes nothing on the stores that need fixing while silently changing behaviour on
+    // fresh ones. `ai-metrics-otlp-export-watermark-v2` below carries the correction.
+    // Shipped migrations are immutable; treat this one as a historical record.
     //
     // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
     // applied before the run's inserts, so genuinely new turns are never swept up.
@@ -509,6 +514,47 @@ const derivedStorageMigrations = [
        WHERE otlp_exported_at_epoch_ms IS NULL
          AND ingest_run_id <> COALESCE(
            (SELECT ingest_run_id FROM ai_metrics_ingest_runs ORDER BY started_at_epoch_ms DESC LIMIT 1),
+           ''
+         )`,
+    ],
+    transactional: true,
+  },
+  {
+    // Corrects v1 above, which excluded the newest ingest run outright. A later zero-turn
+    // run -- a discovery pass that found nothing new -- shadowed the newest run that had
+    // actually committed turns, so exactly the rows most likely to be unexported were the
+    // ones marked. Those turns can never be exported again: the watermark reads as closed
+    // and nothing reopens it.
+    //
+    // The backfill sentinel is what makes this recoverable. v1 writes the literal `0`,
+    // while a real export writes the wall-clock epoch, and rows ingested after v1 ran are
+    // NULL rather than `0`. So `otlp_exported_at_epoch_ms = 0` identifies the backfilled
+    // rows exactly, and among those the newest run by `started_at_epoch_ms` is precisely
+    // the run v1 should have spared -- every run newer than it at v1 time had no turns,
+    // which is the bug condition.
+    //
+    // Runs after v1 on every store, so the two converge: on a store that already applied
+    // the buggy v1 this reopens the buried run, and on a fresh store v1 buries it and
+    // this immediately reopens it. Worst case is one run's worth of re-sent spans, which
+    // carry content-addressed ids the collector deduplicates.
+    migrationId: "ai-metrics-otlp-export-watermark-v2",
+    requiredColumns: [
+      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+    ],
+    statements: [
+      `UPDATE ai_metrics_turns
+       SET otlp_exported_at_epoch_ms = NULL
+       WHERE otlp_exported_at_epoch_ms = 0
+         AND ingest_run_id = COALESCE(
+           (SELECT backfilled.ingest_run_id
+            FROM ai_metrics_turns backfilled
+            JOIN ai_metrics_ingest_runs runs ON runs.ingest_run_id = backfilled.ingest_run_id
+            WHERE backfilled.otlp_exported_at_epoch_ms = 0
+            ORDER BY runs.started_at_epoch_ms DESC
+            LIMIT 1),
            ''
          )`,
     ],

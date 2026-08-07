@@ -4,6 +4,78 @@ Standing mandate: capture every speed/efficiency opportunity noticed while
 shipping PR-A/PR-B. Status: `unowned` (nobody decided), `queued` (in a locked
 decision), `spiked` (needs measurement first). Reviewed at each grill.
 
+## Ranked — highest impact first (2026-08-06)
+
+The numbered items below are a JOURNAL, appended by provenance, and their
+numbers are STABLE IDS: ~330 references across this file, GRILL-DECISIONS.md,
+AGENTS.md, `ops/manifest.json`, `explorations/fleet-coordination/` (another
+clone's packet), and repo source. NEVER renumber to express priority. This
+section is the only priority axis — re-rank by editing here.
+
+Scope: the 19 items carrying no locked decision and no assigned wave (65 of 85
+are dispositioned). Method: three independent lenses — cycle-time removed,
+unblocking/dependency order, cost-to-ship — merged by cross-lens agreement,
+not by averaging (the axes are not commensurable). Provenance: run
+`wf_b1f680b0-2df`.
+
+1. **#82** publish's machine-parseable last line — one appended line; a piped
+   publish destroys `$?`, false-greened twice. Unanimous.
+2. **#60** generated-path → regenerate-command map — #74, #77, and #84 all
+   consume it. Ship the map standalone first, then its consumers.
+3. **#77** `publish --reconcile`; refuse `--amend` on a diverged branch —
+   manual reconcile run 4× in one session; `--amend` hard-stuck once.
+4. **#74** stale-base guard names class A vs B — fired 4/4; a Class B bypass
+   would have REVERTED new `goals/INDEX.md` entries.
+5. **#76** `verdict.json` lanes as composite sub-lanes — bimodal artifact
+   (3 lanes green vs ~24 failed); one agent nearly false-greened it.
+6. **#72** test-kit barrel import tax — 224s of a 278s run is imports, 6:1
+   import-to-execution. Biggest single win AND the worst thing to run
+   concurrently with a wave: wants a quiet single-owner PR.
+7. **#64** wave gate attribution + test advisory lock — supplies #49's
+   missing gate half; two concurrent vitest runs starved ~15 min.
+8. **#70** append-optional lint: artifact vs input DTO — SCOPE, not
+   follow-up, if PR-F goes next: #34's lint breaks every `buildYeetVerdict`
+   call site without the discriminator.
+9. **#67** adversarial-review harness + `yeet diff` — `git diff
+   origin/main...HEAD` is EMPTY on uncommitted work, so review rounds ran
+   vacuous.
+10. **#73** publish detects an already-MERGED PR before pushing — #569 merged
+    mid-proof and publish landed a proven commit in no PR at all.
+11. **#83** status reconciles verdict against remote reality.
+12. **#63** `A.filterMap` takes Result — 3 hits in one wave; the v3 shape
+    silently empties arrays (a suite ran 31/32 green while broken).
+13. **#71** mutation proof gate — 2 of 7 "fixed" PR-E findings survived a
+    full revert with the suite green (~15s/finding).
+14. **#58** decisions-PR adversarial review as a design gate — costs nothing,
+    rides any PR as a decision-text amendment.
+15. **#66** writer-level artifact coverage + encode lint — reverting the
+    writer fix left 1004 tests green; 3 writers still on `renderJson`.
+16. **#68** binding-contract block colocated with schemas — ~20 min scavenger
+    hunt per implementer; deliverable is one paragraph.
+17. **#65** dedupe/budget keys from retry-stable fields.
+18. **#69** fixture corpus for hosted CI payloads — blocked on #47.
+19. **#80** GitHub native stacked PRs — spike first per decision 49's
+    evidence ladder; should not enter a wave yet.
+
+Operator calls this ranking supports:
+
+- **PR-B is unsupported.** Not one of the 19 routes there (decision 18 parked
+  #36 in it; decision 13 calls PR-B execution-only on disjoint surfaces).
+- **PR-I is the better-supported next wave**, provided it absorbs the
+  agent-facing truth items; #64 is explicitly #49's missing half.
+- **Cheapest real win on the board is a bundle no wave owns:** #82 + #76 +
+  #73 + #83 — one coherent "publish output tells the truth" PR over data yeet
+  already fetches.
+- **#64 and #71 each have a cheap half shippable today** with zero machinery
+  — #64's wave-brief law ("own test files during the loop, one full package
+  run at integration") and #71's checklist line ("if the fix is a write, name
+  the test that reads it back"). Taking the cheap halves decouples them from
+  whichever wave runs next.
+- **#57 is NOT in this pool.** Its own text routes it to the
+  fleet-coordination docket, "not a speed-loop vehicle". It was mis-pooled as
+  undispositioned; all three lenses caught it independently. Do not re-score
+  it next cycle — the self-routing IS its disposition.
+
 ## Unowned — new candidates spotted tonight
 
 1. **Incremental jsdoc inventory.** The ratchet lane regenerates the ENTIRE
@@ -875,9 +947,18 @@ durability fixes discovery, not trust.
     into its originating session — terminals die (2026-08-05 power
     loss), PRs persist. Flags live in operator config templates per
     harness, not code. Identity ladder: `BEEP_AGENT_SESSION` env from a
-    launch wrapper now, PR-I's #45/#52 identity later. Dogfooded:
-    #583's body carries the footer hand-stamped. Vehicle: small yeet
-    rider; graduates into PR-I.
+    launch wrapper now, PR-I's #45/#52 identity later. DESIGN
+    CORRECTION (operator catch on the first dogfooded footer,
+    2026-08-06): the WORK CLONE and the SESSION HOME are distinct — a
+    harness session is keyed to the directory it STARTED in, which may
+    differ from the clone the work landed in (this session: home
+    beep-effect3, work beep-effect3-pra). The footer carries both
+    (`clone=` for git context, `session-home=` for the resume block's
+    cd), and the resume block MUST cd to the session home or the id
+    resolves nowhere. Automation sources the home from the harness
+    transcript path env, never from cwd. Dogfooded: #583/#586 bodies
+    carry the corrected footer. Vehicle: small yeet rider; graduates
+    into PR-I.
 80. **Evaluate GitHub native stacked PRs (public preview).** The docs
     claim the exact fixes for our recorded blockers: required checks run
     for ALL stack layers as if against the default branch (would retire
@@ -902,6 +983,20 @@ durability fixes discovery, not trust.
     closeout gains --require-answered-resolutions) and deferred to the
     next yeet Status/closeout touch — jumps the queue if silent
     resolutions are actually observed.
+    OBSERVED, same day (PR #592 closeout): both Greptile threads were
+    fixed in 7e065af387 and drafts naming that sha were staged, but
+    `yeet reply` reported both `stale — already resolved upstream;
+    nothing was posted`. Someone resolved them out-of-band between the
+    publish and the reply pass, so NO receipt exists — and the campaign
+    law forbids bypassing the porcelain with raw `gh api`, so the
+    porcelain now enforces the very silence this item bans: once anyone
+    else resolves first, leaving the receipt is IMPOSSIBLE. Widget:
+    split `stale` — a thread resolved upstream that carries no reply
+    from the publishing identity gets the draft body posted WITHOUT
+    re-resolving (the thread is closed; a comment is additive and
+    harmless) and reports `posted-late`; only a thread already carrying
+    our reply is truly `stale`. Per this item's own trigger clause,
+    this jumps the queue.
 82. **Canonical terminal status line for publish (or `--summary`).**
     (beep-effect14, 2026-08-06 — their top ask.) publish emits a large
     stream including the lane JSON, so context-constrained agents MUST
@@ -919,7 +1014,327 @@ durability fixes discovery, not trust.
     A verdict older than the branch tip or contradicted by remote state
     renders as "stale (predates last push)" with the re-derivation
     command, never as current truth — operators must not learn to
-    ignore the verdict line.
+    ignore the verdict line. CONFIRMED on PR #592's own publish: the
+    first attempt failed proof after committing; the second attempt
+    passed all 21 lanes, pushed, and created the PR — and `yeet status`
+    STILL printed `verdict: publish failure: yeet publish proof failed
+    after creating the local commit` directly above `remote: PR #592
+    OPEN`. The verdict was the previous run's, rendered as current
+    truth beside remote state that contradicts it. Exactly the disease
+    this item names, on the branch that was fixing a different one.
+    THIRD instance, same day, third subcommand: the #592 closeout run
+    printed `verdict: publish failure: Yeet merge readiness requires
+    zero unresolved review threads; found 2: PRRT_...WD, PRRT_...WN`
+    four lines above `review threads: 0 unresolved`. Monitor (#586),
+    publish (#592), closeout (#592) — three subcommands in one day, so
+    this is the verdict writer's default behavior, not an edge case.
+84. **Tree parity: local proof and hosted CI run on DIFFERENT TREES,
+    and the stale-base guard is structurally blind to the gap.**
+    (Reported by beep-effect5, 2026-08-06 — a plan/manifest phase-id
+    mismatch and a goals INDEX drift, both green locally, both
+    surfacing only once merged onto a moved main; mechanism verified
+    in source here, and #582 "regenerate the goals index after rebase"
+    is the same class landing as its own remediation commit.) Two
+    facts compose. (a) `.github/workflows/check.yml` is
+    `on: pull_request` using `actions/checkout@v4` with NO `ref:`
+    override, so hosted lanes run on `refs/pull/N/merge` — head merged
+    into the CURRENT base — while `yeet verify` proves the worktree's
+    HEAD. (b) `assessBaseFreshness` derives `overlappingPaths` as a set
+    INTERSECTION of the paths in `mergeBase..HEAD` and
+    `mergeBase..base`, and `enforceBaseFreshness` returns clean the
+    moment that set is empty. (Its `behindCount === 0` short-circuit is
+    sound — nothing to merge means the trees agree.) So the guard fires
+    only on TEXTUAL path overlap. A semantic conflict — this branch
+    edits A, main edits B, and a repo-level invariant couples A to B
+    (goals INDEX vs newly landed packets; packet phase ids vs a plan
+    manifest) — yields an empty intersection, merges without conflict,
+    and passes every local gate. CORRECTION to the reported remedy:
+    `git merge origin/main` / `merge-tree` is NOT sufficient, because
+    both cited failures were CONFLICT-FREE merges — a clean merge
+    proves nothing here. The guard must MATERIALIZE the merged tree and
+    RE-RUN the repo-level invariant gates on it. Widget: `yeet verify
+    --merged` (or a preflight tier) that merges the base into a
+    detached worktree, runs #75's cheap repo-level battery
+    (goals-doctor, goals:index, schema-first inventory) there, and on
+    failure routes through #60's generated-path → regenerate-command
+    map instead of a hand-merge. This is the TREE-parity sibling of
+    #46's LANE-parity — #46 asks which gates run, this asks what they
+    run ON, and together they close "why wasn't this caught locally" on
+    both axes. It is also the third class under #74, whose two classes
+    both presuppose the guard fired at all. Vehicle: PR-G with #75.
+    CONFIRMED the same day it was written, on this item's own fix PR
+    (#592): PR #587 (Effect beta.103 catalog bump) merged mid-branch.
+    Measured path overlap between `mergeBase..HEAD` and
+    `mergeBase..origin/main` was EMPTY, so `enforceBaseFreshness` would
+    have returned clean — while #587 migrated repo-cli source
+    (Docgen, Laws, Lint, AgentEffectiveness) to beta.103 without
+    touching any of the four files this branch edits. Publishing
+    without merging would have proven a beta.102 tree against a
+    beta.103 CI. The merge happened because an operator reasoned about
+    it, not because any tool signalled it. That gap IS the item.
+85. **Coverage has TWO hosted-only classes, and collapsing them into
+    one "structurally cannot" verdict misroutes the fix.** (Live on PR
+    #587, the Effect 4.0.0-beta.103 catalog bump: `Coverage Regression`
+    failed at 14m51s; a sibling agent read it as the known
+    structurally-hosted-only gap.) The shared premise is TRUE and
+    verified: `YEET_FEEDBACK_TASKS = ["build", "check", "lint",
+    "test"]` (`Yeet/internal/Planner.ts:52`) — yeet verify/publish
+    never runs a package's `coverage` script. But two different
+    failures hide behind that one fact. CLASS R (runtime): defects that
+    only manifest under the coverage runtime — `coverage` is
+    `bunx vitest run --coverage`, a different runtime from `test`'s
+    `bunx --bun vitest run`, where `Bun.spawn` is inert and stdin never
+    EOFs (PR #570's 40-minute hang). Local proof genuinely cannot reach
+    these. CLASS T (threshold): an ordinary ratchet regression, which
+    #587 is — `check.yml` invokes `bun run beep ci lane coverage
+    --affected --base "origin/${GITHUB_BASE_REF}" --summarize`, an
+    invocation reproducible verbatim on a workstation. Class T is a
+    TASK-LIST gap, not a structural one, and diagnosing it as Class R
+    routes to "accept the hosted-only cost" when the cheap fix exists.
+    Why it cannot simply join #75's battery: measured on this run, the
+    lane is 231 tasks / 0 cached / 13m9s — the single most expensive
+    lane in the repo, against a battery whose ordering law is
+    cost-ascending. Widget: a CHANGED-PACKAGE-SCOPED coverage preflight.
+    Evidence it suffices — every package the ratchet flagged
+    (@beep/documents-server, @beep/duckdb, @beep/nlp,
+    @beep/openai-compat) had exactly ONE changed `src` file in the PR;
+    scoping to changed packages turns 231 tasks into 4. Boundary: local
+    numbers stay machine-sensitive, so this is a PREDICTOR of the drop's
+    direction, never the epsilon oracle — the verdict stays hosted.
+    Second finding from the same log: baseline drift is WARN-ONLY. Six
+    packages (@beep/epistemic-client, @beep/epistemic-ui,
+    @beep/exiftool, @beep/gov-legal-mcp, @beep/obs, @beep/qa-capture)
+    are missing from `standards/coverage.regression-baseline.jsonc`, so
+    they are exempt from the ratchet silently and indefinitely — a new
+    package can never regress what it never registered. That belongs in
+    the new-package governance-gate family as a blocking gate.
+    Vehicle: PR-G with #75.
+    SEQUENCING AMENDMENT (same day, from the parallel session that took
+    #587 to root cause with the operator): the preflight is BLOCKED on
+    fixing the gate itself, and must not ship first. The ratchet
+    compares PERCENTAGES with epsilon 0.001, so deleting covered code
+    from any package below 100% trips it arithmetically —
+    `(C-1)/(T-1) < C/T` whenever `C < T`. #587's drops are that
+    signature exactly: four packages, all migration edits, all tiny
+    fractional falls (-0.02 to -0.05). So the gate PENALIZES removing
+    code, and a changed-package preflight built now would only
+    reproduce a false failure faster — predicting a bogus verdict is
+    not a win. Correct order: (1) land the queued two-signal fix in
+    `Quality/internal/CoverageRegression.ts` — keep the pct baseline,
+    add uncovered (`total - covered`), flag only when pct FELL and
+    uncovered ROSE; (2) make filtered `--write-baseline` merge instead
+    of rebuilding `packages` wholesale (today it silently drops ~130
+    entries, which is a second, larger source of the missing-baseline
+    hole above); (3) only then build the preflight, which by then
+    predicts a verdict worth predicting. Corrects this item's original
+    read of #587 as an ordinary regression — the drops were real
+    arithmetic, but the FAILURE was not.
+86. **The ledger is not queryable, and that now costs more than it saves.**
+    (Convergent finding, 2026-08-06 ranking run `wf_b1f680b0-2df`: three
+    lenses given DIFFERENT briefs — cycle-time, unblocking, cost-to-ship
+    — each reported this blocker unprompted, and each proposed the same
+    remedy. Three independent frames landing on one tool is the
+    strongest signal any fan-out here has produced.) The failure is
+    structural, not cosmetic: 1100+ lines exceed a single read; item
+    numbers are NON-MONOTONIC in file order (verified: `... 54 56 57 58
+    59 60 55 61 ...` — #55 sits physically between #60 and #61); and
+    disposition state lives only in interleaved prose paragraphs, so
+    "is item N still open" requires a full-file scan. Consequence
+    measured this run: not one of the three lenses could verify the
+    handed-in candidate list against the file, so the synthesis
+    knowingly inherited an unverifiable premise — and the premise WAS
+    wrong (#57 was pooled as undispositioned while its own text routes
+    it to the fleet docket). Widget: a machine-readable sidecar keyed
+    by the EXISTING stable ids — id, title, status, vehicle, deciding
+    grill decision, blocked-on — generated from and validated against
+    the prose, never replacing it. Explicitly NOT renumbering: the ids
+    are referenced ~330 times across this file, GRILL-DECISIONS.md,
+    AGENTS.md, `ops/manifest.json`, another clone's
+    `explorations/fleet-coordination/` packet, and repo source. Rider:
+    disposition authority is currently three-way with no stated
+    precedence — numbered grill decisions, the SYNTHESIS-2 map, and
+    self-assigned `Vehicle:` lines in the item text. Everything from
+    #56 up leans on the third and weakest form; #84/#85 self-assign to
+    PR-G with no ratification. The sidecar must name which authority
+    wins. Vehicle: PR-G, and it is a prerequisite for #57's claims
+    manifest and any dependency graph.
+87. **`#NN` is an overloaded sigil across at least five referent kinds.**
+    (Same run; flagged independently by the unblocking lens and the
+    disposition mapper, who measured roughly a third of low-numbered
+    citation hits as false positives.) One bare token means: a ledger
+    item, a grill-decision number, a grill-SESSION number ("as grilled
+    in #3"), an r-report item ("r1 #1"), and a GitHub PR number — often
+    in the same sentence ("#74 ... #571", "#84 ... #587"). Humans
+    disambiguate from context; every machine consumer will not. With
+    ~330 references, a distinct ledger sigil plus a one-time mechanical
+    rewrite is cheap NOW and expensive after #86's sidecar, #57's
+    claims manifest, or a dependency graph is built on top of the
+    ambiguous form. Sequence it BEFORE #86. Concrete cost already paid:
+    ledger items 1–16 are never cited by number in GRILL-DECISIONS.md
+    at all — decision 10 ratifies them by DESCRIPTIVE NAME via
+    SYNTHESIS-2.md, which uses its own 1–8 numbering for o-report items
+    while its 9–16 happen to be ledger ids. That is a numbering
+    collision sitting inside the only join path. Vehicle: PR-G, ahead
+    of #86.
+
+88. **A gate run BEFORE the change it gates is a vacuous proof, and
+    reads identically to one run after.** (Lived on PR #592, 2026-08-06.)
+    I ran `bun run beep quality test-tsgo` → exit 0, THEN wrote the new
+    tests, then never re-ran it. `bunx vitest run` reported 61/61 green
+    because vitest does not typecheck. The publish proof then failed on
+    exactly the new lines: `TS2353: 'mainWorktreePath' does not exist
+    in type 'Partial<{...}>'` — the schema field was optional so
+    `.make()` accepted it, but the test helper's `Partial<typeof
+    mergedFacts>` did not. The generalizable law is NOT "remember to
+    run test-tsgo": it is that a gate's transcript entry carries no
+    evidence of WHICH tree it ran against, so a stale pass is
+    indistinguishable from a real one — the same shape as this
+    session's absence-proof receipts and #86's unverifiable premise.
+    Widget: gate results record the worktree hash they ran against, and
+    `yeet status` / the preflight battery render any result from an
+    earlier hash as STALE rather than green — #83's verdict-staleness
+    contract, applied to gate results instead of verdicts. Cheap
+    version available immediately: the battery re-runs a gate whose
+    recorded hash != current instead of reporting its cached verdict.
+    Vehicle: PR-G with #75.
+89. **The flake quarantine recognizes exactly one signature, so every
+    other environment-only failure is hardened by hand.** (Same run.)
+    `@beep/xai#check` failed exit 2 inside the full proof on a branch
+    that does not touch `packages/drivers/xai`; a standalone
+    `bunx turbo run check --filter=@beep/xai --force` passed 9/9,
+    exit 0. The quarantine declined it explicitly — `failure does not
+    match the no-location TS2589 flake signature; keeping failure
+    hard` — which is correct as written and useless in practice: it
+    knows one fingerprint, and this was a different environment-only
+    failure in the same family (53 bun/node processes older than ~11h
+    were live during the proof, all with real parents, so contention is
+    the likely cause and is not reproducible from the diff). Cheap
+    discriminator the quarantine can apply itself, before hardening any
+    package-scoped failure: if the failing package is OUTSIDE
+    `git diff --name-only origin/main...HEAD`, re-run that one package
+    filtered — seconds, against a full re-proof. Escalate to hard only
+    if the isolated re-run also fails. Ties to #35's attribution
+    fingerprints and #47's log fetcher. Vehicle: PR-G.
+    SECOND signature, hours later (PR #592): `Test Unit` failed in
+    "Set up job" before any repo command ran — `Failed to resolve
+    action download info. Error: Service Unavailable` /
+    `##[error]Internal Server Error`, three attempts, all GitHub-side
+    5xx during a confirmed major Actions incident (githubstatus,
+    opened 15:22Z). A plain `gh run rerun --job <id>` is the whole
+    remedy, and it is strictly SAFER to auto-rerun than the trusted
+    TS2589 fingerprint because zero repo commands executed.
+    Fingerprint: setup-step failure log contains `Failed to resolve
+    action download info` (or a setup-step `##[error]Internal Server
+    Error`) with no lane output — rerun once per job per head SHA.
+    Promotes this item from "the list is short" to "the list is a
+    list, and it needs entries". Operator-loop rider from the same
+    moment: I reported "0 failing, 19 pending" and stopped watching;
+    the operator found this failure before I did. A pending snapshot
+    is not monitoring — a check set is unobserved until it reaches a
+    terminal state (`monitor --until-merged` exists for exactly this).
+90. **`run_started_at` is rewritten on re-dispatch, so run-level
+    "queue latency" is an artifact unless filtered to attempt 1.**
+    (2026-08-06, caught by the owned-runners plan workflow's value
+    challenge and verified live the same hour.) During the Actions
+    outage, `run_started_at - created_at` read 18-21 minutes on three
+    Check runs and 0s on others; every "delayed" run was `run_attempt`
+    2-3 and every 0s run was attempt 1 — the metric measured
+    time-until-a-human-clicked-rerun, not runner wait. Actual
+    Blacksmith pickup, measured at JOB level during the same outage:
+    19-67 seconds. Job records were garbled too (a job whose
+    `created_at` postdates its own `completed_at`), so during an
+    incident NO Actions timestamp is trustworthy unaudited.
+    Consequence: "PRs are blocked because no runners are available" is
+    falsified — this repo has no runner-capacity problem, and the
+    owned-runner project must not be justified by one
+    (research/o6-execution-plan.md carries the full correction and the
+    plan it feeds). Widget: the lane-timings collector records
+    `run_attempt` and derives attempt-1 pickup latency, applying the
+    filter in the collector, never the reader. Kin to the
+    absence-proof positive-control law: a damning-looking metric needs
+    its provenance checked before it justifies a project.
+
+Empty-frontmatter changeset receipt (2026-08-06, this PR's own first
+publish): 56 no-release changesets on main used bare `---\n---`
+frontmatter, and the repo-wide js-yaml override (5.2.2, pinned since PR
+#437) makes `yaml.load("")` THROW ("expected a document, but the input
+is empty") where v4 returned `undefined` — so `changeset status` dies on
+the ENTIRE tree, but only after a FRESH install materializes the pinned
+resolution. Worktrees running on older physical node_modules kept
+passing the lane (PR #592's proof passed it hours earlier on the same
+lock), which is the stale-artifact false-green class operating in the
+install layer itself: the lockfile said 5.2.2 for months while the
+installed tree said otherwise, and `--frozen-lockfile` after the
+post-#595 branch switch is what detonated it. `bunx changeset add
+--empty` still emits the bare form, so every new empty changeset
+re-plants the mine. Repair shipped in this PR: `{}` frontmatter (the
+form the tree already used elsewhere), valid under both js-yaml majors.
+Re-planting bound: with 5.2.2 now materialized, the
+`quality:changeset-status` preflight and the hosted parity lane fail a
+bare empty changeset at its author's OWN publish, before merge — so
+the mine survives only the compound case of a stale-install worktree
+(js-yaml 4 still physically present, passing locally) paired with a
+checks-bypassed merge, which is exactly today's window. Named
+follow-up, tracked hard rather than assumed closed: either a wrapper
+that emits `{}` for the empty-changeset path or a repo-sanity lint
+that parses every `.changeset/*.md` with the pinned resolver; rides
+the lint family with #88's gate-staleness work, not this docs PR.
+Context receipt for the same hour: #595 merged with Test Unit and Knip
+FAILURE and most contexts CANCELLED while the required-checks rule was
+temporarily removed from the ruleset during the GitHub Actions outage —
+the first fresh-install lane break surfaced immediately downstream of
+that window. Kin: stale-artifact false greens, #88's gate-staleness
+contract, and the new-package staged-changeset gotchas.
+
+Hint-misattribution receipt (PR #592, 2026-08-06) — third instance in
+one day, so it is a pattern and not an accident. The monitor phase
+failed on two Vercel deployment checks reporting `Deployment rate
+limited — retry in 24 hours` (an account-level build cap, and neither
+check is among main's 17 required contexts). Yeet's `next:` line said
+`Inspect the OSV finding and rerun bun run beep quality github-checks
+security`. There was no OSV finding. Same class as the verdict-packet
+`repairCommand` misrouting already recorded against the misattribution
+trifecta: the hint selector matches on lane family rather than on the
+failing check's own payload. Until it is fixed, read the failing
+check's message, never the hint.
+
+Exit-code masking, self-inflicted again (same run): I backgrounded the
+publish as `<cmd> > log 2>&1; echo "PUBLISH-EXIT=$?"`. The harness
+reported the invocation's exit as 0 — because the trailing `echo`
+succeeded — while the real publish exited 1. Same family as the
+`cmd | grep | tail` masking already in the ledger, and it defeated the
+same instinct twice in one session: the wrapper's status is not the
+work's status. Read the marker or the artifact, never the invocation.
+
+PLAN.md drift (2026-08-06, hit independently by two lenses and the
+synthesizer): `goals/speed-loop/PLAN.md` is advertised — in agent briefs
+and in this packet's own README — as holding the PR-A..PR-I wave
+structure. It is a 9-line cycle-log table whose ledger-delta column stops
+at "8 → 19" with cycle 3 marked "pending", against a ledger now at 87
+items. The wave contents actually live in GRILL-DECISIONS.md #13–20. An
+incoming agent reads PLAN.md as authoritative and gets nothing — the
+mis-pointer cost this run a read cycle on exactly the load-bearing
+question it was launched to answer. Fix is one edit: make PLAN.md either
+current or an explicit pointer to the decisions that carry the waves.
+
+Absence-proof receipts (2026-08-06, self-inflicted twice inside ten
+minutes while verifying the #85 evidence). A negative result needs a
+POSITIVE CONTROL before it counts as proof. (a) `gh pr diff --name-only`
+failed with HTTP 406 (>300 files) and wrote an EMPTY file; the follow-up
+`rg` over it printed no match, which read exactly like "these packages
+were untouched" — the intended conclusion, reached vacuously. (b) The
+repair was worse: `gh api --paginate .../pulls/587/files -q '.[].path'`
+returned 1603 lines, which passed a `wc -l` non-emptiness check, but the
+REST files endpoint's field is `filename` (`path` is the GraphQL name),
+so all 1603 lines were EMPTY and the second absence-proof was vacuous
+too — the sanity check itself was the wrong invariant. Both conclusions
+were false: all four regressed packages DID have changed `src` files.
+Law: when a check's payoff is a no-match, first assert the haystack
+contains a known-present needle (`rg -c '\S'`, a control grep for a path
+you know changed). Kin to [[vacuous-test-pattern]] and the
+jq-capture-annihilation class. Separately: `rg -r` is `--replace`, NOT
+recursive — `rg -rn "pat" path` silently rewrites every match to the
+literal `n` and looks like corrupted source.
 
 Sweep-dogfood receipts (2026-08-06, first executeSweep on its own merged
 branch, exit 0, every rail honored): (a) the lockfile needs-operator
@@ -931,6 +1346,43 @@ off the merged branch the promised second pass cannot reach it; ratified
 decision 45(d)'s "a re-run completes the deletion" is FALSE as shipped.
 Both route to a fast-follow fix PR (sweep --branch override through
 guardLiteralArg + handoff text; decision 45(d) amended same-PR).
+CLOSED same day: PR #592 shipped `--branch`, and the first real dogfood
+(post-#600, two stale merged branches from the primary clone) deleted
+both correctly. New receipt from that run: when the remote branch was
+already auto-deleted on merge, the remote-deletion skip renders
+"remote branch origin/X exists; remote tip <absent> equals pull request
+head <sha>" — stale local ref state and an absent probe result flowing
+into an equality sentence. Probe-absent needs its own rendered reason;
+same class as the named `*ProbeTruncated` → `!probeSucceeded`
+generalization above.
+
+Owned-runners infra receipts (2026-08-06, ci-runners stack
+implementation, workflow wf_f00a6749-061; fuller detail in the run's
+journal): (a) the generated design packet's own acceptance test
+contradicted its security decision — the config-override test enshrined
+cross-region AZs that the decided region/AZ S.check must reject; spec
+and test drifted within one generated artifact and were reconciled by
+hand. (b) fc-arbitrary schema round-trips are structurally incompatible
+with cross-field checks (independent region/AZ arbitraries ~never
+satisfy starts-with, starving fc's filter) — schemaParity needs a
+seeded/custom-arbitrary variant. (c) The docgen-tsc-stricter-than-tsgo
+class recurred: a JSDoc example comparing two non-overlapping literal
+constants passed turbo check (tsgo) and failed real tsc with TS2367 in
+docgen — caught by the adversarial reviewer running docgen:local, which
+the implement gate set omitted; docgen:local belongs in any new-module
+gate battery. (d) Follow-ups now tracked: promote the AWS primitive
+schemas (AwsRegion/Az/Cidr/AmiId/InstanceType/SsmParameterName) to a
+shared module before the controller stack re-declares them; launcher
+IAM enforcement (delete the retracted runner instance profile, add
+RunInstances condition Denies on metadata/profile/tag overrides) is
+account-state work nothing in-repo enforces yet — pre-deploy blocker;
+an in-repo acceptance-probe script would make the o6 red-team gates
+mechanical at first `pulumi up`; the reaper Lambda handler is an
+untypechecked inline string and graduates to a real source file if it
+grows. (e) `rg -r` bit AGAIN (display-only) despite its ledger entry —
+the receipt alone does not prevent recurrence; candidate habit-level
+fix is a shell alias/wrapper making rg refuse `-r` outside explicit
+`--replace` intent.
 
 beep-effect14 operator-feedback disposition (2026-08-06): new items
 #82–83 above. Amendments — #8 (ship porcelain): third verb gap

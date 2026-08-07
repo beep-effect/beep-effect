@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,12 +37,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — in progress. PR #575 reached `mergeable=MERGEABLE` / `status=CLEAN` with all
-hosted checks green at `6b98e95d47`, then a follow-up packet-bookkeeping commit
-(`b11ed4ced1`) broke the required `Lint Policy` check: it flipped every phase to
-`complete` while the packet stayed `active` (`phases-terminal-but-active`) and left
-`goals/INDEX.md` stale against the manifest it had just changed. Both are fixed here. The
-PR was closed by the owner for merge-ordering reasons and needs reopening or replacing. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
+Closed. PR #575 merged as `5e4df6be4a`. The gate ships fail-closed with both rungs
+proven; the cross-slice consultation and its `foundation/capability` gate port are
+deferred with `research/01-gate-shape-check.md` as standing evidence, and the
+"widening the quantified gate set" align question stays parked. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
 `SPEC.md` decisions 10 and 11 kept rung 2 to the half that needs no cross-slice
 decision: durable ports, repository and layers, the slice's first db-admin
 migration with append-only guards, and the IDS fact records. The cross-slice

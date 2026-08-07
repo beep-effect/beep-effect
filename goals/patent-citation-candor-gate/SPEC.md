@@ -45,6 +45,20 @@ Normative here:
    superseded event stops blocking only once the newer event is itself
    dispositioned; examiner events record without gating (widening the
    quantified set is a later align question).
+   **Scope clarification (2026-08-06, post-merge):** "record without gating"
+   constrains what *initiates* gating — a source with no AI-discovered event
+   never blocks — and does NOT mean an examiner-observed event can never be the
+   subject of a judgment. When an examiner-observed observation supersedes an
+   AI-discovered one, it becomes the current observation of that source, so the
+   group is cleared by dispositioning that examiner-observed head. Whether the
+   AI finding's history is discharged by the arrival of an examiner record is a
+   legal question the predicate must never compute, so it blocks until a human
+   decides. Narrowing the head lookup to AI-discovered events would leave zero
+   unsuperseded heads and trip `ambiguous-lineage` with no way to clear it —
+   verified by mutation. Pinned in both directions by `CandorPolicy.test.ts` >
+   "an examiner-observed head is dispositionable". This clarifies decision 4's
+   scope and does not widen the quantified set; that align question stays
+   parked.
 5. **Application identity** — a law-owned union accepting the USPTO
    eight-digit normalized form (driver shape mirrored, never imported) and
    the live WIPO ST.13 `ApplicationNumber`, with explicit conversion — never

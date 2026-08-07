@@ -12,6 +12,7 @@ import { Argument, Command } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { CodexCommandError } from "./Codex.errors.ts";
+import { findingsCommand } from "./Findings.command.ts";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -34,13 +35,18 @@ initiative summary.
 /**
  * Launch Codex with the repo-local quality review fix loop prompt.
  *
- * @param summaryParts - Optional initiative summary words.
- * @returns Effect that runs `codex exec`.
- * @example
+ * **Example** (Closing the current initiative)
+ *
  * ```ts
  * import { runCodexQualityReviewFixLoop } from "@beep/repo-cli/commands/Codex"
+ *
  * const program = runCodexQualityReviewFixLoop(["close", "current", "initiative"])
+ *
+ * console.log(typeof program) // "object"
  * ```
+ *
+ * @param summaryParts - Optional initiative summary words.
+ * @returns Effect that runs `codex exec`.
  * @category use-cases
  * @since 0.0.0
  */
@@ -82,13 +88,24 @@ const qualityReviewFixLoopCommand = Command.make(
 /**
  * Codex helper command group.
  *
- * @example
+ * **Example** (Reading the command name)
+ *
  * ```ts
- * console.log("codexCommand")
+ * import { codexCommand } from "@beep/repo-cli/commands/Codex"
+ *
+ * console.log(codexCommand.name) // "codex"
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
 export const codexCommand = Command.make("codex", {}, () =>
-  printLines(["Codex commands:", "- bun run beep codex quality-review-fix-loop"])
-).pipe(Command.withDescription("Codex agent helper commands"), Command.withSubcommands([qualityReviewFixLoopCommand]));
+  printLines([
+    "Codex commands:",
+    "- bun run beep codex quality-review-fix-loop",
+    "- bun run beep codex findings ingest --from <export.csv>",
+  ])
+).pipe(
+  Command.withDescription("Codex agent helper commands"),
+  Command.withSubcommands([qualityReviewFixLoopCommand, findingsCommand])
+);

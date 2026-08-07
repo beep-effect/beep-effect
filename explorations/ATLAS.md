@@ -40,6 +40,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
+  align-stage: deep-dive of the Lynx project's Legal Knowledge Graph ontology
+  (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded
+  against beep-effect's semantic/KG capability (successor strand to graduated
+  `legal-ontology-landscape`, which cited Lynx in one line only). Research
+  landed 2026-08-06: Lynx is a pattern donor, not a vocabulary donor — five
+  ranked opportunities in `research/05-value-assessment.md` (lead: attributed
+  multi-claim span annotation; `lkg.ttl` as first VETTED vendor slice); zero
+  patent/IP modelling in the whole corpus, so semantic-foundation M2/M3 gaps
+  stay open. Next: grill the five open questions.
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
@@ -61,34 +71,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   contradiction-semantics cluster re-routed to ride with
   `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
   decided milestone — the candor BRIEF's approval — was reached the same
-  day), and the first wedge fully GRADUATED 2026-08-04 into
+  day). Both opened wedges are now fully GRADUATED: the first 2026-08-04 into
   [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
-  (graduation PR #560 merged 2026-08-05); second wedge opened 2026-08-05
-  ([`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md),
-  carrying the contradiction-semantics cluster); next:
-  `patent-drafting-episode-ledger` and the FunctionalUnit extension on
+  (graduation PR #560 merged 2026-08-05; implementation PR #575 merged
+  2026-08-06), and the second — opened 2026-08-05 carrying the
+  contradiction-semantics cluster — 2026-08-06 into
+  [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md).
+  Next: `patent-drafting-episode-ledger` and the FunctionalUnit extension on
   Benjamin's call.
-- [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
-  shape-stage second wedge of the `legal-patent-kg-deepening` routing
-  matrix (opened 2026-08-05, after the candor wedge graduated; research
-  lanes + synthesis landed same-day; all six align branches closed
-  2026-08-06 — scheme + simple relator V1, `law-practice/domain` home with
-  a promotion gate, Party–Role split, full `CorrectionDelta` shape,
-  two-axis void-vs-penalised, typed content with polarity; BRIEF hardened
-  by a three-lens Opus review and APPROVED 2026-08-06 — decompose next): a
-  closed
-  `HohfeldPosition` domain whose correlative pairs are one stored directed
-  relation with a derived opposite view, an identity-bearing n-ary
-  `LegalPositionRelator` aggregate over the live taxonomy /
-  bitemporal-edge / approval foundations, and authority-gated
-  `PowerExercise`/`ActFrame` transition events that keep attempted or
-  ineffective acts on record — carrying the re-routed legal-contradiction
-  vocabulary (`LegalScopeContext`, typed `PriorityBasis`, verdict families,
-  caller-owned `CorrectionDelta`) composed over
-  `goals/epistemic-contradiction-triage` without widening it; FLINT/UFO-L
-  donor verdicts landed 2026-08-05 (`P100` verified-with-correction, `R25`
-  verified with the Apache/MPL split confirmed; both promoted to `adopt` in
-  the parent ledger).
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
@@ -352,6 +342,24 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
+  graduated 2026-08-06 (opened 2026-08-05) into
+  [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md):
+  second wedge of the `legal-patent-kg-deepening` routing matrix, carrying the
+  re-routed contradiction-semantics cluster. A closed eight-member
+  `HohfeldPosition` domain whose correlative and opposite derivations range over
+  `(kind, content)` — the opposite one negating act/omission polarity in the
+  same step, without which it manufactures false contradictions — plus a simple
+  `LegalPositionRelator` storing one advantage-side relation and deriving every
+  other view, and rung-2 authority-gated transition events that keep attempted
+  and ineffective acts on record. Two research lanes (repo surfaces; Hohfeld /
+  FLINT / UFO-L legal frame), six align branches closed in one pass, a BRIEF
+  hardened by a three-lens Opus review (39 findings, 5 P1), and a
+  one-packet/two-rung MAP ([`MAP.md`](./legal-position-relator-runtime/MAP.md))
+  whose capability anchors were re-verified against `main` after the candor
+  sibling's implementation landed. FLINT/UFO-L donor verdicts: `P100`
+  verified-with-correction, `R25` verified with the Apache/MPL split confirmed
+  on the real TNO GitLab files; both promoted to `adopt` in the parent ledger.
 - [`patent-citation-candor-gate`](./patent-citation-candor-gate/README.md) —
   graduated 2026-08-04 (opened, researched, aligned, shaped, and graduated in
   one day) into

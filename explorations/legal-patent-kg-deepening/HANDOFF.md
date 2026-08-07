@@ -81,17 +81,26 @@ Original Phase 1 steps (retained for provenance):
 
 ### Phase 2 — per approved wedge — STARTED 2026-08-04
 
-The first wedge is COMPLETE: `explorations/patent-citation-candor-gate`
-walked capture → research → align → shape → decompose and GRADUATED
-2026-08-04 into `goals/patent-citation-candor-gate` (graduation PR #560
-merged 2026-08-05). The second wedge is at SHAPE with an approved BRIEF:
-`explorations/legal-position-relator-runtime` (opened 2026-08-05 on
-Benjamin's call), seeded from the positions/relators cluster plus the
+Both opened wedges are COMPLETE, and no wedge is mid-stage.
+
+The first: `explorations/patent-citation-candor-gate` walked capture →
+research → align → shape → decompose and GRADUATED 2026-08-04 into
+`goals/patent-citation-candor-gate` (graduation PR #560 merged 2026-08-05;
+implementation PR #575 merged 2026-08-06).
+
+The second: `explorations/legal-position-relator-runtime` (opened 2026-08-05
+on Benjamin's call), seeded from the positions/relators cluster plus the
 carried contradiction-semantics cluster (re-routed 2026-08-04 — compose,
 don't widen; see [`ROUTING-SEED.md`](./ROUTING-SEED.md) § Phase-2
-amendments); research + align landed via PR #573, and the `BRIEF.md` —
-shaped inside the six align boundaries and hardened by a three-lens Opus
-review — was APPROVED by Benjamin 2026-08-06.
+amendments). Research + align landed via PR #573; the `BRIEF.md` — shaped
+inside the six align boundaries and hardened by a three-lens Opus review —
+was APPROVED by Benjamin 2026-08-06; it then decomposed and GRADUATED the
+same day into `goals/legal-position-relator-runtime`. Decompose settled the
+migration-lane fork (the candor goal's rung 2 already opened the
+law-practice lane, so the relator goal is not the first mover) and narrowed
+the cross-slice candidate handoff to four evaluated shapes routed to goal
+P0 rather than guessed at.
+
 Phase shape remains sequential: `patent-drafting-episode-ledger` and the
 FunctionalUnit extension into `explorations/uspto-patent-driver-depth` stay
 queued on Benjamin's call.
@@ -136,12 +145,14 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 ## First action
 
-Phase 1 is complete and signed off (2026-08-01 reconciliation grill), the
-first Phase 2 wedge is GRADUATED (goal packet live on main), and the second
-wedge is at SHAPE with its BRIEF APPROVED (2026-08-06). First action is now
-to RESUME `explorations/legal-position-relator-runtime` where its
-`README.md` Next Open Question points: decompose — author `MAP.md` inside
-the approved BRIEF, run the four-point graduation gate, and graduate on
-Benjamin's call. Do not re-scaffold the packet or re-run its completed
-research/align/shape stages. Goal graduation and merges still require
-Benjamin's explicit ask.
+Phase 1 is complete and signed off (2026-08-01 reconciliation grill), and
+both Phase 2 wedges opened so far are GRADUATED with their goal packets on
+main. **There is no wedge to resume** — do not re-scaffold either packet or
+re-run any of their completed stages.
+
+First action is a routing call that belongs to Benjamin: open
+`patent-drafting-episode-ledger`, or the FunctionalUnit extension into
+`explorations/uspto-patent-driver-depth`. Both are already-approved
+routing-matrix slugs, so opening either needs only his go-ahead, not fresh
+routing approval; a wedge outside those slugs still does. Executing either
+graduated goal is likewise his explicit ask, as are merges.

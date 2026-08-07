@@ -1,0 +1,18 @@
+name: beep-ci-runners
+runtime:
+  name: nodejs
+description: Egress-only network, worker security group, credential-free spot launch template, VPC flow logs, and AWS-side reaper groundwork for beep CI ephemeral runners. Controller and GitHub registration are out of scope.
+main: ../src/internal/ci-runners-entry.ts
+config:
+  aws:region: us-east-1
+  ciRunners:awsRegion: us-east-1
+  ciRunners:vpcCidr: 10.88.0.0/16
+  ciRunners:publicSubnetACidr: 10.88.0.0/20
+  ciRunners:publicSubnetBCidr: 10.88.16.0/20
+  ciRunners:availabilityZoneA: us-east-1a
+  ciRunners:availabilityZoneB: us-east-1b
+  ciRunners:instanceType: m7i.2xlarge
+  ciRunners:rootVolumeSizeGb: "100"
+  ciRunners:maxRunMinutes: "60"
+  ciRunners:reaperTtlMinutes: "90"
+  ciRunners:amiSsmParameterName: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id

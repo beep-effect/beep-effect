@@ -45,16 +45,24 @@ references**. Everything rung 1 needs — `worktree doctor`, `git merge-tree`,
 
 ## Current Phase
 
-**P0 Research** — not started. Next concrete action: confirm the
-`Worktree.command.ts` schema family and decide where `FleetCheckout` sits beside
-the existing per-worktree diagnostic row, then measure the policy surface against
-recent first-parent `main` commits before any signal-3 code exists.
+**P1 Implement** — next. P0 is complete. Next concrete action: author the
+`FleetCheckout` schema as a sibling class in `Worktree.command.ts` (not an
+extension of `WorktreeDoctorEntry`), with liveness as a three-member `LiteralKit`
+domain and every derived field expressible as `unknown`.
 
 ## Latest Evidence
 
-Not started. The exploration's evidence is the inheritance:
-[`RESEARCH.md`](../../explorations/fleet-coordination/RESEARCH.md) and
-[`SYNTHESIS.md`](../../explorations/fleet-coordination/research/SYNTHESIS.md).
+[`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md)
+(2026-08-06) — 26 paths measured over 300 first-parent `main` commits.
+
+**The P0 finding worth carrying into P1:** back-tested against the three Mode B
+specimens actually observed this week, the config-only surface the design assumed
+would have fired on **zero of three**. Every real specimen was a change to shared
+*behavior* — the operator command every agent runs, the skills that drive it, the
+patterns that govern authoring — not to a lint or CI config file. The recommended
+surface adds a narrow, individually-low-frequency shared-behavior set and fires on
+three of three, at 23.7% of commits (~1.9 bulletins/day). Sample is n=3 and
+biased toward events that produced visible failures.
 
 ## Notes
 

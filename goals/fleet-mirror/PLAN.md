@@ -14,7 +14,7 @@ make the budget.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the `Worktree` schema family and **measure** the policy surface against recent first-parent `main` commits. | The surface is a measured list with per-path frequencies recorded in `research/`; `FleetCheckout`'s home is decided. |
+| P0 Research | **complete** | Confirm the `Worktree` schema family and **measure** the policy surface against recent first-parent `main` commits. | Met — [`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md): 26 paths measured over 300 first-parent commits, surface E recommended at 23.7%, `FleetCheckout` sited as a sibling class. |
 | P1 Implement | pending | Schema → `Context.Service` → subcommand, in that order. | Acceptance criteria in `SPEC.md` are met. |
 | P2 Verify | pending | The #551-shape proof test plus the two `unknown`-path tests; full repo proof. | The proof test fails before signal 3 and passes after; `beep yeet verify` green. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |

@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 Add the schema-first Tailscale driver, including typed process failures,

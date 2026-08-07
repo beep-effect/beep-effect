@@ -42,6 +42,21 @@ export const infraProjectName = "beep-effect";
  */
 export * from "./AIMetrics.ts";
 /**
+ * CI runner fleet groundwork Pulumi orchestration exports.
+ *
+ * **Example** (Reference the CI runners stack)
+ *
+ * ```ts
+ * import { CiRunnersStack } from "@beep/infra"
+ *
+ * console.log(CiRunnersStack)
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./CiRunners.ts";
+/**
  * OIP web Pulumi orchestration exports.
  *
  * @example

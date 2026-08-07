@@ -361,7 +361,21 @@ decisions close them:
     worktree is two-pass by design — `delete-local-branch` skips ("held by
     this worktree"), `end-state` moves to main, a re-run completes;
     moving HEAD ahead of the plan's safety facts would violate the rails,
-    and no 7th step id is added for single-pass. (e) Failed commands
+    and no 7th step id is added for single-pass.
+    **AMENDED 2026-08-06 (first real sweep, decision 50(c)): "a re-run
+    completes" was FALSE as shipped.** The premise holds — two-pass is
+    still the right design, and moving HEAD early still violates the
+    rails — but a BARE re-run cannot complete the deletion, because
+    `end-state` has already moved the clone to `main`, so the second
+    pass observes `main` as the current branch and plans against it.
+    The merged branch is never reconsidered. The second pass must NAME
+    its target: `yeet sweep --branch <merged-branch>`. That override
+    ships with this amendment (`overrideSweepBranch`, guarded by the
+    same `guardLiteralArg` refusal as every other argv-bound name), and
+    it is also what makes a blocked `needs-operator` refresh handoff
+    actionable — the worktree holding `main` is rarely the worktree
+    holding the merged branch, so the handoff now names the holder and
+    aims the run back at this branch. (e) Failed commands
     report as `skipped` with the failure text — `SweepStepOutcome` has no
     failure member by design. Review-hardened on #571 (round 5): for the
     REMOTE deletion specifically, the only benign rejection is git's

@@ -430,7 +430,21 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
   });
 });
 
-const jsdocGitErrorAdapter = {
+/**
+ * Git command error adapter shared by the JSDoc quality and migration scans.
+ *
+ * **Example** (Inspect the adapter shape)
+ *
+ * ```ts
+ * import { jsdocGitErrorAdapter } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(typeof jsdocGitErrorAdapter.onSpawnFailure) // "function"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const jsdocGitErrorAdapter = {
   onSpawnFailure: (commandLine: string) => (cause: unknown) =>
     QualityScriptCommandError.new(cause, `Failed to run ${commandLine}.`),
   onNonZeroExit: ({
@@ -450,17 +464,68 @@ const jsdocGitErrorAdapter = {
   onTruncated: O.none<(commandLine: string) => QualityScriptCommandError>(),
 };
 
-const isGeneratedSourceFile = (filePath: string): boolean =>
+/**
+ * Whether a repo-relative path names generated source excluded from JSDoc gates.
+ *
+ * **Example** (Classify a generated path)
+ *
+ * ```ts
+ * import { isGeneratedSourceFile } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(isGeneratedSourceFile("packages/drivers/box/src/_generated/Box.models.gen.ts")) // true
+ * console.log(isGeneratedSourceFile("packages/drivers/box/src/Box.service.ts")) // false
+ * ```
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` when the path names generated source.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isGeneratedSourceFile = (filePath: string): boolean =>
   Str.endsWith(".generated.ts")(filePath) ||
   Str.includes("/_generated/")(filePath) ||
   Str.includes("/generated/")(filePath);
 
 const GENERATED_HEADER_PROBE_LENGTH = 512;
 
-const hasGeneratedFileHeader = (sourceText: string): boolean =>
+/**
+ * Whether source text begins with a `GENERATED FILE` header probe.
+ *
+ * **Example** (Probe a generated header)
+ *
+ * ```ts
+ * import { hasGeneratedFileHeader } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(hasGeneratedFileHeader("// GENERATED FILE - do not edit\nexport {}")) // true
+ * console.log(hasGeneratedFileHeader("export const value = 1")) // false
+ * ```
+ *
+ * @param sourceText - Source text to probe.
+ * @returns `true` when the probe finds a GENERATED FILE marker.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const hasGeneratedFileHeader = (sourceText: string): boolean =>
   pipe(Str.slice(0, GENERATED_HEADER_PROBE_LENGTH)(sourceText), Str.includes("GENERATED FILE"));
 
-const isPackageSourceFile = (filePath: string): boolean =>
+/**
+ * Whether a repo-relative path is a non-generated package source file.
+ *
+ * **Example** (Classify package source paths)
+ *
+ * ```ts
+ * import { isPackageSourceFile } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(isPackageSourceFile("packages/shared/schema/src/Kits.ts")) // true
+ * console.log(isPackageSourceFile("packages/shared/schema/test/Kits.test.ts")) // false
+ * ```
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` for non-generated package source files.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isPackageSourceFile = (filePath: string): boolean =>
   Str.startsWith("packages/")(filePath) &&
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&

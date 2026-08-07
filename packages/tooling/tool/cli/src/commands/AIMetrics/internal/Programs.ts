@@ -7,7 +7,6 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { layerNodeSdkServerTraces, ServerObservabilityConfig } from "@beep/observability/server";
 import {
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
@@ -27,6 +26,7 @@ import {
   AiMetricsMirrorBundleManifest,
   AiMetricsOtlpEndpointSpec,
   AiMetricsOtlpExportInput,
+  AiMetricsOtlpSpanSender,
   AiMetricsOutcomeLabelInput,
   AiMetricsParquetExportMode,
   AiMetricsPrivacyMode,
@@ -71,18 +71,15 @@ import {
   makeAiMetricsInstallPlan,
   makeAiMetricsInstallSpec,
   makeAiMetricsPrivacyCheckResult,
-  markAiMetricsOtlpTurnsExported,
   otlpExportResultToJson,
   privacyCheckToJson,
   queueAiMetricsLabels,
-  readAiMetricsOtlpSpanProjections,
   readEncryptedRawArchiveEnvelope,
   recordAiMetricsBenchmarkRun,
   renderAiMetricsForwarderTimerPlan,
   renderAiMetricsLocalPhoenixCompose,
   runAiMetricsForwarder,
   runAiMetricsOtlpExport,
-  runAiMetricsOtlpProjectionBatchExport,
   runAiMetricsRetentionCompact,
   runAiMetricsRetentionDelete,
   runAiMetricsRetentionRestoreDrill,
@@ -687,23 +684,6 @@ const defaultServiceEndpoint = Effect.fn("AIMetrics.defaultServiceEndpoint")(fun
     traceUrl: `${baseUrl}/v1/traces`,
   });
 });
-
-const serverObservabilityConfigFor = (
-  target: AiMetricsDeployTarget,
-  endpoint: AiMetricsOtlpEndpointSpec
-): ServerObservabilityConfig =>
-  ServerObservabilityConfig.make({
-    devtoolsEnabled: false,
-    devtoolsUrl: "ws://localhost:34437",
-    environment: target,
-    minLogLevel: "Info",
-    otlpBaseUrl: endpoint.baseUrl,
-    otlpEnabled: true,
-    otlpResourceAttributes: endpoint.resourceAttributes,
-    prometheusPrefix: "beep_ai_metrics",
-    serviceName: "beep-ai-metrics",
-    serviceVersion: "0.0.0",
-  });
 
 /**
  * Option schema for the MakeInstallPreviewProgram AI metrics helper.
@@ -1630,9 +1610,10 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   if (otlp) {
     const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
     const otlpExit = yield* Effect.scoped(
-      Layer.build(
-        Layer.mergeAll(duckDbLayer, layerNodeSdkServerTraces(serverObservabilityConfigFor(target, endpoint)))
-      ).pipe(
+      // The Node SDK trace layer used to stand here so `Effect.withSpan` had somewhere to
+      // emit. Export now goes straight to the collector through the OTLP protobuf sender,
+      // which reports whether the spans actually landed -- the whole point of the change.
+      Layer.build(Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer)).pipe(
         Effect.flatMap((context) =>
           exportForwarderDerivedOtlp({
             endpoint,
@@ -1896,24 +1877,17 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
     ingestRunId,
     target,
   });
-  const batch = yield* readAiMetricsOtlpSpanProjections(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
-  const resolvedInput = AiMetricsOtlpExportInput.make({
-    duckDbPath: spec.storage.duckDbPath,
-    endpoint,
-    ingestRunId: batch.ingestRunId,
-    target,
-  });
+  // The same entry point the forwarder uses. Reading, delivering, and marking used to be
+  // spelled out separately here, which is how marking ended up wired into this command
+  // only and never into the forwarder. One path now, and it cannot be half-used.
   const result = yield* Effect.scoped(
-    Layer.build(layerNodeSdkServerTraces(serverObservabilityConfigFor(target, endpoint))).pipe(
-      Effect.flatMap((context) =>
-        runAiMetricsOtlpProjectionBatchExport(resolvedInput, batch).pipe(Effect.provide(context))
+    Layer.build(
+      Layer.mergeAll(
+        DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath })),
+        AiMetricsOtlpSpanSender.layer
       )
-    )
+    ).pipe(Effect.flatMap((context) => runAiMetricsOtlpExport(input).pipe(Effect.provide(context))))
   );
-  // Only once the export has actually succeeded. Marking earlier would strand these
-  // turns permanently if the export then failed, which is the failure this watermark
-  // exists to prevent.
-  yield* markAiMetricsOtlpTurnsExported(batch.turnIds).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
     yield* Console.log(yield* otlpExportResultToJson(result));
