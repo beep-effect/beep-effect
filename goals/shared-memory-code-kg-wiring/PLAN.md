@@ -8,11 +8,11 @@ Status: `complete` (closed 2026-08-06; see history/ for evidence)
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inventory current memory wiring: where cognee is referenced (`AGENTS.md`, `standards/memory-architecture/`, `.mcp.json`, skills), current MCP surfaces per CLI, and the bake-off wiring plan (`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md` §Wiring). | Facts recorded in `research/`; no contradictions with `SPEC.md`, or blockers filed. |
-| P1 Implement | pending | Create `beep-shared` store (git-init, conventions README, four folders); add `basic-memory` + `codegraph` to `.mcp.json`; register both in Codex/Grok/Cursor (machine-local); `codegraph init` + gitignore `.codegraph/`; write `standards/memory-architecture/07-shared-memory-adoption.md`, amend `04-decision-log.md` + `README.md`; update `AGENTS.md` Agent Memory section. | `SPEC.md` acceptance criteria for wiring + docs are met. |
-| P2 Verify | pending | Run the verification matrix: cross-agent round-trip (two different CLIs, fresh sessions), codegraph symbol + callers queries, `basic-memory doctor`, `bun run beep yeet verify`, regenerate `goals/INDEX.md`. | Verification green with evidence archived in `history/`, or blockers documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection, flip packet state, and set the pilot review reminder (2026-08-20). | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Inventory current memory wiring: where cognee is referenced (`AGENTS.md`, `standards/memory-architecture/`, `.mcp.json`, skills), current MCP surfaces per CLI, and the bake-off wiring plan (`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md` §Wiring). | Facts recorded in `research/`; no contradictions with `SPEC.md`, or blockers filed. |
+| P1 Implement | complete | Create `beep-shared` store (git-init, conventions README, four folders); add `basic-memory` + `codegraph` to `.mcp.json`; register both in Codex/Grok/Cursor (machine-local); `codegraph init` + gitignore `.codegraph/`; write `standards/memory-architecture/07-shared-memory-adoption.md`, amend `04-decision-log.md` + `README.md`; update `AGENTS.md` Agent Memory section. | `SPEC.md` acceptance criteria for wiring + docs are met. |
+| P2 Verify | complete | Run the verification matrix: cross-agent round-trip (two different CLIs, fresh sessions), codegraph symbol + callers queries, `basic-memory doctor`, `bun run beep yeet verify`, regenerate `goals/INDEX.md`. | Verification green with evidence archived in `history/`, or blockers documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection, flip packet state, and set the pilot review reminder (2026-08-20). | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P4 Closeout Checklist
 

@@ -32,12 +32,25 @@ from an **external research collection**, not an in-repo exploration.
 
 ## Machine-local wiring commands (documented, not repo-tracked)
 
+Preferred: the idempotent repository bootstrap (store + project + codegraph
+index + doctor probe):
+
 ```sh
-# store
-uvx basic-memory project add beep-shared ~/YeeBois/memory/beep-shared
+bash scripts/setup-agent-memory.sh
+```
+
+Manual equivalents (basic-memory pinned to the reviewed release `0.22.1`):
+
+```sh
+# store + project registration
+uvx basic-memory@0.22.1 project add beep-shared ~/YeeBois/memory/beep-shared
 git -C ~/YeeBois/memory/beep-shared init
+# per-checkout code KG
+DO_NOT_TRACK=1 CODEGRAPH_NO_UPDATE_CHECK=1 codegraph init
+DO_NOT_TRACK=1 CODEGRAPH_NO_UPDATE_CHECK=1 codegraph telemetry off
 # grok
-grok mcp add basic-memory -- uvx basic-memory mcp --project beep-shared
+grok mcp add basic-memory -- uvx basic-memory@0.22.1 mcp --project beep-shared
 # codex: add matching [mcp_servers.basic-memory] to ~/.codex/config.toml
+#        (use args ["basic-memory@0.22.1", "mcp", "--project", "beep-shared"])
 # cursor: add the same two servers in Cursor MCP settings
 ```

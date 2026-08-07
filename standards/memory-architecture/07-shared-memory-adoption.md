@@ -19,8 +19,8 @@ Two tools, two roles, no metered API key in either hot path.
 shared store at `~/YeeBois/memory/beep-shared`, registered as the
 basic-memory project `beep-shared`, read *and* written by all four coding
 agents — Claude Code, Codex CLI, Grok CLI, Cursor — through the MCP server
-`uvx basic-memory mcp --project beep-shared`. The store lives outside the
-repository and is shared by every beep-effect clone; it is not a repo
+`uvx basic-memory@0.22.1 mcp --project beep-shared`. The store lives outside
+the repository and is shared by every beep-effect clone; it is not a repo
 artifact. AGPL-3.0 constrains it to internal developer tooling: it must not
 be distributed or embedded in any customer-facing artifact. The
 Effect-native port below is the path if that ever changes.
@@ -108,6 +108,43 @@ target, so all four registrations are hand-written.
 This is the first memory server in the repository `.mcp.json`. Cognee stays
 where it was, in user-level configuration — the split described in `06` still
 holds, it just no longer describes the default recall path.
+
+The Claude Code launcher pins the reviewed basic-memory release:
+
+```text
+uvx basic-memory@0.22.1 mcp --project beep-shared
+```
+
+Do not float `uvx basic-memory` without a version pin in repository config.
+
+## Bootstrap (fresh machine, clone, or worktree)
+
+`.mcp.json` and `.claude/settings.json` `enabledMcpjsonServers` auto-start
+basic-memory and codegraph. Those servers still need **machine-local** state
+that cannot live in the git tree:
+
+| Prerequisite | Where | Scope |
+|---|---|---|
+| `beep-shared` store + basic-memory project registration | `~/YeeBois/memory/beep-shared` | shared by every clone on the machine |
+| codegraph index | `<checkout>/.codegraph/` (gitignored) | **per checkout / worktree** |
+| `uvx` and `codegraph` on `PATH` | operator install | machine |
+
+Provision both with the idempotent repository script (from any checkout):
+
+```sh
+bash scripts/setup-agent-memory.sh
+# optional: bash scripts/setup-agent-memory.sh /path/to/other-checkout
+```
+
+The script creates the store and four folders if missing, registers the
+`beep-shared` project, runs `codegraph init` when `.codegraph/` is absent,
+disables codegraph telemetry, and probes `basic-memory doctor`. Re-run after
+creating a new worktree (each worktree needs its own index).
+
+**Degradation gate.** If the script has not been run (or tools fail to attach),
+agents must not block: fall back to Layer-1 file memory and ordinary code
+search, as stated in `AGENTS.md` §Agent Memory. Auto-enable is intentional on
+prepared machines; the setup script is the provision path for fresh ones.
 
 ## What this retires
 

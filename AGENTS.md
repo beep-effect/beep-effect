@@ -98,6 +98,9 @@ workflows in skills.
   Layer 1. codegraph answers code-structure questions (symbols, callers,
   blast radius) before grep. All memory decisions and operational detail
   live in `standards/memory-architecture/`.
+- Fresh machine / clone / worktree: run `bash scripts/setup-agent-memory.sh`
+  once so the shared store and per-checkout `.codegraph/` index exist (see
+  `standards/memory-architecture/07-shared-memory-adoption.md` §Bootstrap).
 - If memory is unavailable in-session, fall back to repo-local docs, code
   search, and this file.
 

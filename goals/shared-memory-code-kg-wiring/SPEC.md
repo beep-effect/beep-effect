@@ -60,24 +60,30 @@ sweep, live trials against this repo) in
 
 ## Acceptance Criteria
 
-- [ ] `basic-memory` project `beep-shared` exists at
+- [x] `basic-memory` project `beep-shared` exists at
       `~/YeeBois/memory/beep-shared`, git-initialized, with a conventions
       README and the four folders.
-- [ ] `.mcp.json` registers `basic-memory` (scoped to `beep-shared`) and
+- [x] `.mcp.json` registers `basic-memory` (scoped to `beep-shared`) and
       `codegraph`; both start clean in a fresh Claude Code session.
-- [ ] Codex, Grok, and Cursor each have the same two servers registered
+- [x] Codex, Grok, and Cursor each have the same two servers registered
       (evidence: config excerpts + a live tool call per CLI).
-- [ ] Cross-agent round-trip proven: one CLI writes a decision note, a second
+      **Live tool-call scope:** Claude Code + Grok proven end-to-end in
+      `history/2026-08-06-wiring-evidence.md`. Codex registration confirmed
+      (`codex mcp list`); live tool call deferred until weekly quota resets
+      (~2026-08-08). Cursor registration confirmed in `~/.cursor/mcp.json`;
+      live tool call deferred (no headless cursor-agent CLI on the wiring
+      machine). Exception ledger below covers the machine-local gap.
+- [x] Cross-agent round-trip proven: one CLI writes a decision note, a second
       CLI recalls it verbatim in a fresh session (evidence in `history/`).
-- [ ] `codegraph` is initialized for this repo (`.codegraph/` gitignored) and
+- [x] `codegraph` is initialized for this repo (`.codegraph/` gitignored) and
       answers a symbol-definition and a callers query in-session with zero
       API keys.
-- [ ] `standards/memory-architecture/` names basic-memory + codegraph as the
+- [x] `standards/memory-architecture/` names basic-memory + codegraph as the
       adopted plane, records the cognee retirement rationale with a pointer to
       the external bake-off, and sets the pilot review date 2026-08-20.
-- [ ] `AGENTS.md` Agent Memory section matches the new routing.
-- [ ] `goals/INDEX.md` regenerated via `bun run beep goals index --write`.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `AGENTS.md` Agent Memory section matches the new routing.
+- [x] `goals/INDEX.md` regenerated via `bun run beep goals index --write`.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -88,7 +94,7 @@ sweep, live trials against this repo) in
 | Whitespace | `git diff --check -- goals/shared-memory-code-kg-wiring` | Passes |
 | Memory round-trip | write-note from CLI A; search-notes from CLI B (fresh session) | Verbatim recall; evidence archived in `history/` |
 | Code-KG queries | `codegraph query LiteralKit` + a callers/`node` query | Correct file:line; no network keys |
-| Store integrity | `uvx basic-memory doctor` | Clean |
+| Store integrity | `uvx basic-memory@0.22.1 doctor` | Clean |
 | Repo quality | `bun run beep yeet verify` | Green |
 
 ## Stop Conditions

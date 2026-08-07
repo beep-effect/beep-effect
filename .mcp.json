@@ -39,7 +39,7 @@
     "basic-memory": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["basic-memory", "mcp", "--project", "beep-shared"]
+      "args": ["basic-memory@0.22.1", "mcp", "--project", "beep-shared"]
     },
     "codegraph": {
       "type": "stdio",
