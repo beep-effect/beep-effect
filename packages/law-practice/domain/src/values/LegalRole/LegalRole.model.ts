@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
@@ -15,7 +16,7 @@ const $I = $LawPracticeDomainId.create("values/LegalRole/LegalRole.model");
 
 const isNonEmptyPartyKinds = (kinds: HashSet.HashSet<PartyKind>): boolean => !HashSet.isEmpty(kinds);
 
-const AdmittedPlayerKinds = S.HashSet(PartyKind).check(
+const AdmittedPlayerKinds = StoredHashSet(PartyKind).check(
   S.makeFilter(isNonEmptyPartyKinds, {
     identifier: $I`LegalRoleAdmittedPlayerKindsCheck`,
     title: "Legal Role Admitted Player Kinds",

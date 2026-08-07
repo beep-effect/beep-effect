@@ -68,34 +68,34 @@ const orbitKinds = (position: HohfeldPosition) =>
 // ---------------------------------------------------------------------------
 
 type ScopeInput = {
-  readonly material: HashSet.HashSet<string>;
-  readonly quantitative: HashSet.HashSet<string>;
-  readonly subjective: HashSet.HashSet<string>;
-  readonly temporal: HashSet.HashSet<string>;
-  readonly territorial: HashSet.HashSet<string>;
+  readonly material: ReadonlyArray<string>;
+  readonly quantitative: ReadonlyArray<string>;
+  readonly subjective: ReadonlyArray<string>;
+  readonly temporal: ReadonlyArray<string>;
+  readonly territorial: ReadonlyArray<string>;
 };
 
 const LESSEE_SCOPE: ScopeInput = {
-  material: HashSet.make("the demised premises", "the yard"),
-  quantitative: HashSet.make("unlimited"),
-  subjective: HashSet.make("the lessor", "the lessor's agents"),
-  temporal: HashSet.make("the term of the lease"),
-  territorial: HashSet.make("US-CA", "US-NV"),
+  material: ["the demised premises", "the yard"],
+  quantitative: ["unlimited"],
+  subjective: ["the lessor", "the lessor's agents"],
+  temporal: ["the term of the lease"],
+  territorial: ["US-CA", "US-NV"],
 };
 
 const LESSOR_SCOPE: ScopeInput = {
-  material: HashSet.make("the demised premises", "the cellar"),
-  quantitative: HashSet.make("unlimited"),
-  subjective: HashSet.make("the lessor", "the lessor's successors"),
-  temporal: HashSet.make("the term of the lease", "the holdover period"),
-  territorial: HashSet.make("US-CA"),
+  material: ["the demised premises", "the cellar"],
+  quantitative: ["unlimited"],
+  subjective: ["the lessor", "the lessor's successors"],
+  temporal: ["the term of the lease", "the holdover period"],
+  territorial: ["US-CA"],
 };
 
 /** Same as {@link LESSOR_SCOPE} except that no territory is shared. */
-const ELSEWHERE_SCOPE: ScopeInput = { ...LESSOR_SCOPE, territorial: HashSet.make("US-NY") };
+const ELSEWHERE_SCOPE: ScopeInput = { ...LESSOR_SCOPE, territorial: ["US-NY"] };
 
 const roleInput = (name: string, player: number) => ({
-  admittedPlayerKinds: HashSet.make("natural-person"),
+  admittedPlayerKinds: ["natural-person"],
   name,
   player,
   sourceNorm: NORM,

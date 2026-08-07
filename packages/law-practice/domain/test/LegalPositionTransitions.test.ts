@@ -56,7 +56,7 @@ const actFrameInput = (overrides: Record<string, unknown>) => ({
   ...baseEntityFixtureInput("LawPracticeActFrame", 1),
   act: { description: "assign the lease", polarity: "act" },
   creates: [transition("assignee-claim", "claim", "omission")],
-  derivationKind: { kinds: HashSet.make("create", "extinguish") },
+  derivationKind: { kinds: ["create", "extinguish"] },
   interpreter: { component: "Runtime", kind: "System" },
   preconditions: [
     {
@@ -79,7 +79,7 @@ const powerExerciseInput = (result: Record<string, unknown>) => ({
   attemptedAt: 1_700_000_000_000,
   authorityBasis: {
     claimedRole: {
-      admittedPlayerKinds: HashSet.make("natural-person"),
+      admittedPlayerKinds: ["natural-person"],
       name: "lessee",
       player: 4,
       sourceNorm: { designation: "cl. 4.1" },
@@ -164,7 +164,7 @@ describe("act frame transitions", () => {
   });
 
   it("rejects a frame that records no derivation kind", () => {
-    const rejected = decodeActFrame(actFrameInput({ derivationKind: { kinds: HashSet.empty<string>() } }));
+    const rejected = decodeActFrame(actFrameInput({ derivationKind: { kinds: [] } }));
 
     expect(Result.isFailure(rejected)).toBe(true);
   });

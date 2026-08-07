@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/LegalScopeContext/LegalScopeContext.model");
@@ -98,19 +99,19 @@ export type LegalScopeValue = typeof LegalScopeValue.Type;
  */
 export class LegalScopeContext extends S.Class<LegalScopeContext>($I`LegalScopeContext`)(
   {
-    material: S.HashSet(LegalScopeValue).annotateKey({
+    material: StoredHashSet(LegalScopeValue).annotateKey({
       description: "Recorded subject matter the position is about.",
     }),
-    quantitative: S.HashSet(LegalScopeValue).annotateKey({
+    quantitative: StoredHashSet(LegalScopeValue).annotateKey({
       description: "Recorded amounts or counts the position is bounded by.",
     }),
-    subjective: S.HashSet(LegalScopeValue).annotateKey({
+    subjective: StoredHashSet(LegalScopeValue).annotateKey({
       description: "Recorded persons or classes the position is held in respect of.",
     }),
-    temporal: S.HashSet(LegalScopeValue).annotateKey({
+    temporal: StoredHashSet(LegalScopeValue).annotateKey({
       description: "Recorded times the position is held to apply within.",
     }),
-    territorial: S.HashSet(LegalScopeValue).annotateKey({
+    territorial: StoredHashSet(LegalScopeValue).annotateKey({
       description: "Recorded jurisdictions or territories the position is held to apply within.",
     }),
   },
