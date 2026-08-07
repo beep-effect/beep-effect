@@ -35,7 +35,8 @@ const ReviewerActionBase = LiteralKit(["accepted", "rejected", "amended", "undet
  *
  * **When to use**
  *
- * Use on every finding inside a recorded validator report. Two members, always.
+ * Use as the severity on every finding inside a recorded validator report. Two
+ * members, always.
  *
  * **Details**
  *
@@ -125,8 +126,9 @@ export type CorrectionStage = typeof CorrectionStage.Type;
  *
  * **When to use**
  *
- * Use on every correction delta. The field records an action somebody took, so
- * a delta nobody has reviewed carries `undetermined` rather than nothing.
+ * Use as the reviewer action on every correction delta. The field records an
+ * action somebody took, so a delta nobody has reviewed carries `undetermined`
+ * rather than nothing.
  *
  * **Details**
  *
@@ -174,8 +176,8 @@ export type ReviewerAction = typeof ReviewerAction.Type;
  *
  * **When to use**
  *
- * Use on a correction delta, where it carries a constructor default rather than
- * being supplied at every call site.
+ * Use as the candidacy state on a correction delta, where it carries a
+ * constructor default rather than being supplied at every call site.
  *
  * **Details**
  *

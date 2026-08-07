@@ -1,6 +1,8 @@
 /**
  * Legal position relator policy implementation.
  *
+ * **Details**
+ *
  * Nothing here stores a derived view, and nothing here computes a legal
  * judgment. Admission answers whether a record can be read as a relation, the
  * two views are pure derivations over one stored relation, and the screen
@@ -105,9 +107,9 @@ const overlapsOnEveryAxis = (overlap: LegalScopeContext): boolean =>
  * the question here is whether the same two parties are involved.
  *
  * The relation is symmetric — the derivations commute and are involutive, so
- * `opposite(left) = correlative(right)` implies `opposite(right) =
- * correlative(left)` — which is what makes an unordered pair the honest shape
- * for the answer.
+ * `opposite(left) = correlative(right)` implies
+ * `opposite(right) = correlative(left)` — which is what makes an unordered
+ * pair the honest shape for the answer.
  */
 const isPrimaFacieOpposed = (left: LegalPositionRelator, right: LegalPositionRelator): boolean => {
   const opposed = oppositeViewOf(left);

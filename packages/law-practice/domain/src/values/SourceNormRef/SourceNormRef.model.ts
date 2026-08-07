@@ -43,7 +43,7 @@ export type SourceNormDesignation = typeof SourceNormDesignation.Type;
  *
  * **When to use**
  *
- * Use wherever a record must name the norm it rests on. Every stored position
+ * Use when a record must name the norm it rests on. Every stored position
  * and every prescribed role carries one.
  *
  * **Details**

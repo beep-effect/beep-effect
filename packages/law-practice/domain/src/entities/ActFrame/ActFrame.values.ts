@@ -79,8 +79,8 @@ export type ActFrameSlotKind = typeof ActFrameSlotKind.Type;
  *
  * **When to use**
  *
- * Use on every recorded precondition. There is no default and no omission:
- * a condition that does not say which way it runs cannot be read.
+ * Use as the direction on every recorded precondition. There is no default and
+ * no omission: a condition that does not say which way it runs cannot be read.
  *
  * **Details**
  *

@@ -64,9 +64,9 @@ export type NormTextFragment = typeof NormTextFragment.Type;
  *
  * **When to use**
  *
- * Use on every element of a recorded interpretation — each slot, each
- * precondition, each position a frame creates or terminates — and on each
- * element a correction touches.
+ * Use as the norm pointer on every element of a recorded interpretation — each
+ * slot, each precondition, each position a frame creates or terminates — and on
+ * each element a correction touches.
  *
  * **Details**
  *

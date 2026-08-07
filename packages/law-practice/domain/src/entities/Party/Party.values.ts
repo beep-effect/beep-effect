@@ -19,7 +19,7 @@ const PartyLikeKindBase = LiteralKit(["legal_client", "legal_contact"]);
  *
  * **When to use**
  *
- * Use inside {@link PartyReference} to say which registry the reference key
+ * Use with {@link PartyReference} to say which registry the reference key
  * belongs to.
  *
  * **Details**

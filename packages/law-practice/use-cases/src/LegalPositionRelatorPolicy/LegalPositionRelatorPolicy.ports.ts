@@ -110,7 +110,7 @@ export class LegalPositionRelatorPolicyShape extends S.Class<LegalPositionRelato
  *
  * **When to use**
  *
- * Use wherever recorded legal relations are read: to refuse a record that
+ * Use when recorded legal relations are read: to refuse a record that
  * cannot be read as a relation, to show a relation from either side, or to
  * collect the pairs a human should look at.
  *

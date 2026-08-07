@@ -1,6 +1,8 @@
 /**
  * Array-backed schema for Effect `HashSet` values.
  *
+ * **Details**
+ *
  * The immutable sibling of `@beep/schema/MutableHashSet`, and deliberately
  * smaller than it. That module hand-rolls three symbols because
  * `effect/Schema` has no `MutableHashSet` support at all; for `HashSet` the
@@ -26,11 +28,13 @@ const $I = $SchemaId.create("HashSet");
  * **Example** (Type a persisted set field)
  *
  * ```ts
- * import type { HashSet } from "@beep/schema/HashSet"
+ * import { HashSet } from "@beep/schema/HashSet"
+ * import * as HashSet_ from "effect/HashSet"
  * import * as S from "effect/Schema"
  *
- * declare const axes: HashSet<typeof S.String>
- * console.log(typeof axes) // "object"
+ * const axes: HashSet<typeof S.String> = HashSet(S.String)
+ *
+ * console.log(HashSet_.size(S.decodeUnknownSync(axes)(["temporal", "material"]))) // 2
  * ```
  *
  * @since 0.0.0
@@ -47,7 +51,7 @@ export interface HashSet<Value extends S.Top> extends S.decodeTo<S.HashSet<S.toT
  *
  * **When to use**
  *
- * Use for any set that crosses a serialization boundary — a jsonb column, a
+ * Use with any set that crosses a serialization boundary — a jsonb column, a
  * wire payload, a fixture. `effect/Schema`'s own `HashSet` is the *from-self*
  * schema: its encoded side is another `HashSet`, so encoding leaves a runtime
  * set in place and decoding refuses anything that is not already one. That is

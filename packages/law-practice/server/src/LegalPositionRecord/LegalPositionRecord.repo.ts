@@ -32,9 +32,9 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, flow, Order, pipe, Ref } from "effect";
+import { Effect, Order, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
+import { makeRowDecoders } from "../internal/RepoSupport.ts";
 import type {
   ActFrame,
   CorrectionDelta,
@@ -47,8 +47,6 @@ import type {
   LegalPositionRecordOperation,
   LegalPositionRecordScope,
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
-import type { Result } from "effect";
-import type * as S from "effect/Schema";
 
 const candidateTable = DbSchema.legalOppositionCandidate;
 const correctionTable = DbSchema.correctionDelta;
@@ -91,36 +89,9 @@ const repositoryUnavailable =
       )
     );
 
-/**
- * Decode every selected row through its entity schema.
- *
- * The driver's declared column types are not trusted: a jsonb column hands back
- * whatever the database holds, so a row that no longer decodes is a repository
- * failure rather than a silently-shaped value.
- */
-const decodeRows = <Entity>(
-  rows: ReadonlyArray<unknown>,
-  operation: LegalPositionRecordOperation,
-  decode: (row: unknown) => Result.Result<Entity, S.SchemaError>
-): Effect.Effect<ReadonlyArray<Entity>, LegalPositionRecordRepositoryUnavailable> =>
-  Effect.forEach(rows, flow(decode, Effect.fromResult)).pipe(repositoryUnavailable(operation));
-
-/** Decode the row an append returned, falling back to the appended value. */
-const decodeAppended = <Entity>(
-  rows: ReadonlyArray<unknown>,
-  operation: LegalPositionRecordOperation,
-  decode: (row: unknown) => Result.Result<Entity, S.SchemaError>,
-  appended: Entity
-): Effect.Effect<Entity, LegalPositionRecordRepositoryUnavailable> =>
-  pipe(
-    rows,
-    A.head,
-    O.map(flow(decode, Effect.fromResult)),
-    // The database assigns the SERIAL id, so the returned row is the authority;
-    // the appended value only stands in if the driver returned none.
-    O.getOrElse((): Effect.Effect<Entity, S.SchemaError> => Effect.succeed(appended)),
-    repositoryUnavailable(operation)
-  );
+// Both decoders are shared with the candor record adapter, which reads rows back
+// with identical semantics; only the combinator above is this repository's own.
+const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
 
 // The in-memory sibling orders by the same key the Drizzle variant does, so a
 // read proved here cannot pass in memory and fail against the database. The
