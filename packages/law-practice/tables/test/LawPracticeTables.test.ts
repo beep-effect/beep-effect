@@ -38,12 +38,17 @@ describe("law-practice tables", () => {
     expect(getTableName(kgEdgeTable)).toBe(KG_EDGE_TABLE_NAME);
     expect(getTableName(kgBuildTable)).toBe(KG_BUILD_TABLE_NAME);
     expect(A.sort(R.keys(DbSchema), Order.String)).toStrictEqual([
+      "actFrame",
       "candorDisposition",
+      "correctionDelta",
       "idsSubmissionFact",
       "kgBuild",
       "kgEdge",
       "kgNode",
+      "legalOppositionCandidate",
+      "legalPositionRelator",
       "patentCitationEvent",
+      "powerExercise",
     ]);
   });
 

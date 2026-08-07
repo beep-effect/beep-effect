@@ -70,6 +70,13 @@ export * from "./LegalClient/index.ts";
  */
 export * from "./LegalContact/index.ts";
 /**
+ * Legal opposition candidate entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./LegalOppositionCandidate/index.ts";
+/**
  * Legal position relator entity and value-object exports.
  *
  * @category entities

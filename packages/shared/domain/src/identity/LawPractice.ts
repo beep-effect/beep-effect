@@ -551,3 +551,38 @@ export const CorrectionDeltaId = make("correction_delta", {
  * @since 0.0.0
  */
 export type CorrectionDeltaId = typeof CorrectionDeltaId.Type;
+
+/**
+ * Legal opposition candidate entity identifier.
+ *
+ * **Details**
+ *
+ * A legal opposition candidate records that two stored relations were screened
+ * as prima facie opposed. Candidates are append-only, so the id names one
+ * screening; a later attorney assignment about the same pair is recorded on
+ * that screening rather than replacing it, and a second party's priority basis
+ * takes a fresh id.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.LegalOppositionCandidateId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const LegalOppositionCandidateId = make("legal_opposition_candidate", {
+  description: "Identifier for a law-practice legal opposition candidate entity.",
+});
+
+/**
+ * Runtime type for {@link LegalOppositionCandidateId}.
+ *
+ * @see {@link LegalOppositionCandidateId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type LegalOppositionCandidateId = typeof LegalOppositionCandidateId.Type;
