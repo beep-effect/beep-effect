@@ -3,13 +3,13 @@
   "initiative": {
     "id": "fleet-mirror",
     "title": "Fleet Mirror",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-06",
     "updated": "2026-08-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fleet-mirror",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Derive a read-only view of every checkout sharing this origin - duplicate work, stale bases, and moved policy paths - so an agent learns about a collision before it pays for one, without any agent posting anything.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,7 +36,8 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p0-policy-surface-measurement.md"
+    "research/p0-policy-surface-measurement.md",
+    "research/OPPORTUNITIES.md"
   ],
   "agentLaunchers": [
     {
@@ -56,22 +57,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
