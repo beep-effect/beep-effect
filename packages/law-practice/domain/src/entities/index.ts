@@ -7,6 +7,13 @@
  */
 
 /**
+ * Act frame entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./ActFrame/index.ts";
+/**
  * Candor disposition entity and value-object exports.
  *
  * @category entities
@@ -20,6 +27,13 @@ export * from "./CandorDisposition/index.ts";
  * @since 0.0.0
  */
 export * from "./Claim/index.ts";
+/**
+ * Correction delta entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./CorrectionDelta/index.ts";
 /**
  * Distinction entity and value-object exports.
  *
@@ -97,6 +111,13 @@ export * from "./PatentAsset/index.ts";
  * @since 0.0.0
  */
 export * from "./PatentCitationEvent/index.ts";
+/**
+ * Power exercise entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./PowerExercise/index.ts";
 /**
  * Prior-art reference entity export surface.
  *
