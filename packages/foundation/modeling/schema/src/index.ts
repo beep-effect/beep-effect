@@ -215,6 +215,11 @@ export * from "./Graph/index.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./HashSet.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./Html.ts";
 /**
  * HTTP method schemas and literal-kit helpers.

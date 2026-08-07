@@ -96,6 +96,13 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   that shape deliberately rather than discovering it at the first failing
   insert. A shared `S.HashSetFromArray` in `@beep/schema` would also make the
   filter-shadowed error message land on the right cause.
+- **RESOLVED (rung-2 durability lane).** The predicted shared schema is what
+  shipped: `packages/foundation/modeling/schema/src/HashSet.ts`, the array-backed
+  sibling of the `MutableHashSet` module that already existed. The eight
+  persisted `S.HashSet(...)` uses now use it, so encoded fixtures are ordinary
+  JSON arrays and no boundary codec is needed anywhere. The deeper finding was
+  that a boundary codec could not have worked at all — see
+  "`S.HashSet` cannot be persisted at all" below.
 
 ### `packages/law-practice/use-cases/README.md` contradicts its own shipped precedent
 
@@ -136,6 +143,15 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   would convert a probe cycle into a read. Better still, the guard runs at
   class-construction time rather than typecheck time, so a rule that `check`
   can catch would have failed in seconds instead of after a full vitest boot.
+- **RESOLVED (rung-2 durability lane), and the conclusion above is superseded.**
+  The guard fires because a *declared* schema has an ambiguous encoded form, not
+  because sets are unpersistable. `HashSet` from `@beep/schema` is a transform
+  over `S.Array`, so its encoded form is unambiguous and a field using it is
+  accepted **directly on a persisted entity** — verified by probe. Nesting inside
+  an `S.Class` is therefore a modelling choice from here on, not a workaround, and
+  a future agent should not nest a set purely to satisfy this guard. The
+  prevention note still stands: the error text should name the declared-schema
+  cause, and the guard should run at typecheck time.
 
 ### `assertSchemaArbitraryDecodesToSelf` silently excludes every transforming schema
 
@@ -173,3 +189,62 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   from then on, or teach the linter to compare only the entries a branch's
   changed files own so a packet can record its own schemas without adopting the
   backlog.
+
+### `S.HashSet` cannot be persisted at all, and only a runtime probe says so
+
+Supersedes and explains the two earlier HashSet receipts above; this is the root
+cause both of them were circling.
+
+- **What happened:** the rung-2 durability lane found that a jsonb column
+  holding an `effect/Schema` `HashSet` round-trips through **neither**
+  direction. `S.HashSet(V)` has `Encoded = HashSet<V.Encoded>`, so
+  `S.encodeResult(Entity)` leaves a live set in the column value and the driver
+  serializes it as Effect's tagged `{"_id":"HashSet","values":[...]}` form;
+  `S.decodeUnknownResult(Entity)` then rejects that wrapper (its declaration
+  decoder requires `HashSet.isHashSet`) **and** rejects a plain array. Worse,
+  `EntityTable.pgTableFrom` types the column from `Encoded`, so
+  `$inferInsert["scope"]` is declared as a `HashSet` — the type system asserts a
+  shape the database can never return. `bun run check` was green throughout;
+  only encoding a real entity and reading the value back surfaced it.
+- **Evidence:** `.repos/effect/packages/effect/src/Schema.ts:11341-11421`
+  (`Encoded` is the set, the decoder is `isHashSet`-gated, the array form lives
+  behind a `toCodec` link that plain encode/decode never takes);
+  `packages/drivers/drizzle/src/EntityTable.models.ts:308`, `:322-327` (jsonb is
+  a bare `jsonb(columnName)` typed by `S.Codec.Encoded<Field>`, with no driver
+  codec). A boundary-only fix does not exist: `S.toCodecJson` produces the right
+  values but its `Encoded` is `Json`, which is not assignable to the
+  HashSet-typed insert row without a cast that would leave the column type
+  lying.
+- **Prevention:** `@beep/schema` already shipped `MutableHashSet.ts`, the
+  array-backed set schema, but had no immutable sibling — so the schema agents
+  reached for `effect/Schema`'s `HashSet`, which is the *from-self* validator.
+  This packet added `packages/foundation/modeling/schema/src/HashSet.ts`
+  mirroring it and swapped the eight persisted uses. The mirror is deliberately
+  smaller than its sibling: `MutableHashSet.ts` hand-rolls an iso type, a
+  from-self schema, and a guard because `effect/Schema` has no `MutableHashSet`
+  support at all, whereas for `HashSet` upstream already ships `S.HashSet`,
+  `S.HashSetIso`, and `HashSet.isHashSet` — only the array-backed transform was
+  missing. The general fix is a lint
+  rule: a field reachable from a `persist.jsonb` descriptor must have a
+  JSON-representable encoded side, which would have failed at `check` time
+  instead of at the first row read. The pairing is also worth a docstring on
+  both modules — "`S.HashSet` to validate a value in hand, `@beep/schema`'s to
+  store one" — because the two names differ by import path alone.
+
+### `docgen:local` escalates to a full repo docgen whenever a package gains an exports subpath
+
+- **What happened:** three new concept directories needed `exports` entries, so
+  `bun run beep tsconfig-sync` rewrote the root `tsconfig.json` aliases (+7,
+  then +1). `bun run docgen:local` then refused its bounded run —
+  "full proof required: tsconfig.json: Global docgen or Turbo input changed" —
+  and demanded the repo-wide `bun run docgen`, even though the six selected
+  packages were exactly the ones the branch touched. The full run took **288s**
+  wall and passed; the bounded run would have covered six packages.
+- **Evidence:** `docgen:local plan` output naming `mode: full-required` with the
+  correct six-package selection immediately above the refusal.
+- **Prevention:** an alias addition is append-only and cannot invalidate the
+  docs of a package whose alias set did not change. Treat a root-tsconfig diff
+  that only **adds** `paths` entries as non-invalidating, or scope the
+  invalidation to the packages whose own aliases moved. As it stands, every
+  packet that adds a subpath — the normal way to ship a new concept — pays a
+  full-repo docgen, which is the slowest gate in the loop.

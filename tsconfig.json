@@ -1902,6 +1902,9 @@
       ],
       "@beep/law-practice-use-cases/LegalPositionRelatorPolicy": [
         "./packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts"
+      ],
+      "@beep/schema/HashSet": [
+        "./packages/foundation/modeling/schema/src/HashSet.ts"
       ]
     }
   }
