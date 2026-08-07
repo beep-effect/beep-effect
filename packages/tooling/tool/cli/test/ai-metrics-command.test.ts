@@ -1207,8 +1207,6 @@ describe("ai-metrics command", () => {
             "local",
             "--data-root",
             dataRoot,
-            "--ingest-run",
-            "latest",
             "--json",
           ]);
 
@@ -1262,7 +1260,7 @@ describe("ai-metrics command", () => {
                 "--json",
               ])
             );
-            const forwarderResult = yield* decodeForwarderResult(yield* lastLoggedLine());
+            yield* decodeForwarderResult(yield* lastLoggedLine());
 
             yield* runAiMetricsCommand([
               "otlp",
@@ -1271,8 +1269,6 @@ describe("ai-metrics command", () => {
               "local",
               "--data-root",
               dataRoot,
-              "--ingest-run",
-              "latest",
               "--otlp-base-url",
               otlpBaseUrl,
               "--json",
@@ -1287,7 +1283,6 @@ describe("ai-metrics command", () => {
             expect(traceRequest.bodyText).not.toContain("private-otlp-fixture");
             expect(traceRequest.bodyText).not.toContain(tmpDir);
             expect(result.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
-            expect(result.ingestRunId).toBe(forwarderResult.ingestRunId);
             expect(result.spanCount).toBeGreaterThan(0);
             expect(resultJson).not.toContain("private-otlp-fixture");
             expect(resultJson).not.toContain(rawArchiveKey);
@@ -1304,7 +1299,7 @@ describe("ai-metrics command", () => {
         withTempDirectory((tmpDir) =>
           Effect.gen(function* () {
             const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(31));
-            const { dataRoot, forwarderResult } = yield* withRawArchiveKeyEnv(rawArchiveKey, seedAiMetricsData(tmpDir));
+            const { dataRoot } = yield* withRawArchiveKeyEnv(rawArchiveKey, seedAiMetricsData(tmpDir));
 
             yield* runAiMetricsCommand([
               "otlp",
@@ -1313,8 +1308,6 @@ describe("ai-metrics command", () => {
               "local",
               "--data-root",
               dataRoot,
-              "--ingest-run",
-              forwarderResult.ingestRunId,
               "--otlp-base-url",
               otlpBaseUrl,
               "--json",
@@ -1324,7 +1317,6 @@ describe("ai-metrics command", () => {
             const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
             expect(traceRequest.contentType).toContain("application/x-protobuf");
-            expect(result.ingestRunId).toBe(forwarderResult.ingestRunId);
             expect(result.spanCount).toBeGreaterThan(0);
           })
         )
@@ -1349,8 +1341,6 @@ describe("ai-metrics command", () => {
                 "dankserver",
                 "--data-root",
                 dataRoot,
-                "--ingest-run",
-                "latest",
                 "--hash-salt-secret-ref",
                 "op://TBK/ai-metrics/hash-salt",
                 "--raw-archive-key-secret-ref",

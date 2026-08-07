@@ -803,9 +803,20 @@ const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(fun
     yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_turns
 	                   WHERE ingest_run_id IN (${runIds})`);
+    // Not `WHERE ingest_run_id IN (...)` alone. A session row is content-addressed now and
+    // upserted with OR REPLACE, so its `ingest_run_id` names the run that LAST saw the
+    // transcript, not the run that created it. Pruning the newest run would delete the
+    // transcript's only session row while turns from earlier runs survive, and the exporter
+    // joins sessions INNER -- those turns would vanish from every future export with no
+    // error and no watermark to show for it.
     yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_sessions
-	                   WHERE ingest_run_id IN (${runIds})`);
+	                   WHERE ingest_run_id IN (${runIds})
+	                     AND NOT EXISTS (
+	                       SELECT 1
+	                       FROM ai_metrics_turns
+	                       WHERE ai_metrics_turns.agent_session_id = ai_metrics_sessions.agent_session_id
+	                     )`);
     yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_source_files
 	                   WHERE ingest_run_id IN (${runIds})`);
