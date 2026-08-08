@@ -58,6 +58,15 @@ done, the evidence, what would have prevented it.
   effect CLI; unlisted ones fall into the quality-task fast path. Registered
   subcommands `identity-registry` and `goal-packets` are also absent from the
   list and appear identically unreachable.
+- **Correction (same day, follow-up):** `identity-registry`/`goal-packets` are
+  NOT unreachable — a second, schema-backed copy of the allowlist
+  (`LintPolicySubcommand`, Quality.schemas.ts) gates
+  `parseQualityTaskInvocation`, so entries it knows fall through to the full
+  CLI (verified live: `beep lint identity-registry` runs the real lint). The
+  actual bug class is "in NEITHER copy" — which is what bit `judge-rubric` —
+  plus three hand-maintained surfaces that must agree. Fixed by deriving
+  bin-main's list from the LiteralKit and binding the LiteralKit to the
+  registered subcommands with a test (`lint-subcommand-allowlist.test.ts`).
 - **Cost:** ~30 min of misattribution (a cold-start timeout, a backgrounded
   run, and a false lead toward stale-build theories) before reading bin-main.
 - **Prevention:** the irony is exact — the fix for one hand-duplicated list

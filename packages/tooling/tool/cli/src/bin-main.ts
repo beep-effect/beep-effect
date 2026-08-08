@@ -9,19 +9,6 @@
  */
 
 const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
-const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
-  "circular",
-  "deprecated-apis",
-  "judge-rubric",
-  "package-test-imports",
-  "package-test-typecheck",
-  "reflection-artifacts",
-  "roadmap-refs",
-  "schema-catalog",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-];
 const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "--completions",
   "--help",
@@ -36,6 +23,12 @@ const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
 const { flow } = await import("effect");
+// Single authority for which `lint` subcommands the full command tree owns:
+// the LintPolicySubcommand LiteralKit (Quality.schemas.ts). A test binds that
+// domain to the subcommands registered on lintCommand, so this list can no
+// longer drift apart from either surface.
+const { LintPolicySubcommand } = await import("./commands/Quality/Quality.schemas.ts");
+const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = LintPolicySubcommand.literals;
 
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   text
