@@ -614,11 +614,72 @@ const ontologyMenuDismissBindingAtom = professionalBrowserRuntime.atom((get) =>
   })
 );
 
+// One entry row of the ontology panel menu: open-state dot plus label.
+const OntologyMenuItem = ({
+  current,
+  onSelect,
+  open,
+  panel,
+}: {
+  readonly current: boolean;
+  readonly onSelect: () => void;
+  readonly open: boolean;
+  readonly panel: (typeof DESKTOP_PANELS)[number];
+}): JSX.Element => (
+  <button
+    type="button"
+    data-panel-menu-item={panel.key}
+    aria-current={current ? "page" : undefined}
+    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+    onClick={onSelect}
+  >
+    <span
+      aria-hidden
+      className={
+        open ? "h-1.5 w-1.5 rounded-full bg-primary" : "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
+      }
+    />
+    {panel.label}
+  </button>
+);
+
+// The expanded nine-panel disclosure list under the Ontology rail entry.
+const OntologyMenuList = ({
+  isCurrent,
+  onNavigate,
+  setElement,
+  workspace,
+}: {
+  readonly isCurrent: (key: DesktopPanelKey) => boolean;
+  readonly onNavigate: (key: DesktopPanelKey) => void;
+  readonly setElement: (element: HTMLDivElement | null) => void;
+  readonly workspace: DockWorkspace;
+}): JSX.Element => (
+  <div
+    id="ontology-panel-disclosure"
+    ref={setElement}
+    role="group"
+    aria-label="Ontology panels"
+    className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-md border bg-popover p-1 shadow-md"
+  >
+    {A.map(ONTOLOGY_PANELS, (panel) => (
+      <OntologyMenuItem
+        key={panel.key}
+        current={isCurrent(panel.key)}
+        open={isPanelOpen(workspace, panel.key)}
+        onSelect={() => onNavigate(panel.key)}
+        panel={panel}
+      />
+    ))}
+  </div>
+);
+
 // The nav rail's Ontology entry: expands to the nine-panel menu. An entry
 // click focuses an open panel or opens a closed one beside its cluster
 // siblings; the menu dismisses on outside press and Escape (ARIA menu
 // practices). The menu element and dismissal listeners are owned by runtime
 // atoms, so opening and closing the menu scopes the listener lifecycle.
+// fallow-ignore-next-line complexity -- cognitive 9 = six atom-hook bindings (each +1 in fallow's React model) plus two ternaries and one &&; item row and disclosure list are already extracted, and dropping a hook binding would fuse runtime atoms for the metric's sake
 const OntologyMenu = ({
   isCurrent,
   workspace,
@@ -652,37 +713,15 @@ const OntologyMenu = ({
         </span>
       </Button>
       {open && (
-        <div
-          id="ontology-panel-disclosure"
-          ref={setElement}
-          role="group"
-          aria-label="Ontology panels"
-          className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-md border bg-popover p-1 shadow-md"
-        >
-          {A.map(ONTOLOGY_PANELS, (panel) => (
-            <button
-              key={panel.key}
-              type="button"
-              data-panel-menu-item={panel.key}
-              aria-current={isCurrent(panel.key) ? "page" : undefined}
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-              onClick={() => {
-                navigate(panel.key);
-                close(void 0);
-              }}
-            >
-              <span
-                aria-hidden
-                className={
-                  isPanelOpen(workspace, panel.key)
-                    ? "h-1.5 w-1.5 rounded-full bg-primary"
-                    : "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
-                }
-              />
-              {panel.label}
-            </button>
-          ))}
-        </div>
+        <OntologyMenuList
+          isCurrent={isCurrent}
+          onNavigate={(key) => {
+            navigate(key);
+            close(void 0);
+          }}
+          setElement={setElement}
+          workspace={workspace}
+        />
       )}
     </div>
   );

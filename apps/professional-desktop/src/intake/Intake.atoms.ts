@@ -328,6 +328,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Append one completed intake result.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   appendResult(result: IntakeResultEntry): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, results: A.append(this.results, result) });
   }
@@ -335,6 +336,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Drop all intake results.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   clearResults(): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, results: [] });
   }
@@ -342,6 +344,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Record one more in-flight intake batch.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   startBatch(): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches + 1) });
   }
@@ -349,6 +352,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Record one in-flight intake batch finishing.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   finishBatch(): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches - 1) });
   }
@@ -356,6 +360,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Set the drag-over highlight flag.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   withDragging(isDragging: boolean): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, isDragging });
   }
@@ -363,6 +368,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Replace the vault-selection operator status.
    */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   withVaultSelection(vaultSelection: VaultSelectionState): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, vaultSelection });
   }

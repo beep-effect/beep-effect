@@ -208,7 +208,7 @@ const turnHasSiblings = (
 // crispen: kept as an interface — every field is already schema-validated
 // upstream and this view is rederived on each streaming block, so an S.Class
 // .make here would revalidate a hot path for no new invariant.
-export interface ThreadTranscriptView {
+interface ThreadTranscriptView {
   readonly empty: boolean;
   readonly failed: boolean;
   readonly loading: boolean;
