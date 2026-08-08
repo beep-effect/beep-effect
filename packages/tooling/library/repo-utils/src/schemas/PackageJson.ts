@@ -231,10 +231,6 @@ const NonEmptyStringRecord = makeStrictStringKeyRecord(
   })
 );
 
-const SherifConfig = S.Struct({
-  ignorePackage: S.optionalKey(StringArray),
-});
-
 const BeepFoundationKind = S.Literals(["primitive", "modeling", "capability", "ui-system"] as const).pipe(
   $I.annoteSchema("BeepFoundationKind", {
     title: "Beep Foundation Kind",
@@ -1119,7 +1115,6 @@ const npmPackageJsonFields = {
   resolutions: S.OptionFromOptionalKey(StringRecord),
   patchedDependencies: S.OptionFromOptionalKey(NonEmptyStringRecord),
   trustedDependencies: S.OptionFromOptionalKey(StringArray),
-  sherif: S.OptionFromOptionalKey(SherifConfig),
   readme: S.OptionFromOptionalKey(S.String),
 } as const;
 
