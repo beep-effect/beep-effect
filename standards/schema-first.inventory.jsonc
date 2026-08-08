@@ -17,9 +17,9 @@
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
       "symbol": "DocumentIntakeSurface",
       "kind": "exported-interface",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/professional-desktop",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+      "reason": "Atom view model whose actions record carries runtime-bound closures (get.set dispatchers), which cannot be schema data; the data half (DocumentIntakeState) is already an annotated S.Class."
     },
     {
       "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
