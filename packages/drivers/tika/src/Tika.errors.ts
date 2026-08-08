@@ -7,7 +7,8 @@
 
 import { $TikaId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $TikaId.create("Tika.errors");
@@ -154,4 +155,7 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
  * @category constructors
  * @since 0.0.0
  */
-export const makeTikaError = TikaError.fromReason;
+export const makeTikaError: {
+  (options?: TikaErrorOptions): (reason: TikaErrorReason) => TikaError;
+  (reason: TikaErrorReason, options?: TikaErrorOptions): TikaError;
+} = dual((args) => Str.isString(args[0]), TikaError.fromReason);

@@ -283,7 +283,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
     catch: parseFailure,
   });
   const decoded = yield* Effect.forEach(quads, fromN3Quad);
-  const decodedPrefixes = yield* S.decodeUnknownEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
+  const decodedPrefixes = yield* S.decodeEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
 
   return N3ParseTurtleResult.make({
     dataset: Rdf.makeDataset(decoded),

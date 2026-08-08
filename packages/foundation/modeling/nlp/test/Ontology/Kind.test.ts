@@ -72,7 +72,7 @@ describe("Containment poset", () => {
     fc.assert(
       fc.property(KindContainmentArbitrary, (containment) => {
         const encoded = Effect.runSync(S.encodeEffect(Kind.KindContainment)(containment));
-        const decoded = Effect.runSync(S.decodeUnknownEffect(Kind.KindContainment)(encoded));
+        const decoded = Effect.runSync(S.decodeEffect(Kind.KindContainment)(encoded));
 
         expect(decoded).toEqual(containment);
       })

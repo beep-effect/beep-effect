@@ -40,13 +40,9 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"),
+  digest: S.decodeEffect(ContentDigest)("sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
   ),
 });

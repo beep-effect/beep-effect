@@ -26,7 +26,7 @@ describe("PhaseProfiler", () => {
   it("rejects empty phase labels", () => {
     expect(
       O.isNone(
-        S.decodeUnknownOption(PhaseProfile)({
+        S.decodeOption(PhaseProfile)({
           phase: "",
           outcome: "completed",
           durationMs: NonNegativeInt.make(1),

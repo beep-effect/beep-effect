@@ -31,7 +31,7 @@ import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger"
 import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
 
 /**
- * Build the governed egress `Fetch` layer from composition-root options.
+ * Grant specification plus optional transport override accepted by {@link GovernedEgressLive}.
  *
  * `baseFetch` exists for tests, which need to observe what the boundary let
  * through without reaching the network. Production omits it and the platform
@@ -39,16 +39,47 @@ import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
  *
  * @example
  * ```ts
+ * import { GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
+ * import type { GovernedEgressLiveOptions } from "@beep/epistemic-server/GovernedEgress"
+ * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
+ * import { Duration } from "effect"
+ *
+ * const live: GovernedEgressLiveOptions = {
+ *   grant: GovernedEgressOptions.make({
+ *     grantTtl: Duration.hours(12),
+ *     operation: GrantOperation.make("http-egress"),
+ *     purpose: GrantPurpose.make("ontology-provenance-publication"),
+ *     resource: GrantResource.make("ontology-workspace")
+ *   })
+ * }
+ * console.log(live.grant.operation)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface GovernedEgressLiveOptions {
+  readonly baseFetch?: typeof globalThis.fetch | undefined;
+  readonly grant: GovernedEgressOptions;
+}
+
+/**
+ * Build the governed egress `Fetch` layer from composition-root options.
+ *
+ * @example
+ * ```ts
  * import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"
  * import { Duration, Layer } from "effect"
  *
- * const egress = GovernedEgressLive(GovernedEgressOptions.make({
- *   grantTtl: Duration.hours(12),
- *   operation: GrantOperation.make("http-egress"),
- *   purpose: GrantPurpose.make("ontology-provenance-publication"),
- *   resource: GrantResource.make("ontology-workspace")
- * }))
+ * const egress = GovernedEgressLive({
+ *   grant: GovernedEgressOptions.make({
+ *     grantTtl: Duration.hours(12),
+ *     operation: GrantOperation.make("http-egress"),
+ *     purpose: GrantPurpose.make("ontology-provenance-publication"),
+ *     resource: GrantResource.make("ontology-workspace")
+ *   })
+ * })
  * console.log(Layer.isLayer(egress))
  * // true
  * ```
@@ -61,8 +92,8 @@ import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
 // type is `never`. That is exactly why the override is a policy decision and
 // not a type-checked requirement: nothing fails to compile when it is missing,
 // which is what the transport test exists to catch.
-export const GovernedEgressLive = (
-  options: GovernedEgressOptions,
-  baseFetch?: typeof globalThis.fetch
-): Layer.Layer<never, never, ExecutionLedger | EpistemicConfig> =>
-  Layer.effect(FetchHttpClient.Fetch, makeGovernedEgressFetch(options, baseFetch));
+export const GovernedEgressLive = ({
+  grant,
+  baseFetch,
+}: GovernedEgressLiveOptions): Layer.Layer<never, never, ExecutionLedger | EpistemicConfig> =>
+  Layer.effect(FetchHttpClient.Fetch, makeGovernedEgressFetch(grant, baseFetch));

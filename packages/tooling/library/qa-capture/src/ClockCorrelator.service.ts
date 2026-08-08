@@ -117,37 +117,40 @@ export class BeaconEdge extends S.Class<BeaconEdge>($I`BeaconEdge`)(
  * @category utilities
  * @since 0.0.0
  */
-export const detectBeaconEdges = (
-  samples: ReadonlyArray<LuminanceSample>,
-  minContrast: number = BEACON_MIN_CONTRAST
-): ReadonlyArray<BeaconEdge> => {
-  if (A.length(samples) < 2) {
-    return [];
-  }
-  const lumas = A.map(samples, (sample) => sample.meanLuma);
-  const min = Math.min(...lumas);
-  const max = Math.max(...lumas);
-  if (max - min < minContrast) {
-    return [];
-  }
-  const midpoint = (max + min) / 2;
-  const binary = A.map(lumas, (luma) => luma >= midpoint);
-  const edges: Array<BeaconEdge> = [];
-  A.forEach(samples, (sample, index) => {
-    const previous = index === 0 ? O.none() : O.fromUndefinedOr(binary[index - 1]);
-    const current = binary[index] === true;
-    O.match(previous, {
-      onNone: () => undefined,
-      onSome: (before) => {
-        if (before !== current) {
-          edges[A.length(edges)] = BeaconEdge.make({ timeSeconds: sample.ptsTimeSeconds, toWhite: current });
-        }
-        return undefined;
-      },
+export const detectBeaconEdges: {
+  (minContrast?: number): (samples: ReadonlyArray<LuminanceSample>) => ReadonlyArray<BeaconEdge>;
+  (samples: ReadonlyArray<LuminanceSample>, minContrast?: number): ReadonlyArray<BeaconEdge>;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (samples: ReadonlyArray<LuminanceSample>, minContrast: number = BEACON_MIN_CONTRAST): ReadonlyArray<BeaconEdge> => {
+    if (A.length(samples) < 2) {
+      return [];
+    }
+    const lumas = A.map(samples, (sample) => sample.meanLuma);
+    const min = Math.min(...lumas);
+    const max = Math.max(...lumas);
+    if (max - min < minContrast) {
+      return [];
+    }
+    const midpoint = (max + min) / 2;
+    const binary = A.map(lumas, (luma) => luma >= midpoint);
+    const edges: Array<BeaconEdge> = [];
+    A.forEach(samples, (sample, index) => {
+      const previous = index === 0 ? O.none() : O.fromUndefinedOr(binary[index - 1]);
+      const current = binary[index] === true;
+      O.match(previous, {
+        onNone: () => undefined,
+        onSome: (before) => {
+          if (before !== current) {
+            edges[A.length(edges)] = BeaconEdge.make({ timeSeconds: sample.ptsTimeSeconds, toWhite: current });
+          }
+          return undefined;
+        },
+      });
     });
-  });
-  return edges;
-};
+    return edges;
+  }
+);
 
 const byPaintTime = Order.mapInput(Order.Number, (event: BeaconEvent) => event.tPaintEpochMs);
 const byEdgeTime = Order.mapInput(Order.Number, (edge: BeaconEdge) => edge.timeSeconds);

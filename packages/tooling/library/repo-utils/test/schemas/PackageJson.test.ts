@@ -57,7 +57,7 @@ describe("PackageJson schema", () => {
       fc.assert(
         fc.property(PackageJsonDependenciesArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(PackageJson.fields.dependencies)(value);
-          const decoded = S.decodeUnknownSync(PackageJson.fields.dependencies)(encoded);
+          const decoded = S.decodeSync(PackageJson.fields.dependencies)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -69,7 +69,7 @@ describe("PackageJson schema", () => {
       fc.assert(
         fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta)(value);
-          const decoded = S.decodeUnknownSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
+          const decoded = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -82,7 +82,7 @@ describe("PackageJson schema", () => {
         fc.property(PublishConfigCoreArbitrary, (core) => {
           const value = O.some(core);
           const encoded = S.encodeSync(PackageJson.fields.publishConfig)(value);
-          const decoded = S.decodeUnknownSync(PackageJson.fields.publishConfig)(encoded);
+          const decoded = S.decodeSync(PackageJson.fields.publishConfig)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -917,7 +917,7 @@ describe("PackageJson schema", () => {
         ] as const;
 
         for (const testCase of cases) {
-          const issues = yield* S.decodeUnknownEffect(PackageJson)(testCase.input, {
+          const issues = yield* S.decodeEffect(PackageJson)(testCase.input, {
             onExcessProperty: "error",
             errors: "all",
           }).pipe(Effect.flip, Effect.map(getPackageJsonSchemaIssues));

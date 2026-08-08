@@ -151,7 +151,7 @@ describe("Shared Next.js config preset", () => {
   });
 
   it("applies secure-header object defaults through the schema", () => {
-    const config = Result.getOrThrow(S.decodeUnknownResult(SecureHeadersConfig)({}));
+    const config = Result.getOrThrow(S.decodeResult(SecureHeadersConfig)({}));
 
     expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
   });
@@ -164,7 +164,7 @@ describe("Shared Next.js config preset", () => {
 
       expect(makeSecureHeaders(partialConfig)).toEqual([...DEFAULT_BEEP_SECURE_HEADERS, additionalHeader]);
 
-      const config = withSecureHeaders({}, partialConfig);
+      const config = withSecureHeaders(partialConfig)({});
       const headers = yield* Effect.promise(() => Promise.resolve(config.headers?.()));
 
       expect(headers?.[0]?.source).toBe("/(.*)");

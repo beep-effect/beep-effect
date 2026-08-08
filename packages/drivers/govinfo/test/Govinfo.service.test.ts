@@ -221,28 +221,28 @@ describe("@beep/govinfo", () => {
       reason: "response status",
       status: 429,
     });
-    expect(encode(Sort, S.decodeUnknownSync(Sort)({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
+    expect(encode(Sort, S.decodeSync(Sort)({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
       field: "publishdate",
       sortOrder: "DESC",
     });
     expect(encode(SearchBody, S.decodeUnknownSync(SearchBody)(searchBodyEncoded))).toEqual(searchBodyEncoded);
     expect(encode(Search.Payload, S.decodeUnknownSync(Search.Payload)(searchBodyEncoded))).toEqual(searchBodyEncoded);
-    expect(encode(SearchResult, S.decodeUnknownSync(SearchResult)(searchResultEncoded))).toEqual(searchResultEncoded);
-    expect(
-      encode(Search.Success, S.decodeUnknownSync(Search.Success)({ count: 1, offsetMark: "next", results: [] }))
-    ).toEqual({ count: 1, offsetMark: "next", results: [] });
-    expect(encode(GranuleMetadata, S.decodeUnknownSync(GranuleMetadata)(granuleMetadataEncoded))).toEqual(
+    expect(encode(SearchResult, S.decodeSync(SearchResult)(searchResultEncoded))).toEqual(searchResultEncoded);
+    expect(encode(Search.Success, S.decodeSync(Search.Success)({ count: 1, offsetMark: "next", results: [] }))).toEqual(
+      { count: 1, offsetMark: "next", results: [] }
+    );
+    expect(encode(GranuleMetadata, S.decodeSync(GranuleMetadata)(granuleMetadataEncoded))).toEqual(
       granuleMetadataEncoded
     );
-    expect(encode(PackageInfo, S.decodeUnknownSync(PackageInfo)(packageInfoEncoded))).toEqual(packageInfoEncoded);
-    expect(encode(SummaryItem, S.decodeUnknownSync(SummaryItem)(summaryItemEncoded))).toEqual(summaryItemEncoded);
-    expect(encode(CollectionSummary, S.decodeUnknownSync(CollectionSummary)([summaryItemEncoded]))).toEqual([
+    expect(encode(PackageInfo, S.decodeSync(PackageInfo)(packageInfoEncoded))).toEqual(packageInfoEncoded);
+    expect(encode(SummaryItem, S.decodeSync(SummaryItem)(summaryItemEncoded))).toEqual(summaryItemEncoded);
+    expect(encode(CollectionSummary, S.decodeSync(CollectionSummary)([summaryItemEncoded]))).toEqual([
       summaryItemEncoded,
     ]);
     expect(
       encode(
         GranuleContainer,
-        S.decodeUnknownSync(GranuleContainer)({
+        S.decodeSync(GranuleContainer)({
           count: BigInt(1),
           granules: [granuleMetadataEncoded],
           message: "",
@@ -264,7 +264,7 @@ describe("@beep/govinfo", () => {
     expect(
       encode(
         CollectionContainer,
-        S.decodeUnknownSync(CollectionContainer)({
+        S.decodeSync(CollectionContainer)({
           count: 1,
           message: "",
           nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",

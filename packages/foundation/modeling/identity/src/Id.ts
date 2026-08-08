@@ -50,8 +50,8 @@ type DefaultIdentityPrefix = "beep";
 const isBeepNamespace = S.is(BeepNamespace);
 const isBeepBase = S.is(BeepBase);
 
-const beepNamespace = S.decodeUnknownSync(BeepNamespace)("@beep");
-const beepBase = S.decodeUnknownSync(BeepBase)("beep");
+const beepNamespace = S.decodeSync(BeepNamespace)("@beep");
+const beepBase = S.decodeSync(BeepBase)("beep");
 const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
 const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
 const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
@@ -195,7 +195,7 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
  * @since 0.0.0
  * @category configuration
  */
-export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
+export const VERSION = S.decodeSync(IdentityVersion)("0.0.0");
 
 /**
  * Type-level constraint ensuring an identity segment does not start or end with a slash.
@@ -1590,7 +1590,7 @@ const createComposer = <
     validateTemplateInterpolations(values);
     validateTemplateSegmentCount(strings);
 
-    return pipe(strings[0], S.decodeUnknownSync(ModuleSegmentSchema), (segment) =>
+    return pipe(strings[0], S.decodeSync(ModuleSegmentSchema), (segment) =>
       toIdentityString(appendIdentityValue(value, segment))
     );
   }
@@ -1907,6 +1907,33 @@ type MakeReturn<
   >;
 };
 
+const makeImpl = <
+  const Base extends TString.NonEmpty,
+  const Authority extends string,
+  const Prefix extends string,
+  const Vocab extends VocabShape = CoreVocab,
+>(
+  base: Base,
+  options?: IdentityBinding<Authority, Prefix, Vocab>
+): MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab> => {
+  const normalized = normalizeBase(base);
+  const baseIdentity = createBaseIdentity(normalized);
+  const composer = createComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>(
+    baseIdentity,
+    options
+  );
+  const key = toTaggedKey(normalized);
+
+  return Fn.cast<
+    {
+      [x: string]: IdentityComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>;
+    },
+    MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab>
+  >({
+    [key]: composer,
+  });
+};
+
 /**
  * Create a root identity composer for a `@beep` package namespace.
  *
@@ -1937,6 +1964,13 @@ type MakeReturn<
  * @since 0.0.0
  * @category constructors
  */
+export function make<
+  const Authority extends string,
+  const Prefix extends string,
+  const Vocab extends VocabShape = CoreVocab,
+>(
+  options: IdentityBinding<Authority, Prefix, Vocab>
+): <const Base extends TString.NonEmpty>(base: Base) => MakeReturn<Base, Authority, Prefix, Vocab>;
 export function make<const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base, undefined, undefined>;
 export function make<
   const Base extends TString.NonEmpty,
@@ -1950,23 +1984,12 @@ export function make<
   const Prefix extends string,
   const Vocab extends VocabShape = CoreVocab,
 >(
-  base: Base,
+  baseOrOptions: Base | IdentityBinding<Authority, Prefix, Vocab>,
   options?: IdentityBinding<Authority, Prefix, Vocab>
-): MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab> {
-  const normalized = normalizeBase(base);
-  const baseIdentity = createBaseIdentity(normalized);
-  const composer = createComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>(
-    baseIdentity,
-    options
-  );
-  const key = toTaggedKey(normalized);
-
-  return Fn.cast<
-    {
-      [x: string]: IdentityComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>;
-    },
-    MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab>
-  >({
-    [key]: composer,
-  });
+):
+  | MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab>
+  | ((base: Base) => MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab>) {
+  return P.isString(baseOrOptions)
+    ? makeImpl<Base, Authority, Prefix, Vocab>(baseOrOptions, options)
+    : (base: Base) => makeImpl<Base, Authority, Prefix, Vocab>(base, baseOrOptions);
 }

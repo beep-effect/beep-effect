@@ -101,7 +101,7 @@ const ProcfsUnavailableMissingInodeSyncEngineTestLayer = DocumentsSyncFixtureLiv
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(7);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(7);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const encodeText = (text: string) => new TextEncoder().encode(text);
 const digestOf = (text: string) => DocumentContentDigest.make(bytesToHex(sha256(encodeText(text))));

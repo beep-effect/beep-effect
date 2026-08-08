@@ -345,7 +345,7 @@ const renderBannerGlyph = (kind: "phase" | "startup"): string => (kind === "phas
  */
 export const renderLogBanner: {
   (title: string, options?: RenderLogBannerOptions): string;
-  (options: RenderLogBannerOptions): (title: string) => string;
+  (options?: RenderLogBannerOptions): (title: string) => string;
 } = dual(2, (title: string, options?: RenderLogBannerOptions): string => {
   const pretty = options?.pretty ?? defaultPrettyLoggerConfig;
   const kind = options?.kind ?? "startup";
@@ -432,7 +432,7 @@ const resolveLogger = (format: LogFormat, pretty = defaultPrettyLoggerConfig) =>
  */
 export const layerConsoleLogger: {
   (config: LoggingConfig, pretty?: PrettyLoggerConfig): Layer.Layer<never>;
-  (pretty: PrettyLoggerConfig): (config: LoggingConfig) => Layer.Layer<never>;
+  (pretty?: PrettyLoggerConfig): (config: LoggingConfig) => Layer.Layer<never>;
 } = dual(
   2,
   (config: LoggingConfig, pretty: PrettyLoggerConfig = defaultPrettyLoggerConfig): Layer.Layer<never> =>

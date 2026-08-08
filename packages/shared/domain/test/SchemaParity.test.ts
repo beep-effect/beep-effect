@@ -116,7 +116,7 @@ describe("shared-domain schema parity", () => {
     "keeps fromString byte-identical with the LocalDateFromString codec",
     Effect.fnUntraced(function* () {
       const viaHelper = yield* fromString("2024-06-15");
-      const viaSchema = yield* S.decodeUnknownEffect(LocalDateFromString)("2024-06-15");
+      const viaSchema = yield* S.decodeEffect(LocalDateFromString)("2024-06-15");
 
       assert.strictEqual(Equal.equals(viaHelper, viaSchema), true);
       assert.deepEqual(yield* S.encodeEffect(LocalDateFromString)(viaHelper), "2024-06-15");

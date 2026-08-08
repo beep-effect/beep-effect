@@ -138,7 +138,7 @@ export class ProjectedVaultPath extends S.Class<ProjectedVaultPath>($I`Projected
 ) {}
 
 const decodeSegment = (value: string): Effect.Effect<ValidWindowsPlainPathSegment, TaxonomyProjectionError> =>
-  S.decodeUnknownEffect(ValidWindowsPlainPathSegment)(value).pipe(
+  S.decodeEffect(ValidWindowsPlainPathSegment)(value).pipe(
     Effect.mapError(() => TaxonomyProjectionError.make({ reason: `invalid vault path segment: ${value}` }))
   );
 

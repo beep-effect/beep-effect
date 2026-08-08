@@ -60,7 +60,7 @@ it.effect(
     const cancelReceived = yield* Deferred.make<void>();
     const extReceived = yield* Deferred.make<void>();
     const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer(stdio), scope);
+    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
 
     yield* Effect.gen(function* () {
       const agent = yield* AcpAgent.AcpAgent;
@@ -194,7 +194,7 @@ it.effect(
   Effect.fnUntraced(function* () {
     const { stdio, input, output } = yield* makeInMemoryStdio();
     const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer(stdio), scope);
+    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
 
     yield* Effect.gen(function* () {
       const agent = yield* AcpAgent.AcpAgent;

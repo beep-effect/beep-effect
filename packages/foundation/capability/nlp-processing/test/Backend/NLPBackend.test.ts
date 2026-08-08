@@ -127,7 +127,7 @@ describe("Tagged errors are schema-decodable", () => {
     Effect.fnUntraced(function* () {
       const err = Backend.notSupported("wink", "posTag");
       const encoded = yield* S.encodeEffect(Backend.BackendNotSupported)(err);
-      const decoded = yield* S.decodeUnknownEffect(Backend.BackendNotSupported)(encoded);
+      const decoded = yield* S.decodeEffect(Backend.BackendNotSupported)(encoded);
       expect(decoded.backend).toBe("wink");
       expect(decoded.operation).toBe("posTag");
     })

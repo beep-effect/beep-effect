@@ -45,7 +45,7 @@ const encodeSnapshot = Effect.fn("DockEngine.encodeSnapshot")(function* (state: 
 });
 
 const decodeSnapshotInput = Effect.fn("DockEngine.decodeSnapshotInput")(function* (input: string) {
-  const snapshot = yield* S.decodeUnknownEffect(DockSnapshotJson)(input).pipe(
+  const snapshot = yield* S.decodeEffect(DockSnapshotJson)(input).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
         boundary: "snapshot",

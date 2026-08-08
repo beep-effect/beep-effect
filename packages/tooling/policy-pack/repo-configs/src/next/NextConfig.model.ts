@@ -15,6 +15,7 @@ import { I18NConfig, LoggingConfig, TypeScriptConfig } from "./models/ConfigPrim
 import { ExperimentalConfig } from "./models/ExperimentalConfig.schema.ts";
 import { ImageConfig } from "./models/ImageConfig.schema.ts";
 import { TurbopackOptions } from "./models/Turbopack.schema.ts";
+import type { Effect } from "effect";
 import type { NextConfig as NextConfigFromNext } from "next";
 
 const $I = $RepoConfigsId.create("next/NextConfig.model");
@@ -411,7 +412,9 @@ const encodeNextConfigResult = NextConfig.encodeResult;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeNextConfig = NextConfig.decodeEffect;
+// unary by contract: `options` stays reachable through `NextConfig.decodeEffect`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeNextConfig: (input: unknown) => Effect.Effect<NextConfig, S.SchemaError> = NextConfig.decodeEffect;
 
 /**
  * Synchronously validate and normalize a user-authored Next.js config.

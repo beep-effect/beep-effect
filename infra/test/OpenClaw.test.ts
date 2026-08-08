@@ -95,9 +95,7 @@ const deploymentConfig = OpenClawDeploymentConfig.make({
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(
-    pipe(Result.getOrThrow(S.decodeUnknownResult(S.fromJsonString(S.Unknown))(json)), O.liftPredicate(P.isObject))
-  );
+  O.getOrThrow(pipe(Result.getOrThrow(S.decodeResult(S.fromJsonString(S.Unknown))(json)), O.liftPredicate(P.isObject)));
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the
@@ -159,10 +157,10 @@ describe("@beep/infra OpenClaw", () => {
       providerId: "hosted",
     };
 
-    expect(Result.isSuccess(S.decodeUnknownResult(OpenClawHostedProviderConfig)(provider))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(OpenClawHostedProviderConfig)(provider))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(OpenClawHostedProviderConfig)({
+        S.decodeResult(OpenClawHostedProviderConfig)({
           ...provider,
           baseUrl: "http://hosted.example.test/v1",
         })

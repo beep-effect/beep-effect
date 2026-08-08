@@ -44,7 +44,7 @@ import {
 } from "@/content";
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 
-const contactFormEmail = Result.getOrThrow(S.decodeUnknownResult(EmailString)("tom@example.com"));
+const contactFormEmail = Result.getOrThrow(S.decodeResult(EmailString)("tom@example.com"));
 
 vi.mock("next/image", () =>
   vi.importActual<typeof import("react")>("react").then((ReactModule) => {

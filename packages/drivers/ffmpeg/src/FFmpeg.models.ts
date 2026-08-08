@@ -1184,7 +1184,9 @@ export type FFmpegEvent = typeof FFmpegEvent.Type;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesRequest = ExtractFramesRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractFramesRequest.decodeEffect.
+export const decodeExtractFramesRequest: (input: unknown) => Effect.Effect<ExtractFramesRequest, S.SchemaError> =
+  ExtractFramesRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a probe request.
@@ -1200,7 +1202,9 @@ export const decodeExtractFramesRequest = ExtractFramesRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeProbeVideoRequest = ProbeVideoRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ProbeVideoRequest.decodeEffect.
+export const decodeProbeVideoRequest: (input: unknown) => Effect.Effect<ProbeVideoRequest, S.SchemaError> =
+  ProbeVideoRequest.decodeEffect;
 
 /**
  * Encode an extract-frames manifest into its JSON-safe shape.
@@ -1225,4 +1229,7 @@ export const decodeProbeVideoRequest = ProbeVideoRequest.decodeEffect;
  * @category encoding
  * @since 0.0.0
  */
-export const encodeExtractFramesManifest = ExtractFramesManifest.encodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractFramesManifest.encodeEffect.
+export const encodeExtractFramesManifest: (
+  input: unknown
+) => Effect.Effect<typeof ExtractFramesManifest.Encoded, S.SchemaError> = ExtractFramesManifest.encodeEffect;

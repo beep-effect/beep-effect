@@ -12,8 +12,11 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { EpochMilliseconds, SequenceNumber } from "./ActionEvent.models.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $QaCaptureId.create("QaCapture.models");
 
@@ -837,7 +840,10 @@ export class CollectorHandle extends S.Class<CollectorHandle>($I`CollectorHandle
  * @category decoding
  * @since 0.0.0
  */
-export const decodeSessionManifest = S.decodeUnknownEffect(SessionManifest);
+export const decodeSessionManifest: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SessionManifest, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SessionManifest, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SessionManifest));
 
 /**
  * Decode a JSON string into a {@link SessionManifest}.
@@ -851,7 +857,10 @@ export const decodeSessionManifest = S.decodeUnknownEffect(SessionManifest);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeSessionManifestJson = S.decodeUnknownEffect(S.fromJsonString(SessionManifest));
+export const decodeSessionManifestJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SessionManifest, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SessionManifest, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(SessionManifest)));
 
 /**
  * Encode a {@link SessionManifest} into its JSON string representation.
@@ -866,7 +875,10 @@ export const decodeSessionManifestJson = S.decodeUnknownEffect(S.fromJsonString(
  * @category encoding
  * @since 0.0.0
  */
-export const encodeSessionManifestJson = S.encodeEffect(S.fromJsonString(SessionManifest));
+export const encodeSessionManifestJson: {
+  (options?: AST.ParseOptions): (input: SessionManifest) => Effect.Effect<string, S.SchemaError>;
+  (input: SessionManifest, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(S.fromJsonString(SessionManifest)));
 
 /**
  * Decode a JSON string into a {@link CollectorHandle}.
@@ -880,7 +892,10 @@ export const encodeSessionManifestJson = S.encodeEffect(S.fromJsonString(Session
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCollectorHandleJson = S.decodeUnknownEffect(S.fromJsonString(CollectorHandle));
+export const decodeCollectorHandleJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CollectorHandle, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CollectorHandle, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(CollectorHandle)));
 
 /**
  * Encode a {@link CollectorHandle} into its JSON string representation.
@@ -895,7 +910,10 @@ export const decodeCollectorHandleJson = S.decodeUnknownEffect(S.fromJsonString(
  * @category encoding
  * @since 0.0.0
  */
-export const encodeCollectorHandleJson = S.encodeEffect(S.fromJsonString(CollectorHandle));
+export const encodeCollectorHandleJson: {
+  (options?: AST.ParseOptions): (input: CollectorHandle) => Effect.Effect<string, S.SchemaError>;
+  (input: CollectorHandle, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(S.fromJsonString(CollectorHandle)));
 
 /**
  * Decode an unknown value into a {@link CaptureProvenance}.
@@ -909,4 +927,7 @@ export const encodeCollectorHandleJson = S.encodeEffect(S.fromJsonString(Collect
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCaptureProvenance = S.decodeUnknownEffect(CaptureProvenance);
+export const decodeCaptureProvenance: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CaptureProvenance, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CaptureProvenance, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CaptureProvenance));

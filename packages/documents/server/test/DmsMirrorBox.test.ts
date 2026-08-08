@@ -320,7 +320,7 @@ const folderSource = (id: string, name: string, parentId: string) => ({
   type: "folder",
 });
 
-const staleRemoteFileId = S.decodeUnknownSync(RemoteItemId)("file-9");
+const staleRemoteFileId = S.decodeSync(RemoteItemId)("file-9");
 
 const boxEvent = (eventId: string, eventType: string, source?: Record<string, unknown>): Record<string, unknown> => ({
   eventId,

@@ -122,7 +122,7 @@ describe("DockEngine", () => {
         expect(tabs.active.id).toBe(panelOne.id);
 
         const encoded = yield* engine.encodeSnapshot(state);
-        const snapshot = yield* S.decodeUnknownEffect(S.fromJsonString(DockSnapshot))(encoded);
+        const snapshot = yield* S.decodeEffect(S.fromJsonString(DockSnapshot))(encoded);
         const decoded = yield* engine.decodeSnapshot(encoded);
         expect(snapshot.version).toBe(1);
         expect(workspaceEquals(snapshot.workspace, state)).toBe(true);
@@ -500,7 +500,7 @@ describe("DockEngine", () => {
         const codec = S.fromJsonString(DockWorkspace);
         const encodeFailure = yield* Effect.flip(S.encodeEffect(codec)(duplicatePanelWorkspace));
         const uncheckedJson = yield* S.encodeEffect(S.fromJsonString(PopulatedWorkspace))(duplicatePanelWorkspace);
-        const decodeFailure = yield* Effect.flip(S.decodeUnknownEffect(codec)(uncheckedJson));
+        const decodeFailure = yield* Effect.flip(S.decodeEffect(codec)(uncheckedJson));
 
         expect(encodeFailure.message).toContain("globally unique panel, group, and split identifiers");
         expect(decodeFailure.message).toContain("globally unique panel, group, and split identifiers");

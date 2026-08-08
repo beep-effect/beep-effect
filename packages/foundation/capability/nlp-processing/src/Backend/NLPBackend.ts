@@ -494,5 +494,11 @@ export const initError: typeof BackendInitError.fromCause = BackendInitError.fro
  * @category constructors
  * @since 0.0.0
  */
-export const operationError = (backend: string, operation: string, cause: unknown): BackendOperationError =>
-  BackendOperationError.fromCause(backend, operation, { cause });
+export const operationError: {
+  (backend: string, operation: string, cause: unknown): BackendOperationError;
+  (operation: string, cause: unknown): (backend: string) => BackendOperationError;
+} = dual(
+  3,
+  (backend: string, operation: string, cause: unknown): BackendOperationError =>
+    BackendOperationError.fromCause(backend, operation, { cause })
+);

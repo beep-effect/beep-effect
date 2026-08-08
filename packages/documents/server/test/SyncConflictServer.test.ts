@@ -37,8 +37,8 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const ghostConflictId = S.decodeUnknownSync(Documents.SyncConflictId)(99);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const ghostConflictId = S.decodeSync(Documents.SyncConflictId)(99);
 const listOpenInput = ListOpenSyncConflictsInput.make({ provider: "box", workspaceId });
 
 const conflictSeed = (remoteEventId: O.Option<string>) =>

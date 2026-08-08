@@ -12,7 +12,10 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $QaCaptureId.create("ActionEvent.models");
 
@@ -1310,7 +1313,10 @@ export type ActionEvent = typeof ActionEvent.Type;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeActionEventJson = S.decodeUnknownEffect(S.fromJsonString(ActionEvent));
+export const decodeActionEventJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ActionEvent, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ActionEvent, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ActionEvent)));
 
 /**
  * Encode an {@link ActionEvent} into its JSON NDJSON-line representation.
@@ -1326,4 +1332,7 @@ export const decodeActionEventJson = S.decodeUnknownEffect(S.fromJsonString(Acti
  * @category encoding
  * @since 0.0.0
  */
-export const encodeActionEventJson = S.encodeEffect(S.fromJsonString(ActionEvent));
+export const encodeActionEventJson: {
+  (options?: AST.ParseOptions): (input: ActionEvent) => Effect.Effect<string, S.SchemaError>;
+  (input: ActionEvent, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(S.fromJsonString(ActionEvent)));

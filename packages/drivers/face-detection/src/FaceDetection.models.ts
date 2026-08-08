@@ -9,6 +9,7 @@ import { $FaceDetectionId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { identity, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
 
 const $I = $FaceDetectionId.create("FaceDetection.models");
 
@@ -586,7 +587,10 @@ export class FaceDetectionResult extends S.Class<FaceDetectionResult>($I`FaceDet
  * @category codecs
  * @since 0.0.0
  */
-export const decodeFaceDetectionModelConfig = FaceDetectionModelConfig.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on FaceDetectionModelConfig.decodeEffect.
+export const decodeFaceDetectionModelConfig: (
+  input: unknown
+) => Effect.Effect<FaceDetectionModelConfig, S.SchemaError> = FaceDetectionModelConfig.decodeEffect;
 
 /**
  * Decode an image request from unknown input.
@@ -610,4 +614,7 @@ export const decodeFaceDetectionModelConfig = FaceDetectionModelConfig.decodeEff
  * @category codecs
  * @since 0.0.0
  */
-export const decodeFaceDetectionImageRequest = FaceDetectionImageRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on FaceDetectionImageRequest.decodeEffect.
+export const decodeFaceDetectionImageRequest: (
+  input: unknown
+) => Effect.Effect<FaceDetectionImageRequest, S.SchemaError> = FaceDetectionImageRequest.decodeEffect;

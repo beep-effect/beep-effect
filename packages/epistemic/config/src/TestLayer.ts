@@ -66,7 +66,7 @@ export const fixtureDeniedDestination = SinkDestination.fromUnknown("https://att
  */
 export const fixtureFrozenAt = DateTime.makeUnsafe(0);
 
-const fixtureGrant = S.decodeUnknownSync(ExecutionGrant)({
+const fixtureGrant = S.decodeSync(ExecutionGrant)({
   budget: { maxToolCalls: null },
   expiresAt: 86_400_000,
   operation: "ontology_publish_provenance",

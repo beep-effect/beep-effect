@@ -41,6 +41,8 @@ type Contract<I extends string, V extends VocabShape> = {
   readonly [C in Curie<V>]: Expand<C, V> extends I ? C : never;
 }[Curie<V>];
 
+type ExpandedPredicateValue = { readonly iri: string; readonly inverse: boolean } | undefined;
+
 type ExpandedPredicate<P extends string, V extends VocabShape> = P extends `^${infer C}`
   ? { readonly iri: Expand<C, V>; readonly inverse: true }
   : { readonly iri: Expand<P, V>; readonly inverse: false };
@@ -218,6 +220,14 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
     ),
 });
 
+const expandUnsafe = (curie: string, vocab: VocabShape): string =>
+  pipe(
+    expandOption(curie, vocab),
+    O.getOrElse(() => {
+      throw CurieCodecInvariantError.make({ value: curie });
+    })
+  );
+
 /**
  * Expand a known CURIE into its exact IRI literal.
  *
@@ -232,16 +242,22 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
  * @category codecs
  * @since 0.0.0
  */
+export function expand<const V extends VocabShape>(vocab: V): <const C extends Curie<V>>(curie: C) => Expand<C, V>;
 export function expand<const C extends Curie<typeof CoreVocab>>(curie: C): Expand<C, typeof CoreVocab>;
 export function expand<const V extends VocabShape, const C extends Curie<V>>(curie: C, vocab: V): Expand<C, V>;
-export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
-  return pipe(
-    expandOption(curie, vocab),
+export function expand(curieOrVocab: string | VocabShape, vocab: VocabShape = CoreVocab): unknown {
+  return P.isString(curieOrVocab)
+    ? expandUnsafe(curieOrVocab, vocab)
+    : (curie: string): string => expandUnsafe(curie, curieOrVocab);
+}
+
+const contractUnsafe = (iri: string, vocab: VocabShape): string =>
+  pipe(
+    contractOption(iri, vocab),
     O.getOrElse(() => {
-      throw CurieCodecInvariantError.make({ value: curie });
+      throw CurieCodecInvariantError.make({ value: iri });
     })
   );
-}
 
 /**
  * Contract a registered IRI back to its CURIE literal.
@@ -257,6 +273,9 @@ export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
  * @category codecs
  * @since 0.0.0
  */
+export function contract<const V extends VocabShape>(
+  vocab: V
+): <const I extends Expand<Curie<V>, V>>(iri: I) => Contract<I, V>;
 export function contract<const I extends Expand<Curie<typeof CoreVocab>, typeof CoreVocab>>(
   iri: I
 ): Contract<I, typeof CoreVocab>;
@@ -264,14 +283,22 @@ export function contract<const V extends VocabShape, const I extends Expand<Curi
   iri: I,
   vocab: V
 ): Contract<I, V>;
-export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
-  return pipe(
-    contractOption(iri, vocab),
-    O.getOrElse(() => {
-      throw CurieCodecInvariantError.make({ value: iri });
-    })
-  );
+export function contract(iriOrVocab: string | VocabShape, vocab: VocabShape = CoreVocab): unknown {
+  return P.isString(iriOrVocab)
+    ? contractUnsafe(iriOrVocab, vocab)
+    : (iri: string): string => contractUnsafe(iri, iriOrVocab);
 }
+
+const expandPredicateUnsafe = (predicate: string, vocab: VocabShape): ExpandedPredicateValue => {
+  const inverse = Str.startsWith("^")(predicate);
+  const curie = inverse ? Str.slice(1)(predicate) : predicate;
+
+  return pipe(
+    expandOption(curie, vocab),
+    O.map((iri) => ({ iri, inverse })),
+    O.getOrUndefined
+  );
+};
 
 /**
  * Expand a forward or inverse predicate CURIE into IRI plus direction.
@@ -287,6 +314,10 @@ export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
  * @category codecs
  * @since 0.0.0
  */
+export function expandPredicate<const V extends VocabShape>(
+  vocab: V
+): <const P extends Predicate<V>>(predicate: P) => ExpandedPredicate<P, V>;
+export function expandPredicate(vocab: VocabShape): (predicate: string) => ExpandedPredicateValue;
 export function expandPredicate<const P extends Predicate<typeof CoreVocab>>(
   predicate: P
 ): ExpandedPredicate<P, typeof CoreVocab>;
@@ -294,20 +325,12 @@ export function expandPredicate<const V extends VocabShape, const P extends Pred
   predicate: P,
   vocab: V
 ): ExpandedPredicate<P, V>;
-export function expandPredicate(predicate: string): { readonly iri: string; readonly inverse: boolean } | undefined;
-export function expandPredicate(
-  predicate: string,
-  vocab: VocabShape
-): { readonly iri: string; readonly inverse: boolean } | undefined;
-export function expandPredicate(predicate: string, vocab: VocabShape = CoreVocab) {
-  const inverse = Str.startsWith("^")(predicate);
-  const curie = inverse ? Str.slice(1)(predicate) : predicate;
-
-  return pipe(
-    expandOption(curie, vocab),
-    O.map((iri) => ({ iri, inverse })),
-    O.getOrUndefined
-  );
+export function expandPredicate(predicate: string): ExpandedPredicateValue;
+export function expandPredicate(predicate: string, vocab: VocabShape): ExpandedPredicateValue;
+export function expandPredicate(predicateOrVocab: string | VocabShape, vocab: VocabShape = CoreVocab): unknown {
+  return P.isString(predicateOrVocab)
+    ? expandPredicateUnsafe(predicateOrVocab, vocab)
+    : (predicate: string) => expandPredicateUnsafe(predicate, predicateOrVocab);
 }
 
 /**

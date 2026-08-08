@@ -8,7 +8,10 @@
 import { $OipWebId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Result from "effect/Result";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $OipWebId.create("content/OipContent.model");
 
@@ -657,7 +660,10 @@ export class OipSiteContent extends S.Class<OipSiteContent>($I`OipSiteContent`)(
  * @category utilities
  * @since 0.0.0
  */
-export const decodeOipSiteContentResult = OipSiteContent.decodeUnknownResult;
+export const decodeOipSiteContentResult: {
+  (options?: AST.ParseOptions): (input: unknown) => Result.Result<OipSiteContent, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Result.Result<OipSiteContent, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, OipSiteContent.decodeUnknownResult);
 
 /**
  * Decodes unknown input into {@link OipSiteContent} in an Effect workflow.
@@ -674,4 +680,7 @@ export const decodeOipSiteContentResult = OipSiteContent.decodeUnknownResult;
  * @category utilities
  * @since 0.0.0
  */
-export const decodeOipSiteContent = OipSiteContent.decodeUnknownEffect;
+export const decodeOipSiteContent: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<OipSiteContent, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<OipSiteContent, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, OipSiteContent.decodeUnknownEffect);

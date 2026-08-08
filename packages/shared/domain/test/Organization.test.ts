@@ -81,9 +81,9 @@ describe("Organization", () => {
   it("round-trips schema-derived license tiers and settings", () =>
     fc.assert(
       fc.property(LicenseTierArbitrary, SettingsArbitrary, (licenseTier, settings) => {
-        const decodedTier = S.decodeUnknownSync(Organization.LicenseTier)(licenseTier);
+        const decodedTier = S.decodeSync(Organization.LicenseTier)(licenseTier);
         const encodedSettings = S.encodeSync(Organization.Settings)(settings);
-        const decodedSettings = S.decodeUnknownSync(Organization.Settings)(encodedSettings);
+        const decodedSettings = S.decodeSync(Organization.Settings)(encodedSettings);
 
         expect(decodedTier).toBe(licenseTier);
         expect(

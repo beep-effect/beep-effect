@@ -13,9 +13,13 @@ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Match, pipe } from "effect";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import { TIKA_ENGINE_NAME } from "./Tika.config.ts";
+import { TikaError } from "./Tika.errors.ts";
 import type { ExtractFileOperation, FileProcessingOperationErrorReason } from "@beep/file-processing/Operation";
-import type { TikaError } from "./Tika.errors.ts";
+
+const isTikaError = S.is(TikaError);
 
 const unsupportedMediaTypeStatus = NonNegativeInt.make(415);
 
@@ -145,19 +149,32 @@ const translate = (error: TikaError, engineUnavailableMessage: string): Translat
  * @category constructors
  * @since 0.0.0
  */
-export const tikaOperationError = (
-  operation: ExtractFileOperation,
-  error: TikaError,
-  options: TikaOperationErrorOptions = {}
-): FileProcessingOperationError => {
-  const translated = translate(error, options.engineUnavailableMessage ?? TIKA_ENGINE_UNAVAILABLE_MESSAGE);
+export const tikaOperationError: {
+  (
+    error: TikaError,
+    options?: TikaOperationErrorOptions
+  ): (operation: ExtractFileOperation) => FileProcessingOperationError;
+  (
+    operation: ExtractFileOperation,
+    error: TikaError,
+    options?: TikaOperationErrorOptions
+  ): FileProcessingOperationError;
+} = dual(
+  (args) => !isTikaError(args[0]),
+  (
+    operation: ExtractFileOperation,
+    error: TikaError,
+    options: TikaOperationErrorOptions = {}
+  ): FileProcessingOperationError => {
+    const translated = translate(error, options.engineUnavailableMessage ?? TIKA_ENGINE_UNAVAILABLE_MESSAGE);
 
-  return FileProcessingOperationError.fromReason(translated.reason, {
-    artifactId: operation.source.id,
-    engine: TIKA_ENGINE_NAME,
-    format: operation.format,
-    message: translated.message,
-    operationId: operation.operationId,
-    ...O.getSomesStruct({ details: translated.details }),
-  });
-};
+    return FileProcessingOperationError.fromReason(translated.reason, {
+      artifactId: operation.source.id,
+      engine: TIKA_ENGINE_NAME,
+      format: operation.format,
+      message: translated.message,
+      operationId: operation.operationId,
+      ...O.getSomesStruct({ details: translated.details }),
+    });
+  }
+);

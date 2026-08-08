@@ -259,8 +259,8 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
   const knownKeys = R.keys(fields);
   const decoded = S.make<
     S.Codec<
-      Readonly<Record<string, S.Json>> & S.Schema.Type<typeof strict>,
-      Readonly<Record<string, S.Json>> & S.Schema.Type<typeof strict>
+      Readonly<Record<string, S.Json>> & typeof strict.Type,
+      Readonly<Record<string, S.Json>> & typeof strict.Type
     >
   >(S.StructWithRest(makeTypeStruct(fields), [LooseRecord]).ast);
   const encoded = S.make<
@@ -294,7 +294,7 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
       ),
       encode: SchemaGetter.transformOrFail((input, options) =>
         Effect.zipWith(
-          encodeStrict(pickKnownKeys(input) as S.Schema.Type<typeof strict>, options).pipe(
+          encodeStrict(pickKnownKeys(input) as typeof strict.Type, options).pipe(
             Effect.mapError((error) => error.issue)
           ),
           decodeRest(pickUnknownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
@@ -1170,7 +1170,7 @@ class TSConfigCompilerOptionsShape extends S.Class<TSConfigCompilerOptionsShape>
   tsConfigCompilerOptionsFields
 ) {}
 
-type TSConfigCompilerOptionsShapeType = S.Schema.Type<typeof TSConfigCompilerOptionsShape>;
+type TSConfigCompilerOptionsShapeType = TSConfigCompilerOptionsShape;
 
 const TSConfigCompilerOptionsChecks = S.makeFilterGroup(
   [
@@ -1727,7 +1727,7 @@ export declare namespace TSConfig {
    * @category models
    * @since 0.0.0
    */
-  export type Type = S.Schema.Type<typeof TSConfig>;
+  export type Type = TSConfig;
 
   /**
    * Encoded representation for {@link TSConfig}.
@@ -1738,7 +1738,7 @@ export declare namespace TSConfig {
   export type Encoded = S.Codec.Encoded<typeof TSConfig>;
 }
 
-type TSConfigShapeType = S.Schema.Type<typeof TSConfig>;
+type TSConfigShapeType = TSConfig;
 
 const getCompilerTarget = (config: TSConfigShapeType): (typeof TARGET_VALUES)[number] =>
   pipe(

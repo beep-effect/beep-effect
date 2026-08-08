@@ -238,7 +238,7 @@ describe("tier-gate schema parity laws", () => {
 
     assert.deepStrictEqual(audit.toolCallId, O.none());
     assert.throws(() =>
-      S.decodeUnknownSync(TierGateAuditRecord)({
+      S.decodeSync(TierGateAuditRecord)({
         tool: "search_documents",
         outcome: "approved",
         reason: "Tool is read-only and non-destructive; no approval required.",

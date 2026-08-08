@@ -41,8 +41,8 @@ describe("@beep/identity", () => {
   });
 
   it("normalizes package constructor bases through the schema codec", () => {
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
     expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");

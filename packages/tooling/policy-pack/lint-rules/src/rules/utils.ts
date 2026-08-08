@@ -197,14 +197,20 @@ export const getPropertyName = (node: MaybeNode): O.Option<string> =>
  * @category utilities
  * @since 0.1.0
  */
-export const isIdentifier = (node: O.Option<AstNode>, name?: string): boolean =>
-  O.exists(
-    node,
-    (expression) =>
-      expression.type === "Identifier" &&
-      P.isString(expression.name) &&
-      (name === undefined || expression.name === name)
-  );
+export const isIdentifier: {
+  (name?: string): (node: O.Option<AstNode>) => boolean;
+  (node: O.Option<AstNode>, name?: string): boolean;
+} = dual(
+  (args) => O.isOption(args[0]),
+  (node: O.Option<AstNode>, name?: string): boolean =>
+    O.exists(
+      node,
+      (expression) =>
+        expression.type === "Identifier" &&
+        P.isString(expression.name) &&
+        (name === undefined || expression.name === name)
+    )
+);
 
 /**
  * Resolve the string value of a string-literal node.
@@ -309,7 +315,7 @@ export const ImportBinding = S.Union([NamedImportBinding, NamespaceImportBinding
  * @category models
  * @since 0.1.0
  */
-export type ImportBinding = S.Schema.Type<typeof ImportBinding>;
+export type ImportBinding = typeof ImportBinding.Type;
 
 const makeModuleBinding = (kind: "namespace" | "default", local: string): ImportBinding =>
   kind === "namespace" ? NamespaceImportBinding.make({ local }) : DefaultImportBinding.make({ local });

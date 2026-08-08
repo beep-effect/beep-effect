@@ -16,6 +16,8 @@ import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { Path } from "effect";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
 
@@ -507,7 +509,10 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  * @category codecs
  * @since 0.0.0
  */
-export const encodePracticeKgBundleManifestJson = S.encodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
+export const encodePracticeKgBundleManifestJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest)));
 
 /**
  * Encode reconciliation counts as their JSON string form.
@@ -532,7 +537,10 @@ export const encodePracticeKgBundleManifestJson = S.encodeUnknownEffect(S.fromJs
  * @category codecs
  * @since 0.0.0
  */
-export const encodePracticeKgCountsJson = S.encodeUnknownEffect(S.fromJsonString(PracticeKgCounts));
+export const encodePracticeKgCountsJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(PracticeKgCounts)));
 
 /**
  * Encode a kg_node payload record as its JSON string form.
@@ -556,7 +564,10 @@ export const encodePracticeKgCountsJson = S.encodeUnknownEffect(S.fromJsonString
  * @category codecs
  * @since 0.0.0
  */
-export const encodePracticeKgNodePayloadJson = S.encodeUnknownEffect(S.fromJsonString(UnknownRecord));
+export const encodePracticeKgNodePayloadJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(UnknownRecord)));
 
 /**
  * Encode a build summary as its JSON string form.
@@ -593,4 +604,7 @@ export const encodePracticeKgNodePayloadJson = S.encodeUnknownEffect(S.fromJsonS
  * @category codecs
  * @since 0.0.0
  */
-export const encodePracticeKgSummaryJson = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSummary));
+export const encodePracticeKgSummaryJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(PracticeKgSummary)));

@@ -416,6 +416,10 @@ const mergeVocabImpl = <const Base extends VocabShape, const Extension extends V
     ...extension,
   }) satisfies VocabShape;
 
+// Spells out the object-spread result of `mergeVocabImpl`: extension entries win
+// over base entries of the same prefix.
+type MergedVocab<Base extends VocabShape, Extension extends VocabShape> = Omit<Base, keyof Extension> & Extension;
+
 /**
  * Merge a base registry with literal-preserving extension vocabulary data.
  *
@@ -437,13 +441,13 @@ const mergeVocabImpl = <const Base extends VocabShape, const Extension extends V
  * @since 0.0.0
  */
 export const mergeVocab: {
+  <const Extension extends VocabShape>(
+    extension: Extension
+  ): <const Base extends VocabShape>(base: Base) => MergedVocab<Base, Extension>;
   <const Base extends VocabShape, const Extension extends VocabShape>(
     base: Base,
     extension: Extension
-  ): ReturnType<typeof mergeVocabImpl<Base, Extension>>;
-  <const Extension extends VocabShape>(
-    extension: Extension
-  ): <const Base extends VocabShape>(base: Base) => ReturnType<typeof mergeVocabImpl<Base, Extension>>;
+  ): MergedVocab<Base, Extension>;
 } = dual(2, mergeVocabImpl);
 
 /**

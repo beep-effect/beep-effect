@@ -85,7 +85,7 @@ describe("@beep/workspace-domain", () => {
   it("round-trips schema-derived message roles", () =>
     fc.assert(
       fc.property(MessageRoleArbitrary, (role) => {
-        const decoded = S.decodeUnknownSync(MessageRole)(role);
+        const decoded = S.decodeSync(MessageRole)(role);
         const encoded = S.encodeSync(MessageRole)(decoded);
 
         expect(encoded).toBe(role);

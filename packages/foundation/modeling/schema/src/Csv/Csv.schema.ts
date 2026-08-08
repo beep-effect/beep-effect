@@ -235,7 +235,7 @@ const decodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
         mapRowToHeaderRecord(headerRow, row, normalized.codec.strictColumnHandling)
       );
 
-      return yield* S.decodeUnknownEffect(S.Array(rowSchema))(mappedRows);
+      return yield* S.decodeEffect(S.Array(rowSchema))(mappedRows);
     });
 
     return yield* A.match(rowsAfterSkippedLines, {

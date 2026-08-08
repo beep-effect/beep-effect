@@ -128,11 +128,11 @@ export const prefix: {
  * @since 0.0.0
  */
 export const prefixThunk: {
-  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => () => `${Pre}${S}`;
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): () => `${Pre}${S}`;
+  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => LazyArg<`${Pre}${S}`>;
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): LazyArg<`${Pre}${S}`>;
 } = dual(
   2,
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): (() => `${Pre}${S}`) =>
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): LazyArg<`${Pre}${S}`> =>
     () =>
       `${prefix}${str}` as const
 );
@@ -206,11 +206,11 @@ export const postfix: {
  * @since 0.0.0
  */
 export const postfixThunk: {
-  <const Post extends string>(postfix: Post): <S extends string>(str: S) => () => `${S}${Post}`;
-  <const Post extends string, const S extends string>(str: S, postfix: Post): () => `${S}${Post}`;
+  <const Post extends string>(postfix: Post): <S extends string>(str: S) => LazyArg<`${S}${Post}`>;
+  <const Post extends string, const S extends string>(str: S, postfix: Post): LazyArg<`${S}${Post}`>;
 } = dual(
   2,
-  <const Post extends string, const S extends string>(str: S, postfix: Post): (() => `${S}${Post}`) =>
+  <const Post extends string, const S extends string>(str: S, postfix: Post): LazyArg<`${S}${Post}`> =>
     () =>
       `${str}${postfix}` as const
 );

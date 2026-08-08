@@ -14,6 +14,7 @@ import {
   PracticeKgFamilyToolRow,
   PracticeKgGraphToolRow,
 } from "@beep/law-practice-use-cases/server";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -22,6 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { DuckDbConnectionOptions } from "@beep/duckdb";
 import type { Path } from "effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $LawPracticeServerId.create("PracticeKg.rows");
 
@@ -213,7 +215,10 @@ export const stripPrefix = (prefix: string) =>
  * @since 0.0.0
  * @category codecs
  */
-export const decodePracticeKgGraphRows = S.decodeUnknownEffect(S.Array(PracticeKgGraphToolRow));
+export const decodePracticeKgGraphRows: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ReadonlyArray<PracticeKgGraphToolRow>, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ReadonlyArray<PracticeKgGraphToolRow>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.Array(PracticeKgGraphToolRow)));
 /**
  * Decode docket-family query rows.
  *
@@ -227,7 +232,12 @@ export const decodePracticeKgGraphRows = S.decodeUnknownEffect(S.Array(PracticeK
  * @since 0.0.0
  * @category codecs
  */
-export const decodePracticeKgFamilyRows = S.decodeUnknownEffect(S.Array(PracticeKgFamilyToolRow));
+export const decodePracticeKgFamilyRows: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<ReadonlyArray<PracticeKgFamilyToolRow>, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ReadonlyArray<PracticeKgFamilyToolRow>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.Array(PracticeKgFamilyToolRow)));
 /**
  * Decode corpus-document query rows.
  *
@@ -241,7 +251,12 @@ export const decodePracticeKgFamilyRows = S.decodeUnknownEffect(S.Array(Practice
  * @since 0.0.0
  * @category codecs
  */
-export const decodePracticeKgDocumentRows = S.decodeUnknownEffect(S.Array(PracticeKgDocumentToolRow));
+export const decodePracticeKgDocumentRows: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<ReadonlyArray<PracticeKgDocumentToolRow>, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ReadonlyArray<PracticeKgDocumentToolRow>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.Array(PracticeKgDocumentToolRow)));
 /**
  * Decode email-header query rows.
  *
@@ -255,7 +270,10 @@ export const decodePracticeKgDocumentRows = S.decodeUnknownEffect(S.Array(Practi
  * @since 0.0.0
  * @category codecs
  */
-export const decodePracticeKgEmailRows = S.decodeUnknownEffect(S.Array(PracticeKgEmailToolRow));
+export const decodePracticeKgEmailRows: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ReadonlyArray<PracticeKgEmailToolRow>, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ReadonlyArray<PracticeKgEmailToolRow>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.Array(PracticeKgEmailToolRow)));
 /**
  * Decode grounded candidate-claim query rows.
  *
@@ -269,7 +287,15 @@ export const decodePracticeKgEmailRows = S.decodeUnknownEffect(S.Array(PracticeK
  * @since 0.0.0
  * @category codecs
  */
-export const decodePracticeKgCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
+export const decodePracticeKgCandidateClaimRows: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<ReadonlyArray<PracticeKgCandidateClaimToolRow>, S.SchemaError>;
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<ReadonlyArray<PracticeKgCandidateClaimToolRow>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow)));
 
 /**
  * Convert any decoded tool row to the generic record accepted by the

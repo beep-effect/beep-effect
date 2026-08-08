@@ -24,7 +24,7 @@ import type { JsonLdStreamParseServiceShape } from "../services/jsonld-stream-pa
 const decodeJsonLdDocumentFromJson = S.decodeUnknownEffect(S.fromJsonString(JsonLdDocument));
 
 const decodeNonNegativeInt = (value: number): Effect.Effect<NonNegativeInt, JsonLdStreamParseError> =>
-  S.decodeUnknownEffect(NonNegativeInt)(value).pipe(
+  S.decodeEffect(NonNegativeInt)(value).pipe(
     Effect.mapError((cause) =>
       JsonLdStreamParseError.make({
         reason: "parseFailure",

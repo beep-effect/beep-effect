@@ -13,8 +13,10 @@ import { ExtractClipRequest, ExtractFramesAtRequest, RenderContactSheetRequest, 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { DurationMilliseconds, EpochMilliseconds, SequenceNumber } from "./ActionEvent.models.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $QaCaptureId.create("ExtractionPlan.models");
 
@@ -869,7 +871,10 @@ export type QaDriverRequest = typeof QaDriverRequest.Type;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractionRuleSet = S.decodeUnknownEffect(ExtractionRuleSet);
+export const decodeExtractionRuleSet: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractionRuleSet, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractionRuleSet, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractionRuleSet));
 
 /**
  * Decode an unknown value into an {@link ExtractionPlan}.
@@ -883,7 +888,10 @@ export const decodeExtractionRuleSet = S.decodeUnknownEffect(ExtractionRuleSet);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractionPlan = S.decodeUnknownEffect(ExtractionPlan);
+export const decodeExtractionPlan: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractionPlan, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractionPlan, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractionPlan));
 
 /**
  * Encode an {@link ExtractionPlan} into its JSON string representation.
@@ -898,4 +906,7 @@ export const decodeExtractionPlan = S.decodeUnknownEffect(ExtractionPlan);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeExtractionPlanJson = S.encodeEffect(S.fromJsonString(ExtractionPlan));
+export const encodeExtractionPlanJson: {
+  (options?: AST.ParseOptions): (input: ExtractionPlan) => Effect.Effect<string, S.SchemaError>;
+  (input: ExtractionPlan, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(S.fromJsonString(ExtractionPlan)));

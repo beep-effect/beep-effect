@@ -140,9 +140,14 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
   }))
 );
 
-export const decodeAllowlistDocumentFromJsoncText = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
+// unary by contract: `options` stays reachable through the schema statics these alias;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeAllowlistDocumentFromJsoncText: (
+  input: unknown
+) => Effect.Effect<EffectLawsAllowlistDocument, S.SchemaError> = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
 
-export const decodeAllowlistCheckInput = EffectLawsAllowlistCheckInput.decodeOption;
+export const decodeAllowlistCheckInput: (input: unknown) => O.Option<EffectLawsAllowlistCheckInput> =
+  EffectLawsAllowlistCheckInput.decodeOption;
 export const decodeAllowlistSnapshot = (input: unknown): EffectLawsAllowlistSnapshot =>
   Result.getOrThrow(EffectLawsAllowlistSnapshot.decodeResult(input));
 export const encodeAllowlistSnapshot = (

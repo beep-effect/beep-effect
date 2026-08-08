@@ -48,9 +48,9 @@ import type {
   RunOntologyValidationInput,
 } from "@beep/ontology-use-cases/aggregates/Session";
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-1");
-const fixturePath = S.decodeUnknownSync(OntologyFilePath)("tmp/ontology-workbench/pizza-tutorial.ttl");
-const materialsPath = S.decodeUnknownSync(OntologyFilePath)("tmp/ontology-workbench/materials.ttl");
+const sessionId = S.decodeSync(SessionId)("session-1");
+const fixturePath = S.decodeSync(OntologyFilePath)("tmp/ontology-workbench/pizza-tutorial.ttl");
+const materialsPath = S.decodeSync(OntologyFilePath)("tmp/ontology-workbench/materials.ttl");
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
 const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);

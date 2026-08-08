@@ -367,15 +367,15 @@ const resolveConfig = Effect.fn("HubSpot.resolveConfig")(function* (
     O.match({
       onNone: HubSpotError.failEffectFromReasonThunk("config"),
       onSome: (value) =>
-        S.decodeUnknownEffect(HubSpotAccountId)(value).pipe(
+        S.decodeEffect(HubSpotAccountId)(value).pipe(
           Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
         ),
     })
   );
-  const crmApiUrl = yield* S.decodeUnknownEffect(HubSpotBaseUrl)(input.crmApiUrl).pipe(
+  const crmApiUrl = yield* S.decodeEffect(HubSpotBaseUrl)(input.crmApiUrl).pipe(
     Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
   );
-  const formsApiUrl = yield* S.decodeUnknownEffect(HubSpotBaseUrl)(input.formsApiUrl).pipe(
+  const formsApiUrl = yield* S.decodeEffect(HubSpotBaseUrl)(input.formsApiUrl).pipe(
     Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
   );
 

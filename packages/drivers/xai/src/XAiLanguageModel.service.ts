@@ -14,7 +14,9 @@ import {
 } from "@beep/openai-compat";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -288,12 +290,23 @@ export const layer = (options: XAiLanguageModelOptionsInput): Layer.Layer<Langua
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: XAiModelName,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi> =>
-  AiModel.make(
-    "xai",
-    modelName,
-    layer(config === undefined ? { model: modelName } : { config: O.some(config), model: modelName })
-  );
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: XAiModelName) => AiModel.Model<"xai", LanguageModel.LanguageModel, XAi>;
+  (
+    modelName: XAiModelName,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: XAiModelName,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi> =>
+    AiModel.make(
+      "xai",
+      modelName,
+      layer(config === undefined ? { model: modelName } : { config: O.some(config), model: modelName })
+    )
+);

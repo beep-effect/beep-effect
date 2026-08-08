@@ -516,6 +516,13 @@ export const filterNodes: {
 // =============================================================================
 
 /**
+ * Walkers take an optional `start` list, so arity alone cannot decide the call
+ * style. A `TextGraph` is never an array, which makes the subject decidable.
+ */
+const isTraversalDataFirst = (args: IArguments): boolean =>
+  args.length >= 2 || (args.length === 1 && !A.isArray(args[0]));
+
+/**
  * Create a depth-first walker over text nodes.
  *
  * @example
@@ -530,8 +537,14 @@ export const filterNodes: {
  * @since 0.0.0
  * @category sequencing
  */
-export const dfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const dfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a breadth-first walker over text nodes.
@@ -548,8 +561,14 @@ export const dfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): G
  * @since 0.0.0
  * @category sequencing
  */
-export const bfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const bfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a topological walker where parents precede children.

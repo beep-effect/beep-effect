@@ -107,7 +107,7 @@ describe("@beep/agents-domain", () => {
   it("round-trips schema-derived agent modes", () =>
     fc.assert(
       fc.property(AgentModeArbitrary, (mode) => {
-        const decoded = S.decodeUnknownSync(AgentMode)(mode);
+        const decoded = S.decodeSync(AgentMode)(mode);
         const encoded = S.encodeSync(AgentMode)(decoded);
 
         expect(encoded).toBe(mode);
@@ -142,7 +142,7 @@ describe("@beep/agents-domain", () => {
     );
     expect(assistantContentDocument).toStrictEqual(S.toJsonSchemaDocument(AssistantContent));
 
-    const decoded = S.decodeUnknownSync(RootAssistantBlock)({
+    const decoded = S.decodeSync(RootAssistantBlock)({
       type: "paragraph",
       children: [{ type: "text", text: "hello" }],
     });
@@ -283,7 +283,7 @@ describe("@beep/agents-domain", () => {
 
   it("rejects malformed assistant table and youtube blocks at the domain boundary", () => {
     expect(() =>
-      S.decodeUnknownSync(TableBlock)({
+      S.decodeSync(TableBlock)({
         type: "table",
         rows: [
           { cells: [{ children: [{ type: "text", text: "Name" }] }] },
@@ -295,7 +295,7 @@ describe("@beep/agents-domain", () => {
     ).toThrow(/Tables must contain/);
 
     expect(() =>
-      S.decodeUnknownSync(YouTubeBlock)({
+      S.decodeSync(YouTubeBlock)({
         type: "youtube",
         videoId: "https://youtu.be/dQw4w9WgXcQ",
       })

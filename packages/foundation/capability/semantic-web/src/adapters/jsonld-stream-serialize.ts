@@ -23,7 +23,7 @@ import type { JsonLdStreamSerializeServiceShape } from "../services/jsonld-strea
 const encodeJsonLdDocumentToJson = S.encodeEffect(S.fromJsonString(JsonLdDocument));
 
 const decodeNonNegativeInt = (value: number): Effect.Effect<NonNegativeInt, JsonLdStreamSerializeError> =>
-  S.decodeUnknownEffect(NonNegativeInt)(value).pipe(
+  S.decodeEffect(NonNegativeInt)(value).pipe(
     Effect.mapError((cause) =>
       JsonLdStreamSerializeError.make({
         reason: "serializeFailure",

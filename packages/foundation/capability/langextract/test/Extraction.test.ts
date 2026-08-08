@@ -142,7 +142,7 @@ describe("parseModelOutput", () => {
 
       expect(error).toBeDefined();
 
-      const request = yield* S.decodeUnknownEffect(LangExtractRequest)({
+      const request = yield* S.decodeEffect(LangExtractRequest)({
         documentId: DocumentId.make("doc-1"),
         targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
         text: "Alice founded Acme.",

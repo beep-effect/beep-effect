@@ -46,7 +46,7 @@ export const ArrayOfStrings = S.Array(S.String).pipe(
  * @since 0.0.0
  * @category models
  */
-export type ArrayOfStrings = S.Schema.Type<typeof ArrayOfStrings>;
+export type ArrayOfStrings = typeof ArrayOfStrings.Type;
 
 /**
  * Schema for non-empty arrays of strings.
@@ -84,7 +84,7 @@ export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
  * @since 0.0.0
  * @category models
  */
-export type NonEmptyArrayOfStrings = S.Schema.Type<typeof NonEmptyArrayOfStrings>;
+export type NonEmptyArrayOfStrings = typeof NonEmptyArrayOfStrings.Type;
 
 /**
  * Schema for arrays of `NonEmptyString` values.
@@ -122,7 +122,7 @@ export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
  * @since 0.0.0
  * @category models
  */
-export type ArrayOfNonEmptyStrings = S.Schema.Type<typeof ArrayOfNonEmptyStrings>;
+export type ArrayOfNonEmptyStrings = typeof ArrayOfNonEmptyStrings.Type;
 
 /**
  * Schema for non-empty arrays of `NonEmptyString` values.
@@ -160,7 +160,7 @@ export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).
  * @since 0.0.0
  * @category models
  */
-export type NonEmptyArrayOfNonEmptyStrings = S.Schema.Type<typeof NonEmptyArrayOfNonEmptyStrings>;
+export type NonEmptyArrayOfNonEmptyStrings = typeof NonEmptyArrayOfNonEmptyStrings.Type;
 
 /**
  * Schema for arrays of numbers.
@@ -198,7 +198,7 @@ export const ArrayOfNumbers = S.Array(S.Finite).pipe(
  * @since 0.0.0
  * @category models
  */
-export type ArrayOfNumbers = S.Schema.Type<typeof ArrayOfNumbers>;
+export type ArrayOfNumbers = typeof ArrayOfNumbers.Type;
 
 /**
  * Schema for non-empty arrays of numbers.
@@ -236,7 +236,7 @@ export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
  * @since 0.0.0
  * @category models
  */
-export type NonEmptyArrayOfNumbers = S.Schema.Type<typeof NonEmptyArrayOfNumbers>;
+export type NonEmptyArrayOfNumbers = typeof NonEmptyArrayOfNumbers.Type;
 
 /**
  * Schema for arrays of integers.
@@ -274,7 +274,7 @@ export const ArrayOfInts = S.Array(S.Int).pipe(
  * @since 0.0.0
  * @category models
  */
-export type ArrayOfInts = S.Schema.Type<typeof ArrayOfInts>;
+export type ArrayOfInts = typeof ArrayOfInts.Type;
 
 /**
  * Schema for non-empty arrays of integers.
@@ -312,4 +312,4 @@ export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
  * @since 0.0.0
  * @category models
  */
-export type NonEmptyArrayOfInts = S.Schema.Type<typeof NonEmptyArrayOfInts>;
+export type NonEmptyArrayOfInts = typeof NonEmptyArrayOfInts.Type;

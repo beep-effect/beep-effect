@@ -943,7 +943,7 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
         return O.none<string>();
       }
 
-      const decodedOption = yield* S.decodeUnknownEffect(ContentSecurityPolicyOptionStruct)(option).pipe(
+      const decodedOption = yield* S.decodeEffect(ContentSecurityPolicyOptionStruct)(option).pipe(
         Effect.mapError((cause) =>
           CspError.make({
             message: cause.message,

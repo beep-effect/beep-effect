@@ -41,13 +41,13 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
 const decodeSyncItemId = S.decodeUnknownSync(Documents.SyncItemId);
 const itemOne = decodeSyncItemId(1);
 const itemTwo = decodeSyncItemId(2);
-const relPath = S.decodeUnknownSync(VaultRelPath)("matters/client-default/complaint.pdf");
-const zeroAttempts = S.decodeUnknownSync(NonNegativeInt)(0);
-const generationOne = S.decodeUnknownSync(NonNegativeInt)(1);
+const relPath = S.decodeSync(VaultRelPath)("matters/client-default/complaint.pdf");
+const zeroAttempts = S.decodeSync(NonNegativeInt)(0);
+const generationOne = S.decodeSync(NonNegativeInt)(1);
 
 const operationSeed = (idempotencyKey: string, syncItemId: Documents.SyncItemId) =>
   SyncOperationSeed.make({

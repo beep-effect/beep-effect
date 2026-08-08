@@ -179,7 +179,7 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "decodes schema defaults into Option values",
     Effect.fnUntraced(function* () {
-      const payload = yield* S.decodeUnknownEffect(F.FirecrawlScrapePayload)({ url: "https://example.com" });
+      const payload = yield* S.decodeEffect(F.FirecrawlScrapePayload)({ url: "https://example.com" });
 
       expect(payload.url).toBe("https://example.com");
       expect(O.isNone(payload.options)).toBe(true);
@@ -189,7 +189,7 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "keeps config wire shape while normalizing through the schema",
     Effect.fnUntraced(function* () {
-      const config = yield* S.decodeUnknownEffect(F.FirecrawlConfigInput)({
+      const config = yield* S.decodeEffect(F.FirecrawlConfigInput)({
         apiKey: "fc-test-key",
         apiUrl: "https://api.firecrawl.dev/",
         backoffFactor: 2,
@@ -215,7 +215,7 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "keeps error wire shape while tightening numeric diagnostics",
     Effect.fnUntraced(function* () {
-      const failure = yield* S.decodeUnknownEffect(F.FirecrawlApiFailure)({
+      const failure = yield* S.decodeEffect(F.FirecrawlApiFailure)({
         error: "Unauthorized",
         status: 429,
         success: false,

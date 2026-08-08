@@ -152,11 +152,11 @@ describe("@beep/ontology models", () => {
     ));
 
   it("rejects malformed values for the absorbed precision invariants", () => {
-    expect(Result.isFailure(S.decodeUnknownResult(HttpUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLSearchScore)(Number.POSITIVE_INFINITY))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLClass)({ iri: "" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLClass)({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLObjectProperty)({ iri: "", domain: ["Rdomain"] }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLObjectProperty)({ iri: "Rproperty", range: [""] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(HttpUrl)("not a url"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLSearchScore)(Number.POSITIVE_INFINITY))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "", domain: ["Rdomain"] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "Rproperty", range: [""] }))).toBe(true);
   });
 });

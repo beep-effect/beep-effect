@@ -364,6 +364,8 @@ export const makeSemanticSchemaMetadata = (
 ): SemanticSchemaMetadataAnnotationPayload =>
   pipe(SemanticSchemaMetadata.decodeUnknownResult(metadata), Result.getOrThrowWith(schemaIssueToError));
 
+type Rebuilt<Schema extends S.Top> = Schema["Rebuild"];
+
 /**
  * Attach validated semantic metadata to any Effect schema.
  *
@@ -390,11 +392,11 @@ export const makeSemanticSchemaMetadata = (
  * @category utilities
  */
 export const annotateSemanticSchema: {
-  <Schema extends S.Top>(metadata: typeof SemanticSchemaMetadata.Encoded): (schema: Schema) => Schema["Rebuild"];
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Schema["Rebuild"];
+  <Schema extends S.Top>(metadata: typeof SemanticSchemaMetadata.Encoded): (schema: Schema) => Rebuilt<Schema>;
+  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema>;
 } = dual(
   2,
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Schema["Rebuild"] =>
+  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema> =>
     schema.annotate({ semanticSchemaMetadata: makeSemanticSchemaMetadata(metadata) })
 );
 

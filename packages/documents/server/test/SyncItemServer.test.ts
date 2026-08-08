@@ -40,10 +40,10 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
-const remoteId = S.decodeUnknownSync(RemoteItemId)("9001");
-const localGeneration = S.decodeUnknownSync(NonNegativeInt)(1);
+const remoteId = S.decodeSync(RemoteItemId)("9001");
+const localGeneration = S.decodeSync(NonNegativeInt)(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({

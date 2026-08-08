@@ -189,7 +189,7 @@ describe("ResultStore", () => {
         timestamp: result.timestamp,
       });
       const encoded = yield* S.encodeEffect(ResultStore.StoredResult)(stored);
-      const decoded = yield* S.decodeUnknownEffect(ResultStore.StoredResult)(encoded);
+      const decoded = yield* S.decodeEffect(ResultStore.StoredResult)(encoded);
 
       expect(S.is(ResultStore.StoredResult)(decoded)).toBe(true);
       expect(S.is(ResultStore.AnyOperationResult)(decoded.result)).toBe(true);

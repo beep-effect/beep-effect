@@ -79,7 +79,7 @@ const verifyDigest = Effect.fnUntraced(function* (
 });
 
 const verifyExtractor = Effect.fnUntraced(function* (expected: SourceTextExtractor, name: string, version: string) {
-  const actual = yield* S.decodeUnknownEffect(SourceTextExtractor)({ name, version }).pipe(
+  const actual = yield* S.decodeEffect(SourceTextExtractor)({ name, version }).pipe(
     Effect.mapError(resolverError("extractor-unavailable", "The selected source-text extractor identity was invalid."))
   );
   if (!sourceTextExtractorEquals(actual, expected)) {

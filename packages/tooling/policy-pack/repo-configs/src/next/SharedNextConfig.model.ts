@@ -19,6 +19,7 @@ import { schemaIssueToError } from "./internal.ts";
 import { AllowedDevOrigin } from "./models/AllowedDevOrigin.schema.ts";
 import { defineNextConfig, NextConfig as NextConfigModel } from "./NextConfig.model.ts";
 import { SecureHeadersConfig, withSecureHeaders } from "./security/index.ts";
+import type { Effect } from "effect";
 import type { NextConfig as NextConfigFromNext } from "next";
 
 const $I = $RepoConfigsId.create("next/SharedNextConfig.model");
@@ -481,7 +482,10 @@ const makeBaseConfig = (options: BeepNextConfigOptions): NextConfigFromNext => {
  * @category decoding
  * @since 0.0.0
  */
-export const decodeBeepNextConfigEnv = BeepNextConfigEnv.decodeEffect;
+// unary by contract: `options` stays reachable through `BeepNextConfigEnv.decodeEffect`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeBeepNextConfigEnv: (input: unknown) => Effect.Effect<BeepNextConfigEnv, S.SchemaError> =
+  BeepNextConfigEnv.decodeEffect;
 
 /**
  * Synchronously decode an environment snapshot for the shared Next.js preset.
@@ -569,10 +573,7 @@ export const makeBeepNextBaseConfig = (options: BeepNextConfigOptionsInput): Nex
  */
 export const defineBeepNextConfig = (options: BeepNextConfigOptionsInput): NextConfigFromNext => {
   const decoded = Result.getOrThrowWith(decodeBeepNextConfigOptionsResult(options), schemaIssueToError);
-  return pipe(
-    decoded,
-    makeBaseConfig,
-    (config) => withSecureHeaders(config, decoded.securityHeaders),
-    (config) => composeNextConfig(config, makePlugins(decoded))
+  return pipe(decoded, makeBaseConfig, withSecureHeaders(decoded.securityHeaders), (config) =>
+    composeNextConfig(config, makePlugins(decoded))
   );
 };

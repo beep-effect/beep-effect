@@ -1076,7 +1076,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
     );
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(YouTubeWatchRequest)({
+        S.decodeResult(YouTubeWatchRequest)({
           url: "https://evil.example/?v=M7lc1UVf-VE",
         })
       )
@@ -1087,7 +1087,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
     fc.assert(
       fc.property(S.toArbitrary(ComposerFeatures), (features) => {
         const encoded = S.encodeSync(ComposerFeatures)(features);
-        expect(S.decodeUnknownSync(ComposerFeatures)(encoded)).toEqual(features);
+        expect(S.decodeSync(ComposerFeatures)(encoded)).toEqual(features);
         expect(["enter", "modifierEnter"]).toContain(features.sendOn);
       })
     );

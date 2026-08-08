@@ -667,6 +667,27 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
 });
 
 /**
+ * Child-process handle plus client options accepted by {@link layerChildProcess}.
+ *
+ * @example
+ * ```ts
+ * import type { ChildProcessSpawner } from "effect/unstable/process"
+ * import type { AcpClientChildProcessOptions } from "@beep/acp/client"
+ *
+ * const fromHandle = (
+ *   handle: ChildProcessSpawner.ChildProcessHandle
+ * ): AcpClientChildProcessOptions => ({ handle, logOutgoing: true })
+ * console.log(fromHandle)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface AcpClientChildProcessOptions extends AcpClientOptions {
+  readonly handle: ChildProcessSpawner.ChildProcessHandle;
+}
+
+/**
  * Constructs an ACP client layer backed by a spawned child process.
  *
  * @example
@@ -674,17 +695,14 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
  * import type { ChildProcessSpawner } from "effect/unstable/process"
  * import { layerChildProcess } from "@beep/acp/client"
  *
- * const fromHandle = (handle: ChildProcessSpawner.ChildProcessHandle) => layerChildProcess(handle)
+ * const fromHandle = (handle: ChildProcessSpawner.ChildProcessHandle) => layerChildProcess({ handle })
  * console.log(fromHandle)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const layerChildProcess = (
-  handle: ChildProcessSpawner.ChildProcessHandle,
-  options: AcpClientOptions = {}
-): Layer.Layer<AcpClient> => {
+export const layerChildProcess = ({ handle, ...options }: AcpClientChildProcessOptions): Layer.Layer<AcpClient> => {
   const stdio = makeChildStdio(handle);
   const terminationError = makeTerminationError(handle);
   return Layer.effect(AcpClient, make(stdio, options, terminationError));

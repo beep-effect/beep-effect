@@ -592,7 +592,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
     (input: S.Codec.Encoded<typeof Pattern>) => Pattern
   >(
     (args) => args.length >= 1,
-    (input) => Result.getOrThrowWith(S.decodeUnknownResult(Pattern)(input), schemaIssueToError)
+    (input) => Result.getOrThrowWith(S.decodeResult(Pattern)(input), schemaIssueToError)
   );
 
   /**

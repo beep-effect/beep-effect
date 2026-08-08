@@ -9,7 +9,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { A, thunkFalse } from "@beep/utils";
+import { A, P, thunkFalse } from "@beep/utils";
 import { Glob as SharedGlob, layer as SharedGlobLayer } from "@beep/utils/Glob";
 import * as O from "@beep/utils/Option";
 import { Context, Effect, FileSystem, Layer, MutableHashSet, Order, Path } from "effect";
@@ -408,77 +408,82 @@ const includeAllFiles = (_filePath: string, _name: string): boolean => true;
  * @category utilities
  * @since 0.0.0
  */
-export const walkFiles: (
-  root: string,
-  options?: undefined | WalkFilesOptions
-) => Effect.Effect<ReadonlyArray<string>, DomainError, FileSystem.FileSystem | Path.Path> = Effect.fn(function* (
-  root,
-  options: WalkFilesOptions = {}
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const skipDirectories = options.skipDirectories ?? A.empty<string>();
-  const include = options.include ?? includeAllFiles;
-  const symlinkGuard: WalkFilesSymlinkGuard = options.symlinkGuard ?? "follow";
-  const visited = MutableHashSet.empty<string>();
+export const walkFiles: {
+  (
+    options?: undefined | WalkFilesOptions
+  ): (root: string) => Effect.Effect<ReadonlyArray<string>, DomainError, FileSystem.FileSystem | Path.Path>;
+  (
+    root: string,
+    options?: undefined | WalkFilesOptions
+  ): Effect.Effect<ReadonlyArray<string>, DomainError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => P.isString(args[0]),
+  Effect.fn(function* (root: string, options: WalkFilesOptions = {}) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const skipDirectories = options.skipDirectories ?? A.empty<string>();
+    const include = options.include ?? includeAllFiles;
+    const symlinkGuard: WalkFilesSymlinkGuard = options.symlinkGuard ?? "follow";
+    const visited = MutableHashSet.empty<string>();
 
-  const rootExists = yield* fs.exists(root).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!rootExists) {
-    return A.empty<string>();
-  }
+    const rootExists = yield* fs.exists(root).pipe(Effect.orElseSucceed(thunkFalse));
+    if (!rootExists) {
+      return A.empty<string>();
+    }
 
-  if (symlinkGuard === "guard-cycles") {
-    const canonicalRoot = yield* fs.realPath(root).pipe(Effect.orElseSucceed(() => root));
-    MutableHashSet.add(visited, canonicalRoot);
-  }
+    if (symlinkGuard === "guard-cycles") {
+      const canonicalRoot = yield* fs.realPath(root).pipe(Effect.orElseSucceed(() => root));
+      MutableHashSet.add(visited, canonicalRoot);
+    }
 
-  const visit: (current: string) => Effect.Effect<ReadonlyArray<string>, DomainError> = Effect.fnUntraced(
-    function* (current) {
-      const entries = yield* fs
-        .readDirectory(current)
-        .pipe(Effect.mapError(DomainError.newCause(`Failed to read directory "${current}"`)));
-      let files = A.empty<string>();
+    const visit: (current: string) => Effect.Effect<ReadonlyArray<string>, DomainError> = Effect.fnUntraced(
+      function* (current) {
+        const entries = yield* fs
+          .readDirectory(current)
+          .pipe(Effect.mapError(DomainError.newCause(`Failed to read directory "${current}"`)));
+        let files = A.empty<string>();
 
-      for (const entry of entries) {
-        const childPath = path.join(current, entry);
+        for (const entry of entries) {
+          const childPath = path.join(current, entry);
 
-        if (symlinkGuard === "skip-symlinks") {
-          const link = yield* fs.readLink(childPath).pipe(Effect.option);
-          if (O.isSome(link)) {
-            continue;
-          }
-        }
-
-        const info = yield* fs
-          .stat(childPath)
-          .pipe(Effect.mapError(DomainError.newCause(`Failed to stat "${childPath}"`)));
-
-        if (info.type === "Directory") {
-          if (A.contains(skipDirectories, entry)) {
-            continue;
-          }
-          if (symlinkGuard === "guard-cycles") {
-            const canonical = yield* fs.realPath(childPath).pipe(Effect.orElseSucceed(() => childPath));
-            if (MutableHashSet.has(visited, canonical)) {
+          if (symlinkGuard === "skip-symlinks") {
+            const link = yield* fs.readLink(childPath).pipe(Effect.option);
+            if (O.isSome(link)) {
               continue;
             }
-            MutableHashSet.add(visited, canonical);
           }
-          files = A.appendAll(files, yield* visit(childPath));
-          continue;
+
+          const info = yield* fs
+            .stat(childPath)
+            .pipe(Effect.mapError(DomainError.newCause(`Failed to stat "${childPath}"`)));
+
+          if (info.type === "Directory") {
+            if (A.contains(skipDirectories, entry)) {
+              continue;
+            }
+            if (symlinkGuard === "guard-cycles") {
+              const canonical = yield* fs.realPath(childPath).pipe(Effect.orElseSucceed(() => childPath));
+              if (MutableHashSet.has(visited, canonical)) {
+                continue;
+              }
+              MutableHashSet.add(visited, canonical);
+            }
+            files = A.appendAll(files, yield* visit(childPath));
+            continue;
+          }
+
+          if (info.type === "File" && include(childPath, entry)) {
+            files = A.append(files, childPath);
+          }
         }
 
-        if (info.type === "File" && include(childPath, entry)) {
-          files = A.append(files, childPath);
-        }
+        return files;
       }
+    );
 
-      return files;
-    }
-  );
-
-  return A.sort(yield* visit(root), Order.String);
-});
+    return A.sort(yield* visit(root), Order.String);
+  })
+);
 
 /**
  * Check whether a path exists on disk, never failing.

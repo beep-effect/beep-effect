@@ -29,7 +29,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 const probedAtIso = "2026-07-11T00:00:00.000Z";
 const probedAt = DateTime.makeUnsafe(probedAtIso);
-const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeUnknownResult(EnvVarName)(name));
+const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeResult(EnvVarName)(name));
 
 describe("@beep/agents-domain ProviderInstance", () => {
   it("wires ProviderInstance to the agents BaseEntity identity", () => {
@@ -62,18 +62,18 @@ describe("@beep/agents-domain ProviderInstance", () => {
   });
 
   it("round-trips every AuthSnapshot variant through the tagged union", () => {
-    const authenticated = S.decodeUnknownSync(AuthSnapshot)({
+    const authenticated = S.decodeSync(AuthSnapshot)({
       status: "authenticated",
       email: "dev@example.com",
       subscriptionLabel: "max",
       tokenSource: "claude.ai",
       probedAt: probedAtIso,
     });
-    const unauthenticated = S.decodeUnknownSync(AuthSnapshot)({
+    const unauthenticated = S.decodeSync(AuthSnapshot)({
       status: "unauthenticated",
       probedAt: probedAtIso,
     });
-    const probeFailed = S.decodeUnknownSync(AuthSnapshot)({
+    const probeFailed = S.decodeSync(AuthSnapshot)({
       status: "probe-failed",
       probedAt: probedAtIso,
     });

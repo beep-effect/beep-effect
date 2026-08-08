@@ -208,7 +208,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         domain: "hooks",
         reason: "Native hook payload schema is not public.",
       });
-      expect(yield* S.decodeUnknownEffect(NormalizedAgentInstructionDocument)("# Rules  \n\nUse Effect.  ")).toBe(
+      expect(yield* S.decodeEffect(NormalizedAgentInstructionDocument)("# Rules  \n\nUse Effect.  ")).toBe(
         "# Rules\n\nUse Effect."
       );
     })

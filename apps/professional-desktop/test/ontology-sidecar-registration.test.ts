@@ -22,9 +22,9 @@ import * as S from "effect/Schema";
 import { RpcTest } from "effect/unstable/rpc";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-rpc-validation");
-const provPath = S.decodeUnknownSync(OntologyFilePath)("tmp/session-rpc-validation.prov.ttl");
-const datasetPath = S.decodeUnknownSync(OntologyFilePath)("tmp/session-rpc-validation.dataset.ttl");
+const sessionId = S.decodeSync(SessionId)("session-rpc-validation");
+const provPath = S.decodeSync(OntologyFilePath)("tmp/session-rpc-validation.prov.ttl");
+const datasetPath = S.decodeSync(OntologyFilePath)("tmp/session-rpc-validation.dataset.ttl");
 const decodeRunOntologyValidationResult = S.decodeUnknownEffect(RunOntologyValidationResult);
 
 describe("@beep/professional-desktop ontology sidecar registration", () => {

@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 const expectRoundTrip = (value: AllowedDevOrigin) => {
   const encoded = Result.getOrThrow(S.encodeResult(AllowedDevOrigin)(value));
-  const decoded = Result.getOrThrow(S.decodeUnknownResult(AllowedDevOrigin)(encoded));
+  const decoded = Result.getOrThrow(S.decodeResult(AllowedDevOrigin)(encoded));
 
   expect(Equal.equals(decoded, value)).toBe(true);
 };

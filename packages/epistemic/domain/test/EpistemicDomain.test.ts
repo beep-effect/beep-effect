@@ -83,7 +83,7 @@ describe("@beep/epistemic-domain", () => {
   it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(EvidenceSpan)({
+        S.decodeResult(EvidenceSpan)({
           confidence: 0.92,
           endChar: 13,
           quote: "a claimed fact",
@@ -104,7 +104,7 @@ describe("@beep/epistemic-domain", () => {
 
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(EvidenceSpan)({
+        S.decodeResult(EvidenceSpan)({
           confidence: 0.92,
           endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
           quote: maximumQuote,
@@ -114,7 +114,7 @@ describe("@beep/epistemic-domain", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(EvidenceSpan)({
+        S.decodeResult(EvidenceSpan)({
           confidence: 0.92,
           endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
           quote: overLimitQuote,
@@ -126,7 +126,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("matches an evidence span only to its exact provenance anchor", () => {
     const span = Result.getOrThrow(
-      S.decodeUnknownResult(EvidenceSpan)({
+      S.decodeResult(EvidenceSpan)({
         confidence: 0.92,
         endChar: 8,
         quote: "amount A",
@@ -134,7 +134,7 @@ describe("@beep/epistemic-domain", () => {
       })
     );
     const matching = Result.getOrThrow(
-      S.decodeUnknownResult(TextAnchor)({
+      S.decodeResult(TextAnchor)({
         endChar: 8,
         quote: "amount A",
         startChar: 0,

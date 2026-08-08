@@ -70,10 +70,10 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
 
 const sha256HexPattern = /^[0-9a-f]{64}$/;
 
-const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0");
-const otherRevision = S.decodeUnknownSync(PolicyRevision)("2.0.0");
+const revision = S.decodeSync(PolicyRevision)("1.0.0");
+const otherRevision = S.decodeSync(PolicyRevision)("2.0.0");
 
-const grant = S.decodeUnknownSync(ExecutionGrant)({
+const grant = S.decodeSync(ExecutionGrant)({
   budget: { maxToolCalls: null },
   expiresAt: 60000,
   operation: "ontology_publish_provenance",
@@ -97,7 +97,7 @@ const requestInput = {
 } as const;
 
 const request = (overrides: Record<string, unknown> = {}): ExecutionRequest =>
-  S.decodeUnknownSync(ExecutionRequest)({ ...requestInput, ...overrides });
+  S.decodeSync(ExecutionRequest)({ ...requestInput, ...overrides });
 
 const now = DateTime.makeUnsafe(0);
 const afterExpiry = DateTime.makeUnsafe(120000);
@@ -153,7 +153,7 @@ describe("ExecutionAuthority", () => {
     });
 
     it("reaches every evaluator denial reason distinctly, one axis per case", () => {
-      const tamperedFrozen = S.decodeUnknownSync(FrozenGrantSet)({
+      const tamperedFrozen = S.decodeSync(FrozenGrantSet)({
         ...S.encodeSync(FrozenGrantSet)(frozen),
         grants: [],
       });
@@ -212,7 +212,7 @@ describe("ExecutionAuthority", () => {
       // The tampered set's grants would otherwise produce operation-not-granted;
       // the broken seal must win because a set that fails its own digest cannot
       // be trusted to answer any narrower question.
-      const tampered = S.decodeUnknownSync(FrozenGrantSet)({
+      const tampered = S.decodeSync(FrozenGrantSet)({
         ...S.encodeSync(FrozenGrantSet)(frozen),
         grants: [],
       });
@@ -257,7 +257,7 @@ describe("ExecutionAuthority", () => {
     it("verifyFrozenGrantSetDigest accepts the sealed set and rejects a tampered copy", () => {
       expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
 
-      const tampered = S.decodeUnknownSync(FrozenGrantSet)({
+      const tampered = S.decodeSync(FrozenGrantSet)({
         ...S.encodeSync(FrozenGrantSet)(frozen),
         policyRevision: "2.0.0",
       });
@@ -275,7 +275,7 @@ describe("ExecutionAuthority", () => {
 
     it("rejects a tampered decision record keeping its old hash", () => {
       const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
-      const tampered = S.decodeUnknownSync(ExecutionDecisionRecord)({
+      const tampered = S.decodeSync(ExecutionDecisionRecord)({
         ...S.encodeSync(ExecutionDecisionRecord)(record),
         audience: "local-workspace",
       });
@@ -296,7 +296,7 @@ describe("ExecutionAuthority", () => {
       const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
       const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
       const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
-      const tamperedSecond = S.decodeUnknownSync(ExecutionDecisionRecord)({
+      const tamperedSecond = S.decodeSync(ExecutionDecisionRecord)({
         ...S.encodeSync(ExecutionDecisionRecord)(second),
         destinationDigest: "0".repeat(64),
       });
@@ -360,7 +360,7 @@ describe("ExecutionAuthority", () => {
         runKey: ExecutionRunKey.make("b".repeat(64)),
         settlement: "completed",
       });
-      const tampered = S.decodeUnknownSync(ExecutionOutcomeRecord)({
+      const tampered = S.decodeSync(ExecutionOutcomeRecord)({
         ...S.encodeSync(ExecutionOutcomeRecord)(outcome),
         settlement: "failed",
       });

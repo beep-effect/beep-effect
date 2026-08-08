@@ -35,7 +35,7 @@ describe("TSConfig schema", () => {
       fc.assert(
         fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(TSConfig.fields.compilerOptions)(value);
-          const decoded = S.decodeUnknownSync(TSConfig.fields.compilerOptions)(encoded);
+          const decoded = S.decodeSync(TSConfig.fields.compilerOptions)(encoded);
 
           expect(decoded).toEqual(value);
         }),

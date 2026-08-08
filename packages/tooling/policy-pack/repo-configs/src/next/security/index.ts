@@ -234,9 +234,8 @@ export const makeSecureHeaders = (config?: SecureHeadersConfigInput): ReadonlyAr
 /**
  * Add shared secure headers to a Next.js config.
  *
- * @param config - Base Next.js configuration receiving secure headers.
  * @param secureHeadersConfig - Secure header override or extension settings.
- * @returns A Next.js configuration with the shared secure-header route prepended.
+ * @returns A function adding the shared secure-header route to a Next.js configuration.
  * @remarks
  * Existing app `headers()` are called only when Next.js calls the composed
  * `headers()` function. The shared secure-header route is prepended so app
@@ -244,30 +243,32 @@ export const makeSecureHeaders = (config?: SecureHeadersConfigInput): ReadonlyAr
  * @example
  * ```ts
  * import { withSecureHeaders } from "@beep/repo-configs/next/security"
- * const config = withSecureHeaders({ reactStrictMode: true })
+ * const config = withSecureHeaders()({ reactStrictMode: true })
  * console.log(config)
  * ```
  * @category combinators
  * @since 0.0.0
  */
-export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfigInput): NextConfig =>
-  pipe(
-    makeSecureHeaders(secureHeadersConfig),
-    A.match({
-      onEmpty: () => config,
-      onNonEmpty: (secureHeaders) => {
-        const previousHeaders = config.headers;
-        return {
-          ...config,
-          headers: () =>
-            Promise.resolve(P.isFunction(previousHeaders) ? previousHeaders() : A.empty()).then((headers) => [
-              {
-                source: headerSource(secureHeadersConfig),
-                headers: A.fromIterable(secureHeaders),
-              },
-              ...headers,
-            ]),
-        };
-      },
-    })
-  );
+export const withSecureHeaders =
+  (secureHeadersConfig?: SecureHeadersConfigInput) =>
+  (config: NextConfig): NextConfig =>
+    pipe(
+      makeSecureHeaders(secureHeadersConfig),
+      A.match({
+        onEmpty: () => config,
+        onNonEmpty: (secureHeaders) => {
+          const previousHeaders = config.headers;
+          return {
+            ...config,
+            headers: () =>
+              Promise.resolve(P.isFunction(previousHeaders) ? previousHeaders() : A.empty()).then((headers) => [
+                {
+                  source: headerSource(secureHeadersConfig),
+                  headers: A.fromIterable(secureHeaders),
+                },
+                ...headers,
+              ]),
+          };
+        },
+      })
+    );

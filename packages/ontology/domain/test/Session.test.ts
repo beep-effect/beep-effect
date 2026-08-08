@@ -17,7 +17,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-1");
+const sessionId = S.decodeSync(SessionId)("session-1");
 const nameQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),

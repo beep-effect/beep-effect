@@ -64,7 +64,7 @@ describe("schema parity", () => {
   });
 
   it("applies docgen.json constant defaults at the schema boundary", () => {
-    expect(Result.getOrThrow(S.decodeUnknownResult(Configuration.ConfigurationSchema)({}))).toMatchObject({
+    expect(Result.getOrThrow(S.decodeResult(Configuration.ConfigurationSchema)({}))).toMatchObject({
       enableSearch: true,
       enforceDescriptions: false,
       enforceExamples: false,

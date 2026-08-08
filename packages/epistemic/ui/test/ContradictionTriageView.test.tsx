@@ -187,20 +187,20 @@ const queuePage = Result.getOrThrow(
 );
 
 const emptyQueuePage = Result.getOrThrow(
-  S.decodeUnknownResult(ContradictionTriage.ContradictionCandidatePage)({
+  S.decodeResult(ContradictionTriage.ContradictionCandidatePage)({
     items: [],
     total: 0,
   })
 );
 const staleEmptyQueuePage = Result.getOrThrow(
-  S.decodeUnknownResult(ContradictionTriage.ContradictionCandidatePage)({
+  S.decodeResult(ContradictionTriage.ContradictionCandidatePage)({
     items: [],
     total: 1,
   })
 );
 
 const query = Result.getOrThrow(
-  S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload)({
+  S.decodeResult(ContradictionTriage.ContradictionListPayload)({
     disposition: "open",
     knownAt: 2_000,
     limit: 50,
@@ -211,7 +211,7 @@ const query = Result.getOrThrow(
 
 const queryAfterReview = ContradictionTriage.ContradictionListPayload.make({
   ...query,
-  knownAt: Result.getOrThrow(S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload.fields.knownAt)(3_000)),
+  knownAt: Result.getOrThrow(S.decodeResult(ContradictionTriage.ContradictionListPayload.fields.knownAt)(3_000)),
 });
 const queryAfterEmptyPage = ContradictionTriage.ContradictionListPayload.make({
   ...query,
@@ -219,7 +219,7 @@ const queryAfterEmptyPage = ContradictionTriage.ContradictionListPayload.make({
 });
 
 const sourceRequest = Result.getOrThrow(
-  S.decodeUnknownResult(ContradictionTriage.EvidenceSourcePagePayload)({
+  S.decodeResult(ContradictionTriage.EvidenceSourcePagePayload)({
     candidateId: 20,
     evidenceId: 3,
     knownAt: 2_000,

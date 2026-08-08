@@ -162,10 +162,10 @@ describe("Core models", () => {
           const encodedDocument = Effect.runSync(S.encodeEffect(Document)(document));
           const encodedSimilarity = Effect.runSync(S.encodeEffect(SimilarityScore)(similarity));
 
-          expect(Effect.runSync(S.decodeUnknownEffect(Token)(encodedToken))).toEqual(token);
-          expect(Effect.runSync(S.decodeUnknownEffect(Sentence)(encodedSentence))).toEqual(sentence);
-          expect(Effect.runSync(S.decodeUnknownEffect(Document)(encodedDocument))).toEqual(document);
-          expect(Effect.runSync(S.decodeUnknownEffect(SimilarityScore)(encodedSimilarity))).toEqual(similarity);
+          expect(Effect.runSync(S.decodeEffect(Token)(encodedToken))).toEqual(token);
+          expect(Effect.runSync(S.decodeEffect(Sentence)(encodedSentence))).toEqual(sentence);
+          expect(Effect.runSync(S.decodeEffect(Document)(encodedDocument))).toEqual(document);
+          expect(Effect.runSync(S.decodeEffect(SimilarityScore)(encodedSimilarity))).toEqual(similarity);
         }
       ),
       fcRuns(50)

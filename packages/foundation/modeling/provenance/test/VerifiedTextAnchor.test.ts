@@ -209,7 +209,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       );
       const receipt = toTextAnchorVerificationReceipt(verified);
       const encoded = yield* S.encodeUnknownEffect(TextAnchorVerificationReceipt)(receipt);
-      const decodedReceipt = yield* S.decodeUnknownEffect(TextAnchorVerificationReceipt)(encoded);
+      const decodedReceipt = yield* S.decodeEffect(TextAnchorVerificationReceipt)(encoded);
       const verificationFailure = yield* S.decodeUnknownEffect(VerifiedTextAnchor)(encoded).pipe(Effect.flip);
       const receiptIsNotVerified: TextAnchorVerificationReceipt extends VerifiedTextAnchor ? false : true = true;
 
@@ -225,7 +225,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
     fc.assert(
       fc.property(S.toArbitrary(SourceTextIdentity), (source) => {
         const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(source));
-        const decoded = Result.getOrThrow(S.decodeUnknownResult(SourceTextIdentity)(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
 
         expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
       }),

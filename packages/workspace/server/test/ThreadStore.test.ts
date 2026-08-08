@@ -148,7 +148,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when appending to an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
       const error = yield* store
         .appendTurn({ threadId: missing, parentTurnId: O.none(), role: "user", content: docOf("x") })
         .pipe(Effect.flip);
@@ -324,7 +324,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when setting the title for an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
       const error = yield* store
         .setTitleIfEmpty({ threadId: missing, emptyTitle: "New thread", title: "Missing" })
         .pipe(Effect.flip);

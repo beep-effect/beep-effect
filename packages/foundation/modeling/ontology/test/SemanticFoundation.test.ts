@@ -315,7 +315,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     "rejects traversal segments in librarian input at decode time",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.sync(() =>
-        S.decodeUnknownResult(LibrarianInput)({
+        S.decodeResult(LibrarianInput)({
           client: "acme",
           conceptIri: "https://ns.beep.sh/ontology/semantic-foundation/concept/email-message",
           documentClass: "received",

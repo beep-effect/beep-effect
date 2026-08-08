@@ -365,11 +365,11 @@ describe("@beep/xai", () => {
     expect(encode(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions)).toEqual({
       model: "grok-3",
     });
-    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpStatusCode)(99))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiHttpStatusCode)(99))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
   });
 
   it("round-trips crispened xAI schemas through their encoded form", () => {

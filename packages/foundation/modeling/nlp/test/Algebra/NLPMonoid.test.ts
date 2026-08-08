@@ -121,7 +121,7 @@ describe("Document Monoids", () => {
       fc.assert(
         fc.property(S.toArbitrary(NLP.DocumentStatistics), (stats) => {
           const encoded = Effect.runSync(S.encodeEffect(NLP.DocumentStatistics)(stats));
-          const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.DocumentStatistics)(encoded));
+          const decoded = Effect.runSync(S.decodeEffect(NLP.DocumentStatistics)(encoded));
 
           expect(statsEquals(decoded, stats)).toBe(true);
         })
@@ -138,7 +138,7 @@ describe("Linguistic Monoids", () => {
     fc.assert(
       fc.property(S.toArbitrary(NLP.DependencyEdge), (edge) => {
         const encoded = Effect.runSync(S.encodeEffect(NLP.DependencyEdge)(edge));
-        const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.DependencyEdge)(encoded));
+        const decoded = Effect.runSync(S.decodeEffect(NLP.DependencyEdge)(encoded));
 
         expect(edgeEquals(decoded, edge)).toBe(true);
       })
@@ -160,7 +160,7 @@ describe("TextAnalysis", () => {
     fc.assert(
       fc.property(S.toArbitrary(NLP.TextAnalysis), (analysis) => {
         const encoded = Effect.runSync(S.encodeEffect(NLP.TextAnalysis)(analysis));
-        const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.TextAnalysis)(encoded));
+        const decoded = Effect.runSync(S.decodeEffect(NLP.TextAnalysis)(encoded));
 
         expect(analysisEquals(decoded, analysis)).toBe(true);
       })

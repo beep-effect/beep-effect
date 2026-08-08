@@ -1492,7 +1492,9 @@ export class ProbeRegionLuminanceResult extends S.Class<ProbeRegionLuminanceResu
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFrameAtRequest = ExtractFrameAtRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractFrameAtRequest.decodeEffect.
+export const decodeExtractFrameAtRequest: (input: unknown) => Effect.Effect<ExtractFrameAtRequest, S.SchemaError> =
+  ExtractFrameAtRequest.decodeEffect;
 
 /**
  * Decode an unknown value into an extract-frames-at request.
@@ -1512,7 +1514,9 @@ export const decodeExtractFrameAtRequest = ExtractFrameAtRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesAtRequest = ExtractFramesAtRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractFramesAtRequest.decodeEffect.
+export const decodeExtractFramesAtRequest: (input: unknown) => Effect.Effect<ExtractFramesAtRequest, S.SchemaError> =
+  ExtractFramesAtRequest.decodeEffect;
 
 /**
  * Decode an unknown value into an extract-clip request.
@@ -1532,7 +1536,9 @@ export const decodeExtractFramesAtRequest = ExtractFramesAtRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractClipRequest = ExtractClipRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractClipRequest.decodeEffect.
+export const decodeExtractClipRequest: (input: unknown) => Effect.Effect<ExtractClipRequest, S.SchemaError> =
+  ExtractClipRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a render-gif request.
@@ -1553,7 +1559,9 @@ export const decodeExtractClipRequest = ExtractClipRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeRenderGifRequest = RenderGifRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on RenderGifRequest.decodeEffect.
+export const decodeRenderGifRequest: (input: unknown) => Effect.Effect<RenderGifRequest, S.SchemaError> =
+  RenderGifRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a render-contact-sheet request.
@@ -1572,7 +1580,10 @@ export const decodeRenderGifRequest = RenderGifRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeRenderContactSheetRequest = RenderContactSheetRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on RenderContactSheetRequest.decodeEffect.
+export const decodeRenderContactSheetRequest: (
+  input: unknown
+) => Effect.Effect<RenderContactSheetRequest, S.SchemaError> = RenderContactSheetRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-container-metadata request.
@@ -1592,7 +1603,10 @@ export const decodeRenderContactSheetRequest = RenderContactSheetRequest.decodeE
  * @category decoding
  * @since 0.0.0
  */
-export const decodeWriteContainerMetadataRequest = WriteContainerMetadataRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on WriteContainerMetadataRequest.decodeEffect.
+export const decodeWriteContainerMetadataRequest: (
+  input: unknown
+) => Effect.Effect<WriteContainerMetadataRequest, S.SchemaError> = WriteContainerMetadataRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a probe-region-luminance request.
@@ -1614,7 +1628,10 @@ export const decodeWriteContainerMetadataRequest = WriteContainerMetadataRequest
  * @category decoding
  * @since 0.0.0
  */
-export const decodeProbeRegionLuminanceRequest = ProbeRegionLuminanceRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ProbeRegionLuminanceRequest.decodeEffect.
+export const decodeProbeRegionLuminanceRequest: (
+  input: unknown
+) => Effect.Effect<ProbeRegionLuminanceRequest, S.SchemaError> = ProbeRegionLuminanceRequest.decodeEffect;
 
 /**
  * Encode an extract-frames-at manifest into its JSON-safe shape.
@@ -1649,4 +1666,7 @@ export const decodeProbeRegionLuminanceRequest = ProbeRegionLuminanceRequest.dec
  * @category encoding
  * @since 0.0.0
  */
-export const encodeExtractFramesAtManifest = ExtractFramesAtManifest.encodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ExtractFramesAtManifest.encodeEffect.
+export const encodeExtractFramesAtManifest: (
+  input: unknown
+) => Effect.Effect<typeof ExtractFramesAtManifest.Encoded, S.SchemaError> = ExtractFramesAtManifest.encodeEffect;

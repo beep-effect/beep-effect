@@ -9,6 +9,7 @@ import { $SharedDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Cuid, cuid } from "@beep/schema/Cuid";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { SegmentValue } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";
@@ -245,8 +246,14 @@ export const factory = <const Entity extends EntityId.Any>(
  * @since 0.0.0
  * @category constructors
  */
-export const fromCuid = <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity> =>
-  factory(entityId).fromUnknown(`${entityId.tableName}_${id}`);
+export const fromCuid: {
+  (id: Cuid): <const Entity extends EntityId.Any>(entityId: Entity) => PublicEntityIdFor<Entity>;
+  <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity>;
+} = dual(
+  2,
+  <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity> =>
+    factory(entityId).fromUnknown(`${entityId.tableName}_${id}`)
+);
 
 /**
  * Generate a public entity id for an entity schema.

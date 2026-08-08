@@ -10,8 +10,10 @@ import { LiteralKit, NonNegativeInt, SchemaUtils, TrimmedNonEmptyText } from "@b
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $OipWebId.create("contact/ContactSubmission.model");
 
@@ -396,4 +398,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  * @category utilities
  * @since 0.0.0
  */
-export const decodeContactSubmission = ContactSubmission.decodeUnknownEffect;
+export const decodeContactSubmission: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ContactSubmission, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ContactSubmission, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, ContactSubmission.decodeUnknownEffect);

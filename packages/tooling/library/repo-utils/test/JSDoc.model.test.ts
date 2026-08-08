@@ -20,7 +20,7 @@ describe("JSDoc schema models", () => {
     fc.assert(
       fc.property(TagNameArbitrary, (value) => {
         const encoded = S.encodeSync(TagName)(value);
-        const decoded = S.decodeUnknownSync(TagName)(encoded);
+        const decoded = S.decodeSync(TagName)(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -32,7 +32,7 @@ describe("JSDoc schema models", () => {
     fc.assert(
       fc.property(TagValueArbitrary, (value) => {
         const encoded = S.encodeSync(TagValue)(value);
-        const decoded = S.decodeUnknownSync(TagValue)(encoded);
+        const decoded = S.decodeSync(TagValue)(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -44,7 +44,7 @@ describe("JSDoc schema models", () => {
     fc.assert(
       fc.property(TSCategoryDefinitionArbitrary, (value) => {
         const encoded = S.encodeSync(TSCategoryDefinition)(value);
-        const decoded = S.decodeUnknownSync(TSCategoryDefinition)(encoded);
+        const decoded = S.decodeSync(TSCategoryDefinition)(encoded);
 
         expect(decoded).toEqual(value);
         expect(value.documentationPriority).toBeGreaterThanOrEqual(1);
@@ -58,7 +58,7 @@ describe("JSDoc schema models", () => {
     fc.assert(
       fc.property(CategorySignalArbitrary, (value) => {
         const encoded = S.encodeSync(CategorySignal)(value);
-        const decoded = S.decodeUnknownSync(CategorySignal)(encoded);
+        const decoded = S.decodeSync(CategorySignal)(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -67,7 +67,7 @@ describe("JSDoc schema models", () => {
     fc.assert(
       fc.property(ScoredCategoryCandidateArbitrary, (value) => {
         const encoded = S.encodeSync(ScoredCategoryCandidate)(value);
-        const decoded = S.decodeUnknownSync(ScoredCategoryCandidate)(encoded);
+        const decoded = S.decodeSync(ScoredCategoryCandidate)(encoded);
 
         expect(decoded).toEqual(value);
       }),

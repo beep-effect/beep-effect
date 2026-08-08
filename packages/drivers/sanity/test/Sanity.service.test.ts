@@ -194,10 +194,10 @@ describe("@beep/sanity", () => {
       status: 500,
       url: "https://api.sanity.io/v2025-05-14/data/query/production",
     });
-    expect(Result.isFailure(S.decodeUnknownResult(SanityQueryResponse)({ ms: -1, result: null }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(SanityQueryResponse)({ ms: -1, result: null }))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(SanityError)({
+        S.decodeResult(SanityError)({
           _tag: "SanityError",
           reason: "response status",
           status: 99,

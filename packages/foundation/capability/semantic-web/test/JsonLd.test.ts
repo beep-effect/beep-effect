@@ -163,15 +163,15 @@ describe("JSON-LD", () => {
         JsonLdFrameArbitrary,
         (context, literalValue, frame) => {
           const encodedContext = Effect.runSync(S.encodeEffect(JsonLdContext)(context));
-          const decodedContext = Effect.runSync(S.decodeUnknownEffect(JsonLdContext)(encodedContext));
+          const decodedContext = Effect.runSync(S.decodeEffect(JsonLdContext)(encodedContext));
           const reencodedContext = Effect.runSync(S.encodeEffect(JsonLdContext)(decodedContext));
 
           const encodedLiteralValue = Effect.runSync(S.encodeEffect(JsonLdLiteralValue)(literalValue));
-          const decodedLiteralValue = Effect.runSync(S.decodeUnknownEffect(JsonLdLiteralValue)(encodedLiteralValue));
+          const decodedLiteralValue = Effect.runSync(S.decodeEffect(JsonLdLiteralValue)(encodedLiteralValue));
           const reencodedLiteralValue = Effect.runSync(S.encodeEffect(JsonLdLiteralValue)(decodedLiteralValue));
 
           const encodedFrame = Effect.runSync(S.encodeEffect(JsonLdFrame)(frame));
-          const decodedFrame = Effect.runSync(S.decodeUnknownEffect(JsonLdFrame)(encodedFrame));
+          const decodedFrame = Effect.runSync(S.decodeEffect(JsonLdFrame)(encodedFrame));
           const reencodedFrame = Effect.runSync(S.encodeEffect(JsonLdFrame)(decodedFrame));
 
           expect(reencodedContext).toEqual(encodedContext);

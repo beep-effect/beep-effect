@@ -180,7 +180,7 @@ describe("floating dock topology", () => {
           )
         ).state;
         const encoded = yield* S.encodeEffect(DockSnapshot)(DockSnapshot.make({ workspace: state }));
-        const decoded = yield* S.decodeUnknownEffect(DockSnapshot)(encoded);
+        const decoded = yield* S.decodeEffect(DockSnapshot)(encoded);
         expect(decoded.workspace).toEqual(state);
       })
     );

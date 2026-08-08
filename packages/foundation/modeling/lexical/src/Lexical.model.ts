@@ -2943,7 +2943,7 @@ export declare namespace LexicalNodeWire {
    * @category serialization
    * @since 0.0.0
    */
-  export type Type = S.Schema.Type<typeof LexicalNodeWire>;
+  export type Type = LexicalNodeWire;
 
   /**
    * Encoded opaque wire node.

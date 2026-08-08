@@ -1,5 +1,6 @@
 import { Client as AcpClient } from "@beep/acp";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -13,7 +14,7 @@ const encoder = new TextEncoder();
 const JsonRpcId = S.Union([S.Finite, S.String]);
 const JsonRpcHeaders = S.Array(S.Unknown);
 
-export const jsonRpcRequest = <A, I>(method: string, params: S.Codec<A, I>) =>
+const jsonRpcRequestImpl = <A, I>(method: string, params: S.Codec<A, I>) =>
   S.Struct({
     headers: JsonRpcHeaders,
     id: JsonRpcId,
@@ -22,12 +23,22 @@ export const jsonRpcRequest = <A, I>(method: string, params: S.Codec<A, I>) =>
     params,
   });
 
-export const jsonRpcNotification = <A, I>(method: string, params: S.Codec<A, I>) =>
+export const jsonRpcRequest: {
+  <A, I>(params: S.Codec<A, I>): (method: string) => ReturnType<typeof jsonRpcRequestImpl<A, I>>;
+  <A, I>(method: string, params: S.Codec<A, I>): ReturnType<typeof jsonRpcRequestImpl<A, I>>;
+} = dual(2, jsonRpcRequestImpl);
+
+const jsonRpcNotificationImpl = <A, I>(method: string, params: S.Codec<A, I>) =>
   S.Struct({
     jsonrpc: S.Literal("2.0"),
     method: S.Literal(method),
     params,
   });
+
+export const jsonRpcNotification: {
+  <A, I>(params: S.Codec<A, I>): (method: string) => ReturnType<typeof jsonRpcNotificationImpl<A, I>>;
+  <A, I>(method: string, params: S.Codec<A, I>): ReturnType<typeof jsonRpcNotificationImpl<A, I>>;
+} = dual(2, jsonRpcNotificationImpl);
 
 export const jsonRpcResponse = <A, I>(result: S.Codec<A, I>) =>
   S.Struct({
@@ -36,8 +47,12 @@ export const jsonRpcResponse = <A, I>(result: S.Codec<A, I>) =>
     result,
   });
 
-export const encodeJsonl = <A, I>(schema: S.Codec<A, I>, value: A) =>
-  Effect.map(S.encodeEffect(S.fromJsonString(schema))(value), (encoded) => encoder.encode(`${encoded}\n`));
+export const encodeJsonl: {
+  <A>(value: A): <I>(schema: S.Codec<A, I>) => Effect.Effect<Uint8Array<ArrayBuffer>, S.SchemaError>;
+  <A, I>(schema: S.Codec<A, I>, value: A): Effect.Effect<Uint8Array<ArrayBuffer>, S.SchemaError>;
+} = dual(2, <A, I>(schema: S.Codec<A, I>, value: A) =>
+  Effect.map(S.encodeEffect(S.fromJsonString(schema))(value), (encoded) => encoder.encode(`${encoded}\n`))
+);
 
 export const makeChildStdio = (handle: ChildProcessSpawner.ChildProcessHandle) =>
   Stdio.make({

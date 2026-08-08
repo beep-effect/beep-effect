@@ -14,7 +14,11 @@
 
 import { $ObsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ObsId.create("ObsProtocol.models");
 
@@ -734,7 +738,10 @@ export type ObsOutgoingMessage = typeof ObsOutgoingMessage.Type;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeObsIncomingMessageJson = S.decodeUnknownEffect(S.fromJsonString(ObsIncomingMessage));
+export const decodeObsIncomingMessageJson: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<ObsIncomingMessage, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<ObsIncomingMessage, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ObsIncomingMessage)));
 
 /**
  * Encode an {@link ObsIncomingMessage} into a JSON text frame. Primarily
@@ -753,7 +760,15 @@ export const decodeObsIncomingMessageJson = S.decodeUnknownEffect(S.fromJsonStri
  * @category encoding
  * @since 0.0.0
  */
-export const encodeObsIncomingMessageJson = S.encodeEffect(S.fromJsonString(ObsIncomingMessage));
+export const encodeObsIncomingMessageJson: {
+  (options?: SchemaAST.ParseOptions): (input: ObsIncomingMessage) => Effect.Effect<string, S.SchemaError>;
+  (input: ObsIncomingMessage, options?: SchemaAST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(
+  // Dispatch on the `op` envelope discriminant: every `ObsIncomingMessage` carries
+  // one and `ParseOptions` never does.
+  (args) => P.hasProperty(args[0], "op"),
+  S.encodeEffect(S.fromJsonString(ObsIncomingMessage))
+);
 
 /**
  * Decode a raw obs-websocket JSON text frame into an {@link ObsOutgoingMessage}.
@@ -772,7 +787,10 @@ export const encodeObsIncomingMessageJson = S.encodeEffect(S.fromJsonString(ObsI
  * @category decoding
  * @since 0.0.0
  */
-export const decodeObsOutgoingMessageJson = S.decodeUnknownEffect(S.fromJsonString(ObsOutgoingMessage));
+export const decodeObsOutgoingMessageJson: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<ObsOutgoingMessage, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<ObsOutgoingMessage, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ObsOutgoingMessage)));
 
 /**
  * Encode an {@link ObsOutgoingMessage} into a JSON text frame for the wire.
@@ -790,7 +808,15 @@ export const decodeObsOutgoingMessageJson = S.decodeUnknownEffect(S.fromJsonStri
  * @category encoding
  * @since 0.0.0
  */
-export const encodeObsOutgoingMessageJson = S.encodeEffect(S.fromJsonString(ObsOutgoingMessage));
+export const encodeObsOutgoingMessageJson: {
+  (options?: SchemaAST.ParseOptions): (input: ObsOutgoingMessage) => Effect.Effect<string, S.SchemaError>;
+  (input: ObsOutgoingMessage, options?: SchemaAST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(
+  // Dispatch on the `op` envelope discriminant: every `ObsOutgoingMessage` carries
+  // one and `ParseOptions` never does.
+  (args) => P.hasProperty(args[0], "op"),
+  S.encodeEffect(S.fromJsonString(ObsOutgoingMessage))
+);
 
 /**
  * `RecordStateChanged` event data payload.

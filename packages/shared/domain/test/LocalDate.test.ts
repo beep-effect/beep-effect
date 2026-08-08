@@ -73,7 +73,7 @@ describe("LocalDate.Model", () => {
   it.effect(
     "decodes and encodes the schema class",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(Model)({ year: 2024, month: 6, day: 15 });
+      const decoded = yield* S.decodeEffect(Model)({ year: 2024, month: 6, day: 15 });
       const encoded = yield* S.encodeEffect(Model)(decoded);
 
       assert.strictEqual(decoded.toISOString(), "2024-06-15");
@@ -85,9 +85,9 @@ describe("LocalDate.Model", () => {
     fc.assert(
       fc.property(ModelArbitrary, (date) => {
         const encoded = S.encodeSync(Model)(date);
-        const decoded = S.decodeUnknownSync(Model)(encoded);
+        const decoded = S.decodeSync(Model)(encoded);
         const encodedString = S.encodeSync(LocalDateFromString)(date);
-        const decodedString = S.decodeUnknownSync(LocalDateFromString)(encodedString);
+        const decodedString = S.decodeSync(LocalDateFromString)(encodedString);
 
         assert.instanceOf(decoded, Model);
         assert.strictEqual(equals(decoded, date), true);
@@ -98,7 +98,7 @@ describe("LocalDate.Model", () => {
     ));
 
   it.effect("rejects impossible calendar dates at the schema boundary", () =>
-    expectFailure(S.decodeUnknownEffect(Model)({ year: 2024, month: 2, day: 30 }))
+    expectFailure(S.decodeEffect(Model)({ year: 2024, month: 2, day: 30 }))
   );
 });
 
@@ -292,7 +292,7 @@ describe("LocalDateFromString", () => {
         endDate: LocalDateFromString,
       });
 
-      const decoded = yield* S.decodeUnknownEffect(Params)({
+      const decoded = yield* S.decodeEffect(Params)({
         startDate: "2024-01-01",
         endDate: "2024-12-31",
       });

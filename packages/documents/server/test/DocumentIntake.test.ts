@@ -88,7 +88,7 @@ describe("@beep/documents-server DocumentIntake", () => {
       const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
       const bytes = new TextEncoder().encode("unclassifiable body");
 
-      const input = yield* S.decodeUnknownEffect(Document.IntakeDroppedFileInput)({
+      const input = yield* S.decodeEffect(Document.IntakeDroppedFileInput)({
         content: Buffer.from(bytes).toString("base64"),
         filingContext: DefaultVaultFilingContext,
         intakeBatchId: "Batch 42",

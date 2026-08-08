@@ -27,7 +27,7 @@ import * as S from "effect/Schema";
 // — it is exactly what `postMessage` does to the value.
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeUnknownSync(SessionId)("session-1"),
+    id: S.decodeSync(SessionId)("session-1"),
     baseDataset: makeDataset([
       makeQuad(
         makeNamedNode("https://example.test/alice"),

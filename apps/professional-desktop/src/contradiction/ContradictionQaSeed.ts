@@ -605,7 +605,7 @@ const ensureEvidence = Effect.fn("ContradictionQaSeed.ensureEvidence")(function*
 const ensureBelief = Effect.fn("ContradictionQaSeed.ensureBelief")(function* (specification: BeliefSpecification) {
   const db = yield* PostgresDrizzle;
   const repository = yield* EdgeAuthorityRepository;
-  const identity = yield* S.decodeUnknownEffect(LogicalEdgeIdentity)(specification.identity).pipe(
+  const identity = yield* S.decodeEffect(LogicalEdgeIdentity)(specification.identity).pipe(
     Effect.mapError(() => seedError("belief-conflict", "A contradiction QA belief identity is invalid."))
   );
   const expectedLogicalKey = logicalEdgeKey(identity);

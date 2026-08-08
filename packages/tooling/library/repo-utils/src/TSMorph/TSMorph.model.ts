@@ -1569,7 +1569,7 @@ class TsMorphScopeEntrypointFile extends S.Class<TsMorphScopeEntrypointFile>($I`
   })
 ) {
   static readonly new = (filePath: string) =>
-    TsMorphScopeEntrypointFile.make({ filePath: S.decodeUnknownSync(TypeScriptFilePath)(filePath) });
+    TsMorphScopeEntrypointFile.make({ filePath: S.decodeSync(TypeScriptFilePath)(filePath) });
 }
 
 /**

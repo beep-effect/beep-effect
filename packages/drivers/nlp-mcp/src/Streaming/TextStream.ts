@@ -317,28 +317,39 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
  * @since 0.0.0
  * @category streams
  */
-export const streamLines = (
-  filePath: string,
-  options: (typeof TextStreamOptions)["~type.make.in"] = {}
-): Stream.Stream<string, PlatformError, FileSystem.FileSystem | Path.Path> => {
-  const streamOptions = TextStreamOptions.make(options);
+export const streamLines: {
+  (
+    options?: (typeof TextStreamOptions)["~type.make.in"]
+  ): (filePath: string) => Stream.Stream<string, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof TextStreamOptions)["~type.make.in"]
+  ): Stream.Stream<string, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof TextStreamOptions)["~type.make.in"] = {}
+  ): Stream.Stream<string, PlatformError, FileSystem.FileSystem | Path.Path> => {
+    const streamOptions = TextStreamOptions.make(options);
 
-  return Stream.unwrap(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const resolved = yield* resolveLocalPath(filePath);
+    return Stream.unwrap(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const resolved = yield* resolveLocalPath(filePath);
 
-      return fs.stream(resolved).pipe(
-        Stream.decodeText({ encoding: streamOptions.encoding }),
-        Stream.splitLines,
-        Stream.drop(streamOptions.skip),
-        Stream.map((line) => (streamOptions.trim ? Str.trim(line) : line)),
-        Stream.filter((line) => !streamOptions.skipEmpty || Str.isNonEmpty(line)),
-        Stream.take(streamOptions.maxLines)
-      );
-    })
-  );
-};
+        return fs.stream(resolved).pipe(
+          Stream.decodeText({ encoding: streamOptions.encoding }),
+          Stream.splitLines,
+          Stream.drop(streamOptions.skip),
+          Stream.map((line) => (streamOptions.trim ? Str.trim(line) : line)),
+          Stream.filter((line) => !streamOptions.skipEmpty || Str.isNonEmpty(line)),
+          Stream.take(streamOptions.maxLines)
+        );
+      })
+    );
+  }
+);
 
 /**
  * Collect a text file into an array of processed lines.
@@ -356,11 +367,22 @@ export const streamLines = (
  * @since 0.0.0
  * @category utilities
  */
-export const readLines = (
-  filePath: string,
-  options: (typeof TextStreamOptions)["~type.make.in"] = {}
-): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
-  Stream.runCollect(streamLines(filePath, options));
+export const readLines: {
+  (
+    options?: (typeof TextStreamOptions)["~type.make.in"]
+  ): (filePath: string) => Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof TextStreamOptions)["~type.make.in"]
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof TextStreamOptions)["~type.make.in"] = {}
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
+    Stream.runCollect(streamLines(filePath, options))
+);
 
 /**
  * Read an entire text file into a single decoded string.
@@ -504,11 +526,22 @@ export const sampleLines = Effect.fn("TextStream.sampleLines")(function* (
  * @since 0.0.0
  * @category diagnostics
  */
-export const countLines = (
-  filePath: string,
-  options: (typeof TextReadOptions)["~type.make.in"] = {}
-): Effect.Effect<number, PlatformError, FileSystem.FileSystem | Path.Path> =>
-  Stream.runCount(streamLines(filePath, options));
+export const countLines: {
+  (
+    options?: (typeof TextReadOptions)["~type.make.in"]
+  ): (filePath: string) => Effect.Effect<number, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof TextReadOptions)["~type.make.in"]
+  ): Effect.Effect<number, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] = {}
+  ): Effect.Effect<number, PlatformError, FileSystem.FileSystem | Path.Path> =>
+    Stream.runCount(streamLines(filePath, options))
+);
 
 /**
  * Report whether a path exists.
@@ -571,45 +604,56 @@ export const getFileSize = Effect.fn("TextStream.getFileSize")(function* (filePa
  * @since 0.0.0
  * @category diagnostics
  */
-export const computeStats = (
-  filePath: string,
-  options: (typeof TextReadOptions)["~type.make.in"] = {}
-): Effect.Effect<TextStreamStats, PlatformError, FileSystem.FileSystem | Path.Path> =>
-  streamLines(filePath, options).pipe(
-    Stream.runFold(
-      (): {
-        maxLineLength: number;
-        minLineLength: number;
-        nonEmptyLines: number;
-        totalBytes: number;
-        totalLength: number;
-        totalLines: number;
-      } => ({
-        maxLineLength: 0,
-        minLineLength: Number.MAX_SAFE_INTEGER,
-        nonEmptyLines: 0,
-        totalBytes: 0,
-        totalLength: 0,
-        totalLines: 0,
-      }),
-      (acc, line) => ({
-        maxLineLength: Num.max(acc.maxLineLength, Str.length(line)),
-        minLineLength: Num.min(acc.minLineLength, Str.length(line)),
-        nonEmptyLines: acc.nonEmptyLines + (Str.isNonEmpty(line) ? 1 : 0),
-        totalBytes: acc.totalBytes + byteLength(line) + 1,
-        totalLength: acc.totalLength + Str.length(line),
-        totalLines: acc.totalLines + 1,
-      })
-    ),
-    Effect.map(
-      (acc): TextStreamStats =>
-        TextStreamStats.make({
-          avgLineLength: acc.totalLines > 0 ? acc.totalLength / acc.totalLines : 0,
-          maxLineLength: acc.maxLineLength,
-          minLineLength: acc.totalLines > 0 ? acc.minLineLength : 0,
-          nonEmptyLines: acc.nonEmptyLines,
-          totalBytes: acc.totalBytes,
-          totalLines: acc.totalLines,
+export const computeStats: {
+  (
+    options?: (typeof TextReadOptions)["~type.make.in"]
+  ): (filePath: string) => Effect.Effect<TextStreamStats, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof TextReadOptions)["~type.make.in"]
+  ): Effect.Effect<TextStreamStats, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] = {}
+  ): Effect.Effect<TextStreamStats, PlatformError, FileSystem.FileSystem | Path.Path> =>
+    streamLines(filePath, options).pipe(
+      Stream.runFold(
+        (): {
+          maxLineLength: number;
+          minLineLength: number;
+          nonEmptyLines: number;
+          totalBytes: number;
+          totalLength: number;
+          totalLines: number;
+        } => ({
+          maxLineLength: 0,
+          minLineLength: Number.MAX_SAFE_INTEGER,
+          nonEmptyLines: 0,
+          totalBytes: 0,
+          totalLength: 0,
+          totalLines: 0,
+        }),
+        (acc, line) => ({
+          maxLineLength: Num.max(acc.maxLineLength, Str.length(line)),
+          minLineLength: Num.min(acc.minLineLength, Str.length(line)),
+          nonEmptyLines: acc.nonEmptyLines + (Str.isNonEmpty(line) ? 1 : 0),
+          totalBytes: acc.totalBytes + byteLength(line) + 1,
+          totalLength: acc.totalLength + Str.length(line),
+          totalLines: acc.totalLines + 1,
         })
+      ),
+      Effect.map(
+        (acc): TextStreamStats =>
+          TextStreamStats.make({
+            avgLineLength: acc.totalLines > 0 ? acc.totalLength / acc.totalLines : 0,
+            maxLineLength: acc.maxLineLength,
+            minLineLength: acc.totalLines > 0 ? acc.minLineLength : 0,
+            nonEmptyLines: acc.nonEmptyLines,
+            totalBytes: acc.totalBytes,
+            totalLines: acc.totalLines,
+          })
+      )
     )
-  );
+);

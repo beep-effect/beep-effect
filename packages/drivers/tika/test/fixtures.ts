@@ -5,6 +5,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
@@ -77,15 +79,21 @@ export const fixtureText = (format: TikaFixtureFormat): string => fixtureContent
  * single metadata record whose extracted text lives under `X-TIKA:content`.
  * The `image-metadata` payload carries metadata keys only.
  */
-export const tikaRmetaResponse = (format: TikaFixtureFormat, content = fixtureContent[format]): string =>
-  JSON.stringify([
-    {
-      "Content-Type": fixtureContentTypes[format],
-      "dc:title": `${format} fixture`,
-      "X-TIKA:Parsed-By": ["org.apache.tika.parser.CompositeParser", "org.apache.tika.parser.DefaultParser"],
-      ...(format === "image-metadata" ? {} : { "X-TIKA:content": content }),
-    },
-  ]);
+export const tikaRmetaResponse: {
+  (format: TikaFixtureFormat, content?: string): string;
+  (content?: string): (format: TikaFixtureFormat) => string;
+} = dual(
+  (args) => R.has(fixtureContent, args[0]),
+  (format: TikaFixtureFormat, content: string = fixtureContent[format]): string =>
+    JSON.stringify([
+      {
+        "Content-Type": fixtureContentTypes[format],
+        "dc:title": `${format} fixture`,
+        "X-TIKA:Parsed-By": ["org.apache.tika.parser.CompositeParser", "org.apache.tika.parser.DefaultParser"],
+        ...(format === "image-metadata" ? {} : { "X-TIKA:content": content }),
+      },
+    ])
+);
 
 type ExtractOperationOverrides = {
   readonly bytes?: Uint8Array | undefined;
@@ -106,7 +114,7 @@ export const makeExtractOperationFixture = Effect.fn("TikaFixtures.makeExtractOp
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
   const extension = fixtureExtensions[format];
   const name = `fixture.${extension}`;
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)(name);
+  const relativePath = yield* S.decodeEffect(PosixPath)(name);
   const bytes = overrides.bytes ?? textEncoder.encode(`${format} fixture bytes`);
 
   return ExtractFileOperation.make({

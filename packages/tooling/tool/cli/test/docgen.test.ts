@@ -1607,7 +1607,7 @@ export const AccountFlags = {
  * @category schemas
  * @since 0.0.0
  */
-export type AccountFlags = Schema.Schema.Type<typeof AccountFlags>;
+export type AccountFlags = typeof AccountFlags.Type;
 
 /**
  * Account graph schema.

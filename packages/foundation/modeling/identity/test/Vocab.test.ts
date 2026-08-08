@@ -87,6 +87,6 @@ describe("CoreVocab runtime invariants", () => {
   });
 
   it("accepts CoreVocab through the runtime registry schema", () => {
-    expect(O.isSome(S.decodeUnknownOption(VocabRegistry)(CoreVocab))).toBe(true);
+    expect(O.isSome(S.decodeOption(VocabRegistry)(CoreVocab))).toBe(true);
   });
 });

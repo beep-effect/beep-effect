@@ -9,9 +9,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const workItemId = Result.getOrThrow(S.decodeUnknownResult(DomainWorkItem.WorkItemId)("work-item-1"));
-const workerId = Result.getOrThrow(S.decodeUnknownResult(DomainWorker.WorkerId)(1));
-const organizationId = Result.getOrThrow(S.decodeUnknownResult(DomainWorker.WorkerOrganizationId)(10));
+const workItemId = Result.getOrThrow(S.decodeResult(DomainWorkItem.WorkItemId)("work-item-1"));
+const workerId = Result.getOrThrow(S.decodeResult(DomainWorker.WorkerId)(1));
+const organizationId = Result.getOrThrow(S.decodeResult(DomainWorker.WorkerOrganizationId)(10));
 
 const schemaParityCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
   ["CreateWorkItemCommand", WorkItem.CreateWorkItemCommand],

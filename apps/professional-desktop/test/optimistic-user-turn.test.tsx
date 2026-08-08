@@ -25,7 +25,7 @@ import { AsyncResult, Reactivity } from "effect/unstable/reactivity";
 import { afterEach, beforeAll, describe, expect, vi } from "vitest";
 import type { JSX } from "react";
 
-const threadId = S.decodeUnknownSync(WorkspaceIdentity.ThreadId)(1);
+const threadId = S.decodeSync(WorkspaceIdentity.ThreadId)(1);
 
 const userMessage = MdModel.Document.make({
   children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "what did I just ask?" })] })],

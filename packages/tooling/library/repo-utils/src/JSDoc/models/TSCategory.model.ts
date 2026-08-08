@@ -1537,39 +1537,52 @@ export function getCandidateCategories(signals: ReadonlyArray<CategorySignal>): 
  * @category utilities
  * @since 0.0.0
  */
-export function resolveContextFallback(
-  scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
-  ancestorCategory?: CategoryTag,
-  sourceFileDominantCategory?: CategoryTag
-): CategoryTag {
-  const resolvedAncestor = pipe(
-    ancestorCategory,
-    O.fromUndefinedOr,
-    O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
-  );
+export const resolveContextFallback: {
+  (
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): (scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>) => CategoryTag;
+  (
+    scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): CategoryTag;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (
+    scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): CategoryTag => {
+    const resolvedAncestor = pipe(
+      ancestorCategory,
+      O.fromUndefinedOr,
+      O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
+    );
 
-  if (O.isSome(resolvedAncestor)) {
-    return resolvedAncestor.value;
+    if (O.isSome(resolvedAncestor)) {
+      return resolvedAncestor.value;
+    }
+
+    const resolvedSourceFileDominant = pipe(
+      sourceFileDominantCategory,
+      O.fromUndefinedOr,
+      O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
+    );
+
+    if (O.isSome(resolvedSourceFileDominant)) {
+      return resolvedSourceFileDominant.value;
+    }
+
+    return pipe(
+      scoredCandidates,
+      A.head,
+      O.filter((candidate) => candidate.combinedConfidence >= UNCATEGORIZED_GUARDRAIL_THRESHOLD),
+      O.map((candidate) => candidate.category._tag),
+      O.getOrElse(() => UNCATEGORIZED_CATEGORY_TAG)
+    );
   }
-
-  const resolvedSourceFileDominant = pipe(
-    sourceFileDominantCategory,
-    O.fromUndefinedOr,
-    O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
-  );
-
-  if (O.isSome(resolvedSourceFileDominant)) {
-    return resolvedSourceFileDominant.value;
-  }
-
-  return pipe(
-    scoredCandidates,
-    A.head,
-    O.filter((candidate) => candidate.combinedConfidence >= UNCATEGORIZED_GUARDRAIL_THRESHOLD),
-    O.map((candidate) => candidate.category._tag),
-    O.getOrElse(() => UNCATEGORIZED_CATEGORY_TAG)
-  );
-}
+);
 
 /**
  * The TypeScript Category Tag

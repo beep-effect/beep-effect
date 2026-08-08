@@ -211,7 +211,7 @@ export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* 
  *
  * const createUser = Effect.succeed({ id: "user__1", name: "Alice" })
  *
- * const tracked = trackDuration(timer, createUser, { attributes: { service: "iam" } })
+ * const tracked = trackDuration(createUser, timer, { attributes: { service: "iam" } })
  *
  * console.log(Effect.runPromise(tracked))
  * ```
@@ -270,11 +270,6 @@ export const trackDuration: {
   (
     metric: Metric.Metric<Duration.Duration, unknown>
   ): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
-  <A, E, R>(
-    metric: Metric.Metric<Duration.Duration, unknown>,
-    effect: Effect.Effect<A, E, R>,
-    options?: TrackDurationOptionsInput
-  ): Effect.Effect<A, E, R>;
 } = dual(
   isTrackDurationDataFirst,
   Effect.fn("trackDuration")(function* <A, E, R>(

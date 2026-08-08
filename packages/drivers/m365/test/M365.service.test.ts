@@ -267,7 +267,7 @@ const routeFixture = (request: HttpClientRequest.HttpClientRequest): Effect.Effe
 describe("@beep/m365 service", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeUnknownResult(M365ConfigInput)({
+      S.decodeResult(M365ConfigInput)({
         authority: "https://login.microsoftonline.com/common",
         clientId: "client-id",
         graphBaseUrl: GRAPH_BASE_URL,
@@ -279,7 +279,7 @@ describe("@beep/m365 service", () => {
       })
     );
     const drive = Result.getOrThrow(
-      S.decodeUnknownResult(GraphDrive)({
+      S.decodeResult(GraphDrive)({
         id: DRIVE_ID,
         quota: {
           remaining: 12,
@@ -288,22 +288,22 @@ describe("@beep/m365 service", () => {
         },
       })
     );
-    const folder = Result.getOrThrow(S.decodeUnknownResult(GraphFolder)({ childCount: 2 }));
+    const folder = Result.getOrThrow(S.decodeResult(GraphFolder)({ childCount: 2 }));
     const item = Result.getOrThrow(
-      S.decodeUnknownResult(GraphDriveItem)({
+      S.decodeResult(GraphDriveItem)({
         folder: { childCount: 2 },
         id: ITEM_ID,
         size: 3,
       })
     );
     const messagesRequest = Result.getOrThrow(
-      S.decodeUnknownResult(M365ListMessagesRequest)({
+      S.decodeResult(M365ListMessagesRequest)({
         filter: "receivedDateTime ge 2026-01-01",
         top: 2,
         userId: "user-id",
       })
     );
-    const sitesRequest = Result.getOrThrow(S.decodeUnknownResult(M365ListSitesRequest)({}));
+    const sitesRequest = Result.getOrThrow(S.decodeResult(M365ListSitesRequest)({}));
     const error = M365Error.fromReason("throttled", {
       resource: "drives",
       retryAfterSeconds: 12,

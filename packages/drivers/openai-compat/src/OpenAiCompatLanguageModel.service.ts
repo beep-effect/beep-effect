@@ -14,6 +14,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -1064,19 +1065,30 @@ export const layer = (
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: string,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
-  AiModel.make(
-    "openai-compat",
-    modelName,
-    layer(
-      config === undefined
-        ? { model: modelName }
-        : {
-            config,
-            model: modelName,
-          }
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: string) => AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
+    AiModel.make(
+      "openai-compat",
+      modelName,
+      layer(
+        config === undefined
+          ? { model: modelName }
+          : {
+              config,
+              model: modelName,
+            }
+      )
     )
-  );
+);

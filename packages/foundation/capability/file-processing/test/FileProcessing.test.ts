@@ -66,13 +66,9 @@ const assertJsonRoundTrip = <A, EncodeError, DecodeError>(
 };
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  digest: S.decodeEffect(ContentDigest)("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   ),
 });
@@ -134,16 +130,16 @@ describe("@beep/file-processing", () => {
         ExtractFileOperationArbitrary,
         ProcessFileOperationArbitrary,
         (artifactId, digest, operationId, source, extractOperation, processOperation) => {
-          const decodedArtifactId = Effect.runSync(S.decodeUnknownEffect(ArtifactId)(artifactId));
-          const decodedDigest = Effect.runSync(S.decodeUnknownEffect(ContentDigest)(digest));
-          const decodedOperationId = Effect.runSync(S.decodeUnknownEffect(OperationId)(operationId));
+          const decodedArtifactId = Effect.runSync(S.decodeEffect(ArtifactId)(artifactId));
+          const decodedDigest = Effect.runSync(S.decodeEffect(ContentDigest)(digest));
+          const decodedOperationId = Effect.runSync(S.decodeEffect(OperationId)(operationId));
           const encodedSource = Effect.runSync(S.encodeEffect(SourceArtifact)(source));
-          const decodedSource = Effect.runSync(S.decodeUnknownEffect(SourceArtifact)(encodedSource));
+          const decodedSource = Effect.runSync(S.decodeEffect(SourceArtifact)(encodedSource));
           const reencodedSource = Effect.runSync(S.encodeEffect(SourceArtifact)(decodedSource));
           const encodedExtract = Effect.runSync(S.encodeEffect(ExtractFileOperation)(extractOperation));
-          const decodedExtract = Effect.runSync(S.decodeUnknownEffect(ExtractFileOperation)(encodedExtract));
+          const decodedExtract = Effect.runSync(S.decodeEffect(ExtractFileOperation)(encodedExtract));
           const encodedProcess = Effect.runSync(S.encodeEffect(ProcessFileOperation)(processOperation));
-          const decodedProcess = Effect.runSync(S.decodeUnknownEffect(ProcessFileOperation)(encodedProcess));
+          const decodedProcess = Effect.runSync(S.decodeEffect(ProcessFileOperation)(encodedProcess));
 
           expect(decodedArtifactId).toBe(artifactId);
           expect(decodedDigest).toBe(digest);

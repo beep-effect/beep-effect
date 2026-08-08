@@ -48,6 +48,7 @@ import { A, O, R, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   optionalPulumiConfigFields,
@@ -652,97 +653,100 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
  * @category constructors
  * @since 0.0.0
  */
-export const makeOpenClawDeploymentIntent = (
-  deployment: OpenClawDeploymentConfig,
-  configRoot = defaultConfigRoot
-): OpenclawDeploymentIntent =>
-  OpenclawDeploymentIntent.make({
-    agent: OpenclawAgentIntent.make({
-      id: deployment.agentId,
-      model: `${deployment.hostedProvider.providerId}/${deployment.hostedProvider.modelId}`,
-      name: deployment.agentName,
-      workspace: `${configRoot}/${generationPointerName}/workspace`,
-    }),
-    authProfiles: [
-      OpenclawAuthProfileIntent.make({
-        mode: "api_key",
-        profileId: `${deployment.hostedProvider.providerId}:managed`,
-        provider: deployment.hostedProvider.providerId,
+export const makeOpenClawDeploymentIntent: {
+  (configRoot?: string): (deployment: OpenClawDeploymentConfig) => OpenclawDeploymentIntent;
+  (deployment: OpenClawDeploymentConfig, configRoot?: string): OpenclawDeploymentIntent;
+} = dual(
+  (args) => args.length >= 1 && !Str.isString(args[0]),
+  (deployment: OpenClawDeploymentConfig, configRoot: string = defaultConfigRoot): OpenclawDeploymentIntent =>
+    OpenclawDeploymentIntent.make({
+      agent: OpenclawAgentIntent.make({
+        id: deployment.agentId,
+        model: `${deployment.hostedProvider.providerId}/${deployment.hostedProvider.modelId}`,
+        name: deployment.agentName,
+        workspace: `${configRoot}/${generationPointerName}/workspace`,
       }),
-    ],
-    controlUi: OpenclawControlUiIntent.make({
-      allowedOrigins: [`http://127.0.0.1:${deployment.gatewayPort}`, `http://localhost:${deployment.gatewayPort}`],
-      enabled: true,
-    }),
-    gateway: OpenclawGatewayIntent.make({
-      authTokenRef: deployment.gatewayAuthTokenRef,
-      port: deployment.gatewayPort,
-    }),
-    guardrails: OpenclawGuardrailsIntent.make({ toolsDeny: ["*"] }),
-    logging: OpenclawLoggingIntent.make({ filePath: deployment.logFilePath }),
-    openclawVersion: deployment.openclawVersion,
-    persona: OpenclawPersonaIntent.make({
-      clientDataPolicy: "synthetic-only",
-      confidentialityPolicy: "advisory",
-      soulMarkdown: openClawLegalSoulMarkdown,
-    }),
-    providers: [
-      OpenclawModelProviderIntent.make({
-        api: "openai-compat",
-        apiKey: OpenclawProviderApiKeySecretRef.make({
-          _tag: "SecretRef",
-          ref: deployment.hostedProvider.apiKeyRef,
+      authProfiles: [
+        OpenclawAuthProfileIntent.make({
+          mode: "api_key",
+          profileId: `${deployment.hostedProvider.providerId}:managed`,
+          provider: deployment.hostedProvider.providerId,
         }),
-        baseUrl: deployment.hostedProvider.baseUrl,
-        id: deployment.hostedProvider.providerId,
-        models: [
-          OpenclawModelDeclaration.make({
-            id: deployment.hostedProvider.modelId,
-            input: ["text"],
-            name: deployment.hostedProvider.modelName,
-          }),
-        ],
+      ],
+      controlUi: OpenclawControlUiIntent.make({
+        allowedOrigins: [`http://127.0.0.1:${deployment.gatewayPort}`, `http://localhost:${deployment.gatewayPort}`],
+        enabled: true,
       }),
-      OpenclawModelProviderIntent.make({
-        api: "openai-compat",
-        apiKey: OpenclawProviderApiKeyPlaceholder.make({
-          _tag: "Placeholder",
-          value: localProviderPlaceholder,
+      gateway: OpenclawGatewayIntent.make({
+        authTokenRef: deployment.gatewayAuthTokenRef,
+        port: deployment.gatewayPort,
+      }),
+      guardrails: OpenclawGuardrailsIntent.make({ toolsDeny: ["*"] }),
+      logging: OpenclawLoggingIntent.make({ filePath: deployment.logFilePath }),
+      openclawVersion: deployment.openclawVersion,
+      persona: OpenclawPersonaIntent.make({
+        clientDataPolicy: "synthetic-only",
+        confidentialityPolicy: "advisory",
+        soulMarkdown: openClawLegalSoulMarkdown,
+      }),
+      providers: [
+        OpenclawModelProviderIntent.make({
+          api: "openai-compat",
+          apiKey: OpenclawProviderApiKeySecretRef.make({
+            _tag: "SecretRef",
+            ref: deployment.hostedProvider.apiKeyRef,
+          }),
+          baseUrl: deployment.hostedProvider.baseUrl,
+          id: deployment.hostedProvider.providerId,
+          models: [
+            OpenclawModelDeclaration.make({
+              id: deployment.hostedProvider.modelId,
+              input: ["text"],
+              name: deployment.hostedProvider.modelName,
+            }),
+          ],
         }),
-        baseUrl: deployment.localProvider.baseUrl,
-        id: deployment.localProvider.providerId,
-        models: [
-          OpenclawModelDeclaration.make({
-            id: deployment.localProvider.modelId,
-            input: ["text"],
-            name: deployment.localProvider.modelName,
+        OpenclawModelProviderIntent.make({
+          api: "openai-compat",
+          apiKey: OpenclawProviderApiKeyPlaceholder.make({
+            _tag: "Placeholder",
+            value: localProviderPlaceholder,
           }),
-        ],
+          baseUrl: deployment.localProvider.baseUrl,
+          id: deployment.localProvider.providerId,
+          models: [
+            OpenclawModelDeclaration.make({
+              id: deployment.localProvider.modelId,
+              input: ["text"],
+              name: deployment.localProvider.modelName,
+            }),
+          ],
+        }),
+      ],
+      secretsResolver: OpenclawSecretsResolverIntent.make({
+        commandPath: deployment.resolverCommandPath,
+        opBinaryPath: deployment.resolverOpBinaryPath,
+        trustedDir: deployment.resolverTrustedDir,
       }),
-    ],
-    secretsResolver: OpenclawSecretsResolverIntent.make({
-      commandPath: deployment.resolverCommandPath,
-      opBinaryPath: deployment.resolverOpBinaryPath,
-      trustedDir: deployment.resolverTrustedDir,
-    }),
-    skills: [
-      OpenclawSkillPin.make({
-        integrity: createHash("sha256").update(openClawProofSkillMarkdown, "utf8").digest("hex"),
-        name: proofSkillName,
-        source: proofSkillSource,
-        version: proofSkillVersion,
-      }),
-    ],
-    telegram: O.some(
-      OpenclawTelegramIntent.make({
-        botTokenRef: deployment.telegramBotTokenRef,
-        defaultTo: deployment.telegramDefaultTo,
-        dmPolicy: deployment.telegramDmPolicy,
-        groupPolicy: deployment.telegramGroupPolicy,
-        groups: {},
-      })
-    ),
-  });
+      skills: [
+        OpenclawSkillPin.make({
+          integrity: createHash("sha256").update(openClawProofSkillMarkdown, "utf8").digest("hex"),
+          name: proofSkillName,
+          source: proofSkillSource,
+          version: proofSkillVersion,
+        }),
+      ],
+      telegram: O.some(
+        OpenclawTelegramIntent.make({
+          botTokenRef: deployment.telegramBotTokenRef,
+          defaultTo: deployment.telegramDefaultTo,
+          dmPolicy: deployment.telegramDmPolicy,
+          groupPolicy: deployment.telegramGroupPolicy,
+          groups: {},
+        })
+      ),
+    })
+);
 
 /**
  * Backup shipping inputs for encrypted generation snapshots.

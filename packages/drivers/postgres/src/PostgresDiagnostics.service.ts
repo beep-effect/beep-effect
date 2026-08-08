@@ -8,6 +8,7 @@
 import colors from "@beep/colors";
 import { A, Str } from "@beep/utils";
 import { Cause, Console, flow, pipe, Result } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { format } from "sql-formatter";
@@ -293,31 +294,35 @@ const normalizePostgresError = (error: unknown): PostgresError => {
  *
  * @example
  * ```ts
+ * import { pipe } from "effect"
  * import { formatSql } from "@beep/postgres"
  *
  * const sql = formatSql("select * from users where id = $1", [1])
- * console.log(sql)
+ * const piped = pipe("select * from users where id = $1", formatSql([1]))
+ * console.log(sql, piped)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const formatSql = (
-  statement: string,
-  parameters: ReadonlyArray<unknown> = [],
-  palette: Colors = colors
-): string => {
-  const formatted = formatStatement(statement);
-  const highlighted = pipe(
-    formatted,
-    Str.split("\n"),
-    A.map((line) => highlightLine(line, palette)),
-    A.join("\n")
-  );
-  const renderedParams = formatParams(parameters, palette);
+export const formatSql: {
+  (parameters?: ReadonlyArray<unknown>, palette?: Colors): (statement: string) => string;
+  (statement: string, parameters?: ReadonlyArray<unknown>, palette?: Colors): string;
+} = dual(
+  (args) => P.isString(args[0]),
+  (statement: string, parameters: ReadonlyArray<unknown> = [], palette: Colors = colors): string => {
+    const formatted = formatStatement(statement);
+    const highlighted = pipe(
+      formatted,
+      Str.split("\n"),
+      A.map((line) => highlightLine(line, palette)),
+      A.join("\n")
+    );
+    const renderedParams = formatParams(parameters, palette);
 
-  return renderedParams.length === 0 ? highlighted : `${highlighted}\n${renderedParams}`;
-};
+    return renderedParams.length === 0 ? highlighted : `${highlighted}\n${renderedParams}`;
+  }
+);
 
 /**
  * Render a Postgres failure with diagnostics and formatted SQL.

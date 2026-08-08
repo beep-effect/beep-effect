@@ -86,7 +86,7 @@ export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, Dom
  * @since 0.0.0
  */
 export const jsonParse: (input: string) => Effect.Effect<unknown, DomainError> = Effect.fn(function* (input) {
-  return yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(input).pipe(
+  return yield* S.decodeEffect(S.fromJsonString(S.Unknown))(input).pipe(
     Effect.mapError((e) => DomainError.make({ message: `JSON parse failed: ${e.message}`, cause: e }))
   );
 });
