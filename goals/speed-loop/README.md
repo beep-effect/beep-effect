@@ -11,7 +11,9 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 Run the research → probe → grill → ship → harvest cycle as a standing agentic
 loop over repo quality/speed/performance, until two consecutive cycles' best
 probe-gated candidates each measure under ~30 seconds of full-sweep saving
-(the stop rule — see `SPEC.md`).
+(the stop rule — see `SPEC.md`; superseded 2026-08-08 by signed decisions
+54-55, which closed the packet by graduation instead — see the SPEC's
+supersession note).
 
 ## Read This First
 

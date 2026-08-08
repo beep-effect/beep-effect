@@ -22,7 +22,7 @@ the performance layer follows on its own track without becoming subordinate.
 ## Immediate next action
 
 Execute P1 only: validate 1Password secret references through the authorized
-Developer Environment flow, mint/install the repo-scoped GitHub App, then
+`BEEP_CI` vault flow, mint/install the repo-scoped GitHub App, then
 prove the module on a non-serving shadow label through the existing Pulumi
 backend. Do not start cache or AMI work before the module is deployed.
 
