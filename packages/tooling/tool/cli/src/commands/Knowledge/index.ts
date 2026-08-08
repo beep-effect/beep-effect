@@ -20,6 +20,13 @@ export * from "./Knowledge.command.ts";
  */
 export * from "./Knowledge.errors.ts";
 /**
+ * Reference census schemas, shared scanning machinery, classifier, and tree evaluator.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Knowledge.refs.ts";
+/**
  * Versioned Stage-1 finding and delta-report schema surface.
  *
  * @category schemas
