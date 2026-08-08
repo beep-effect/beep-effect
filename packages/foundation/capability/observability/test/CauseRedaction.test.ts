@@ -111,6 +111,24 @@ describe("CauseRedaction", () => {
   );
 
   it.effect(
+    "logs through the curried data-last form with the same redaction",
+    Effect.fnUntraced(function* () {
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+
+      yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
+        Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
+      ).pipe(Effect.provide(Logger.layer([logger])));
+
+      expect(annotations).toHaveLength(1);
+      expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+      expect(annotations[0]?.cause_classification).toBe("failure");
+    })
+  );
+
+  it.effect(
     "observes a boundary failure without changing its Cause",
     Effect.fnUntraced(function* () {
       const original = Cause.fail(new Error("boom"));
