@@ -120,6 +120,12 @@ jobs:
       # heap — a soft limit trades CPU for survival. Remove when lanes move to
       # owned runners with real memory.
       GOMEMLIMIT: 10GiB
+      # The Node-side twin: package builds run V8 tsc, whose default heap cap
+      # scales with machine RAM (~8GB here), so two concurrent builds in the
+      # concurrency-2 lanes OOM the VM the same way tsgo did (Test Integration
+      # died on epistemic #build tasks, exit 137). 5GB x 2 fits; local dev is
+      # unaffected because this is CI job env, not repo config.
+      NODE_OPTIONS: --max-old-space-size=5120
       TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
       TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
