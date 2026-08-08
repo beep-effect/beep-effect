@@ -13,7 +13,8 @@ import type { Table } from "./ClaimDisposition.table.ts";
 /**
  * Selected epistemic ClaimDisposition row.
  *
- * @example
+ * **Example** (Selected row with violations)
+ *
  * ```ts
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
  *
@@ -55,7 +56,8 @@ export type ClaimDispositionRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic ClaimDisposition row.
  *
- * @example
+ * **Example** (Insertable row without id)
+ *
  * ```ts
  * import type { ClaimDispositionInsert } from "@beep/epistemic-tables/entities/ClaimDisposition"
  *
@@ -92,11 +94,14 @@ const decodeClaimDispositionRow = S.decodeUnknownSync(ClaimDisposition);
 /**
  * Convert a ClaimDisposition entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the
  * snake_case column shape produced by {@link Table}. The database-managed
  * `id` (SERIAL) is dropped so the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert omits database id)
+ *
  * ```ts
  * import { fromClaimDispositionRow, toClaimDispositionInsert } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
@@ -143,7 +148,8 @@ export const toClaimDispositionInsert = (claimDisposition: ClaimDisposition): Cl
 /**
  * Convert a selected persistence row into a ClaimDisposition entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import { fromClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"

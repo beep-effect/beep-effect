@@ -97,7 +97,8 @@ const getQuotedFieldStart = (input: string, cursor: number, parserOptions: Parse
  * Parsed CSV field with the cursor position after the field and normalized
  * string value.
  *
- * @example
+ * **Example** (Create ParsedField value)
+ *
  * ```ts
  * import { ParsedField } from "@beep/schema/CsvParser"
  *
@@ -252,7 +253,8 @@ const parseField = (
 /**
  * Parsed CSV row with the cursor position after the row and raw field values.
  *
- * @example
+ * **Example** (Create ParsedRow value)
+ *
  * ```ts
  * import { ParsedRow } from "@beep/schema/CsvParser"
  *
@@ -396,7 +398,8 @@ const parseCsvRowsEffect = Effect.fn("CsvParser.parseCsvRowsEffect")(function* (
 /**
  * Parse full CSV text into raw row arrays using low-level parser options.
  *
- * @example
+ * **Example** (Parse CSV into rows)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { parseCsvRows } from "@beep/schema/CsvParser"

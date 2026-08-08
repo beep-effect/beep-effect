@@ -20,7 +20,8 @@ import type { FieldOption } from "../core/Options.ts";
  * label/description/options; binding props (`value`/`onValueChange`/`name`) are
  * owned by the field.
  *
- * @example
+ * **Example** (Plan radio group props)
+ *
  * ```ts
  * import type { RadioGroupFieldProps } from "@beep/form/fields/RadioGroupField"
  *
@@ -48,7 +49,8 @@ export interface RadioGroupFieldProps
 /**
  * Schema-bound radio group: one selectable value among the options.
  *
- * @example
+ * **Example** (Plan radio group form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { RadioGroupField } from "@beep/form/fields/RadioGroupField"

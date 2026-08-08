@@ -13,15 +13,16 @@ import { $I } from "./HttpStatus.shared.ts";
 /**
  * HttpStatusCategory - HTTP status code category
  *
- * @example
+ * **Example** (Log category pairs length)
+ *
  * ```ts
  * import { HttpStatusCategory } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatusCategory.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatusCategory = MappedLiteralKit([
   ["INFO", "1XX"],
@@ -47,15 +48,6 @@ export const HttpStatusCategory = MappedLiteralKit([
 
 /**
  * {@inheritDoc HttpStatusCategory}
- *
- * @example
- * ```ts
- * import type { HttpStatusCategory } from "@beep/schema/HttpStatus"
- *
- * const category: HttpStatusCategory = "4XX"
- * console.log(category)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

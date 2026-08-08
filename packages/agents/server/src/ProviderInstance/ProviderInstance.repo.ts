@@ -78,12 +78,16 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
   return { ...encodeProviderInstanceInsert(insert), rowVersion: 1 } satisfies ProviderInstanceInsert;
 });
 
-/** Build the Drizzle-backed ProviderInstance repository.
- * @example
+/**
+ *  Build the Drizzle-backed ProviderInstance repository.
+ *
+ * **Example** (Import repository factory)
+ *
  * ```ts
  * import { makeProviderInstanceRepository } from "@beep/agents-server/ProviderInstance"
  * console.log(makeProviderInstanceRepository)
  * ```
+ *
  * @category repositories
  * @since 0.0.0
  */
@@ -167,12 +171,16 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
   });
 });
 
-/** Drizzle ProviderInstance repository layer requiring `PostgresDrizzle`.
- * @example
+/**
+ *  Drizzle ProviderInstance repository layer requiring `PostgresDrizzle`.
+ *
+ * **Example** (Import repository layer)
+ *
  * ```ts
  * import { ProviderInstanceRepositoryLayer } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceRepositoryLayer)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

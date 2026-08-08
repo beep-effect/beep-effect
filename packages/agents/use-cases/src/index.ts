@@ -8,7 +8,8 @@
 /**
  * Public runtime SDK contract exports.
  *
- * @example
+ * **Example** (Decode TurnHistoryItem with Schema)
+ *
  * ```ts
  * import { TurnHistoryItem } from "@beep/agents-use-cases"
  * import * as S from "effect/Schema"

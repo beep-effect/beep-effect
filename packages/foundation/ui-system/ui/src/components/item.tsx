@@ -16,7 +16,8 @@ import type * as React from "react";
 /**
  * Item group component.
  *
- * @example
+ * **Example** (Import ItemGroup component)
+ *
  * ```tsx
  * import { ItemGroup } from "@beep/ui/components/item"
  *
@@ -35,7 +36,8 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Item separator component.
  *
- * @example
+ * **Example** (Import ItemSeparator component)
+ *
  * ```tsx
  * import { ItemSeparator } from "@beep/ui/components/item"
  *
@@ -73,7 +75,8 @@ const itemVariants = cva(
 /**
  * Item component.
  *
- * @example
+ * **Example** (Import Item component)
+ *
  * ```tsx
  * import { Item } from "@beep/ui/components/item"
  *
@@ -131,7 +134,8 @@ const itemMediaVariants = cva(
 /**
  * Item media component.
  *
- * @example
+ * **Example** (Import ItemMedia component)
+ *
  * ```tsx
  * import { ItemMedia } from "@beep/ui/components/item"
  *
@@ -159,7 +163,8 @@ function ItemMedia({
 /**
  * Item content component.
  *
- * @example
+ * **Example** (Import ItemContent component)
+ *
  * ```tsx
  * import { ItemContent } from "@beep/ui/components/item"
  *
@@ -182,7 +187,8 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Item title component.
  *
- * @example
+ * **Example** (Import ItemTitle component)
+ *
  * ```tsx
  * import { ItemTitle } from "@beep/ui/components/item"
  *
@@ -205,7 +211,8 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Item description component.
  *
- * @example
+ * **Example** (Import ItemDescription component)
+ *
  * ```tsx
  * import { ItemDescription } from "@beep/ui/components/item"
  *
@@ -232,7 +239,8 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
 /**
  * Item actions component.
  *
- * @example
+ * **Example** (Import ItemActions component)
+ *
  * ```tsx
  * import { ItemActions } from "@beep/ui/components/item"
  *
@@ -249,7 +257,8 @@ function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Item header component.
  *
- * @example
+ * **Example** (Import ItemHeader component)
+ *
  * ```tsx
  * import { ItemHeader } from "@beep/ui/components/item"
  *
@@ -272,7 +281,8 @@ function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Item footer component.
  *
- * @example
+ * **Example** (Import ItemFooter component)
+ *
  * ```tsx
  * import { ItemFooter } from "@beep/ui/components/item"
  *

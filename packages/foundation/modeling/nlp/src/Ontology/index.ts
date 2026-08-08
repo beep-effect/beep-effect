@@ -9,14 +9,15 @@
  * The 11-stratum text-kind ontology, typed-text payloads, smart constructors,
  * and the containment poset.
  *
- * @example
+ * **Example** (Checking kind containment)
+ *
  * ```typescript
  * import { Kind } from "@beep/nlp/Ontology"
  *
  * console.log(Kind.canContain("Document", "Sentence")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * as Kind from "./Kind.ts";

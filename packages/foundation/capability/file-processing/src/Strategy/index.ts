@@ -16,7 +16,8 @@ const $I = $FileProcessingId.create("Strategy");
 /**
  * Operation kinds supported by the capability contract.
  *
- * @example
+ * **Example** (Check process option included)
+ *
  * ```ts
  * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
  *
@@ -35,7 +36,8 @@ export const FileProcessingOperationKind = LiteralKit(["detect", "extract", "exp
 /**
  * Type for {@link FileProcessingOperationKind}.
  *
- * @example
+ * **Example** (Type process kind guard)
+ *
  * ```ts
  * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
  *
@@ -51,7 +53,8 @@ export type FileProcessingOperationKind = typeof FileProcessingOperationKind.Typ
 /**
  * Concrete engine families known to P1.
  *
- * @example
+ * **Example** (Check tika option included)
+ *
  * ```ts
  * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
  *
@@ -70,7 +73,8 @@ export const FileProcessingEngineFamily = LiteralKit(["auto", "tika", "libpff", 
 /**
  * Type for {@link FileProcessingEngineFamily}.
  *
- * @example
+ * **Example** (Type tika engine guard)
+ *
  * ```ts
  * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
  *
@@ -86,7 +90,8 @@ export type FileProcessingEngineFamily = typeof FileProcessingEngineFamily.Type;
 /**
  * V1 file format families recognized by the capability.
  *
- * @example
+ * **Example** (Check pdf-text-layer option)
+ *
  * ```ts
  * import { FileFormatFamily } from "@beep/file-processing/Strategy"
  *
@@ -140,7 +145,8 @@ export const FileFormatFamily = LiteralKit([
 /**
  * Type for {@link FileFormatFamily}.
  *
- * @example
+ * **Example** (Type format family guard)
+ *
  * ```ts
  * import { FileFormatFamily } from "@beep/file-processing/Strategy"
  *
@@ -156,7 +162,8 @@ export type FileFormatFamily = typeof FileFormatFamily.Type;
 /**
  * Processing capability advertised by an engine.
  *
- * @example
+ * **Example** (Check export-children option)
+ *
  * ```ts
  * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
  *
@@ -180,7 +187,8 @@ export const FileProcessingCapability = LiteralKit([
 /**
  * Type for {@link FileProcessingCapability}.
  *
- * @example
+ * **Example** (Type capability guard)
+ *
  * ```ts
  * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
  *
@@ -196,7 +204,8 @@ export type FileProcessingCapability = typeof FileProcessingCapability.Type;
 /**
  * Support disposition selected for a source artifact.
  *
- * @example
+ * **Example** (Check deferred disposition option)
+ *
  * ```ts
  * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
  *
@@ -215,7 +224,8 @@ export const FileProcessingSupportDisposition = LiteralKit(["supported", "deferr
 /**
  * Type for {@link FileProcessingSupportDisposition}.
  *
- * @example
+ * **Example** (Type deferred disposition guard)
+ *
  * ```ts
  * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
  *
@@ -231,7 +241,8 @@ export type FileProcessingSupportDisposition = typeof FileProcessingSupportDispo
 /**
  * Reason a source was skipped or deferred.
  *
- * @example
+ * **Example** (Check skip reason option)
+ *
  * ```ts
  * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
  *
@@ -259,7 +270,8 @@ export const FileProcessingSkipReason = LiteralKit([
 /**
  * Type for {@link FileProcessingSkipReason}.
  *
- * @example
+ * **Example** (Type skip reason guard)
+ *
  * ```ts
  * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
  *
@@ -275,7 +287,8 @@ export type FileProcessingSkipReason = typeof FileProcessingSkipReason.Type;
 /**
  * Preferred engine selection for an operation.
  *
- * @example
+ * **Example** (Make auto engine preference)
+ *
  * ```ts
  * import { StrategyPreference } from "@beep/file-processing/Strategy"
  *
@@ -298,7 +311,8 @@ export class StrategyPreference extends S.Class<StrategyPreference>($I`StrategyP
 /**
  * Strategy selected when an operation is supported.
  *
- * @example
+ * **Example** (Make supported selected strategy)
+ *
  * ```ts
  * import { SupportedSelectedStrategy } from "@beep/file-processing/Strategy"
  *
@@ -330,7 +344,8 @@ export class SupportedSelectedStrategy extends S.Class<SupportedSelectedStrategy
 /**
  * Strategy selected when an operation is intentionally deferred.
  *
- * @example
+ * **Example** (Make deferred selected strategy)
+ *
  * ```ts
  * import { DeferredSelectedStrategy } from "@beep/file-processing/Strategy"
  *
@@ -364,7 +379,8 @@ export class DeferredSelectedStrategy extends S.Class<DeferredSelectedStrategy>(
 /**
  * Strategy selected when an operation is unsupported.
  *
- * @example
+ * **Example** (Make unsupported selected strategy)
+ *
  * ```ts
  * import { UnsupportedSelectedStrategy } from "@beep/file-processing/Strategy"
  *
@@ -398,7 +414,8 @@ export class UnsupportedSelectedStrategy extends S.Class<UnsupportedSelectedStra
 /**
  * Strategy selected for a concrete operation.
  *
- * @example
+ * **Example** (Decode deferred selected strategy)
+ *
  * ```ts
  * import { SelectedStrategy } from "@beep/file-processing/Strategy"
  * import { Effect } from "effect"
@@ -433,7 +450,8 @@ export const SelectedStrategy = S.Union([
 /**
  * Type for {@link SelectedStrategy}.
  *
- * @example
+ * **Example** (Typed decode selected strategy)
+ *
  * ```ts
  * import { SelectedStrategy } from "@beep/file-processing/Strategy"
  * import { Effect } from "effect"
@@ -461,7 +479,8 @@ export type SelectedStrategy = typeof SelectedStrategy.Type;
 /**
  * Runtime-neutral engine descriptor.
  *
- * @example
+ * **Example** (Make engine descriptor)
+ *
  * ```ts
  * import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy"
  *
@@ -509,11 +528,14 @@ export class FileProcessingEngineDescriptor extends S.Class<FileProcessingEngine
 /**
  * Classify a bare file extension into its deterministic format family.
  *
+ * **Details**
+ *
  * This is the canonical extension-to-format mapping shared by detection
  * engines and processing pipelines; unknown extensions classify as
  * `"unknown"`.
  *
- * @example
+ * **Example** (Classify known unknown extensions)
+ *
  * ```ts
  * import { classifyFormatFromExtension } from "@beep/file-processing/Strategy"
  *

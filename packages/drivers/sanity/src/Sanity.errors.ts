@@ -56,7 +56,8 @@ const SanityErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the Sanity driver.
  *
- * @example
+ * **Example** (Decode known reason values)
+ *
  * ```ts
  * import { SanityErrorReason } from "@beep/sanity"
  * import * as O from "effect/Option"
@@ -82,7 +83,8 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
 /**
  * Type for {@link SanityErrorReason}.
  *
- * @example
+ * **Example** (Annotate typed reason value)
+ *
  * ```ts
  * import type { SanityErrorReason } from "@beep/sanity"
  *
@@ -99,7 +101,8 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
 /**
  * Technical failure raised by the Sanity driver boundary.
  *
- * @example
+ * **Example** (Create status-based error)
+ *
  * ```ts
  * import { SanityError } from "@beep/sanity"
  *
@@ -137,7 +140,8 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
   /**
    * Create a Sanity driver error.
    *
-   * @example
+   * **Example** (Create error with cause)
+   *
    * ```ts
    * import { SanityError } from "@beep/sanity"
    *
@@ -165,7 +169,8 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
 /**
  * Options used when constructing Sanity driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { SanityErrorOptions } from "@beep/sanity"
  *

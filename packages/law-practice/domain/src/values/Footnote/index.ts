@@ -9,9 +9,8 @@
 /**
  * Footnote model exports.
  *
- * **Example**
+ * **Example** (Import and detect footnotes)
  *
- * @example
  * ```ts
  * import { Footnote } from "@beep/law-practice-domain";
  *

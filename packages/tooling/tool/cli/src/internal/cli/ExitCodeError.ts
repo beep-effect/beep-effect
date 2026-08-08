@@ -16,13 +16,15 @@ const $I = $RepoCliId.create("internal/cli/ExitCodeError");
 /**
  * Silent non-zero process exit requested after command output was rendered.
  *
- * @example
+ * **Example** (Make CliReportedExit instance)
+ *
  * ```ts
  * import { CliReportedExit } from "@beep/repo-cli/internal/cli/ExitCodeError"
  *
  * const error = CliReportedExit.make({ message: "check failed", exitCode: 1 })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -46,13 +48,15 @@ export class CliReportedExit extends TaggedErrorClass<CliReportedExit>($I`CliRep
 /**
  * Fail with a reported CLI exit sentinel.
  *
- * @example
+ * **Example** (Create reported exit Effect)
+ *
  * ```ts
  * import { failWithReportedExit } from "@beep/repo-cli/internal/cli/ExitCodeError"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(failWithReportedExit("check failed")))
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

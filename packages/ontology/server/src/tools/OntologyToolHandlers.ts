@@ -36,12 +36,16 @@ import type { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools";
 import type * as Tool from "effect/unstable/ai/Tool";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
-/** Thin service-delegating handler layer for the ontology toolkit.
- * @example
+/**
+ *  Thin service-delegating handler layer for the ontology toolkit.
+ *
+ * **Example** (Import toolkit handlers layer)
+ *
  * ```ts
  * import { OntologyToolkitHandlersLive } from "@beep/ontology-server/tools"
  * console.log(OntologyToolkitHandlersLive)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
@@ -105,12 +109,16 @@ const gatedMutation = Effect.fn("Ontology.Tools.gatedMutation")(function* <A, E,
   });
 });
 
-/** Read-only MCP handlers that remain available while mutation registration is disabled.
- * @example
+/**
+ *  Read-only MCP handlers that remain available while mutation registration is disabled.
+ *
+ * **Example** (Import read-only MCP handlers)
+ *
  * ```ts
  * import { OntologyMcpReadOnlyHandlersLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpReadOnlyHandlersLive)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
@@ -128,12 +136,16 @@ export const OntologyMcpReadOnlyHandlersLive = OntologyReadOnlyToolkit.toLayer(
   })
 );
 
-/** Authenticated, TierGate-wrapped mutation handlers for the MCP transport.
- * @example
+/**
+ *  Authenticated, TierGate-wrapped mutation handlers for the MCP transport.
+ *
+ * **Example** (Import mutation MCP handlers)
+ *
  * ```ts
  * import { OntologyMcpMutationHandlersLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpMutationHandlersLive)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
@@ -180,19 +192,27 @@ const publicationFailure = (error: HttpClientError.HttpClientError) =>
         recoverable: true,
       });
 
-/** Publish a provenance sidecar to a caller-named destination through the ambient client.
- * @remarks Exported as a standalone effect, not buried in the handler closure,
+/**
+ *  Publish a provenance sidecar to a caller-named destination through the ambient client.
+ *
+ * **Gotchas**
+ *
+ * Exported as a standalone effect, not buried in the handler closure,
  * so the error translation below can be proven directly: which failures become
  * an indistinguishable refusal and which stay a distinguishable execution error
  * is a security property, not an implementation detail.
- * @remarks Requires `HttpClient.HttpClient` from its caller and never builds
+ *
+ * Requires `HttpClient.HttpClient` from its caller and never builds
  * one: a self-provided client would resolve its own `Fetch` and escape the
  * governed egress boundary entirely.
- * @example
+ *
+ * **Example** (Import publishProvenance effect)
+ *
  * ```ts
  * import { publishProvenance } from "@beep/ontology-server/tools"
  * console.log(typeof publishProvenance)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
@@ -220,15 +240,22 @@ export const publishProvenance = Effect.fn("Ontology.Tools.publishProvenance")(f
   });
 });
 
-/** Governed provenance publication handlers, registered only when egress is allowlisted.
- * @remarks Takes `HttpClient.HttpClient` as a layer requirement and never
+/**
+ *  Governed provenance publication handlers, registered only when egress is allowlisted.
+ *
+ * **Gotchas**
+ *
+ * Takes `HttpClient.HttpClient` as a layer requirement and never
  * builds its own: a self-provided client would resolve its own `Fetch` and
  * escape the governed egress boundary entirely.
- * @example
+ *
+ * **Example** (Import publish MCP handlers)
+ *
  * ```ts
  * import { OntologyMcpPublishHandlersLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpPublishHandlersLive)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
@@ -253,23 +280,31 @@ const OntologyToolServiceServerLive = OntologyToolServiceLive.pipe(
   Layer.provide(CanonicalizationServiceLive)
 );
 
-/** Fully wired real-engine ontology toolkit handler layer without transport.
- * @example
+/**
+ *  Fully wired real-engine ontology toolkit handler layer without transport.
+ *
+ * **Example** (Import full ontology tools layer)
+ *
  * ```ts
  * import { OntologyToolsLive } from "@beep/ontology-server/tools"
  * console.log(OntologyToolsLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
 export const OntologyToolsLive = OntologyToolkitHandlersLive.pipe(Layer.provideMerge(OntologyToolServiceServerLive));
 
-/** Fully wired read-only MCP ontology handlers over the real engine stack.
- * @example
+/**
+ *  Fully wired read-only MCP ontology handlers over the real engine stack.
+ *
+ * **Example** (Import read-only MCP tools)
+ *
  * ```ts
  * import { OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpReadOnlyToolsLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -277,12 +312,16 @@ export const OntologyMcpReadOnlyToolsLive = OntologyMcpReadOnlyHandlersLive.pipe
   Layer.provideMerge(OntologyToolServiceServerLive)
 );
 
-/** Fully wired TierGate-protected mutation handlers over the real engine stack.
- * @example
+/**
+ *  Fully wired TierGate-protected mutation handlers over the real engine stack.
+ *
+ * **Example** (Import mutation MCP tools)
+ *
  * ```ts
  * import { OntologyMcpMutationToolsLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpMutationToolsLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -290,14 +329,21 @@ export const OntologyMcpMutationToolsLive = OntologyMcpMutationHandlersLive.pipe
   Layer.provideMerge(OntologyToolServiceServerLive)
 );
 
-/** Fully wired governed provenance publication handlers over the real engine stack.
- * @remarks `HttpClient.HttpClient` stays an open requirement so the composition
+/**
+ *  Fully wired governed provenance publication handlers over the real engine stack.
+ *
+ * **Details**
+ *
+ * `HttpClient.HttpClient` stays an open requirement so the composition
  * root supplies the client whose graph carries the governed egress `Fetch`.
- * @example
+ *
+ * **Example** (Import publish MCP tools)
+ *
  * ```ts
  * import { OntologyMcpPublishToolsLive } from "@beep/ontology-server/tools"
  * console.log(OntologyMcpPublishToolsLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

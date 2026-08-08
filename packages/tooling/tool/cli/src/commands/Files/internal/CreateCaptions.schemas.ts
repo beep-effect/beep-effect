@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/Files/internal/CreateCaptions.schemas");
 /**
  * Reason a direct directory entry was skipped by `files create-captions`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesSkippedReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesSkippedReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -51,13 +53,15 @@ export type CreateCaptionFilesSkippedReason = typeof CreateCaptionFilesSkippedRe
 /**
  * Options used by caption sidecar creation.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -76,13 +80,15 @@ export class CreateCaptionFilesOptions extends S.Class<CreateCaptionFilesOptions
 /**
  * Planned caption sidecar file creation.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesPlanEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -105,13 +111,15 @@ export class CreateCaptionFilesPlanEntry extends S.Class<CreateCaptionFilesPlanE
 /**
  * Source entry skipped by caption sidecar creation.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesSkippedEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -134,13 +142,15 @@ export class CreateCaptionFilesSkippedEntry extends S.Class<CreateCaptionFilesSk
 /**
  * Planned caption sidecar creation run.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesPlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesPlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -160,13 +170,15 @@ export class CreateCaptionFilesPlan extends S.Class<CreateCaptionFilesPlan>($I`C
 /**
  * Summary returned by `createCaptionFiles`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CreateCaptionFilesSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CreateCaptionFilesSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -187,12 +199,14 @@ export class CreateCaptionFilesSummary extends S.Class<CreateCaptionFilesSummary
 /**
  * Decode unknown caption sidecar creation options.
  *
- * @example
+ * **Example** (Decode undefined options)
+ *
  * ```ts
  * import { decodeCreateCaptionFilesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeCreateCaptionFilesOptions(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */

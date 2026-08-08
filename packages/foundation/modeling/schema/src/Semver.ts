@@ -1,7 +1,8 @@
 /**
  * Schema-backed Semantic Versioning value object and comparison helpers.
  *
- * @example
+ * **Example** (Decode and format version)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -348,12 +349,14 @@ const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.su
 /**
  * Structured semantic version value object.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `prerelease` participates in precedence ordering. `build` is preserved for
  * formatting and round trips, but it is ignored by {@link Semver.compare}
  * according to the SemVer precedence rules.
  *
- * @example
+ * **Example** (Make and format version)
+ *
  * ```ts
  * import { Semver } from "@beep/schema/Semver"
  *
@@ -391,12 +394,14 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Normalizes supported loose boundary strings before strict SemVer parsing.
    *
-   * @remarks
+   * **Details**
+   *
    * This trims whitespace, removes a leading `v`, trims dot-separated
    * identifiers, and expands `MAJOR.MINOR` to `MAJOR.MINOR.0`. It does not make
    * invalid values valid; parsing still rejects malformed segments.
    *
-   * @example
+   * **Example** (Normalize loose version string)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -418,7 +423,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Parses a supported SemVer boundary string into a structured value.
    *
-   * @example
+   * **Example** (Parse version string)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
@@ -436,7 +442,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Splits a prerelease string into validated SemVer prerelease identifiers.
    *
-   * @example
+   * **Example** (Split prerelease identifiers)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -452,7 +459,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Formats a structured SemVer value back to a canonical string.
    *
-   * @example
+   * **Example** (Format structured version)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -485,7 +493,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Compares two prerelease identifiers using SemVer precedence rules.
    *
-   * @example
+   * **Example** (Compare prerelease identifiers)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -525,12 +534,14 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Compares two versions using SemVer precedence.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * String inputs are normalized with {@link Semver.normalizeStr} and parsed
    * before comparison. If either string cannot be parsed, comparison falls back
    * to lexical ordering of the formatted inputs.
    *
-   * @example
+   * **Example** (Compare version precedence)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -572,12 +583,14 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Checks whether a version satisfies a small SemVer comparator range.
    *
-   * @remarks
+   * **Details**
+   *
    * Supported syntax is intentionally small: whitespace-separated comparators,
    * `||` range groups, and the `^`, `>=`, `>`, `<=`, `<`, and `=` operators.
    * Build metadata is ignored for precedence comparisons.
    *
-   * @example
+   * **Example** (Check version range satisfaction)
+   *
    * ```ts
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -615,7 +628,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
 /**
  * Codec that decodes supported SemVer strings into {@link Semver} values.
  *
- * @example
+ * **Example** (Decode SemVer string codec)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -646,7 +660,8 @@ export const SemverFromString = S.String.pipe(
 /**
  * Type for {@link SemverFromString}.
  *
- * @example
+ * **Example** (Annotate SemverFromString type)
+ *
  * ```ts
  * import { Semver } from "@beep/schema/Semver"
  * import type { SemverFromString } from "@beep/schema/Semver"

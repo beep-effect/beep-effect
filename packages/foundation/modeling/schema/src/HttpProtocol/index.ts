@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for HTTP protocol schemas.
  *
- * @example
+ * **Example** (Decode HTTP protocol schema)
+ *
  * ```ts
  * import * as HttpProtocol from "@beep/schema/HttpProtocol"
  * import * as S from "effect/Schema"

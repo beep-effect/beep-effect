@@ -23,7 +23,8 @@ const FixtureKey = S.NonEmptyString.check(
 /**
  * Stable dotted fixture key for an agent entity.
  *
- * @example
+ * **Example** (Decode agent fixture key)
+ *
  * ```ts
  * import { AgentFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -44,7 +45,8 @@ export const AgentFixtureKey = FixtureKey.pipe(
 /**
  * Type accepted by the {@link AgentFixtureKey} schema.
  *
- * @example
+ * **Example** (Type agent fixture key)
+ *
  * ```ts
  * import { AgentFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -61,7 +63,8 @@ export type AgentFixtureKey = typeof AgentFixtureKey.Type;
 /**
  * Stable dotted fixture key for a skill entity.
  *
- * @example
+ * **Example** (Decode skill fixture key)
+ *
  * ```ts
  * import { SkillFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -82,7 +85,8 @@ export const SkillFixtureKey = FixtureKey.pipe(
 /**
  * Type accepted by the {@link SkillFixtureKey} schema.
  *
- * @example
+ * **Example** (Type skill fixture key)
+ *
  * ```ts
  * import { SkillFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -99,7 +103,8 @@ export type SkillFixtureKey = typeof SkillFixtureKey.Type;
 /**
  * Non-empty display name for a fixture-backed agent.
  *
- * @example
+ * **Example** (Decode agent display name)
+ *
  * ```ts
  * import { AgentName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -120,7 +125,8 @@ export const AgentName = S.NonEmptyString.pipe(
 /**
  * Type accepted by the {@link AgentName} schema.
  *
- * @example
+ * **Example** (Type agent display name)
+ *
  * ```ts
  * import { AgentName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -137,7 +143,8 @@ export type AgentName = typeof AgentName.Type;
 /**
  * Non-empty display name for a fixture-backed skill.
  *
- * @example
+ * **Example** (Decode skill display name)
+ *
  * ```ts
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -158,7 +165,8 @@ export const SkillName = S.NonEmptyString.pipe(
 /**
  * Type accepted by the {@link SkillName} schema.
  *
- * @example
+ * **Example** (Type skill display name)
+ *
  * ```ts
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"

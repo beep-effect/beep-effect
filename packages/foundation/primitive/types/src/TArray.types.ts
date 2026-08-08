@@ -8,7 +8,8 @@
 /**
  * Extracts the element type from a tuple or array type.
  *
- * @example
+ * **Example** (Extracting array element types)
+ *
  * ```typescript
  * import type { TArray } from "@beep/types"
  *
@@ -22,8 +23,8 @@
  * console.log(elements)
  * ```
  *
- * @since 0.0.0
- * @category utilities
  * @typeParam T - The type from which the element type will be inferred.
+ * @category utilities
+ * @since 0.0.0
  */
 export type Elem<T> = T extends readonly (infer U)[] ? U : never;

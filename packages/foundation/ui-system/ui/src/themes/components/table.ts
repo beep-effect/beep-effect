@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Table theme theme value.
  *
- * @example
+ * **Example** (Import and log tableTheme)
+ *
  * ```ts
  * import { tableTheme } from "@beep/ui/themes/components/table"
  *

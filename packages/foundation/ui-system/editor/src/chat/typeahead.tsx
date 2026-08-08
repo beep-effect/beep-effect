@@ -206,7 +206,8 @@ const MENU_VIEWPORT_GAP_PX = 4;
  * Whether the typeahead listbox should flip above the caret line: there is not
  * enough viewport space below it for the full menu, and more space above.
  *
- * @example
+ * **Example** (True when caret near bottom)
+ *
  * ```ts
  * import { shouldOpenUpward } from "@beep/editor/chat/typeahead"
  *
@@ -233,7 +234,8 @@ export const shouldOpenUpward = ({
  * Fixed viewport coordinates for the typeahead listbox: below the caret when it
  * fits, above it otherwise, clamped horizontally to the viewport.
  *
- * @example
+ * **Example** (Clamped position above caret)
+ *
  * ```ts
  * import { typeaheadMenuPosition } from "@beep/editor/chat/typeahead"
  *
@@ -418,7 +420,8 @@ interface SlashPluginProps {
  * `/query` text is removed and the item mutates the current selection. Tracks
  * its open state in the shared {@link menusOpenAtom}.
  *
- * @example
+ * **Example** (SlashPlugin with default items)
+ *
  * ```tsx
  * import { SlashPlugin } from "@beep/editor/chat/typeahead"
  * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
@@ -497,7 +500,8 @@ interface MentionPluginProps {
  * persisted node, so the emitted state stays within the v1 schema vocabulary.
  * Tracks its open state in the shared {@link menusOpenAtom}.
  *
- * @example
+ * **Example** (MentionPlugin with query source)
+ *
  * ```tsx
  * import { MentionPlugin } from "@beep/editor/chat/typeahead"
  * import { MentionOption } from "@beep/editor/chat/config"
@@ -603,7 +607,8 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
 /**
  * DOM id of the Lexical-owned typeahead listbox, scoped to one editor.
  *
- * @example
+ * **Example** (Id starts with typeahead-menu)
+ *
  * ```ts
  * import { typeaheadMenuId } from "@beep/editor/chat/typeahead"
  * import { createEditor } from "lexical"
@@ -728,7 +733,8 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
  * preserving its `aria-activedescendant` behavior. Reads the open state from
  * the shared {@link anyMenuOpenAtom}.
  *
- * @example
+ * **Example** (Mount ComboboxAriaPlugin alone)
+ *
  * ```tsx
  * import { ComboboxAriaPlugin } from "@beep/editor/chat/typeahead"
  *

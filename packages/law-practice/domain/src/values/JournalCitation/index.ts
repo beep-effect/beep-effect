@@ -9,9 +9,8 @@
 /**
  * JournalCitation model exports.
  *
- * **Example**
+ * **Example** (Import JournalCitation export)
  *
- * @example
  * ```ts
  * import { JournalCitation } from "@beep/law-practice-domain/values";
  * ```

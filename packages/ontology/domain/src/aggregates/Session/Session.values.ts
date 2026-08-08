@@ -15,7 +15,8 @@ const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
 /**
  * Stable ontology workbench session id.
  *
- * @example
+ * **Example** (Decode SessionId from string)
+ *
  * ```ts
  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -25,8 +26,8 @@ const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
  * console.log(sessionId)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const SessionId = S.NonEmptyString.pipe(
   S.brand("OntologySessionId"),
@@ -39,7 +40,8 @@ export const SessionId = S.NonEmptyString.pipe(
 /**
  * Type for {@link SessionId}.
  *
- * @example
+ * **Example** (Annotate decoded SessionId type)
+ *
  * ```ts
  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -49,15 +51,16 @@ export const SessionId = S.NonEmptyString.pipe(
  * console.log(sessionId)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SessionId = typeof SessionId.Type;
 
 /**
  * Derived named graph partitions owned by an ontology session.
  *
- * @example
+ * **Example** (Build asserted partition IRI)
+ *
  * ```ts
  * import { graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -66,8 +69,8 @@ export type SessionId = typeof SessionId.Type;
  * console.log(graphIri)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const GraphPartition = LiteralKit(["asserted", "ontologies", "inferred", "shapes", "provenance"]).pipe(
   $I.annoteSchema("GraphPartition", {
@@ -78,7 +81,8 @@ export const GraphPartition = LiteralKit(["asserted", "ontologies", "inferred", 
 /**
  * Type for {@link GraphPartition}.
  *
- * @example
+ * **Example** (Type GraphPartition then IRI)
+ *
  * ```ts
  * import { graphPartitionIri, GraphPartition } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -87,15 +91,16 @@ export const GraphPartition = LiteralKit(["asserted", "ontologies", "inferred", 
  * console.log(graphPartitionIri(partition))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GraphPartition = typeof GraphPartition.Type;
 
 /**
  * Canonical graph IRI for each ontology session partition.
  *
- * @example
+ * **Example** (Get provenance partition IRI)
+ *
  * ```ts
  * import { graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -104,8 +109,8 @@ export type GraphPartition = typeof GraphPartition.Type;
  * console.log(iri)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const graphPartitionIri = (partition: GraphPartition): string =>
   GraphPartition.$match(partition, {
@@ -119,7 +124,8 @@ export const graphPartitionIri = (partition: GraphPartition): string =>
 /**
  * Shared SPEC 13 exclusion rule for derived graph partitions.
  *
- * @example
+ * **Example** (Check shapes partition exclusion)
+ *
  * ```ts
  * import { isExcludedFromReasoning } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -128,8 +134,8 @@ export const graphPartitionIri = (partition: GraphPartition): string =>
  * console.log(excluded)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const isExcludedFromReasoning = (partition: GraphPartition): boolean =>
   GraphPartition.$match(partition, {

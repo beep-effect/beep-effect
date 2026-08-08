@@ -22,10 +22,13 @@ const readOntologyMcpConfig = Effect.fn("Ontology.McpConfig.read")(function* () 
 /**
  * Live ontology configuration backed by the ambient Effect `ConfigProvider`.
  *
+ * **Details**
+ *
  * Missing or empty workspace-root configuration remains in the typed
  * `ConfigError` channel so application entrypoints decide startup policy.
  *
- * @example
+ * **Example** (Provide workspace root config)
+ *
  * ```ts
  * import { OntologyConfigLive } from "@beep/ontology-config/layer"
  * import { OntologyConfig } from "@beep/ontology-config/server"
@@ -55,7 +58,8 @@ export const OntologyConfigLive = Layer.effect(OntologyConfig, readOntologyConfi
  * Live ontology MCP surface configuration backed by the ambient Effect
  * `ConfigProvider`.
  *
- * @example
+ * **Example** (Enable MCP mutations config)
+ *
  * ```ts
  * import { OntologyMcpConfigLive } from "@beep/ontology-config/layer"
  * import { OntologyMcpConfig } from "@beep/ontology-config/server"

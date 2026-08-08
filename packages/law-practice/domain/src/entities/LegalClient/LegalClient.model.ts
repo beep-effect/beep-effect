@@ -16,7 +16,8 @@ const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.model")
 /**
  * Legal client entity that owns law-practice contacts and matters.
  *
- * @example
+ * **Example** (Decode LegalClient with Schema)
+ *
  * ```ts
  * import { LegalClient } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

@@ -23,7 +23,8 @@ const ClaimDispositionOperationBase = LiteralKit(["record", "listByClaim"]);
 /**
  * Bounded vocabulary of claim disposition repository operations.
  *
- * @example
+ * **Example** (Decode operation with Schema)
+ *
  * ```ts
  * import { ClaimDispositionOperation } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import * as S from "effect/Schema"
@@ -44,7 +45,8 @@ export const ClaimDispositionOperation = ClaimDispositionOperationBase.pipe(
 /**
  * Runtime type for {@link ClaimDispositionOperation}.
  *
- * @example
+ * **Example** (Satisfy operation type check)
+ *
  * ```ts
  * import type { ClaimDispositionOperation } from "@beep/epistemic-use-cases/ClaimDisposition"
  *
@@ -60,11 +62,14 @@ export type ClaimDispositionOperation = typeof ClaimDispositionOperation.Type;
 /**
  * Raised when the claim disposition repository could not serve a request.
  *
+ * **Details**
+ *
  * Persisting a rejection is not optional bookkeeping: a rejected claim that
  * failed to record its disposition is indistinguishable from a claim nobody ever
  * gated, so this failure is typed and propagated rather than logged and dropped.
  *
- * @example
+ * **Example** (Create unavailability error)
+ *
  * ```ts
  * import { ClaimDispositionRepositoryUnavailable } from "@beep/epistemic-use-cases/ClaimDisposition"
  *
@@ -103,7 +108,8 @@ export class ClaimDispositionRepositoryUnavailable extends TaggedErrorClass<Clai
    * Build the unavailability error for an operation, optionally retaining the
    * driver defect that produced it.
    *
-   * @example
+   * **Example** (Build error with cause)
+   *
    * ```ts
    * import { ClaimDispositionRepositoryUnavailable } from "@beep/epistemic-use-cases/ClaimDisposition"
    * import * as O from "effect/Option"
@@ -134,7 +140,8 @@ export class ClaimDispositionRepositoryUnavailable extends TaggedErrorClass<Clai
  * revising it would erase the decision it exists to remember. A claim's later
  * resolution is a new disposition, and the earlier one becomes `superseded`.
  *
- * @example
+ * **Example** (Implement repository shape)
+ *
  * ```ts
  * import type { ClaimDispositionRepositoryShape } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { Effect } from "effect"
@@ -162,7 +169,8 @@ export interface ClaimDispositionRepositoryShape {
 /**
  * Claim disposition repository service tag.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import { ClaimDispositionRepository } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { Effect } from "effect"

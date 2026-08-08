@@ -21,12 +21,14 @@ export const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;
 /**
  * Path segments for the `@beep/identity` package composer export file.
  *
- * @example
+ * **Example** (Join path segments)
+ *
  * ```ts
  * import { IDENTITY_PACKAGES_EXPORT_PATH } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * console.log(IDENTITY_PACKAGES_EXPORT_PATH.join("/")) // "src/packages.ts"
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -35,15 +37,17 @@ export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
 /**
  * Build the identity composer accessor name for a package.
  *
- * @param packageName - Workspace package name to derive the composer accessor from.
- * @returns The PascalCase identity composer accessor name (e.g. `$RepoCliId`).
- * @example
+ * **Example** (Derive accessor from package)
+ *
  * ```ts
  * import { toIdentityAccessorName } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const result = toIdentityAccessorName("@beep/repo-cli")
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param packageName - Workspace package name to derive the composer accessor from.
+ * @returns The PascalCase identity composer accessor name (e.g. `$RepoCliId`).
  * @category utilities
  * @since 0.0.0
  */
@@ -52,15 +56,17 @@ const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCa
 /**
  * Render the typed identity composer export block for a package.
  *
- * @param packageName - Workspace package name the exported identity composer targets.
- * @returns The rendered TypeScript export block declaring the typed identity composer.
- * @example
+ * **Example** (Render typed export block)
+ *
  * ```ts
  * import { typedIdentityExportBlock } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const result = typedIdentityExportBlock("RepoCli", "$RepoCliId")
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param packageName - Workspace package name the exported identity composer targets.
+ * @returns The rendered TypeScript export block declaring the typed identity composer.
  * @category utilities
  * @since 0.0.0
  */
@@ -90,13 +96,15 @@ const typedIdentityExportBlock = (packageName: string): string => {
 /**
  * Resolve the repo-relative identity package composer file path.
  *
- * @example
+ * **Example** (Resolve packages file path)
+ *
  * ```ts
  * import { resolveIdentityPackagesFilePath } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const result = resolveIdentityPackagesFilePath("/repo")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -116,7 +124,8 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
 /**
  * Add a package segment and typed identity export to `@beep/identity`.
  *
- * @example
+ * **Example** (Register package identity export)
+ *
  * ```ts
  * import { ensureIdentityPackageRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  * import { Effect } from "effect"
@@ -128,6 +137,7 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -157,13 +167,15 @@ const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesF
 /**
  * Check whether `@beep/identity` needs a package composer registration.
  *
- * @example
+ * **Example** (Check registration needed)
+ *
  * ```ts
  * import { identityPackageRegistrationNeeded } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const result = identityPackageRegistrationNeeded("export {}", "$RepoCliId")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -189,15 +201,17 @@ const BEEP_SCOPE_PREFIX = "@beep/";
  * Match a dedicated composer export for a package, tolerating manual casing
  * aliases such as `$LangExtractId` for the mechanical `$LangextractId`.
  *
- * @param packageName - Workspace package slug (without the `@beep/` scope).
- * @returns A case-insensitive pattern matching the dedicated export statement.
- * @example
+ * **Example** (Match export with casing)
+ *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const pattern = CreatePackageIdentityRegistration.accessorExportPattern("repo-cli")
  * console.log(pattern.test("export const $RepoCliId")) // true
  * ```
+ *
+ * @param packageName - Workspace package slug (without the `@beep/` scope).
+ * @returns A case-insensitive pattern matching the dedicated export statement.
  * @category utilities
  * @since 0.0.0
  */
@@ -208,16 +222,18 @@ const accessorExportPattern = (packageName: string): RegExp =>
  * Filter workspace package slugs missing either their `$I.compose(...)`
  * segment or dedicated export in the identity registry content.
  *
- * @param registryContent - Current text of the identity `packages.ts` file.
- * @param packageNames - Workspace package slugs to check.
- * @returns The slugs that still need registration.
- * @example
+ * **Example** (Filter unregistered package slugs)
+ *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * const missing = CreatePackageIdentityRegistration.missingIdentityRegistrations("export {}", ["repo-cli"])
  * console.log(missing) // ["repo-cli"]
  * ```
+ *
+ * @param registryContent - Current text of the identity `packages.ts` file.
+ * @param packageNames - Workspace package slugs to check.
+ * @returns The slugs that still need registration.
  * @category utilities
  * @since 0.0.0
  */
@@ -234,7 +250,8 @@ const missingIdentityRegistrations = (
  * Enumerate every `@beep/*` workspace package as `[slug, directory]` entries,
  * sorted by slug.
  *
- * @example
+ * **Example** (Collect workspace package entries)
+ *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  * import { Effect } from "effect"
@@ -242,6 +259,7 @@ const missingIdentityRegistrations = (
  * const program = CreatePackageIdentityRegistration.collectWorkspaceIdentityEntries("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -267,7 +285,8 @@ const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectW
  * Register every workspace package missing from the identity composer
  * registry, returning the slugs that were registered.
  *
- * @example
+ * **Example** (Register missing workspace packages)
+ *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  * import { Effect } from "effect"
@@ -275,6 +294,7 @@ const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectW
  * const program = CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -304,12 +324,14 @@ const registerMissingWorkspaceIdentityPackages = Effect.fn(
 /**
  * Internal identity registration surface used by the create-package command.
  *
- * @example
+ * **Example** (Access identity registration helpers)
+ *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
  * console.log(CreatePackageIdentityRegistration.toIdentityAccessorName("repo-cli"))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

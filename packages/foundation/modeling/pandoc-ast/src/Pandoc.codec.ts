@@ -69,7 +69,8 @@ type PandocConstructorContext = "block" | "inline" | "meta";
 /**
  * Generic Pandoc constructor wire shape.
  *
- * @example
+ * **Example** (Make constructor wire)
+ *
  * ```ts
  * import { PandocConstructorWire } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -90,7 +91,8 @@ export const PandocConstructorWire = PandocUnknownConstructorWire.pipe(
 /**
  * Companion namespace for {@link PandocConstructorWire}.
  *
- * @example
+ * **Example** (Type constructor wire)
+ *
  * ```ts
  * import { PandocConstructorWire } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -106,7 +108,8 @@ export type PandocConstructorWire = typeof PandocConstructorWire.Type;
 /**
  * Pandoc JSON document wire shape.
  *
- * @example
+ * **Example** (Decode empty document wire)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocJsonWire } from "@beep/pandoc-ast/Pandoc.codec"
@@ -138,7 +141,8 @@ export class PandocJsonWire extends S.Class<PandocJsonWire>($I`PandocJsonWire`)(
 /**
  * Companion namespace for {@link PandocJsonWire}.
  *
- * @example
+ * **Example** (Make empty document wire)
+ *
  * ```ts
  * import { PandocJsonWire } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -172,7 +176,8 @@ export declare namespace PandocJsonWire {
 /**
  * Pandoc JSON string codec.
  *
- * @example
+ * **Example** (Decode JSON string wire)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocJsonFromString } from "@beep/pandoc-ast/Pandoc.codec"
@@ -194,7 +199,8 @@ export const PandocJsonFromString = S.fromJsonString(PandocJsonWire).pipe(
 /**
  * Runtime type for {@link PandocJsonFromString}.
  *
- * @example
+ * **Example** (Annotate wire type)
+ *
  * ```ts
  * import type { PandocJsonFromString } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -217,7 +223,8 @@ const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
 /**
  * Typed failure raised by strict or lossless Pandoc JSON decoding.
  *
- * @example
+ * **Example** (Catch decode error tag)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonStrict } from "@beep/pandoc-ast/Pandoc.codec"
@@ -241,7 +248,8 @@ export class PandocDecodeError extends CauseTaggedError<PandocDecodeError>($I`Pa
 /**
  * A diagnostic produced while inspecting a lossless Pandoc document.
  *
- * @example
+ * **Example** (Make lossless issue)
+ *
  * ```ts
  * import { PandocLosslessIssue } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -276,7 +284,8 @@ export class PandocLosslessIssue extends S.Class<PandocLosslessIssue>($I`PandocL
 /**
  * Exact raw top-level block in a lossless document.
  *
- * @example
+ * **Example** (Check future block shape)
+ *
  * ```ts
  * import { PandocLosslessBlock } from "@beep/pandoc-ast/Pandoc.codec"
  * import * as S from "effect/Schema"
@@ -296,7 +305,8 @@ export const PandocLosslessBlock = S.Json.pipe(
 /**
  * Runtime type for {@link PandocLosslessBlock}.
  *
- * @example
+ * **Example** (Annotate lossless block)
+ *
  * ```ts
  * import type { PandocLosslessBlock } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -312,12 +322,14 @@ export type PandocLosslessBlock = typeof PandocLosslessBlock.Type;
 /**
  * Lossless Pandoc envelope with exact raw views and recursive diagnostics.
  *
- * @remarks
+ * **Details**
+ *
  * {@link wire} remains the single source used by lossless encoding. The
  * block and metadata views remain exact raw JSON and are never replaced by
  * synthetic semantic nodes.
  *
- * @example
+ * **Example** (Decode lossless empty document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
@@ -398,10 +410,13 @@ class PandocLosslessDocumentValue {
 /**
  * Module-issued lossless Pandoc envelope.
  *
+ * **Details**
+ *
  * The public schema has no arbitrary constructor: decoding is the only issuer,
  * so the derived views and diagnostics cannot contradict the retained wire.
  *
- * @example
+ * **Example** (Validate decoded lossless document)
+ *
  * ```ts
  * import {
  *   decodePandocJsonLossless,
@@ -433,7 +448,8 @@ export const PandocLosslessDocument = S.declare(PandocLosslessDocumentValue.is).
 /**
  * Decoded type of {@link PandocLosslessDocument}.
  *
- * @example
+ * **Example** (Type decoded lossless document)
+ *
  * ```ts
  * import {
  *   decodePandocJsonLossless,
@@ -1016,7 +1032,8 @@ const encodeMeta = (meta: PandocMeta): Readonly<Record<string, S.Json>> =>
 /**
  * Decodes a Pandoc JSON object into the internal schema-first document model.
  *
- * @example
+ * **Example** (Decode empty JSON object)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1045,12 +1062,14 @@ const decodePandocJsonStringInternal = flow(decodeWireFromString, Effect.flatMap
 /**
  * Strictly decodes a Pandoc JSON object into the semantic document model.
  *
- * @remarks
+ * **Details**
+ *
  * Malformed payloads for known constructors fail with
  * {@link PandocDecodeError}. Future constructor names remain explicit
  * `Unknown*` semantic nodes.
  *
- * @example
+ * **Example** (Strict-decode empty document)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJsonStrict } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1070,7 +1089,8 @@ export const decodePandocJsonStrict = (input: unknown): Effect.Effect<PandocDocu
 /**
  * Backward-compatible alias for {@link decodePandocJsonStrict}.
  *
- * @example
+ * **Example** (Alias strict empty decode)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1091,7 +1111,8 @@ export const decodePandocJson = decodePandocJsonStrict;
 /**
  * Decodes a Pandoc JSON string into the internal schema-first document model.
  *
- * @example
+ * **Example** (Decode empty JSON string)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1111,7 +1132,8 @@ export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<Pand
 /**
  * Backward-compatible alias for {@link decodePandocJsonStringStrict}.
  *
- * @example
+ * **Example** (Alias string strict decode)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1502,13 +1524,15 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
 /**
  * Decodes Pandoc JSON while preserving the complete JSON tree exactly.
  *
- * @remarks
+ * **Details**
+ *
  * Known malformed constructors stay unchanged in the retained wire and produce
  * path-located issues at the nearest complete constructor boundary; no
  * synthetic semantic node replaces them. {@link encodePandocJsonLossless}
  * always emits the original wire.
  *
- * @example
+ * **Example** (Lossless-decode empty document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1530,7 +1554,8 @@ export const decodePandocJsonLossless = (input: unknown): Effect.Effect<PandocLo
 /**
  * Decodes a Pandoc JSON string into the exact lossless envelope.
  *
- * @example
+ * **Example** (Lossless-decode JSON string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonStringLossless } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1554,7 +1579,8 @@ export const decodePandocJsonStringLossless = (
 /**
  * Encodes an internal Pandoc document model to Pandoc JSON object form.
  *
- * @example
+ * **Example** (Encode empty document wire)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { encodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1579,7 +1605,8 @@ export const encodePandocJson = (document: PandocDocument.Type): Effect.Effect<P
 /**
  * Encodes an internal Pandoc document model to a Pandoc JSON string.
  *
- * @example
+ * **Example** (Encode document to string)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { encodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1597,7 +1624,8 @@ export const encodePandocJsonString = flow(encodePandocJson, Effect.flatMap(enco
 /**
  * Returns the exact JSON object retained by a lossless decode.
  *
- * @example
+ * **Example** (Round-trip retained wire)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJsonLossless, encodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
@@ -1619,7 +1647,8 @@ export const encodePandocJsonLossless = (
 /**
  * Encodes the exact JSON object retained by a lossless decode to text.
  *
- * @example
+ * **Example** (Encode retained wire string)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import {

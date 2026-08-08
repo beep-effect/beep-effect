@@ -213,8 +213,8 @@ const packageReport = (
 /**
  * Builds a package-local quality report from ts-morph-enriched subjects.
  *
- * @effects Reads package docgen configuration and TypeScript source files.
- * @example
+ * **Example** (Analyze first package quality)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { analyzePackageQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
@@ -234,6 +234,8 @@ const packageReport = (
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @effects Reads package docgen configuration and TypeScript source files.
  * @category workflows
  * @since 0.0.0
  */
@@ -286,8 +288,8 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
 /**
  * Builds the consolidated report emitted by the quality command.
  *
- * @effects Runs package-local JSDoc quality analysis for the provided targets.
- * @example
+ * **Example** (Analyze all packages quality)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { analyzeDocgenQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
@@ -305,6 +307,8 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @effects Runs package-local JSDoc quality analysis for the provided targets.
  * @category workflows
  * @since 0.0.0
  */

@@ -13,12 +13,14 @@ const $I = $RepoConfigsId.create("next/models/Turbopack.schema");
 /**
  * JSON-compatible value accepted by Turbopack loader options.
  *
- * @example
+ * **Example** (Make JSON value object)
+ *
  * ```ts
  * import { JSONValue } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const value = JSONValue.make({ enabled: true })
  * console.log(value)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -26,12 +28,14 @@ export type JSONValue = string | number | boolean | Array<JSONValue> | { [key: s
 /**
  * JSON-compatible value schema accepted by Turbopack loader options.
  *
- * @example
+ * **Example** (Make JSON value schema)
+ *
  * ```ts
  * import { JSONValue } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const value = JSONValue.make({ enabled: true })
  * console.log(value)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -46,12 +50,14 @@ export const JSONValue: S.Codec<JSONValue, JSONValue> = S.suspend(() =>
 /**
  * Record of Turbopack loader options.
  *
- * @example
+ * **Example** (Make loader options flag)
+ *
  * ```ts
  * import { TurbopackLoaderOptions } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const options = TurbopackLoaderOptions.make({ flag: true })
  * console.log(options)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -64,12 +70,14 @@ export const TurbopackLoaderOptions = S.Record(S.String, JSONValue).pipe(
 /**
  * Record of Turbopack loader options.
  *
- * @example
+ * **Example** (Annotate loader options type)
+ *
  * ```ts
  * import type { TurbopackLoaderOptions } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const options: TurbopackLoaderOptions = { flag: true }
  * console.log(options)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -88,12 +96,14 @@ class TurbopackLoaderItemConfig extends S.Class<TurbopackLoaderItemConfig>($I`Tu
 /**
  * Loader entry accepted by a Turbopack rule.
  *
- * @example
+ * **Example** (Make sass-loader item)
+ *
  * ```ts
  * import { TurbopackLoaderItem } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const loader = TurbopackLoaderItem.make({ loader: "sass-loader" })
  * console.log(loader)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -106,12 +116,14 @@ export const TurbopackLoaderItem = S.Union([S.String, TurbopackLoaderItemConfig]
 /**
  * Loader entry accepted by a Turbopack rule.
  *
- * @example
+ * **Example** (Assign string loader item)
+ *
  * ```ts
  * import type { TurbopackLoaderItem } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const loader: TurbopackLoaderItem = "sass-loader"
  * console.log(loader)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,12 +132,14 @@ export type TurbopackLoaderItem = typeof TurbopackLoaderItem.Type;
 /**
  * Built-in Turbopack rule condition.
  *
- * @example
+ * **Example** (Access browser enum condition)
+ *
  * ```ts
  * import { TurbopackLoaderBuiltinCondition } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const condition = TurbopackLoaderBuiltinCondition.Enum.browser
  * console.log(condition)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -145,12 +159,14 @@ export const TurbopackLoaderBuiltinCondition = LiteralKit([
 /**
  * Built-in Turbopack rule condition.
  *
- * @example
+ * **Example** (Satisfy browser condition string)
+ *
  * ```ts
  * import type { TurbopackLoaderBuiltinCondition } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const condition = "browser" satisfies TurbopackLoaderBuiltinCondition
  * console.log(condition)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -159,12 +175,14 @@ export type TurbopackLoaderBuiltinCondition = typeof TurbopackLoaderBuiltinCondi
 /**
  * Recursive condition object used by Turbopack rules.
  *
- * @example
+ * **Example** (Make all browser condition)
+ *
  * ```ts
  * import { TurbopackRuleCondition } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const condition = TurbopackRuleCondition.make({ all: ["browser"] })
  * console.log(condition)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -222,12 +240,14 @@ class TurbopackRuleMatcherCondition extends S.Class<TurbopackRuleMatcherConditio
 /**
  * Recursive condition schema used by Turbopack rules.
  *
- * @example
+ * **Example** (Make recursive rule condition)
+ *
  * ```ts
  * import { TurbopackRuleCondition } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const condition = TurbopackRuleCondition.make({ all: ["browser"] })
  * console.log(condition)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -248,12 +268,14 @@ export const TurbopackRuleCondition: S.Codec<TurbopackRuleCondition, TurbopackRu
 /**
  * Module type used by Turbopack for matched files.
  *
- * @example
+ * **Example** (Access ecmascript module enum)
+ *
  * ```ts
  * import { TurbopackModuleType } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const type = TurbopackModuleType.Enum.ecmascript
  * console.log(type)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -278,12 +300,14 @@ export const TurbopackModuleType = LiteralKit([
 /**
  * Module type used by Turbopack for matched files.
  *
- * @example
+ * **Example** (Satisfy text module type)
+ *
  * ```ts
  * import type { TurbopackModuleType } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const type = "text" satisfies TurbopackModuleType
  * console.log(type)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -292,12 +316,14 @@ export type TurbopackModuleType = typeof TurbopackModuleType.Type;
 /**
  * Object-form Turbopack rule configuration.
  *
- * @example
+ * **Example** (Make text type rule)
+ *
  * ```ts
  * import { TurbopackRuleConfigItem } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const rule = TurbopackRuleConfigItem.make({ type: "text" })
  * console.log(rule)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -322,12 +348,14 @@ export class TurbopackRuleConfigItem extends S.Class<TurbopackRuleConfigItem>($I
 /**
  * Turbopack rule configuration collection.
  *
- * @example
+ * **Example** (Make sass-loader collection)
+ *
  * ```ts
  * import { TurbopackRuleConfigCollection } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const collection = TurbopackRuleConfigCollection.make([{ loader: "sass-loader" }])
  * console.log(collection)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -343,12 +371,14 @@ export const TurbopackRuleConfigCollection = S.Union([
 /**
  * Turbopack rule configuration collection.
  *
- * @example
+ * **Example** (Annotate string loader collection)
+ *
  * ```ts
  * import type { TurbopackRuleConfigCollection } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const collection: TurbopackRuleConfigCollection = ["sass-loader"]
  * console.log(collection)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -368,12 +398,14 @@ class TurbopackIgnoredIssue extends S.Class<TurbopackIgnoredIssue>($I`TurbopackI
 /**
  * Options for Turbopack in `next.config.js`.
  *
- * @example
+ * **Example** (Make options with root)
+ *
  * ```ts
  * import { TurbopackOptions } from "@beep/repo-configs/next/models/Turbopack.schema"
  * const options = TurbopackOptions.make({ root: process.cwd() })
  * console.log(options)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

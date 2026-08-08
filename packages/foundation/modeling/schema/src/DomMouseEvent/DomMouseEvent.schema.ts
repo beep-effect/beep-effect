@@ -12,22 +12,24 @@ const $I = $SchemaId.create("DomMouseEvent");
 /**
  * Type guard for MouseEvent.
  *
- * @example
+ * **Example** (Guard MouseEvent instance)
+ *
  * ```ts
  * import { isMouseEvent } from "@beep/schema/DomMouseEvent"
  *
  * console.log(isMouseEvent(new MouseEvent("click")))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isMouseEvent = (u: unknown): u is MouseEvent => u instanceof MouseEvent;
 
 /**
  * A DOM mouse event.
  *
- * @example
+ * **Example** (Decode MouseEvent with schema)
+ *
  * ```ts
  * import { DOMMouseEvent } from "@beep/schema/DomMouseEvent"
  * import * as S from "effect/Schema"
@@ -36,8 +38,8 @@ export const isMouseEvent = (u: unknown): u is MouseEvent => u instanceof MouseE
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMMouseEvent = S.declare(isMouseEvent).pipe(
   $I.annoteSchema("DOMMouseEvent", {
@@ -48,7 +50,8 @@ export const DOMMouseEvent = S.declare(isMouseEvent).pipe(
 /**
  * Type for {@link DOMMouseEvent}.
  *
- * @example
+ * **Example** (Typed DOMMouseEvent decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DOMMouseEvent } from "@beep/schema/DomMouseEvent"
@@ -57,8 +60,8 @@ export const DOMMouseEvent = S.declare(isMouseEvent).pipe(
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DOMMouseEvent = typeof DOMMouseEvent.Type;
 

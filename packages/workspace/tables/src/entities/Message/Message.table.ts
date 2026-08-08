@@ -11,7 +11,8 @@ import { Message } from "@beep/workspace-domain/entities/Message";
 /**
  * PGLite/Postgres Drizzle table for the workspace Message entity.
  *
- * @example
+ * **Example** (Read table name and content storage)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *

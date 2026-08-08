@@ -9,7 +9,8 @@
 /**
  * IR-to-law mapping service contract exports.
  *
- * @example
+ * **Example** (Verify IrToLaw factory export)
+ *
  * ```ts
  * import * as IrToLaw from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -23,7 +24,8 @@ export * as IrToLaw from "./IrToLaw/index.ts";
 /**
  * Office-action review loop service contract exports.
  *
- * @example
+ * **Example** (Verify review factory export)
+ *
  * ```ts
  * import * as OfficeActionReview from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -37,7 +39,8 @@ export * as OfficeActionReview from "./OfficeActionReview/index.ts";
 /**
  * Practice knowledge-graph MCP declaration exports.
  *
- * @example
+ * **Example** (Count practice KG tools)
+ *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *

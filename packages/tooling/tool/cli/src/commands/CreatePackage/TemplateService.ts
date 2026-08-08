@@ -18,7 +18,8 @@ const $I = $RepoCliId.create("commands/CreatePackage/TemplateService");
 /**
  * Mapping between template source file and output file path.
  *
- * @example
+ * **Example** (Validate TemplateSpec with Schema)
+ *
  * ```ts
  * import { TemplateSpec } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -26,6 +27,7 @@ const $I = $RepoCliId.create("commands/CreatePackage/TemplateService");
  * const candidate = { outputPath: "README.md", templateName: "README.md.hbs" }
  * console.log(S.is(TemplateSpec)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,7 +44,8 @@ export class TemplateSpec extends S.Class<TemplateSpec>($I`TemplateSpec`)(
 /**
  * Rendered template output.
  *
- * @example
+ * **Example** (Validate RenderedTemplate with Schema)
+ *
  * ```ts
  * import { RenderedTemplate } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -50,6 +53,7 @@ export class TemplateSpec extends S.Class<TemplateSpec>($I`TemplateSpec`)(
  * const candidate = { content: "# Example\n", outputPath: "README.md" }
  * console.log(S.is(RenderedTemplate)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,7 +70,8 @@ export class RenderedTemplate extends S.Class<RenderedTemplate>($I`RenderedTempl
 /**
  * Request payload for template rendering.
  *
- * @example
+ * **Example** (Validate TemplateRenderRequest with Schema)
+ *
  * ```ts
  * import { TemplateRenderRequest } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -74,6 +79,7 @@ export class RenderedTemplate extends S.Class<RenderedTemplate>($I`RenderedTempl
  * const candidate = { templateDir: "templates/package", templates: [{ outputPath: "README.md", templateName: "README.md.hbs" }] }
  * console.log(S.is(TemplateRenderRequest)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -94,12 +100,14 @@ export class TemplateRenderRequest extends S.Class<TemplateRenderRequest>($I`Tem
 /**
  * Service contract for template rendering.
  *
- * @example
+ * **Example** (Cast TemplateServiceShape value)
+ *
  * ```ts
  * import type { TemplateServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TemplateServiceShape
  * console.log(value) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -112,7 +120,8 @@ export type TemplateServiceShape = {
 /**
  * Service tag for template rendering.
  *
- * @example
+ * **Example** (Resolve TemplateService from Effect)
+ *
  * ```ts
  * import { TemplateService } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -120,6 +129,7 @@ export type TemplateServiceShape = {
  * const program = Effect.service(TemplateService)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -155,14 +165,16 @@ const createHandlebarsEnvironment = () => {
 /**
  * Construct the default template service implementation.
  *
- * @returns Template renderer backed by Handlebars.
- * @example
+ * **Example** (Create default template service)
+ *
  * ```ts
  * import { createTemplateService } from "@beep/repo-cli/commands/CreatePackage"
  *
  * const service = createTemplateService()
  * console.log("renderTemplates" in service) // true
  * ```
+ *
+ * @returns Template renderer backed by Handlebars.
  * @category models
  * @since 0.0.0
  */

@@ -34,10 +34,13 @@ const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.
 /**
  * Client-owned filters and pagination for the contradiction queue.
  *
+ * **Details**
+ *
  * Organization scope is deliberately absent. The authenticated server derives
  * it instead of trusting a renderer-supplied tenant identity.
  *
- * @example
+ * **Example** (Check disposition field presence)
+ *
  * ```ts
  * import { ContradictionListPayload } from "@beep/epistemic-use-cases/public"
  *
@@ -83,11 +86,14 @@ const EvidenceSourcePageSelectorBase = LiteralKit(["anchor", "page"]).toTaggedUn
  * Selects the source page containing the persisted anchor start, or one
  * explicit page returned by a prior source-page response.
  *
+ * **Details**
+ *
  * The anchor selector keeps surrogate-safe page-boundary calculation inside
  * the server, which owns the complete canonical text. A renderer therefore
  * never guesses an initial page from a nominal page size.
  *
- * @example
+ * **Example** (Make anchor selector case)
+ *
  * ```ts
  * import { EvidenceSourcePageSelector } from "@beep/epistemic-use-cases/public"
  *
@@ -107,7 +113,8 @@ export const EvidenceSourcePageSelector = EvidenceSourcePageSelectorBase.pipe(
 /**
  * Runtime type for {@link EvidenceSourcePageSelector}.
  *
- * @example
+ * **Example** (Type anchor selector value)
+ *
  * ```ts
  * import type { EvidenceSourcePageSelector } from "@beep/epistemic-use-cases/public"
  *
@@ -123,12 +130,15 @@ export type EvidenceSourcePageSelector = typeof EvidenceSourcePageSelector.Type;
 /**
  * Renderer request for one bounded page of verified canonical source text.
  *
+ * **Details**
+ *
  * The server derives organization scope and the exact source identity from the
  * persisted candidate and evidence verification. The renderer can select only
  * an evidence row already bound to the candidate and either its exact anchor
  * page or one explicit page returned by prior navigation.
  *
- * @example
+ * **Example** (Check selector field presence)
+ *
  * ```ts
  * import { EvidenceSourcePagePayload } from "@beep/epistemic-use-cases/public"
  *
@@ -164,10 +174,13 @@ export class EvidenceSourcePagePayload extends S.Class<EvidenceSourcePagePayload
 /**
  * Evidence shown beneath one exact belief version.
  *
+ * **Details**
+ *
  * A missing persisted verification receipt is explicit and keeps the source
  * action disabled; it never falls back to an unverified quote.
  *
- * @example
+ * **Example** (Check verifiedAnchor field)
+ *
  * ```ts
  * import { ContradictionEvidenceView } from "@beep/epistemic-use-cases/public"
  *
@@ -194,7 +207,8 @@ export class ContradictionEvidenceView extends S.Class<ContradictionEvidenceView
 /**
  * One exact immutable belief and the evidence assigned to its side.
  *
- * @example
+ * **Example** (Check belief field presence)
+ *
  * ```ts
  * import { ContradictionBeliefView } from "@beep/epistemic-use-cases/public"
  *
@@ -221,10 +235,13 @@ export class ContradictionBeliefView extends S.Class<ContradictionBeliefView>($I
 /**
  * Expanded candidate view used by the human triage workspace.
  *
+ * **Details**
+ *
  * `left` and `right` preserve the candidate's canonical ordering. Neither side
  * is marked preferred or authoritative by this read model.
  *
- * @example
+ * **Example** (Check left field presence)
+ *
  * ```ts
  * import { ContradictionCandidateDetailView } from "@beep/epistemic-use-cases/public"
  *
@@ -299,11 +316,14 @@ const EvidenceSourceHighlightSchema = EvidenceSourceHighlightStruct.mapFields(id
 /**
  * Quote-free projection of a freshly verified source anchor.
  *
+ * **Details**
+ *
  * The projection retains the absolute UTF-16 offsets and exact source
  * identity needed for highlighting while deliberately omitting the
  * potentially unbounded anchor quote.
  *
- * @example
+ * **Example** (Check highlight offset fields)
+ *
  * ```ts
  * import { EvidenceSourceHighlight } from "@beep/epistemic-use-cases/public"
  *
@@ -383,7 +403,8 @@ const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity)
 /**
  * Bounded canonical source page and quote-free verified highlight projection.
  *
- * @example
+ * **Example** (Check highlight field presence)
+ *
  * ```ts
  * import { EvidenceSourcePage } from "@beep/epistemic-use-cases/public"
  *
@@ -418,11 +439,14 @@ const ContradictionActionErrorReasonBase = LiteralKit([
 /**
  * Sanitized, actionable reasons a contradiction RPC can fail.
  *
+ * **Details**
+ *
  * These values distinguish stale review state and source availability without
  * exposing repository diagnostics, filesystem paths, organization identity,
  * or authorization internals.
  *
- * @example
+ * **Example** (Access stale-candidate enum)
+ *
  * ```ts
  * import { ContradictionActionErrorReason } from "@beep/epistemic-use-cases/public"
  *
@@ -442,7 +466,8 @@ export const ContradictionActionErrorReason = ContradictionActionErrorReasonBase
 /**
  * Runtime type for {@link ContradictionActionErrorReason}.
  *
- * @example
+ * **Example** (Type source-access-denied reason)
+ *
  * ```ts
  * import type { ContradictionActionErrorReason } from "@beep/epistemic-use-cases/public"
  *
@@ -458,7 +483,8 @@ export type ContradictionActionErrorReason = typeof ContradictionActionErrorReas
 /**
  * Client-safe contradiction action failure carried by every triage RPC.
  *
- * @example
+ * **Example** (Make candidate-not-found error)
+ *
  * ```ts
  * import { ContradictionActionError } from "@beep/epistemic-use-cases/public"
  *
@@ -486,7 +512,8 @@ export class ContradictionActionError extends TaggedErrorClass<ContradictionActi
 /**
  * Lists the authenticated organization’s contradiction candidates.
  *
- * @example
+ * **Example** (Lookup list candidates RPC)
+ *
  * ```ts
  * import { ContradictionRpcs, ListContradictionCandidatesRpc } from "@beep/epistemic-use-cases/public"
  *
@@ -505,7 +532,8 @@ export const ListContradictionCandidatesRpc = Rpc.make("ListContradictionCandida
 /**
  * Reads one candidate with both exact beliefs and their evidence.
  *
- * @example
+ * **Example** (Lookup get candidate RPC)
+ *
  * ```ts
  * import { ContradictionRpcs, GetContradictionCandidateRpc } from "@beep/epistemic-use-cases/public"
  *
@@ -524,7 +552,8 @@ export const GetContradictionCandidateRpc = Rpc.make("GetContradictionCandidate"
 /**
  * Applies a human rejection or one persisted supersession proposal.
  *
- * @example
+ * **Example** (Lookup review candidate RPC)
+ *
  * ```ts
  * import { ContradictionRpcs, ReviewContradictionCandidateRpc } from "@beep/epistemic-use-cases/public"
  *
@@ -543,7 +572,8 @@ export const ReviewContradictionCandidateRpc = Rpc.make("ReviewContradictionCand
 /**
  * Reads one bounded source-text page for candidate-bound verified evidence.
  *
- * @example
+ * **Example** (Lookup source page RPC)
+ *
  * ```ts
  * import { ContradictionRpcs, GetEvidenceSourcePageRpc } from "@beep/epistemic-use-cases/public"
  *
@@ -562,7 +592,8 @@ export const GetEvidenceSourcePageRpc = Rpc.make("GetEvidenceSourcePage", {
 /**
  * Authenticated desktop RPC group for contradiction triage.
  *
- * @example
+ * **Example** (Check source page request)
+ *
  * ```ts
  * import { ContradictionRpcs } from "@beep/epistemic-use-cases/public"
  *

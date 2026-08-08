@@ -76,14 +76,16 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, SchemaC
  * path by prefix. `packages/shared/**` and `infra/**` are unassigned until
  * their P1 wave assignment lands and resolve to `O.none` (non-blocking).
  *
- * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
- * @returns The resolved wave family, or `O.none` when the path is unassigned.
- * @example
+ * **Example** (Resolve crispening family)
+ *
  * ```ts
  * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Postgres.ts"))
  * ```
+ *
+ * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
+ * @returns The resolved wave family, or `O.none` when the path is unassigned.
  * @category utilities
  * @since 0.0.0
  */
@@ -117,9 +119,8 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * when its `ruleId` is a policy-tracked card AND the resolved blocking flag
  * (owner override, else family, else non-blocking when unassigned) is `false`.
  *
- * @param policyDocument - The decoded `standards/schema-crispening.policy.jsonc` document, if present.
- * @returns A predicate over inventory entries.
- * @example
+ * **Example** (Build exemption predicate)
+ *
  * ```ts
  * import { isSchemaCrispeningPolicyExempt } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -127,6 +128,9 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * const exemptWithoutPolicy = isSchemaCrispeningPolicyExempt(O.none())
  * console.log(exemptWithoutPolicy) // example value
  * ```
+ *
+ * @param policyDocument - The decoded `standards/schema-crispening.policy.jsonc` document, if present.
+ * @returns A predicate over inventory entries.
  * @category utilities
  * @since 0.0.0
  */

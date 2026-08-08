@@ -11,7 +11,8 @@ import { CandidateProject } from "@beep/workspace-domain/entities/CandidateProje
 /**
  * PGLite/Postgres Drizzle table for the workspace CandidateProject entity.
  *
- * @example
+ * **Example** (Read table name and lifecycle)
+ *
  * ```ts
  * import { CandidateProject } from "@beep/workspace-tables/entities"
  *

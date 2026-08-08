@@ -575,22 +575,6 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
 // by design, so the cap applies unconditionally.
 const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 
-// PR #600 moved CI off Blacksmith onto standard ubuntu-24.04 (4 vCPU / 16GB).
-// At the shared cap of 4 the heaviest lanes stack four multi-GB tsgo/vitest
-// processes and the kernel OOM-kills a rotating 2-4 package set (exit 137:
-// epistemic-server, db-admin, epistemic-ui, editor, workspace-server...) or
-// loses the runner entirely, while the same tree passes every lane locally.
-// Only the lanes that actually die pin this; the rest stay at the shared cap.
-// Both injection sites (`boundedRootTurboArgs` and `coverageTurboArgs` in
-// Quality/Tasks.ts) keep caller-provided concurrency, so this pin wins.
-// Pinned to 1, not 2: at 2-wide an epistemic-server-class tsc build plus any
-// neighbor still OOM-killed the runner (Test Integration died in 8 minutes;
-// Check lost its whole runner 55 minutes in with zero concluded steps). A
-// single task fits — the green Test Unit lane builds the same packages —
-// so full serialization is the only setting these machines survive. Revisit
-// when the owned beep-* runners land.
-const CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG = "--concurrency=1";
-
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
@@ -785,7 +769,10 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", [CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG], options)],
+      // The two heaviest package checks (repo-cli, epistemic-server) OOM a 16GB
+      // hosted runner when their tsgo processes overlap, so the check lane runs
+      // serial; the smaller tasks dominate the count, not the wall clock.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
           label: "ci:codegen:generate",
@@ -834,9 +821,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [
-        turboRootLaneStep(repoRoot, "coverage", "coverage", [CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG], options),
-      ],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
@@ -863,6 +848,7 @@ export const ciLaneStepsForTesting: {
           "jsdoc-ratchet",
           "--inventory",
           JSDOC_CI_INVENTORY_JSON_PATH,
+          "--include-generated",
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
@@ -904,15 +890,7 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-      "test-integration": () => [
-        turboRootLaneStep(
-          repoRoot,
-          "test-integration",
-          "test",
-          ["--integration", CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG],
-          options
-        ),
-      ],
+      "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
       "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
     })
 );

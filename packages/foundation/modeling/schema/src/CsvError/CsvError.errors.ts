@@ -29,7 +29,8 @@ const CsvErrorBase: TaggedErrorClassFromFields<CsvError, "CsvError", typeof CsvE
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
  *
- * @example
+ * **Example** (Create CsvError instance)
+ *
  * ```ts
  * import { CsvError } from "@beep/schema/CsvError"
  *
@@ -45,7 +46,8 @@ export class CsvError extends CsvErrorBase {}
 /**
  * Construct a {@link CsvError}.
  *
- * @example
+ * **Example** (Construct CsvError with offset)
+ *
  * ```ts
  * import { csvError } from "@beep/schema/CsvError"
  *

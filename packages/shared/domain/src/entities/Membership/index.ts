@@ -8,28 +8,30 @@
 /**
  * Membership model schema namespace.
  *
- * @example
+ * **Example** (Access model table name)
+ *
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/Membership"
  *
  * console.log(Model.definition.entityId.tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./Membership.model.ts";
 /**
  * Membership value schemas.
  *
- * @example
+ * **Example** (Check member role value)
+ *
  * ```ts
  * import { Role } from "@beep/shared-domain/entities/Membership"
  *
  * console.log(Role.is.member("member"))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export * from "./Membership.values.ts";

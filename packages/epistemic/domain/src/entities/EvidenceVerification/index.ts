@@ -8,7 +8,8 @@
 /**
  * Immutable evidence-verification sidecar model.
  *
- * @example
+ * **Example** (Log entity type from definition)
+ *
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification"
  *

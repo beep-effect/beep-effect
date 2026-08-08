@@ -15,7 +15,8 @@ const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");
 /**
  * Validated options used by `corpus extract`.
  *
- * @example
+ * **Example** (Make extract options)
+ *
  * ```ts
  * import { CorpusExtractOptions } from "@beep/repo-cli/commands/Corpus"
  *
@@ -28,6 +29,7 @@ const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");
  * })
  * console.log(options.exportChildren) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -54,7 +56,8 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
 /**
  * Summary counts returned by `corpus extract`.
  *
- * @example
+ * **Example** (Make extract summary counts)
+ *
  * ```ts
  * import { CorpusExtractSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -70,6 +73,7 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  * })
  * console.log(summary.succeededCount) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,7 +95,8 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
 /**
  * JSON encoder for {@link CorpusExtractSummary}.
  *
- * @example
+ * **Example** (Encode extract summary JSON)
+ *
  * ```ts
  * import { CorpusExtractSummary, encodeCorpusExtractSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -109,6 +114,7 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  *
  * Effect.runPromise(encodeCorpusExtractSummaryJson(summary)).then((json) => console.log(json.includes("\"sourceCount\":1"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

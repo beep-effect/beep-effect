@@ -34,7 +34,8 @@ const UsptoToolErrorReasonBase = LiteralKit([
  * Redacted technical failure reasons a USPTO MCP tool can surface once the
  * `api_key_required` gate has passed.
  *
- * @example
+ * **Example** (Logging enum transport value)
+ *
  * ```ts
  * import { UsptoToolErrorReason } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -59,7 +60,8 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
 /**
  * Type for {@link UsptoToolErrorReason}.
  *
- * @example
+ * **Example** (Type-checking transport reason)
+ *
  * ```ts
  * import { UsptoToolErrorReason } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -77,7 +79,8 @@ export type UsptoToolErrorReason = typeof UsptoToolErrorReason.Type;
  * Structured failure returned by USPTO MCP tools once credential resolution
  * has already succeeded (transport, decoding, or upstream status failures).
  *
- * @example
+ * **Example** (Making a transport failure)
+ *
  * ```ts
  * import { UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -115,7 +118,8 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
  * `api_key_required` envelope (credential absent) or a post-gate
  * {@link UsptoToolError} (driver-level failure).
  *
- * @example
+ * **Example** (Recognizing a tool error)
+ *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -141,7 +145,8 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
 /**
  * Type for {@link UsptoMcpFailure}.
  *
- * @example
+ * **Example** (Typing a tool error)
+ *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -162,7 +167,8 @@ export type UsptoMcpFailure = typeof UsptoMcpFailure.Type;
 /**
  * Parameters for {@link UsptoSearchApplicationsTool}.
  *
- * @example
+ * **Example** (Building search query params)
+ *
  * ```ts
  * import { UsptoSearchApplicationsParams } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -192,7 +198,8 @@ export class UsptoSearchApplicationsParams extends S.Class<UsptoSearchApplicatio
  * Returns the kit's `api_key_required` envelope when `USPTO_API_KEY` is
  * absent (Q6); returns real `@beep/uspto` results when present.
  *
- * @example
+ * **Example** (Reading search tool name)
+ *
  * ```ts
  * import { UsptoSearchApplicationsTool } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -217,7 +224,8 @@ export const UsptoSearchApplicationsTool = annotateFourHints(
 /**
  * Parameters for {@link UsptoGetDocumentsTool}.
  *
- * @example
+ * **Example** (Building get-documents params)
+ *
  * ```ts
  * import { PosInt } from "@beep/schema"
  * import { UsptoApplicationNumber } from "@beep/uspto"
@@ -255,7 +263,8 @@ export class UsptoGetDocumentsParams extends S.Class<UsptoGetDocumentsParams>($I
  * Gated on the same `USPTO_API_KEY` credential as
  * {@link UsptoSearchApplicationsTool}.
  *
- * @example
+ * **Example** (Reading documents tool name)
+ *
  * ```ts
  * import { UsptoGetDocumentsTool } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -282,7 +291,8 @@ export const UsptoGetDocumentsTool = annotateFourHints(
  * The thin USPTO MCP proving-host toolkit: search plus document listing,
  * both gated on the same `USPTO_API_KEY` credential.
  *
- * @example
+ * **Example** (Listing toolkit tool keys)
+ *
  * ```ts
  * import { UsptoToolkit } from "@beep/uspto-mcp/UsptoTools"
  *
@@ -298,7 +308,8 @@ export const UsptoToolkit = Toolkit.make(UsptoSearchApplicationsTool, UsptoGetDo
 /**
  * Type for {@link UsptoToolkit}.
  *
- * @example
+ * **Example** (Typing toolkit tool count)
+ *
  * ```ts
  * import { UsptoToolkit } from "@beep/uspto-mcp/UsptoTools"
  *

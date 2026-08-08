@@ -19,13 +19,14 @@ const $I = $LawPracticeDomainId.create("values/DurableLocator/DurableLocator.mod
  * A portable, host-agnostic locator for a citation, in the style of W3C Web
  * Annotation selectors.
  *
+ * **Details**
+ *
  * Stores the citation as a quote plus surrounding context (TextQuoteSelector)
  * and an offset hint (TextPositionSelector), so it survives edits to the
  * document.
  *
- * **Example**
+ * **Example** (Creating a DurableLocator)
  *
- * @example
  * ```ts
  * import { DurableLocator } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -108,7 +109,8 @@ export class DurableLocator extends S.Class<DurableLocator>($I`DurableLocator`)(
 /**
  * Companion namespace for `DurableLocator`.
  *
- * @example
+ * **Example** (Accessing Encoded space type)
+ *
  * ```ts
  * import type { DurableLocator } from "@beep/law-practice-domain"
  *
@@ -123,9 +125,8 @@ export declare namespace DurableLocator {
   /**
    * Wire-encoded representation of a decoded {@link DurableLocator}.
    *
-   * **Example**
+   * **Example** (Aliasing the Encoded type)
    *
-   * @example
    * ```ts
    * import type { DurableLocator } from "@beep/law-practice-domain"
    *

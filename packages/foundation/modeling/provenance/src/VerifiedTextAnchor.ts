@@ -23,7 +23,8 @@ const utf8Encoder = new TextEncoder();
 /**
  * Machine-readable reasons a text anchor cannot acquire verified status.
  *
- * @example
+ * **Example** (Check error reason membership)
+ *
  * ```ts
  * import { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
  *
@@ -47,7 +48,8 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
 /**
  * Type for {@link VerifiedTextAnchorErrorReason}.
  *
- * @example
+ * **Example** (Assign typed error reason)
+ *
  * ```ts
  * import type { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
  *
@@ -63,7 +65,8 @@ export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason
 /**
  * Sanitized failure emitted by verified-anchor construction.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor"
  *
@@ -102,12 +105,15 @@ export class VerifiedTextAnchorError extends TaggedErrorClass<VerifiedTextAnchor
 /**
  * Inputs required to bind an anchor to an expected source identity.
  *
+ * **Details**
+ *
  * `expectedSource` is the identity authorized by the caller; `source` is the
  * identity actually resolved with `sourceText`. The verifier hashes
  * `sourceText` and requires its digest to match that resolved identity. A
  * mismatch is evidence drift, not permission to rewrite an existing anchor.
  *
- * @example
+ * **Example** (Check sourceText field presence)
+ *
  * ```ts
  * import { VerifyTextAnchorInput } from "@beep/provenance/VerifiedTextAnchor"
  *
@@ -134,12 +140,15 @@ export class VerifyTextAnchorInput extends S.Class<VerifyTextAnchorInput>($I`Ver
  * Persistable receipt recording an anchor and the source identity against which
  * it was verified.
  *
+ * **Details**
+ *
  * A receipt is deliberately structural: it preserves the existing
  * `{ anchor, source }` wire contract, but it is not runtime proof. Consumers
  * must resolve the exact source text and call {@link verifyTextAnchor} before
  * using a receipt where current verification is required.
  *
- * @example
+ * **Example** (Check receipt anchor field)
+ *
  * ```ts
  * import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor"
  *
@@ -179,11 +188,14 @@ class VerifiedTextAnchorValue {
 /**
  * Opaque runtime proof that a text anchor matches one exact resolved source.
  *
+ * **Details**
+ *
  * The schema is from-self and the implementation class is module-private, so
  * structural receipts cannot be decoded or constructed as verified values.
  * Only {@link verifyTextAnchor} can create this runtime type.
  *
- * @example
+ * **Example** (Receipt is not runtime proof)
+ *
  * ```ts
  * import type {
  *   TextAnchorVerificationReceipt,
@@ -205,11 +217,14 @@ export type VerifiedTextAnchor = VerifiedTextAnchorValue;
 /**
  * From-self schema for the opaque runtime verified-anchor proof.
  *
+ * **Details**
+ *
  * Decoding structural wire data is intentionally rejected because
  * `{ anchor, source }` does not contain the canonical source text needed to
  * prove raw-slice equality.
  *
- * @example
+ * **Example** (Schema rejects structural data)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor"
@@ -230,10 +245,13 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
 /**
  * Convert an opaque runtime proof into its persistable structural receipt.
  *
+ * **Details**
+ *
  * The reverse conversion is intentionally unavailable; a receipt must be
  * re-verified with canonical source text.
  *
- * @example
+ * **Example** (Convert verified anchor to receipt)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -294,12 +312,15 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
 /**
  * Prove a candidate anchor against an authorized, exact source manifestation.
  *
+ * **Details**
+ *
  * Construction fails when scope or identity drifted, the raw text digest does
  * not match the resolved source identity, offsets are not valid UTF-16
  * code-point boundaries, the range is internally inconsistent, or the exact
  * raw slice differs from the quote.
  *
- * @example
+ * **Example** (Verify matching text anchor)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"

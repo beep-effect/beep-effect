@@ -13,7 +13,8 @@ const $I = $SchemaId.create("SnakeStr");
 /**
  * Branded snake_case string schema.
  *
- * @example
+ * **Example** (Decode snake_case string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SnakeCaseStr } from "@beep/schema"
@@ -22,8 +23,8 @@ const $I = $SchemaId.create("SnakeStr");
  * console.log(value) // "workflow_status_2"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SnakeCaseStr = NonEmptyTrimmedStr.pipe(
   S.check(
@@ -46,7 +47,8 @@ export const SnakeCaseStr = NonEmptyTrimmedStr.pipe(
 /**
  * Type for {@link SnakeCaseStr}.
  *
- * @example
+ * **Example** (Type a snake_case value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { SnakeCaseStr } from "@beep/schema"
@@ -56,7 +58,7 @@ export const SnakeCaseStr = NonEmptyTrimmedStr.pipe(
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SnakeCaseStr = typeof SnakeCaseStr.Type;

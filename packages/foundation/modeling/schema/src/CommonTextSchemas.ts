@@ -21,7 +21,8 @@ const normalizeBooleanString: (value: string) => boolean = flow(Str.trim, Str.to
 /**
  * Trimmed and non-empty text schema that strips whitespace and rejects empty results.
  *
- * @example
+ * **Example** (Decode trimmed non-empty text)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas"
@@ -30,8 +31,8 @@ const normalizeBooleanString: (value: string) => boolean = flow(Str.trim, Str.to
  * console.log(value) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const TrimmedNonEmptyText = S.String.pipe(
   S.decodeTo(
@@ -49,7 +50,8 @@ export const TrimmedNonEmptyText = S.String.pipe(
 /**
  * Type for {@link TrimmedNonEmptyText}.
  *
- * @example
+ * **Example** (Type annotated trimmed text)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas"
@@ -58,15 +60,16 @@ export const TrimmedNonEmptyText = S.String.pipe(
  * console.log(name) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TrimmedNonEmptyText = typeof TrimmedNonEmptyText.Type;
 
 /**
  * Schema that decodes a comma-separated string into a trimmed non-empty string array.
  *
- * @example
+ * **Example** (Decode comma-separated items)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CommaSeparatedList } from "@beep/schema/CommonTextSchemas"
@@ -75,8 +78,8 @@ export type TrimmedNonEmptyText = typeof TrimmedNonEmptyText.Type;
  * console.log(items) // ["foo", "bar", "baz"]
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CommaSeparatedList = S.String.pipe(
   S.decodeTo(
@@ -94,7 +97,8 @@ export const CommaSeparatedList = S.String.pipe(
 /**
  * Type for {@link CommaSeparatedList}.
  *
- * @example
+ * **Example** (Type annotated list decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CommaSeparatedList } from "@beep/schema/CommonTextSchemas"
@@ -103,15 +107,16 @@ export const CommaSeparatedList = S.String.pipe(
  * console.log(tags.join("|")) // "a|b"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CommaSeparatedList = typeof CommaSeparatedList.Type;
 
 /**
  * Schema that normalizes common boolean string spellings (`"true"`, `"1"`, `"yes"`, `"on"`, etc.) to `boolean`.
  *
- * @example
+ * **Example** (Normalize boolean string values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizedBooleanString } from "@beep/schema/CommonTextSchemas"
@@ -120,8 +125,8 @@ export type CommaSeparatedList = typeof CommaSeparatedList.Type;
  * console.log(S.decodeUnknownSync(NormalizedBooleanString)("0")) // false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NormalizedBooleanString = S.String.pipe(
   S.decodeTo(
@@ -139,7 +144,8 @@ export const NormalizedBooleanString = S.String.pipe(
 /**
  * Type for {@link NormalizedBooleanString}.
  *
- * @example
+ * **Example** (Type annotated boolean flag)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizedBooleanString } from "@beep/schema/CommonTextSchemas"
@@ -148,7 +154,7 @@ export const NormalizedBooleanString = S.String.pipe(
  * console.log(flag) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NormalizedBooleanString = typeof NormalizedBooleanString.Type;

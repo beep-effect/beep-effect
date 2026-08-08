@@ -8,7 +8,8 @@
 /**
  * Generated ACP method metadata.
  *
- * @example
+ * **Example** (Log agent methods and version)
+ *
  * ```ts
  * import { AGENT_METHODS, PROTOCOL_VERSION } from "@beep/acp/schema"
  *
@@ -22,7 +23,8 @@ export * from "./_generated/meta.gen.ts";
 /**
  * Generated ACP wire schemas.
  *
- * @example
+ * **Example** (Make InitializeRequest with capabilities)
+ *
  * ```ts
  * import { InitializeRequest } from "@beep/acp/schema"
  *

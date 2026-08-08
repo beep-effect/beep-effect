@@ -18,7 +18,8 @@ const $I = $FileProcessingId.create("Operation");
 /**
  * Machine-readable file-processing operation failure reasons.
  *
- * @example
+ * **Example** (Check reason options membership)
+ *
  * ```ts
  * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
  *
@@ -46,7 +47,8 @@ export const FileProcessingOperationErrorReason = LiteralKit([
 /**
  * Type for {@link FileProcessingOperationErrorReason}.
  *
- * @example
+ * **Example** (Type and refine reason)
+ *
  * ```ts
  * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
  *
@@ -62,7 +64,8 @@ export type FileProcessingOperationErrorReason = typeof FileProcessingOperationE
 /**
  * Sanitized file-processing operation error.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { FileProcessingOperationError } from "@beep/file-processing/Operation"
  *
@@ -107,7 +110,8 @@ export class FileProcessingOperationError extends TaggedErrorClass<FileProcessin
 /**
  * Operation request for format detection.
  *
- * @example
+ * **Example** (Decode detect operation request)
+ *
  * ```ts
  * import { DetectFileOperation } from "@beep/file-processing/Operation"
  * import { Effect } from "effect"
@@ -150,7 +154,8 @@ export class DetectFileOperation extends S.Class<DetectFileOperation>($I`DetectF
 /**
  * Result emitted by format detection.
  *
- * @example
+ * **Example** (Decode detection result payload)
+ *
  * ```ts
  * import { DetectionResult } from "@beep/file-processing/Operation"
  * import { Effect } from "effect"
@@ -186,7 +191,8 @@ export class DetectionResult extends S.Class<DetectionResult>($I`DetectionResult
 /**
  * Operation request for text and metadata extraction.
  *
- * @example
+ * **Example** (Decode extract operation request)
+ *
  * ```ts
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
  * import { Effect } from "effect"
@@ -232,7 +238,8 @@ export class ExtractFileOperation extends S.Class<ExtractFileOperation>($I`Extra
 /**
  * Operation request for archive child export.
  *
- * @example
+ * **Example** (Decode export-archive request)
+ *
  * ```ts
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
  * import { Effect } from "effect"
@@ -277,7 +284,8 @@ export class ExportArchiveOperation extends S.Class<ExportArchiveOperation>($I`E
 /**
  * Operation request for a full source processing pass.
  *
- * @example
+ * **Example** (Decode process operation request)
+ *
  * ```ts
  * import { ProcessFileOperation } from "@beep/file-processing/Operation"
  * import { Effect } from "effect"

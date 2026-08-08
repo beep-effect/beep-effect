@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/epistemic-config`.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/epistemic-config"
  *

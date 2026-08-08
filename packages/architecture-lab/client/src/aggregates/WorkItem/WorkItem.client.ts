@@ -1,7 +1,8 @@
 /**
  * WorkItem client facade for command/query transport adapters.
  *
- * @remarks
+ * **Details**
+ *
  * The module defines only the client-side contract and service tag. Concrete
  * HTTP, RPC, or in-memory transports supply the actual command/query effects.
  *
@@ -21,12 +22,14 @@ const $I = $ArchitectureLabClientId.create("aggregates/WorkItem/WorkItem.client"
 /**
  * Transport boundary for WorkItem command and query calls.
  *
- * @remarks
+ * **Details**
+ *
  * Implementations own the remote call, serialization, retry, and authentication
  * policy. The contract preserves the public WorkItem use-case error channel so
  * callers do not depend on server repository details.
  *
- * @example
+ * **Example** (Stub transport create call)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import {
@@ -101,7 +104,8 @@ export interface WorkItemClientTransport {
 /**
  * Facade shape exposed through the WorkItem client service.
  *
- * @example
+ * **Example** (Build client and list)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { ListWorkItemsQuery, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -144,12 +148,14 @@ export interface WorkItemClientShape extends WorkItemClientTransport {}
 /**
  * Effect context service tag for the WorkItem client facade.
  *
- * @remarks
+ * **Details**
+ *
  * Applications provide this tag with a facade built by
  * {@link makeWorkItemClient}. Consumers can then depend on `WorkItemClient`
  * instead of a concrete transport implementation.
  *
- * @example
+ * **Example** (Provide client service tag)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { ListWorkItemsQuery, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -194,11 +200,13 @@ export class WorkItemClient extends Context.Service<WorkItemClient, WorkItemClie
 /**
  * Build the WorkItem client facade from a concrete transport.
  *
- * @remarks
+ * **Details**
+ *
  * The facade is intentionally thin: it forwards each method directly to the
  * supplied transport and does not wrap, retry, or reinterpret failures.
  *
- * @example
+ * **Example** (Forward create to transport)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { CreateWorkItemCommand, type WorkItemActionError } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -245,7 +253,6 @@ export class WorkItemClient extends Context.Service<WorkItemClient, WorkItemClie
  * ```
  *
  * @see {@link WorkItemClientTransport} for the transport contract the facade mirrors.
- *
  * @category clients
  * @since 0.0.0
  */

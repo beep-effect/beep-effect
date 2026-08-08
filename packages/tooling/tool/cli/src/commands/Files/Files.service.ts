@@ -181,13 +181,15 @@ interface ArchiveCandidateCollectedEntries {
 /**
  * Service contract for dataset file curation operations.
  *
- * @example
+ * **Example** (Service method key type)
+ *
  * ```ts
  * import type { FilesCommandServiceShape } from "@beep/repo-cli/commands/Files"
  *
  * type ServiceMethod = keyof FilesCommandServiceShape
  * const method: ServiceMethod = "normalizeFiles"
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -288,12 +290,14 @@ export interface FilesCommandServiceShape {
 /**
  * Service tag for dataset file curation operations.
  *
- * @example
+ * **Example** (Service tag identity)
+ *
  * ```ts
  * import { FilesCommandService } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof FilesCommandService = FilesCommandService
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -1711,12 +1715,14 @@ const buildStripMetadataPlan = Effect.fn("Files.buildStripMetadataPlan")(functio
 /**
  * Print the files command index.
  *
- * @example
+ * **Example** (Print files index)
+ *
  * ```ts
  * import { printFilesIndex } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof printFilesIndex = printFilesIndex
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -2503,12 +2509,14 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
 /**
  * Live service layer for dataset file curation operations.
  *
- * @example
+ * **Example** (Live layer identity)
+ *
  * ```ts
  * import { FilesCommandServiceLive } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof FilesCommandServiceLive = FilesCommandServiceLive
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -2518,14 +2526,16 @@ export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, Fi
 /**
  * Audit direct images and write deterministic review evidence without changing source files.
  *
- * @param options - Image audit directory, model, manifest, and overwrite options.
- * @returns The completed image audit manifest.
- * @example
+ * **Example** (Audit images function)
+ *
  * ```ts
  * import { auditImages } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof auditImages = auditImages
  * ```
+ *
+ * @param options - Image audit directory, model, manifest, and overwrite options.
+ * @returns The completed image audit manifest.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2539,14 +2549,16 @@ export const auditImages = Effect.fn("Files.auditImages")(function* (
 /**
  * Archive obvious poor image candidates out of a dataset directory.
  *
- * @param options - Candidate archival options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Archive poor candidates)
+ *
  * ```ts
  * import { archivePoorCandidates } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof archivePoorCandidates = archivePoorCandidates
  * ```
+ *
+ * @param options - Candidate archival options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2560,14 +2572,16 @@ export const archivePoorCandidates = Effect.fn("Files.archivePoorCandidates")(fu
 /**
  * Create same-stem caption sidecar files for direct image files.
  *
- * @param options - Caption sidecar creation options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Create caption sidecars)
+ *
  * ```ts
  * import { createCaptionFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof createCaptionFiles = createCaptionFiles
  * ```
+ *
+ * @param options - Caption sidecar creation options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2581,14 +2595,16 @@ export const createCaptionFiles = Effect.fn("Files.createCaptionFiles")(function
 /**
  * Crop solid or near-solid borders from direct image files.
  *
- * @param options - Border crop options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Crop image borders)
+ *
  * ```ts
  * import { cropBordersFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof cropBordersFiles = cropBordersFiles
  * ```
+ *
+ * @param options - Border crop options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2602,14 +2618,16 @@ export const cropBordersFiles = Effect.fn("Files.cropBordersFiles")(function* (
 /**
  * Validate a complete decision ledger and materialize canonical PNG derivatives.
  *
- * @param options - Source, ledger, output, dry-run, and overwrite options.
- * @returns Summary counts for the curation run.
- * @example
+ * **Example** (Curate image derivatives)
+ *
  * ```ts
  * import { curateImages } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof curateImages = curateImages
  * ```
+ *
+ * @param options - Source, ledger, output, dry-run, and overwrite options.
+ * @returns Summary counts for the curation run.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2623,14 +2641,16 @@ export const curateImages = Effect.fn("Files.curateImages")(function* (
 /**
  * Detect solid or near-solid borders in direct image files.
  *
- * @param options - Border detection options.
- * @returns JSON-safe detection report.
- * @example
+ * **Example** (Detect image borders)
+ *
  * ```ts
  * import { detectBordersFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof detectBordersFiles = detectBordersFiles
  * ```
+ *
+ * @param options - Border detection options.
+ * @returns JSON-safe detection report.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2644,14 +2664,16 @@ export const detectBordersFiles = Effect.fn("Files.detectBordersFiles")(function
 /**
  * Detect human faces in direct image files.
  *
- * @param options - Face detection options.
- * @returns JSON-safe face detection report.
- * @example
+ * **Example** (Detect faces in images)
+ *
  * ```ts
  * import { detectFacesFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof detectFacesFiles = detectFacesFiles
  * ```
+ *
+ * @param options - Face detection options.
+ * @returns JSON-safe face detection report.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2665,8 +2687,8 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
 /**
  * Recursively move image and video files into one flat destination directory.
  *
- * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
- * @example
+ * **Example** (Flatten media dry-run)
+ *
  * ```ts
  * import { FlattenMediaOptions, flattenMediaFiles } from "@beep/repo-cli/commands/Files"
  * import { Effect } from "effect"
@@ -2678,6 +2700,8 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
  * }))
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2691,14 +2715,16 @@ export const flattenMediaFiles = Effect.fn("Files.flattenMediaFiles")(function* 
 /**
  * Normalize direct image files into an output directory and write a transform manifest.
  *
- * @param options - Normalization options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Normalize files function)
+ *
  * ```ts
  * import { normalizeFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof normalizeFiles = normalizeFiles
  * ```
+ *
+ * @param options - Normalization options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2712,15 +2738,17 @@ export const normalizeFiles = Effect.fn("Files.normalizeFiles")(function* (
 /**
  * Process a file or directory into the V1 file-processing proof manifest tree.
  *
- * @param options - File-processing proof options.
- * @returns Summary counts for the operation.
- * @effects Requires {@link FilesCommandService}; reads source files, writes the proof manifest tree, and reports failures through {@link FilesCommandError}.
- * @example
+ * **Example** (Process files function)
+ *
  * ```ts
  * import { processFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof processFiles = processFiles
  * ```
+ *
+ * @param options - File-processing proof options.
+ * @returns Summary counts for the operation.
+ * @effects Requires {@link FilesCommandService}; reads source files, writes the proof manifest tree, and reports failures through {@link FilesCommandError}.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2734,17 +2762,19 @@ export const processFiles = Effect.fn("Files.processFiles")(function* (
 /**
  * Sort direct regular files in a directory by size and rename them with a generated prefix.
  *
- * @param dir - Directory whose direct regular files should be sorted and renamed.
- * @param prefix - Safe generated filename prefix.
- * @param dryRun - Whether to print the plan without applying it.
- * @param withDimensions - Whether to include probed media dimensions in generated names.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Sort and rename files)
+ *
  * ```ts
  * import { sortAndRenameFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof sortAndRenameFiles = sortAndRenameFiles
  * ```
+ *
+ * @param dir - Directory whose direct regular files should be sorted and renamed.
+ * @param prefix - Safe generated filename prefix.
+ * @param dryRun - Whether to print the plan without applying it.
+ * @param withDimensions - Whether to include probed media dimensions in generated names.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2762,16 +2792,18 @@ export const sortAndRenameFiles = Effect.fn("Files.sortAndRenameFiles")(function
  * Strip user-authored metadata from direct image and video files in a directory.
  * Unless `dryRun` is true, selected files are rewritten in place.
  *
- * @param dir - Directory whose direct media files should be stripped.
- * @param dryRun - Whether to print the plan without applying it.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Strip metadata dry-run)
+ *
  * ```ts
  * import { stripMetadataFiles } from "@beep/repo-cli/commands/Files/index"
  *
  * const program = stripMetadataFiles("./tmp", true)
  * console.log(program) // example value
  * ```
+ *
+ * @param dir - Directory whose direct media files should be stripped.
+ * @param dryRun - Whether to print the plan without applying it.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */

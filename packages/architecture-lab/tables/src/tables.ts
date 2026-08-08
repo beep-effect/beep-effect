@@ -17,7 +17,8 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the architecture lab table projections.
  *
- * @example
+ * **Example** (Verify schema table names)
+ *
  * ```ts
  * import { DbSchema } from "@beep/architecture-lab-tables/tables"
  * import { getTableName } from "drizzle-orm"
@@ -42,7 +43,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the architecture lab Drizzle schema object.
  *
- * @example
+ * **Example** (Type-annotate DbSchema value)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/architecture-lab-tables/tables"
  * import { getTableName } from "drizzle-orm"

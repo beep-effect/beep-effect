@@ -60,13 +60,15 @@ type OptionalUploadDropzoneOptions = Partial<UploadDropzoneOptions>;
 /**
  * Controlled file-array props for {@link UploadBox}.
  *
- * @remarks
+ * **Details**
+ *
  * `value` is the selected file array owned by the caller, while
  * `onValueChange` receives the next accepted files from `react-dropzone`.
  * The dropzone options exposed here are forwarded to `useDropzone` with the
  * component-owned `onDrop` bridge preserved.
  *
- * @example
+ * **Example** (Controlled multi-file photo props)
+ *
  * ```ts
  * import type { UploadBoxProps } from "@beep/ui/components/upload"
  *
@@ -137,12 +139,14 @@ class UploadImagePreview extends S.Class<UploadImagePreview>($I`UploadImagePrevi
 /**
  * Render props exposed to custom {@link UploadBox} children.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `previews` contains blob URLs for image files only. The component owns URL
  * revocation, so render callbacks should use the URLs immediately rather than
  * storing them outside the upload subtree.
  *
- * @example
+ * **Example** (Render props summary helper)
+ *
  * ```ts
  * import type { UploadBoxRenderProps } from "@beep/ui/components/upload"
  *
@@ -454,7 +458,8 @@ const UploadBoxRoot: React.FC<ReturnType<typeof useUploadBoxState>> = ({
 /**
  * Controlled dropzone upload box with optional preview render props.
  *
- * @example
+ * **Example** (Gallery upload with previews)
+ *
  * ```tsx
  * import * as React from "react"
  * import { UploadBox } from "@beep/ui/components/upload"
@@ -501,7 +506,8 @@ export const UploadBox: React.FC<UploadBoxProps> = (props) => {
 /**
  * Props for the standard {@link Upload} primitive.
  *
- * @example
+ * **Example** (PDF document upload props)
+ *
  * ```ts
  * import type { UploadProps } from "@beep/ui/components/upload"
  *
@@ -525,7 +531,8 @@ export interface UploadProps extends UploadBoxProps {}
 /**
  * Standard file upload primitive using the default dropzone presentation.
  *
- * @example
+ * **Example** (Single PDF contract upload)
+ *
  * ```tsx
  * import * as React from "react"
  * import { Upload } from "@beep/ui/components/upload"
@@ -552,7 +559,8 @@ export const Upload: React.FC<UploadProps> = (props) => <UploadBox {...props} />
 /**
  * Props for the single-file {@link UploadAvatar} primitive.
  *
- * @example
+ * **Example** (Image-only avatar props)
+ *
  * ```ts
  * import type { UploadAvatarProps } from "@beep/ui/components/upload"
  *
@@ -575,7 +583,8 @@ export interface UploadAvatarProps extends Omit<UploadBoxProps, "multiple"> {}
 /**
  * Avatar-shaped single-file upload primitive with image preview support.
  *
- * @example
+ * **Example** (Profile photo avatar field)
+ *
  * ```tsx
  * import * as React from "react"
  * import { UploadAvatar } from "@beep/ui/components/upload"

@@ -9,7 +9,8 @@
 /**
  * Segment map model exports.
  *
- * @example
+ * **Example** (Import SegmentMap export)
+ *
  * ```ts
  * import { SegmentMap } from "@beep/law-practice-domain/values";
  * ```

@@ -196,14 +196,16 @@ const scanBorderSide = (
 /**
  * Render an RGB color as a lowercase hexadecimal color.
  *
- * @param color - RGB color to render.
- * @returns Hex color string in `#rrggbb` format.
- * @example
+ * **Example** (Convert RGB to hex)
+ *
  * ```ts
  * import { rgbToHex } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof rgbToHex = rgbToHex
  * ```
+ *
+ * @param color - RGB color to render.
+ * @returns Hex color string in `#rrggbb` format.
  * @category utilities
  * @since 0.0.0
  */
@@ -213,14 +215,16 @@ export const rgbToHex = (color: RgbColor): string =>
 /**
  * Classify an analyzed image from its matched border sides.
  *
- * @param sides - Per-side border measurements.
- * @returns Border layout classification.
- * @example
+ * **Example** (Classify matched border sides)
+ *
  * ```ts
  * import { classifyBorderSides } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof classifyBorderSides = classifyBorderSides
  * ```
+ *
+ * @param sides - Per-side border measurements.
+ * @returns Border layout classification.
  * @category utilities
  * @since 0.0.0
  */
@@ -264,15 +268,17 @@ export const classifyBorderSides = (sides: ReadonlyArray<DetectBorderSideMeasure
 /**
  * Analyze raw RGB image pixels for near-solid borders on all four sides.
  *
- * @param image - Raw image pixel data in RGB channel order.
- * @param thresholds - Detection thresholds.
- * @returns Per-side border measurements in top/right/bottom/left order.
- * @example
+ * **Example** (Detect near-solid image borders)
+ *
  * ```ts
  * import { analyzeSolidBorders } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof analyzeSolidBorders = analyzeSolidBorders
  * ```
+ *
+ * @param image - Raw image pixel data in RGB channel order.
+ * @param thresholds - Detection thresholds.
+ * @returns Per-side border measurements in top/right/bottom/left order.
  * @category utilities
  * @since 0.0.0
  */

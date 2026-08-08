@@ -17,7 +17,8 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors"
 /**
  * Failure raised when a command attempts to mutate an archived WorkItem.
  *
- * @example
+ * **Example** (Make archived WorkItem failure)
+ *
  * ```ts
  * import { WorkItemAlreadyArchived, WorkItemId } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -50,7 +51,8 @@ export class WorkItemAlreadyArchived extends TaggedErrorClass<WorkItemAlreadyArc
 /**
  * Failure raised when a command attempts an unsupported lifecycle transition.
  *
- * @example
+ * **Example** (Build invalid transition failure)
+ *
  * ```ts
  * import { WorkItemId, WorkItemInvalidTransition } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -92,7 +94,8 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
   /**
    * Create a typed WorkItem transition failure from lifecycle values.
    *
-   * @example
+   * **Example** (Create failure from statuses)
+   *
    * ```ts
    * import { WorkItemId, WorkItemInvalidTransition } from "@beep/architecture-lab-domain/aggregates/WorkItem"
    * import * as S from "effect/Schema"
@@ -123,7 +126,8 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
 /**
  * Failure raised when an assignment command omits a valid assignee.
  *
- * @example
+ * **Example** (Make assignee required failure)
+ *
  * ```ts
  * import { WorkItemAssigneeRequired, WorkItemId } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -156,7 +160,8 @@ export class WorkItemAssigneeRequired extends TaggedErrorClass<WorkItemAssigneeR
 /**
  * WorkItem aggregate domain failure schema.
  *
- * @example
+ * **Example** (Decode domain error schema)
+ *
  * ```ts
  * import { WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -190,7 +195,8 @@ export const WorkItemDomainError = S.Union([
 /**
  * Runtime type for {@link WorkItemDomainError}.
  *
- * @example
+ * **Example** (Type domain error union member)
+ *
  * ```ts
  * import { WorkItemAssigneeRequired, WorkItemId, type WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"

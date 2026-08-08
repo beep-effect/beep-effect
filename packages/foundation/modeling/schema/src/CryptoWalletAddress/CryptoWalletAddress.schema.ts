@@ -120,7 +120,8 @@ const CryptoWalletAddressChecks = S.makeFilterGroup(
 /**
  * Branded schema for canonical mainnet blockchain wallet addresses.
  *
- * @example
+ * **Example** (Decode zero wallet address)
+ *
  * ```ts
  * import { CryptoWalletAddress } from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"
@@ -129,8 +130,8 @@ const CryptoWalletAddressChecks = S.makeFilterGroup(
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChecks).pipe(
   S.brand("CryptoWalletAddress"),
@@ -142,7 +143,8 @@ export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChe
 /**
  * Type for {@link CryptoWalletAddress}.
  *
- * @example
+ * **Example** (Type annotated address decode)
+ *
  * ```ts
  * import { CryptoWalletAddress } from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"
@@ -153,15 +155,16 @@ export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChe
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CryptoWalletAddress = typeof CryptoWalletAddress.Type;
 
 /**
  * Redacted Branded schema for canonical mainnet blockchain wallet addresses.
  *
- * @example
+ * **Example** (Make redacted wallet address)
+ *
  * ```ts
  * import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress"
  *
@@ -169,8 +172,8 @@ export type CryptoWalletAddress = typeof CryptoWalletAddress.Type;
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CryptoWalletAddressRedacted = CryptoWalletAddress.pipe(
   S.RedactedFromValue,
@@ -185,7 +188,8 @@ export const CryptoWalletAddressRedacted = CryptoWalletAddress.pipe(
 /**
  * Type for {@link CryptoWalletAddressRedacted}.
  *
- * @example
+ * **Example** (Type redacted wallet address)
+ *
  * ```ts
  * import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress"
  *
@@ -195,8 +199,8 @@ export const CryptoWalletAddressRedacted = CryptoWalletAddress.pipe(
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CryptoWalletAddressRedacted = typeof CryptoWalletAddressRedacted.Type;
 

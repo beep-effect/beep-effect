@@ -58,7 +58,8 @@ export * from "./Tika.tikaapp.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/tika"
  *

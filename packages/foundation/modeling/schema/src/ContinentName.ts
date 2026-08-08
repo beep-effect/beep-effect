@@ -9,7 +9,8 @@ import { ContinentName as ContinentNameSchema } from "./ContinentCode.ts";
 /**
  * CLDR top-level territory containment display-name schema.
  *
- * @example
+ * **Example** (Decode continent display name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContinentName } from "@beep/schema/ContinentName"
@@ -18,24 +19,14 @@ import { ContinentName as ContinentNameSchema } from "./ContinentCode.ts";
  * console.log(name) // "Americas"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ContinentName = ContinentNameSchema;
 
 /**
  * {@inheritDoc ContinentName}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { ContinentName } from "@beep/schema/ContinentName"
- *
- * const name: ContinentName = S.decodeUnknownSync(ContinentName)("Europe")
- * console.log(name) // "Europe"
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ContinentName = typeof ContinentName.Type;

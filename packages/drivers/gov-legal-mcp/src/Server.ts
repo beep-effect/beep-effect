@@ -29,7 +29,8 @@ const $I = $GovLegalMcpId.create("Server");
 /**
  * Identity advertised by the gov-legal MCP stdio server.
  *
- * @example
+ * **Example** (Making a server config)
+ *
  * ```ts
  * import { GovLegalMcpServerConfig } from "@beep/gov-legal-mcp/Server"
  *
@@ -59,7 +60,8 @@ export class GovLegalMcpServerConfig extends S.Class<GovLegalMcpServerConfig>($I
  * Build the stdio MCP layer with the keyless eCFR and hard-gated GovInfo
  * toolkits.
  *
- * @example
+ * **Example** (Building stdio MCP layer)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import * as NodeStdio from "@effect/platform-node/NodeStdio"

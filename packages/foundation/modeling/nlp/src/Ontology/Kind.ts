@@ -35,17 +35,20 @@ const $I = $NlpId.create("Ontology/Kind");
 /**
  * Textual strata in the NLP category (the object layer).
  *
+ * **Details**
+ *
  * Forms a poset under containment plus orthogonal annotation kinds.
  *
- * @example
+ * **Example** (Document kind membership check)
+ *
  * ```ts
  * import { TextKind } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(TextKind.is.Document("Document")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const TextKind = LiteralKit([
   // Structural hierarchy (poset under containment)
@@ -71,7 +74,8 @@ export const TextKind = LiteralKit([
 /**
  * Runtime type for {@link TextKind}.
  *
- * @example
+ * **Example** (Assign Sentence kind value)
+ *
  * ```ts
  * import type { TextKind } from "@beep/nlp/Ontology/Kind"
  *
@@ -79,15 +83,16 @@ export const TextKind = LiteralKit([
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextKind = typeof TextKind.Type;
 
 /**
  * Runtime schema for validating values at the ontology kind boundary.
  *
- * @example
+ * **Example** (Make Sentence kind value)
+ *
  * ```ts
  * import { TextKindSchema } from "@beep/nlp/Ontology/Kind"
  *
@@ -111,7 +116,8 @@ export const TextKindSchema: S.Schema<TextKind> = TextKind.pipe(
 /**
  * Build a schema for text payloads constrained to one ontology kind schema.
  *
- * @example
+ * **Example** (Build Token typed schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TypedTextSchema } from "@beep/nlp/Ontology/Kind"
@@ -142,13 +148,15 @@ export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) => {
 /**
  * Text content tagged with its ontological kind.
  *
+ * **Details**
+ *
  * Pairs raw content with its position in the categorical hierarchy, enabling
  * type-level enforcement of valid operations. Derived from {@link TypedTextSchema}
  * (bounded to the finite {@link TextKind} literal domain) rather than hand-declared,
  * so the schema factory is the single source of truth for the shape.
  *
- * @typeParam K - The ontological kind (position in the category).
- * @example
+ * **Example** (Document typed text value)
+ *
  * ```ts
  * import type { TypedText } from "@beep/nlp/Ontology/Kind"
  *
@@ -156,8 +164,9 @@ export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) => {
  * console.log(doc.kind)
  * ```
  *
- * @since 0.0.0
+ * @typeParam K - The ontological kind (position in the category).
  * @category models
+ * @since 0.0.0
  */
 export type TypedText<K extends TextKind> = S.Schema.Type<ReturnType<typeof TypedTextSchema<K>>>;
 
@@ -176,15 +185,16 @@ const makeTyped =
 /**
  * Create document-level typed text at the top of the structural hierarchy.
  *
- * @example
+ * **Example** (Create Document typed text)
+ *
  * ```ts
  * import { Document } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Document("This is a document.").kind) // "Document"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Document: (content: string, metadata?: Record<string, unknown>) => TypedText<"Document"> =
   makeTyped("Document");
@@ -192,15 +202,16 @@ export const Document: (content: string, metadata?: Record<string, unknown>) => 
 /**
  * Create paragraph-level typed text for a logical block in a document.
  *
- * @example
+ * **Example** (Create Paragraph typed text)
+ *
  * ```ts
  * import { Paragraph } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Paragraph("A paragraph.").kind) // "Paragraph"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Paragraph: (content: string, metadata?: Record<string, unknown>) => TypedText<"Paragraph"> =
   makeTyped("Paragraph");
@@ -208,15 +219,16 @@ export const Paragraph: (content: string, metadata?: Record<string, unknown>) =>
 /**
  * Create sentence-level typed text for a complete utterance or statement.
  *
- * @example
+ * **Example** (Create Sentence typed text)
+ *
  * ```ts
  * import { Sentence } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Sentence("A sentence.").kind) // "Sentence"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Sentence: (content: string, metadata?: Record<string, unknown>) => TypedText<"Sentence"> =
   makeTyped("Sentence");
@@ -224,30 +236,32 @@ export const Sentence: (content: string, metadata?: Record<string, unknown>) => 
 /**
  * Create token-level typed text for one word, symbol, or punctuation mark.
  *
- * @example
+ * **Example** (Create Token typed text)
+ *
  * ```ts
  * import { Token } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Token("word").kind) // "Token"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Token: (content: string, metadata?: Record<string, unknown>) => TypedText<"Token"> = makeTyped("Token");
 
 /**
  * Create character-level typed text for the atomic textual stratum.
  *
- * @example
+ * **Example** (Create Character typed text)
+ *
  * ```ts
  * import { Character } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Character("a").kind) // "Character"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Character: (content: string, metadata?: Record<string, unknown>) => TypedText<"Character"> =
   makeTyped("Character");
@@ -255,30 +269,32 @@ export const Character: (content: string, metadata?: Record<string, unknown>) =>
 /**
  * Create entity-level typed text for a semantic mention extracted from prose.
  *
- * @example
+ * **Example** (Create Entity with type)
+ *
  * ```ts
  * import { Entity } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Entity("Apple Inc.", { type: "ORG" }).kind) // "Entity"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Entity: (content: string, metadata?: Record<string, unknown>) => TypedText<"Entity"> = makeTyped("Entity");
 
 /**
  * Create relation-level typed text for a semantic edge between entities.
  *
- * @example
+ * **Example** (Create Relation with type)
+ *
  * ```ts
  * import { Relation } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Relation("founded", { type: "FOUNDER_OF" }).kind) // "Relation"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Relation: (content: string, metadata?: Record<string, unknown>) => TypedText<"Relation"> =
   makeTyped("Relation");
@@ -286,15 +302,16 @@ export const Relation: (content: string, metadata?: Record<string, unknown>) => 
 /**
  * Create embedding-level typed text for vector-space metadata about content.
  *
- * @example
+ * **Example** (Create Embedding with model)
+ *
  * ```ts
  * import { Embedding } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Embedding("apple", { model: "word2vec" }).kind) // "Embedding"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Embedding: (content: string, metadata?: Record<string, unknown>) => TypedText<"Embedding"> =
   makeTyped("Embedding");
@@ -302,15 +319,16 @@ export const Embedding: (content: string, metadata?: Record<string, unknown>) =>
 /**
  * Create dependency-level typed text for syntactic dependency arcs.
  *
- * @example
+ * **Example** (Create Dependency with head)
+ *
  * ```ts
  * import { Dependency } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Dependency("nsubj", { head: "runs" }).kind) // "Dependency"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Dependency: (content: string, metadata?: Record<string, unknown>) => TypedText<"Dependency"> =
   makeTyped("Dependency");
@@ -318,45 +336,48 @@ export const Dependency: (content: string, metadata?: Record<string, unknown>) =
 /**
  * Create chunk-level typed text for shallow-parsing constituents.
  *
- * @example
+ * **Example** (Create Chunk typed text)
+ *
  * ```ts
  * import { Chunk } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Chunk("the dog").kind) // "Chunk"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Chunk: (content: string, metadata?: Record<string, unknown>) => TypedText<"Chunk"> = makeTyped("Chunk");
 
 /**
  * Create POS-level typed text for part-of-speech annotations.
  *
- * @example
+ * **Example** (Create POS with tag)
+ *
  * ```ts
  * import { POS } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(POS("dog", { tag: "NN" }).kind) // "POS"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const POS: (content: string, metadata?: Record<string, unknown>) => TypedText<"POS"> = makeTyped("POS");
 
 /**
  * Create lemma-level typed text for canonical token forms.
  *
- * @example
+ * **Example** (Create Lemma with original)
+ *
  * ```ts
  * import { Lemma } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(Lemma("run", { original: "running" }).kind) // "Lemma"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Lemma: (content: string, metadata?: Record<string, unknown>) => TypedText<"Lemma"> = makeTyped("Lemma");
 
@@ -367,12 +388,14 @@ export const Lemma: (content: string, metadata?: Record<string, unknown>) => Typ
 /**
  * Structural containment hierarchy for valid parent-child kind relationships.
  *
- * @remarks
+ * **Details**
+ *
  * The static `containment` record is the authoritative runtime poset used by
  * {@link canContain} and {@link getValidChildren}. Structural kinds form the
  * main hierarchy, while annotation kinds are attached at appropriate strata.
  *
- * @example
+ * **Example** (Sentence contains Token check)
+ *
  * ```ts
  * import { KindContainment } from "@beep/nlp/Ontology/Kind"
  *
@@ -434,7 +457,8 @@ export class KindContainment extends S.Class<KindContainment>($I`KindContainment
 /**
  * Check whether `parent` can contain `child` per the containment poset.
  *
- * @example
+ * **Example** (Check parent-child containment)
+ *
  * ```ts
  * import { canContain } from "@beep/nlp/Ontology/Kind"
  *
@@ -442,8 +466,8 @@ export class KindContainment extends S.Class<KindContainment>($I`KindContainment
  * console.log(canContain("Token", "Document")) // false
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const canContain: {
   (parent: TextKind, child: TextKind): boolean;
@@ -453,15 +477,16 @@ export const canContain: {
 /**
  * Get all valid child kinds for a given parent kind.
  *
- * @example
+ * **Example** (List Token child kinds)
+ *
  * ```ts
  * import { getValidChildren } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(getValidChildren("Token")) // ["Character", "POS", "Lemma"]
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getValidChildren = (kind: TextKind): ReadonlyArray<TextKind> => KindContainment.containment[kind];
 
@@ -472,45 +497,48 @@ export const getValidChildren = (kind: TextKind): ReadonlyArray<TextKind> => Kin
 /**
  * Extract raw content from typed text.
  *
- * @example
+ * **Example** (Extract Document content)
+ *
  * ```ts
  * import { Document, content } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(content(Document("hello"))) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const content = <K extends TextKind>(text: TypedText<K>): string => text.content;
 
 /**
  * Get the kind of a typed text.
  *
- * @example
+ * **Example** (Get Token kind)
+ *
  * ```ts
  * import { Token, kindOf } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(kindOf(Token("word"))) // "Token"
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const kindOf = <K extends TextKind>(text: TypedText<K>): K => text.kind;
 
 /**
  * Map over the content of typed text, preserving its kind.
  *
- * @example
+ * **Example** (Uppercase Token content)
+ *
  * ```ts
  * import { Token, mapContent } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(mapContent(Token("dog"), (s) => s.toUpperCase()).content) // "DOG"
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const mapContent: {
   <K extends TextKind>(text: TypedText<K>, f: (content: string) => string): TypedText<K>;
@@ -526,15 +554,16 @@ export const mapContent: {
 /**
  * Merge additional metadata into typed text.
  *
- * @example
+ * **Example** (Add Entity type metadata)
+ *
  * ```ts
  * import { Entity, withMetadata } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(withMetadata(Entity("Acme"), { type: "ORG" }).metadata) // { type: "ORG" }
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const withMetadata: {
   <K extends TextKind>(text: TypedText<K>, metadata: Record<string, unknown>): TypedText<K>;
@@ -550,15 +579,16 @@ export const withMetadata: {
 /**
  * Type guard: whether a value is a {@link TypedText} of a specific kind.
  *
- * @example
+ * **Example** (Guard Token typed text)
+ *
  * ```ts
  * import { Token, isKind } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(isKind("Token")(Token("word"))) // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isKind =
   <K extends TextKind>(kind: K) =>
@@ -568,15 +598,16 @@ export const isKind =
 /**
  * Re-tag typed text to a new kind (use only when the transition is valid).
  *
- * @example
+ * **Example** (Recast Token to Lemma)
+ *
  * ```ts
  * import { Token, recast } from "@beep/nlp/Ontology/Kind"
  *
  * console.log(recast(Token("word"), "Lemma").kind) // "Lemma"
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const recast: {
   <K extends TextKind>(text: TypedText<TextKind>, newKind: K): TypedText<K>;

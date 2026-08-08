@@ -14,7 +14,8 @@ const $I = $XaiId.create("XAiEndpoints.models");
 /**
  * Number of xAI endpoints represented in the manifest.
  *
- * @example
+ * **Example** (Verify manifest length match)
+ *
  * ```ts
  * import { XAI_ENDPOINT_COUNT, XAI_ENDPOINTS } from "@beep/xai"
  *
@@ -33,7 +34,8 @@ const XAiHttpMethodBase = LiteralKit(XAiHttpMethodValues);
 /**
  * HTTP method literals used by xAI REST endpoints.
  *
- * @example
+ * **Example** (Assign POST HTTP method)
+ *
  * ```ts
  * import type { XAiHttpMethod } from "@beep/xai"
  *
@@ -58,7 +60,8 @@ export const XAiHttpMethod = XAiHttpMethodBase.pipe(
 /**
  * Type for {@link XAiHttpMethod}.
  *
- * @example
+ * **Example** (Assign GET HTTP method)
+ *
  * ```ts
  * import type { XAiHttpMethod } from "@beep/xai"
  *
@@ -77,7 +80,8 @@ const XAiAuthKindBase = LiteralKit(XAiAuthKindValues);
 /**
  * Authentication channel required by an xAI endpoint.
  *
- * @example
+ * **Example** (Assign api-key auth kind)
+ *
  * ```ts
  * import type { XAiAuthKind } from "@beep/xai"
  *
@@ -102,7 +106,8 @@ export const XAiAuthKind = XAiAuthKindBase.pipe(
 /**
  * Type for {@link XAiAuthKind}.
  *
- * @example
+ * **Example** (Type api-key auth value)
+ *
  * ```ts
  * import type { XAiAuthKind } from "@beep/xai"
  *
@@ -121,7 +126,8 @@ const XAiEndpointBaseBase = LiteralKit(XAiEndpointBaseValues);
 /**
  * xAI base URL family used by an endpoint.
  *
- * @example
+ * **Example** (Assign management base URL)
+ *
  * ```ts
  * import type { XAiEndpointBase } from "@beep/xai"
  *
@@ -146,7 +152,8 @@ export const XAiEndpointBase = XAiEndpointBaseBase.pipe(
 /**
  * Type for {@link XAiEndpointBase}.
  *
- * @example
+ * **Example** (Assign api base URL)
+ *
  * ```ts
  * import type { XAiEndpointBase } from "@beep/xai"
  *
@@ -165,7 +172,8 @@ const XAiRequestBodyKindBase = LiteralKit(XAiRequestBodyKindValues);
 /**
  * Request body encoding used by an xAI endpoint.
  *
- * @example
+ * **Example** (Assign json request body)
+ *
  * ```ts
  * import type { XAiRequestBodyKind } from "@beep/xai"
  *
@@ -190,7 +198,8 @@ export const XAiRequestBodyKind = XAiRequestBodyKindBase.pipe(
 /**
  * Type for {@link XAiRequestBodyKind}.
  *
- * @example
+ * **Example** (Type json request body)
+ *
  * ```ts
  * import type { XAiRequestBodyKind } from "@beep/xai"
  *
@@ -209,7 +218,8 @@ const XAiResponseBodyKindBase = LiteralKit(XAiResponseBodyKindValues);
 /**
  * Response body encoding returned by an xAI endpoint.
  *
- * @example
+ * **Example** (Assign json response body)
+ *
  * ```ts
  * import type { XAiResponseBodyKind } from "@beep/xai"
  *
@@ -234,7 +244,8 @@ export const XAiResponseBodyKind = XAiResponseBodyKindBase.pipe(
 /**
  * Type for {@link XAiResponseBodyKind}.
  *
- * @example
+ * **Example** (Type json response body)
+ *
  * ```ts
  * import type { XAiResponseBodyKind } from "@beep/xai"
  *
@@ -253,7 +264,8 @@ const XAiEndpointStatusBase = LiteralKit(XAiEndpointStatusValues);
 /**
  * Documentation status for an xAI endpoint.
  *
- * @example
+ * **Example** (Assign active endpoint status)
+ *
  * ```ts
  * import type { XAiEndpointStatus } from "@beep/xai"
  *
@@ -278,7 +290,8 @@ export const XAiEndpointStatus = XAiEndpointStatusBase.pipe(
 /**
  * Type for {@link XAiEndpointStatus}.
  *
- * @example
+ * **Example** (Type active endpoint status)
+ *
  * ```ts
  * import type { XAiEndpointStatus } from "@beep/xai"
  *
@@ -384,7 +397,8 @@ const XAiEndpointMethodNameBase = LiteralKit(XAiEndpointMethodNameValues);
 /**
  * Public `XAi` service method names that correspond to documented endpoints.
  *
- * @example
+ * **Example** (Assign createChatCompletion name)
+ *
  * ```ts
  * import type { XAiEndpointMethodName } from "@beep/xai"
  *
@@ -409,7 +423,8 @@ export const XAiEndpointMethodName = XAiEndpointMethodNameBase.pipe(
 /**
  * Type for {@link XAiEndpointMethodName}.
  *
- * @example
+ * **Example** (Assign listModels method name)
+ *
  * ```ts
  * import type { XAiEndpointMethodName } from "@beep/xai"
  *
@@ -425,7 +440,8 @@ export type XAiEndpointMethodName = typeof XAiEndpointMethodName.Type;
 /**
  * Runtime list of public `XAi` endpoint method names.
  *
- * @example
+ * **Example** (Log method names length)
+ *
  * ```ts
  * import { XAI_ENDPOINT_METHOD_NAMES } from "@beep/xai"
  *
@@ -530,7 +546,8 @@ const XAiEndpointIdBase = LiteralKit(XAiEndpointIdValues);
 /**
  * Stable endpoint identifiers in the checked-in xAI manifest.
  *
- * @example
+ * **Example** (Assign chat completion id)
+ *
  * ```ts
  * import type { XAiEndpointId } from "@beep/xai"
  *
@@ -555,7 +572,8 @@ export const XAiEndpointId = XAiEndpointIdBase.pipe(
 /**
  * Type for {@link XAiEndpointId}.
  *
- * @example
+ * **Example** (Assign list models id)
+ *
  * ```ts
  * import type { XAiEndpointId } from "@beep/xai"
  *
@@ -571,7 +589,8 @@ export type XAiEndpointId = typeof XAiEndpointId.Type;
 /**
  * Schema for endpoint descriptors stored in {@link XAI_ENDPOINTS}.
  *
- * @example
+ * **Example** (Create endpoint type guard)
+ *
  * ```ts
  * import { XAiEndpoint } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -605,7 +624,8 @@ export class XAiEndpoint extends S.Class<XAiEndpoint>($I`XAiEndpoint`)(
 /**
  * Metadata for one documented xAI endpoint.
  *
- * @example
+ * **Example** (Build full endpoint descriptor)
+ *
  * ```ts
  * import type { XAiEndpointDescriptor } from "@beep/xai"
  *
@@ -633,7 +653,8 @@ const endpoint = (descriptor: XAiEndpointDescriptor): XAiEndpointDescriptor => X
 /**
  * Manifest of every xAI endpoint represented by the `XAi` service.
  *
- * @example
+ * **Example** (Log endpoints manifest length)
+ *
  * ```ts
  * import { XAI_ENDPOINTS } from "@beep/xai"
  *

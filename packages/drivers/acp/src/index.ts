@@ -8,7 +8,8 @@
 /**
  * ACP driver error exports.
  *
- * @example
+ * **Example** (Create method not found error)
+ *
  * ```ts
  * import { Errors } from "@beep/acp"
  *
@@ -23,7 +24,8 @@ export * as Errors from "./Acp.errors.ts";
 /**
  * Generated ACP schema exports.
  *
- * @example
+ * **Example** (Log schema protocol version)
+ *
  * ```ts
  * import { Schema } from "@beep/acp"
  *
@@ -37,7 +39,8 @@ export * as Schema from "./Acp.models.ts";
 /**
  * Agent-side ACP service exports.
  *
- * @example
+ * **Example** (Access agent service layer)
+ *
  * ```ts
  * import { Agent } from "@beep/acp"
  *
@@ -52,7 +55,8 @@ export * as Agent from "./AcpAgent.service.ts";
 /**
  * Client-side ACP service exports.
  *
- * @example
+ * **Example** (Access ACP client service)
+ *
  * ```ts
  * import { Client } from "@beep/acp"
  *
@@ -67,7 +71,8 @@ export * as Client from "./AcpClient.service.ts";
 /**
  * ACP transport protocol exports.
  *
- * @example
+ * **Example** (Create patched ACP protocol)
+ *
  * ```ts
  * import { Protocol } from "@beep/acp"
  *
@@ -82,7 +87,8 @@ export * as Protocol from "./AcpProtocol.service.ts";
 /**
  * ACP RPC descriptor exports.
  *
- * @example
+ * **Example** (Access agent RPC group)
+ *
  * ```ts
  * import { Rpc } from "@beep/acp"
  *
@@ -97,7 +103,8 @@ export * as Rpc from "./AcpRpc.models.ts";
 /**
  * ACP terminal handle exports.
  *
- * @example
+ * **Example** (Create terminal handle)
+ *
  * ```ts
  * import { Terminal } from "@beep/acp"
  *

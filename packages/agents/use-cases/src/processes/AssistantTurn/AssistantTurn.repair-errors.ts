@@ -15,7 +15,8 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.repai
 /**
  * Port failure raised when the block-repair adapter cannot complete its repair call.
  *
- * @example
+ * **Example** (Creating a BlockRepairFailed error)
+ *
  * ```ts
  * import { AssistantTurn } from "@beep/agents-use-cases/server"
  *

@@ -33,11 +33,13 @@ const $I = $RepoUtilsId.create("TSMorph/TSMorph.shared");
 /**
  * Supported declaration nodes for normalized TSMorph symbol extraction.
  *
- * @example
+ * **Example** (Import OutlineDeclaration type)
+ *
  * ```ts
  * import type { OutlineDeclaration } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * type Example = OutlineDeclaration
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -62,7 +64,8 @@ const bySymbolStartLineAscending: Order.Order<TsMorphSymbol> = Order.mapInput(
 /**
  * Deterministic symbol ordering used by normalized TSMorph symbol collections.
  *
- * @example
+ * **Example** (Compare two symbols ascending)
+ *
  * ```ts
  * import { byTsMorphSymbolAscending } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { Symbol as TsMorphSymbol } from "@beep/repo-utils"
@@ -109,6 +112,7 @@ const bySymbolStartLineAscending: Order.Order<TsMorphSymbol> = Order.mapInput(
  * })
  * console.log(byTsMorphSymbolAscending(helper, model))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -133,7 +137,8 @@ const byDiagnosticCodeAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput
 /**
  * Deterministic ordering for normalized diagnostics.
  *
- * @example
+ * **Example** (Compare two diagnostics ascending)
+ *
  * ```ts
  * import { byNormalizedDiagnosticAscending } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { TsMorphDiagnostic } from "@beep/repo-utils"
@@ -162,6 +167,7 @@ const byDiagnosticCodeAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput
  * })
  * console.log(byNormalizedDiagnosticAscending(missingName, unusedLocal))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -181,9 +187,8 @@ const firstSignatureLine = (text: string): string =>
 /**
  * Read the normalized JSDoc description text attached to a declaration.
  *
- * @param node - Declaration node that may carry JSDoc metadata.
- * @returns Normalized declaration description text when present.
- * @example
+ * **Example** (Read function docstring)
+ *
  * ```ts
  * import { readDocstring } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { Project } from "ts-morph"
@@ -195,6 +200,9 @@ const firstSignatureLine = (text: string): string =>
  * const docstring = readDocstring(sourceFile.getFunctionOrThrow("readSourceText"))
  * console.log(docstring)
  * ```
+ *
+ * @param node - Declaration node that may carry JSDoc metadata.
+ * @returns Normalized declaration description text when present.
  * @category utilities
  * @since 0.0.0
  */
@@ -216,9 +224,8 @@ export const readDocstring = (node: OutlineDeclaration): O.Option<string> => {
 /**
  * Read normalized decorator text attached to a declaration.
  *
- * @param node - Declaration node that may carry decorators.
- * @returns Normalized decorator source text in declaration order.
- * @example
+ * **Example** (Read class decorators)
+ *
  * ```ts
  * import { readDecorators } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { Project } from "ts-morph"
@@ -230,6 +237,9 @@ export const readDocstring = (node: OutlineDeclaration): O.Option<string> => {
  * const decorators = readDecorators(sourceFile.getClassOrThrow("User"))
  * console.log(decorators)
  * ```
+ *
+ * @param node - Declaration node that may carry decorators.
+ * @returns Normalized decorator source text in declaration order.
  * @category utilities
  * @since 0.0.0
  */
@@ -241,9 +251,8 @@ export const readDecorators = (node: OutlineDeclaration): ReadonlyArray<string> 
 /**
  * Read the first non-empty signature line for a declaration.
  *
- * @param node - Declaration node to read.
- * @returns First non-empty line from the declaration source text.
- * @example
+ * **Example** (Read function signature)
+ *
  * ```ts
  * import { readSignature } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { Project } from "ts-morph"
@@ -255,6 +264,9 @@ export const readDecorators = (node: OutlineDeclaration): ReadonlyArray<string> 
  * const signature = readSignature(sourceFile.getFunctionOrThrow("readSourceText"))
  * console.log(signature)
  * ```
+ *
+ * @param node - Declaration node to read.
+ * @returns First non-empty line from the declaration source text.
  * @category utilities
  * @since 0.0.0
  */
@@ -272,9 +284,8 @@ export const readSignature = (node: OutlineDeclaration): string => {
 /**
  * Derive the normalized summary text for a declaration.
  *
- * @param docstring - Optional normalized JSDoc description text.
- * @returns Stable summary text used by the public symbol model.
- * @example
+ * **Example** (Summarize optional docstring)
+ *
  * ```ts
  * import { makeSummary } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import * as O from "effect/Option"
@@ -282,6 +293,9 @@ export const readSignature = (node: OutlineDeclaration): string => {
  * const summary = makeSummary(O.some("Reads source text."))
  * console.log(summary)
  * ```
+ *
+ * @param docstring - Optional normalized JSDoc description text.
+ * @returns Stable summary text used by the public symbol model.
  * @category utilities
  * @since 0.0.0
  */
@@ -290,11 +304,8 @@ export const makeSummary = (docstring: O.Option<string>): O.Option<string> => do
 /**
  * Build stable symbol keywords from normalized declaration metadata.
  *
- * @param name - Symbol display name.
- * @param qualifiedName - Fully qualified symbol path.
- * @param kind - Public symbol kind literal.
- * @returns Stable keyword set used by the public symbol model.
- * @example
+ * **Example** (Build symbol keywords)
+ *
  * ```ts
  * import { makeKeywords } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  *
@@ -303,6 +314,11 @@ export const makeSummary = (docstring: O.Option<string>): O.Option<string> => do
  * })
  * console.log(keywords)
  * ```
+ *
+ * @param name - Symbol display name.
+ * @param qualifiedName - Fully qualified symbol path.
+ * @param kind - Public symbol kind literal.
+ * @returns Stable keyword set used by the public symbol model.
  * @category utilities
  * @since 0.0.0
  */
@@ -334,10 +350,8 @@ export const makeKeywords: {
 /**
  * Build deterministic lowercased search text for a normalized symbol entry.
  *
- * @param symbol - Public normalized symbol metadata.
- * @param sourceText - Extracted declaration source text.
- * @returns Lowercased search corpus for symbol lookup and filtering.
- * @example
+ * **Example** (Build symbol search text)
+ *
  * ```ts
  * import { makeScopeSymbolSearchText } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { SourceText, Symbol as TsMorphSymbol } from "@beep/repo-utils"
@@ -366,6 +380,10 @@ export const makeKeywords: {
  * const searchText = makeScopeSymbolSearchText(symbol, sourceText)
  * console.log(searchText.includes("application user"))
  * ```
+ *
+ * @param symbol - Public normalized symbol metadata.
+ * @param sourceText - Extracted declaration source text.
+ * @returns Lowercased search corpus for symbol lookup and filtering.
  * @category utilities
  * @since 0.0.0
  */
@@ -407,15 +425,17 @@ const flattenDiagnosticMessageTextMatcher = Match.type<string | DiagnosticMessag
 /**
  * Flatten a TypeScript diagnostic message chain into normalized text.
  *
- * @param message - Diagnostic string or nested TypeScript message chain.
- * @returns Normalized multi-line diagnostic text.
- * @example
+ * **Example** (Flatten diagnostic message)
+ *
  * ```ts
  * import { flattenDiagnosticMessageText } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  *
  * const message = flattenDiagnosticMessageText("TS2304: Cannot find name 'x'.")
  * console.log(message)
  * ```
+ *
+ * @param message - Diagnostic string or nested TypeScript message chain.
+ * @returns Normalized multi-line diagnostic text.
  * @category utilities
  * @since 0.0.0
  */
@@ -437,9 +457,8 @@ const normalizeDiagnosticCategoryMatcher = Match.type<DiagnosticCategory>().pipe
 /**
  * Normalize TypeScript diagnostic categories into the public service literal domain.
  *
- * @param category - Raw TypeScript diagnostic category.
- * @returns Public service diagnostic category literal.
- * @example
+ * **Example** (Normalize error category)
+ *
  * ```ts
  * import { normalizeDiagnosticCategory } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { DiagnosticCategory } from "ts-morph"
@@ -447,6 +466,9 @@ const normalizeDiagnosticCategoryMatcher = Match.type<DiagnosticCategory>().pipe
  * const category = normalizeDiagnosticCategory(DiagnosticCategory.Error)
  * console.log(category)
  * ```
+ *
+ * @param category - Raw TypeScript diagnostic category.
+ * @returns Public service diagnostic category literal.
  * @category utilities
  * @since 0.0.0
  */
@@ -456,7 +478,8 @@ export const normalizeDiagnosticCategory = (category: DiagnosticCategory): TsMor
 /**
  * Named declaration summary discovered from a TypeScript source file.
  *
- * @example
+ * **Example** (Create named declaration)
+ *
  * ```ts
  * import { NamedDeclaration } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  *
@@ -466,6 +489,7 @@ export const normalizeDiagnosticCategory = (category: DiagnosticCategory): TsMor
  * })
  * console.log(declaration.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -497,9 +521,8 @@ export class NamedDeclaration extends S.Class<NamedDeclaration>($I`NamedDeclarat
 /**
  * Read the normalized name and kind for a supported declaration node.
  *
- * @param declaration - Supported declaration node to inspect.
- * @returns Normalized declaration name and public kind when available.
- * @example
+ * **Example** (Read interface declaration name)
+ *
  * ```ts
  * import { getDeclarationName } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import { Project } from "ts-morph"
@@ -511,6 +534,9 @@ export class NamedDeclaration extends S.Class<NamedDeclaration>($I`NamedDeclarat
  * const declaration = getDeclarationName(sourceFile.getInterfaceOrThrow("SearchSymbolsRequest"))
  * console.log(declaration)
  * ```
+ *
+ * @param declaration - Supported declaration node to inspect.
+ * @returns Normalized declaration name and public kind when available.
  * @category utilities
  * @since 0.0.0
  */
@@ -561,10 +587,8 @@ export const getDeclarationName = (declaration: OutlineDeclaration): O.Option<Na
 /**
  * Extend a parent symbol qualified name with one child declaration segment.
  *
- * @param parentSymbol - Parent symbol, when the declaration is nested.
- * @param name - Child declaration name segment.
- * @returns Qualified symbol name anchored to the nearest parent symbol.
- * @example
+ * **Example** (Qualify root declaration name)
+ *
  * ```ts
  * import { pipeQualifiedName } from "@beep/repo-utils/TSMorph/TSMorph.shared"
  * import * as O from "effect/Option"
@@ -572,6 +596,10 @@ export const getDeclarationName = (declaration: OutlineDeclaration): O.Option<Na
  * const qualifiedName = pipeQualifiedName(O.none(), "SearchSymbolsRequest")
  * console.log(qualifiedName)
  * ```
+ *
+ * @param parentSymbol - Parent symbol, when the declaration is nested.
+ * @param name - Child declaration name segment.
+ * @returns Qualified symbol name anchored to the nearest parent symbol.
  * @category utilities
  * @since 0.0.0
  */

@@ -16,7 +16,8 @@ const LicenseTierBase = LiteralKit(["solo", "team", "enterprise"]);
 /**
  * Commercial license tier assigned to an organization.
  *
- * @example
+ * **Example** (Decode enterprise license tier)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Organization } from "@beep/shared-domain/entities"
@@ -46,7 +47,8 @@ export const LicenseTier = LicenseTierBase.pipe(
 /**
  * Runtime type for {@link LicenseTier}.
  *
- * @example
+ * **Example** (Type a LicenseTier value)
+ *
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  *
@@ -62,7 +64,8 @@ export type LicenseTier = typeof LicenseTier.Type;
 /**
  * Compliance and automation settings owned by an organization.
  *
- * @example
+ * **Example** (Decode organization settings)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Organization } from

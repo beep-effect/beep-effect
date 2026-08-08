@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for secure HTTP header name schemas.
  *
- * @example
+ * **Example** (Decode with SecureHeader Schema)
+ *
  * ```ts
  * import * as SecureHeader from "@beep/schema/SecureHeader"
  * import * as S from "effect/Schema"

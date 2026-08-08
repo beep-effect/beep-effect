@@ -195,7 +195,7 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
  * export const nested = 1
  * \`\`\`
  *
- * @remarks Outer legacy tag that cleanup-on-touch must detect.
+ * @remarks Outer legacy tag that the zero-legacy gate must detect.
  * @category helpers
  * @since 0.0.0
  */`);
@@ -1053,4 +1053,19 @@ export * from "./flatTarget.ts";
         })
       )
     ));
+
+  it("does not treat string-literal /** as a JSDoc comment opener", () => {
+    const comments = jsdocCommentsFromSource(`
+const root = Str.endsWith("/**")(path);
+project.addSourceFilesAtPaths(\`\${base}/**/*.ts\`);
+/**
+ * Real doc.
+ * @since 0.0.0
+ */
+export const real = 1;
+`);
+    expect(comments).toHaveLength(1);
+    expect(comments[0]).toContain("Real doc.");
+    expect(comments[0]).not.toContain("addSourceFilesAtPaths");
+  });
 });

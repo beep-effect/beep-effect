@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Webhook/Webhook.model");
 /**
  * Experimental schema anchor for Box webhook subscription resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty webhook payload)
+ *
  * ```ts
  * import { Webhook } from "@beep/box/experimental/domain/entities/Webhook/Webhook.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Webhook extends S.Class<Webhook>($I`Webhook`)(
 /**
  * Type-level companion namespace for {@link Webhook} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode webhook)
+ *
  * ```ts
  * import { Webhook } from "@beep/box/experimental/domain/entities/Webhook/Webhook.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Webhook {
   /**
    * Encoded payload accepted by the {@link Webhook} entity schema.
    *
-   * @example
+   * **Example** (Encode made webhook instance)
+   *
    * ```ts
    * import { Webhook } from "@beep/box/experimental/domain/entities/Webhook/Webhook.model";
    * import * as S from "effect/Schema";

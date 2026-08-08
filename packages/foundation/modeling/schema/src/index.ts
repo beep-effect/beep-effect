@@ -11,7 +11,7 @@ export * from "./Number.ts";
 /**
  * Package version.
  *
- * **Example** (Read the package version)
+ * **Example** (Read package version)
  *
  * ```ts
  * import { VERSION } from "@beep/schema"
@@ -216,21 +216,16 @@ export * from "./Graph/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./HashSet.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Html.ts";
 /**
  * HTTP method schemas and literal-kit helpers.
  *
- * **Example** (Narrow an HTTP method)
+ * **Example** (Check HTTP method literal)
  *
  * ```ts
  * import { HttpMethod } from "@beep/schema"
  *
- * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS")) // true
+ * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
  * ```
  *
  * @category schemas
@@ -252,14 +247,14 @@ export * from "./Int64.ts";
  * class, lossless wire codec, `boolean | Node` subschema union, document
  * envelope, and local `$ref` resolvers.
  *
- * **Example** (Decode a JSON Schema node)
+ * **Example** (Decode JSON Schema node)
  *
  * ```ts
  * import { JSONSchema } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
- * console.log(node._tag) // "Success"
+ * console.log(node._tag)
  * ```
  *
  * @category schemas
@@ -344,7 +339,7 @@ export * from "./PascalStr.ts";
 /**
  * Transport-layer port number schemas and codecs.
  *
- * **Example** (Decode a port from a string)
+ * **Example** (Decode port from string)
  *
  * ```ts
  * import { Effect } from "effect"
@@ -355,8 +350,8 @@ export * from "./PascalStr.ts";
  * console.log(port) // 443
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export * from "./Port.ts";
 /**
@@ -387,7 +382,7 @@ export * from "./RegExp.ts";
 /**
  * Nominal safe-object schema and object-keyword normalization codec.
  *
- * **Example** (Decode a safe object)
+ * **Example** (Decode safe object value)
  *
  * ```ts
  * import { SafeObject } from "@beep/schema"

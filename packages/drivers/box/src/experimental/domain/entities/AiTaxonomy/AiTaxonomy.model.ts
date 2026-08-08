@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/AiTaxonomy/AiTaxonomy.mod
 /**
  * Experimental schema anchor for Box AI taxonomy resources returned by AI classification workflows.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { AiTaxonomy } from "@beep/box/experimental/domain/entities/AiTaxonomy/AiTaxonomy.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class AiTaxonomy extends S.Class<AiTaxonomy>($I`AiTaxonomy`)(
 /**
  * Type-level companion namespace for {@link AiTaxonomy} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode taxonomy)
+ *
  * ```ts
  * import { AiTaxonomy } from "@beep/box/experimental/domain/entities/AiTaxonomy/AiTaxonomy.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace AiTaxonomy {
   /**
    * Encoded payload accepted by the {@link AiTaxonomy} entity schema.
    *
-   * @example
+   * **Example** (Encode made taxonomy payload)
+   *
    * ```ts
    * import { AiTaxonomy } from "@beep/box/experimental/domain/entities/AiTaxonomy/AiTaxonomy.model";
    * import * as S from "effect/Schema";

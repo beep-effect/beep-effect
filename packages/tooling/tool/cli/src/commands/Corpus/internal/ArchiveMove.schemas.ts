@@ -15,7 +15,8 @@ const $I = $RepoCliId.create("commands/Corpus/internal/ArchiveMove.schemas");
 /**
  * Validated options used by `corpus archive-move`.
  *
- * @example
+ * **Example** (Make archive move options)
+ *
  * ```ts
  * import { CorpusArchiveMoveOptions } from "@beep/repo-cli/commands/Corpus"
  *
@@ -26,6 +27,7 @@ const $I = $RepoCliId.create("commands/Corpus/internal/ArchiveMove.schemas");
  * })
  * console.log(options.sourcePaths.length) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -44,7 +46,8 @@ export class CorpusArchiveMoveOptions extends S.Class<CorpusArchiveMoveOptions>(
 /**
  * One JSONL row written after a successful archive move.
  *
- * @example
+ * **Example** (Create manifest record)
+ *
  * ```ts
  * import { CorpusArchiveMoveManifestRecord } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -59,6 +62,7 @@ export class CorpusArchiveMoveOptions extends S.Class<CorpusArchiveMoveOptions>(
  * })
  * console.log(record.fileCount) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -82,7 +86,8 @@ export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveMa
 /**
  * JSONL encoder for {@link CorpusArchiveMoveManifestRecord}.
  *
- * @example
+ * **Example** (Encode manifest record JSON)
+ *
  * ```ts
  * import { CorpusArchiveMoveManifestRecord, encodeCorpusArchiveMoveManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -99,6 +104,7 @@ export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveMa
  *
  * Effect.runPromise(encodeCorpusArchiveMoveManifestRecordJson(record)).then((json) => console.log(json.includes("source-a"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -107,7 +113,8 @@ export const encodeCorpusArchiveMoveManifestRecordJson = JsonStringCodec(CorpusA
 /**
  * Summary counts returned by `corpus archive-move`.
  *
- * @example
+ * **Example** (Make archive move summary)
+ *
  * ```ts
  * import { CorpusArchiveMoveSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -120,6 +127,7 @@ export const encodeCorpusArchiveMoveManifestRecordJson = JsonStringCodec(CorpusA
  * })
  * console.log(summary.sourcesMoved) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

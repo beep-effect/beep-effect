@@ -16,7 +16,8 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.error
  * Public action failure raised when an assistant turn cannot be generated.
  * This is the client-safe error a turn kernel implementation may fail with.
  *
- * @example
+ * **Example** (Creating a TurnGenerationError)
+ *
  * ```ts
  * import { TurnGenerationError } from "@beep/agents-use-cases/public"
  *

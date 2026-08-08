@@ -44,7 +44,8 @@ import type {
 /**
  * Class factory with inherited invariant fields.
  *
- * @example
+ * **Example** (Extract table name type)
+ *
  * ```ts
  * import type { ClassFactory } from "@beep/schema/EntitySchema"
  *
@@ -53,8 +54,8 @@ import type {
  * console.log(tableName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export type ClassFactory<
   Self,
@@ -558,7 +559,8 @@ const withClassFactory = <
 /**
  * Build an entity schema class factory with invariant fields.
  *
- * @example
+ * **Example** (Build entity schema class)
+ *
  * ```ts
  * import { ClassFactory, persist } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -571,8 +573,8 @@ const withClassFactory = <
  * console.log(Account.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const ClassFactory =
   (identifier: string) =>
@@ -592,7 +594,8 @@ export const ClassFactory =
 /**
  * Retrieve entity metadata from schema annotations or class statics.
  *
- * @example
+ * **Example** (Read entity table name)
+ *
  * ```ts
  * import { ClassFactory, getDefinition, persist } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -605,8 +608,8 @@ export const ClassFactory =
  * console.log(getDefinition(Account).tableName)
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getDefinition = <Entity extends EntityClass.Any>(entity: Entity): EntityClass.DefinitionOf<Entity> => {
   const annotated = entity.ast.annotations?.[DefinitionAnnotationKey];

@@ -21,11 +21,13 @@ import { makeProviderInstanceRepository } from "./ProviderInstance.repo.ts";
 /**
  * Drizzle repository port layer.
  *
- * @example
+ * **Example** (Import repository live layer)
+ *
  * ```ts
  * import { ProviderInstanceRepositoryLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceRepositoryLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -37,11 +39,13 @@ export const ProviderInstanceRepositoryLive = Layer.effect(
 /**
  * Provider CLI probe port layer.
  *
- * @example
+ * **Example** (Import probe live layer)
+ *
  * ```ts
  * import { ProviderProbeLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderProbeLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -50,11 +54,13 @@ export const ProviderProbeLive = Layer.effect(ProviderProbe, makeProviderProbe()
 /**
  * ProviderInstance use-case layer over its two ports.
  *
- * @example
+ * **Example** (Import use-cases live layer)
+ *
  * ```ts
  * import { ProviderInstanceUseCasesLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceUseCasesLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -68,11 +74,13 @@ export const ProviderInstanceUseCasesLive = Layer.effect(
 /**
  * RPC handler layer bound to the live ProviderInstance use cases.
  *
- * @example
+ * **Example** (Import RPC handlers live layer)
+ *
  * ```ts
  * import { ProviderInstanceRpcHandlersLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceRpcHandlersLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -92,12 +100,16 @@ export const ProviderInstanceRpcHandlersLive = ProviderInstanceRpcs.toLayer(
 
 const PortsLive = Layer.mergeAll(ProviderInstanceRepositoryLive, ProviderProbeLive);
 
-/** Complete ProviderInstance slice layer, including driver and RPC handlers.
- * @example
+/**
+ *  Complete ProviderInstance slice layer, including driver and RPC handlers.
+ *
+ * **Example** (Import complete live layer)
+ *
  * ```ts
  * import { ProviderInstanceLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

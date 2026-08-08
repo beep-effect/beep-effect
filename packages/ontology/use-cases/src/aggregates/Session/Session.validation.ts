@@ -90,7 +90,8 @@ const dcat = (name: string): NamedNode => makeNamedNode(`${DCAT_NAMESPACE}${name
 /**
  * Verified ontology repair proposal generated from a SHACL violation.
  *
- * @example
+ * **Example** (Make verified repair proposal)
+ *
  * ```ts
  * import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyRepairProposal } from "@beep/ontology-use-cases/aggregates/Session"
@@ -141,7 +142,8 @@ export class OntologyRepairProposal extends S.Class<OntologyRepairProposal>($I`O
 /**
  * Validation request for an ontology session.
  *
- * @example
+ * **Example** (Make validation input with session)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { RunOntologyValidationInput } from "@beep/ontology-use-cases/aggregates/Session"
@@ -180,7 +182,8 @@ export class RunOntologyValidationInput extends S.Class<RunOntologyValidationInp
 /**
  * Validation result with verified repair proposals.
  *
- * @example
+ * **Example** (Make conforming validation result)
+ *
  * ```ts
  * import { RunOntologyValidationResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation"
@@ -215,7 +218,8 @@ export class RunOntologyValidationResult extends S.Class<RunOntologyValidationRe
 /**
  * Provenance and dataset-description export command.
  *
- * @example
+ * **Example** (Make provenance export command)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { ExportOntologyProvenanceCommand, OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
@@ -255,7 +259,8 @@ export class ExportOntologyProvenanceCommand extends S.Class<ExportOntologyProve
 /**
  * Provenance and dataset-description export result.
  *
- * @example
+ * **Example** (Make provenance export result)
+ *
  * ```ts
  * import { ExportOntologyProvenanceResult, OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -290,7 +295,8 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
 /**
  * Ontology validation failure.
  *
- * @example
+ * **Example** (Make SHACL validation error)
+ *
  * ```ts
  * import { OntologyValidationError } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -319,7 +325,8 @@ export class OntologyValidationError extends TaggedErrorClass<OntologyValidation
 /**
  * Ontology validation runner service shape.
  *
- * @example
+ * **Example** (Stub validation runner shape)
+ *
  * ```ts
  * import type { OntologyValidationRunnerShape } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -849,7 +856,8 @@ const exportOntologyProvenance = Effect.fn("Ontology.Validation.exportProvenance
 /**
  * Ontology validation runner service tag.
  *
- * @example
+ * **Example** (Yield validation runner service)
+ *
  * ```ts
  * import { OntologyValidationRunner } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -873,7 +881,8 @@ export class OntologyValidationRunner extends Context.Service<
 /**
  * Live ontology validation runner.
  *
- * @example
+ * **Example** (Reference live runner layer)
+ *
  * ```ts
  * import { OntologyValidationRunnerLive } from "@beep/ontology-use-cases/aggregates/Session"
  *

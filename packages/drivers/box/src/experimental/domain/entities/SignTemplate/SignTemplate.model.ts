@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/SignTemplate/SignTemplate
 /**
  * Experimental schema anchor for reusable Box Sign template resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty schema)
+ *
  * ```ts
  * import { SignTemplate } from "@beep/box/experimental/domain/entities/SignTemplate/SignTemplate.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class SignTemplate extends S.Class<SignTemplate>($I`SignTemplate`)(
 /**
  * Type-level companion namespace for {@link SignTemplate} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { SignTemplate } from "@beep/box/experimental/domain/entities/SignTemplate/SignTemplate.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace SignTemplate {
   /**
    * Encoded payload accepted by the {@link SignTemplate} entity schema.
    *
-   * @example
+   * **Example** (Encode made SignTemplate)
+   *
    * ```ts
    * import { SignTemplate } from "@beep/box/experimental/domain/entities/SignTemplate/SignTemplate.model";
    * import * as S from "effect/Schema";

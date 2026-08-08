@@ -13,7 +13,8 @@ import type { Table } from "./Message.table.ts";
 /**
  * Selected workspace Message row.
  *
- * @example
+ * **Example** (Assert MessageRow select type)
+ *
  * ```ts
  * import type { MessageRow, Table } from "@beep/workspace-tables/entities/Message"
  *
@@ -31,7 +32,8 @@ export type MessageRow = typeof Table.$inferSelect;
 /**
  * Insertable workspace Message row.
  *
- * @example
+ * **Example** (Assert MessageInsert insert type)
+ *
  * ```ts
  * import type { MessageInsert, Table } from "@beep/workspace-tables/entities/Message"
  *
@@ -52,12 +54,15 @@ const decodeMessageRow = S.decodeUnknownSync(Message);
 /**
  * Convert a Message entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link Table}, whose metadata carries the physical SQL
  * column names. The database-managed `id` (SERIAL) is dropped so the insert
  * defers to the sequence.
  *
- * @example
+ * **Example** (Convert Message entity to insert)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-domain/entities/Message"
  * import { toMessageInsert } from "@beep/workspace-tables/entities/Message"
@@ -116,7 +121,8 @@ export const toMessageInsert = (message: Message): MessageInsert => {
 /**
  * Convert a selected persistence row into a Message entity.
  *
- * @example
+ * **Example** (Convert Message row to entity)
+ *
  * ```ts
  * import { fromMessageRow, type MessageRow } from "@beep/workspace-tables/entities/Message"
  *

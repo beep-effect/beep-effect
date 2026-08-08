@@ -1,15 +1,16 @@
 /**
  * W3C DID Core identifier schemas.
  *
- * @remarks
+ * **Details**
+ *
  * This module models the core DID string syntax from
  * {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax}.
  * DID URL path, query, and fragment forms are specified separately by
  * {@link https://www.w3.org/TR/did-core/#did-url-syntax | DID URL Syntax} and
  * are intentionally outside this schema.
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
@@ -29,7 +30,8 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
 /**
  * Branded schema for W3C DID Core identifier strings.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The generic DID Core syntax is `did:<method-name>:<method-specific-id>`.
  * The `method-name` component is one or more lowercase ASCII letters or
  * digits. The `method-specific-id` component is non-empty and contains only
@@ -42,7 +44,8 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries}
  * or that the identifier resolves to a DID document.
  *
- * @example
+ * **Example** (Decode a valid DID)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -55,7 +58,8 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * console.log(did) // "did:example:123456789abcdefghi"
  * ```
  *
- * @example
+ * **Example** (Reject path-bearing DID URLs)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Did } from "@beep/schema/Did"
@@ -66,9 +70,9 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * console.log(isDid("did:example:123456789abcdefghi/path")) // false
  * ```
  *
- * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax}
- * @see {@link https://www.w3.org/TR/did-core/#did-url-syntax | W3C DID Core DID URL Syntax}
- * @see {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries}
+ * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax} for the DID Core syntax rules.
+ * @see {@link https://www.w3.org/TR/did-core/#did-url-syntax | W3C DID Core DID URL Syntax} for DID URL path query and fragment forms.
+ * @see {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries} for registered DID methods.
  * @category identifiers
  * @since 0.0.0
  */
@@ -88,7 +92,8 @@ export const Did = S.String.check(didSyntaxCheck)
 /**
  * Type for {@link Did}.
  *
- * @example
+ * **Example** (Annotate decoded DID type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -109,7 +114,8 @@ export type Did = typeof Did.Type;
 /**
  * Companion namespace for encoded DID type surfaces.
  *
- * @example
+ * **Example** (Encode DID with percent bytes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -130,7 +136,8 @@ export declare namespace Did {
   /**
    * Encoded string type for {@link Did}.
    *
-   * @example
+   * **Example** (Round-trip encode Did.Encoded)
+   *
    * ```ts
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"

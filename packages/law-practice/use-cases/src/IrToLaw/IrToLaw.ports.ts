@@ -28,7 +28,8 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
 /**
  * Structural field contract for {@link LawEntities}.
  *
- * @example
+ * **Example** (Pick LawEntities key)
+ *
  * ```ts
  * import type { LawEntities } from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -88,7 +89,8 @@ const LawEntitiesBase: S.Class<LawEntities, S.Struct<LawEntitiesFields>, {}> = S
  * action's grounded extractions. Each field is the concrete entity the generic
  * extraction output resolves into.
  *
- * @example
+ * **Example** (List LawEntities keys)
+ *
  * ```ts
  * import type { LawEntities } from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -114,7 +116,8 @@ export class LawEntities extends LawEntitiesBase {}
  * {@link LawEntities} they encode. The `span`/`matchedText` an extraction
  * carries is what grounds the distinction's `TextAnchor`.
  *
- * @example
+ * **Example** (Fail shape toLaw call)
+ *
  * ```ts
  * import { IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect, Exit } from "effect"
@@ -154,7 +157,8 @@ export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)(
 /**
  * IR-to-law mapping service tag.
  *
- * @example
+ * **Example** (Provide fake IrToLaw service)
+ *
  * ```ts
  * import { IrToLaw, IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect, Exit } from "effect"

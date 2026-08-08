@@ -211,7 +211,8 @@ const SwcPlugins = S.Tuple([S.String, UnknownRecord]).pipe(S.mutable, S.Array, S
 /**
  * Public experimental configuration accepted by Next.js.
  *
- * @example
+ * **Example** (Creating ExperimentalConfig with options)
+ *
  * ```ts
  * import { ExperimentalConfig } from "@beep/repo-configs/next/models/ExperimentalConfig.schema"
  * const config = ExperimentalConfig.make({
@@ -220,6 +221,7 @@ const SwcPlugins = S.Tuple([S.String, UnknownRecord]).pipe(S.mutable, S.Array, S
  * })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

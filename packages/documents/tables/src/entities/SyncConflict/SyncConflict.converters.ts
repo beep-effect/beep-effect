@@ -13,7 +13,8 @@ import type { syncConflictTable } from "./SyncConflict.table.ts";
 /**
  * Selected documents SyncConflict row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { syncConflictTable, SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
  *
@@ -31,7 +32,8 @@ export type SyncConflictRow = typeof syncConflictTable.$inferSelect;
 /**
  * Insertable documents SyncConflict row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { syncConflictTable, SyncConflictInsert } from "@beep/documents-tables/entities/SyncConflict"
  *
@@ -52,12 +54,15 @@ const decodeSyncConflictRow = S.decodeUnknownSync(SyncConflict);
 /**
  * Convert a SyncConflict entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link syncConflictTable}, whose metadata carries the
  * physical SQL column names. The database-managed `id` (SERIAL) is dropped so
  * the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert drops managed id)
+ *
  * ```ts
  * import { fromSyncConflictRow, toSyncConflictInsert } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
@@ -100,7 +105,8 @@ export const toSyncConflictInsert = (syncConflict: SyncConflict): SyncConflictIn
 /**
  * Convert a selected persistence row into a SyncConflict entity.
  *
- * @example
+ * **Example** (Row to SyncConflict entity)
+ *
  * ```ts
  * import { fromSyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"

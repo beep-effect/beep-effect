@@ -29,6 +29,8 @@ const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.ports");
 /**
  * Service shape for the execution ledger.
  *
+ * **Details**
+ *
  * `appendDecision` is the write-ahead half: the governed gate calls it before
  * the effect runs and converts any failure into a refusal. `appendOutcome`
  * settles an allowed decision after the effect ran; its failure cannot fail the
@@ -38,7 +40,8 @@ const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.ports");
  * predicate, scoped to allowed decisions — a refused dispatch legitimately has
  * no outcome row and must never be reported as unknown.
  *
- * @example
+ * **Example** (Stub shape type check)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -75,7 +78,8 @@ export interface ExecutionLedgerShape {
 /**
  * Execution ledger service tag.
  *
- * @example
+ * **Example** (Provide stub ledger service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

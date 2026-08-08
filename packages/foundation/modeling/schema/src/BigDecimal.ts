@@ -15,12 +15,13 @@ const $I = $SchemaId.create("BigDecimal");
  * Schema that decodes a number into an Effect `BigDecimal` and encodes a
  * `BigDecimal` back to a number.
  *
+ * **Details**
+ *
  * Useful at boundaries where decimal values are transported as plain JSON
  * numbers but consumed internally as `BigDecimal`.
  *
- * @category validation
- * @since 0.0.0
- * @example
+ * **Example** (Decode number to BigDecimal)
+ *
  * ```typescript
  * import * as S from "effect/Schema"
  * import { BigDecimalFromNumber } from "@beep/schema/BigDecimal"
@@ -29,6 +30,9 @@ const $I = $SchemaId.create("BigDecimal");
  * const value = decode(12.34)
  * console.log(value)
  * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const BigDecimalFromNumber: S.decodeTo<S.BigDecimal, S.Finite> = S.Finite.pipe(
   S.decodeTo(S.BigDecimal, {

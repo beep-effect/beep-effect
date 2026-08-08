@@ -20,7 +20,8 @@ import * as O from "effect/Option";
  * host. `USPTO_API_KEY` is the same environment variable `@beep/uspto`'s own
  * `Uspto.layer` resolves.
  *
- * @example
+ * **Example** (Logging the soft gate)
+ *
  * ```ts
  * import { UsptoSourceAuthRegistration } from "@beep/uspto-mcp/UsptoSourceAuth"
  *

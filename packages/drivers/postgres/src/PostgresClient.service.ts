@@ -16,7 +16,8 @@ const $I = $PostgresId.create("PostgresClient.service");
 /**
  * Native Effect Postgres pool configuration.
  *
- * @example
+ * **Example** (Pool config object shape)
+ *
  * ```ts
  * import type { PostgresPoolConfig } from "@beep/postgres"
  *
@@ -36,7 +37,8 @@ export type PostgresPoolConfig = Pg.PgPoolConfig;
 /**
  * Native Effect Postgres client value.
  *
- * @example
+ * **Example** (Reading client config)
+ *
  * ```ts
  * import type { PostgresClientValue } from "@beep/postgres"
  *
@@ -52,7 +54,8 @@ export type PostgresClientValue = Pg.PgClient;
 /**
  * Beep service key for a native Effect Postgres client.
  *
- * @example
+ * **Example** (Service key reference)
+ *
  * ```ts
  * import { PostgresClient } from "@beep/postgres"
  *
@@ -67,7 +70,8 @@ export class PostgresClient extends Context.Service<PostgresClient, PostgresClie
   /**
    * Acquire a native Effect Postgres client.
    *
-   * @example
+   * **Example** (Acquiring Postgres client)
+   *
    * ```ts
    * import { PostgresClient } from "@beep/postgres"
    *
@@ -84,7 +88,8 @@ export class PostgresClient extends Context.Service<PostgresClient, PostgresClie
   /**
    * Build a Layer that provides both native and Beep Postgres client keys.
    *
-   * @example
+   * **Example** (Building client layer)
+   *
    * ```ts
    * import { PostgresClient } from "@beep/postgres"
    *
@@ -107,7 +112,8 @@ export class PostgresClient extends Context.Service<PostgresClient, PostgresClie
   /**
    * Build a Layer from an already acquired native Effect Postgres client.
    *
-   * @example
+   * **Example** (Layer from existing client)
+   *
    * ```ts
    * import { PostgresClient } from "@beep/postgres"
    * import type { PostgresClientValue } from "@beep/postgres"

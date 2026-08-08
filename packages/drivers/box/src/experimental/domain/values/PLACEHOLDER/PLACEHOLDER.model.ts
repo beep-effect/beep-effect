@@ -12,10 +12,12 @@ const $I = $BoxId.create("values/PLACEHOLDER/PLACEHOLDER.model");
 /**
  * Experimental placeholder value-object schema retained until this generator slot is promoted to a named Box value.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty object)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/values/PLACEHOLDER/PLACEHOLDER.model";
  * import * as S from "effect/Schema";
@@ -40,7 +42,8 @@ export class PLACEHOLDER extends S.Class<PLACEHOLDER>($I`PLACEHOLDER`)(
 /**
  * Type-level companion namespace for {@link PLACEHOLDER} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty payload)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/values/PLACEHOLDER/PLACEHOLDER.model";
  * import * as S from "effect/Schema";
@@ -58,7 +61,8 @@ export declare namespace PLACEHOLDER {
   /**
    * Encoded payload accepted by the {@link PLACEHOLDER} value-object schema.
    *
-   * @example
+   * **Example** (Encode made empty payload)
+   *
    * ```ts
    * import { PLACEHOLDER } from "@beep/box/experimental/domain/values/PLACEHOLDER/PLACEHOLDER.model";
    * import * as S from "effect/Schema";

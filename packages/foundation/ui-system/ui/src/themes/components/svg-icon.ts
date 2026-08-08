@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Svg icon theme theme value.
  *
- * @example
+ * **Example** (Import and log svgIconTheme)
+ *
  * ```ts
  * import { svgIconTheme } from "@beep/ui/themes/components/svg-icon"
  *

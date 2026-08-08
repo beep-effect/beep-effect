@@ -31,7 +31,8 @@ const PanelViewKind = LiteralKit(["component", "text"]);
 /**
  * Persistence policy for rendering inactive panels.
  *
- * @example
+ * **Example** (Make always render mode)
+ *
  * ```ts
  * import { PanelRenderMode } from "@beep/dock"
  *
@@ -50,7 +51,8 @@ export const PanelRenderMode = LiteralKit(["onlyWhenVisible", "always"]).annotat
 /**
  * Decoded inactive-panel rendering policy.
  *
- * @example
+ * **Example** (Type onlyWhenVisible mode)
+ *
  * ```ts
  * import { PanelRenderMode } from "@beep/dock"
  *
@@ -66,7 +68,8 @@ export type PanelRenderMode = typeof PanelRenderMode.Type;
 /**
  * Codec for JSON-safe renderer parameter scalars.
  *
- * @example
+ * **Example** (Make string parameter value)
+ *
  * ```ts
  * import { PanelParameterValue } from "@beep/dock"
  *
@@ -85,7 +88,8 @@ export const PanelParameterValue = S.Union([S.String, S.Finite, S.Boolean]).pipe
 /**
  * Decoded renderer parameter scalar.
  *
- * @example
+ * **Example** (Type boolean parameter value)
+ *
  * ```ts
  * import { PanelParameterValue } from "@beep/dock"
  *
@@ -101,7 +105,8 @@ export type PanelParameterValue = typeof PanelParameterValue.Type;
 /**
  * Codec for renderer-neutral panel parameter records.
  *
- * @example
+ * **Example** (Make theme parameter record)
+ *
  * ```ts
  * import { PanelParameters } from "@beep/dock"
  *
@@ -120,7 +125,8 @@ export const PanelParameters = S.Record(S.String, PanelParameterValue).pipe(
 /**
  * Decoded renderer parameter record.
  *
- * @example
+ * **Example** (Type count parameter record)
+ *
  * ```ts
  * import { PanelParameters } from "@beep/dock"
  *
@@ -136,7 +142,8 @@ export type PanelParameters = typeof PanelParameters.Type;
 /**
  * Renderer-backed panel content resolved by a host registry.
  *
- * @example
+ * **Example** (Make markdown component view)
+ *
  * ```ts
  * import { ComponentPanelView, RendererKey } from "@beep/dock"
  *
@@ -161,7 +168,8 @@ export class ComponentPanelView extends S.Class<ComponentPanelView>($I`Component
 /**
  * Serializable renderer-independent text panel content.
  *
- * @example
+ * **Example** (Make text panel view)
+ *
  * ```ts
  * import { TextPanelView } from "@beep/dock"
  *
@@ -185,7 +193,8 @@ export class TextPanelView extends S.Class<TextPanelView>($I`TextPanelView`)(
 /**
  * Tagged codec for every renderer-neutral panel view.
  *
- * @example
+ * **Example** (Make text kind view)
+ *
  * ```ts
  * import { PanelView } from "@beep/dock"
  *
@@ -206,7 +215,8 @@ export const PanelView = PanelViewKind.mapMembers(Tuple.evolve([() => ComponentP
 /**
  * Decoded renderer-neutral panel view.
  *
- * @example
+ * **Example** (Assign text view type)
+ *
  * ```ts
  * import { PanelView, TextPanelView } from "@beep/dock"
  *
@@ -228,10 +238,13 @@ const PositiveFiniteExtent = S.Finite.check(S.isGreaterThan(0)).pipe(
 /**
  * Optional minimum and maximum pixel extents for one panel.
  *
- * @remarks A missing facet leaves that axis bound unconstrained. When a
+ * **Gotchas**
+ *
+ * A missing facet leaves that axis bound unconstrained. When a
  * minimum exceeds a maximum, geometry gives the minimum precedence.
  *
- * @example
+ * **Example** (Make partial panel constraints)
+ *
  * ```ts
  * import { PanelConstraints } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -258,7 +271,8 @@ export class PanelConstraints extends S.Class<PanelConstraints>($I`PanelConstrai
 /**
  * One persistable renderer-neutral panel instance.
  *
- * @example
+ * **Example** (Make text panel instance)
+ *
  * ```ts
  * import { Panel, PanelId, TextPanelView } from "@beep/dock"
  *
@@ -307,7 +321,8 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
 /**
  * Optional replacements accepted by a panel update.
  *
- * @example
+ * **Example** (Make title panel patch)
+ *
  * ```ts
  * import { PanelPatch } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -335,7 +350,8 @@ export class PanelPatch extends S.Class<PanelPatch>($I`PanelPatch`)(
 /**
  * Persisted locking policy for a tab group.
  *
- * @example
+ * **Example** (Make locked group mode)
+ *
  * ```ts
  * import { GroupLockedMode } from "@beep/dock"
  *
@@ -352,7 +368,8 @@ export const GroupLockedMode = LiteralKit(["unlocked", "locked", "no-drop-target
 /**
  * Decoded tab-group locking policy.
  *
- * @example
+ * **Example** (Type no-drop-target mode)
+ *
  * ```ts
  * import { GroupLockedMode } from "@beep/dock"
  *
@@ -368,7 +385,8 @@ export type GroupLockedMode = typeof GroupLockedMode.Type;
 /**
  * Persisted edge used to render a tab-group header.
  *
- * @example
+ * **Example** (Make bottom header position)
+ *
  * ```ts
  * import { GroupHeaderPosition } from "@beep/dock"
  *
@@ -385,7 +403,8 @@ export const GroupHeaderPosition = LiteralKit(["top", "bottom"]).annotate(
 /**
  * Decoded tab-group header edge.
  *
- * @example
+ * **Example** (Type top header position)
+ *
  * ```ts
  * import { GroupHeaderPosition } from "@beep/dock"
  *
@@ -401,7 +420,8 @@ export type GroupHeaderPosition = typeof GroupHeaderPosition.Type;
 /**
  * Persistable visibility, locking, and header metadata for a tab group.
  *
- * @example
+ * **Example** (Make locked group metadata)
+ *
  * ```ts
  * import { GroupMetadata } from "@beep/dock"
  *
@@ -429,7 +449,8 @@ export class GroupMetadata extends S.Class<GroupMetadata>($I`GroupMetadata`)(
 /**
  * Optional replacements accepted by a group update.
  *
- * @example
+ * **Example** (Make visibility group patch)
+ *
  * ```ts
  * import { GroupPatch } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -465,7 +486,8 @@ type SplitPosition = Pick<SplitPlacement, "side" | "splitId" | "newGroupRatio">;
 /**
  * Non-empty tab zipper with the active panel stored structurally.
  *
- * @example
+ * **Example** (Make single-panel tabs node)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -625,7 +647,8 @@ const DefaultSplitRatio = S.toType(SplitRatio).pipe(SchemaUtils.withConstantDefa
 /**
  * Horizontal binary layout with semantic left and right children.
  *
- * @example
+ * **Example** (Make horizontal split layout)
+ *
  * ```ts
  * import { GroupId, HorizontalSplitLayout, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -653,7 +676,8 @@ export class HorizontalSplitLayout extends S.Class<HorizontalSplitLayout>($I`Hor
 /**
  * Vertical binary layout with semantic top and bottom children.
  *
- * @example
+ * **Example** (Make vertical split layout)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, TabsNode, TextPanelView, VerticalSplitLayout } from "@beep/dock"
  *
@@ -683,7 +707,8 @@ type SplitLayoutShape = HorizontalSplitLayout | VerticalSplitLayout;
 /**
  * Tagged codec for horizontal and vertical binary layouts.
  *
- * @example
+ * **Example** (Make horizontal split case)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, SplitLayout, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -749,7 +774,8 @@ export const SplitLayout = S.Union([HorizontalSplitLayout, VerticalSplitLayout])
 /**
  * Decoded axis-specific binary layout.
  *
- * @example
+ * **Example** (Type horizontal split layout)
+ *
  * ```ts
  * import { GroupId, HorizontalSplitLayout, Panel, PanelId, SplitLayout, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -767,7 +793,8 @@ export type SplitLayout = typeof SplitLayout.Type;
 /**
  * Recursive binary split node with exactly two children.
  *
- * @example
+ * **Example** (Make horizontal split node)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, SplitId, SplitLayout, SplitNode, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -861,7 +888,8 @@ const DockNodeBase = S.Union([TabsNode, SplitNode])
 /**
  * Recursive codec for tabs and binary split tree nodes.
  *
- * @example
+ * **Example** (Count panels in tabs node)
+ *
  * ```ts
  * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -1007,7 +1035,8 @@ export const DockNode = DockNodeBase.pipe(
 /**
  * Decoded recursive dock tree node.
  *
- * @example
+ * **Example** (Type tabs as dock node)
+ *
  * ```ts
  * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -1049,7 +1078,8 @@ type DockNodeEncoded = TabsNodeEncoded | SplitNodeEncoded;
 /**
  * Type helpers associated with the recursive dock-node codec.
  *
- * @example
+ * **Example** (Type DockNode.Type alias)
+ *
  * ```ts
  * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -1065,7 +1095,8 @@ export declare namespace DockNode {
   /**
    * Decoded type exposed by the dock-node namespace.
    *
-   * @example
+   * **Example** (Assign DockNode.Type value)
+   *
    * ```ts
    * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
    *
@@ -1081,7 +1112,8 @@ export declare namespace DockNode {
   /**
    * Encoded recursive dock-node representation.
    *
-   * @example
+   * **Example** (Build encoded tabs node)
+   *
    * ```ts
    * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
    *
@@ -1115,7 +1147,8 @@ export declare namespace DockNode {
 /**
  * One independently positioned floating dock subtree.
  *
- * @example
+ * **Example** (Make floating member box)
+ *
  * ```ts
  * import { FloatingMember, GroupId, Panel, PanelId, TabsNode, TextPanelView, TopLeftAnchoredBox } from "@beep/dock"
  *
@@ -1136,7 +1169,8 @@ export class FloatingMember extends S.Class<FloatingMember>($I`FloatingMember`)(
 /**
  * Workspace state without a docked root node.
  *
- * @example
+ * **Example** (Make empty workspace)
+ *
  * ```ts
  * import { EmptyWorkspace } from "@beep/dock"
  *
@@ -1161,7 +1195,8 @@ export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
 /**
  * Workspace state containing a non-empty dock tree.
  *
- * @example
+ * **Example** (Make populated workspace)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  *
@@ -1243,7 +1278,8 @@ const DockWorkspaceGlobalIdentityCheck = S.makeFilter<typeof DockWorkspaceBase.T
 /**
  * Validated codec for complete empty or populated dock state.
  *
- * @example
+ * **Example** (Use empty dock workspace)
+ *
  * ```ts
  * import { DockWorkspace } from "@beep/dock"
  *
@@ -1462,7 +1498,8 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
 /**
  * Decoded complete dock workspace state.
  *
- * @example
+ * **Example** (Type empty dock workspace)
+ *
  * ```ts
  * import { DockWorkspace } from "@beep/dock"
  *
@@ -1478,7 +1515,8 @@ export type DockWorkspace = typeof DockWorkspace.Type;
 /**
  * Versioned persisted envelope for one complete dock workspace.
  *
- * @example
+ * **Example** (Make versioned dock snapshot)
+ *
  * ```ts
  * import { DockSnapshot, DockWorkspace } from "@beep/dock"
  *

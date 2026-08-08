@@ -12,7 +12,8 @@ const $I = $SchemaId.create("person/CardinalDirection");
 /**
  * Cardinal direction literal schema.
  *
- * @example
+ * **Example** (Check Options includes north)
+ *
  * ```ts
  * import { CardinalDirection } from "@beep/schema/CardinalDirection"
  *
@@ -21,8 +22,8 @@ const $I = $SchemaId.create("person/CardinalDirection");
  *
  * CardinalDirection - The cardinal directions
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CardinalDirection = LiteralKit(["north", "south", "east", "west"]).pipe(
   $I.annoteSchema("CardinalDirection", {
@@ -31,15 +32,6 @@ export const CardinalDirection = LiteralKit(["north", "south", "east", "west"]).
 );
 /**
  * {@inheritDoc CardinalDirection}
- *
- * @example
- * ```ts
- * import { CardinalDirection } from "@beep/schema/CardinalDirection"
- *
- * const direction: CardinalDirection = "north"
- * console.log(CardinalDirection.Options.includes(direction))
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -48,7 +40,8 @@ export type CardinalDirection = typeof CardinalDirection.Type;
 /**
  * CardinalDirectionAbbrev - The abbreviated version of the {@link CardinalDirection}
  *
- * @example
+ * **Example** (Check Options includes N)
+ *
  * ```ts
  * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
  *
@@ -66,24 +59,16 @@ export const CardinalDirectionAbbrev = LiteralKit(["N", "S", "E", "W"]).pipe(
 
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
- *
- * @example
- * ```ts
- * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
- *
- * const abbrev: CardinalDirectionAbbrev = "N"
- * console.log(CardinalDirectionAbbrev.Options.includes(abbrev))
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
 export type CardinalDirectionAbbrev = typeof CardinalDirectionAbbrev.Type;
 
 /**
- * {@inheritDoc CardinalDirection}
+ * Alias for {@link CardinalDirection} (compat export name).
  *
- * @example
+ * **Example** (Check a north literal)
+ *
  * ```ts
  * import { Schema } from "@beep/schema/CardinalDirection"
  *
@@ -97,24 +82,16 @@ export const Schema = CardinalDirection;
 
 /**
  * {@inheritDoc CardinalDirection}
- *
- * @example
- * ```ts
- * import type { Schema } from "@beep/schema/CardinalDirection"
- *
- * const direction: Schema = "north"
- * console.log(direction)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
 export type Schema = CardinalDirection;
 
 /**
- * {@inheritDoc CardinalDirectionAbbrev}
+ * Alias for {@link CardinalDirectionAbbrev} (compat export name).
  *
- * @example
+ * **Example** (Check an N abbrev literal)
+ *
  * ```ts
  * import { Abbrev } from "@beep/schema/CardinalDirection"
  *
@@ -128,15 +105,6 @@ export const Abbrev = CardinalDirectionAbbrev;
 
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
- *
- * @example
- * ```ts
- * import type { Abbrev } from "@beep/schema/CardinalDirection"
- *
- * const abbrev: Abbrev = "N"
- * console.log(abbrev)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

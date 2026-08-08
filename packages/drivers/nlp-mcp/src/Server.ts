@@ -38,7 +38,8 @@ const $I = $NlpMcpId.create("Server");
 /**
  * Configuration for the MCP server identity advertised to clients.
  *
- * @example
+ * **Example** (Creating server identity config)
+ *
  * ```ts
  * import { NlpMcpServerConfig } from "@beep/nlp-mcp/Server"
  *
@@ -46,8 +47,8 @@ const $I = $NlpMcpId.create("Server");
  * console.log(config.name)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpServerConfig`)(
   {
@@ -67,6 +68,8 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * Build the stdio-transport MCP server layer exposing the NLP and streaming
  * toolkits.
  *
+ * **Details**
+ *
  * Registers both the canonical {@link NlpToolkit} (with its wink-backed
  * {@link WinkNlpToolkitLive} handlers) and the {@link StreamingToolkit} (with
  * its {@link StreamingToolkitHandlersLive} handlers) into one MCP server served
@@ -78,7 +81,8 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * `NodeFileSystem.layer`, `NodePath.layer` (from `@effect/platform-node`) and
  * `FetchHttpClient.layer` (from `effect/unstable/http`) at the entrypoint.
  *
- * @example
+ * **Example** (Providing Node platform layers)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import { makeServerLayer } from "@beep/nlp-mcp/Server"
@@ -97,8 +101,8 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * void Layer.launch(server)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const makeServerLayer = (
   config: NlpMcpServerConfig

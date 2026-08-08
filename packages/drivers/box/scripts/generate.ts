@@ -1071,7 +1071,8 @@ const renderDeclaration = (declaration: GeneratedDeclaration): string => {
     return `/**
  * ${description}
  *
- * @example
+ * **Example** (Inspect the ${declaration.name} schema)
+ *
  * \`\`\`ts
  * import { ${declaration.name} } from "@beep/box"
  *
@@ -1086,7 +1087,8 @@ ${schemaConst};
 /**
  * Type for {@link ${declaration.name}}.
  *
- * @example
+ * **Example** (Reference the ${declaration.name} type)
+ *
  * \`\`\`ts
  * import type { ${declaration.name} } from "@beep/box"
  *
@@ -1108,7 +1110,8 @@ export type ${declaration.name} = typeof ${declaration.name}.Type;
     return `/**
  * ${description}
  *
- * @example
+ * **Example** (Inspect the ${declaration.name} schema)
+ *
  * \`\`\`ts
  * import { ${declaration.name} } from "@beep/box"
  *
@@ -1130,7 +1133,8 @@ export class ${declaration.name} extends ${declaration.baseName}.extend<${declar
   return `/**
  * ${description}
  *
- * @example
+ * **Example** (Inspect the ${declaration.name} schema)
+ *
  * \`\`\`ts
  * import { ${declaration.name} } from "@beep/box"
  *
@@ -1168,7 +1172,8 @@ const renderPayload = (method: ManagerMethod): string => {
   return `/**
  * ${description}
  *
- * @example
+ * **Example** (Inspect the ${method.payloadName} schema)
+ *
  * \`\`\`ts
  * import { ${method.payloadName} } from "@beep/box"
  *
@@ -1194,7 +1199,8 @@ const renderSuccess = (method: ManagerMethod): string => {
   return `/**
  * ${description}
  *
- * @example
+ * **Example** (Inspect the ${method.successName} schema)
+ *
  * \`\`\`ts
  * import { ${method.successName} } from "@beep/box"
  *
@@ -1209,7 +1215,8 @@ ${schemaConst};
 /**
  * Type for {@link ${method.successName}}.
  *
- * @example
+ * **Example** (Reference the ${method.successName} type)
+ *
  * \`\`\`ts
  * import type { ${method.successName} } from "@beep/box"
  *
@@ -1262,7 +1269,8 @@ const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unkn
 /**
  * Serialized Box SDK JSON payloads.
  *
- * @example
+ * **Example** (Inspect the BoxSerializedData schema)
+ *
  * \`\`\`ts
  * import { BoxSerializedData } from "@beep/box"
  *
@@ -1277,7 +1285,8 @@ ${renderGeneratedSchemaConst("BoxSerializedData", "Permissive schema for Box SDK
 /**
  * Type for {@link BoxSerializedData}.
  *
- * @example
+ * **Example** (Reference the BoxSerializedData type)
+ *
  * \`\`\`ts
  * import type { BoxSerializedData } from "@beep/box"
  *
@@ -1292,7 +1301,8 @@ export type BoxSerializedData = typeof BoxSerializedData.Type;
 /**
  * Box SDK date wrapper or encoded date string.
  *
- * @example
+ * **Example** (Inspect the BoxSdkDate schema)
+ *
  * \`\`\`ts
  * import { BoxSdkDate } from "@beep/box"
  *
@@ -1314,7 +1324,8 @@ ${renderGeneratedSchemaConst(
 /**
  * Type for {@link BoxSdkDate}.
  *
- * @example
+ * **Example** (Reference the BoxSdkDate type)
+ *
  * \`\`\`ts
  * import type { BoxSdkDate } from "@beep/box"
  *
@@ -1329,7 +1340,8 @@ export type BoxSdkDate = typeof BoxSdkDate.Type;
 /**
  * Box SDK date-time wrapper or encoded date-time string.
  *
- * @example
+ * **Example** (Inspect the BoxSdkDateTime schema)
+ *
  * \`\`\`ts
  * import { BoxSdkDateTime } from "@beep/box"
  *
@@ -1351,7 +1363,8 @@ ${renderGeneratedSchemaConst(
 /**
  * Type for {@link BoxSdkDateTime}.
  *
- * @example
+ * **Example** (Reference the BoxSdkDateTime type)
+ *
  * \`\`\`ts
  * import type { BoxSdkDateTime } from "@beep/box"
  *
@@ -1366,7 +1379,8 @@ export type BoxSdkDateTime = typeof BoxSdkDateTime.Type;
 /**
  * Generated Box SDK method names wrapped by \\@beep/box.
  *
- * @example
+ * **Example** (Guard a generated Box method name)
+ *
  * \`\`\`ts
  * import { BoxMethodName } from "@beep/box"
  *
@@ -1387,7 +1401,8 @@ ${renderGeneratedSchemaConst(
 /**
  * Type for {@link BoxMethodName}.
  *
- * @example
+ * **Example** (Reference the BoxMethodName type)
+ *
  * \`\`\`ts
  * import type { BoxMethodName } from "@beep/box"
  *
@@ -1470,7 +1485,8 @@ import * as M from "./Box.models.gen.ts";
 /**
  * Shared generated operation runner supplied by {@link Box}.
  *
- * @example
+ * **Example** (Reference the BoxRunSdkCall type)
+ *
  * \`\`\`ts
  * import type { BoxRunSdkCall } from "@beep/box/Box.operations.gen"
  *
@@ -1493,7 +1509,8 @@ export type BoxRunSdkCall = <Payload, Success>(
 /**
  * Generated JSON operation groups for the Box SDK.
  *
- * @example
+ * **Example** (Reference the BoxGeneratedOperations type)
+ *
  * \`\`\`ts
  * import type { BoxGeneratedOperations } from "@beep/box/Box.operations.gen"
  *
@@ -1574,7 +1591,8 @@ const invokeSdkMethod = (
 /**
  * Build generated Box SDK operation groups from a SDK client and shared runner.
  *
- * @example
+ * **Example** (Inspect the generated operations factory)
+ *
  * \`\`\`ts
  * import { makeGeneratedOperations } from "@beep/box/Box.operations.gen"
  *

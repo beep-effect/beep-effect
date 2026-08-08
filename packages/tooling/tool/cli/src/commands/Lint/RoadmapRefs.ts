@@ -195,13 +195,15 @@ const phaseSnapshotFinding = Effect.fn("RoadmapRefs.phaseSnapshotFinding")(funct
 /**
  * Verifies roadmap packet links exist and reports goal phase-count drift.
  *
- * @example
+ * **Example** (Verify Effect lint runner)
+ *
  * ```ts
  * import { runRoadmapRefsLint } from "@beep/repo-cli/commands/Lint/RoadmapRefs"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runRoadmapRefsLint))
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -256,12 +258,14 @@ export const runRoadmapRefsLint = Effect.fn(function* () {
 /**
  * `bun run beep lint roadmap-refs` — enforce roadmap packet links.
  *
- * @example
+ * **Example** (Log command name)
+ *
  * ```ts
  * import { lintRoadmapRefsCommand } from "@beep/repo-cli/commands/Lint/RoadmapRefs"
  *
  * console.log(lintRoadmapRefsCommand.name)
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

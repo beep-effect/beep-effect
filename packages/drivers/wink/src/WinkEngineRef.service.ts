@@ -43,12 +43,14 @@ const makeWinkEngineRef = Effect.gen(function* () {
 /**
  * Compatibility service for reading the live wink runtime ref and updating custom entities.
  *
- * @remarks
+ * **Details**
+ *
  * Prefer {@link WinkEngineRef} when code needs stable access to the shared `Ref`
  * itself, such as cache invalidation or compatibility bridges. For normal NLP
  * operations use the higher-level `WinkEngine` service.
  *
- * @example
+ * **Example** (Read shared runtime ref)
+ *
  * ```ts
  * import { Effect, Layer, Ref } from "effect"
  * import { WinkEngineLive } from "@beep/wink"
@@ -74,7 +76,8 @@ export class WinkEngineRef extends Context.Service<WinkEngineRef, WinkEngineRefS
 /**
  * Live compatibility layer backed by the shared wink engine runtime.
  *
- * @example
+ * **Example** (Provide live compatibility layer)
+ *
  * ```ts
  * import { Effect, Layer, Ref } from "effect"
  * import { WinkEngineLive } from "@beep/wink"
@@ -99,7 +102,8 @@ export const WinkEngineRefLive = Layer.effect(WinkEngineRef, makeWinkEngineRef);
 /**
  * Runtime state stored inside the shared wink engine ref.
  *
- * @example
+ * **Example** (Read runtime state from ref)
+ *
  * ```ts
  * import { Effect, Layer, Ref } from "effect"
  * import type { WinkEngineRuntimeState } from "@beep/wink"
@@ -121,7 +125,8 @@ export type WinkEngineRuntimeState = WinkEngineRuntimeStateType;
 /**
  * Branded schema for live wink engine instance identifiers.
  *
- * @example
+ * **Example** (Make branded instance identifier)
+ *
  * ```ts
  * import { InstanceId } from "@beep/wink"
  *
@@ -136,7 +141,8 @@ export const InstanceId = InstanceIdService;
 /**
  * Serializable schema for wink engine state metadata.
  *
- * @example
+ * **Example** (Construct serializable engine state)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { InstanceId, WinkEngineState } from "@beep/wink"

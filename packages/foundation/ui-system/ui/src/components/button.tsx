@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication -- button and ui/button intentionally share CVA variant tables; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 "use client";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva } from "class-variance-authority";
@@ -13,7 +14,8 @@ import type { VariantProps } from "class-variance-authority";
 /**
  * Class factory for shared button visual variants and sizes.
  *
- * @example
+ * **Example** (Destructive and icon variants)
+ *
  * ```tsx
  * import { strictEqual } from "node:assert"
  * import { buttonVariants } from "@beep/ui/components/button"
@@ -65,7 +67,8 @@ const buttonVariants = cva(
 /**
  * Base interactive button with shared variant and size styling.
  *
- * @example
+ * **Example** (Small submit save button)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  *

@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import CandidateLifecycle module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/values/CandidateLifecycle"
  *

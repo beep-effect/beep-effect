@@ -14,13 +14,14 @@ const $I = $LawPracticeDomainId.create("values/SurroundingContext/SurroundingCon
 /**
  * Result of surrounding context extraction.
  *
+ * **Details**
+ *
  * Pairs the extracted sentence or paragraph `text` with the absolute character
  * `span` locating that text in the source document, so consumers can render the
  * snippet or map it back to its position.
  *
- * **Example**
+ * **Example** (Make with text and span)
  *
- * @example
  * ```ts
  * import { SurroundingContext } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -61,7 +62,8 @@ export class SurroundingContext extends S.Class<SurroundingContext>($I`Surroundi
 /**
  * Companion namespace for `SurroundingContext`.
  *
- * @example
+ * **Example** (Alias Encoded wire type)
+ *
  * ```ts
  * import type { SurroundingContext } from "@beep/law-practice-domain"
  *
@@ -75,9 +77,8 @@ export declare namespace SurroundingContext {
   /**
    * Wire-encoded representation of a decoded {@link SurroundingContext}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { SurroundingContext } from "@beep/law-practice-domain"
    *

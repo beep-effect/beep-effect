@@ -13,7 +13,8 @@ import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
 /**
  * Create the package-owner resolver used by schema-first repository scans.
  *
- * @example
+ * **Example** (Wrap owner resolver in Effect)
+ *
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -21,6 +22,7 @@ import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
  * const program = Effect.succeed(makeSchemaFirstOwnerResolver)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -38,7 +40,8 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
 /**
  * Create a ts-morph project loaded with the schema-first scan source globs.
  *
- * @example
+ * **Example** (Wrap project factory in Effect)
+ *
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -46,6 +49,7 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
  * const program = Effect.succeed(makeSchemaFirstProject)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -60,12 +64,14 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
 /**
  * Predicate for source paths excluded from schema-first scans.
  *
- * @example
+ * **Example** (Check excluded dist path)
+ *
  * ```ts
  * import { isSchemaFirstExcludedFile } from "@beep/repo-cli/test/Lint"
  *
  * console.log(isSchemaFirstExcludedFile("packages/demo/dist/index.ts"))
  * ```
+ *
  * @category predicates
  * @since 0.0.0
  */

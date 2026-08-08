@@ -17,12 +17,13 @@ const $I = $LawPracticeDomainId.create("values/HistoryLink/HistoryLink.model");
  * One link in a subsequent-history chain (#849): the case at this position,
  * paired with the disposition {@link HistorySignal} that led TO it.
  *
+ * **Details**
+ *
  * The chain root has no inbound signal, so `signal` is `Option<HistorySignal>`
  * with a `None` constructor default — `None` marks the root link.
  *
- * **Example**
+ * **Example** (Root and signaled links)
  *
- * @example
  * ```ts
  * import { CitationId, HistoryLink } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
@@ -66,7 +67,8 @@ export class HistoryLink extends S.Class<HistoryLink>($I`HistoryLink`)(
 /**
  * Companion namespace for `HistoryLink`.
  *
- * @example
+ * **Example** (Encoded field key access)
+ *
  * ```ts
  * import type { HistoryLink } from "@beep/law-practice-domain"
  *
@@ -81,9 +83,8 @@ export declare namespace HistoryLink {
   /**
    * Wire-encoded representation of a decoded {@link HistoryLink}.
    *
-   * **Example**
+   * **Example** (Encoded wire type alias)
    *
-   * @example
    * ```ts
    * import type { HistoryLink } from "@beep/law-practice-domain"
    *

@@ -18,7 +18,8 @@ const $I = $SchemaId.create("Percentage");
 /**
  * Schema for a valid percentage value between 0 and 100 (inclusive).
  *
- * @example
+ * **Example** (Decode percentage value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Percentage } from "@beep/schema/Percentage"
@@ -43,25 +44,16 @@ export const Percentage = S.Finite.check(
 
 /**
  * {@inheritDoc Percentage}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { Percentage } from "@beep/schema/Percentage"
- *
- * const discount: Percentage = S.decodeUnknownSync(Percentage)(25)
- * console.log(discount) // 25
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Percentage = typeof Percentage.Type;
 
 /**
  * Type guard for {@link Percentage}.
  *
- * @example
+ * **Example** (Guard valid and invalid)
+ *
  * ```ts
  * import { isPercentage } from "@beep/schema/Percentage"
  *
@@ -69,15 +61,16 @@ export type Percentage = typeof Percentage.Type;
  * console.log(isPercentage(150)) // false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isPercentage = Percentage.is;
 
 /**
  * Percentage constant for 0%.
  *
- * @example
+ * **Example** (Zero constant checks)
+ *
  * ```ts
  * import { ZERO, isZero, toDecimal } from "@beep/schema/Percentage"
  *
@@ -92,7 +85,8 @@ export const ZERO: Percentage = Percentage.make(0);
 /**
  * Percentage constant for 20%.
  *
- * @example
+ * **Example** (Twenty to decimal)
+ *
  * ```ts
  * import { TWENTY, toDecimal } from "@beep/schema/Percentage"
  *
@@ -106,7 +100,8 @@ export const TWENTY: Percentage = Percentage.make(20);
 /**
  * Percentage constant for 50%.
  *
- * @example
+ * **Example** (Format fifty percent)
+ *
  * ```ts
  * import { FIFTY, format } from "@beep/schema/Percentage"
  *
@@ -120,7 +115,8 @@ export const FIFTY: Percentage = Percentage.make(50);
 /**
  * Percentage constant for 100%.
  *
- * @example
+ * **Example** (Full hundred checks)
+ *
  * ```ts
  * import { HUNDRED, isFull, toDecimal } from "@beep/schema/Percentage"
  *
@@ -136,22 +132,24 @@ export const HUNDRED: Percentage = Percentage.make(100);
 /**
  * Convert a percentage to its decimal representation (0-1 range).
  *
- * @example
+ * **Example** (Convert fifty to decimal)
+ *
  * ```ts
  * import { toDecimal, FIFTY } from "@beep/schema/Percentage"
  *
  * console.log(toDecimal(FIFTY)) // 0.5
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const toDecimal = (percentage: Percentage): number => percentage / 100;
 
 /**
  * Convert a decimal (0-1 range) to a percentage value.
  *
- * @example
+ * **Example** (Decimal to percentage)
+ *
  * ```ts
  * import { fromDecimal } from "@beep/schema/Percentage"
  *
@@ -159,15 +157,16 @@ export const toDecimal = (percentage: Percentage): number => percentage / 100;
  * console.log(pct) // 75
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const fromDecimal = (decimal: number): Percentage => Percentage.make(decimal * 100);
 
 /**
  * Check if a percentage value is zero.
  *
- * @example
+ * **Example** (Check zero vs fifty)
+ *
  * ```ts
  * import { isZero, ZERO, FIFTY } from "@beep/schema/Percentage"
  *
@@ -175,15 +174,16 @@ export const fromDecimal = (decimal: number): Percentage => Percentage.make(deci
  * console.log(isZero(FIFTY)) // false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isZero = (percentage: Percentage): boolean => percentage === 0;
 
 /**
  * Check if a percentage value is 100%.
  *
- * @example
+ * **Example** (Check full vs fifty)
+ *
  * ```ts
  * import { isFull, HUNDRED, FIFTY } from "@beep/schema/Percentage"
  *
@@ -191,15 +191,16 @@ export const isZero = (percentage: Percentage): boolean => percentage === 0;
  * console.log(isFull(FIFTY)) // false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isFull = (percentage: Percentage): boolean => percentage === 100;
 
 /**
  * Get the complement of a percentage (100 - value).
  *
- * @example
+ * **Example** (Complement of twenty)
+ *
  * ```ts
  * import { complement, TWENTY } from "@beep/schema/Percentage"
  *
@@ -207,15 +208,16 @@ export const isFull = (percentage: Percentage): boolean => percentage === 100;
  * console.log(value) // 80
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const complement = (percentage: Percentage): Percentage => Percentage.make(100 - percentage);
 
 /**
  * Format a percentage as a display string with configurable decimal places.
  *
- * @example
+ * **Example** (Format with decimals)
+ *
  * ```ts
  * import { format, FIFTY } from "@beep/schema/Percentage"
  *
@@ -223,8 +225,8 @@ export const complement = (percentage: Percentage): Percentage => Percentage.mak
  * console.log(format(FIFTY, 2)) // "50.00%"
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const format: {
   (percentage: Percentage): (decimalPlaces?: undefined | number) => string;

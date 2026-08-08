@@ -18,7 +18,8 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Workspace/WorkspaceVault");
 /**
  * Workspace vault configuration read model.
  *
- * @example
+ * **Example** (Make workspace vault config)
+ *
  * ```ts
  * import { WorkspaceVaultConfig } from "@beep/workspace-use-cases/public"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -52,7 +53,8 @@ export class WorkspaceVaultConfig extends S.Class<WorkspaceVaultConfig>($I`Works
 /**
  * Input accepted when persisting a workspace vault root.
  *
- * @example
+ * **Example** (Make set vault input)
+ *
  * ```ts
  * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
  * import { SetWorkspaceVaultInput } from "@beep/workspace-use-cases/public"
@@ -86,7 +88,8 @@ export class SetWorkspaceVaultInput extends S.Class<SetWorkspaceVaultInput>($I`S
 /**
  * Raised when the workspace vault store cannot serve a request.
  *
- * @example
+ * **Example** (Create store unavailable error)
+ *
  * ```ts
  * import { WorkspaceVaultStoreUnavailable } from "@beep/workspace-use-cases/public"
  *
@@ -112,7 +115,8 @@ export class WorkspaceVaultStoreUnavailable extends TaggedErrorClass<WorkspaceVa
 /**
  * Raised when a selected workspace vault root is not usable by the server.
  *
- * @example
+ * **Example** (Create root invalid error)
+ *
  * ```ts
  * import { WorkspaceVaultRootInvalid } from "@beep/workspace-use-cases/public"
  *
@@ -142,7 +146,8 @@ export class WorkspaceVaultRootInvalid extends TaggedErrorClass<WorkspaceVaultRo
 /**
  * Internal typed workspace vault store failure.
  *
- * @example
+ * **Example** (Decode vault store error)
+ *
  * ```ts
  * import { WorkspaceVaultRootInvalid, WorkspaceVaultStoreError } from "@beep/workspace-use-cases/public"
  * import * as S from "effect/Schema"
@@ -168,19 +173,6 @@ export const WorkspaceVaultStoreError = S.Union([WorkspaceVaultStoreUnavailable,
 
 /**
  * {@inheritDoc WorkspaceVaultStoreError}
- *
- * @example
- * ```ts
- * import type { WorkspaceVaultStoreError } from "@beep/workspace-use-cases/public"
- * import { WorkspaceVaultRootInvalid } from "@beep/workspace-use-cases/public"
- *
- * const error: WorkspaceVaultStoreError = WorkspaceVaultRootInvalid.make({
- *   path: "/tmp/beep-documents-vault",
- *   reason: "Workspace vault root is not writable."
- * })
- * console.log(error._tag)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -189,7 +181,8 @@ export type WorkspaceVaultStoreError = typeof WorkspaceVaultStoreError.Type;
 /**
  * Client-safe workspace vault configuration failure.
  *
- * @example
+ * **Example** (Create action error message)
+ *
  * ```ts
  * import { WorkspaceVaultActionError } from "@beep/workspace-use-cases/public"
  *
@@ -219,7 +212,8 @@ export class WorkspaceVaultActionError extends TaggedErrorClass<WorkspaceVaultAc
 /**
  * Workspace vault store service shape.
  *
- * @example
+ * **Example** (Implement vault store shape)
+ *
  * ```ts
  * import { WorkspaceVaultConfig } from "@beep/workspace-use-cases/public"
  * import type { WorkspaceVaultStoreShape } from "@beep/workspace-use-cases/public"
@@ -254,7 +248,8 @@ export interface WorkspaceVaultStoreShape {
 /**
  * Workspace vault store service tag.
  *
- * @example
+ * **Example** (Provide vault store service)
+ *
  * ```ts
  * import { WorkspaceVaultConfig, WorkspaceVaultStore } from "@beep/workspace-use-cases/public"
  * import type { WorkspaceVaultStoreShape } from "@beep/workspace-use-cases/public"

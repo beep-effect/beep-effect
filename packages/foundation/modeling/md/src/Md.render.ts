@@ -109,7 +109,8 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
 /**
  * Error raised when a render adapter fails while producing output.
  *
- * @example
+ * **Example** (Constructing a RenderError)
+ *
  * ```ts
  * import { RenderError } from "@beep/md/Md.render"
  *
@@ -139,7 +140,8 @@ export class RenderError extends TaggedErrorClass<RenderError>($I`RenderError`)(
 /**
  * Pure render adapter contract for synchronous output formats.
  *
- * @example
+ * **Example** (Defining a pure adapter)
+ *
  * ```ts
  * import type { PureRenderAdapter } from "@beep/md/Md.render"
  *
@@ -161,10 +163,13 @@ export interface PureRenderAdapter<Output> {
 /**
  * Effectful render adapter contract for resourceful output formats.
  *
+ * **Details**
+ *
  * Future PDF and DOCX adapters can use this shape when rendering needs fonts,
  * files, streams, or other services.
  *
- * @example
+ * **Example** (Defining an effectful adapter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { EffectRenderAdapter } from "@beep/md/Md.render"
@@ -563,7 +568,8 @@ function renderMarkdownInlineForLinkLabel(inline: Inline): string {
 /**
  * Renders an inline node as Markdown.
  *
- * @example
+ * **Example** (Rendering strong as Markdown)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderMarkdownInline } from "@beep/md/Md.render"
@@ -588,7 +594,8 @@ const renderHtmlOptionalAttribute = (name: string, value: O.Option<string>): str
 /**
  * Renders an inline node as an HTML fragment.
  *
- * @example
+ * **Example** (Rendering emphasis as HTML)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderHtmlInline } from "@beep/md/Md.render"
@@ -622,7 +629,8 @@ const renderHtmlInlineMatcher = Match.type<Inline>().pipe(
 /**
  * Renders an inline node as an HTML fragment.
  *
- * @example
+ * **Example** (Rendering emphasis as HTML)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderHtmlInline } from "@beep/md/Md.render"
@@ -640,7 +648,8 @@ export function renderHtmlInline(inline: Inline): string {
 /**
  * Renders a block node as Markdown.
  *
- * @example
+ * **Example** (Rendering heading as Markdown)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderMarkdownBlock } from "@beep/md/Md.render"
@@ -694,7 +703,8 @@ export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>()
 /**
  * Renders a block node as an HTML fragment.
  *
- * @example
+ * **Example** (Rendering paragraph as HTML)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderHtmlBlock } from "@beep/md/Md.render"
@@ -730,7 +740,8 @@ export const renderHtmlBlock: (block: Block) => string = Match.type<Block>().pip
 /**
  * Renders block nodes as a Markdown document body.
  *
- * @example
+ * **Example** (Rendering multiple Markdown blocks)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderMarkdownBlocks } from "@beep/md/Md.render"
@@ -749,7 +760,8 @@ export const renderMarkdownBlocks: (blocks: ReadonlyArray<Block>) => Markdown = 
 /**
  * Renders block nodes as an HTML fragment body.
  *
- * @example
+ * **Example** (Rendering multiple HTML blocks)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderHtmlBlocks } from "@beep/md/Md.render"
@@ -769,9 +781,12 @@ export const renderHtmlBlocks: (blocks: ReadonlyArray<Block>) => HtmlFragment = 
 /**
  * Renders a document through the Markdown adapter and returns the output directly.
  *
+ * **Details**
+ *
  * Prefer {@link render} when callers should handle adapter failure explicitly.
  *
- * @example
+ * **Example** (Rendering Markdown unsafely)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderUnsafe } from "@beep/md/Md.render"
@@ -787,9 +802,12 @@ export const renderUnsafe = (document: Document): Markdown => renderWithUnsafe(M
 /**
  * Renders a document through the HTML fragment adapter and returns the output directly.
  *
+ * **Details**
+ *
  * Prefer {@link renderHtml} when callers should handle adapter failure explicitly.
  *
- * @example
+ * **Example** (Rendering HTML unsafely)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderHtmlUnsafe } from "@beep/md/Md.render"
@@ -805,9 +823,12 @@ export const renderHtmlUnsafe = (document: Document): HtmlFragment => renderWith
 /**
  * Renders a document through the plain text adapter and returns the output directly.
  *
+ * **Details**
+ *
  * Prefer {@link renderPlainText} when callers should handle adapter failure explicitly.
  *
- * @example
+ * **Example** (Rendering plain text unsafely)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderPlainTextUnsafe } from "@beep/md/Md.render"
@@ -823,9 +844,12 @@ export const renderPlainTextUnsafe = (document: Document): string => renderWithU
 /**
  * Renders a document with a custom pure adapter and returns the output directly.
  *
+ * **Details**
+ *
  * Prefer {@link renderWith} when callers should handle adapter failure explicitly.
  *
- * @example
+ * **Example** (Rendering with custom adapter)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
@@ -845,10 +869,13 @@ export const renderWithUnsafe: {
 /**
  * Starts an effectful render adapter and returns its effect directly.
  *
+ * **Details**
+ *
  * Prefer {@link renderEffectWith} when adapter construction failures should be
  * reported as {@link RenderError}.
  *
- * @example
+ * **Example** (Starting effectful render unsafely)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
@@ -884,10 +911,13 @@ export const renderEffectWithUnsafe: {
 /**
  * Starts an effectful render adapter with synchronous adapter failures captured.
  *
+ * **Details**
+ *
  * Adapter effects keep their original error and requirement channels. Only
  * failures thrown while starting the adapter are wrapped as {@link RenderError}.
  *
- * @example
+ * **Example** (Starting effectful render safely)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
@@ -931,7 +961,8 @@ export const renderEffectWith: {
 /**
  * URL policy options accepted by built-in render adapter factories.
  *
- * @example
+ * **Example** (Creating URL render options)
+ *
  * ```ts
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  * import { UrlRenderOptions } from "@beep/md/Md.render"
@@ -1258,7 +1289,8 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document)
 /**
  * Creates a Markdown render adapter with an optional URL sink policy.
  *
- * @example
+ * **Example** (Markdown adapter with URL policy)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
@@ -1283,7 +1315,8 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
 /**
  * Creates an HTML fragment render adapter with an optional URL sink policy.
  *
- * @example
+ * **Example** (HTML adapter with URL policy)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
@@ -1308,7 +1341,8 @@ export const makeHtmlFragmentAdapter = (options: UrlRenderOptions = {}): PureRen
 /**
  * Built-in Markdown render adapter.
  *
- * @example
+ * **Example** (Using built-in Markdown adapter)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter } from "@beep/md/Md.render"
@@ -1326,10 +1360,13 @@ export const MarkdownAdapter: PureRenderAdapter<Markdown> = {
 /**
  * Built-in HTML fragment render adapter.
  *
+ * **Details**
+ *
  * Note: this adapter escapes `rawHtml` inline nodes by default. Treat trusted
  * HTML pass-through as an explicit custom-adapter boundary.
  *
- * @example
+ * **Example** (Using built-in HTML adapter)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { HtmlFragmentAdapter } from "@beep/md/Md.render"
@@ -1347,7 +1384,8 @@ export const HtmlFragmentAdapter: PureRenderAdapter<HtmlFragment> = {
 /**
  * Built-in plain-text render adapter.
  *
- * @example
+ * **Example** (Using built-in plain-text adapter)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { PlainTextAdapter } from "@beep/md/Md.render"
@@ -1366,10 +1404,13 @@ export const PlainTextAdapter: PureRenderAdapter<string> = {
 /**
  * Renders a document with a custom pure adapter.
  *
+ * **Details**
+ *
  * Adapter failures are captured as {@link RenderError}. Use
  * {@link renderWithUnsafe} only at boundaries that intentionally throw.
  *
- * @example
+ * **Example** (Rendering with Result capture)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
@@ -1397,10 +1438,13 @@ export const renderWith: {
 /**
  * Renders a document through the Markdown adapter.
  *
+ * **Details**
+ *
  * Adapter failures are captured as {@link RenderError}. Use
  * {@link renderUnsafe} only at boundaries that intentionally throw.
  *
- * @example
+ * **Example** (Rendering Markdown with Result)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
@@ -1419,10 +1463,13 @@ export const render = (document: Document): Result.Result<Markdown, RenderError>
 /**
  * Renders a document through the HTML fragment adapter.
  *
+ * **Details**
+ *
  * Adapter failures are captured as {@link RenderError}. Use
  * {@link renderHtmlUnsafe} only at boundaries that intentionally throw.
  *
- * @example
+ * **Example** (Rendering HTML with Result)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
@@ -1441,10 +1488,13 @@ export const renderHtml = (document: Document): Result.Result<HtmlFragment, Rend
 /**
  * Renders a document through the plain text adapter.
  *
+ * **Details**
+ *
  * Adapter failures are captured as {@link RenderError}. Use
  * {@link renderPlainTextUnsafe} only at boundaries that intentionally throw.
  *
- * @example
+ * **Example** (Rendering plain text with Result)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
@@ -1472,7 +1522,8 @@ const encodeUnsupported =
 /**
  * Schema transformation from a document AST to branded Markdown text.
  *
- * @example
+ * **Example** (Decoding document to Markdown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -1501,7 +1552,8 @@ export const DocumentToMarkdown = DocumentSchema.pipe(
 /**
  * Type for {@link DocumentToMarkdown}.
  *
- * @example
+ * **Example** (Accepting DocumentToMarkdown type)
+ *
  * ```ts
  * import type { DocumentToMarkdown } from "@beep/md/Md.render"
  *
@@ -1517,7 +1569,8 @@ export type DocumentToMarkdown = Markdown;
 /**
  * Schema transformation from a document AST to a branded HTML fragment.
  *
- * @example
+ * **Example** (Decoding document to HTML)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -1546,7 +1599,8 @@ export const DocumentToHtmlFragment = DocumentSchema.pipe(
 /**
  * Schema transformation from a document AST to plain text.
  *
- * @example
+ * **Example** (Decoding document to plain text)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -1575,7 +1629,8 @@ export const DocumentToPlainText = DocumentSchema.pipe(
 /**
  * Type for {@link DocumentToPlainText}.
  *
- * @example
+ * **Example** (Accepting DocumentToPlainText type)
+ *
  * ```ts
  * import type { DocumentToPlainText } from "@beep/md/Md.render"
  *
@@ -1591,7 +1646,8 @@ export type DocumentToPlainText = string;
 /**
  * Type for {@link DocumentToHtmlFragment}.
  *
- * @example
+ * **Example** (Accepting DocumentToHtmlFragment type)
+ *
  * ```ts
  * import type { DocumentToHtmlFragment } from "@beep/md/Md.render"
  *

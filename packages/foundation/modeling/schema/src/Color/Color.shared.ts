@@ -11,7 +11,8 @@ import * as S from "effect/Schema";
 /**
  * Internal identity composer for color schemas.
  *
- * @example
+ * **Example** (Compose identity identifier)
+ *
  * ```ts
  * import { $I } from "../../src/Color/Color.shared.ts"
  *
@@ -28,7 +29,8 @@ export const $I = $SchemaId.create("Color");
 /**
  * Convert a schema issue into the package-local schema error type.
  *
- * @example
+ * **Example** (Convert decode failure to error)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Result from "effect/Result"
@@ -51,7 +53,8 @@ export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]
 /**
  * Encoded RGB channel payload used by internal color conversions.
  *
- * @example
+ * **Example** (Construct RGB encoded payload)
+ *
  * ```ts
  * import { RgbEncoded } from "../../src/Color/Color.shared.ts"
  *
@@ -77,7 +80,8 @@ export class RgbEncoded extends S.Class<RgbEncoded>($I`RgbEncoded`)(
 /**
  * Encoded OKLCH coordinate payload used by internal color conversions.
  *
- * @example
+ * **Example** (Construct OKLCH encoded payload)
+ *
  * ```ts
  * import { OklchEncoded } from "../../src/Color/Color.shared.ts"
  *

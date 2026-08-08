@@ -14,7 +14,8 @@ import type * as React from "react";
 /**
  * Select component.
  *
- * @example
+ * **Example** (Import Select component)
+ *
  * ```tsx
  * import { Select } from "@beep/ui/components/select"
  *
@@ -29,7 +30,8 @@ const Select = SelectPrimitive.Root;
 /**
  * Select group component.
  *
- * @example
+ * **Example** (Import SelectGroup component)
+ *
  * ```tsx
  * import { SelectGroup } from "@beep/ui/components/select"
  *
@@ -46,7 +48,8 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
 /**
  * Select value component.
  *
- * @example
+ * **Example** (Import SelectValue component)
+ *
  * ```tsx
  * import { SelectValue } from "@beep/ui/components/select"
  *
@@ -65,7 +68,8 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 /**
  * Select trigger component.
  *
- * @example
+ * **Example** (Import SelectTrigger component)
+ *
  * ```tsx
  * import { SelectTrigger } from "@beep/ui/components/select"
  *
@@ -102,7 +106,8 @@ function SelectTrigger({
 /**
  * Select content component.
  *
- * @example
+ * **Example** (Import SelectContent component)
+ *
  * ```tsx
  * import { SelectContent } from "@beep/ui/components/select"
  *
@@ -153,7 +158,8 @@ function SelectContent({
 /**
  * Select label component.
  *
- * @example
+ * **Example** (Import SelectLabel component)
+ *
  * ```tsx
  * import { SelectLabel } from "@beep/ui/components/select"
  *
@@ -176,7 +182,8 @@ function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) 
 /**
  * Select item component.
  *
- * @example
+ * **Example** (Import SelectItem component)
+ *
  * ```tsx
  * import { SelectItem } from "@beep/ui/components/select"
  *
@@ -211,7 +218,8 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
 /**
  * Select separator component.
  *
- * @example
+ * **Example** (Import SelectSeparator component)
+ *
  * ```tsx
  * import { SelectSeparator } from "@beep/ui/components/select"
  *
@@ -234,7 +242,8 @@ function SelectSeparator({ className, ...props }: SelectPrimitive.Separator.Prop
 /**
  * Select scroll up button component.
  *
- * @example
+ * **Example** (Import SelectScrollUpButton component)
+ *
  * ```tsx
  * import { SelectScrollUpButton } from "@beep/ui/components/select"
  *
@@ -262,7 +271,8 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
 /**
  * Select scroll down button component.
  *
- * @example
+ * **Example** (Import SelectScrollDownButton component)
+ *
  * ```tsx
  * import { SelectScrollDownButton } from "@beep/ui/components/select"
  *

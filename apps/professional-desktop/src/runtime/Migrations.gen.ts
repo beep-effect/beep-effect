@@ -12,7 +12,8 @@ import type { MigrationBundleEntry } from "@beep/postgres";
  * Professional Desktop sidecar migration bundle, synced byte-exactly from
  * the db-admin drizzle migration folders.
  *
- * @example
+ * **Example** (Count the bundled migrations)
+ *
  * ```ts
  * import { migrationBundle } from "@/runtime/Migrations.gen"
  *

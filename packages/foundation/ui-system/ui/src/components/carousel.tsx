@@ -19,7 +19,8 @@ import type { UseEmblaCarouselType } from "embla-carousel-react";
 /**
  * Embla carousel API instance exposed after the carousel initializes.
  *
- * @example
+ * **Example** (Guard undefined carousel API)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { CarouselApi } from "@beep/ui/components/carousel"
@@ -126,11 +127,13 @@ const carouselEffectAtom = Atom.family((scope: string) =>
 /**
  * Read the nearest carousel controls and scroll state.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This hook requires a parent {@link Carousel}; it reports a React context
  * invariant when called outside that provider.
  *
- * @example
+ * **Example** (Next button with hook)
+ *
  * ```tsx
  * import { Carousel, CarouselContent, CarouselItem, useCarousel } from "@beep/ui/components/carousel"
  *
@@ -163,7 +166,8 @@ function useCarousel() {
 /**
  * Embla-backed carousel provider with keyboard navigation.
  *
- * @example
+ * **Example** (Horizontal with navigation)
+ *
  * ```tsx
  * import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@beep/ui/components/carousel"
  *
@@ -268,7 +272,8 @@ function Carousel({
 /**
  * Scroll viewport and flex track for carousel items.
  *
- * @example
+ * **Example** (Two-slide content track)
+ *
  * ```tsx
  * import { CarouselContent, CarouselItem } from "@beep/ui/components/carousel"
  *
@@ -298,7 +303,8 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Single slide inside a carousel content track.
  *
- * @example
+ * **Example** (Half-width carousel item)
+ *
  * ```tsx
  * import { CarouselItem } from "@beep/ui/components/carousel"
  *
@@ -327,7 +333,8 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Previous-slide control wired to the surrounding carousel.
  *
- * @example
+ * **Example** (Ghost previous control)
+ *
  * ```tsx
  * import { CarouselPrevious } from "@beep/ui/components/carousel"
  *
@@ -372,7 +379,8 @@ function CarouselPrevious({
 /**
  * Next-slide control wired to the surrounding carousel.
  *
- * @example
+ * **Example** (Ghost next control)
+ *
  * ```tsx
  * import { CarouselNext } from "@beep/ui/components/carousel"
  *

@@ -20,7 +20,8 @@ const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.model
 /**
  * Entity identifier for a persisted documents SyncOperation.
  *
- * @example
+ * **Example** (Decode SyncOperationId value)
+ *
  * ```ts
  * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
  * import * as S from "effect/Schema"
@@ -40,7 +41,8 @@ export const SyncOperationId = Documents.SyncOperationId;
 /**
  * Runtime type for {@link SyncOperationId}.
  *
- * @example
+ * **Example** (Type SyncOperationId values)
+ *
  * ```ts
  * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
  * import * as S from "effect/Schema"
@@ -61,7 +63,8 @@ export type SyncOperationId = typeof SyncOperationId.Type;
 /**
  * Kind of one-way push performed against the DMS mirror.
  *
- * @example
+ * **Example** (Assert uploadFile operation type)
+ *
  * ```ts
  * import { SyncOperationType } from "@beep/documents-domain/entities/SyncOperation"
  *
@@ -90,7 +93,8 @@ export const SyncOperationType = LiteralKit([
 /**
  * Runtime type for {@link SyncOperationType}.
  *
- * @example
+ * **Example** (Assign createFolder type value)
+ *
  * ```ts
  * import type { SyncOperationType } from "@beep/documents-domain/entities/SyncOperation"
  *
@@ -106,7 +110,8 @@ export type SyncOperationType = typeof SyncOperationType.Type;
 /**
  * Outbox lifecycle status for a queued push operation.
  *
- * @example
+ * **Example** (Assert queued operation status)
+ *
  * ```ts
  * import { SyncOperationStatus } from "@beep/documents-domain/entities/SyncOperation"
  *
@@ -129,7 +134,8 @@ export const SyncOperationStatus = LiteralKit(["queued", "leased", "succeeded", 
 /**
  * Runtime type for {@link SyncOperationStatus}.
  *
- * @example
+ * **Example** (Assign succeeded status value)
+ *
  * ```ts
  * import type { SyncOperationStatus } from "@beep/documents-domain/entities/SyncOperation"
  *
@@ -145,7 +151,8 @@ export type SyncOperationStatus = typeof SyncOperationStatus.Type;
 /**
  * Durable one-way push outbox operation from the local vault to the DMS mirror.
  *
- * @example
+ * **Example** (Decode SyncOperation entity)
+ *
  * ```ts
  * import { SyncOperation, SyncOperationId } from "@beep/documents-domain/entities/SyncOperation"
  * import * as S from "effect/Schema"

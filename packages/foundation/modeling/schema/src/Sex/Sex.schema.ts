@@ -12,15 +12,16 @@ const $I = $SchemaId.create("Sex");
 /**
  * The sex of a person ("male" or "female").
  *
- * @example
+ * **Example** (Check female in Options)
+ *
  * ```ts
  * import { Sex } from "@beep/schema/Sex"
  *
  * console.log(Sex.Options.includes("female"))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Sex = LiteralKit(["male", "female"]).pipe(
   $I.annoteSchema("Sex", {
@@ -29,28 +30,20 @@ export const Sex = LiteralKit(["male", "female"]).pipe(
 );
 /**
  * {@inheritDoc Sex}
- *
- * @example
- * ```ts
- * import { Sex } from "@beep/schema/Sex"
- *
- * const sex: Sex = "female"
- * console.log(Sex.Options.includes(sex))
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
 export type Sex = typeof Sex.Type;
 
 /**
- * {@inheritDoc Sex}
+ * Alias for {@link Sex} (compat export name).
  *
- * @example
+ * **Example** (Check a male literal)
+ *
  * ```ts
  * import { Schema } from "@beep/schema/Sex"
  *
- * console.log(Schema.Options.includes("female"))
+ * console.log(Schema.Options.includes("male"))
  * ```
  *
  * @category validation
@@ -60,15 +53,6 @@ export const Schema = Sex;
 
 /**
  * {@inheritDoc Sex}
- *
- * @example
- * ```ts
- * import type { Schema } from "@beep/schema/Sex"
- *
- * const sex: Schema = "female"
- * console.log(sex)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

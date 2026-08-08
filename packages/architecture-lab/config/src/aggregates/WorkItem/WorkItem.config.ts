@@ -27,7 +27,8 @@ const WorkItemMigrationSchemaName = S.NonEmptyString.check(
 /**
  * Client-safe feature flags for WorkItem behavior.
  *
- * @example
+ * **Example** (Decode public feature flags)
+ *
  * ```ts
  * import { WorkItemPublicConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -61,7 +62,8 @@ export class WorkItemPublicConfig extends S.Class<WorkItemPublicConfig>($I`WorkI
 /**
  * Server-only repository and migration settings for WorkItem persistence.
  *
- * @example
+ * **Example** (Decode server repository settings)
+ *
  * ```ts
  * import { WorkItemServerConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -95,7 +97,8 @@ export class WorkItemServerConfig extends S.Class<WorkItemServerConfig>($I`WorkI
 /**
  * Secret-reference configuration for the WorkItem backing connection.
  *
- * @example
+ * **Example** (Decode secret connection name)
+ *
  * ```ts
  * import { WorkItemSecretConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -125,7 +128,8 @@ export class WorkItemSecretConfig extends S.Class<WorkItemSecretConfig>($I`WorkI
 /**
  * Default browser-safe WorkItem feature flags used by test and local layers.
  *
- * @example
+ * **Example** (Check default feature flags)
+ *
  * ```ts
  * import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  *
@@ -144,7 +148,8 @@ export const defaultWorkItemPublicConfig = WorkItemPublicConfig.make({});
 /**
  * Default server-side WorkItem repository and migration names.
  *
- * @example
+ * **Example** (Read default migration schema)
+ *
  * ```ts
  * import { defaultWorkItemServerConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  *
@@ -159,7 +164,8 @@ export const defaultWorkItemServerConfig = WorkItemServerConfig.make({});
 /**
  * Default WorkItem secret reference name for local proof wiring.
  *
- * @example
+ * **Example** (Read default connection name)
+ *
  * ```ts
  * import { defaultWorkItemSecretConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  *
