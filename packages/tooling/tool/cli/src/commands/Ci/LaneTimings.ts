@@ -288,7 +288,7 @@ const epochMillis = (value: string | null): O.Option<number> =>
  * @param from - Earlier ISO timestamp, or null when absent.
  * @param to - Later ISO timestamp, or null when absent.
  * @returns Whole seconds between them, or `None` when absent or inverted.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const ciTimestampSpanSeconds = (from: string | null, to: string | null): O.Option<number> =>
@@ -332,7 +332,7 @@ export const ciTimestampSpanSeconds = (from: string | null, to: string | null): 
  *
  * @param job - One collected job record.
  * @returns Seconds the job waited for a runner, or `None` past attempt 1.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const attemptOnePickupSeconds = (job: CiWorkflowJob): O.Option<number> =>
@@ -367,7 +367,7 @@ const stepSecondsMatching = (job: CiWorkflowJob, pattern: RegExp): O.Option<numb
  *
  * @param labels - Runner labels the job requested.
  * @returns The runner pool the labels prove.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const ciRunnerClassForLabels = (labels: ReadonlyArray<string>): CiRunnerClass => {
@@ -421,7 +421,7 @@ const jobShapeRecord = (job: CiWorkflowJob): GithubJobRecord =>
  *
  * @param job - One collected job record.
  * @returns The row, with every derived column already filtered.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const ciLaneTimingRow = (job: CiWorkflowJob): CiLaneTimingRow =>
@@ -472,7 +472,7 @@ export const ciLaneTimingRow = (job: CiWorkflowJob): CiLaneTimingRow =>
  * @param rows - Rows derived from collected jobs.
  * @param peakRssByJobName - Peak resident set size in bytes, keyed by job name.
  * @returns The same rows with peak RSS filled in where a measurement exists.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const withCiLanePeakRss = (
@@ -510,7 +510,7 @@ const medianOf = (values: ReadonlyArray<number>): O.Option<number> =>
  *
  * @param rows - Rows derived from collected jobs.
  * @returns The aggregate report.
- * @category derivation
+ * @category mapping
  * @since 0.0.0
  */
 export const ciLaneTimingsReport = (rows: ReadonlyArray<CiLaneTimingRow>): CiLaneTimingsReport => {
