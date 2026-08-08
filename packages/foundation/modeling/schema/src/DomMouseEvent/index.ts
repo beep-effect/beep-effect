@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for DOM mouse event schemas.
  *
- * @example
+ * **Example** (Import DomMouseEvent namespace)
+ *
  * ```ts
  * import * as DomMouseEvent from "@beep/schema/DomMouseEvent"
  *

@@ -1498,6 +1498,16 @@ describe("quality task adapter", () => {
     expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
   });
 
+  it("drops caller concurrency flags from the serial SQL pass instead of duplicating turbo's", () => {
+    const steps = rootQualityStepsForTesting(
+      "/repo",
+      getInvocation(["test", "--integration", "--concurrency=1", "--summarize"])
+    );
+
+    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
+    expect(A.filter([...(steps[1]?.args ?? [])], (arg) => arg.startsWith("--concurrency"))).toHaveLength(1);
+  });
+
   it("requires explicit test SQL URLs over generic application defaults", () => {
     expect(
       sqlIntegrationConnectionUriFromEnvForTesting({

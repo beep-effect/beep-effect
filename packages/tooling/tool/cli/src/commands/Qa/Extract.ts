@@ -105,10 +105,13 @@ const scenarioMarkerNameAt = (events: ReadonlyArray<ActionEvent>, windowStartEpo
 /**
  * Path of the sidecar extraction plan a round's last extract wrote.
  *
+ * **Details**
+ *
  * The capture-session manifest has no plan field, so the plan lives beside it
  * and `beep qa report` reads it back to render dropped windows and budget use.
  *
- * @example
+ * **Example** (Path from round layout)
+ *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { extractionPlanPath } from "@beep/repo-cli/commands/Qa/Extract"
@@ -131,6 +134,7 @@ const scenarioMarkerNameAt = (events: ReadonlyArray<ActionEvent>, windowStartEpo
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -142,10 +146,13 @@ export const extractionPlanPath: {
 /**
  * Path of the round artifact budget `beep qa record --budget-mb` persisted.
  *
+ * **Details**
+ *
  * The capture-session manifest has no budget field, so the recorder's choice
  * lives beside it and becomes the default the next `qa extract` plans against.
  *
- * @example
+ * **Example** (Budget path from layout)
+ *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { artifactBudgetPath } from "@beep/repo-cli/commands/Qa/Extract"
@@ -168,6 +175,7 @@ export const extractionPlanPath: {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -179,7 +187,8 @@ export const artifactBudgetPath: {
 /**
  * Persist the round artifact budget chosen at record time.
  *
- * @example
+ * **Example** (Write empty artifact budget)
+ *
  * ```ts
  * import { ArtifactBudget } from "@beep/qa-capture"
  * import { writeArtifactBudget } from "@beep/repo-cli/commands/Qa/Extract"
@@ -188,6 +197,7 @@ export const artifactBudgetPath: {
  * const program = writeArtifactBudget("/repo/.beep/qa/round-1/artifact-budget.json", ArtifactBudget.make({}))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -205,13 +215,15 @@ export const writeArtifactBudget = Effect.fn("QaExtract.writeArtifactBudget")(fu
 /**
  * Read the round artifact budget, when record persisted one.
  *
- * @example
+ * **Example** (Read budget returns Effect)
+ *
  * ```ts
  * import { readArtifactBudget } from "@beep/repo-cli/commands/Qa/Extract"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readArtifactBudget("/repo/.beep/qa/round-1/artifact-budget.json"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -231,13 +243,15 @@ export const readArtifactBudget = Effect.fn("QaExtract.readArtifactBudget")(func
 /**
  * Read the sidecar extraction plan, when a previous extract wrote one.
  *
- * @example
+ * **Example** (Read plan returns Effect)
+ *
  * ```ts
  * import { readExtractionPlan } from "@beep/repo-cli/commands/Qa/Extract"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readExtractionPlan("/repo/.beep/qa/round-1/extraction-plan.json"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -284,11 +298,14 @@ const layoutOfSessionDir = Effect.fnUntraced(function* (
 /**
  * Resolve the round directory an extract or report command operates on.
  *
+ * **Details**
+ *
  * An explicit `--session` directory must still be a `round-N` directory under a
  * `.beep/qa` root; anything else would break the round-relative paths every
  * downstream artifact reference depends on.
  *
- * @example
+ * **Example** (Resolve without session option)
+ *
  * ```ts
  * import { resolveRoundLayout } from "@beep/repo-cli/commands/Qa/Extract"
  * import { Effect } from "effect"
@@ -296,6 +313,7 @@ const layoutOfSessionDir = Effect.fnUntraced(function* (
  *
  * console.log(Effect.isEffect(resolveRoundLayout("/repo", O.none()))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -332,12 +350,15 @@ const probeDuration = Effect.fn("QaExtract.probeDuration")(function* (videoPath:
 /**
  * A round's video prepared for frame-accurate extraction.
  *
+ * **Details**
+ *
  * Playwright's live-muxed webm carries no container duration, which makes
  * contact-sheet tiling fail and seeking unreliable. When the probe reports no
  * duration the video is remuxed once to h264/mp4 and every later op reads that
  * copy instead.
  *
- * @example
+ * **Example** (Make normalized prepared video)
+ *
  * ```ts
  * import { PreparedVideo } from "@beep/repo-cli/commands/Qa/Extract"
  *
@@ -348,6 +369,7 @@ const probeDuration = Effect.fn("QaExtract.probeDuration")(function* (videoPath:
  * })
  * console.log(prepared.normalized) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -426,11 +448,14 @@ const windowIndexOfLabel: (label: string) => O.Option<number> = flow(
 /**
  * Recover the witness sequence numbers an artifact label was planned from.
  *
+ * **Details**
+ *
  * `planDriverRequests` names every artifact `<ruleKind>-w<index>`, so the
  * planned window — and therefore its source events — is recoverable from the
  * produced filename without threading a parallel index through the drivers.
  *
- * @example
+ * **Example** (Sequences for empty plan)
+ *
  * ```ts
  * import { ArtifactBudget, ExtractionPlan } from "@beep/qa-capture"
  * import { windowSeqsForLabel } from "@beep/repo-cli/commands/Qa/Extract"
@@ -444,6 +469,7 @@ const windowIndexOfLabel: (label: string) => O.Option<number> = flow(
  * })
  * console.log(windowSeqsForLabel(plan, "drag-w0").length) // 0
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -569,17 +595,21 @@ const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
 /**
  * Artifacts produced by one extraction run, plus everything that went wrong.
  *
+ * **Details**
+ *
  * Driver and provenance failures are collected instead of raised so a partial
  * round still yields the evidence it did manage to render; the command exits
  * non-zero afterwards when the list is non-empty.
  *
- * @example
+ * **Example** (Make empty extraction outcome)
+ *
  * ```ts
  * import { ExtractionOutcome } from "@beep/repo-cli/commands/Qa/Extract"
  *
  * const outcome = ExtractionOutcome.make({ artifacts: [], failures: [] })
  * console.log(outcome.failures.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -738,7 +768,8 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
 /**
  * Run the full extraction pipeline over one round directory.
  *
- * @example
+ * **Example** (Dry-run extract pipeline)
+ *
  * ```ts
  * import { runQaExtract } from "@beep/repo-cli/commands/Qa/Extract"
  * import { QaExtractOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -748,6 +779,7 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
  * const options = QaExtractOptions.make({ budgetMb: O.none(), dryRun: true, rules: O.none(), session: O.none() })
  * console.log(Effect.isEffect(runQaExtract("/repo", options))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

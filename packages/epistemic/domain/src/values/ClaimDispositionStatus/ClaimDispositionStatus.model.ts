@@ -17,7 +17,8 @@ const ClaimDispositionStatusBase = LiteralKit(["active", "rejected", "superseded
  * rejection (`rejected`), or displaced by a later disposition (`superseded`).
  * There is no `conflicted` member — an unresolved conflict is not a disposition.
  *
- * @example
+ * **Example** (Decode rejected status value)
+ *
  * ```ts
  * import { ClaimDispositionStatus } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const ClaimDispositionStatus = ClaimDispositionStatusBase.pipe(
 /**
  * Runtime type for {@link ClaimDispositionStatus}.
  *
- * @example
+ * **Example** (Satisfy active status type)
+ *
  * ```ts
  * import type { ClaimDispositionStatus } from "@beep/epistemic-domain"
  *

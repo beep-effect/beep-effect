@@ -8,7 +8,8 @@
 /**
  * Grant set construction error exports.
  *
- * @example
+ * **Example** (Create GrantRevisionMismatch error)
+ *
  * ```ts
  * import { PolicyRevision } from "@beep/epistemic-domain"
  * import { GrantRevisionMismatch } from "@beep/epistemic-domain/values/GrantSet"
@@ -20,7 +21,7 @@
  * )
  * console.log(error.grantRevision)
  * ```
-
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -28,7 +29,8 @@ export * from "./GrantSet.errors.ts";
 /**
  * Grant set model exports.
  *
- * @example
+ * **Example** (Decode a DraftGrantSet)
+ *
  * ```ts
  * import { DraftGrantSet } from "@beep/epistemic-domain/values/GrantSet"
  * import * as S from "effect/Schema"
@@ -40,7 +42,7 @@ export * from "./GrantSet.errors.ts";
  * })
  * console.log(draft.state)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

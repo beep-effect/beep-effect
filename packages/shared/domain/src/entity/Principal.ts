@@ -16,15 +16,16 @@ const SystemComponentBase = LiteralKit(["Runtime", "Sync", "Migration", "Policy"
 /**
  * Shared system components that can author persisted rows.
  *
- * @example
+ * **Example** (Check Runtime component)
+ *
  * ```ts
  * import { SystemComponent } from "@beep/shared-domain/entity/Principal"
  *
  * console.log(SystemComponent.is.Runtime("Runtime"))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const SystemComponent = SystemComponentBase.pipe(
   $I.annoteSchema("SystemComponent", {
@@ -40,7 +41,8 @@ export const SystemComponent = SystemComponentBase.pipe(
 /**
  * Runtime type for {@link SystemComponent}.
  *
- * @example
+ * **Example** (Type a system component)
+ *
  * ```ts
  * import type { SystemComponent } from "@beep/shared-domain/entity/Principal"
  *
@@ -48,15 +50,16 @@ export const SystemComponent = SystemComponentBase.pipe(
  * console.log(component)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SystemComponent = typeof SystemComponent.Type;
 
 /**
  * Principal variant for a user actor.
  *
- * @example
+ * **Example** (Decode user principal)
+ *
  * ```ts
  * import { UserPrincipal } from "@beep/shared-domain/entity/Principal"
  * import * as S from "effect/Schema"
@@ -85,7 +88,8 @@ export class UserPrincipal extends S.Class<UserPrincipal>($I`UserPrincipal`)(
 /**
  * Principal variant for a service account.
  *
- * @example
+ * **Example** (Decode service account principal)
+ *
  * ```ts
  * import { ServiceAccountPrincipal } from "@beep/shared-domain/entity/Principal"
  * import * as S from "effect/Schema"
@@ -122,7 +126,8 @@ export class ServiceAccountPrincipal extends S.Class<ServiceAccountPrincipal>($I
 /**
  * Principal variant for an AI agent acting in the system.
  *
- * @example
+ * **Example** (Decode agent principal)
+ *
  * ```ts
  * import { AgentPrincipal } from "@beep/shared-domain/entity/Principal"
  * import * as S from "effect/Schema"
@@ -161,7 +166,8 @@ export class AgentPrincipal extends S.Class<AgentPrincipal>($I`AgentPrincipal`)(
 /**
  * Principal variant for a connector account.
  *
- * @example
+ * **Example** (Decode connector account principal)
+ *
  * ```ts
  * import { ConnectorAccountPrincipal } from "@beep/shared-domain/entity/Principal"
  * import * as S from "effect/Schema"
@@ -198,7 +204,8 @@ export class ConnectorAccountPrincipal extends S.Class<ConnectorAccountPrincipal
 /**
  * Principal variant for internal system work.
  *
- * @example
+ * **Example** (Create system principal)
+ *
  * ```ts
  * import { SystemPrincipal } from "@beep/shared-domain/entity/Principal"
  *
@@ -209,8 +216,8 @@ export class ConnectorAccountPrincipal extends S.Class<ConnectorAccountPrincipal
  * console.log(principal.component)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal`)(
   {
@@ -225,7 +232,8 @@ export class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal
 /**
  * Tagged union used by every BaseEntity field that names an actor.
  *
- * @example
+ * **Example** (Decode system principal)
+ *
  * ```ts
  * import { Principal } from "@beep/shared-domain/entity/Principal"
  * import * as S from "effect/Schema"
@@ -258,7 +266,8 @@ export const Principal = S.Union([
 /**
  * Runtime type for {@link Principal}.
  *
- * @example
+ * **Example** (Annotate principal value)
+ *
  * ```ts
  * import type { Principal } from "@beep/shared-domain/entity/Principal"
  *
@@ -269,15 +278,16 @@ export const Principal = S.Union([
  * console.log(principal.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Principal = typeof Principal.Type;
 
 /**
  * Encoded boundary type for {@link Principal}.
  *
- * @example
+ * **Example** (Annotate encoded principal)
+ *
  * ```ts
  * import type { Principal } from "@beep/shared-domain/entity/Principal"
  *
@@ -288,14 +298,15 @@ export type Principal = typeof Principal.Type;
  * console.log(encoded.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export declare namespace Principal {
   /**
    * Encoded boundary companion type for {@link Principal}.
    *
-   * @example
+   * **Example** (Use encoded principal type)
+   *
    * ```ts
    * import type { Principal } from "@beep/shared-domain/entity/Principal"
    *

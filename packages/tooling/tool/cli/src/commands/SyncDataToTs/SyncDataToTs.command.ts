@@ -294,13 +294,15 @@ const syncTarget = Effect.fn("syncTarget")(function* (
  * Test-only access to the per-target producer so schema proofs exercise the
  * same construction path used by the command.
  *
- * @internal
- * @example
+ * **Example** (Check testing helper type)
+ *
  * ```ts
  * import { syncTargetForTesting } from "@beep/repo-cli/test/SyncDataToTs"
  *
  * console.log(typeof syncTargetForTesting) // "function"
  * ```
+ *
+ * @internal
  * @category testing
  * @since 0.0.0
  */
@@ -520,7 +522,8 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
 /**
  * CLI command for syncing official upstream datasets into checked-in TypeScript modules.
  *
- * @example
+ * **Example** (Run sync data command)
+ *
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
  * import { Command } from "effect/unstable/cli"
@@ -529,6 +532,7 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

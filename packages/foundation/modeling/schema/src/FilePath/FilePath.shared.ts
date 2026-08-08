@@ -12,7 +12,8 @@ import * as O from "effect/Option";
 /**
  * Internal identity composer.
  *
- * @example
+ * **Example** (Compose identity identifier)
+ *
  * ```ts
  * import { $I } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -29,7 +30,8 @@ export const $I = $SchemaId.create("FilePath");
 /**
  * Matches strings beginning with a Windows drive letter prefix such as `C:`.
  *
- * @example
+ * **Example** (Test Windows drive prefix)
+ *
  * ```ts
  * import { windowsDrivePrefixRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -44,7 +46,8 @@ export const windowsDrivePrefixRegExp = /^[A-Za-z]:/;
 /**
  * Matches a full Windows drive root such as `C:` or `C:\`.
  *
- * @example
+ * **Example** (Test Windows drive root)
+ *
  * ```ts
  * import { windowsDriveRootRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -59,7 +62,8 @@ export const windowsDriveRootRegExp = /^[A-Za-z]:[\\/]?$/;
 /**
  * Matches strings beginning with the Windows UNC prefix `\\`.
  *
- * @example
+ * **Example** (Test Windows UNC prefix)
+ *
  * ```ts
  * import { windowsUncPrefixRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -74,7 +78,8 @@ export const windowsUncPrefixRegExp = /^\\\\/;
 /**
  * Matches a full Windows UNC root such as `\\server\share`.
  *
- * @example
+ * **Example** (Test Windows UNC root)
+ *
  * ```ts
  * import { windowsUncRootRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -89,7 +94,8 @@ export const windowsUncRootRegExp = /^\\\\[^\\/]+\\[^\\/]+$/;
 /**
  * Matches a Windows path segment containing no path separators.
  *
- * @example
+ * **Example** (Test segment without separators)
+ *
  * ```ts
  * import { windowsSegmentWithoutSeparatorsRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -105,7 +111,8 @@ export const windowsSegmentWithoutSeparatorsRegExp = /^[^\\/]+$/;
  * Matches a Windows path segment containing none of the reserved characters
  * `<>:"|?*`.
  *
- * @example
+ * **Example** (Test valid segment characters)
+ *
  * ```ts
  * import { windowsInvalidSegmentCharacterRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -121,7 +128,8 @@ export const windowsInvalidSegmentCharacterRegExp = /^[^<>:"|?*]+$/;
  * Matches a Windows path segment that does not end with a trailing dot or
  * space.
  *
- * @example
+ * **Example** (Test valid trailing segment)
+ *
  * ```ts
  * import { windowsInvalidTrailingSegmentRegExp } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -142,7 +150,8 @@ const matchesPattern =
 /**
  * Split a string on a separator and drop empty segments.
  *
- * @example
+ * **Example** (Split path drop empties)
+ *
  * ```ts
  * import { splitNonEmpty } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -160,7 +169,8 @@ export const splitNonEmpty = (separator: string | RegExp) => flow(Str.split(sepa
  * Check whether a path string starts with an unsupported Windows device
  * namespace prefix (`\\?\` or `\\.\`).
  *
- * @example
+ * **Example** (Detect unsupported namespace prefix)
+ *
  * ```ts
  * import { usesUnsupportedWindowsNamespacePrefix } from "../../src/FilePath/FilePath.shared.ts"
  *
@@ -179,7 +189,8 @@ export const usesUnsupportedWindowsNamespacePrefix = Match.type<string>().pipe(
 /**
  * Check whether a string starts with a Windows drive letter prefix.
  *
- * @example
+ * **Example** (Check Windows drive prefix)
+ *
  * ```ts
  * import { isWindowsDrivePrefix } from "../../src/FilePath/FilePath.shared.ts"
  *

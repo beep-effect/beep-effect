@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for DOM React node schemas.
  *
- * @example
+ * **Example** (Import namespace and list keys)
+ *
  * ```ts
  * import * as DomReactNode from "@beep/schema/DomReactNode"
  *

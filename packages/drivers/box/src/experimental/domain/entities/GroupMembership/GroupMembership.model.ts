@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/GroupMembership/GroupMemb
 /**
  * Experimental schema anchor for Box group membership records.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { GroupMembership } from "@beep/box/experimental/domain/entities/GroupMembership/GroupMembership.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class GroupMembership extends S.Class<GroupMembership>($I`GroupMembership
 /**
  * Type-level companion namespace for {@link GroupMembership} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode membership)
+ *
  * ```ts
  * import { GroupMembership } from "@beep/box/experimental/domain/entities/GroupMembership/GroupMembership.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace GroupMembership {
   /**
    * Encoded payload accepted by the {@link GroupMembership} entity schema.
    *
-   * @example
+   * **Example** (Encode empty membership)
+   *
    * ```ts
    * import { GroupMembership } from "@beep/box/experimental/domain/entities/GroupMembership/GroupMembership.model";
    * import * as S from "effect/Schema";

@@ -25,7 +25,8 @@ const HubSpotHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLessTha
 /**
  * Technical error reasons emitted by the HubSpot driver.
  *
- * @example
+ * **Example** (Decode transport reason)
+ *
  * ```ts
  * import { HubSpotErrorReason } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -52,7 +53,8 @@ export const HubSpotErrorReason = LiteralKit([
 /**
  * Type for {@link HubSpotErrorReason}.
  *
- * @example
+ * **Example** (Assign response status type)
+ *
  * ```ts
  * import type { HubSpotErrorReason as HubSpotErrorReasonType } from "@beep/hubspot"
  *
@@ -68,7 +70,8 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
 /**
  * Technical failure raised by the HubSpot driver boundary.
  *
- * @example
+ * **Example** (Create error with form context)
+ *
  * ```ts
  * import { HubSpotError } from "@beep/hubspot"
  *
@@ -112,7 +115,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
   /**
    * Create a HubSpot driver error.
    *
-   * @example
+   * **Example** (Create error with status)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -138,7 +142,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
   /**
    * Create a failed Effect containing a HubSpot driver error.
    *
-   * @example
+   * **Example** (Failed Effect from reason)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -154,7 +159,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
   /**
    * Create a thunk returning a failed Effect containing a HubSpot driver error.
    *
-   * @example
+   * **Example** (Thunk returning failed Effect)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -171,7 +177,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
 /**
  * Options used when constructing HubSpot driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { HubSpotErrorOptions } from "@beep/hubspot"
  *

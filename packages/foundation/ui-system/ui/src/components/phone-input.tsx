@@ -49,7 +49,8 @@ const phoneNumberE164Pattern = /^\+[1-9]\d{1,14}$/u;
 /**
  * Supported phone country codes from the pinned phone metadata.
  *
- * @example
+ * **Example** (Check country code support)
+ *
  * ```tsx
  * import { phoneCountryCodes } from "@beep/ui/components/phone-input"
  *
@@ -64,7 +65,8 @@ export const phoneCountryCodes: ReadonlyArray<PhoneCountryCode> = getCountries()
 /**
  * Country options filtered to the phone metadata's supported countries.
  *
- * @example
+ * **Example** (Log country options length)
+ *
  * ```tsx
  * import { phoneCountryOptions } from "@beep/ui/components/phone-input"
  *
@@ -79,7 +81,8 @@ export const phoneCountryOptions = A.filter(countryOptions, (option) => isSuppor
 /**
  * E.164 phone number value schema used by {@link PhoneInput}.
  *
- * @example
+ * **Example** (Parse unknown to E.164)
+ *
  * ```ts
  * import { PhoneNumberE164 } from "@beep/ui/components/phone-input"
  *
@@ -123,7 +126,8 @@ export const PhoneNumberE164 = S.String.check(
 /**
  * Runtime type for {@link PhoneNumberE164}.
  *
- * @example
+ * **Example** (Annotate E.164 string type)
+ *
  * ```ts
  * import type { PhoneNumberE164 } from "@beep/ui/components/phone-input"
  *
@@ -140,7 +144,8 @@ export type PhoneNumberE164 = typeof PhoneNumberE164.Type;
 /**
  * Formats draft phone input for a selected country.
  *
- * @example
+ * **Example** (Format US draft number)
+ *
  * ```tsx
  * import { formatPhoneDraft } from "@beep/ui/components/phone-input"
  *
@@ -158,7 +163,8 @@ export const formatPhoneDraft: {
 /**
  * Parses a draft phone input into E.164 when possible.
  *
- * @example
+ * **Example** (Parse draft as E.164)
+ *
  * ```tsx
  * import * as O from "effect/Option"
  * import { parsePhoneDraft } from "@beep/ui/components/phone-input"
@@ -190,7 +196,8 @@ export const parsePhoneDraft: {
  * Validates an E.164 phone number using the pinned `libphonenumber-js/min`
  * metadata.
  *
- * @example
+ * **Example** (Validate E.164 phone number)
+ *
  * ```tsx
  * import { isValidPhoneNumberE164 } from "@beep/ui/components/phone-input"
  *
@@ -205,7 +212,8 @@ export const isValidPhoneNumberE164 = (value: string): boolean => PhoneNumberE16
 /**
  * Props for a country-aware phone input that emits E.164 values.
  *
- * @example
+ * **Example** (Satisfy PhoneInputProps object)
+ *
  * ```ts
  * import type { PhoneInputProps } from "@beep/ui/components/phone-input"
  *
@@ -263,11 +271,13 @@ const PhoneInputScope = makeScopedAtom((input: PhoneInputScopeInput) =>
 /**
  * Country-aware phone input that emits E.164 strings.
  *
- * @remarks
+ * **Details**
+ *
  * `value` controls the emitted E.164 number, while the selected country lives
  * in scoped component state unless `onCountryChange` mirrors it elsewhere.
  *
- * @example
+ * **Example** (Render basic PhoneInput field)
+ *
  * ```tsx
  * import { PhoneInput } from "@beep/ui/components/phone-input"
  *

@@ -16,12 +16,14 @@ const stringEquals: {
 /**
  * Remove blank variants and keep the first spelling of each unique string.
  *
- * @remarks
+ * **Details**
+ *
  * Lookup helpers use this after generating increasingly lossy alternatives.
  * Preserving order lets exact or less-normalized spellings win before fallback
  * forms such as basenames or compact identifier spellings.
  *
- * @example
+ * **Example** (Dedupe keeping first occurrence)
+ *
  * ```typescript
  * import * as VariantText from "@beep/nlp/VariantText"
  *

@@ -25,7 +25,8 @@ const SHORT_DIGEST_LENGTH = 12;
 /**
  * Failure raised when deterministic vault path projection cannot complete.
  *
- * @example
+ * **Example** (Create projection error)
+ *
  * ```ts
  * import { TaxonomyProjectionError } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -51,7 +52,8 @@ export class TaxonomyProjectionError extends TaggedErrorClass<TaxonomyProjection
 /**
  * Input accepted by deterministic filed-document path projection.
  *
- * @example
+ * **Example** (Build filed path input)
+ *
  * ```ts
  * import {
  *   DefaultVaultFilingContext,
@@ -100,7 +102,8 @@ export class ProjectFiledDocumentPathInput extends S.Class<ProjectFiledDocumentP
 /**
  * Deterministic relative vault path for a filed document.
  *
- * @example
+ * **Example** (Decode projected vault path)
+ *
  * ```ts
  * import { ProjectedVaultPath } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -203,7 +206,8 @@ const projectedFileName = (
 /**
  * Projects a taxonomy concept decision into a deterministic vault-relative file path.
  *
- * @example
+ * **Example** (Project filed document path)
+ *
  * ```ts
  * import {
  *   DefaultVaultFilingContext,
@@ -248,7 +252,8 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
 /**
  * Input accepted by deterministic inbox document path projection.
  *
- * @example
+ * **Example** (Build inbox path input)
+ *
  * ```ts
  * import { ProjectInboxDocumentPathInput } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -285,7 +290,8 @@ export class ProjectInboxDocumentPathInput extends S.Class<ProjectInboxDocumentP
 /**
  * Projects an unfiled intake document into the deterministic inbox vault path.
  *
- * @example
+ * **Example** (Project inbox document path)
+ *
  * ```ts
  * import { ProjectInboxDocumentPathInput, projectInboxDocumentPath } from "@beep/documents-domain/values/Taxonomy"
  * import { Effect } from "effect"
@@ -319,7 +325,8 @@ export const projectInboxDocumentPath = Effect.fn("Documents.Taxonomy.projectInb
 /**
  * Projects an intake batch id into the deterministic inbox path.
  *
- * @example
+ * **Example** (Project intake batch path)
+ *
  * ```ts
  * import { projectIntakeInboxPath } from "@beep/documents-domain/values/Taxonomy"
  * import { Effect } from "effect"
@@ -337,7 +344,8 @@ export const projectIntakeInboxPath = (intakeBatchId: string): Effect.Effect<str
 /**
  * Slugifies a display value for use in vault path segments.
  *
- * @example
+ * **Example** (Slugify display value)
+ *
  * ```ts
  * import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy"
  *

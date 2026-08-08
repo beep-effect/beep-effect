@@ -16,7 +16,8 @@ const $I = $CosmosId.create("Cosmos.backend");
 /**
  * Graph viewport backend selected by the driver.
  *
- * @example
+ * **Example** (Assign cosmos backend value)
+ *
  * ```ts
  * import { CosmosBackend } from "@beep/cosmos"
  *
@@ -37,7 +38,8 @@ export const CosmosBackend = LiteralKit(["cosmos", "sigma"]).annotate(
 /**
  * Type for {@link CosmosBackend}.
  *
- * @example
+ * **Example** (Assign sigma backend type)
+ *
  * ```ts
  * import { CosmosBackend } from "@beep/cosmos"
  *
@@ -54,7 +56,8 @@ export type CosmosBackend = typeof CosmosBackend.Type;
 /**
  * Runtime WebGL2 probe result.
  *
- * @example
+ * **Example** (Create failed WebGL2 probe)
+ *
  * ```ts
  * import { CosmosCapabilityProbe } from "@beep/cosmos"
  *
@@ -82,7 +85,8 @@ export class CosmosCapabilityProbe extends S.Class<CosmosCapabilityProbe>($I`Cos
 /**
  * Driver backend selection result.
  *
- * @example
+ * **Example** (Create sigma selection result)
+ *
  * ```ts
  * import { CosmosBackendSelection } from "@beep/cosmos"
  *
@@ -123,7 +127,8 @@ const HtmlCanvasElementLike = S.declare<HTMLCanvasElement>(isHtmlCanvasElement).
 /**
  * Input options for the runtime WebGL2 probe.
  *
- * @example
+ * **Example** (Create empty probe options)
+ *
  * ```ts
  * import { ProbeWebGl2Options } from "@beep/cosmos"
  *
@@ -147,7 +152,8 @@ export class ProbeWebGl2Options extends S.Class<ProbeWebGl2Options>($I`ProbeWebG
 /**
  * Selects cosmos.gl when WebGL2 is available, otherwise sigma.js.
  *
- * @example
+ * **Example** (Select cosmos with WebGL2)
+ *
  * ```ts
  * import { CosmosCapabilityProbe, selectCosmosBackend } from "@beep/cosmos"
  *
@@ -171,7 +177,8 @@ export const selectCosmosBackend = (probe: CosmosCapabilityProbe): CosmosBackend
 /**
  * Probes WebGL2 at runtime without assuming a browser at import time.
  *
- * @example
+ * **Example** (Run runtime WebGL2 probe)
+ *
  * ```ts
  * import { probeWebGl2 } from "@beep/cosmos"
  *

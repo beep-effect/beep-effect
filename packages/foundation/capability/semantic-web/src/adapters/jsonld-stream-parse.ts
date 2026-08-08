@@ -86,7 +86,8 @@ const applyLoaderBaseIri = (
 /**
  * JSON-LD streaming parse service live layer.
  *
- * @example
+ * **Example** (Parse stream with fallback)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect, Layer } from "effect"

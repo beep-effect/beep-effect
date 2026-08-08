@@ -16,15 +16,16 @@ const $I = $LawPracticeDomainId.create("values/ConstitutionalCitation/Constituti
 /**
  * A constitutional citation (type: `constitutional`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `constitutional`
  * discriminant tag plus the constitution-specific components: jurisdiction,
  * article/amendment/preamble (mutually exclusive), section, clause, an optional
  * post-reform `currentLocation`, and the {@link ConstitutionalComponentSpan}
  * that locates each part in the source text.
  *
- * **Example**
+ * **Example** (Make a constitutional citation)
  *
- * @example
  * ```ts
  * import { ConstitutionalCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -124,7 +125,8 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
 /**
  * Companion namespace for `ConstitutionalCitation`.
  *
- * @example
+ * **Example** (Access Encoded type field)
+ *
  * ```ts
  * import type { ConstitutionalCitation } from "@beep/law-practice-domain"
  *
@@ -139,9 +141,8 @@ export declare namespace ConstitutionalCitation {
   /**
    * Wire-encoded representation of a decoded {@link ConstitutionalCitation}.
    *
-   * **Example**
+   * **Example** (Define Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { ConstitutionalCitation } from "@beep/law-practice-domain"
    *

@@ -74,7 +74,8 @@ const AppendFileSyncEncoding = S.Literals([
  * Options for {@link appendFileSync}, mirroring Node's `fs.appendFileSync`
  * options object.
  *
- * @example
+ * **Example** (Make append options)
+ *
  * ```ts
  * import { AppendFileSyncOptions } from "@beep/utils/FileSystem"
  *
@@ -106,7 +107,8 @@ export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`App
  * Options for {@link rmSync}, mirroring the `recursive`/`force` flags of Node's
  * `fs.rmSync`.
  *
- * @example
+ * **Example** (Make recursive force options)
+ *
  * ```ts
  * import { RmSyncOptions } from "@beep/utils/FileSystem"
  *
@@ -135,7 +137,8 @@ export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
  * Options for {@link readdirSync}. When `withFileTypes` is `true`, the effect
  * resolves with `node:fs` `Dirent` entries instead of plain name strings.
  *
- * @example
+ * **Example** (Make withFileTypes options)
+ *
  * ```ts
  * import { ReaddirSyncOptions } from "@beep/utils/FileSystem"
  *
@@ -240,11 +243,14 @@ const toFileInfo = (stats: NodeStats): FileSystem.File.Info => ({
 /**
  * Appends `data` to the file at `path`, creating it if it does not exist.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `appendFileSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel; narrow them via `error.reason._tag`.
  *
- * @example
+ * **Example** (Append log entry)
+ *
  * ```ts
  * import { appendFileSync } from "@beep/utils/FileSystem"
  *
@@ -284,11 +290,14 @@ export const appendFileSync: {
 /**
  * Reports whether a path exists.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `existsSync`. Because
  * `fs.existsSync` swallows every error and returns `false` instead of throwing,
  * this effect has no failure channel.
  *
- * @example
+ * **Example** (Check path exists)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { existsSync } from "@beep/utils/FileSystem"
@@ -306,11 +315,14 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
 /**
  * Removes the file or directory at `path`, honoring `recursive`/`force`.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `rmSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (Remove directory recursively)
+ *
  * ```ts
  * import { rmSync } from "@beep/utils/FileSystem"
  *
@@ -337,11 +349,14 @@ export const rmSync: {
 /**
  * Renames (moves) a path from `oldPath` to `newPath`.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `renameSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (Rename temporary file)
+ *
  * ```ts
  * import { renameSync } from "@beep/utils/FileSystem"
  *
@@ -378,6 +393,8 @@ const readdirSyncImpl = (
 /**
  * Lists the entries of a directory.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `readdirSync`. By default the
  * effect resolves with entry name strings; pass `{ withFileTypes: true }` to
  * resolve with `node:fs` `Dirent` entries (whose `isDirectory()`/
@@ -385,7 +402,8 @@ const readdirSyncImpl = (
  * `Effect.runSync` at a boundary; failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (List directory names)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { readdirSync } from "@beep/utils/FileSystem"
@@ -420,13 +438,16 @@ export function readdirSync(
 /**
  * Returns effect's `FileSystem.File.Info` for a path.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `statSync`, mapping the
  * resulting `Stats` into effect's `File.Info` (so `info.type === "Directory"`
  * replaces the raw `stats.isDirectory()` check, timestamps are `Option<Date>`,
  * and `info.size` is a `bigint`). Run it with `Effect.runSync` at a boundary;
  * failures surface on the wrapped `PlatformError` channel.
  *
- * @example
+ * **Example** (Read path file info)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { statSync } from "@beep/utils/FileSystem"
@@ -449,6 +470,8 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  * Creates a dual API helper that waits for the first file-system watch event
  * in `directory` whose basename matches `name`.
  *
+ * **Details**
+ *
  * The returned function subscribes to `FileSystem.watch(directory)`, filters
  * events by exact file name, and resolves with the first matching
  * `WatchEvent`. If the watch stream ends before a match is observed, the
@@ -458,7 +481,8 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  * - Data-first: `waitForFile("/tmp", "done.txt")`
  * - Data-last: `pipe("/tmp", waitForFile("done.txt"))`
  *
- * @example
+ * **Example** (Wait for ready file)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { makeWaitForFile } from "@beep/utils/FileSystem"

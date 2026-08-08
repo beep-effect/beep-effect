@@ -1,7 +1,8 @@
 /**
  * Product-neutral DuckDB execution service and native Node API layer builders.
  *
- * @remarks
+ * **Details**
+ *
  * The service boundary exposes SQL execution, read queries, transactions, and
  * table-to-Parquet export without leaking `@duckdb/node-api` connection types
  * into domain packages. The native implementation uses a shared connection and
@@ -27,7 +28,8 @@ const $I = $DuckdbId.create("DuckDb.service");
 /**
  * Positional or named parameters accepted by DuckDB statements.
  *
- * @example
+ * **Example** (Positional and named parameters)
+ *
  * ```ts
  * import type { DuckDbQueryParameters } from "@beep/duckdb"
  *
@@ -45,13 +47,15 @@ export type DuckDbQueryParameters = Array<DuckDBValue> | Record<string, DuckDBVa
 /**
  * Adapter contract accepted by {@link DuckDb.makeLayer}.
  *
- * @remarks
+ * **Details**
+ *
  * Use this interface when a test, host application, or alternate runtime wants
  * to provide DuckDB behavior without depending on the native Node API
  * implementation exported by this package. Implementations should normalize
  * recoverable failures into {@link DuckDbError}.
  *
- * @example
+ * **Example** (Stub client for tests)
+ *
  * ```ts
  * import type { DuckDbClient, DuckDbRows } from "@beep/duckdb"
  * import { Effect } from "effect"
@@ -79,14 +83,14 @@ export interface DuckDbClient {
   /**
    * Export a table through DuckDB's Parquet writer.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * Native implementations reject calls made from a transaction-scoped client
    * because DuckDB writes the Parquet file outside the database transaction and
    * cannot roll that filesystem side effect back.
    *
    * @effects
    * Requests DuckDB to write a Parquet file at `request.filePath`.
-   *
    * @since 0.0.0
    */
   readonly copyTableToParquet: (request: DuckDbParquetExport) => Effect.Effect<void, DuckDbError>;
@@ -121,7 +125,8 @@ export interface DuckDbClient {
   /**
    * Execute work inside a DuckDB transaction.
    *
-   * @remarks
+   * **Details**
+   *
    * Native implementations begin a transaction for the outer call, commit on
    * success, and roll back on failure. Calls made on an already transactional
    * client reuse the active transaction client instead of opening a nested
@@ -130,7 +135,6 @@ export interface DuckDbClient {
    * @effects
    * Mutates transaction state on the backing connection with `BEGIN`,
    * `COMMIT`, or `ROLLBACK`.
-   *
    * @since 0.0.0
    */
   readonly withTransaction: <A, R>(
@@ -141,12 +145,14 @@ export interface DuckDbClient {
 /**
  * Runtime shape exposed by the {@link DuckDb} service tag.
  *
- * @remarks
+ * **Details**
+ *
  * Application code depends on this service shape rather than on native
  * `@duckdb/node-api` connection objects. The shape mirrors {@link DuckDbClient}
  * so production layers, host adapters, and tests can share the same boundary.
  *
- * @example
+ * **Example** (Service shape stub)
+ *
  * ```ts
  * import type { DuckDbRows, DuckDbShape } from "@beep/duckdb"
  * import { Effect } from "effect"
@@ -450,13 +456,15 @@ const makeNodeLayer = (options: DuckDbConnectionOptions): Layer.Layer<DuckDb> =>
 /**
  * Effect service for product-neutral DuckDB execution.
  *
- * @remarks
+ * **Details**
+ *
  * Yield this service from Effect programs that need DuckDB execution. Use
  * {@link DuckDb.makeNodeLayer} for managed native connection lifetime, or
  * {@link DuckDb.makeLayer} when tests or host code provide a compatible
  * adapter.
  *
- * @example
+ * **Example** (Provide adapter via layer)
+ *
  * ```ts
  * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
  * import { Effect } from "effect"
@@ -484,12 +492,14 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
   /**
    * Build a Layer from a narrow product-neutral DuckDB adapter.
    *
-   * @remarks
+   * **Details**
+   *
    * This constructor does not acquire a native DuckDB connection. It only
    * installs the supplied adapter under the {@link DuckDb} service key, which
    * is useful for tests and host-owned database runtimes.
    *
-   * @example
+   * **Example** (Layer from adapter client)
+   *
    * ```ts
    * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
    * import { Effect } from "effect"
@@ -518,13 +528,15 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
   /**
    * Build a native DuckDB Node API client.
    *
-   * @remarks
+   * **Details**
+   *
    * The returned client lazily opens one shared native connection on first use
    * and serializes operations through that connection. Prefer
    * {@link DuckDb.makeNodeLayer} when the connection should be closed with an
    * Effect scope finalizer.
    *
-   * @example
+   * **Example** (In-memory native client)
+   *
    * ```ts
    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
    * import { Effect } from "effect"
@@ -550,12 +562,14 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
   /**
    * Build the native DuckDB Node API service layer.
    *
-   * @remarks
+   * **Details**
+   *
    * The layer registers a scope finalizer that closes both the shared
    * connection and DuckDB instance. Use this constructor for application code
    * that wants native resources tied to an Effect scope.
    *
-   * @example
+   * **Example** (Scoped native service layer)
+   *
    * ```ts
    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
    * import { Effect } from "effect"

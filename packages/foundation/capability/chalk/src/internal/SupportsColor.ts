@@ -528,7 +528,8 @@ const supportsColorLevel = ({
 /**
  * Detect color support for a stream and process-like runtime.
  *
- * @example
+ * **Example** (Force color via env)
+ *
  * ```ts
  * import { createSupportsColor } from "./SupportsColor.ts"
  *
@@ -568,7 +569,8 @@ export const createSupportsColor = ({
 /**
  * Color support detected for the current Node.js stdout and stderr streams.
  *
- * @example
+ * **Example** (Log detected stdout support)
+ *
  * ```ts
  * import { detectedSupportsColor } from "./SupportsColor.ts"
  *

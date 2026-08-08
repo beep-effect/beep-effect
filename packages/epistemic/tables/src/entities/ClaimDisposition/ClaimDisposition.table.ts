@@ -11,7 +11,8 @@ import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDispositi
 /**
  * PGLite/Postgres Drizzle table for the epistemic ClaimDisposition entity.
  *
- * @example
+ * **Example** (Log table definition name)
+ *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-tables/entities"
  *

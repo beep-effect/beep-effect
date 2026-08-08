@@ -93,11 +93,14 @@ const configuredPath = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
 /**
  * Expands a leading `~` or `~/` segment to the current user's home directory.
  *
+ * **Details**
+ *
  * Spawned CLI processes get no shell expansion, so configured HOME and
  * executable paths that start with a tilde must be expanded before they reach
  * the process runner.
  *
- * @example
+ * **Example** (Expand tilde to home)
+ *
  * ```ts
  * import * as NodeOS from "node:os"
  * import { expandTildePath } from "@beep/ai-provider-cli"
@@ -414,7 +417,8 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
 /**
  * Effect service for provider CLI home isolation mechanics.
  *
- * @remarks
+ * **Details**
+ *
  * Claude instances are isolated by pointing `HOME` at a dedicated directory;
  * Codex instances are isolated by pointing `CODEX_HOME` at either the shared
  * home (`direct`) or a shadow home (`authOverlay`). `ensureCodexShadowHome`
@@ -422,7 +426,8 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
  * shared home, private credential entries (`auth.json`, `models_cache.json`)
  * stay real files, and a symlinked `auth.json` is refused.
  *
- * @example
+ * **Example** (Ensure Codex shadow home)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -445,7 +450,6 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
  * `ensureCodexShadowHome` creates directories and manages symlinks beneath
  * the configured shared and shadow home paths through the provided
  * `FileSystem`; the resolve and env helpers perform no filesystem writes.
- *
  * @category services
  * @since 0.0.0
  */
@@ -455,7 +459,8 @@ export class AiProviderCliHome extends Context.Service<AiProviderCliHome, AiProv
   /**
    * Live provider CLI home layer backed by platform `FileSystem` and `Path`.
    *
-   * @example
+   * **Example** (Access live home layer)
+   *
    * ```ts
    * import { AiProviderCliHome } from "@beep/ai-provider-cli"
    *

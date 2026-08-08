@@ -33,12 +33,14 @@ export { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 /**
  * The repo's canonical 2-space JSONC formatting options.
  *
- * @example
+ * **Example** (Access tabSize option)
+ *
  * ```ts
  * import { JSONC_FORMATTING_OPTIONS } from "@beep/repo-cli/internal/cli/Jsonc"
  *
  * console.log(JSONC_FORMATTING_OPTIONS.tabSize)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -50,19 +52,23 @@ export const JSONC_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
 /**
  * A comment-preserving JSONC modification request.
  *
+ * **Details**
+ *
  * `path` is a `jsonc-parser` JSON path (string/number segments); `value` is the
  * arbitrary JSON value to write; `isArrayInsertion` inserts at an array index
  * rather than replacing (the only `jsonc.ModificationOptions` flag any call site
  * uses — `formattingOptions` is always the module default and `getInsertionIndex`
  * is unused).
  *
- * @example
+ * **Example** (Create modification request)
+ *
  * ```ts
  * import { JsoncModification } from "@beep/repo-cli/internal/cli/Jsonc"
  *
  * const request = JsoncModification.make({ content: '{ "a": 1 }', path: ["a"], value: 2 })
  * console.log(request.path)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -82,15 +88,17 @@ export class JsoncModification extends S.Class<JsoncModification>($I`JsoncModifi
  * Apply a comment-preserving modification at a JSON path, formatted with
  * {@link JSONC_FORMATTING_OPTIONS}.
  *
- * @param request - The content, JSON path, value, and optional array-insertion flag.
- * @returns The edited JSONC text with comments and unrelated formatting preserved.
- * @example
+ * **Example** (Update value at path)
+ *
  * ```ts
  * import { applyJsoncModification } from "@beep/repo-cli/internal/cli/Jsonc"
  *
  * const next = applyJsoncModification({ content: '{\n  "a": 1\n}', path: ["a"], value: 2 })
  * console.log(next.includes('"a": 2'))
  * ```
+ *
+ * @param request - The content, JSON path, value, and optional array-insertion flag.
+ * @returns The edited JSONC text with comments and unrelated formatting preserved.
  * @category editing
  * @since 0.0.0
  */
@@ -105,17 +113,21 @@ export const applyJsoncModification = (request: JsoncModification): string => {
 /**
  * Re-format JSON/JSONC text with {@link JSONC_FORMATTING_OPTIONS}.
  *
+ * **Details**
+ *
  * Returns the formatted text without a trailing newline; callers that need one
  * (for example writing a file) append it themselves.
  *
- * @param content - JSON/JSONC source text to format.
- * @returns The re-formatted text.
- * @example
+ * **Example** (Format minified JSON)
+ *
  * ```ts
  * import { jsonText } from "@beep/repo-cli/internal/cli/Jsonc"
  *
  * console.log(jsonText('{"a":1}').includes('"a": 1'))
  * ```
+ *
+ * @param content - JSON/JSONC source text to format.
+ * @returns The re-formatted text.
  * @category editing
  * @since 0.0.0
  */

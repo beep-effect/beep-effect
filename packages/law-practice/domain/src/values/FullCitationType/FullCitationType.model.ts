@@ -17,14 +17,15 @@ const $I = $LawPracticeDomainId.create("values/FullCitationType/FullCitationType
 /**
  * Citation type discriminators for full (non-short-form) citations.
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `FullCitationType.Enum` for typed literal access, `FullCitationType.is`
  * for per-literal guards, and `FullCitationType.Options` for the full literal
  * list.
  *
- * **Example**
+ * **Example** (Decode and use helpers)
  *
- * @example
  * ```ts
  * import { FullCitationType } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -69,9 +70,8 @@ export const FullCitationType = LiteralKit([
  * The decoded literal type for {@link FullCitationType} — a union of every full
  * citation kind (`"case" | "docket" | "statute" | ...`).
  *
- * **Example**
+ * **Example** (Annotate full citation kind)
  *
- * @example
  * ```ts
  * import type { FullCitationType } from "@beep/law-practice-domain"
  *

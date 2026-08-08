@@ -32,7 +32,8 @@ const CsvText = S.String.pipe(
 /**
  * Object-like row schema contract accepted by the CSV schema factory.
  *
- * @example
+ * **Example** (Satisfy row schema contract)
+ *
  * ```ts
  * import type { RowSchemaWithFields } from "@beep/schema/Csv"
  * import * as S from "effect/Schema"
@@ -51,7 +52,8 @@ export type RowSchemaWithFields = S.Top & {
 /**
  * Schema transformation returned by the CSV schema factory for a row schema.
  *
- * @example
+ * **Example** (Decode CSV document rows)
+ *
  * ```ts
  * import type { CsvDocument } from "@beep/schema/Csv"
  * import { CSV } from "@beep/schema/Csv"
@@ -286,11 +288,14 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  * Schema factory for CSV documents whose rows are validated by the provided
  * row schema.
  *
+ * **Details**
+ *
  * The row schema must be an object-like Effect schema with named fields. CSV
  * cells remain string boundaries, so callers should use string-backed field
  * schemas such as `S.FiniteFromString` when coercion is needed.
  *
- * @example
+ * **Example** (Decode CSV with coercion)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -331,7 +336,8 @@ export const Csv: {
  * Branded runtime type for CSV document text produced by encoding a `CSV`
  * schema.
  *
- * @example
+ * **Example** (Type branded CSV text)
+ *
  * ```ts
  * import type { CsvText } from "@beep/schema/Csv"
  *
@@ -355,7 +361,8 @@ export { Csv as CSV, Csv as Schema };
 /**
  * Runtime type extracted from the {@link CSV} alias.
  *
- * @example
+ * **Example** (Type CSV schema alias)
+ *
  * ```ts
  * import { CSV } from "@beep/schema/Csv"
  * import type { CSV as CSVSchema } from "@beep/schema/Csv"
@@ -376,7 +383,8 @@ export type CSV<RowSchema extends RowSchemaWithFields> = CsvDocument<RowSchema>;
 /**
  * Runtime type extracted from the {@link Schema} alias.
  *
- * @example
+ * **Example** (Type Schema alias usage)
+ *
  * ```ts
  * import { Schema as CsvSchema } from "@beep/schema/Csv"
  * import type { Schema as CsvSchemaType } from "@beep/schema/Csv"

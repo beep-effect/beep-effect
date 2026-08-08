@@ -41,6 +41,8 @@ const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 /**
  * Configurable allow-list of directories the streaming file tools may read.
  *
+ * **Details**
+ *
  * Local reads issued by the streaming MCP tools are constrained to these roots:
  * a caller-supplied path is accepted only when it canonically resolves inside at
  * least one configured root (see {@link resolveLocalPath}). The reference
@@ -52,15 +54,16 @@ const PositiveInteger = S.Int.check(S.isGreaterThan(0));
  * when no override layer is supplied; provide {@link layerAllowedRoots} to widen
  * the allow-list for a particular runtime.
  *
- * @example
+ * **Example** (Log allow-list reference key)
+ *
  * ```ts
  * import { StreamingAllowedRoots } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(StreamingAllowedRoots.key)
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const StreamingAllowedRoots: Context.Reference<ReadonlyArray<string>> = Context.Reference<ReadonlyArray<string>>(
   $I`StreamingAllowedRoots`,
@@ -72,12 +75,15 @@ export const StreamingAllowedRoots: Context.Reference<ReadonlyArray<string>> = C
 /**
  * Build a layer that overrides the {@link StreamingAllowedRoots} allow-list.
  *
+ * **Details**
+ *
  * Pass one or more directories that the streaming file tools are permitted to
  * read from. Paths are resolved within these roots and any candidate that
  * escapes every root (absolute path outside the roots, `..` traversal, or a
  * symlink pointing outside) is rejected before any bytes are read.
  *
- * @example
+ * **Example** (Override roots with dataset path)
+ *
  * ```ts
  * import { layerAllowedRoots } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -85,8 +91,8 @@ export const StreamingAllowedRoots: Context.Reference<ReadonlyArray<string>> = C
  * console.log(DatasetRoots)
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const layerAllowedRoots = (roots: ReadonlyArray<string>): Layer.Layer<never> =>
   Layer.succeed(StreamingAllowedRoots)(roots);
@@ -94,6 +100,8 @@ export const layerAllowedRoots = (roots: ReadonlyArray<string>): Layer.Layer<nev
 /**
  * Resolve a caller-supplied path against the configured allowed roots, failing
  * closed before any filesystem access.
+ *
+ * **Details**
  *
  * The streaming MCP tools accept attacker-controllable path strings, so each
  * candidate is resolved against every {@link StreamingAllowedRoots} entry via
@@ -104,7 +112,8 @@ export const layerAllowedRoots = (roots: ReadonlyArray<string>): Layer.Layer<nev
  * read helpers keep their existing `PlatformError` failure type while still
  * refusing the read before any bytes are touched.
  *
- * @example
+ * **Example** (Resolve path under allowed roots)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
@@ -121,8 +130,8 @@ export const layerAllowedRoots = (roots: ReadonlyArray<string>): Layer.Layer<nev
  * Effect.runPromise(program).then(console.log)
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const resolveLocalPath: (
   filePath: string
@@ -149,7 +158,8 @@ const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
 /**
  * Text decoding labels accepted by the streaming text helpers.
  *
- * @example
+ * **Example** (Parse encoding from unknown)
+ *
  * ```ts
  * import { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -173,7 +183,8 @@ export const TextEncoding = TextEncodingBase.pipe(
 /**
  * Type for {@link TextEncoding}.
  *
- * @example
+ * **Example** (Annotate latin1 encoding value)
+ *
  * ```ts
  * import type { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -181,8 +192,8 @@ export const TextEncoding = TextEncodingBase.pipe(
  * console.log(encoding)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextEncoding = typeof TextEncoding.Type;
 
@@ -191,7 +202,8 @@ const DEFAULT_ENCODING: TextEncoding = "utf-8";
 /**
  * Per-line processing options shared by the read-oriented helpers.
  *
- * @example
+ * **Example** (Make skipEmpty trim options)
+ *
  * ```ts
  * import { TextReadOptions } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -199,8 +211,8 @@ const DEFAULT_ENCODING: TextEncoding = "utf-8";
  * console.log(options.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions`)(
   {
@@ -222,7 +234,8 @@ export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions
 /**
  * Streaming options that extend {@link TextReadOptions} with windowing controls.
  *
- * @example
+ * **Example** (Make maxLines skip options)
+ *
  * ```ts
  * import { TextStreamOptions } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -230,8 +243,8 @@ export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions
  * console.log(options.maxLines)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamOptions`)(
   {
@@ -251,7 +264,8 @@ export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamO
 /**
  * Aggregate line-length and byte statistics computed for a text file.
  *
- * @example
+ * **Example** (Construct aggregate line stats)
+ *
  * ```ts
  * import { TextStreamStats } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -266,8 +280,8 @@ export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamO
  * console.log(stats.totalLines)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextStreamStats extends S.Class<TextStreamStats>($I`TextStreamStats`)(
   {
@@ -300,12 +314,15 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
 /**
  * Stream a text file as a sequence of processed lines.
  *
+ * **Details**
+ *
  * Bytes are decoded with the requested encoding then split on line boundaries;
  * `skip` and `maxLines` window the result while `trim`/`skipEmpty` shape each
  * emitted line. The stream surfaces the platform's `PlatformError` channel and
  * requires the {@link FileSystem.FileSystem} and {@link Path.Path} services.
  *
- * @example
+ * **Example** (Stream trimmed windowed lines)
+ *
  * ```ts
  * import * as Stream from "effect/Stream"
  * import { streamLines } from "@beep/nlp-mcp/Streaming/TextStream"
@@ -314,8 +331,8 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
  * console.log(Stream.runCollect(lines))
  * ```
  *
- * @since 0.0.0
  * @category streams
+ * @since 0.0.0
  */
 export const streamLines: {
   (
@@ -354,18 +371,21 @@ export const streamLines: {
 /**
  * Collect a text file into an array of processed lines.
  *
+ * **Details**
+ *
  * Loads every emitted line into memory; prefer {@link streamLines} for large
  * inputs where incremental processing is sufficient.
  *
- * @example
+ * **Example** (Collect non-empty file lines)
+ *
  * ```ts
  * import { readLines } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(readLines("/tmp/data.txt", { skipEmpty: true }))
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const readLines: {
   (
@@ -387,7 +407,8 @@ export const readLines: {
 /**
  * Read an entire text file into a single decoded string.
  *
- * @example
+ * **Example** (Read whole decoded text file)
+ *
  * ```ts
  * import { readTextFile } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -396,9 +417,8 @@ export const readLines: {
  *
  * @effects Requires `FileSystem` and `Path`, resolves the supplied file path,
  * and fails with `PlatformError` when the file cannot be read or decoded.
- *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const readTextFile = Effect.fn("TextStream.readTextFile")(function* (
   filePath: string,
@@ -412,15 +432,16 @@ export const readTextFile = Effect.fn("TextStream.readTextFile")(function* (
 /**
  * Read the first `n` processed lines of a text file.
  *
- * @example
+ * **Example** (Read first five file lines)
+ *
  * ```ts
  * import { head } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(head("/tmp/data.txt", { n: 5 }))
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const head: {
   (
@@ -444,15 +465,16 @@ export const head: {
 /**
  * Read the last `n` processed lines of a text file.
  *
- * @example
+ * **Example** (Read last five file lines)
+ *
  * ```ts
  * import { tail } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(tail("/tmp/data.txt", { n: 5 }))
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const tail: {
   (
@@ -476,11 +498,14 @@ export const tail: {
 /**
  * Sample up to `sampleSize` processed lines uniformly at random.
  *
+ * **Details**
+ *
  * When the file has at most `sampleSize` processed lines they are returned in
  * order; otherwise a deterministic-by-{@link Random} shuffle selects the sample,
  * which is then re-sorted into original document order.
  *
- * @example
+ * **Example** (Sample three random lines)
+ *
  * ```ts
  * import { sampleLines } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -490,9 +515,8 @@ export const tail: {
  * @effects Reads processed lines through {@link readLines} and uses the Effect
  * `Random` service to choose sample indices when the file contains more than
  * `sampleSize` lines.
- *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const sampleLines = Effect.fn("TextStream.sampleLines")(function* (
   filePath: string,
@@ -516,15 +540,16 @@ export const sampleLines = Effect.fn("TextStream.sampleLines")(function* (
 /**
  * Count the processed lines in a text file without buffering them.
  *
- * @example
+ * **Example** (Count processed file lines)
+ *
  * ```ts
  * import { countLines } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(countLines("/tmp/data.txt"))
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const countLines: {
   (
@@ -546,7 +571,8 @@ export const countLines: {
 /**
  * Report whether a path exists.
  *
- * @example
+ * **Example** (Check whether path exists)
+ *
  * ```ts
  * import { fileExists } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -555,9 +581,8 @@ export const countLines: {
  *
  * @effects Requires `FileSystem` and `Path`, resolves the supplied file path,
  * and queries the platform file system for path existence.
- *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const fileExists = Effect.fn("TextStream.fileExists")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -568,7 +593,8 @@ export const fileExists = Effect.fn("TextStream.fileExists")(function* (filePath
 /**
  * Report the size of a file in bytes.
  *
- * @example
+ * **Example** (Report file size in bytes)
+ *
  * ```ts
  * import { getFileSize } from "@beep/nlp-mcp/Streaming/TextStream"
  *
@@ -577,9 +603,8 @@ export const fileExists = Effect.fn("TextStream.fileExists")(function* (filePath
  *
  * @effects Requires `FileSystem` and `Path`, resolves the supplied file path,
  * and fails with `PlatformError` when the file cannot be statted.
- *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const getFileSize = Effect.fn("TextStream.getFileSize")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -591,18 +616,21 @@ export const getFileSize = Effect.fn("TextStream.getFileSize")(function* (filePa
 /**
  * Compute aggregate line-length and byte statistics for a text file.
  *
+ * **Details**
+ *
  * The accumulator runs in a single streaming pass; `totalBytes` charges each
  * processed line its UTF-8 byte length plus one newline separator.
  *
- * @example
+ * **Example** (Compute trimmed line statistics)
+ *
  * ```ts
  * import { computeStats } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * console.log(computeStats("/tmp/data.txt", { trim: true }))
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const computeStats: {
   (

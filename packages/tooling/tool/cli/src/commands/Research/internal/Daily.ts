@@ -33,7 +33,8 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 /**
  * Commit changed vault files when the daily pipeline is configured to commit.
  *
- * @example
+ * **Example** (Commit vault git changes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { commitVault } from "@beep/repo-cli/commands/Research/internal/Daily"
@@ -42,6 +43,7 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
  * const program = commitVault("/repo/.research")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category processes
  * @since 0.0.0
  */
@@ -86,7 +88,8 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
 /**
  * Run the daily research pipeline steps in order.
  *
- * @example
+ * **Example** (Daily pipeline with options)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily"
@@ -103,6 +106,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */

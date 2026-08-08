@@ -15,7 +15,8 @@ const make = EntityId.factory("architecture_lab", $I);
 /**
  * Architecture lab Worker entity identifier.
  *
- * @example
+ * **Example** (Decode WorkerId from number)
+ *
  * ```ts
  * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
@@ -37,7 +38,8 @@ export const WorkerId = make("worker", {
 /**
  * Runtime type for {@link WorkerId}.
  *
- * @example
+ * **Example** (WorkerId type array usage)
+ *
  * ```ts
  * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"

@@ -53,12 +53,14 @@ class DocNewOptions extends S.Class<DocNewOptions>($I`DocNewOptions`)(
 /**
  * Represents a one-based source location in a parsed file.
  *
- * @example
+ * **Example** (Creating a Position)
+ *
  * ```ts
  * import { Position } from "@beep/repo-docgen/Domain"
  * const position = Position.new(1, 1)
  * console.log(position)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,7 +100,8 @@ export class Position extends S.Class<Position>($I`Position`)(
 /**
  * Represents normalized JSDoc metadata for a documented symbol.
  *
- * @example
+ * **Example** (Creating a Doc)
+ *
  * ```ts
  * import { Doc } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -112,6 +115,7 @@ export class Position extends S.Class<Position>($I`Position`)(
  * })
  * console.log(doc)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -203,7 +207,8 @@ class SignaturePositionOptions extends S.Class<SignaturePositionOptions>($I`Sign
 /**
  * Represents a named documented API member with source and signature metadata.
  *
- * @example
+ * **Example** (Creating a DocEntry)
+ *
  * ```ts
  * import { Doc, DocEntry, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -221,6 +226,7 @@ class SignaturePositionOptions extends S.Class<SignaturePositionOptions>($I`Sign
  * })
  * console.log(entry)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -282,7 +288,8 @@ class ClassNewOptions extends S.Class<ClassNewOptions>($I`ClassNewOptions`)(
 /**
  * Represents a documented class and its emitted member structure.
  *
- * @example
+ * **Example** (Creating a Class model)
+ *
  * ```ts
  * import { Class, Doc, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -303,6 +310,7 @@ class ClassNewOptions extends S.Class<ClassNewOptions>($I`ClassNewOptions`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -364,7 +372,8 @@ export class Class extends S.TaggedClass<Class>($I`Class`)(
 /**
  * Represents a documented interface declaration.
  *
- * @example
+ * **Example** (Creating an Interface model)
+ *
  * ```ts
  * import { Doc, Interface, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -382,6 +391,7 @@ export class Class extends S.TaggedClass<Class>($I`Class`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -431,7 +441,8 @@ export class Interface extends S.TaggedClass<Interface>($I`Interface`)(
 /**
  * Represents a documented function declaration or function-valued export.
  *
- * @example
+ * **Example** (Creating a Function model)
+ *
  * ```ts
  * import { Doc, Function, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -449,6 +460,7 @@ export class Interface extends S.TaggedClass<Interface>($I`Interface`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -498,7 +510,8 @@ export class Function extends S.TaggedClass<Function>($I`Function`)(
 /**
  * Represents a documented type alias declaration.
  *
- * @example
+ * **Example** (Creating a TypeAlias model)
+ *
  * ```ts
  * import { Doc, Position, TypeAlias } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -516,6 +529,7 @@ export class Function extends S.TaggedClass<Function>($I`Function`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -565,7 +579,8 @@ export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)(
 /**
  * Represents a documented exported constant declaration.
  *
- * @example
+ * **Example** (Creating a Constant model)
+ *
  * ```ts
  * import { Constant, Doc, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -583,6 +598,7 @@ export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -643,10 +659,13 @@ class ExportNewOptions extends S.Class<ExportNewOptions>($I`ExportNewOptions`)(
 /**
  * Represents a named export declaration that is documented separately from its original declaration.
  *
- * @remarks
+ * **Details**
+ *
  * Namespace export declarations are marked with `isNamespaceExport` so the printer can label
  * `export * as Name from "./module.ts"` differently from named export lists.
- * @example
+ *
+ * **Example** (Creating an Export model)
+ *
  * ```ts
  * import { Doc, Export, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -665,6 +684,7 @@ class ExportNewOptions extends S.Class<ExportNewOptions>($I`ExportNewOptions`)(
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -733,7 +753,8 @@ type NamespaceNewOptions = Omit<NamespaceNewOptionsShape, "namespaces"> & {
 /**
  * Represents a documented namespace and its nested exported members.
  *
- * @example
+ * **Example** (Creating a Namespace model)
+ *
  * ```ts
  * import { Doc, Namespace, Position } from "@beep/repo-docgen/Domain"
  * const doc = Doc.new("Description.", {
@@ -753,6 +774,7 @@ type NamespaceNewOptions = Omit<NamespaceNewOptionsShape, "namespaces"> & {
  * })
  * console.log(model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -829,7 +851,8 @@ class ModuleNewOptions extends S.Class<ModuleNewOptions>($I`ModuleNewOptions`)(
 /**
  * Represents a fully parsed module ready for validation and printing.
  *
- * @example
+ * **Example** (Creating a Module instance)
+ *
  * ```ts
  * import { Project } from "ts-morph"
  * import { Doc, Module } from "@beep/repo-docgen/Domain"
@@ -861,6 +884,7 @@ class ModuleNewOptions extends S.Class<ModuleNewOptions>($I`ModuleNewOptions`)(
  *
  * console.log(module.path)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -950,7 +974,8 @@ type FileNewOptionsInput = Exclude<(typeof FileNewOptions)["~type.make.in"], voi
 /**
  * Ordering that sorts modules by their normalized lowercase source path.
  *
- * @example
+ * **Example** (Sorting modules by path)
+ *
  * ```ts
  * import * as A from "effect/Array"
  * import { Project } from "ts-morph"
@@ -995,6 +1020,7 @@ type FileNewOptionsInput = Exclude<(typeof FileNewOptions)["~type.make.in"], voi
  * console.log(sorted[0]?.name)
  * console.log(ByPath(second)(first))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1009,12 +1035,14 @@ export const ByPath: {
 /**
  * Represents a file which can be optionally overwritable.
  *
- * @example
+ * **Example** (Creating an overwritable File)
+ *
  * ```ts
  * import { File } from "@beep/repo-docgen/Domain"
  * const file = File.new("docs/index.md", "# Docs", { isOverwritable: true })
  * console.log(file)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1058,12 +1086,14 @@ export class File extends S.Class<File>($I`File`)(
 /**
  * Unique symbol used to brand docgen-specific errors.
  *
- * @example
+ * **Example** (Reading the symbol key)
+ *
  * ```ts
  * import { DocgenErrorTypeId } from "@beep/repo-docgen/Domain"
  *
  * console.log(Symbol.keyFor(DocgenErrorTypeId))
  * ```
+ *
  * @category symbols
  * @since 0.0.0
  */
@@ -1072,11 +1102,13 @@ export const DocgenErrorTypeId = Symbol.for("@beep/repo-docgen/DocgenError");
 /**
  * Type-level alias for the unique docgen error branding symbol.
  *
- * @example
+ * **Example** (Using the type alias)
+ *
  * ```ts
  * import type { DocgenErrorTypeId } from "@beep/repo-docgen/Domain"
  * type ExampleDocgenErrorTypeId = DocgenErrorTypeId
  * ```
+ *
  * @category symbols
  * @since 0.0.0
  */
@@ -1085,12 +1117,14 @@ export type DocgenErrorTypeId = typeof DocgenErrorTypeId;
 /**
  * Typed error used throughout docgen parsing and generation operations.
  *
- * @example
+ * **Example** (Creating a DocgenError)
+ *
  * ```ts
  * import { DocgenError } from "@beep/repo-docgen/Domain"
  * const error = DocgenError.make({ message: "Unable to generate docs." })
  * console.log(error)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1109,7 +1143,8 @@ export class DocgenError extends TaggedErrorClass<DocgenError>($I`DocgenError`)(
 /**
  * Service shape for the process APIs used by docgen.
  *
- * @example
+ * **Example** (Mock process service shape)
+ *
  * ```ts
  * import { Effect } from "effect"
  *
@@ -1121,6 +1156,7 @@ export class DocgenError extends TaggedErrorClass<DocgenError>($I`DocgenError`)(
  *
  * console.log(fakeProcess.platform)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -1139,7 +1175,8 @@ const defaultProcess: ProcessShape = {
 /**
  * Service exposing the current process working directory, platform, and argument vector.
  *
- * @example
+ * **Example** (Reading process cwd)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Process } from "@beep/repo-docgen/Domain"
@@ -1153,6 +1190,7 @@ const defaultProcess: ProcessShape = {
  *
  * console.log(cwd.length > 0)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

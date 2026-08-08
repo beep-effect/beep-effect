@@ -8,14 +8,15 @@
 /**
  * ClaimLifecycle vocabulary and transition value object.
  *
- * @example
+ * **Example** (Access candidate enum value)
+ *
  * ```ts
  * import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle"
  *
  * console.log(ClaimLifecycle.Enum.candidate)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./ClaimLifecycle.model.ts";

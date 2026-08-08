@@ -23,12 +23,14 @@ const $I = $RepoCliId.create("commands/Qa/Qa.schemas");
 /**
  * Default playwright capture harness spawned by lane A.
  *
- * @example
+ * **Example** (Default scenario path value)
+ *
  * ```ts
  * import { DEFAULT_SCENARIO_PATH } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  *
  * console.log(DEFAULT_SCENARIO_PATH) // ".beep/qa-capture.mjs"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -37,7 +39,8 @@ export const DEFAULT_SCENARIO_PATH = ".beep/qa-capture.mjs";
 /**
  * Round artifact budget in mebibytes.
  *
- * @example
+ * **Example** (BudgetMib schema validation)
+ *
  * ```ts
  * import { BudgetMib } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as S from "effect/Schema"
@@ -45,6 +48,7 @@ export const DEFAULT_SCENARIO_PATH = ".beep/qa-capture.mjs";
  * console.log(S.is(BudgetMib)(20)) // true
  * console.log(S.is(BudgetMib)(0)) // false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -64,13 +68,15 @@ export const BudgetMib = S.Int.check(
 /**
  * Auto-stop duration of a lane B recording, in seconds.
  *
- * @example
+ * **Example** (DurationSeconds schema check)
+ *
  * ```ts
  * import { DurationSeconds } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(DurationSeconds)(45)) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -90,7 +96,8 @@ export const DurationSeconds = S.Int.check(
 /**
  * Validated options accepted by `beep qa record`.
  *
- * @example
+ * **Example** (Construct QaRecordOptions)
+ *
  * ```ts
  * import { QaRecordOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as O from "effect/Option"
@@ -109,6 +116,7 @@ export const DurationSeconds = S.Int.check(
  * })
  * console.log(options.lane) // "playwright"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -133,7 +141,8 @@ export class QaRecordOptions extends S.Class<QaRecordOptions>($I`QaRecordOptions
 /**
  * Validated options accepted by `beep qa extract`.
  *
- * @example
+ * **Example** (Construct QaExtractOptions)
+ *
  * ```ts
  * import { QaExtractOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as O from "effect/Option"
@@ -146,6 +155,7 @@ export class QaRecordOptions extends S.Class<QaRecordOptions>($I`QaRecordOptions
  * })
  * console.log(options.dryRun) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -167,7 +177,8 @@ export class QaExtractOptions extends S.Class<QaExtractOptions>($I`QaExtractOpti
 /**
  * Validated options accepted by `beep qa report`.
  *
- * @example
+ * **Example** (Construct QaReportOptions)
+ *
  * ```ts
  * import { QaReportOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as O from "effect/Option"
@@ -175,6 +186,7 @@ export class QaExtractOptions extends S.Class<QaExtractOptions>($I`QaExtractOpti
  * const options = QaReportOptions.make({ session: O.none() })
  * console.log(O.isNone(options.session)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -190,7 +202,8 @@ export class QaReportOptions extends S.Class<QaReportOptions>($I`QaReportOptions
 /**
  * Validated options accepted by `beep qa mark`.
  *
- * @example
+ * **Example** (Construct QaMarkOptions)
+ *
  * ```ts
  * import { QaMarkOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as O from "effect/Option"
@@ -198,6 +211,7 @@ export class QaReportOptions extends S.Class<QaReportOptions>($I`QaReportOptions
  * const options = QaMarkOptions.make({ data: O.none(), label: "gesture:sash-drag" })
  * console.log(options.label)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -221,7 +235,8 @@ export class QaMarkOptions extends S.Class<QaMarkOptions>($I`QaMarkOptions`)(
 /**
  * Validated options accepted by `beep qa judge-pack`.
  *
- * @example
+ * **Example** (Construct QaJudgePackOptions)
+ *
  * ```ts
  * import { QaJudgePackOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import * as O from "effect/Option"
@@ -229,6 +244,7 @@ export class QaMarkOptions extends S.Class<QaMarkOptions>($I`QaMarkOptions`)(
  * const options = QaJudgePackOptions.make({ round: 3, surface: O.none() })
  * console.log(options.round) // 3
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -245,13 +261,15 @@ export class QaJudgePackOptions extends S.Class<QaJudgePackOptions>($I`QaJudgePa
 /**
  * Validated options accepted by `beep qa judge-ingest`.
  *
- * @example
+ * **Example** (Construct QaJudgeIngestOptions)
+ *
  * ```ts
  * import { QaJudgeIngestOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  *
  * const options = QaJudgeIngestOptions.make({ from: "judge-stdout.txt", round: 3 })
  * console.log(options.from)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -268,13 +286,15 @@ export class QaJudgeIngestOptions extends S.Class<QaJudgeIngestOptions>($I`QaJud
 /**
  * Validated options accepted by `beep qa judge-lint`.
  *
- * @example
+ * **Example** (Construct QaJudgeLintOptions)
+ *
  * ```ts
  * import { QaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  *
  * const options = QaJudgeLintOptions.make({ round: 3 })
  * console.log(options.round) // 3
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -290,13 +310,15 @@ export class QaJudgeLintOptions extends S.Class<QaJudgeLintOptions>($I`QaJudgeLi
 /**
  * Decode raw `beep qa record` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaRecordOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaRecordOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -308,13 +330,15 @@ export const decodeQaRecordOptions: {
 /**
  * Decode raw `beep qa extract` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaExtractOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaExtractOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -326,13 +350,15 @@ export const decodeQaExtractOptions: {
 /**
  * Decode raw `beep qa report` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaReportOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaReportOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -344,13 +370,15 @@ export const decodeQaReportOptions: {
 /**
  * Decode raw `beep qa mark` flags and arguments.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaMarkOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaMarkOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -362,13 +390,15 @@ export const decodeQaMarkOptions: {
 /**
  * Decode raw `beep qa judge-pack` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaJudgePackOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaJudgePackOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -380,13 +410,15 @@ export const decodeQaJudgePackOptions: {
 /**
  * Decode raw `beep qa judge-ingest` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaJudgeIngestOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaJudgeIngestOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -398,13 +430,15 @@ export const decodeQaJudgeIngestOptions: {
 /**
  * Decode raw `beep qa judge-lint` flags.
  *
- * @example
+ * **Example** (Decode returns Effect)
+ *
  * ```ts
  * import { decodeQaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaJudgeLintOptions({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

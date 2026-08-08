@@ -25,7 +25,8 @@ import type { Graph3DRenderHandle } from "./Graph3D.renderer.ts";
  * StrictMode double-mount contract). The optional `onNodeSelect` callback is
  * held in a ref so its identity never forces a remount.
  *
- * @example
+ * **Example** (Synthetic projection handle mount)
+ *
  * ```ts
  * import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d"
  * import { useGraph3DHandle } from "@beep/graph-3d/react"
@@ -106,7 +107,8 @@ export const useGraph3DHandle = (options: {
  * once per `sampleIntervalMs` (default 500ms). Returns `0` until the first
  * sample lands or while no handle is mounted.
  *
- * @example
+ * **Example** (FPS overlay from handle)
+ *
  * ```ts
  * import { useGraph3DFps } from "@beep/graph-3d/react"
  * import type { Graph3DRenderHandle } from "@beep/graph-3d/browser"

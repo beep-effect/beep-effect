@@ -22,7 +22,8 @@ const $I = $OntologyId.create("TaxonomyLoader");
  * traversal, absolute paths, and separator tricks are rejected at decode
  * time and the loader cannot read outside its configured directory.
  *
- * @example
+ * **Example** (Reject path traversal)
+ *
  * ```ts
  * import { VendorSlicePath } from "@beep/ontology/TaxonomyLoader"
  * import * as S from "effect/Schema"
@@ -46,12 +47,16 @@ export const VendorSlicePath = S.NonEmptyString.check(
   })
 );
 
-/** Explicit loader-vetting state required in addition to research verification.
- * @example
+/**
+ *  Explicit loader-vetting state required in addition to research verification.
+ *
+ * **Example** (Check VETTED predicate)
+ *
  * ```ts
  * import { VendorLoadStatus } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorLoadStatus.is.VETTED("VETTED")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -59,24 +64,32 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
   $I.annoteSchema("VendorLoadStatus", { description: "Explicit implementation-loading verdict for a vendor slice." })
 );
 
-/** Runtime type for {@link VendorLoadStatus}.
- * @example
+/**
+ *  Runtime type for {@link VendorLoadStatus}.
+ *
+ * **Example** (Assign UNVETTED status)
+ *
  * ```ts
  * import type { VendorLoadStatus } from "@beep/ontology/TaxonomyLoader"
  * const status: VendorLoadStatus = "UNVETTED"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export type VendorLoadStatus = typeof VendorLoadStatus.Type;
 
-/** One manifest row admitted by the package loader.
- * @example
+/**
+ *  One manifest row admitted by the package loader.
+ *
+ * **Example** (Make manifest entry)
+ *
  * ```ts
  * import { VendorManifestEntry } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorManifestEntry.make({ format: "jsonld", id: "fixture", loadStatus: "VETTED", path: "fixture.jsonld" }).id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -85,12 +98,16 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
   $I.annote("VendorManifestEntry", { description: "Manifest row for one explicitly vetted JSON-LD taxonomy slice." })
 ) {}
 
-/** Raised when the manifest cannot be read.
- * @example
+/**
+ *  Raised when the manifest cannot be read.
+ *
+ * **Example** (Make read error)
+ *
  * ```ts
  * import { TaxonomyManifestReadError } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyManifestReadError.make({ path: "missing.jsonl" })._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -102,12 +119,16 @@ export class TaxonomyManifestReadError extends TaggedErrorClass<TaxonomyManifest
   $I.annote("TaxonomyManifestReadError", { description: "The vendor manifest is missing or unreadable." })
 ) {}
 
-/** Raised when a manifest row cannot be parsed.
- * @example
+/**
+ *  Raised when a manifest row cannot be parsed.
+ *
+ * **Example** (Make parse error)
+ *
  * ```ts
  * import { TaxonomyManifestParseError } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyManifestParseError.make({ line: 1, path: "manifest.jsonl" }).line)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -119,12 +140,16 @@ export class TaxonomyManifestParseError extends TaggedErrorClass<TaxonomyManifes
   $I.annote("TaxonomyManifestParseError", { description: "A vendor manifest JSONL row failed schema decoding." })
 ) {}
 
-/** Raised when a manifest slice lacks explicit loading approval.
- * @example
+/**
+ *  Raised when a manifest slice lacks explicit loading approval.
+ *
+ * **Example** (Make unvetted error)
+ *
  * ```ts
  * import { VendorSliceUnvetted } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceUnvetted.make({ id: "folio" }).id)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -134,12 +159,16 @@ export class VendorSliceUnvetted extends TaggedErrorClass<VendorSliceUnvetted>($
   $I.annote("VendorSliceUnvetted", { description: "A vendor slice is not explicitly VETTED for loading." })
 ) {}
 
-/** Raised when an approved slice cannot be read.
- * @example
+/**
+ *  Raised when an approved slice cannot be read.
+ *
+ * **Example** (Make slice read error)
+ *
  * ```ts
  * import { VendorSliceReadError } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceReadError.make({ id: "fixture", path: "missing.jsonld" })._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -149,12 +178,16 @@ export class VendorSliceReadError extends TaggedErrorClass<VendorSliceReadError>
   $I.annote("VendorSliceReadError", { description: "An explicitly vetted vendor slice is unreadable." })
 ) {}
 
-/** Raised when an approved slice cannot be schema-decoded.
- * @example
+/**
+ *  Raised when an approved slice cannot be schema-decoded.
+ *
+ * **Example** (Make slice parse error)
+ *
  * ```ts
  * import { VendorSliceParseError } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceParseError.make({ id: "fixture", path: "fixture.jsonld" }).id)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -167,7 +200,8 @@ export class VendorSliceParseError extends TaggedErrorClass<VendorSliceParseErro
 /**
  * Raised when a vetted vendor slice resolves outside its canonical vendor root.
  *
- * @example
+ * **Example** (Make path escape error)
+ *
  * ```ts
  * import { VendorSlicePathEscape } from "@beep/ontology/TaxonomyLoader"
  *
@@ -232,12 +266,16 @@ const readSlice = Effect.fn("TaxonomyLoader.readSlice")(function* (entry: Vendor
   });
 });
 
-/** Service contract for loading the committed seed plus explicitly vetted slices.
- * @example
+/**
+ *  Service contract for loading the committed seed plus explicitly vetted slices.
+ *
+ * **Example** (Access service key)
+ *
  * ```ts
  * import { TaxonomyLoader } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyLoader.key)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -259,12 +297,16 @@ export class TaxonomyLoader extends Context.Service<
     >;
   }
 >()($I`TaxonomyLoader`) {
-  /** Live loader implementation requiring only the portable FileSystem service.
-   * @example
+  /**
+   *  Live loader implementation requiring only the portable FileSystem service.
+   *
+   * **Example** (Access live layer)
+   *
    * ```ts
    * import { TaxonomyLoader } from "@beep/ontology/TaxonomyLoader"
    * console.log(TaxonomyLoader.layer)
    * ```
+   *
    * @category layers
    * @since 0.0.0
    */

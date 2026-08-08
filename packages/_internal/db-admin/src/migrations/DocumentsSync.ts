@@ -12,7 +12,8 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 /**
  * Documents sync migration target used to prove DMS sync-state persistence.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { DocumentsSyncMigrationTarget } from "@beep/db-admin/migrations/DocumentsSync"
  *

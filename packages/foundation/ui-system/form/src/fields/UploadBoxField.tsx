@@ -14,7 +14,8 @@ import type React from "react";
  * Props for {@link UploadBoxField}: `UploadBox` props plus label/description;
  * binding props are owned by the field.
  *
- * @example
+ * **Example** (Satisfies UploadBoxFieldProps shape)
+ *
  * ```ts
  * import type { UploadBoxFieldProps } from "@beep/form/fields/UploadBoxField"
  *
@@ -42,11 +43,14 @@ export interface UploadBoxFieldProps
 /**
  * TanStack-bound dropzone upload field for multi-file arrays.
  *
+ * **Details**
+ *
  * Use through `useAppForm` as `field.UploadBox`; selected image files can be
  * previewed by the underlying `@beep/ui` primitive while TanStack stores the
  * canonical `ReadonlyArray<File>` value.
  *
- * @example
+ * **Example** (Gallery multi-file upload form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Collaboration/Collaborati
 /**
  * Experimental schema anchor for Box collaboration records linking principals to shared items.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { Collaboration } from "@beep/box/experimental/domain/entities/Collaboration/Collaboration.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Collaboration extends S.Class<Collaboration>($I`Collaboration`)(
 /**
  * Type-level companion namespace for {@link Collaboration} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode collaboration)
+ *
  * ```ts
  * import { Collaboration } from "@beep/box/experimental/domain/entities/Collaboration/Collaboration.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Collaboration {
   /**
    * Encoded payload accepted by the {@link Collaboration} entity schema.
    *
-   * @example
+   * **Example** (Encode collaboration payload)
+   *
    * ```ts
    * import { Collaboration } from "@beep/box/experimental/domain/entities/Collaboration/Collaboration.model";
    * import * as S from "effect/Schema";

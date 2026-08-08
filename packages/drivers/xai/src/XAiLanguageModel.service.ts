@@ -37,7 +37,8 @@ const $I = $XaiId.create("XAiLanguageModel.service");
 /**
  * Non-empty xAI model identifier accepted by the language-model adapter.
  *
- * @example
+ * **Example** (Decode model name)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -59,7 +60,8 @@ export const XAiModelName = S.NonEmptyString.pipe(
 /**
  * Type for {@link XAiModelName}.
  *
- * @example
+ * **Example** (Type annotate model name)
+ *
  * ```ts
  * import type { XAiLanguageModel } from "@beep/xai"
  *
@@ -75,7 +77,8 @@ export type XAiModelName = typeof XAiModelName.Type;
 /**
  * Options accepted by the xAI Effect AI language-model adapter.
  *
- * @example
+ * **Example** (Create language model options)
+ *
  * ```ts
  * import type { XAiLanguageModel } from "@beep/xai"
  * import * as O from "effect/Option"
@@ -217,7 +220,8 @@ const streamChatCompletion = (
 /**
  * Builds an xAI Effect AI language-model service.
  *
- * @example
+ * **Example** (Build language model service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { XAi, XAiLanguageModel } from "@beep/xai"
@@ -236,7 +240,6 @@ const streamChatCompletion = (
  * Reads the `XAi` service from context and builds an Effect AI language-model
  * adapter. The returned service sends future chat completion and streaming
  * requests through xAI and maps driver failures into Effect AI errors.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -260,7 +263,8 @@ export const make: (options: XAiLanguageModelOptionsInput) => Effect.Effect<Lang
 /**
  * Builds an xAI Effect AI language-model layer.
  *
- * @example
+ * **Example** (Create language model layer)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  *
@@ -278,7 +282,8 @@ export const layer = (options: XAiLanguageModelOptionsInput): Layer.Layer<Langua
 /**
  * Builds an Effect AI model value for xAI.
  *
- * @example
+ * **Example** (Build Effect AI model)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  *

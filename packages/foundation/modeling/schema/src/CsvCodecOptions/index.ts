@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for CSV codec option schemas.
  *
- * @example
+ * **Example** (Make default codec options)
+ *
  * ```ts
  * import * as CsvCodecOptions from "@beep/schema/CsvCodecOptions"
  *

@@ -31,7 +31,8 @@ const ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY = 256;
 /**
  * Builds the typed ACP process-exit error used by child-process transports.
  *
- * @example
+ * **Example** (Make termination error)
+ *
  * ```ts
  * import { makeTerminationError } from "@beep/acp/client"
  * import type { ChildProcessSpawner } from "effect/unstable/process"
@@ -48,7 +49,8 @@ export { makeTerminationError } from "./internal/stdio.ts";
 /**
  * Options for constructing an ACP client service.
  *
- * @example
+ * **Example** (Create client options)
+ *
  * ```ts
  * import type { AcpClientOptions } from "@beep/acp/client"
  *
@@ -72,7 +74,8 @@ type AcpClientRaw = {
 /**
  * Service shape implemented by the ACP client driver.
  *
- * @example
+ * **Example** (Access raw notifications)
+ *
  * ```ts
  * import type { AcpClientShape } from "@beep/acp/client"
  *
@@ -270,7 +273,8 @@ export interface AcpClientShape extends AcpProtocol.AcpExtensionRegistrars {
 /**
  * Context service tag for an ACP client.
  *
- * @example
+ * **Example** (Resolve AcpClient service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AcpClient } from "@beep/acp/client"
@@ -329,7 +333,8 @@ interface BufferedNotificationHandler<A> {
 /**
  * Constructs an ACP client from an Effect `Stdio` transport.
  *
- * @example
+ * **Example** (Build client from Stdio)
+ *
  * ```ts
  * import type * as Stdio from "effect/Stdio"
  * import { make } from "@beep/acp/client"
@@ -690,7 +695,8 @@ export interface AcpClientChildProcessOptions extends AcpClientOptions {
 /**
  * Constructs an ACP client layer backed by a spawned child process.
  *
- * @example
+ * **Example** (Layer from process handle)
+ *
  * ```ts
  * import type { ChildProcessSpawner } from "effect/unstable/process"
  * import { layerChildProcess } from "@beep/acp/client"

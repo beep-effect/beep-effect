@@ -8,7 +8,8 @@
 /**
  * Turn model exports.
  *
- * @example
+ * **Example** (Log Turn entity type)
+ *
  * ```ts
  * import * as Turn from "@beep/workspace-domain/entities/Turn"
  *

@@ -26,7 +26,8 @@ interface PacerLayerSet {
 /**
  * Compose `PacerAuth`, `PacerSession`, and `PclClient` over the given transport.
  *
- * @example
+ * **Example** (Compose with mock config)
+ *
  * ```ts
  * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
  *

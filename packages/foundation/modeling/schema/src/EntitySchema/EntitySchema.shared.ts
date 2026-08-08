@@ -9,7 +9,8 @@ import { $SchemaId } from "@beep/identity";
 /**
  * Internal identity composer.
  *
- * @example
+ * **Example** (Compose entity identifier)
+ *
  * ```ts
  * import { $I } from "../../src/EntitySchema/EntitySchema.shared.ts"
  *
@@ -25,7 +26,8 @@ export const $I = $SchemaId.create("EntitySchema");
 /**
  * Annotation key used to attach a schema's entity definition metadata.
  *
- * @example
+ * **Example** (Log definition annotation key)
+ *
  * ```ts
  * import { DefinitionAnnotationKey } from "../../src/EntitySchema/EntitySchema.shared.ts"
  *

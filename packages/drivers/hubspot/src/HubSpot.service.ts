@@ -75,7 +75,8 @@ const HubSpotUpsertStatus = S.NonEmptyString.pipe(
 /**
  * HubSpot form field submission value.
  *
- * @example
+ * **Example** (Make email form field)
+ *
  * ```ts
  * import { HubSpotFormField } from "@beep/hubspot"
  *
@@ -107,7 +108,8 @@ export class HubSpotFormField extends S.Class<HubSpotFormField>($I`HubSpotFormFi
 /**
  * HubSpot form submission context.
  *
- * @example
+ * **Example** (Create form page context)
+ *
  * ```ts
  * import { HubSpotFormContext } from "@beep/hubspot"
  *
@@ -142,7 +144,8 @@ export class HubSpotFormContext extends S.Class<HubSpotFormContext>($I`HubSpotFo
 /**
  * HubSpot form submission request.
  *
- * @example
+ * **Example** (Build form submit request)
+ *
  * ```ts
  * import { HubSpotSubmitFormRequest } from "@beep/hubspot"
  *
@@ -182,7 +185,8 @@ export class HubSpotSubmitFormRequest extends S.Class<HubSpotSubmitFormRequest>(
 /**
  * HubSpot form submission response.
  *
- * @example
+ * **Example** (Create form submit response)
+ *
  * ```ts
  * import { HubSpotSubmitFormResponse } from "@beep/hubspot"
  *
@@ -215,7 +219,8 @@ export class HubSpotSubmitFormResponse extends S.Class<HubSpotSubmitFormResponse
 /**
  * HubSpot contact upsert request using email as the stable identifier.
  *
- * @example
+ * **Example** (Upsert contact by email)
+ *
  * ```ts
  * import { HubSpotUpsertContactRequest } from "@beep/hubspot"
  *
@@ -254,7 +259,8 @@ export class HubSpotUpsertContactRequest extends S.Class<HubSpotUpsertContactReq
 /**
  * HubSpot contact upsert result.
  *
- * @example
+ * **Example** (Create upsert contact result)
+ *
  * ```ts
  * import { HubSpotUpsertContactResult } from "@beep/hubspot"
  *
@@ -282,7 +288,8 @@ export class HubSpotUpsertContactResult extends S.Class<HubSpotUpsertContactResu
 /**
  * HubSpot contact upsert response.
  *
- * @example
+ * **Example** (Create upsert contact response)
+ *
  * ```ts
  * import { HubSpotUpsertContactResponse } from "@beep/hubspot"
  *
@@ -318,7 +325,8 @@ export class HubSpotUpsertContactResponse extends S.Class<HubSpotUpsertContactRe
 /**
  * Public HubSpot service shape.
  *
- * @example
+ * **Example** (Satisfy HubSpot service shape)
+ *
  * ```ts
  * import {
  *   HubSpotSubmitFormResponse,
@@ -542,7 +550,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedHubSpotConfi
 /**
  * Effect service for HubSpot Forms API submissions.
  *
- * @example
+ * **Example** (Build HubSpot service layer)
+ *
  * ```ts
  * import { HubSpot, HubSpotConfigInput } from "@beep/hubspot"
  *
@@ -562,7 +571,8 @@ export class HubSpot extends Context.Service<HubSpot, HubSpotShape>()($I`HubSpot
   /**
    * Build a HubSpot layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Build layer from config)
+   *
    * ```ts
    * import { HubSpot, HubSpotConfigInput } from "@beep/hubspot"
    *
@@ -591,7 +601,8 @@ export class HubSpot extends Context.Service<HubSpot, HubSpotShape>()($I`HubSpot
   /**
    * Live HubSpot layer backed by ambient Effect Config values.
    *
-   * @example
+   * **Example** (Log live HubSpot layer)
+   *
    * ```ts
    * import { HubSpot } from "@beep/hubspot"
    *

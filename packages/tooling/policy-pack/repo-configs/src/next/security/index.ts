@@ -22,7 +22,8 @@ const isFalse = (value: unknown): value is false => Eq.equals(false)(value);
 /**
  * A secure HTTP response header emitted through Next.js `headers()`.
  *
- * @example
+ * **Example** (Make secure header instance)
+ *
  * ```ts
  * import { SecureHeader } from "@beep/repo-configs/next/security"
  * const header = SecureHeader.make({
@@ -31,6 +32,7 @@ const isFalse = (value: unknown): value is false => Eq.equals(false)(value);
  * })
  * console.log(header)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -79,12 +81,14 @@ const emptySecureHeaders: Array<SecureHeader> = [];
 /**
  * Default secure headers shared by current Next.js apps in this repo.
  *
- * @example
+ * **Example** (Log default secure headers)
+ *
  * ```ts
  * import { DEFAULT_BEEP_SECURE_HEADERS } from "@beep/repo-configs/next/security"
  * const headers = DEFAULT_BEEP_SECURE_HEADERS
  * console.log(headers)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -110,11 +114,14 @@ class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`Secu
 /**
  * Shared secure-header configuration for the repo Next.js preset.
  *
- * @remarks
+ * **Details**
+ *
  * `false` disables shared secure headers. An object with `headers` replaces
  * the repo default set; an object with `additionalHeaders` merges additively
  * with app values winning by header key.
- * @example
+ *
+ * **Example** (Configure headers and additions)
+ *
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
@@ -124,6 +131,7 @@ class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`Secu
  * }
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -136,7 +144,8 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
 /**
  * Shared secure-header configuration for the repo Next.js preset.
  *
- * @example
+ * **Example** (Type secure headers config)
+ *
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
@@ -146,6 +155,7 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
  * }
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -173,13 +183,15 @@ type SecureHeadersConfigObjectInput = {
 /**
  * Constructor input accepted by direct secure-header helpers.
  *
- * @example
+ * **Example** (Disable or set source)
+ *
  * ```ts
  * import type { SecureHeadersConfigInput } from "@beep/repo-configs/next/security"
  * const disabled: SecureHeadersConfigInput = false
  * const withSource: SecureHeadersConfigInput = { source: "/api/:path*" }
  * console.log(disabled, withSource)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -209,9 +221,8 @@ const headerSource = (config: SecureHeadersConfigInput | undefined): string =>
 /**
  * Build the secure header list for the shared Next.js preset.
  *
- * @param config - Secure header override or extension settings.
- * @returns The secure HTTP header list to attach to the Next.js config.
- * @example
+ * **Example** (Build secure header list)
+ *
  * ```ts
  * import { makeSecureHeaders } from "@beep/repo-configs/next/security"
  * const headers = makeSecureHeaders({
@@ -221,6 +232,9 @@ const headerSource = (config: SecureHeadersConfigInput | undefined): string =>
  * })
  * console.log(headers)
  * ```
+ *
+ * @param config - Secure header override or extension settings.
+ * @returns The secure HTTP header list to attach to the Next.js config.
  * @category constructors
  * @since 0.0.0
  */
@@ -234,41 +248,44 @@ export const makeSecureHeaders = (config?: SecureHeadersConfigInput): ReadonlyAr
 /**
  * Add shared secure headers to a Next.js config.
  *
- * @param secureHeadersConfig - Secure header override or extension settings.
- * @returns A function adding the shared secure-header route to a Next.js configuration.
- * @remarks
+ * **Details**
+ *
  * Existing app `headers()` are called only when Next.js calls the composed
  * `headers()` function. The shared secure-header route is prepended so app
  * routes remain visible and can add more specific behavior after the baseline.
- * @example
+ *
+ * **Example** (Wrap Next.js config)
+ *
  * ```ts
  * import { withSecureHeaders } from "@beep/repo-configs/next/security"
- * const config = withSecureHeaders()({ reactStrictMode: true })
+ * const config = withSecureHeaders({ reactStrictMode: true })
  * console.log(config)
  * ```
+ *
+ * @param config - Base Next.js configuration receiving secure headers.
+ * @param secureHeadersConfig - Secure header override or extension settings.
+ * @returns A Next.js configuration with the shared secure-header route prepended.
  * @category combinators
  * @since 0.0.0
  */
-export const withSecureHeaders =
-  (secureHeadersConfig?: SecureHeadersConfigInput) =>
-  (config: NextConfig): NextConfig =>
-    pipe(
-      makeSecureHeaders(secureHeadersConfig),
-      A.match({
-        onEmpty: () => config,
-        onNonEmpty: (secureHeaders) => {
-          const previousHeaders = config.headers;
-          return {
-            ...config,
-            headers: () =>
-              Promise.resolve(P.isFunction(previousHeaders) ? previousHeaders() : A.empty()).then((headers) => [
-                {
-                  source: headerSource(secureHeadersConfig),
-                  headers: A.fromIterable(secureHeaders),
-                },
-                ...headers,
-              ]),
-          };
-        },
-      })
-    );
+export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfigInput): NextConfig =>
+  pipe(
+    makeSecureHeaders(secureHeadersConfig),
+    A.match({
+      onEmpty: () => config,
+      onNonEmpty: (secureHeaders) => {
+        const previousHeaders = config.headers;
+        return {
+          ...config,
+          headers: () =>
+            Promise.resolve(P.isFunction(previousHeaders) ? previousHeaders() : A.empty()).then((headers) => [
+              {
+                source: headerSource(secureHeadersConfig),
+                headers: A.fromIterable(secureHeaders),
+              },
+              ...headers,
+            ]),
+        };
+      },
+    })
+  );

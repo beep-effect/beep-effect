@@ -179,7 +179,8 @@ const findFuzzy = (sourceText: string, query: string, threshold: number): O.Opti
 /**
  * Align one extraction candidate against source text.
  *
- * @example
+ * **Example** (Align candidate both ways)
+ *
  * ```ts
  * import { alignCandidate } from "@beep/langextract/Alignment"
  * import { ExtractionCandidate } from "@beep/langextract/Extraction"
@@ -222,7 +223,8 @@ export const alignCandidate: {
 /**
  * Align candidates and honor the optional maximum extraction count.
  *
- * @example
+ * **Example** (Align candidates both ways)
+ *
  * ```ts
  * import { alignCandidates } from "@beep/langextract/Alignment"
  * import { ExtractionCandidate } from "@beep/langextract/Extraction"

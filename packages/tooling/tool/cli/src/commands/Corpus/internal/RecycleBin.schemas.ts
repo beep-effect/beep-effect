@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/Corpus/internal/RecycleBin.schemas");
 /**
  * Recycle-bin metadata format version family.
  *
- * @example
+ * **Example** (Validate format version string)
+ *
  * ```ts
  * import { RecycleBinFormatVersion } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(RecycleBinFormatVersion)("v2")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -42,7 +44,8 @@ export type RecycleBinFormatVersion = typeof RecycleBinFormatVersion.Type;
 /**
  * Original-file facts recovered from one `$I` recycle-bin metadata file.
  *
- * @example
+ * **Example** (Decode original file facts)
+ *
  * ```ts
  * import { RecycleBinOriginal } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -57,6 +60,7 @@ export type RecycleBinFormatVersion = typeof RecycleBinFormatVersion.Type;
  * })
  * console.log(original.originalName) // "spec.docx"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,7 +81,8 @@ export class RecycleBinOriginal extends S.Class<RecycleBinOriginal>($I`RecycleBi
 /**
  * Matched `$I`/`$R` restoration row.
  *
- * @example
+ * **Example** (Decode matched restoration row)
+ *
  * ```ts
  * import { MatchedRestorationRecord } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -99,6 +104,7 @@ export class RecycleBinOriginal extends S.Class<RecycleBinOriginal>($I`RecycleBi
  * })
  * console.log(record.matchStatus) // "matched"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,7 +125,8 @@ export class MatchedRestorationRecord extends S.Class<MatchedRestorationRecord>(
 /**
  * Restoration row for a `$I` metadata file with no `$R` content partner.
  *
- * @example
+ * **Example** (Decode unmatched metadata row)
+ *
  * ```ts
  * import { UnmatchedMetadataRestorationRecord } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -140,6 +147,7 @@ export class MatchedRestorationRecord extends S.Class<MatchedRestorationRecord>(
  * })
  * console.log(record.metadataRelativePath) // "$I0CB4M9.docx"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -161,7 +169,8 @@ export class UnmatchedMetadataRestorationRecord extends S.Class<UnmatchedMetadat
 /**
  * Restoration row for a `$R` content file with no `$I` metadata partner.
  *
- * @example
+ * **Example** (Make unmatched content record)
+ *
  * ```ts
  * import { UnmatchedContentRestorationRecord } from "@beep/repo-cli/commands/Corpus"
  *
@@ -173,6 +182,7 @@ export class UnmatchedMetadataRestorationRecord extends S.Class<UnmatchedMetadat
  * })
  * console.log(record.contentRelativePath) // "$R0CB4M9.docx"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -193,7 +203,8 @@ export class UnmatchedContentRestorationRecord extends S.Class<UnmatchedContentR
 /**
  * Restoration manifest row for one recycle-bin artifact.
  *
- * @example
+ * **Example** (Decode restoration manifest row)
+ *
  * ```ts
  * import { CorpusRestorationRecord } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -206,6 +217,7 @@ export class UnmatchedContentRestorationRecord extends S.Class<UnmatchedContentR
  * })
  * console.log(record.matchStatus) // "unmatched-content"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -231,7 +243,8 @@ export type CorpusRestorationRecord = typeof CorpusRestorationRecord.Type;
 /**
  * JSONL encoder for {@link CorpusRestorationRecord}.
  *
- * @example
+ * **Example** (Encode restoration record JSON)
+ *
  * ```ts
  * import { encodeCorpusRestorationRecordJson, UnmatchedContentRestorationRecord } from "@beep/repo-cli/commands/Corpus"
  * import { Effect } from "effect"
@@ -245,6 +258,7 @@ export type CorpusRestorationRecord = typeof CorpusRestorationRecord.Type;
  *
  * Effect.runPromise(encodeCorpusRestorationRecordJson(record)).then((json) => console.log(json.includes("unmatched-content"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -253,13 +267,15 @@ export const encodeCorpusRestorationRecordJson = JsonStringCodec(CorpusRestorati
 /**
  * Recycle-bin artifact kind derived from the `$I`/`$R` filename prefix.
  *
- * @example
+ * **Example** (Validate entry kind value)
+ *
  * ```ts
  * import { RecycleBinEntryKind } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(RecycleBinEntryKind)("metadata")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -280,7 +296,8 @@ export type RecycleBinEntryKind = typeof RecycleBinEntryKind.Type;
 /**
  * One recycle-bin artifact discovered while scanning salvaged sources.
  *
- * @example
+ * **Example** (Make scan entry model)
+ *
  * ```ts
  * import { RecycleBinScanEntry } from "@beep/repo-cli/commands/Corpus"
  *
@@ -291,6 +308,7 @@ export type RecycleBinEntryKind = typeof RecycleBinEntryKind.Type;
  * })
  * console.log(entry.kind) // "metadata"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -308,7 +326,8 @@ export class RecycleBinScanEntry extends S.Class<RecycleBinScanEntry>($I`Recycle
 /**
  * A `$I`/`$R` pair joined on its shared pair key.
  *
- * @example
+ * **Example** (Make paired entry model)
+ *
  * ```ts
  * import { RecycleBinPairedEntry } from "@beep/repo-cli/commands/Corpus"
  *
@@ -319,6 +338,7 @@ export class RecycleBinScanEntry extends S.Class<RecycleBinScanEntry>($I`Recycle
  * })
  * console.log(pair.pairKey) // "0CB4M9.docx"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -336,7 +356,8 @@ export class RecycleBinPairedEntry extends S.Class<RecycleBinPairedEntry>($I`Rec
 /**
  * Pairing outcome over a set of recycle-bin scan entries.
  *
- * @example
+ * **Example** (Make empty pairing outcome)
+ *
  * ```ts
  * import { RecycleBinPairing } from "@beep/repo-cli/commands/Corpus"
  *
@@ -347,6 +368,7 @@ export class RecycleBinPairedEntry extends S.Class<RecycleBinPairedEntry>($I`Rec
  * })
  * console.log(pairing.matched.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -161,11 +161,14 @@ const GenerateBuildIdFunction = declaredFunction<NonNullable<NextConfigFromNext[
 /**
  * Public Next.js configuration schema.
  *
- * @remarks
+ * **Details**
+ *
  * This schema models user-authored `next.config.js` data from the public
  * `next` package declarations. Fields marked `@internal` in Next.js source are
  * intentionally omitted and stripped during decoding.
- * @example
+ *
+ * **Example** (Define validated Next config)
+ *
  * ```ts
  * import { defineNextConfig } from "@beep/repo-configs/next"
  * import type { NextConfig } from "next"
@@ -175,6 +178,7 @@ const GenerateBuildIdFunction = declaredFunction<NonNullable<NextConfigFromNext[
  * } satisfies NextConfig)
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -402,13 +406,15 @@ const encodeNextConfigResult = NextConfig.encodeResult;
 /**
  * Decode unknown input into a public Next.js configuration value.
  *
- * @example
+ * **Example** (Decode config with Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeNextConfig } from "@beep/repo-configs/next"
  * const program = decodeNextConfig({ reactStrictMode: true })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -419,9 +425,8 @@ export const decodeNextConfig: (input: unknown) => Effect.Effect<NextConfig, S.S
 /**
  * Synchronously validate and normalize a user-authored Next.js config.
  *
- * @param config - Unknown user-authored Next.js configuration input.
- * @returns A plain Next.js configuration object validated by the schema.
- * @example
+ * **Example** (Validate Next config sync)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { defineNextConfig } from "@beep/repo-configs/next"
@@ -432,6 +437,9 @@ export const decodeNextConfig: (input: unknown) => Effect.Effect<NextConfig, S.S
  *
  * strictEqual(config.reactStrictMode, true)
  * ```
+ *
+ * @param config - Unknown user-authored Next.js configuration input.
+ * @returns A plain Next.js configuration object validated by the schema.
  * @category constructors
  * @since 0.0.0
  */
@@ -444,12 +452,14 @@ export const defineNextConfig = (config: unknown): NextConfigFromNext =>
 /**
  * Backwards-compatible alias for the public experimental Next.js schema.
  *
- * @example
+ * **Example** (Make experimental schema value)
+ *
  * ```ts
  * import { NextConfigExperimental } from "@beep/repo-configs/next"
  * const experimental = NextConfigExperimental.make({ cssChunking: true })
  * console.log(experimental)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -458,12 +468,14 @@ export const NextConfigExperimental = ExperimentalConfig;
 /**
  * Backwards-compatible alias for the public experimental Next.js model.
  *
- * @example
+ * **Example** (Type experimental config object)
+ *
  * ```ts
  * import type { NextConfigExperimental } from "@beep/repo-configs/next"
  * const experimental: NextConfigExperimental = { cssChunking: true }
  * console.log(experimental)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -472,12 +484,14 @@ export type NextConfigExperimental = ExperimentalConfig;
 /**
  * Backwards-compatible alias for the public Next.js configuration schema.
  *
- * @example
+ * **Example** (Make base schema value)
+ *
  * ```ts
  * import { NextConfigBase } from "@beep/repo-configs/next"
  * const config = NextConfigBase.make({ reactStrictMode: true })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -486,12 +500,14 @@ export const NextConfigBase: typeof NextConfig = NextConfig;
 /**
  * Backwards-compatible alias for the public Next.js configuration model.
  *
- * @example
+ * **Example** (Type base config object)
+ *
  * ```ts
  * import type { NextConfigBase } from "@beep/repo-configs/next"
  * const config: NextConfigBase = { reactStrictMode: true }
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -662,11 +662,8 @@ const isFnSchemaEligibleFilePath = (filePath: string): boolean => !Str.endsWith(
  * contract is an inline object type literal rather than a schema, within a
  * schema-modeled file. Generic declarations are conservatively skipped.
  *
- * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
- * @example
+ * **Example** (Detect inline object contract)
+ *
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -678,6 +675,11 @@ const isFnSchemaEligibleFilePath = (filePath: string): boolean => !Str.endsWith(
  * const entry = fnSchemaEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("updateWidget")
  * ```
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -720,11 +722,8 @@ const fnSchemaEntryFromFunctionLike = (
  * inspected; inferred returns are out of scope. Generic declarations and
  * `.tsx` react boundary files are conservatively skipped by callers.
  *
- * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
- * @example
+ * **Example** (Detect null return annotation)
+ *
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -736,6 +735,11 @@ const fnSchemaEntryFromFunctionLike = (
  * const entry = nullReturnEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("findUser")
  * ```
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -837,11 +841,8 @@ const isInSchemaBoundaryExecutable = (node: Node): boolean => {
  * normalization belongs in a schema transformation so the invariant travels
  * with the decoded data instead of living beside the schema boundary.
  *
- * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` when exported schema-boundary code performs ad hoc normalization, `O.none` otherwise.
- * @example
+ * **Example** (Detect ad hoc normalization)
+ *
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -856,6 +857,11 @@ const isInSchemaBoundaryExecutable = (node: Node): boolean => {
  * const entry = normalizationEntryFromCallExpression(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("normalizeName.trim")
  * ```
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` when exported schema-boundary code performs ad hoc normalization, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -905,11 +911,8 @@ const isGetSomesObjectName = (name: string): boolean =>
  * `O.getSomesStruct` instead. Calls over an identifier/variable argument (the
  * homogeneous dynamic-key dictionary case) are left alone.
  *
- * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
- * @example
+ * **Example** (Detect getSomes struct literal)
+ *
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -921,6 +924,11 @@ const isGetSomesObjectName = (name: string): boolean =>
  * const entry = getsomesStructEntryFromCallExpression(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("pickSomes.R.getSomes")
  * ```
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -1040,7 +1048,8 @@ const equivalenceEntryFromVariableDeclaration = (
 /**
  * Grouped schema-first AST detectors consumed by the scan orchestrator.
  *
- * @example
+ * **Example** (Check interface schema candidate)
+ *
  * ```ts
  * import { SchemaFirstDetectors } from "@beep/repo-cli/test/Lint"
  * import * as O from "effect/Option"
@@ -1051,6 +1060,7 @@ const equivalenceEntryFromVariableDeclaration = (
  * const [node] = sourceFile.getInterfaces()
  * console.log(SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(node)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -344,12 +344,14 @@ export const decodeTurboPlanTasksFromQueryJsonForTesting = decodeTurboPlanTasksF
 /**
  * Collect the Turbo package catalog and affected feedback-task snapshot.
  *
- * @example
+ * **Example** (Collect turbo plan snapshot)
+ *
  * ```ts
  * import { collectTurboPlanSnapshot, defaultYeetRunOptions } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(collectTurboPlanSnapshot(".", defaultYeetRunOptions()))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -29,12 +29,14 @@ import type { QaJudgeIngestOptions } from "./Qa.schemas.ts";
 /**
  * File name of the schema-validated inventory inside a round.
  *
- * @example
+ * **Example** (Log inventory JSON filename)
+ *
  * ```ts
  * import { INVENTORY_JSON_FILE } from "@beep/repo-cli/commands/Qa/JudgeIngest"
  *
  * console.log(INVENTORY_JSON_FILE) // "inventory.json"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -43,12 +45,14 @@ export const INVENTORY_JSON_FILE = "inventory.json";
 /**
  * File name of the rendered inventory inside a round.
  *
- * @example
+ * **Example** (Log inventory markdown filename)
+ *
  * ```ts
  * import { INVENTORY_MARKDOWN_FILE } from "@beep/repo-cli/commands/Qa/JudgeIngest"
  *
  * console.log(INVENTORY_MARKDOWN_FILE) // "inventory.md"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -57,7 +61,8 @@ export const INVENTORY_MARKDOWN_FILE = "inventory.md";
 /**
  * Absolute path of a round's `inventory.json`.
  *
- * @example
+ * **Example** (Resolve inventory JSON path)
+ *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { inventoryJsonPath } from "@beep/repo-cli/commands/Qa/JudgeIngest"
@@ -80,6 +85,7 @@ export const INVENTORY_MARKDOWN_FILE = "inventory.md";
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -91,13 +97,15 @@ export const inventoryJsonPath: {
 /**
  * Parse noisy judge output into a schema-valid inventory.
  *
- * @example
+ * **Example** (Parse non-JSON judge output)
+ *
  * ```ts
  * import { parseJudgeOutput } from "@beep/repo-cli/commands/Qa/JudgeIngest"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(parseJudgeOutput("no json here"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -127,7 +135,8 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
 /**
  * Ingest a judge transcript into a round's `inventory.json` and `inventory.md`.
  *
- * @example
+ * **Example** (Ingest judge transcript effect)
+ *
  * ```ts
  * import { runQaJudgeIngest } from "@beep/repo-cli/commands/Qa/JudgeIngest"
  * import { QaJudgeIngestOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -136,6 +145,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
  * const options = QaJudgeIngestOptions.make({ from: "judge-stdout.txt", round: 3 })
  * console.log(Effect.isEffect(runQaJudgeIngest("/repo", options))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

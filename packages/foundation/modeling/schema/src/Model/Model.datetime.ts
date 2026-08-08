@@ -17,7 +17,8 @@ const $I = $SchemaId.create("Model");
  * A schema for a `DateTime.Utc` that is serialized as a date string in the
  * format `YYYY-MM-DD`, with time removed.
  *
- * @example
+ * **Example** (Decode date string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -26,8 +27,8 @@ const $I = $SchemaId.create("Model");
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const Date = S.String.pipe(
   S.decodeTo(S.DateTimeUtc, {
@@ -42,7 +43,8 @@ export const Date = S.String.pipe(
 /**
  * Type for {@link Date}.
  *
- * @example
+ * **Example** (Type decoded date value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -51,23 +53,24 @@ export const Date = S.String.pipe(
  * console.log(value.toString())
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Date = typeof Date.Type;
 
 /**
  * Overridable date field that defaults to today's UTC date on insert.
  *
- * @example
+ * **Example** (Log DateWithNow schema)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
  * console.log(Model.DateWithNow)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateWithNow = Overridable(Date, {
   defaultValue: Effect.map(DateTime.now, DateTime.removeTime),
@@ -76,15 +79,16 @@ export const DateWithNow = Overridable(Date, {
 /**
  * Overridable datetime field (string-backed) that defaults to `DateTime.now`.
  *
- * @example
+ * **Example** (Log DateTimeWithNow schema)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
  * console.log(Model.DateTimeWithNow)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeWithNow = Overridable(S.DateTimeUtcFromString, {
   defaultValue: DateTime.now,
@@ -93,15 +97,16 @@ export const DateTimeWithNow = Overridable(S.DateTimeUtcFromString, {
 /**
  * Overridable datetime field (Date-backed) that defaults to `DateTime.now`.
  *
- * @example
+ * **Example** (Log DateTimeFromDateWithNow)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
  * console.log(Model.DateTimeFromDateWithNow)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeFromDateWithNow = Overridable(S.DateTimeUtcFromDate, {
   defaultValue: DateTime.now,
@@ -110,15 +115,16 @@ export const DateTimeFromDateWithNow = Overridable(S.DateTimeUtcFromDate, {
 /**
  * Overridable datetime field (number-backed) that defaults to `DateTime.now`.
  *
- * @example
+ * **Example** (Log DateTimeFromNumberWithNow)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
  * console.log(Model.DateTimeFromNumberWithNow)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeFromNumberWithNow = Overridable(S.DateTimeUtcFromMillis, {
   defaultValue: DateTime.now,
@@ -127,7 +133,8 @@ export const DateTimeFromNumberWithNow = Overridable(S.DateTimeUtcFromMillis, {
 /**
  * Interface for a string-backed datetime insert field.
  *
- * @example
+ * **Example** (Type DateTimeInsert field)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -135,8 +142,8 @@ export const DateTimeFromNumberWithNow = Overridable(S.DateTimeUtcFromMillis, {
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeInsert
   extends VariantSchema.Field<{
@@ -149,9 +156,12 @@ export interface DateTimeInsert
  * A field that represents a date-time value that is inserted as the current
  * `DateTime.Utc`. It is serialized as a string for the database.
  *
+ * **Details**
+ *
  * It is omitted from updates and is available for selection.
  *
- * @example
+ * **Example** (Use DateTimeInsert field)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -162,8 +172,8 @@ export interface DateTimeInsert
  * console.log(Group.fields.createdAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeInsert: DateTimeInsert = Field({
   select: S.DateTimeUtcFromString,
@@ -174,7 +184,8 @@ export const DateTimeInsert: DateTimeInsert = Field({
 /**
  * Interface for a Date-backed datetime insert field.
  *
- * @example
+ * **Example** (Type DateTimeInsertFromDate)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -182,8 +193,8 @@ export const DateTimeInsert: DateTimeInsert = Field({
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeInsertFromDate
   extends VariantSchema.Field<{
@@ -196,9 +207,12 @@ export interface DateTimeInsertFromDate
  * A field that represents a date-time value that is inserted as the current
  * `DateTime.Utc`. It is serialized as a `Date` for the database.
  *
+ * **Details**
+ *
  * It is omitted from updates and is available for selection.
  *
- * @example
+ * **Example** (Use DateTimeInsertFromDate)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -209,8 +223,8 @@ export interface DateTimeInsertFromDate
  * console.log(Group.fields.createdAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeInsertFromDate: DateTimeInsertFromDate = Field({
   select: S.DateTimeUtcFromDate,
@@ -221,7 +235,8 @@ export const DateTimeInsertFromDate: DateTimeInsertFromDate = Field({
 /**
  * Interface for a number-backed datetime insert field.
  *
- * @example
+ * **Example** (Type DateTimeInsertFromNumber)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -229,8 +244,8 @@ export const DateTimeInsertFromDate: DateTimeInsertFromDate = Field({
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeInsertFromNumber
   extends VariantSchema.Field<{
@@ -243,9 +258,12 @@ export interface DateTimeInsertFromNumber
  * A field that represents a date-time value that is inserted as the current
  * `DateTime.Utc`. It is serialized as a `number`.
  *
+ * **Details**
+ *
  * It is omitted from updates and is available for selection.
  *
- * @example
+ * **Example** (Use DateTimeInsertFromNumber)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -256,8 +274,8 @@ export interface DateTimeInsertFromNumber
  * console.log(Group.fields.createdAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeInsertFromNumber: DateTimeInsertFromNumber = Field({
   select: S.DateTimeUtcFromMillis,
@@ -268,7 +286,8 @@ export const DateTimeInsertFromNumber: DateTimeInsertFromNumber = Field({
 /**
  * Interface for a string-backed datetime update field.
  *
- * @example
+ * **Example** (Type DateTimeUpdate field)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -276,8 +295,8 @@ export const DateTimeInsertFromNumber: DateTimeInsertFromNumber = Field({
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeUpdate
   extends VariantSchema.Field<{
@@ -291,10 +310,13 @@ export interface DateTimeUpdate
  * A field that represents a date-time value that is updated as the current
  * `DateTime.Utc`. It is serialized as a string for the database.
  *
+ * **Details**
+ *
  * It is set to the current `DateTime.Utc` on updates and inserts and is
  * available for selection.
  *
- * @example
+ * **Example** (Use DateTimeUpdate field)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -305,8 +327,8 @@ export interface DateTimeUpdate
  * console.log(Group.fields.updatedAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeUpdate: DateTimeUpdate = Field({
   select: S.DateTimeUtcFromString,
@@ -318,7 +340,8 @@ export const DateTimeUpdate: DateTimeUpdate = Field({
 /**
  * Interface for a Date-backed datetime update field.
  *
- * @example
+ * **Example** (Type DateTimeUpdateFromDate)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -326,8 +349,8 @@ export const DateTimeUpdate: DateTimeUpdate = Field({
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeUpdateFromDate
   extends VariantSchema.Field<{
@@ -341,10 +364,13 @@ export interface DateTimeUpdateFromDate
  * A field that represents a date-time value that is updated as the current
  * `DateTime.Utc`. It is serialized as a `Date` for the database.
  *
+ * **Details**
+ *
  * It is set to the current `DateTime.Utc` on updates and inserts and is
  * available for selection.
  *
- * @example
+ * **Example** (Use DateTimeUpdateFromDate)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -355,8 +381,8 @@ export interface DateTimeUpdateFromDate
  * console.log(Group.fields.updatedAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeUpdateFromDate: DateTimeUpdateFromDate = Field({
   select: S.DateTimeUtcFromDate,
@@ -368,7 +394,8 @@ export const DateTimeUpdateFromDate: DateTimeUpdateFromDate = Field({
 /**
  * Interface for a number-backed datetime update field.
  *
- * @example
+ * **Example** (Type DateTimeUpdateFromNumber)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -376,8 +403,8 @@ export const DateTimeUpdateFromDate: DateTimeUpdateFromDate = Field({
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface DateTimeUpdateFromNumber
   extends VariantSchema.Field<{
@@ -391,10 +418,13 @@ export interface DateTimeUpdateFromNumber
  * A field that represents a date-time value that is updated as the current
  * `DateTime.Utc`. It is serialized as a `number`.
  *
+ * **Details**
+ *
  * It is set to the current `DateTime.Utc` on updates and inserts and is
  * available for selection.
  *
- * @example
+ * **Example** (Use DateTimeUpdateFromNumber)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -405,8 +435,8 @@ export interface DateTimeUpdateFromNumber
  * console.log(Group.fields.updatedAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeUpdateFromNumber: DateTimeUpdateFromNumber = Field({
   select: S.DateTimeUtcFromMillis,

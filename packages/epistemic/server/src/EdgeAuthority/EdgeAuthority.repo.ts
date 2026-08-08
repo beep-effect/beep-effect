@@ -158,13 +158,16 @@ const openHeadOf = (versions: ReadonlyArray<EdgeVersion>): O.Option<EdgeVersion>
  * The version a supersession replaces, chosen among the rows the transaction
  * locked (every row still current on the transaction axis).
  *
+ * **Details**
+ *
  * The row open on both axes wins when there is one — after an out-of-order
  * arrival the highest version is the late OLDER fact, and superseding that
  * instead of the standing head would rewrite history at the wrong end. When no
  * row is valid-open (the fact was closed by a fact-became-false correction) the
  * highest version stands in, so a closed head can still be corrected.
  *
- * @example
+ * **Example** (Function typeof check)
+ *
  * ```ts
  * import { supersessionHeadOf } from "./EdgeAuthority.repo.ts"
  *
@@ -305,12 +308,14 @@ type SupersedeEdgeFactInTransaction = {
  * Execute the conflict-safe close-and-insert supersession primitive inside a
  * caller-owned transaction.
  *
- * @remarks
+ * **Details**
+ *
  * This is intentionally server-private: it lets higher-level workflows append
  * their own outcome record in the same transaction without duplicating edge
  * authority logic or exposing a transaction handle through a public port.
  *
- * @example
+ * **Example** (Caller transaction wrapper)
+ *
  * ```ts
  * import { supersedeEdgeFactInTransaction } from "./EdgeAuthority.repo.ts"
  *
@@ -377,7 +382,8 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
 /**
  * Build the Drizzle-backed bitemporal edge authority repository.
  *
- * @example
+ * **Example** (Build Effect repository)
+ *
  * ```ts
  * import { makeDrizzleEdgeAuthorityRepository } from "@beep/epistemic-server/EdgeAuthority"
  * import { Effect } from "effect"

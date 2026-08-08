@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/AppItem/AppItem.model");
 /**
  * Experimental schema anchor for Box app item resources that represent application-owned Box content.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode AppItem)
+ *
  * ```ts
  * import { AppItem } from "@beep/box/experimental/domain/entities/AppItem/AppItem.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class AppItem extends S.Class<AppItem>($I`AppItem`)(
 /**
  * Type-level companion namespace for {@link AppItem} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode AppItem)
+ *
  * ```ts
  * import { AppItem } from "@beep/box/experimental/domain/entities/AppItem/AppItem.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace AppItem {
   /**
    * Encoded payload accepted by the {@link AppItem} entity schema.
    *
-   * @example
+   * **Example** (Encode AppItem payload)
+   *
    * ```ts
    * import { AppItem } from "@beep/box/experimental/domain/entities/AppItem/AppItem.model";
    * import * as S from "effect/Schema";

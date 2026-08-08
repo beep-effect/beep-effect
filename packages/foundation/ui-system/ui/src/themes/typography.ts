@@ -89,7 +89,8 @@ const h4Styles = {
 /**
  * Typography theme value.
  *
- * @example
+ * **Example** (Import and log typography)
+ *
  * ```ts
  * import { typography } from "@beep/ui/themes/typography"
  *
@@ -120,7 +121,8 @@ export const typography: ThemeOptions["typography"] = {
 /**
  * Typography theme theme value.
  *
- * @example
+ * **Example** (Import and log typographyTheme)
+ *
  * ```ts
  * import { typographyTheme } from "@beep/ui/themes/typography"
  *

@@ -37,7 +37,8 @@ const decodeMimeType = S.decodeUnknownResult(MimeType);
  * Derived from `@beep/schema`'s {@link ImageMimeType} so the literal subset stays
  * in lockstep with the canonical MIME vocabulary.
  *
- * @example
+ * **Example** (Checking PNG MIME eligibility)
+ *
  * ```ts
  * import { IMAGE_MIME_TYPES } from "@beep/editor/chat/attachment-model"
  *
@@ -53,7 +54,8 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pickOptions(["image/png", "image/j
  * Schema for the vision-eligible image MIME subset, used to guard whether a
  * captured attachment is an image via {@link isImageAttachment}.
  *
- * @example
+ * **Example** (Validating image MIME type)
+ *
  * ```ts
  * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
  *
@@ -73,7 +75,8 @@ export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
 /**
  * Companion type for {@link ImageAttachmentMimeType}.
  *
- * @example
+ * **Example** (Assigning image MIME type)
+ *
  * ```ts
  * import type { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
  *
@@ -89,7 +92,8 @@ export type ImageAttachmentMimeType = typeof ImageAttachmentMimeType.Type;
 /**
  * Default maximum captured attachment size (10 MB).
  *
- * @example
+ * **Example** (Converting default max to MB)
+ *
  * ```ts
  * import { DEFAULT_MAX_ATTACHMENT_BYTES } from "@beep/editor/chat/attachment-model"
  *
@@ -151,7 +155,8 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.
  *
- * @example
+ * **Example** (Creating oversized file rejection)
+ *
  * ```ts
  * import { AttachmentTooLarge } from "@beep/editor/chat/attachment-model"
  *
@@ -183,7 +188,8 @@ export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`
  * A captured file rejected because its `file.type` is empty or not a recognized
  * {@link MimeType}.
  *
- * @example
+ * **Example** (Creating invalid MIME rejection)
+ *
  * ```ts
  * import { AttachmentInvalidMimeType } from "@beep/editor/chat/attachment-model"
  *
@@ -217,7 +223,8 @@ export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvali
  * are revoked; this typed failure is safe to surface without rendering the raw
  * cause.
  *
- * @example
+ * **Example** (Creating port failure error)
+ *
  * ```ts
  * import { AttachmentPortFailed } from "@beep/editor/chat/attachment-model"
  *
@@ -248,7 +255,8 @@ export class AttachmentPortFailed extends TaggedErrorClass<AttachmentPortFailed>
  * file from one with an unrecognized MIME type, rather than collapsing both into
  * an opaque `O.none()`.
  *
- * @example
+ * **Example** (Typing a capture rejection)
+ *
  * ```ts
  * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
@@ -275,7 +283,8 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
 /**
  * Companion type for {@link AttachmentRejection}.
  *
- * @example
+ * **Example** (Assigning rejection union type)
+ *
  * ```ts
  * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
@@ -296,7 +305,8 @@ export type AttachmentRejection = typeof AttachmentRejection.Type;
  * Any typed failure the attachment surface can show inline: capture validation
  * or a rejected consumer port.
  *
- * @example
+ * **Example** (Typing an attachment failure)
+ *
  * ```ts
  * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
  *
@@ -320,7 +330,8 @@ export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidM
 /**
  * Companion type for {@link AttachmentFailure}.
  *
- * @example
+ * **Example** (Making attachment failure value)
+ *
  * ```ts
  * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
  *
@@ -345,11 +356,14 @@ let attachmentSequence = 0;
  * `objectUrl` must be released with {@link revokeAttachment} once the chip is
  * removed.
  *
+ * **Details**
+ *
  * Validation lives on the schema: `mimeType` is a {@link MimeType}, `size` is
  * bounded by {@link DEFAULT_MAX_ATTACHMENT_BYTES}, and capture-time size policy
  * is configurable via the {@link ComposerAttachment.fromFile} static.
  *
- * @example
+ * **Example** (Making a composer attachment)
+ *
  * ```ts
  * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
  *
@@ -392,7 +406,8 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    * policy lives here rather than on the field check so the per-composer
    * `maxAttachmentBytes` prop can tighten the bound.
    *
-   * @example
+   * **Example** (Checking file size budget)
+   *
    * ```ts
    * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
    *
@@ -417,7 +432,8 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    * Release the `objectUrl` of a {@link Success} with {@link revokeAttachment}
    * once removed.
    *
-   * @example
+   * **Example** (Capturing file as attachment)
+   *
    * ```ts
    * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
    * import { Result } from "effect"
@@ -431,7 +447,6 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    *
    * @effects Creates an object URL for successfully captured files; release it
    * with {@link revokeAttachment} once the attachment is removed.
-   *
    * @category utilities
    * @since 0.0.0
    */
@@ -468,7 +483,8 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
  * Whether an attachment is a vision-eligible image, guarded by the
  * {@link ImageAttachmentMimeType} schema.
  *
- * @example
+ * **Example** (Detecting vision-eligible image)
+ *
  * ```ts
  * import { ComposerAttachment, isImageAttachment } from "@beep/editor/chat/attachment-model"
  *
@@ -496,7 +512,8 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  * release the `objectUrl` of a {@link Success} with {@link revokeAttachment} once
  * it is removed.
  *
- * @example
+ * **Example** (Converting file to attachment)
+ *
  * ```ts
  * import { fileToAttachment } from "@beep/editor/chat/attachment-model"
  * import { Result } from "effect"
@@ -508,7 +525,6 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  *
  * @effects Creates an object URL for successfully captured files; release it
  * with {@link revokeAttachment} once the attachment is removed.
- *
  * @category utilities
  * @since 0.0.0
  */
@@ -526,7 +542,8 @@ export const fileToAttachment: {
 /**
  * Release the object URL backing an attachment thumbnail.
  *
- * @example
+ * **Example** (Revoking attachment object URL)
+ *
  * ```ts
  * import { ComposerAttachment, revokeAttachment } from "@beep/editor/chat/attachment-model"
  *
@@ -548,7 +565,6 @@ export const fileToAttachment: {
  * ```
  *
  * @effects Calls `URL.revokeObjectURL` for the attachment thumbnail URL.
- *
  * @category utilities
  * @since 0.0.0
  */

@@ -7,12 +7,14 @@ type OptionalPropRecord<Key extends string, Value> = { readonly [K in Key]?: Val
 /**
  * Builds an object containing one property only when the option is present.
  *
- * @example
+ * **Example** (Build property from Option)
+ *
  * ```ts
  * import * as O from "effect/Option"
  *
  * console.log(optionalProp("line", O.some(42)))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

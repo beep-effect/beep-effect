@@ -37,7 +37,8 @@ const RunpodRawPath = S.String.pipe(
 /**
  * Scalar query values accepted by Runpod request models and raw requests.
  *
- * @example
+ * **Example** (Inspect query scalar AST)
+ *
  * ```ts
  * import { RunpodQueryScalar } from "@beep/runpod"
  *
@@ -56,7 +57,8 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
 /**
  * Type for {@link RunpodQueryScalar}.
  *
- * @example
+ * **Example** (Assign scalar query value)
+ *
  * ```ts
  * import type { RunpodQueryScalar } from "@beep/runpod"
  *
@@ -74,7 +76,8 @@ const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withC
 /**
  * Query value accepted by the raw Runpod request escape hatch.
  *
- * @example
+ * **Example** (Inspect query value AST)
+ *
  * ```ts
  * import { RunpodQueryValue } from "@beep/runpod"
  *
@@ -94,7 +97,8 @@ export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArr
 /**
  * Type for {@link RunpodQueryValue}.
  *
- * @example
+ * **Example** (Assign array query value)
+ *
  * ```ts
  * import type { RunpodQueryValue } from "@beep/runpod"
  *
@@ -110,7 +114,8 @@ export type RunpodQueryValue = typeof RunpodQueryValue.Type;
 /**
  * Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.
  *
- * @example
+ * **Example** (Make raw GET request)
+ *
  * ```ts
  * import { RunpodRawRequest } from "@beep/runpod"
  *
@@ -141,7 +146,8 @@ export class RunpodRawRequest extends S.Class<RunpodRawRequest>($I`RunpodRawRequ
 /**
  * Raw Runpod HTTP response returned by {@link Runpod.raw}.
  *
- * @example
+ * **Example** (Make raw HTTP response)
+ *
  * ```ts
  * import { RunpodRawResponse } from "@beep/runpod"
  *
@@ -171,7 +177,8 @@ export class RunpodRawResponse extends S.Class<RunpodRawResponse>($I`RunpodRawRe
 /**
  * Public service shape for generated Runpod operations plus the raw request escape hatch.
  *
- * @example
+ * **Example** (Type raw request parameter)
+ *
  * ```ts
  * import type { RunpodShape } from "@beep/runpod"
  * import { RunpodRawRequest } from "@beep/runpod"
@@ -851,7 +858,8 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
 /**
  * Effect service for all documented Runpod REST API v1 operations.
  *
- * @example
+ * **Example** (Create Runpod service layer)
+ *
  * ```ts
  * import { Runpod, RunpodConfigInput } from "@beep/runpod"
  *

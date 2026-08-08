@@ -21,7 +21,8 @@ const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.errors")
 /**
  * Operations the execution ledger port exposes.
  *
- * @example
+ * **Example** (Log appendDecision enum value)
+ *
  * ```ts
  * import { ExecutionLedgerOperation } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
@@ -46,7 +47,8 @@ export const ExecutionLedgerOperation = LiteralKit([
 /**
  * Runtime type for {@link ExecutionLedgerOperation}.
  *
- * @example
+ * **Example** (Assign typed operation value)
+ *
  * ```ts
  * import type { ExecutionLedgerOperation } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
@@ -69,11 +71,14 @@ const optionalDefect = (description: string) =>
 /**
  * A ledger write the database rejected by constraint name.
  *
+ * **Details**
+ *
  * The append-only tables reject chain collisions, fabricated outcomes, and
  * shape violations by NAME — never by message prose — so the adapter maps the
  * name straight into this error and the caller branches on nothing weaker.
  *
- * @example
+ * **Example** (Build constraint violation error)
+ *
  * ```ts
  * import { ExecutionLedgerConstraintViolation } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
@@ -106,7 +111,8 @@ export class ExecutionLedgerConstraintViolation extends TaggedErrorClass<Executi
   /**
    * Build the violation for a named constraint rejection.
    *
-   * @example
+   * **Example** (Build named constraint violation)
+   *
    * ```ts
    * import { ExecutionLedgerConstraintViolation } from "@beep/epistemic-use-cases/ExecutionLedger"
    *
@@ -127,7 +133,8 @@ export class ExecutionLedgerConstraintViolation extends TaggedErrorClass<Executi
 /**
  * The execution ledger could not serve a request.
  *
- * @example
+ * **Example** (Create unavailable during error)
+ *
  * ```ts
  * import { ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
@@ -161,7 +168,8 @@ export class ExecutionLedgerUnavailable extends TaggedErrorClass<ExecutionLedger
   /**
    * Build the availability failure for an operation.
    *
-   * @example
+   * **Example** (Build availability failure tag)
+   *
    * ```ts
    * import { ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
    *
@@ -183,7 +191,8 @@ export class ExecutionLedgerUnavailable extends TaggedErrorClass<ExecutionLedger
 /**
  * Union of execution ledger write failures.
  *
- * @example
+ * **Example** (Check error union membership)
+ *
  * ```ts
  * import { ExecutionLedgerError, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
@@ -203,7 +212,8 @@ export const ExecutionLedgerError = S.Union([ExecutionLedgerConstraintViolation,
 /**
  * Runtime type for {@link ExecutionLedgerError}.
  *
- * @example
+ * **Example** (Type error handler parameter)
+ *
  * ```ts
  * import type { ExecutionLedgerError } from "@beep/epistemic-use-cases/ExecutionLedger"
  *

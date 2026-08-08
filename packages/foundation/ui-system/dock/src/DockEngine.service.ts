@@ -64,7 +64,8 @@ const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: 
 /**
  * Service contract for decoding, encoding, restoring, and transitioning dock state.
  *
- * @example
+ * **Example** (Encode workspace snapshot)
+ *
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import type { DockEngineShape } from "@beep/dock"
@@ -101,11 +102,14 @@ export interface DockEngineShape {
 /**
  * Context service for the stateless dock transition kernel.
  *
- * @remarks The Atom runtime consumes this capability, and alternate layers can
+ * **Details**
+ *
+ * The Atom runtime consumes this capability, and alternate layers can
  * add policy, authorization, collaboration, or remote execution without
  * changing the atom graph.
  *
- * @example
+ * **Example** (Encode via DockEngine service)
+ *
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import { Effect } from "effect"
@@ -140,7 +144,8 @@ const makeDockEngine = Effect.succeed(
 /**
  * Default deterministic layer for the dock transition kernel.
  *
- * @example
+ * **Example** (Provide live encode snapshot)
+ *
  * ```ts
  * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import { Effect } from "effect"
@@ -162,7 +167,8 @@ export const DockEngineLive = Layer.effect(DockEngine, makeDockEngine);
 /**
  * Replaceable snapshot persistence port contract.
  *
- * @example
+ * **Example** (Implement store load save)
+ *
  * ```ts
  * import type { DockSnapshotStoreShape } from "@beep/dock"
  * import { Effect } from "effect"
@@ -187,7 +193,8 @@ export interface DockSnapshotStoreShape {
 /**
  * Context service for replaceable snapshot persistence.
  *
- * @example
+ * **Example** (Save and load snapshot)
+ *
  * ```ts
  * import { DockSnapshotStore, makeDockSnapshotStoreMemory } from "@beep/dock"
  * import { Effect } from "effect"
@@ -210,7 +217,8 @@ export class DockSnapshotStore extends Context.Service<DockSnapshotStore, DockSn
 /**
  * Creates an isolated in-memory snapshot-store layer.
  *
- * @example
+ * **Example** (Seeded memory store layer)
+ *
  * ```ts
  * import { makeDockSnapshotStoreMemory } from "@beep/dock"
  * import { DockSnapshotStore } from "@beep/dock"
@@ -245,7 +253,8 @@ export const makeDockSnapshotStoreMemory = (initial: O.Option<string> = O.none()
 /**
  * Resolves a loaded snapshot or fails with typed absence.
  *
- * @example
+ * **Example** (Require present snapshot)
+ *
  * ```ts
  * import { requireSnapshot } from "@beep/dock"
  * import { Effect } from "effect"

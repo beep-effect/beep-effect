@@ -88,7 +88,8 @@ import type {
 /**
  * Inline constructor input accepted by text-oriented builders.
  *
- * @example
+ * **Example** (Accept InlineInput type)
+ *
  * ```ts
  * import type { InlineInput } from "@beep/md/Md"
  *
@@ -104,7 +105,8 @@ export type InlineInput = string | Inline;
 /**
  * Inline child content accepted by inline and text block builders.
  *
- * @example
+ * **Example** (Inline content array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { InlineContent } from "@beep/md/Md"
@@ -121,7 +123,8 @@ export type InlineContent = InlineInput | ReadonlyArray<InlineInput>;
 /**
  * Overloaded builder shape for inline-content constructors.
  *
- * @example
+ * **Example** (Accept Strong builder)
+ *
  * ```ts
  * import type { InlineContentBuilder } from "@beep/md/Md"
  * import type { Strong } from "@beep/md/Md.model"
@@ -141,7 +144,8 @@ export type InlineContentBuilder<Node> = {
 /**
  * Block constructor input accepted by block containers.
  *
- * @example
+ * **Example** (Accept BlockInput type)
+ *
  * ```ts
  * import type { BlockInput } from "@beep/md/Md"
  *
@@ -157,7 +161,8 @@ export type BlockInput = string | Block;
 /**
  * Block child content accepted by block container call forms.
  *
- * @example
+ * **Example** (Block content array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockContent } from "@beep/md/Md"
@@ -174,10 +179,13 @@ export type BlockContent = BlockInput | ReadonlyArray<BlockInput>;
 /**
  * Tagged-template interpolation accepted by block containers.
  *
+ * **Details**
+ *
  * Arrays in templates are inline content arrays; use the call form for block
  * arrays.
  *
- * @example
+ * **Example** (Template value as heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockTemplateValue } from "@beep/md/Md"
@@ -194,7 +202,8 @@ export type BlockTemplateValue = InlineContent | Block;
 /**
  * Overloaded builder shape for block-content constructors.
  *
- * @example
+ * **Example** (Accept BlockQuote builder)
+ *
  * ```ts
  * import type { BlockContentBuilder } from "@beep/md/Md"
  * import type { BlockQuote } from "@beep/md/Md.model"
@@ -214,7 +223,8 @@ export type BlockContentBuilder<Node> = {
 /**
  * Child input accepted inside list item constructors.
  *
- * @example
+ * **Example** (Strong list item child)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemChildInput } from "@beep/md/Md"
@@ -231,7 +241,8 @@ export type ListItemChildInput = InlineInput | Block;
 /**
  * List item child content accepted by ordered, unordered, and task list builders.
  *
- * @example
+ * **Example** (Nested list item content)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemContent } from "@beep/md/Md"
@@ -248,7 +259,8 @@ export type ListItemContent = ListItemChildInput | ReadonlyArray<ListItemChildIn
 /**
  * Overloaded builder shape for list item content constructors.
  *
- * @example
+ * **Example** (Accept Li builder)
+ *
  * ```ts
  * import type { ListItemContentBuilder } from "@beep/md/Md"
  * import type { Li } from "@beep/md/Md.model"
@@ -268,7 +280,8 @@ export type ListItemContentBuilder<Node> = {
 /**
  * Input accepted by ordered and unordered list constructors.
  *
- * @example
+ * **Example** (List item input array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemInput } from "@beep/md/Md"
@@ -297,10 +310,8 @@ type TaskListCompatibilityInput =
 /**
  * Input accepted by task list constructors.
  *
- * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
- * {@link taskListFromItems}. This union remains for shorthand compatibility.
+ * **Example** (Checked task item object)
  *
- * @example
  * ```ts
  * import type { TaskListItemInput } from "@beep/md/Md"
  *
@@ -308,6 +319,8 @@ type TaskListCompatibilityInput =
  * console.log(item)
  * ```
  *
+ * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
+ * {@link taskListFromItems}. This union remains for shorthand compatibility.
  * @category models
  * @since 0.0.0
  */
@@ -316,7 +329,8 @@ export type TaskListItemInput = TaskListCompatibilityInput;
 /**
  * Input accepted by table cell constructors.
  *
- * @example
+ * **Example** (String table cell)
+ *
  * ```ts
  * import type { TableCellInput } from "@beep/md/Md"
  *
@@ -332,7 +346,8 @@ export type TableCellInput = InlineContent | TableCell;
 /**
  * Input accepted by table row constructors.
  *
- * @example
+ * **Example** (Row with table cell)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { TableRowInput } from "@beep/md/Md"
@@ -553,7 +568,8 @@ const asTableRow = (input: TableRowInput): TableRow =>
 /**
  * Creates plain escaped inline text.
  *
- * @example
+ * **Example** (Create plain text)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -569,7 +585,8 @@ export const text = (value: string): Text => Text.make({ value });
 /**
  * Creates trusted raw Markdown inline content.
  *
- * @example
+ * **Example** (Create raw Markdown)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -585,9 +602,12 @@ export const rawMarkdown = (value: string): RawMarkdown => RawMarkdown.make({ va
 /**
  * Creates raw HTML inline content for adapters that opt into trusted HTML rendering.
  *
+ * **Details**
+ *
  * The built-in {@link HtmlFragmentAdapter} escapes this value by default.
  *
- * @example
+ * **Example** (Create raw HTML)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -603,7 +623,8 @@ export const rawHtml = (value: string): RawHtml => RawHtml.make({ value });
 /**
  * Creates strong inline content.
  *
- * @example
+ * **Example** (Strong with nested code)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -619,7 +640,8 @@ export const strong = makeInlineContentBuilder((children): Strong => Strong.make
 /**
  * Creates emphasized inline content.
  *
- * @example
+ * **Example** (Create emphasized text)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -635,7 +657,8 @@ export const em = makeInlineContentBuilder((children): Em => Em.make({ children 
 /**
  * Creates deleted inline content.
  *
- * @example
+ * **Example** (Create deleted text)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -651,7 +674,8 @@ export const del = makeInlineContentBuilder((children): Del => Del.make({ childr
 /**
  * Creates an inline code span.
  *
- * @example
+ * **Example** (Create inline code)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -667,7 +691,8 @@ export const code = (value: string): Code => Code.make({ value });
 /**
  * Creates an inline hyperlink.
  *
- * @example
+ * **Example** (Create hyperlink)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -693,7 +718,9 @@ export const a: {
  * Alternate text lives in the options object so the constructor keeps a single
  * positional argument; omitting it yields the empty alt text.
  *
- * @example
+ *
+ * **Example** (Create inline image)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -716,7 +743,8 @@ export const img: {
 /**
  * Creates an inline line break.
  *
- * @example
+ * **Example** (Create line break)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -731,7 +759,8 @@ export const br: Br = Br.make({});
 /**
  * Creates inline TeX math content.
  *
- * @example
+ * **Example** (Create inline math)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -747,7 +776,8 @@ export const inlineMath = (value: string): InlineMath => InlineMath.make({ value
 /**
  * Creates an inline footnote reference.
  *
- * @example
+ * **Example** (Create footnote reference)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -764,7 +794,8 @@ export const footnoteRef = (identifier: string): FootnoteReference =>
 /**
  * Creates a level-one heading block.
  *
- * @example
+ * **Example** (Create h1 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -780,7 +811,8 @@ export const h1 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-two heading block.
  *
- * @example
+ * **Example** (Create h2 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -796,7 +828,8 @@ export const h2 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-three heading block.
  *
- * @example
+ * **Example** (Create h3 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -812,7 +845,8 @@ export const h3 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-four heading block.
  *
- * @example
+ * **Example** (Create h4 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -828,7 +862,8 @@ export const h4 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-five heading block.
  *
- * @example
+ * **Example** (Create h5 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -844,7 +879,8 @@ export const h5 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-six heading block.
  *
- * @example
+ * **Example** (Create h6 heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -860,7 +896,8 @@ export const h6 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a paragraph block.
  *
- * @example
+ * **Example** (Create paragraph)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -876,7 +913,8 @@ export const p = makeInlineContentBuilder((children): PNode => PNode.make({ chil
 /**
  * Creates a list item node.
  *
- * @example
+ * **Example** (Create list item)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -892,7 +930,8 @@ export const li = makeListItemContentBuilder((children): Li => Li.make({ childre
 /**
  * Creates an unordered list block.
  *
- * @example
+ * **Example** (Create unordered list)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -908,7 +947,8 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
 /**
  * Creates an ordered list block.
  *
- * @example
+ * **Example** (Create ordered list)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -934,7 +974,8 @@ export const ol: {
 /**
  * Creates a GFM task list item.
  *
- * @example
+ * **Example** (Create checked task item)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -963,7 +1004,8 @@ const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInpu
 /**
  * Creates a GFM task list block.
  *
- * @example
+ * **Example** (Create task list)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -981,7 +1023,8 @@ export const taskList = taskListCompatibility;
 /**
  * Creates a GFM task list from canonical tagged task items.
  *
- * @example
+ * **Example** (Task list from items)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1000,7 +1043,8 @@ export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): Ta
 /**
  * Creates a block quote container.
  *
- * @example
+ * **Example** (Create blockquote)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1016,7 +1060,8 @@ export const blockquote = makeBlockContentBuilder((children): BlockQuote => Bloc
 /**
  * Creates a fenced code block.
  *
- * @example
+ * **Example** (Create fenced code block)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1039,7 +1084,8 @@ export const pre: {
 /**
  * Creates a table cell with inline content.
  *
- * @example
+ * **Example** (Create table cell)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1055,7 +1101,8 @@ export const tableCell = (children: InlineContent): TableCell => TableCell.make(
 /**
  * Creates a table row from table cells.
  *
- * @example
+ * **Example** (Create table row)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1072,7 +1119,8 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
 /**
  * Creates a Markdown table block.
  *
- * @example
+ * **Example** (Create table with header)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1108,7 +1156,8 @@ export const table: {
 /**
  * Creates a display TeX math block.
  *
- * @example
+ * **Example** (Create math block)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1124,7 +1173,8 @@ export const mathBlock = (value: string): MathBlock => MathBlock.make({ value })
 /**
  * Creates a footnote definition block.
  *
- * @example
+ * **Example** (Create footnote definition)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1147,7 +1197,8 @@ export const footnoteDef: {
 /**
  * Creates a typed admonition block.
  *
- * @example
+ * **Example** (Create warning admonition)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1170,7 +1221,8 @@ export const admonition: {
 /**
  * Creates a safe generalized block embed.
  *
- * @example
+ * **Example** (Create video embed)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1198,7 +1250,8 @@ export const embed: {
 /**
  * Creates the encoded YouTube embed payload decoded by public constructors.
  *
- * @example
+ * **Example** (Create YouTube embed result)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
@@ -1215,7 +1268,8 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
 /**
  * Creates a YouTube embed block and captures schema validation failures.
  *
- * @example
+ * **Example** (Create YouTube embed)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
@@ -1233,7 +1287,8 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
 /**
  * Effectful YouTube embed constructor.
  *
- * @example
+ * **Example** (Effectful YouTube constructor)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
@@ -1252,9 +1307,12 @@ export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: s
 /**
  * Creates a YouTube embed block and throws on schema validation failure.
  *
+ * **Details**
+ *
  * Prefer {@link youtube} or {@link youtubeEffect} at input boundaries.
  *
- * @example
+ * **Example** (Unsafe YouTube constructor)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1270,7 +1328,8 @@ export const youtubeUnsafe = (videoId: string): YouTube => YouTube.make({ videoI
 /**
  * Creates a horizontal rule block.
  *
- * @example
+ * **Example** (Create horizontal rule)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1285,7 +1344,8 @@ export const hr: Hr = Hr.make({});
 /**
  * Creates a Markdown document from block children.
  *
- * @example
+ * **Example** (Create Markdown document)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -1310,12 +1370,15 @@ export const make: {
 /**
  * Namespace-style public Markdown DSL.
  *
+ * **Details**
+ *
  * Simple text-oriented block builders such as {@link h1}, {@link h2}, and
  * {@link p} are intended to read naturally as tagged template literals while
  * keeping function-call overloads for dynamic strings and structured inline
  * children.
  *
- * @example
+ * **Example** (Build and render document)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { Result } from "effect"

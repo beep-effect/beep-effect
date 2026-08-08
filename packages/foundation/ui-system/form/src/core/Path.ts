@@ -59,12 +59,14 @@ type PathsLimited<Data, Path extends string = "", Depth extends number = 3> = De
 /**
  * Dot/bracket field paths available for a form value shape.
  *
- * @remarks
+ * **Details**
+ *
  * Object keys use dot notation (`user.name`). Array entries accept both the
  * TanStack-friendly dot form (`items.0.name`) and the schema formatter's
  * bracket form (`items[0].name`).
  *
- * @example
+ * **Example** (Satisfies nested array path)
+ *
  * ```ts
  * import type { Paths } from "@beep/form/core/Path"
  *
@@ -86,7 +88,8 @@ export type Paths<Data> = PathsLimited<Data, "", 5>;
 /**
  * Error map keyed by typed form paths, plus the empty-string root error key.
  *
- * @example
+ * **Example** (Root and field errors)
+ *
  * ```ts
  * import type { PathErrorMap } from "@beep/form/core/Path"
  *
@@ -108,7 +111,8 @@ export type PathErrorMap<Data> = Partial<Record<Paths<Data> | "", string>>;
 /**
  * Validator result shape used by path-keyed form validation helpers.
  *
- * @example
+ * **Example** (Field validation result)
+ *
  * ```ts
  * import type { PathValidationResult } from "@beep/form/core/Path"
  *
@@ -156,7 +160,8 @@ const propertyKeyToPathSegment = (key: PropertyKey): string =>
 /**
  * Converts a schema issue path into dot-and-bracket form field notation.
  *
- * @example
+ * **Example** (Schema path to field)
+ *
  * ```ts
  * import { schemaPathToFieldPath } from "@beep/form/core/Path"
  *
@@ -190,7 +195,8 @@ export const schemaPathToFieldPath = (path: ReadonlyArray<PropertyKey | Standard
 /**
  * Tests whether a path is equal to or nested below a root path.
  *
- * @example
+ * **Example** (Nested path under root)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { isPathUnderRoot } from "@beep/form/core/Path"
@@ -214,7 +220,8 @@ export const isPathUnderRoot: {
 /**
  * Tests whether a path or one of its parents is marked dirty.
  *
- * @example
+ * **Example** (Parent dirty check)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { isPathOrParentDirty } from "@beep/form/core/Path"
@@ -257,7 +264,8 @@ export const isPathOrParentDirty: {
 /**
  * Reads a value from a dot-and-bracket path.
  *
- * @example
+ * **Example** (Read nested path value)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { getNestedValue } from "@beep/form/core/Path"
@@ -294,7 +302,8 @@ type SetNestedValueResult<T> = T extends unknown ? T : never;
 /**
  * Sets a value at a dot-and-bracket path while copying touched containers.
  *
- * @example
+ * **Example** (Set nested path value)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { setNestedValue } from "@beep/form/core/Path"

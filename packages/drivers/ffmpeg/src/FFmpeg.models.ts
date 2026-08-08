@@ -16,7 +16,8 @@ const $I = $FfmpegId.create("FFmpeg.models");
 /**
  * Positive frame extraction rate in frames per second.
  *
- * @example
+ * **Example** (Decode positive frame rate)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveFrameRate } from "@beep/ffmpeg"
@@ -60,7 +61,8 @@ export const PositiveFrameRate = S.Finite.check(
 /**
  * Positive frame extraction rate in frames per second.
  *
- * @example
+ * **Example** (Typed positive frame rate)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveFrameRate } from "@beep/ffmpeg"
@@ -77,7 +79,8 @@ export type PositiveFrameRate = typeof PositiveFrameRate.Type;
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Decode positive milliseconds)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveMilliseconds } from "@beep/ffmpeg"
@@ -121,7 +124,8 @@ export const PositiveMilliseconds = S.Finite.check(
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Typed positive milliseconds)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveMilliseconds } from "@beep/ffmpeg"
@@ -138,7 +142,8 @@ export type PositiveMilliseconds = typeof PositiveMilliseconds.Type;
 /**
  * File-name prefix accepted for generated frame outputs.
  *
- * @example
+ * **Example** (Decode safe frame prefix)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeFramePrefix } from "@beep/ffmpeg"
@@ -182,7 +187,8 @@ export const SafeFramePrefix = S.String.check(
 /**
  * Safe frame filename prefix.
  *
- * @example
+ * **Example** (Typed safe frame prefix)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeFramePrefix } from "@beep/ffmpeg"
@@ -199,7 +205,8 @@ export type SafeFramePrefix = typeof SafeFramePrefix.Type;
 /**
  * Non-negative finite duration measured in seconds.
  *
- * @example
+ * **Example** (Make non-negative seconds)
+ *
  * ```ts
  * import { NonNegativeSeconds } from "@beep/ffmpeg"
  *
@@ -227,7 +234,8 @@ export const NonNegativeSeconds = S.Finite.check(
 /**
  * Non-negative finite duration measured in seconds.
  *
- * @example
+ * **Example** (Typed non-negative seconds)
+ *
  * ```ts
  * import { NonNegativeSeconds } from "@beep/ffmpeg"
  * import type { NonNegativeSeconds as NonNegativeSecondsValue } from "@beep/ffmpeg"
@@ -244,7 +252,8 @@ export type NonNegativeSeconds = typeof NonNegativeSeconds.Type;
 /**
  * Zero-based frame index.
  *
- * @example
+ * **Example** (Make zero-based frame index)
+ *
  * ```ts
  * import { FrameIndex } from "@beep/ffmpeg"
  *
@@ -272,7 +281,8 @@ export const FrameIndex = S.Int.check(
 /**
  * Zero-based frame index.
  *
- * @example
+ * **Example** (Typed zero-based frame index)
+ *
  * ```ts
  * import { FrameIndex } from "@beep/ffmpeg"
  * import type { FrameIndex as FrameIndexValue } from "@beep/ffmpeg"
@@ -289,7 +299,8 @@ export type FrameIndex = typeof FrameIndex.Type;
 /**
  * Non-negative integer frame count.
  *
- * @example
+ * **Example** (Make non-negative frame count)
+ *
  * ```ts
  * import { FrameCount } from "@beep/ffmpeg"
  *
@@ -317,7 +328,8 @@ export const FrameCount = S.Int.check(
 /**
  * Non-negative integer frame count.
  *
- * @example
+ * **Example** (Typed non-negative frame count)
+ *
  * ```ts
  * import { FrameCount } from "@beep/ffmpeg"
  * import type { FrameCount as FrameCountValue } from "@beep/ffmpeg"
@@ -334,7 +346,8 @@ export type FrameCount = typeof FrameCount.Type;
 /**
  * Positive integer pixel dimension.
  *
- * @example
+ * **Example** (Make positive pixel dimension)
+ *
  * ```ts
  * import { VideoDimension } from "@beep/ffmpeg"
  *
@@ -362,7 +375,8 @@ export const VideoDimension = S.Int.check(
 /**
  * Positive integer pixel dimension.
  *
- * @example
+ * **Example** (Typed positive pixel dimension)
+ *
  * ```ts
  * import { VideoDimension } from "@beep/ffmpeg"
  * import type { VideoDimension as VideoDimensionValue } from "@beep/ffmpeg"
@@ -379,7 +393,8 @@ export type VideoDimension = typeof VideoDimension.Type;
 /**
  * FFmpeg progress percent in the closed 0-100 range.
  *
- * @example
+ * **Example** (Make progress percent value)
+ *
  * ```ts
  * import { FFmpegProgressPercent } from "@beep/ffmpeg"
  *
@@ -422,7 +437,8 @@ export const FFmpegProgressPercent = S.Finite.check(
 /**
  * FFmpeg progress percent in the closed 0-100 range.
  *
- * @example
+ * **Example** (Typed progress percent value)
+ *
  * ```ts
  * import { FFmpegProgressPercent } from "@beep/ffmpeg"
  * import type { FFmpegProgressPercent as FFmpegProgressPercentValue } from "@beep/ffmpeg"
@@ -439,7 +455,8 @@ export type FFmpegProgressPercent = typeof FFmpegProgressPercent.Type;
 /**
  * Minimum filename padding width used for generated frame numbers.
  *
- * @example
+ * **Example** (Make filename padding width)
+ *
  * ```ts
  * import { FrameFilenamePadding } from "@beep/ffmpeg"
  *
@@ -467,7 +484,8 @@ export const FrameFilenamePadding = S.Int.check(
 /**
  * Minimum filename padding width used for generated frame numbers.
  *
- * @example
+ * **Example** (Typed filename padding width)
+ *
  * ```ts
  * import { FrameFilenamePadding } from "@beep/ffmpeg"
  * import type { FrameFilenamePadding as FrameFilenamePaddingValue } from "@beep/ffmpeg"
@@ -484,7 +502,8 @@ export type FrameFilenamePadding = typeof FrameFilenamePadding.Type;
 /**
  * Runtime path overrides for the native FFmpeg binaries.
  *
- * @example
+ * **Example** (Make FFmpeg path overrides)
+ *
  * ```ts
  * import { FFmpegConfigInput } from "@beep/ffmpeg"
  *
@@ -524,7 +543,8 @@ export class FFmpegConfigInput extends S.Class<FFmpegConfigInput>($I`FFmpegConfi
 /**
  * Resolved runtime configuration for the native FFmpeg driver.
  *
- * @example
+ * **Example** (Make resolved FFmpeg config)
+ *
  * ```ts
  * import { FFmpegConfig } from "@beep/ffmpeg"
  *
@@ -565,7 +585,8 @@ export class FFmpegConfig extends S.Class<FFmpegConfig>($I`FFmpegConfig`)(
 /**
  * Request to probe a video's first video stream.
  *
- * @example
+ * **Example** (Make probe video request)
+ *
  * ```ts
  * import { ProbeVideoRequest } from "@beep/ffmpeg"
  *
@@ -594,7 +615,8 @@ export class ProbeVideoRequest extends S.Class<ProbeVideoRequest>($I`ProbeVideoR
 /**
  * Video metadata extracted from ffprobe.
  *
- * @example
+ * **Example** (Make video probe metadata)
+ *
  * ```ts
  * import { VideoProbe } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -664,7 +686,8 @@ export class VideoProbe extends S.Class<VideoProbe>($I`VideoProbe`)(
 /**
  * Request to extract PNG frames from a video.
  *
- * @example
+ * **Example** (Make extract frames request)
+ *
  * ```ts
  * import { ExtractFramesRequest } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -732,7 +755,8 @@ export class ExtractFramesRequest extends S.Class<ExtractFramesRequest>($I`Extra
 /**
  * A frame written by an extract-frames run.
  *
- * @example
+ * **Example** (Make extracted frame record)
+ *
  * ```ts
  * import { ExtractedFrame } from "@beep/ffmpeg"
  *
@@ -779,7 +803,8 @@ export class ExtractedFrame extends S.Class<ExtractedFrame>($I`ExtractedFrame`)(
 /**
  * Options recorded in an extract-frames manifest.
  *
- * @example
+ * **Example** (Make manifest options record)
+ *
  * ```ts
  * import { ExtractFramesManifestOptions } from "@beep/ffmpeg"
  *
@@ -818,7 +843,8 @@ export class ExtractFramesManifestOptions extends S.Class<ExtractFramesManifestO
 /**
  * Summary recorded in an extract-frames manifest.
  *
- * @example
+ * **Example** (Make manifest summary record)
+ *
  * ```ts
  * import { ExtractFramesManifestSummary } from "@beep/ffmpeg"
  *
@@ -847,7 +873,8 @@ export class ExtractFramesManifestSummary extends S.Class<ExtractFramesManifestS
 /**
  * JSON manifest written by an extract-frames run.
  *
- * @example
+ * **Example** (Make extract frames manifest)
+ *
  * ```ts
  * import { ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary, VideoProbe } from "@beep/ffmpeg"
  *
@@ -920,7 +947,8 @@ export class ExtractFramesManifest extends S.Class<ExtractFramesManifest>($I`Ext
 /**
  * Result returned after frames have been committed.
  *
- * @example
+ * **Example** (Make extract frames result)
+ *
  * ```ts
  * import { ExtractFramesResult } from "@beep/ffmpeg"
  *
@@ -973,7 +1001,8 @@ export class ExtractFramesResult extends S.Class<ExtractFramesResult>($I`Extract
 /**
  * Event emitted when extract-frames starts.
  *
- * @example
+ * **Example** (Make started event payload)
+ *
  * ```ts
  * import { FFmpegStartedEvent } from "@beep/ffmpeg"
  *
@@ -1026,7 +1055,8 @@ export class FFmpegStartedEvent extends S.Class<FFmpegStartedEvent>($I`FFmpegSta
 /**
  * Event emitted when ffmpeg reports extraction progress.
  *
- * @example
+ * **Example** (Make progress event payload)
+ *
  * ```ts
  * import { FFmpegProgressEvent } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -1088,7 +1118,8 @@ export class FFmpegProgressEvent extends S.Class<FFmpegProgressEvent>($I`FFmpegP
 /**
  * Event emitted after frames and manifest are committed.
  *
- * @example
+ * **Example** (Make completed event payload)
+ *
  * ```ts
  * import { FFmpegCompletedEvent } from "@beep/ffmpeg"
  *
@@ -1135,7 +1166,8 @@ export class FFmpegCompletedEvent extends S.Class<FFmpegCompletedEvent>($I`FFmpe
 /**
  * Structured events emitted by extract-frames.
  *
- * @example
+ * **Example** (Read event kind field)
+ *
  * ```ts
  * import type { FFmpegEvent } from "@beep/ffmpeg"
  *
@@ -1157,7 +1189,8 @@ export const FFmpegEvent = S.Union([FFmpegStartedEvent, FFmpegProgressEvent, FFm
 /**
  * Structured events emitted by extract-frames.
  *
- * @example
+ * **Example** (Access event kind field)
+ *
  * ```ts
  * import type { FFmpegEvent } from "@beep/ffmpeg"
  *
@@ -1173,7 +1206,8 @@ export type FFmpegEvent = typeof FFmpegEvent.Type;
 /**
  * Decode an unknown value into an extract-frames request.
  *
- * @example
+ * **Example** (Decode extract frames request)
+ *
  * ```ts
  * import { decodeExtractFramesRequest } from "@beep/ffmpeg"
  *
@@ -1191,7 +1225,8 @@ export const decodeExtractFramesRequest: (input: unknown) => Effect.Effect<Extra
 /**
  * Decode an unknown value into a probe request.
  *
- * @example
+ * **Example** (Decode probe video request)
+ *
  * ```ts
  * import { decodeProbeVideoRequest } from "@beep/ffmpeg"
  *
@@ -1209,7 +1244,8 @@ export const decodeProbeVideoRequest: (input: unknown) => Effect.Effect<ProbeVid
 /**
  * Encode an extract-frames manifest into its JSON-safe shape.
  *
- * @example
+ * **Example** (Encode extract frames manifest)
+ *
  * ```ts
  * import { encodeExtractFramesManifest, ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary, VideoProbe } from "@beep/ffmpeg"
  *

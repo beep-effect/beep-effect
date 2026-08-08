@@ -8,7 +8,8 @@
 /**
  * Office-action extraction label exports.
  *
- * @example
+ * **Example** (Check extraction label export)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -22,7 +23,8 @@ export * from "./OfficeActionExtractionLabel.ts";
 /**
  * Office-action review port exports.
  *
- * @example
+ * **Example** (Check review port export)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -36,7 +38,8 @@ export * from "./OfficeActionReview.ports.ts";
 /**
  * Office-action review implementation exports.
  *
- * @example
+ * **Example** (Check review implementation export)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/OfficeActionReview"
  *

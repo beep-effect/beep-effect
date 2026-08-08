@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for CSV formatters.
  *
- * @example
+ * **Example** (Import CsvFormatter namespace)
+ *
  * ```ts
  * import * as CsvFormatter from "@beep/schema/CsvFormatter"
  *

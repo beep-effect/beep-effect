@@ -13,11 +13,12 @@ import { fcRuns } from "./FastCheckRuns.ts";
 /**
  * Assert that a schema-derived arbitrary only emits values accepted by the same schema without transformation.
  *
+ * **Details**
+ *
  * Decoded values are compared with schema-derived equivalence so object and class schemas can use the helper.
  *
- * @param schema - Schema whose generated values must decode back to themselves.
- * @param options - Optional FastCheck tuning for the assertion.
- * @example
+ * **Example** (Assert arbitrary decodes to self)
+ *
  * ```ts
  * import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils"
  * import { pipe } from "effect"
@@ -27,6 +28,9 @@ import { fcRuns } from "./FastCheckRuns.ts";
  * assertSchemaArbitraryDecodesToSelf(Status, { numRuns: 4 })
  * pipe(Status, assertSchemaArbitraryDecodesToSelf({ numRuns: 4 }))
  * ```
+ *
+ * @param schema - Schema whose generated values must decode back to themselves.
+ * @param options - Optional FastCheck tuning for the assertion.
  * @category schema
  * @since 0.0.0
  */

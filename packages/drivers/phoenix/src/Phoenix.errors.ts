@@ -19,7 +19,8 @@ const $I = $PhoenixId.create("Phoenix.errors");
 /**
  * Driver operation names surfaced in {@link PhoenixError} diagnostics.
  *
- * @example
+ * **Example** (Log createDataset enum value)
+ *
  * ```ts
  * import { PhoenixOperation } from "@beep/phoenix"
  *
@@ -50,7 +51,8 @@ export const PhoenixOperation = LiteralKit([
 /**
  * Type for {@link PhoenixOperation}.
  *
- * @example
+ * **Example** (Type-check createDataset operation)
+ *
  * ```ts
  * import { PhoenixOperation } from "@beep/phoenix"
  *
@@ -67,7 +69,8 @@ export type PhoenixOperation = typeof PhoenixOperation.Type;
 /**
  * Technical error reasons emitted by the Phoenix driver.
  *
- * @example
+ * **Example** (Log transport reason enum)
+ *
  * ```ts
  * import { PhoenixErrorReason } from "@beep/phoenix"
  *
@@ -86,7 +89,8 @@ export const PhoenixErrorReason = LiteralKit(["config", "response decoding", "tr
 /**
  * Type for {@link PhoenixErrorReason}.
  *
- * @example
+ * **Example** (Type-check transport reason)
+ *
  * ```ts
  * import { PhoenixErrorReason } from "@beep/phoenix"
  *
@@ -103,7 +107,8 @@ export type PhoenixErrorReason = typeof PhoenixErrorReason.Type;
 /**
  * Options used when constructing Phoenix driver errors.
  *
- * @example
+ * **Example** (Make options with cause)
+ *
  * ```ts
  * import { PhoenixErrorOptions } from "@beep/phoenix"
  *
@@ -141,7 +146,8 @@ class PhoenixErrorOperationOptionsInput extends S.Class<PhoenixErrorOperationOpt
 /**
  * Technical failure raised by the Phoenix driver boundary.
  *
- * @example
+ * **Example** (Create operation-scoped error)
+ *
  * ```ts
  * import { PhoenixError } from "@beep/phoenix"
  *
@@ -172,7 +178,8 @@ export class PhoenixError extends TaggedErrorClass<PhoenixError>($I`PhoenixError
   /**
    * Create a Phoenix driver error scoped to one operation.
    *
-   * @example
+   * **Example** (Create error with cause)
+   *
    * ```ts
    * import { PhoenixError } from "@beep/phoenix"
    *

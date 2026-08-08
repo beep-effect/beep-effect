@@ -108,10 +108,13 @@ const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.ma
 /**
  * Submit one evidence-backed contradiction proposal.
  *
+ * **Details**
+ *
  * Repeated candidate identity is duplicate-suppressed, while `receiptKey`
  * preserves a durable receipt for every distinct submission.
  *
- * @example
+ * **Example** (Decode submit candidate schema)
+ *
  * ```ts
  * import { SubmitContradictionCandidate } from "@beep/epistemic-use-cases/server"
  * import * as S from "effect/Schema"
@@ -136,7 +139,8 @@ const ContradictionDispositionFilterBase = LiteralKit(["all", "open", "rejected"
 /**
  * Disposition filter supported by contradiction list reads.
  *
- * @example
+ * **Example** (Check open disposition filter)
+ *
  * ```ts
  * import { ContradictionDispositionFilter } from "@beep/epistemic-use-cases/public"
  *
@@ -157,7 +161,8 @@ export const ContradictionDispositionFilter = ContradictionDispositionFilterBase
 /**
  * Runtime type for {@link ContradictionDispositionFilter}.
  *
- * @example
+ * **Example** (Type open disposition filter)
+ *
  * ```ts
  * import {
  *   ContradictionDispositionFilter,
@@ -176,7 +181,8 @@ export type ContradictionDispositionFilter = typeof ContradictionDispositionFilt
 /**
  * Positive contradiction-candidate page size capped at 100 rows.
  *
- * @example
+ * **Example** (Validate page limit bounds)
+ *
  * ```ts
  * import { ContradictionCandidatePageLimit } from "@beep/epistemic-use-cases/public"
  * import * as S from "effect/Schema"
@@ -204,7 +210,8 @@ export const ContradictionCandidatePageLimit = PosInt.check(
 /**
  * Runtime type for {@link ContradictionCandidatePageLimit}.
  *
- * @example
+ * **Example** (Make typed page limit)
+ *
  * ```ts
  * import {
  *   ContradictionCandidatePageLimit,
@@ -223,7 +230,8 @@ export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageL
 /**
  * Paginated two-axis contradiction-candidate list query.
  *
- * @example
+ * **Example** (Build list candidates query)
+ *
  * ```ts
  * import {
  *   ContradictionCandidatePageLimit,
@@ -278,7 +286,8 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
 /**
  * Query one persisted contradiction candidate in a two-axis temporal view.
  *
- * @example
+ * **Example** (Build get candidate query)
+ *
  * ```ts
  * import { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
  * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
@@ -317,10 +326,13 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
 /**
  * Server-only query for exact belief, evidence, and verification expansion.
  *
+ * **Details**
+ *
  * The organization is derived from authenticated server scope. A public
  * renderer never supplies it directly.
  *
- * @example
+ * **Example** (Build expanded candidate query)
+ *
  * ```ts
  * import { GetExpandedContradictionCandidate } from "@beep/epistemic-use-cases/server"
  * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
@@ -396,7 +408,8 @@ const ContradictionReviewDecisionBase = LiteralKit(["reject", "supersedeProposal
  * Narrow human review decision: reject the candidate, or approve one explicit
  * replacement against one persisted candidate side.
  *
- * @example
+ * **Example** (Make reject review decision)
+ *
  * ```ts
  * import { ContradictionReviewDecision } from "@beep/epistemic-use-cases/public"
  *
@@ -416,7 +429,8 @@ export const ContradictionReviewDecision = ContradictionReviewDecisionBase.pipe(
 /**
  * Runtime type for {@link ContradictionReviewDecision}.
  *
- * @example
+ * **Example** (Type reject review decision)
+ *
  * ```ts
  * import type { ContradictionReviewDecision } from "@beep/epistemic-use-cases/public"
  *
@@ -432,11 +446,14 @@ export type ContradictionReviewDecision = typeof ContradictionReviewDecision.Typ
 /**
  * Review one persisted contradiction candidate.
  *
+ * **Details**
+ *
  * The caller supplies no reviewer identity, source facet, replacement fact,
  * losing side, or validity. Server orchestration derives actor/time/source and
  * reloads the selected immutable proposal after verifying its digest.
  *
- * @example
+ * **Example** (Decode review candidate schema)
+ *
  * ```ts
  * import { ReviewContradictionCandidate } from "@beep/epistemic-use-cases/public"
  * import * as S from "effect/Schema"

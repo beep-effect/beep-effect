@@ -19,7 +19,8 @@ import * as S from "effect/Schema";
  * for end-user copy and `parseOptions` for decode behavior. Derived from the
  * underlying effect API so it stays in sync across upgrades.
  *
- * @example
+ * **Example** (Configuring parseOptions errors)
+ *
  * ```ts
  * import type { ToFormSchemaOptions } from "@beep/form/core/FormSchema"
  *
@@ -39,7 +40,8 @@ export type ToFormSchemaOptions = NonNullable<Parameters<typeof S.toStandardSche
  * The Standard Schema view of an effect `Codec`, carrying both the decoded
  * `Type` and the wire `Encoded` shape.
  *
- * @example
+ * **Example** (Satisfying FormSchema type params)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { toFormSchema } from "@beep/form/core/FormSchema"
@@ -61,11 +63,14 @@ export interface FormSchema<A, I> extends ReturnType<typeof S.toStandardSchemaV1
  * consume. Pass `leafHook`/`checkHook` to surface end-user copy instead of the
  * developer-oriented `Expected X, got Y` defaults.
  *
+ * **Details**
+ *
  * Standard Schema **input is the `Encoded` shape** and **output is the decoded
  * `Type`**; parse options default to `{ errors: "all" }` so a single field can
  * report multiple issues.
  *
- * @example
+ * **Example** (Converting Struct to Standard Schema)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import * as S from "effect/Schema"

@@ -63,9 +63,8 @@ const POST_FOOTNOTE_HEADING_RE = /^[A-Z][A-Z0-9 &:'.-]{3,}$/m;
  * A detected footnote zone in the text.
  * Positions are in input-text (raw) coordinates.
  *
- * **Example**
+ * **Example** (Create a footnote zone)
  *
- * @example
  * ```ts
  * import { Footnote } from "@beep/law-practice-domain";
  * import { NonNegativeInt, PosInt } from "@beep/schema";
@@ -104,7 +103,8 @@ export class Zone extends S.Class<Zone>($I`Zone`)(
 /**
  * Result of footnote detection — sorted by start position.
  *
- * @example
+ * **Example** (Detect footnotes in text)
+ *
  * ```ts
  * import { Footnote } from "@beep/law-practice-domain";
  *
@@ -126,7 +126,8 @@ export const FootnoteMap = pipe(
 /**
  * Companion runtime type for {@link FootnoteMap}.
  *
- * @example
+ * **Example** (Type FootnoteMap detection result)
+ *
  * ```ts
  * import { Footnote } from "@beep/law-practice-domain";
  *
@@ -142,6 +143,8 @@ export type FootnoteMap = typeof FootnoteMap.Type;
 /**
  * Detect footnote zones in plain text using separator + marker heuristics.
  *
+ * **Details**
+ *
  * Strategy: find a separator line, then parse numbered markers in the text
  * that follows. Each footnote zone extends from its marker to the start
  * of the next marker. The final zone is capped at the next clear
@@ -149,7 +152,8 @@ export type FootnoteMap = typeof FootnoteMap.Type;
  * line, or end of text) to avoid swallowing body content that follows the
  * footnote section (#539).
  *
- * @example
+ * **Example** (Detect text footnote zones)
+ *
  * ```ts
  * import { Footnote } from "@beep/law-practice-domain";
  *

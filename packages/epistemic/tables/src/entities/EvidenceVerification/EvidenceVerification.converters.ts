@@ -16,7 +16,8 @@ import type { Table } from "./EvidenceVerification.table.ts";
 /**
  * Selected epistemic EvidenceVerification row.
  *
- * @example
+ * **Example** (Typed empty rows array)
+ *
  * ```ts
  * import type { EvidenceVerificationRow } from "@beep/epistemic-tables/entities/EvidenceVerification"
  *
@@ -32,7 +33,8 @@ export type EvidenceVerificationRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic EvidenceVerification row.
  *
- * @example
+ * **Example** (Typed empty inserts array)
+ *
  * ```ts
  * import type { EvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification"
  *
@@ -86,9 +88,12 @@ const validateEvidenceAssociation = (
  * organization, evidence id, transaction time, and verified anchor match the
  * referenced evidence.
  *
+ * **Details**
+ *
  * The database-managed serial id is omitted so inserts use the table sequence.
  *
- * @example
+ * **Example** (Check insert converter type)
+ *
  * ```ts
  * import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification"
  *
@@ -119,7 +124,8 @@ export const toEvidenceVerificationInsert: {
 /**
  * Convert a selected row into an EvidenceVerification entity.
  *
- * @example
+ * **Example** (Check row converter type)
+ *
  * ```ts
  * import { fromEvidenceVerificationRow } from "@beep/epistemic-tables/entities/EvidenceVerification"
  *

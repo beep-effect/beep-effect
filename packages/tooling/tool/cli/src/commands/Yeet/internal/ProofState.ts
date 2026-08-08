@@ -92,9 +92,8 @@ const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState))
 /**
  * Build the full-proof lock path for a Yeet run context.
  *
- * @param context - Repo context whose artifact directory owns the lock file.
- * @returns An Effect yielding the `quality-lock` path under the run artifacts.
- * @example
+ * **Example** (Build quality-lock path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { proofLockPathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -112,6 +111,9 @@ const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState))
  *
  * const lockPath = proofLockPathForContext(context).pipe(Effect.map((path) => path.endsWith("quality-lock")))
  * ```
+ *
+ * @param context - Repo context whose artifact directory owns the lock file.
+ * @returns An Effect yielding the `quality-lock` path under the run artifacts.
  * @category utilities
  * @since 0.0.0
  */
@@ -135,12 +137,8 @@ const readFingerprintFileBytes = Effect.fn("Yeet.readFingerprintFileBytes")(func
 /**
  * Capture a binary Git diff artifact and return its bytes for fingerprinting.
  *
- * @param context - Repo context that supplies the working tree and artifact
- * root.
- * @param args - Git diff arguments appended after `git diff --binary`.
- * @param fileName - Safe suffix used for the temporary fingerprint artifact.
- * @returns The bytes written by Git before the temporary artifact is removed.
- * @example
+ * **Example** (Capture staged binary diff)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectGitDiffBytes, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -160,6 +158,12 @@ const readFingerprintFileBytes = Effect.fn("Yeet.readFingerprintFileBytes")(func
  *   Effect.map((bytes) => bytes.byteLength)
  * )
  * ```
+ *
+ * @param context - Repo context that supplies the working tree and artifact
+ * root.
+ * @param args - Git diff arguments appended after `git diff --binary`.
+ * @param fileName - Safe suffix used for the temporary fingerprint artifact.
+ * @returns The bytes written by Git before the temporary artifact is removed.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -196,9 +200,8 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
 /**
  * Hash the current Git status, unstaged diff, and staged diff for proof reuse.
  *
- * @param context - Repo context whose worktree is fingerprinted.
- * @returns A SHA-256 fingerprint for the exact current worktree state.
- * @example
+ * **Example** (Hash worktree fingerprint)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectDiffFingerprint, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -216,6 +219,9 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
  *
  * const fingerprintLength = collectDiffFingerprint(context).pipe(Effect.map((fingerprint) => fingerprint.length))
  * ```
+ *
+ * @param context - Repo context whose worktree is fingerprinted.
+ * @returns A SHA-256 fingerprint for the exact current worktree state.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -241,7 +247,8 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
 /**
  * Collect the reusable-proof fingerprint for the current Git worktree.
  *
- * @example
+ * **Example** (Fingerprint for testing)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectDiffFingerprintForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -259,6 +266,7 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
  *
  * const fingerprint = collectDiffFingerprintForTesting(context).pipe(Effect.map((value) => value.slice(0, 12)))
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -286,7 +294,8 @@ const laneProofStateForStep = (step: RepoPlanStep, diffFingerprint: string, veri
 /**
  * Proof-lock state schema exposed for lock-disposition tests.
  *
- * @example
+ * **Example** (Make lock state schema)
+ *
  * ```ts
  * import { YeetProofLockStateForTesting } from "@beep/repo-cli/test/Yeet"
  *
@@ -300,6 +309,7 @@ const laneProofStateForStep = (step: RepoPlanStep, diffFingerprint: string, veri
  * })
  * console.log(state.branch)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -326,7 +336,8 @@ const proofLockDisposition = (
 /**
  * Decide whether an existing proof lock is stale, active, or unreadable.
  *
- * @example
+ * **Example** (Detect replace-stale lock)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -343,6 +354,7 @@ const proofLockDisposition = (
  *
  * strictEqual(proofLockDispositionForTesting(O.some(state), false), "replace-stale")
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -374,10 +386,8 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
 /**
  * Atomically acquire the full-proof lock for heavyweight Yeet verification.
  *
- * @param context - Repo context whose artifact directory owns the lock.
- * @param proofSteps - Full-proof steps used to record the owner command.
- * @returns The lock path when this process successfully owns the lock.
- * @example
+ * **Example** (Acquire full-proof lock)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { acquireFullProofLock, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -406,6 +416,10 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
  *
  * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((path) => path.includes("quality-lock")))
  * ```
+ *
+ * @param context - Repo context whose artifact directory owns the lock.
+ * @param proofSteps - Full-proof steps used to record the owner command.
+ * @returns The lock path when this process successfully owns the lock.
  * @category resource-management
  * @since 0.0.0
  */
@@ -475,15 +489,17 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
 /**
  * Remove a previously acquired full-proof lock path.
  *
- * @param lockPath - Path returned by {@link acquireFullProofLock}.
- * @returns An Effect that ignores missing lock files during cleanup.
- * @example
+ * **Example** (Release quality-lock path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { releaseProofLock } from "@beep/repo-cli/test/Yeet"
  *
  * const released = releaseProofLock(".beep/yeet/runs/example/quality-lock").pipe(Effect.as("released"))
  * ```
+ *
+ * @param lockPath - Path returned by {@link acquireFullProofLock}.
+ * @returns An Effect that ignores missing lock files during cleanup.
  * @category resource-management
  * @since 0.0.0
  */
@@ -495,12 +511,8 @@ export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lockPat
 /**
  * Write exact-match proof state after Yeet verification succeeds.
  *
- * @param context - Repo context whose branch, base, head, and artifact paths
- * are recorded.
- * @param tier - Proof tier that produced the reusable state.
- * @param proofSteps - Proof steps whose command hashes are persisted.
- * @returns An Effect that completes after the state file is written.
- * @example
+ * **Example** (Write full verified state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoPlanStep, RepoRunContext, writeVerifiedState } from "@beep/repo-cli/test/Yeet"
@@ -529,6 +541,12 @@ export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lockPat
  *
  * const writeState = writeVerifiedState(context, "full", [step]).pipe(Effect.as("state written"))
  * ```
+ *
+ * @param context - Repo context whose branch, base, head, and artifact paths
+ * are recorded.
+ * @param tier - Proof tier that produced the reusable state.
+ * @param proofSteps - Proof steps whose command hashes are persisted.
+ * @returns An Effect that completes after the state file is written.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -565,10 +583,8 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
 /**
  * Build the pre-run-id proof state path used by older Yeet versions.
  *
- * @param context - Repo context whose branch and artifact directory determine
- * the legacy path.
- * @returns An Effect yielding the legacy `state.json` location.
- * @example
+ * **Example** (Build legacy state path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { legacyRunStatePathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -586,6 +602,10 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
  *
  * const legacyPath = legacyRunStatePathForContext(context).pipe(Effect.map((path) => path.endsWith("state.json")))
  * ```
+ *
+ * @param context - Repo context whose branch and artifact directory determine
+ * the legacy path.
+ * @returns An Effect yielding the legacy `state.json` location.
  * @category utilities
  * @since 0.0.0
  */
@@ -604,9 +624,8 @@ const verifiedStateArtifactForPath =
 /**
  * Load reusable Yeet proof state from the current or legacy artifact path.
  *
- * @param context - Repo context whose artifact paths are inspected.
- * @returns The decoded durable proof state for the current branch.
- * @example
+ * **Example** (Load proof tier state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { loadVerifiedState, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -624,6 +643,9 @@ const verifiedStateArtifactForPath =
  *
  * const proofTier = loadVerifiedState(context).pipe(Effect.map((state) => state.proofTier))
  * ```
+ *
+ * @param context - Repo context whose artifact paths are inspected.
+ * @returns The decoded durable proof state for the current branch.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -658,7 +680,8 @@ export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
 /**
  * Expose proof-state loading for upgrade compatibility tests.
  *
- * @example
+ * **Example** (Load verifiedAt for tests)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { loadVerifiedStateForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -676,6 +699,7 @@ export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
  *
  * const verifiedAt = loadVerifiedStateForTesting(context).pipe(Effect.map((state) => state.verifiedAt))
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -684,10 +708,8 @@ export const loadVerifiedStateForTesting = loadVerifiedState;
 /**
  * Assert that the saved full-proof state still matches the current worktree.
  *
- * @param context - Repo context whose branch, base, head, commit, and diff are
- * compared with the saved proof state.
- * @returns An Effect that completes only when the saved full proof is reusable.
- * @example
+ * **Example** (Assert matching proof state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { assertReusableVerifiedState, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -705,6 +727,10 @@ export const loadVerifiedStateForTesting = loadVerifiedState;
  *
  * const reusable = assertReusableVerifiedState(context).pipe(Effect.as("proof state matches"))
  * ```
+ *
+ * @param context - Repo context whose branch, base, head, commit, and diff are
+ * compared with the saved proof state.
+ * @returns An Effect that completes only when the saved full proof is reusable.
  * @category diagnostics
  * @since 0.0.0
  */

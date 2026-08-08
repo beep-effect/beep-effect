@@ -12,7 +12,8 @@ const $I = $DockId.create("AnchoredBox");
 /**
  * Coordinates a floating box from the container's top-left corner.
  *
- * @example
+ * **Example** (Make TopLeft coordinates)
+ *
  * ```ts
  * import { TopLeft } from "@beep/dock"
  *
@@ -32,7 +33,8 @@ export class TopLeft extends S.TaggedClass<TopLeft>($I`TopLeft`)(
 /**
  * Coordinates a floating box from the container's top-right corner.
  *
- * @example
+ * **Example** (Make TopRight coordinates)
+ *
  * ```ts
  * import { TopRight } from "@beep/dock"
  *
@@ -52,7 +54,8 @@ export class TopRight extends S.TaggedClass<TopRight>($I`TopRight`)(
 /**
  * Coordinates a floating box from the container's bottom-left corner.
  *
- * @example
+ * **Example** (Make BottomLeft coordinates)
+ *
  * ```ts
  * import { BottomLeft } from "@beep/dock"
  *
@@ -72,7 +75,8 @@ export class BottomLeft extends S.TaggedClass<BottomLeft>($I`BottomLeft`)(
 /**
  * Coordinates a floating box from the container's bottom-right corner.
  *
- * @example
+ * **Example** (Make BottomRight coordinates)
+ *
  * ```ts
  * import { BottomRight } from "@beep/dock"
  *
@@ -92,7 +96,8 @@ export class BottomRight extends S.TaggedClass<BottomRight>($I`BottomRight`)(
 /**
  * Width and height shared by every anchored floating box.
  *
- * @example
+ * **Example** (Make width and height)
+ *
  * ```ts
  * import { AnchoredSize } from "@beep/dock"
  *
@@ -111,7 +116,8 @@ export class AnchoredSize extends S.Class<AnchoredSize>($I`AnchoredSize`)(
 /**
  * A sized floating box anchored from the top-left corner.
  *
- * @example
+ * **Example** (Make top-left sized box)
+ *
  * ```ts
  * import { TopLeftAnchoredBox } from "@beep/dock"
  *
@@ -134,7 +140,8 @@ export class TopLeftAnchoredBox extends AnchoredSize.extend<TopLeftAnchoredBox>(
 /**
  * A sized floating box anchored from the top-right corner.
  *
- * @example
+ * **Example** (Make top-right sized box)
+ *
  * ```ts
  * import { TopRightAnchoredBox } from "@beep/dock"
  *
@@ -157,7 +164,8 @@ export class TopRightAnchoredBox extends AnchoredSize.extend<TopRightAnchoredBox
 /**
  * A sized floating box anchored from the bottom-right corner.
  *
- * @example
+ * **Example** (Make bottom-right sized box)
+ *
  * ```ts
  * import { BottomRightAnchoredBox } from "@beep/dock"
  *
@@ -180,7 +188,8 @@ export class BottomRightAnchoredBox extends AnchoredSize.extend<BottomRightAncho
 /**
  * A sized floating box anchored from the bottom-left corner.
  *
- * @example
+ * **Example** (Make bottom-left sized box)
+ *
  * ```ts
  * import { BottomLeftAnchoredBox } from "@beep/dock"
  *
@@ -203,7 +212,8 @@ export class BottomLeftAnchoredBox extends AnchoredSize.extend<BottomLeftAnchore
 /**
  * Codec for current tagged and legacy untagged anchored-box shapes.
  *
- * @example
+ * **Example** (Decode untagged top-left box)
+ *
  * ```ts
  * import { AnchoredBox } from "@beep/dock"
  * import * as S from "effect/Schema"
@@ -232,7 +242,8 @@ export const AnchoredBox = S.Union([
 /**
  * Decoded anchored floating-box value.
  *
- * @example
+ * **Example** (Type a top-left box)
+ *
  * ```ts
  * import { AnchoredBox, TopLeftAnchoredBox } from "@beep/dock"
  *
@@ -252,7 +263,8 @@ export type AnchoredBox = typeof AnchoredBox.Type;
 /**
  * Type helpers associated with the anchored-box codec.
  *
- * @example
+ * **Example** (Declare encoded TopLeft shape)
+ *
  * ```ts
  * import type { AnchoredBox } from "@beep/dock"
  *
@@ -273,7 +285,8 @@ export declare namespace AnchoredBox {
   /**
    * Encoded representation accepted and emitted by {@link AnchoredBox}.
    *
-   * @example
+   * **Example** (Declare encoded BottomRight shape)
+   *
    * ```ts
    * import type { AnchoredBox } from "@beep/dock"
    *

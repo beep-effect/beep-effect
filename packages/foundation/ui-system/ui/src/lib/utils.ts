@@ -1,16 +1,17 @@
 /**
  * Utility functions for the UI component library.
  *
- * @example
+ * **Example** (Import cn utility)
+ *
  * ```ts
  * import { cn } from "@beep/ui/lib/utils"
  *
  * console.log(cn)
  * ```
  *
+ * @packageDocumentation
  * @category utilities
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { clsx } from "clsx";
@@ -20,7 +21,8 @@ import type { ClassValue } from "clsx";
 /**
  * Cn export.
  *
- * @example
+ * **Example** (Import cn function)
+ *
  * ```ts
  * import { cn } from "@beep/ui/lib/utils"
  *

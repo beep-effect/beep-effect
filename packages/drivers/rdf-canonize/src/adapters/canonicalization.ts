@@ -230,15 +230,16 @@ const getCanonicalDataset = (
 /**
  * Canonicalization service live layer.
  *
- * @example
+ * **Example** (Import live layer)
+ *
  * ```ts
  * import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization"
  *
  * console.log(CanonicalizationServiceLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const CanonicalizationServiceLive = Layer.succeed(
   CanonicalizationService,

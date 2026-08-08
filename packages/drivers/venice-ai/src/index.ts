@@ -8,7 +8,8 @@
 /**
  * Public Venice AI driver exports.
  *
- * @example
+ * **Example** (Import VeniceAI service)
+ *
  * ```ts
  * import { VeniceAI } from "@beep/venice-ai"
  *
@@ -23,7 +24,8 @@ export * from "./VeniceAI.service.ts";
 /**
  * Effect AI language-model adapter exports for Venice chat completions.
  *
- * @example
+ * **Example** (Create Venice language model)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -39,7 +41,8 @@ export * as VeniceAiLanguageModel from "./VeniceAiLanguageModel.service.ts";
 /**
  * Current version of the `@beep/venice-ai` package.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/venice-ai"
  *

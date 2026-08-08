@@ -1,7 +1,8 @@
 /**
  * Schema-first request and row models for the DuckDB driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * These models describe the technical DuckDB boundary only. Domain packages
  * define their own row projections and decode those projections after this
  * driver has returned JSON-compatible row objects.
@@ -19,12 +20,14 @@ const $I = $DuckdbId.create("DuckDb.models");
 /**
  * Connection options for opening a DuckDB database instance.
  *
- * @remarks
+ * **Details**
+ *
  * Use `":memory:"` for an in-memory database. File paths are passed to the
  * native DuckDB Node API as-is; this package does not create parent
  * directories or encode domain-specific storage policy.
  *
- * @example
+ * **Example** (In-memory connection options)
+ *
  * ```ts
  * import { DuckDbConnectionOptions } from "@beep/duckdb"
  *
@@ -55,13 +58,15 @@ export class DuckDbConnectionOptions extends S.Class<DuckDbConnectionOptions>($I
 /**
  * Request to export one DuckDB table to a Parquet file.
  *
- * @remarks
+ * **Details**
+ *
  * The service quotes `tableName` and `filePath` before constructing DuckDB's
  * `COPY ... TO ... (FORMAT parquet)` statement. The request does not describe
  * filtering or projection; callers create the table shape they want before
  * exporting it.
  *
- * @example
+ * **Example** (Parquet export request)
+ *
  * ```ts
  * import { DuckDbParquetExport } from "@beep/duckdb"
  *
@@ -93,12 +98,14 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
 /**
  * Schema for a JSON-compatible row returned from a DuckDB query.
  *
- * @remarks
+ * **Details**
+ *
  * The native row reader can produce arbitrary JavaScript values. The service
  * decodes those values through this schema before returning rows, so invalid
  * row shapes fail as {@link DuckDbError} instead of leaking unchecked data.
  *
- * @example
+ * **Example** (Decode unknown row object)
+ *
  * ```ts
  * import { DuckDbRow } from "@beep/duckdb"
  *
@@ -119,7 +126,8 @@ export const DuckDbRow = JsonObject.pipe(
 /**
  * Runtime TypeScript type represented by {@link DuckDbRow}.
  *
- * @example
+ * **Example** (Satisfy DuckDbRow type)
+ *
  * ```ts
  * import type { DuckDbRow } from "@beep/duckdb"
  *
@@ -135,13 +143,15 @@ export type DuckDbRow = typeof DuckDbRow.Type;
 /**
  * Schema for the row set returned from a DuckDB query.
  *
- * @remarks
+ * **Details**
+ *
  * `DuckDb.query` decodes the complete array through this schema after the
  * native reader returns row objects. The schema intentionally stays
  * product-neutral; callers decode domain-specific row shapes in their own
  * package.
  *
- * @example
+ * **Example** (Decode unknown rows array)
+ *
  * ```ts
  * import { DuckDbRows } from "@beep/duckdb"
  *
@@ -165,7 +175,8 @@ export const DuckDbRows = S.Array(DuckDbRow).pipe(
 /**
  * Runtime TypeScript type represented by {@link DuckDbRows}.
  *
- * @example
+ * **Example** (Satisfy DuckDbRows type)
+ *
  * ```ts
  * import type { DuckDbRows } from "@beep/duckdb"
  *

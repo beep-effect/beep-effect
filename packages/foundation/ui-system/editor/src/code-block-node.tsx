@@ -39,7 +39,8 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * Serialized shape of {@link CodeBlockNode}. Viewer-internal: the wire profile
  * persists code as a `code` block, never as this type.
  *
- * @example
+ * **Example** (Make typescript code payload)
+ *
  * ```ts
  * import { SerializedCodeBlockNode } from "@beep/editor/code-block-node"
  *
@@ -74,7 +75,8 @@ const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(
 /**
  * Block-level Lexical decorator node that renders a readable, copyable code block.
  *
- * @example
+ * **Example** (Node type is codeblock)
+ *
  * ```tsx
  * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
@@ -130,7 +132,8 @@ export class CodeBlockNode extends DecoratorBlockNode {
 /**
  * Create a code-block node.
  *
- * @example
+ * **Example** (Create node text content)
+ *
  * ```ts
  * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
@@ -146,7 +149,8 @@ export const $createCodeBlockNode = (options: { readonly code: string; readonly 
 /**
  * Type guard for {@link CodeBlockNode}.
  *
- * @example
+ * **Example** (True for code block nodes)
+ *
  * ```ts
  * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor/code-block-node"
  *

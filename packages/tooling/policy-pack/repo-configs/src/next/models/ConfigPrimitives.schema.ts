@@ -18,7 +18,8 @@ const StringOrStringArray = S.Union([S.String, StringArray]);
 /**
  * Locale-specific domain routing entry for Next.js internationalization.
  *
- * @example
+ * **Example** (Make domain locale entry)
+ *
  * ```ts
  * import { DomainLocale } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const locale = DomainLocale.make({
@@ -27,6 +28,7 @@ const StringOrStringArray = S.Union([S.String, StringArray]);
  * })
  * console.log(locale)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -49,7 +51,8 @@ export class DomainLocale extends S.Class<DomainLocale>($I`DomainLocale`)(
 /**
  * Internationalization configuration for a Next.js app.
  *
- * @example
+ * **Example** (Make i18n configuration)
+ *
  * ```ts
  * import { I18NConfig } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const i18n = I18NConfig.make({
@@ -58,6 +61,7 @@ export class DomainLocale extends S.Class<DomainLocale>($I`DomainLocale`)(
  * })
  * console.log(i18n)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -87,12 +91,14 @@ export class I18NConfig extends S.Class<I18NConfig>($I`I18NConfig`)(
 /**
  * Next.js TypeScript configuration block.
  *
- * @example
+ * **Example** (Make TypeScript config path)
+ *
  * ```ts
  * import { TypeScriptConfig } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const config = TypeScriptConfig.make({ tsconfigPath: "tsconfig.next.json" })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -116,12 +122,14 @@ export class TypeScriptConfig extends S.Class<TypeScriptConfig>($I`TypeScriptCon
 /**
  * Route export path map entry query parameters.
  *
- * @example
+ * **Example** (Make query with slug)
+ *
  * ```ts
  * import { NextParsedUrlQuery } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const query = NextParsedUrlQuery.make({ slug: "hello" })
  * console.log(query)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -134,12 +142,14 @@ export const NextParsedUrlQuery = S.Record(S.String, StringOrStringArray).pipe(
 /**
  * Route export path map entry query parameters.
  *
- * @example
+ * **Example** (Type query parameters object)
+ *
  * ```ts
  * import type { NextParsedUrlQuery } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const query: NextParsedUrlQuery = { slug: "hello" }
  * console.log(query)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -158,7 +168,8 @@ class ExportPathMapEntry extends S.Class<ExportPathMapEntry>($I`ExportPathMapEnt
 /**
  * Public export path map returned by `next.config.js` `exportPathMap`.
  *
- * @example
+ * **Example** (Make export path map)
+ *
  * ```ts
  * import { ExportPathMap } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const paths = ExportPathMap.make({
@@ -166,6 +177,7 @@ class ExportPathMapEntry extends S.Class<ExportPathMapEntry>($I`ExportPathMapEnt
  * })
  * console.log(paths)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -178,12 +190,14 @@ export const ExportPathMap = S.Record(S.String, ExportPathMapEntry).pipe(
 /**
  * Public export path map returned by `next.config.js` `exportPathMap`.
  *
- * @example
+ * **Example** (Type export path map)
+ *
  * ```ts
  * import type { ExportPathMap } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const paths: ExportPathMap = { "/": { page: "/" } }
  * console.log(paths)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -219,12 +233,14 @@ class IncomingRequestLoggingConfig extends S.Class<IncomingRequestLoggingConfig>
 /**
  * Fetch logging configuration used by Next.js.
  *
- * @example
+ * **Example** (Make fetch logging config)
+ *
  * ```ts
  * import { LoggingConfig } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const logging = LoggingConfig.make({ fetches: { fullUrl: true } })
  * console.log(logging)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -253,12 +269,14 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
 /**
  * Lightning CSS feature name accepted by Next.js.
  *
- * @example
+ * **Example** (Select nesting feature enum)
+ *
  * ```ts
  * import { LightningCssFeature } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const feature = LightningCssFeature.Enum.nesting
  * console.log(feature)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -296,12 +314,14 @@ export const LightningCssFeature = LiteralKit([
 /**
  * Lightning CSS feature name accepted by Next.js.
  *
- * @example
+ * **Example** (Satisfy nesting feature type)
+ *
  * ```ts
  * import type { LightningCssFeature } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const feature = "nesting" satisfies LightningCssFeature
  * console.log(feature)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -310,12 +330,14 @@ export type LightningCssFeature = typeof LightningCssFeature.Type;
 /**
  * Lightning CSS include/exclude feature configuration.
  *
- * @example
+ * **Example** (Make features include nesting)
+ *
  * ```ts
  * import { LightningCssFeatures } from "@beep/repo-configs/next/models/ConfigPrimitives.schema"
  * const features = LightningCssFeatures.make({ include: ["nesting"] })
  * console.log(features)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

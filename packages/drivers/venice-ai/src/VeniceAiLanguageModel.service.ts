@@ -30,7 +30,8 @@ const $I = $VeniceAiId.create("VeniceAiLanguageModel.service");
 /**
  * Options accepted by the Venice Effect AI language-model adapter.
  *
- * @example
+ * **Example** (Making language model options)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  * import * as S from "effect/Schema"
@@ -223,7 +224,8 @@ const streamChatCompletion = (
 /**
  * Builds a Venice Effect AI language-model service.
  *
- * @example
+ * **Example** (Building language model service)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -254,7 +256,8 @@ export const make: (
 /**
  * Builds a Venice Effect AI language-model layer.
  *
- * @example
+ * **Example** (Building language model layer)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -274,7 +277,8 @@ export const layer = (
 /**
  * Builds an Effect AI model value for Venice.
  *
- * @example
+ * **Example** (Creating Effect AI model)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *

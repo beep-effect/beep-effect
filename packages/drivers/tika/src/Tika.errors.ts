@@ -25,7 +25,8 @@ const TikaErrorReasonBase = LiteralKit([
 /**
  * Technical Tika failure reasons.
  *
- * @example
+ * **Example** (Log TikaErrorReason object)
+ *
  * ```ts
  * import { TikaErrorReason } from "@beep/tika"
  *
@@ -45,7 +46,8 @@ export const TikaErrorReason = TikaErrorReasonBase.pipe(
 /**
  * Type for {@link TikaErrorReason}.
  *
- * @example
+ * **Example** (Assign typed error reason)
+ *
  * ```ts
  * import type { TikaErrorReason } from "@beep/tika"
  *
@@ -61,7 +63,8 @@ export type TikaErrorReason = typeof TikaErrorReason.Type;
 /**
  * Options used when constructing {@link TikaError} instances.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { TikaErrorOptions } from "@beep/tika"
  * import { NonNegativeInt } from "@beep/schema"
@@ -90,7 +93,8 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
 /**
  * Technical failure raised inside the Tika driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { TikaError } from "@beep/tika"
  *
@@ -144,7 +148,8 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
 /**
  * Create a Tika technical error with a typed reason.
  *
- * @example
+ * **Example** (Make error with reason)
+ *
  * ```ts
  * import { makeTikaError } from "@beep/tika"
  *

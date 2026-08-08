@@ -21,7 +21,8 @@ const $I = $McpKitId.create("ToolAnnotations");
 /**
  * The four MCP tool-behavior hints as a single record.
  *
- * @example
+ * **Example** (Make four-hint annotations)
+ *
  * ```ts
  * import { FourHintAnnotations } from "@beep/mcp-kit"
  *
@@ -102,7 +103,8 @@ export type AnnotatedTool<T extends AiTool.Any> = T extends unknown ? T : never;
 /**
  * Applies all four MCP tool-behavior hints to a tool in one call.
  *
- * @example
+ * **Example** (Annotate tool with four hints)
+ *
  * ```ts
  * import { Tool } from "effect/unstable/ai"
  * import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit"
@@ -136,7 +138,8 @@ export const annotateFourHints: {
  * (the common case for read-side MCP tools; precedent:
  * `packages/drivers/m365-mcp/src/M365Tools.ts`).
  *
- * @example
+ * **Example** (Log read-only tool hints)
+ *
  * ```ts
  * import { readOnlyToolHints } from "@beep/mcp-kit"
  *
@@ -153,7 +156,8 @@ export const readOnlyToolHints: FourHintAnnotations = FourHintAnnotations.readOn
  * Hints for a destructive, non-idempotent write tool that may reach external
  * systems.
  *
- * @example
+ * **Example** (Log destructive write hints)
+ *
  * ```ts
  * import { destructiveWriteToolHints } from "@beep/mcp-kit"
  *

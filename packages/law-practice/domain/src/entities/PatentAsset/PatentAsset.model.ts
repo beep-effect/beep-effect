@@ -16,7 +16,8 @@ const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model")
 /**
  * Patent asset entity managed inside a prosecution matter.
  *
- * @example
+ * **Example** (Decoding a PatentAsset)
+ *
  * ```ts
  * import { PatentAsset } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

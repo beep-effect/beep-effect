@@ -8,7 +8,8 @@
 /**
  * Claim disposition repository layer exports.
  *
- * @example
+ * **Example** (In-memory repository export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-server/ClaimDisposition"
@@ -23,7 +24,8 @@ export * from "./ClaimDisposition.layer.ts";
 /**
  * Claim disposition repository adapter exports.
  *
- * @example
+ * **Example** (Drizzle repository factory export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-server/ClaimDisposition"

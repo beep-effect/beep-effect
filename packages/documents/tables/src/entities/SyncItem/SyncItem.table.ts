@@ -12,7 +12,8 @@ import { EntityTable } from "@beep/drizzle";
 /**
  * Drizzle table projection for documents SyncItem entities.
  *
- * @example
+ * **Example** (Validate SyncItem table projection)
+ *
  * ```ts
  * import { syncItemTable } from "@beep/documents-tables/entities/SyncItem"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -34,7 +35,8 @@ export const syncItemTable = EntityTable.pgTableFrom(DomainSyncItem.SyncItem);
 /**
  * Physical Postgres table name derived from the SyncItem entity definition.
  *
- * @example
+ * **Example** (Check physical table name)
+ *
  * ```ts
  * import { SYNC_ITEM_TABLE_NAME } from "@beep/documents-tables/entities/SyncItem"
  *

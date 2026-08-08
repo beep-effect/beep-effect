@@ -9,7 +9,8 @@
 /**
  * Claim projection pure read-model exports.
  *
- * @example
+ * **Example** (Empty claims projection total)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimProjection from "@beep/epistemic-use-cases/ClaimProjection"
@@ -24,7 +25,8 @@ export * as ClaimProjection from "./ClaimProjection/index.ts";
 /**
  * Contradiction-triage public contracts.
  *
- * @example
+ * **Example** (Log ReviewContradictionCandidate export)
+ *
  * ```ts
  * import { ContradictionTriage } from "@beep/epistemic-use-cases/public"
  *

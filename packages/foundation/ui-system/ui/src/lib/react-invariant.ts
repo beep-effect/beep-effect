@@ -15,7 +15,8 @@ const $I = $UiId.create("lib/react-invariant");
 /**
  * React context invariant options class.
  *
- * @example
+ * **Example** (Import invariant options class)
+ *
  * ```ts
  * import { ReactContextInvariantOptions } from "@beep/ui/lib/react-invariant"
  *
@@ -43,7 +44,8 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
 /**
  * Error thrown when a React context hook is used outside its provider.
  *
- * @example
+ * **Example** (Create missing provider error)
+ *
  * ```ts
  * import { ReactContextInvariantError } from "@beep/ui/lib/react-invariant"
  *
@@ -80,7 +82,8 @@ type RequiredReactContext<Value> = Value extends unknown ? Value : never;
 /**
  * Require that a React context hook has been called under its provider.
  *
- * @example
+ * **Example** (Require context under provider)
+ *
  * ```ts
  * import { requireReactContext } from "@beep/ui/lib/react-invariant"
  *

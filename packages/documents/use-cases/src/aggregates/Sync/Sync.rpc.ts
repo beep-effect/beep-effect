@@ -21,7 +21,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.rpc");
  * Workspace-scoped payload shared by the vault sync trigger, status, and
  * conflict-listing RPCs.
  *
- * @example
+ * **Example** (Make workspace payload)
+ *
  * ```ts
  * import { VaultSyncWorkspacePayload } from "@beep/documents-use-cases/public"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -50,7 +51,8 @@ export class VaultSyncWorkspacePayload extends S.Class<VaultSyncWorkspacePayload
 /**
  * Payload for marking one vault sync drift record as reviewed.
  *
- * @example
+ * **Example** (Make conflict reviewed payload)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public"
@@ -86,7 +88,8 @@ export class MarkVaultSyncConflictReviewedPayload extends S.Class<MarkVaultSyncC
 /**
  * RPC used by the desktop webview to trigger one vault sync pass.
  *
- * @example
+ * **Example** (Verify trigger RPC registration)
+ *
  * ```ts
  * import { TriggerVaultSyncRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -106,7 +109,8 @@ export const TriggerVaultSyncRpc = Rpc.make("TriggerVaultSync", {
 /**
  * RPC used by the desktop webview to read the current vault sync status.
  *
- * @example
+ * **Example** (Verify status RPC registration)
+ *
  * ```ts
  * import { GetVaultSyncStatusRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -126,7 +130,8 @@ export const GetVaultSyncStatusRpc = Rpc.make("GetVaultSyncStatus", {
 /**
  * RPC used by the desktop webview to list open vault sync drift records.
  *
- * @example
+ * **Example** (Verify list conflicts registration)
+ *
  * ```ts
  * import { ListVaultSyncConflictsRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -146,7 +151,8 @@ export const ListVaultSyncConflictsRpc = Rpc.make("ListVaultSyncConflicts", {
 /**
  * RPC used by the desktop webview to mark one drift record as reviewed.
  *
- * @example
+ * **Example** (Verify mark reviewed registration)
+ *
  * ```ts
  * import { MarkVaultSyncConflictReviewedRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -166,7 +172,8 @@ export const MarkVaultSyncConflictReviewedRpc = Rpc.make("MarkVaultSyncConflictR
 /**
  * Vault sync RPC group exposed by the professional desktop server.
  *
- * @example
+ * **Example** (Check trigger request exists)
+ *
  * ```ts
  * import { VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *

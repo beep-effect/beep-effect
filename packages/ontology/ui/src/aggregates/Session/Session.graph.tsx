@@ -27,7 +27,8 @@ import type { JSX } from "react";
 /**
  * Graph header, renderer control, canvas mount, and projection overlay.
  *
- * @example
+ * **Example** (Import OntologyGraphRegion)
+ *
  * ```tsx
  * import { OntologyGraphRegion } from "@beep/ontology-ui"
  *

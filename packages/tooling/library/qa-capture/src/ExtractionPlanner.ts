@@ -45,11 +45,13 @@ const $I = $QaCaptureId.create("ExtractionPlanner");
 /**
  * Maximum gap in milliseconds between same-kind windows that still merges.
  *
- * @example
+ * **Example** (Log merge gap constant)
+ *
  * ```ts
  * import { OVERLAP_MERGE_GAP_MS } from "@beep/qa-capture"
  * console.log(OVERLAP_MERGE_GAP_MS)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -58,11 +60,13 @@ export const OVERLAP_MERGE_GAP_MS = 250;
 /**
  * Deterministic byte estimate for one extracted full-resolution PNG frame.
  *
- * @example
+ * **Example** (Log frame byte estimate)
+ *
  * ```ts
  * import { FRAME_ESTIMATED_BYTES } from "@beep/qa-capture"
  * console.log(FRAME_ESTIMATED_BYTES)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -71,16 +75,20 @@ export const FRAME_ESTIMATED_BYTES = 60000;
 /**
  * Deterministic GIF byte estimate per width pixel per frame.
  *
+ * **Details**
+ *
  * A 640-wide 10 fps GIF estimates to roughly 154 KB per second. Calibrated
  * against the recorded-qa-acceptance round-1 measurements: palette-quantized
  * GIFs of mostly-static UI compress far below photographic estimates, and the
  * original 80 bytes/width-px/frame figure degraded every GIF to strips.
  *
- * @example
+ * **Example** (Log GIF byte estimate)
+ *
  * ```ts
  * import { GIF_BYTES_PER_WIDTH_PIXEL_FRAME } from "@beep/qa-capture"
  * console.log(GIF_BYTES_PER_WIDTH_PIXEL_FRAME)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -89,13 +97,17 @@ export const GIF_BYTES_PER_WIDTH_PIXEL_FRAME = 24;
 /**
  * Deterministic byte estimate for the whole-video contact sheet JPEG.
  *
+ * **Details**
+ *
  * The sheet is always emitted and rides outside the window budget.
  *
- * @example
+ * **Example** (Log sheet byte estimate)
+ *
  * ```ts
  * import { SHEET_ESTIMATED_BYTES } from "@beep/qa-capture"
  * console.log(SHEET_ESTIMATED_BYTES)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -104,11 +116,13 @@ export const SHEET_ESTIMATED_BYTES = 320000;
 /**
  * Minimum GIF duration in seconds after clamping to the video timeline.
  *
- * @example
+ * **Example** (Log minimum GIF duration)
+ *
  * ```ts
  * import { MIN_GIF_SECONDS } from "@beep/qa-capture"
  * console.log(MIN_GIF_SECONDS)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -117,15 +131,19 @@ export const MIN_GIF_SECONDS = 0.2;
 /**
  * Distance in seconds frame seeks are kept away from the container endpoint.
  *
+ * **Details**
+ *
  * A seek at exactly the container duration decodes no frame, and one failed
  * endpoint seek discards a window's whole staged strip, so mapped timestamps
  * clamp to `videoDurationSeconds - END_SEEK_GUARD_SECONDS` instead.
  *
- * @example
+ * **Example** (Log end seek guard)
+ *
  * ```ts
  * import { END_SEEK_GUARD_SECONDS } from "@beep/qa-capture"
  * console.log(END_SEEK_GUARD_SECONDS)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -134,16 +152,20 @@ export const END_SEEK_GUARD_SECONDS = 0.1;
 /**
  * Maximum width in pixels of extracted strip frames.
  *
+ * **Details**
+ *
  * Bounds the only judge artifact that was previously unbounded: full-viewport
  * PNG frames of visually complex captures can exceed judge-pack's per-file
  * byte ceiling and get dropped wholesale. 960 keeps a 1600-wide viewport
  * legible for the vision judge while staying comfortably inside the budget.
  *
- * @example
+ * **Example** (Log frame max width)
+ *
  * ```ts
  * import { FRAME_MAX_WIDTH } from "@beep/qa-capture"
  * console.log(FRAME_MAX_WIDTH)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -215,10 +237,13 @@ const distancePx = (down: PointerDownEvent, x: number, y: number): number => Mat
 /**
  * Derive extraction windows from a witness event stream.
  *
+ * **Details**
+ *
  * Pairing state (open transitions, animations, gestures, hovers) is tracked
  * with `MutableHashMap`s local to the call; the function stays pure.
  *
- * @example
+ * **Example** (Plan windows from markers)
+ *
  * ```ts
  * import { defaultExtractionRules, MarkerEvent, planWindows } from "@beep/qa-capture"
  * const windows = planWindows(
@@ -227,6 +252,7 @@ const distancePx = (down: PointerDownEvent, x: number, y: number): number => Mat
  * )
  * console.log(windows.length)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -425,12 +451,14 @@ export const planWindows: {
 /**
  * Result of an overlap merge over extraction windows.
  *
- * @example
+ * **Example** (Create empty fit result)
+ *
  * ```ts
  * import { WindowFitResult } from "@beep/qa-capture"
  * const empty = WindowFitResult.make({ dropped: [], windows: [] })
  * console.log(empty.windows.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -481,17 +509,21 @@ const mergeTwo = (kept: ExtractionWindow, next: ExtractionWindow): ExtractionWin
  * Merge same-kind windows that start less than
  * {@link OVERLAP_MERGE_GAP_MS} after the previous one ends.
  *
+ * **Details**
+ *
  * Every absorbed window is recorded in `dropped` with reason
  * `overlap-merged`.
  *
- * @param windows - Planned windows in any order; merging sorts them by start time.
- * @returns The surviving windows plus every window they absorbed.
- * @example
+ * **Example** (Merge empty window list)
+ *
  * ```ts
  * import { mergeOverlappingWindows } from "@beep/qa-capture"
  * const result = mergeOverlappingWindows([])
  * console.log(result.windows.length)
  * ```
+ *
+ * @param windows - Planned windows in any order; merging sorts them by start time.
+ * @returns The surviving windows plus every window they absorbed.
  * @category utilities
  * @since 0.0.0
  */
@@ -534,7 +566,8 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
  * Deterministically estimate the committed byte size of one window's
  * artifacts under a budget's GIF duration cap.
  *
- * @example
+ * **Example** (Estimate window artifact bytes)
+ *
  * ```ts
  * import { ArtifactBudget, estimateWindowBytes, ExtractionWindow } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -553,6 +586,7 @@ export const mergeOverlappingWindows = (windows: ReadonlyArray<ExtractionWindow>
  * )
  * console.log(bytes)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -592,12 +626,14 @@ const withGif = (window: ExtractionWindow, gif: O.Option<GifSpec>): ExtractionWi
 /**
  * Result of fitting windows under an {@link ArtifactBudget}.
  *
- * @example
+ * **Example** (Create empty budget result)
+ *
  * ```ts
  * import { BudgetFitResult } from "@beep/qa-capture"
  * const empty = BudgetFitResult.make({ dropped: [], estimatedTotalBytes: 0, windows: [] })
  * console.log(empty.estimatedTotalBytes) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -627,17 +663,21 @@ export class BudgetFitResult extends S.Class<BudgetFitResult>($I`BudgetFitResult
 /**
  * Fit windows under a byte budget via the degradation ladder.
  *
+ * **Details**
+ *
  * Ladder: drop P2 windows, reduce GIF fps to 10, reduce GIF width to 480,
  * turn GIFs into strips, then drop remaining windows lowest-priority-first
  * (latest start first inside a priority). Every step is recorded in
  * `dropped`; the returned estimate never exceeds the budget.
  *
- * @example
+ * **Example** (Fit empty list under budget)
+ *
  * ```ts
  * import { applyBudget, ArtifactBudget } from "@beep/qa-capture"
  * const result = applyBudget([], ArtifactBudget.make({}))
  * console.log(result.estimatedTotalBytes)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -742,15 +782,19 @@ export const applyBudget: {
 /**
  * Inputs of one {@link buildExtractionPlan} run.
  *
+ * **Details**
+ *
  * Both the budget and the rule set carry defaults, so a caller that only has
  * witness events still gets the canonical planner behavior.
  *
- * @example
+ * **Example** (Make options with defaults)
+ *
  * ```ts
  * import { BuildExtractionPlanOptions } from "@beep/qa-capture"
  * const options = BuildExtractionPlanOptions.make({ events: [] })
  * console.log(options.rules.length > 0) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -782,9 +826,8 @@ export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptio
 /**
  * Build a complete, budget-fitted {@link ExtractionPlan} from witness events.
  *
- * @param options - Witness events plus the budget and rules to plan under.
- * @returns A budget-fitted extraction plan.
- * @example
+ * **Example** (Build plan from markers)
+ *
  * ```ts
  * import { BuildExtractionPlanOptions, buildExtractionPlan, MarkerEvent } from "@beep/qa-capture"
  * const plan = buildExtractionPlan(
@@ -794,6 +837,9 @@ export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptio
  * )
  * console.log(plan.windows.length)
  * ```
+ *
+ * @param options - Witness events plus the budget and rules to plan under.
+ * @returns A budget-fitted extraction plan.
  * @category utilities
  * @since 0.0.0
  */
@@ -816,11 +862,14 @@ type EpochToVideoSeconds = (epochMs: number) => number;
  * Convert a witness wall-clock timestamp to seconds on the video timeline,
  * clamped to `[0, max(0, videoDurationSeconds - END_SEEK_GUARD_SECONDS)]`.
  *
+ * **Details**
+ *
  * The upper bound stays {@link END_SEEK_GUARD_SECONDS} short of the container
  * endpoint: there is no decodable frame at exactly the container duration, and
  * the driver stages a window's timestamps as one fail-fast operation.
  *
- * @example
+ * **Example** (Map epoch to video seconds)
+ *
  * ```ts
  * import { ClockSync, epochToVideoSeconds } from "@beep/qa-capture"
  * const toVideo = epochToVideoSeconds(
@@ -836,6 +885,7 @@ type EpochToVideoSeconds = (epochMs: number) => number;
  * console.log(toVideo(1753838001500)) // 1.5
  * console.log(toVideo(1753838020000)) // 9.9
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -858,13 +908,14 @@ export const epochToVideoSeconds: {
 /**
  * Convert a video-timeline timestamp back to the witness wall-clock epoch.
  *
+ * **Details**
+ *
  * The exact inverse of the affine {@link epochToVideoSeconds} mapping (before
  * clamping), used to stamp each extracted strip frame with the capture epoch
  * of its own source instant rather than the window start.
  *
- * @param clockSync - Affine clock fit whose slope and offset are inverted.
- * @returns A function mapping video seconds to epoch milliseconds.
- * @example
+ * **Example** (Map video seconds to epoch)
+ *
  * ```ts
  * import { ClockSync, videoSecondsToEpochMs } from "@beep/qa-capture"
  * const toEpochMs = videoSecondsToEpochMs(
@@ -878,6 +929,9 @@ export const epochToVideoSeconds: {
  * )
  * console.log(toEpochMs(1.5)) // 1753838001500
  * ```
+ *
+ * @param clockSync - Affine clock fit whose slope and offset are inverted.
+ * @returns A function mapping video seconds to epoch milliseconds.
  * @category utilities
  * @since 0.0.0
  */
@@ -889,7 +943,8 @@ export const videoSecondsToEpochMs =
 /**
  * Input options for {@link planDriverRequests}.
  *
- * @example
+ * **Example** (Construct driver request options)
+ *
  * ```ts
  * import {
  *   ArtifactBudget,
@@ -920,6 +975,7 @@ export const videoSecondsToEpochMs =
  * })
  * console.log(options.videoPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -976,6 +1032,8 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
 /**
  * Materialize a fitted plan into `@beep/ffmpeg` driver requests.
  *
+ * **Details**
+ *
  * Emits one frame-strip request per window with frame times (bounded to
  * {@link FRAME_MAX_WIDTH} so strip frames stay inside the judge image budget),
  * one GIF request per window with a GIF spec (duration clamped to the budget
@@ -983,9 +1041,8 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  * request. When the clock confidence is `low`, windows are padded by an extra
  * 250 ms on both sides before mapping onto the video timeline.
  *
- * @param options - Fitted plan, clock sync, video path, and the artifact directories.
- * @returns One driver request per planned artifact, plus the whole-video contact sheet.
- * @example
+ * **Example** (Materialize empty plan requests)
+ *
  * ```ts
  * import {
  *   ArtifactBudget,
@@ -1019,6 +1076,9 @@ export class PlanDriverRequestsOptions extends S.Class<PlanDriverRequestsOptions
  * )
  * console.log(requests.length)
  * ```
+ *
+ * @param options - Fitted plan, clock sync, video path, and the artifact directories.
+ * @returns One driver request per planned artifact, plus the whole-video contact sheet.
  * @category utilities
  * @since 0.0.0
  */

@@ -18,7 +18,8 @@ import type { FieldOption } from "../core/Options.ts";
  * Props for {@link SelectField}: `Select` props plus label/description/options;
  * binding props (`value`/`onValueChange`/`name`/`id`) are owned by the field.
  *
- * @example
+ * **Example** (Select props with options)
+ *
  * ```ts
  * import type { SelectFieldProps } from "@beep/form/fields/SelectField"
  *
@@ -48,7 +49,8 @@ export interface SelectFieldProps
 /**
  * Schema-bound single-select dropdown.
  *
- * @example
+ * **Example** (Status dropdown form field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { SelectField } from "@beep/form/fields/SelectField"

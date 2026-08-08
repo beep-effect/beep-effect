@@ -49,12 +49,15 @@ const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
 /**
  * Folds a legacy serialized YouTube embed value into a bare candidate video id.
  *
+ * **Details**
+ *
  * Already-bare ids pass through; `watch`, `embed`, `shorts`, and `youtu.be`
  * URLs decode to their canonical 11-character id; anything else (including an
  * unparseable string) returns the trimmed input unchanged so the downstream
  * `YouTubeVideoId` schema makes the accept/reject decision.
  *
- * @example
+ * **Example** (Decode youtu.be URL)
+ *
  * ```ts
  * import { legacyYouTubeVideoId } from "@beep/lexical-schema/Lexical.normalize"
  *
@@ -80,10 +83,13 @@ export const legacyYouTubeVideoId = (value: string): string => {
 /**
  * Sanitizes a serialized Lexical link URL before it reaches an anchor `href`.
  *
+ * **Details**
+ *
  * Uses the canonical browser-safe `@beep/md` URL policy so every browser URL
  * sink in the document stack shares one protocol and relative-path contract.
  *
- * @example
+ * **Example** (Reject javascript URL)
+ *
  * ```ts
  * import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize"
  *
@@ -144,7 +150,8 @@ const parseSafeDeclaration = (declaration: string): O.Option<string> => {
  * weaponized for UI redressing or external resource fetches. Empty input (the
  * common Lexical default) round-trips to the empty string.
  *
- * @example
+ * **Example** (Strip unsafe CSS properties)
+ *
  * ```ts
  * import { sanitizeInlineStyle } from "@beep/lexical-schema/Lexical.normalize"
  *
@@ -166,7 +173,8 @@ export const sanitizeInlineStyle = (style: string): string =>
  * function call / URL (`(`), or an escape (`\`) is dropped to the empty string,
  * preventing the bare-value sink from being used for CSS injection.
  *
- * @example
+ * **Example** (Reject multi-declaration value)
+ *
  * ```ts
  * import { sanitizeStyleValue } from "@beep/lexical-schema/Lexical.normalize"
  *

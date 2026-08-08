@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Tooltip provider export.
  *
- * @example
+ * **Example** (Import TooltipProvider export)
+ *
  * ```tsx
  * import { TooltipProvider } from "@beep/ui/components/tooltip"
  *
@@ -29,7 +30,8 @@ function TooltipProvider({ ...props }: TooltipPrimitive.Provider.Props) {
 /**
  * Tooltip component.
  *
- * @example
+ * **Example** (Import Tooltip component)
+ *
  * ```tsx
  * import { Tooltip } from "@beep/ui/components/tooltip"
  *
@@ -46,7 +48,8 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
 /**
  * Tooltip trigger component.
  *
- * @example
+ * **Example** (Import TooltipTrigger component)
+ *
  * ```tsx
  * import { TooltipTrigger } from "@beep/ui/components/tooltip"
  *
@@ -63,7 +66,8 @@ function TooltipTrigger({ className, ...props }: TooltipPrimitive.Trigger.Props)
 /**
  * Tooltip content component.
  *
- * @example
+ * **Example** (Import TooltipContent component)
+ *
  * ```tsx
  * import { TooltipContent } from "@beep/ui/components/tooltip"
  *

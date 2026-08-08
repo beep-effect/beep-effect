@@ -19,13 +19,15 @@ const $I = $RepoCliId.create("commands/Files/internal/ArchivePoorCandidates.sche
 /**
  * Dataset profile used by candidate-quality triage.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CandidateAssessmentProfile } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CandidateAssessmentProfile)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -46,13 +48,15 @@ export type CandidateAssessmentProfile = typeof CandidateAssessmentProfile.Type;
 /**
  * Candidate-quality decision produced by `files archive-poor-candidates`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CandidateAssessmentDecision } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CandidateAssessmentDecision)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -73,13 +77,15 @@ export type CandidateAssessmentDecision = typeof CandidateAssessmentDecision.Typ
 /**
  * Hard-threshold reason that can cause an image to be archived.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CandidateAssessmentReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CandidateAssessmentReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -104,13 +110,15 @@ export type CandidateAssessmentReason = typeof CandidateAssessmentReason.Type;
 /**
  * Reason a direct directory entry was skipped by `files archive-poor-candidates`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesSkippedReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesSkippedReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -139,13 +147,15 @@ export type ArchivePoorCandidatesSkippedReason = typeof ArchivePoorCandidatesSki
 /**
  * Numeric threshold ratio used by candidate-quality triage.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CandidateRatioThreshold } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CandidateRatioThreshold)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -173,13 +183,15 @@ export type CandidateRatioThreshold = typeof CandidateRatioThreshold.Type;
 /**
  * Options used by poor-candidate archival.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -207,13 +219,15 @@ export class ArchivePoorCandidatesOptions extends S.Class<ArchivePoorCandidatesO
 /**
  * JSON-safe options recorded in a poor-candidate archive manifest.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesManifestOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesManifestOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -237,13 +251,15 @@ export class ArchivePoorCandidatesManifestOptions extends S.Class<ArchivePoorCan
 /**
  * Derived image metrics used for candidate-quality triage.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CandidateAssessmentMetrics } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CandidateAssessmentMetrics)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -262,13 +278,15 @@ export class CandidateAssessmentMetrics extends S.Class<CandidateAssessmentMetri
 /**
  * Caption or metadata sidecar moved with an archived image.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivedSidecarEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivedSidecarEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -288,13 +306,15 @@ export class ArchivedSidecarEntry extends S.Class<ArchivedSidecarEntry>($I`Archi
 /**
  * Assessed image candidate with an archive or keep decision.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -322,13 +342,15 @@ export class ArchivePoorCandidatesEntry extends S.Class<ArchivePoorCandidatesEnt
 /**
  * Source entry skipped by poor-candidate archival.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesSkippedEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -350,13 +372,15 @@ export class ArchivePoorCandidatesSkippedEntry extends S.Class<ArchivePoorCandid
 /**
  * Planned poor-candidate archive run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesPlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesPlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -377,13 +401,15 @@ export class ArchivePoorCandidatesPlan extends S.Class<ArchivePoorCandidatesPlan
 /**
  * Summary counts returned by poor-candidate archival.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -410,13 +436,15 @@ export class ArchivePoorCandidatesSummary extends S.Class<ArchivePoorCandidatesS
 /**
  * JSON-safe summary recorded by poor-candidate archival.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesManifestSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesManifestSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -438,13 +466,15 @@ export class ArchivePoorCandidatesManifestSummary extends S.Class<ArchivePoorCan
 /**
  * Manifest written by a successful poor-candidate archive run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArchivePoorCandidatesManifest } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ArchivePoorCandidatesManifest)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -469,12 +499,14 @@ export class ArchivePoorCandidatesManifest extends S.Class<ArchivePoorCandidates
 /**
  * Decode unknown poor-candidate archive options.
  *
- * @example
+ * **Example** (Decode undefined options)
+ *
  * ```ts
  * import { decodeArchivePoorCandidatesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeArchivePoorCandidatesOptions(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -486,12 +518,14 @@ export const decodeArchivePoorCandidatesOptions: {
 /**
  * Encode a poor-candidate archive manifest into its JSON-safe shape.
  *
- * @example
+ * **Example** (Encode manifest type alias)
+ *
  * ```ts
  * import { encodeArchivePoorCandidatesManifest } from "@beep/repo-cli/commands/Files"
  *
  * const encode: typeof encodeArchivePoorCandidatesManifest = encodeArchivePoorCandidatesManifest
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */

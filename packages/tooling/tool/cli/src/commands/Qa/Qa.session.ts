@@ -28,12 +28,14 @@ const $I = $RepoCliId.create("commands/Qa/Qa.session");
 /**
  * Portless dev-server port every `*.beep.localhost` app is proxied on.
  *
- * @example
+ * **Example** (Logging the constant value)
+ *
  * ```ts
  * import { PORTLESS_PORT } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
  * console.log(PORTLESS_PORT) // 1355
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -42,7 +44,8 @@ export const PORTLESS_PORT = 1355;
 /**
  * Resolve the `.beep/qa` root for a checkout.
  *
- * @example
+ * **Example** (Resolving QA root path)
+ *
  * ```ts
  * import { qaRootPath } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect, Path } from "effect"
@@ -50,6 +53,7 @@ export const PORTLESS_PORT = 1355;
  * const program = Effect.map(Effect.service(Path.Path), (path) => qaRootPath(path, "/repo"))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -61,14 +65,16 @@ export const qaRootPath: {
 /**
  * Portless URL of a repo dev-server app.
  *
- * @param app - Portless app name, for example storybook.
- * @returns The app's canonical portless dev-server URL.
- * @example
+ * **Example** (Building app portless URL)
+ *
  * ```ts
  * import { portlessUrlForApp } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
  * console.log(portlessUrlForApp("storybook")) // "http://storybook.beep.localhost:1355"
  * ```
+ *
+ * @param app - Portless app name, for example storybook.
+ * @returns The app's canonical portless dev-server URL.
  * @category utilities
  * @since 0.0.0
  */
@@ -77,7 +83,8 @@ export const portlessUrlForApp = (app: string): string => `http://${app}.beep.lo
 /**
  * The page a capture round drives, with the CORS origins its witness may post from.
  *
- * @example
+ * **Example** (Creating a CaptureTarget)
+ *
  * ```ts
  * import { CaptureTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
@@ -87,6 +94,7 @@ export const portlessUrlForApp = (app: string): string => `http://${app}.beep.lo
  * })
  * console.log(target.url)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,7 +127,8 @@ const originsOf = (url: URL): ReadonlyArray<string> => {
 /**
  * The `--url` / `--app` pair {@link resolveCaptureTarget} resolves a page from.
  *
- * @example
+ * **Example** (Request with optional app)
+ *
  * ```ts
  * import { CaptureTargetRequest } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import * as O from "effect/Option"
@@ -127,6 +136,7 @@ const originsOf = (url: URL): ReadonlyArray<string> => {
  * const request = CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() })
  * console.log(O.isSome(request.app)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -153,12 +163,13 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
 /**
  * Resolve `--url` / `--app` into the page a round drives.
  *
+ * **Details**
+ *
  * `--url` wins when both are supplied; `--app` expands through the portless
  * naming mandate rather than a numeric localhost port.
  *
- * @param options - The --url / --app pair as supplied on the command line.
- * @returns An Effect resolving the capture target, failing when neither flag yields a usable URL.
- * @example
+ * **Example** (Resolving from app flag)
+ *
  * ```ts
  * import { CaptureTargetRequest, resolveCaptureTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
@@ -167,6 +178,9 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
  * const program = resolveCaptureTarget(CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param options - The --url / --app pair as supplied on the command line.
+ * @returns An Effect resolving the capture target, failing when neither flag yields a usable URL.
  * @category use-cases
  * @since 0.0.0
  */
@@ -206,7 +220,8 @@ const roundOrDiscovered = (
 /**
  * Resolve an explicit `--round` flag, or discover the next free round.
  *
- * @example
+ * **Example** (Resolving explicit round number)
+ *
  * ```ts
  * import { resolveRound } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
@@ -215,6 +230,7 @@ const roundOrDiscovered = (
  * const program = resolveRound("/repo/.beep/qa", O.some(3))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -237,7 +253,8 @@ export const resolveRound = Effect.fn("QaSession.resolveRound")(function* (
 /**
  * Resolve an existing round directory, defaulting to the highest recorded round.
  *
- * @example
+ * **Example** (Resolving highest existing round)
+ *
  * ```ts
  * import { resolveExistingRound } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
@@ -246,6 +263,7 @@ export const resolveRound = Effect.fn("QaSession.resolveRound")(function* (
  * const program = resolveExistingRound("/repo/.beep/qa", O.none())
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -273,13 +291,15 @@ export const resolveExistingRound = Effect.fn("QaSession.resolveExistingRound")(
 /**
  * Witness events decoded from one round's NDJSON log.
  *
- * @example
+ * **Example** (Creating empty event log)
+ *
  * ```ts
  * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
  * const log = QaEventLog.make({ events: [], rejectedCount: 0 })
  * console.log(log.rejectedCount) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -304,10 +324,13 @@ export class QaEventLog extends S.Class<QaEventLog>($I`QaEventLog`)(
 /**
  * Read and decode a round's `events.ndjson`, tolerating undecodable lines.
  *
+ * **Details**
+ *
  * A malformed line is counted, not raised: a partially-written log from an
  * interrupted session must still yield every event it did flush.
  *
- * @example
+ * **Example** (Reading round event log)
+ *
  * ```ts
  * import { readEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
@@ -315,6 +338,7 @@ export class QaEventLog extends S.Class<QaEventLog>($I`QaEventLog`)(
  * const program = readEventLog("/repo/.beep/qa/round-1/events.ndjson")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -353,13 +377,15 @@ const capturedText = (command: string, args: ReadonlyArray<string>) =>
 /**
  * Commit provenance of the checkout a round was recorded from.
  *
- * @example
+ * **Example** (Creating dirty commit provenance)
+ *
  * ```ts
  * import { CommitProvenance } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
  * const commit = CommitProvenance.make({ dirty: true, sha: "a73f509b5a" })
  * console.log(commit.dirty) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -384,13 +410,15 @@ export class CommitProvenance extends S.Class<CommitProvenance>($I`CommitProvena
 /**
  * Read HEAD sha and dirty state, degrading to `unknown` outside a checkout.
  *
- * @example
+ * **Example** (Reading HEAD commit state)
+ *
  * ```ts
  * import { readCommitProvenance } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readCommitProvenance("/repo"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -421,16 +449,20 @@ const toolVersion = (tool: string, output: O.Option<string>): R.ReadonlyRecord<s
 /**
  * Best-effort versions of the native tools a round depends on.
  *
+ * **Details**
+ *
  * Every probe degrades to an omitted key rather than failing the capture: a
  * missing exiftool must not stop a recording that has already started.
  *
- * @example
+ * **Example** (Collecting native tool versions)
+ *
  * ```ts
  * import { collectToolVersions } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(collectToolVersions())) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -453,12 +485,14 @@ export const collectToolVersions = Effect.fn("QaSession.collectToolVersions")(fu
 /**
  * Build the session identifier stamped into every artifact of a round.
  *
- * @example
+ * **Example** (Building round session id)
+ *
  * ```ts
  * import { makeSessionId } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
  * console.log(makeSessionId(2, 1754000000000)) // "qa-round-2-1754000000000"
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -473,7 +507,8 @@ export const makeSessionId: {
 /**
  * Path of the recording-start hint the playwright harness writes.
  *
- * @example
+ * **Example** (Resolving record hint path)
+ *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { recordHintPath } from "@beep/repo-cli/commands/Qa/Qa.session"
@@ -496,6 +531,7 @@ export const makeSessionId: {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -513,13 +549,15 @@ const RecordHintJson = S.fromJsonString(RecordHint);
 /**
  * Read the harness recording-start hint, when the round produced one.
  *
- * @example
+ * **Example** (Reading recording start hint)
+ *
  * ```ts
  * import { readRecordStartHint } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readRecordStartHint("/repo/.beep/qa/round-1/video/record-hint.json"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -537,7 +575,8 @@ export const readRecordStartHint = Effect.fn("QaSession.readRecordStartHint")(fu
 /**
  * Write the recording-start hint the clock correlator falls back to.
  *
- * @example
+ * **Example** (Writing recording start hint)
+ *
  * ```ts
  * import { writeRecordStartHint } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
@@ -545,6 +584,7 @@ export const readRecordStartHint = Effect.fn("QaSession.readRecordStartHint")(fu
  * const program = writeRecordStartHint("/repo/.beep/qa/round-1/video/record-hint.json", 1754000000000)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -564,16 +604,20 @@ export const writeRecordStartHint = Effect.fn("QaSession.writeRecordStartHint")(
 /**
  * Locate the recorded video inside a round's `video/` directory.
  *
+ * **Details**
+ *
  * Prefers the canonical `capture.webm` the harness renames to, then falls back
  * to the first recorded container playwright or OBS left behind.
  *
- * @example
+ * **Example** (Discovering recorded video file)
+ *
  * ```ts
  * import { discoverRecordedVideo } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(discoverRecordedVideo("/repo/.beep/qa/round-1/video"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

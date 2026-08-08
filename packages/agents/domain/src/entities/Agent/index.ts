@@ -8,7 +8,8 @@
 /**
  * Agent entity schema exports.
  *
- * @example
+ * **Example** (Import Agent entity type)
+ *
  * ```ts
  * import { Agent } from "@beep/agents-domain/entities/Agent"
  *
@@ -22,7 +23,8 @@ export * from "./Agent.model.ts";
 /**
  * Agent value-schema exports.
  *
- * @example
+ * **Example** (Check AgentMode deterministic fixture)
+ *
  * ```ts
  * import { AgentMode } from "@beep/agents-domain/entities/Agent"
  *

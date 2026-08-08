@@ -37,12 +37,14 @@ const UnsafeMetadataVideoExtensions = ["asf", "asx", "m3u", "m3u8", "m4u", "mxu"
 /**
  * Check whether a video extension is unsafe for metadata-only ffmpeg rewrites.
  *
- * @param extension - File extension with or without a leading dot.
- * @returns Whether the extension points at playlist or redirect-style media.
- * @example
+ * **Example** (Check m3u8 extension)
+ *
  * ```ts
  * isUnsafeMetadataVideoExtension(".m3u8")
  * ```
+ *
+ * @param extension - File extension with or without a leading dot.
+ * @returns Whether the extension points at playlist or redirect-style media.
  * @category utilities
  * @since 0.0.0
  */

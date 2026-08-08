@@ -43,10 +43,13 @@ class ExtractKeywordsSuccess extends S.Class<ExtractKeywordsSuccess>($I`ExtractK
  * Defines the agent-facing tool contract for extracting ranked keyword terms
  * from a text.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs compact topical terms for tagging,
  * routing, search facets, or retrieval hints.
  *
- * @example
+ * **Example** (Decode parameters schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExtractKeywords } from "@beep/nlp-processing/Tools/ExtractKeywords"

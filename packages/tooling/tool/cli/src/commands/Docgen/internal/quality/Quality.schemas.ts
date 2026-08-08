@@ -35,12 +35,14 @@ export const QUALITY_RUBRIC_VERSION = "jsdoc-quality-v1" as const;
 /**
  * Scope mode supported by `docgen quality`.
  *
- * @example
+ * **Example** (Check affected scope mode)
+ *
  * ```ts
  * import { DocgenQualityScopeMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * console.log(DocgenQualityScopeMode.is.affected("affected"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -53,13 +55,15 @@ export const DocgenQualityScopeMode = LiteralKit(["affected", "package", "change
 /**
  * Scope mode supported by `docgen quality`.
  *
- * @example
+ * **Example** (Assign affected scope mode)
+ *
  * ```ts
  * import type { DocgenQualityScopeMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const mode: DocgenQualityScopeMode = "affected"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -68,12 +72,14 @@ export type DocgenQualityScopeMode = typeof DocgenQualityScopeMode.Type;
 /**
  * Optional advisory scoring mode for `docgen quality`.
  *
- * @example
+ * **Example** (Check rubric score mode)
+ *
  * ```ts
  * import { DocgenQualityScoreMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * console.log(DocgenQualityScoreMode.is.rubric("rubric"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,13 +92,15 @@ export const DocgenQualityScoreMode = LiteralKit(["none", "rubric", "codex"]).pi
 /**
  * Optional advisory scoring mode for `docgen quality`.
  *
- * @example
+ * **Example** (Assign rubric score mode)
+ *
  * ```ts
  * import type { DocgenQualityScoreMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const mode: DocgenQualityScoreMode = "rubric"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -101,12 +109,14 @@ export type DocgenQualityScoreMode = typeof DocgenQualityScoreMode.Type;
 /**
  * Quality tier assigned to a JSDoc review subject.
  *
- * @example
+ * **Example** (Check warn quality tier)
+ *
  * ```ts
  * import { DocgenQualityTier } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * console.log(DocgenQualityTier.is.warn("warn"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,13 +129,15 @@ export const DocgenQualityTier = LiteralKit(["pass", "warn", "fail"]).pipe(
 /**
  * Quality tier assigned to a JSDoc review subject.
  *
- * @example
+ * **Example** (Assign warn quality tier)
+ *
  * ```ts
  * import type { DocgenQualityTier } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const tier: DocgenQualityTier = "warn"
  * console.log(tier) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -134,12 +146,14 @@ export type DocgenQualityTier = typeof DocgenQualityTier.Type;
 /**
  * Completion status for a package-local quality analysis.
  *
- * @example
+ * **Example** (Check completed package status)
+ *
  * ```ts
  * import { DocgenQualityPackageStatus } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * console.log(DocgenQualityPackageStatus.is.completed("completed"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -152,13 +166,15 @@ export const DocgenQualityPackageStatus = LiteralKit(["completed", "partial", "f
 /**
  * Completion status for a package-local quality analysis.
  *
- * @example
+ * **Example** (Assign completed package status)
+ *
  * ```ts
  * import type { DocgenQualityPackageStatus } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const status: DocgenQualityPackageStatus = "completed"
  * console.log(status) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -167,12 +183,14 @@ export type DocgenQualityPackageStatus = typeof DocgenQualityPackageStatus.Type;
 /**
  * Typed finding code emitted by the v1 quality rubric.
  *
- * @example
+ * **Example** (Check missing-example finding code)
+ *
  * ```ts
  * import { DocgenQualityFindingCode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * console.log(DocgenQualityFindingCode.is["missing-example"]("missing-example"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -201,13 +219,15 @@ export const DocgenQualityFindingCode = LiteralKit([
 /**
  * Typed finding code emitted by the v1 quality rubric.
  *
- * @example
+ * **Example** (Assign missing-example finding code)
+ *
  * ```ts
  * import type { DocgenQualityFindingCode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const code: DocgenQualityFindingCode = "missing-example"
  * console.log(code) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -216,7 +236,8 @@ export type DocgenQualityFindingCode = typeof DocgenQualityFindingCode.Type;
 /**
  * Single typed quality finding for one JSDoc subject.
  *
- * @example
+ * **Example** (Make missing-example finding)
+ *
  * ```ts
  * import { DocgenQualityFinding } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -230,6 +251,7 @@ export type DocgenQualityFindingCode = typeof DocgenQualityFindingCode.Type;
  * })
  * console.log(finding.code)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -250,7 +272,8 @@ export class DocgenQualityFinding extends S.Class<DocgenQualityFinding>($I`Docge
 /**
  * Nearby TypeScript diagnostic carried as quality-review evidence.
  *
- * @example
+ * **Example** (Make TypeScript diagnostic)
+ *
  * ```ts
  * import { DocgenQualityDiagnostic } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -262,6 +285,7 @@ export class DocgenQualityFinding extends S.Class<DocgenQualityFinding>($I`Docge
  * })
  * console.log(diagnostic.code)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -280,7 +304,8 @@ export class DocgenQualityDiagnostic extends S.Class<DocgenQualityDiagnostic>($I
 /**
  * Nearby exported symbol carried as review context.
  *
- * @example
+ * **Example** (Make related export symbol)
+ *
  * ```ts
  * import { DocgenRelatedSymbol } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -292,6 +317,7 @@ export class DocgenQualityDiagnostic extends S.Class<DocgenQualityDiagnostic>($I
  * })
  * console.log(symbol.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -310,13 +336,15 @@ export class DocgenRelatedSymbol extends S.Class<DocgenRelatedSymbol>($I`DocgenR
 /**
  * Stable evidence packet for one exported-symbol JSDoc quality review.
  *
- * @example
+ * **Example** (Pick subject export name)
+ *
  * ```ts
  * import type { DocgenQualitySubject } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const subject: Pick<DocgenQualitySubject, "exportName"> = { exportName: "makeUser" }
  * console.log(subject.exportName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,7 +380,8 @@ export class DocgenQualitySubject extends S.Class<DocgenQualitySubject>($I`Docge
 /**
  * Rubric outcome for one JSDoc quality subject.
  *
- * @example
+ * **Example** (Make passing quality review)
+ *
  * ```ts
  * import { DocgenQualityReview } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -365,6 +394,7 @@ export class DocgenQualitySubject extends S.Class<DocgenQualitySubject>($I`Docge
  * })
  * console.log(review.score)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -384,7 +414,8 @@ export class DocgenQualityReview extends S.Class<DocgenQualityReview>($I`DocgenQ
 /**
  * Aggregate summary for a JSDoc quality run.
  *
- * @example
+ * **Example** (Make aggregate quality summary)
+ *
  * ```ts
  * import { DocgenQualitySummary } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -398,6 +429,7 @@ export class DocgenQualityReview extends S.Class<DocgenQualityReview>($I`DocgenQ
  * })
  * console.log(summary.subjects)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -418,7 +450,8 @@ export class DocgenQualitySummary extends S.Class<DocgenQualitySummary>($I`Docge
 /**
  * Package-scoped JSDoc quality report.
  *
- * @example
+ * **Example** (Make package quality report)
+ *
  * ```ts
  * import {
  *   DocgenQualityPackageReport,
@@ -446,6 +479,7 @@ export class DocgenQualitySummary extends S.Class<DocgenQualitySummary>($I`Docge
  * })
  * console.log(report.packagePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -470,7 +504,8 @@ export class DocgenQualityPackageReport extends S.Class<DocgenQualityPackageRepo
 /**
  * Bounded advisory packet for future Codex remediation.
  *
- * @example
+ * **Example** (Make remediation packet)
+ *
  * ```ts
  * import { DocgenQualityRemediationPacket } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -484,6 +519,7 @@ export class DocgenQualityPackageReport extends S.Class<DocgenQualityPackageRepo
  * })
  * console.log(packet.title)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -506,13 +542,15 @@ export class DocgenQualityRemediationPacket extends S.Class<DocgenQualityRemedia
 /**
  * Consolidated report emitted by `beep docgen quality`.
  *
- * @example
+ * **Example** (Pick report schema version)
+ *
  * ```ts
  * import type { DocgenQualityReport } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const report: Pick<DocgenQualityReport, "schemaVersion"> = { schemaVersion: 2 }
  * console.log(report.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -535,7 +573,8 @@ export class DocgenQualityReport extends S.Class<DocgenQualityReport>($I`DocgenQ
 /**
  * Pre-hash subject candidate collected before stable identity finalization.
  *
- * @example
+ * **Example** (Pick candidate identity fields)
+ *
  * ```ts
  * import type { DocgenQualitySubjectCandidate } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
@@ -545,6 +584,7 @@ export class DocgenQualityReport extends S.Class<DocgenQualityReport>($I`DocgenQ
  * }
  * console.log(candidate.exportName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -564,13 +604,15 @@ export class DocgenQualitySubjectCandidate extends S.Class<DocgenQualitySubjectC
 /**
  * Stable ordering by workspace-relative package path for quality analysis.
  *
- * @example
+ * **Example** (Order package paths ascending)
+ *
  * ```ts
  * import { byPackagePathAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  * import { Order } from "effect"
  *
  * console.log(Order.lessThan(byPackagePathAscending)("a", "b")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -585,13 +627,15 @@ export const byPackagePathAscending: {
 /**
  * Stable ordering by subject identity for deterministic quality reports.
  *
- * @example
+ * **Example** (Order subject identities ascending)
+ *
  * ```ts
  * import { bySubjectIdentityAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  * import { Order } from "effect"
  *
  * console.log(Order.lessThan(bySubjectIdentityAscending)("a", "b")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

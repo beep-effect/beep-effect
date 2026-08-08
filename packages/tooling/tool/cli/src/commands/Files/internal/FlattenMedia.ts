@@ -450,9 +450,8 @@ const makeFlattenMediaSummary = (plan: FlattenMediaPlan, dryRun: boolean, movedC
 /**
  * Validate, plan, preview, and apply a recursive media flattening operation.
  *
- * @internal
- * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
- * @example
+ * **Example** (Run flatten with options)
+ *
  * ```ts
  * import { FlattenMediaOptions } from "@beep/repo-cli/commands/Files"
  * import { runFlattenMediaFiles } from "@beep/repo-cli/commands/Files/internal/FlattenMedia"
@@ -464,6 +463,9 @@ const makeFlattenMediaSummary = (plan: FlattenMediaPlan, dryRun: boolean, movedC
  * }))
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @internal
+ * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
  * @category use-cases
  * @since 0.0.0
  */

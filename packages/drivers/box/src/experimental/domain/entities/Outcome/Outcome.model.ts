@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Outcome/Outcome.model");
 /**
  * Experimental schema anchor for outcome resources returned by Box workflow-style operations.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty Outcome)
+ *
  * ```ts
  * import { Outcome } from "@beep/box/experimental/domain/entities/Outcome/Outcome.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Outcome extends S.Class<Outcome>($I`Outcome`)(
 /**
  * Type-level companion namespace for {@link Outcome} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Outcome)
+ *
  * ```ts
  * import { Outcome } from "@beep/box/experimental/domain/entities/Outcome/Outcome.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Outcome {
   /**
    * Encoded payload accepted by the {@link Outcome} entity schema.
    *
-   * @example
+   * **Example** (Encode Outcome to Encoded)
+   *
    * ```ts
    * import { Outcome } from "@beep/box/experimental/domain/entities/Outcome/Outcome.model";
    * import * as S from "effect/Schema";

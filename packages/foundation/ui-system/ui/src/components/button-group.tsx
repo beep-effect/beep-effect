@@ -15,7 +15,8 @@ import type { VariantProps } from "class-variance-authority";
 /**
  * Class factory for segmented horizontal or vertical button groups.
  *
- * @example
+ * **Example** (Horizontal and vertical classes)
+ *
  * ```tsx
  * import { strictEqual } from "node:assert"
  * import { buttonGroupVariants } from "@beep/ui/components/button-group"
@@ -49,7 +50,8 @@ const buttonGroupVariants = cva(
 /**
  * Segmented control container for adjacent buttons and inputs.
  *
- * @example
+ * **Example** (Reject and approve buttons)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  * import { ButtonGroup } from "@beep/ui/components/button-group"
@@ -86,7 +88,8 @@ function ButtonGroup({
 /**
  * Non-interactive text segment that aligns with grouped controls.
  *
- * @example
+ * **Example** (Currency label with button)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  * import { ButtonGroup, ButtonGroupText } from "@beep/ui/components/button-group"
@@ -126,7 +129,8 @@ function ButtonGroupText({ className, render, ...props }: useRender.ComponentPro
 /**
  * Divider that matches grouped button orientation.
  *
- * @example
+ * **Example** (Split save action buttons)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  * import { ButtonGroup, ButtonGroupSeparator } from "@beep/ui/components/button-group"

@@ -29,7 +29,8 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.sparql");
 /**
  * SPARQL query profiles exposed by the ontology workbench panel.
  *
- * @example
+ * **Example** (Assign select profile)
+ *
  * ```ts
  * import { OntologySparqlPanelProfile } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -50,7 +51,8 @@ export const OntologySparqlPanelProfile = LiteralKit(["select", "construct", "as
 /**
  * Type for {@link OntologySparqlPanelProfile}.
  *
- * @example
+ * **Example** (Assign construct profile)
+ *
  * ```ts
  * import { OntologySparqlPanelProfile } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -67,7 +69,8 @@ export type OntologySparqlPanelProfile = typeof OntologySparqlPanelProfile.Type;
 /**
  * SPARQL query safeguard envelope.
  *
- * @example
+ * **Example** (Make empty safeguards)
+ *
  * ```ts
  * import { OntologySparqlSafeguards } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -98,7 +101,8 @@ export class OntologySparqlSafeguards extends S.Class<OntologySparqlSafeguards>(
 /**
  * SPARQL panel example query.
  *
- * @example
+ * **Example** (Make all-triples example)
+ *
  * ```ts
  * import { OntologySparqlExample } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -130,7 +134,8 @@ export class OntologySparqlExample extends S.Class<OntologySparqlExample>($I`Ont
 /**
  * SPARQL execution input for an ontology session.
  *
- * @example
+ * **Example** (Make SPARQL run input)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { RunOntologySparqlInput } from "@beep/ontology-use-cases/aggregates/Session"
@@ -177,7 +182,8 @@ export class RunOntologySparqlInput extends S.Class<RunOntologySparqlInput>($I`R
 /**
  * SPARQL execution result with applied safeguards.
  *
- * @example
+ * **Example** (Make safeguarded result)
+ *
  * ```ts
  * import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { NonNegativeInt } from "@beep/schema"
@@ -221,7 +227,8 @@ export class RunOntologySparqlResult extends S.Class<RunOntologySparqlResult>($I
 /**
  * SPARQL safeguard validation failure.
  *
- * @example
+ * **Example** (Make profile mismatch error)
+ *
  * ```ts
  * import { OntologySparqlError } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -254,7 +261,8 @@ export class OntologySparqlError extends TaggedErrorClass<OntologySparqlError>($
 /**
  * SPARQL runner service shape.
  *
- * @example
+ * **Example** (Accept runner shape)
+ *
  * ```ts
  * import type { OntologySparqlRunnerShape } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -294,7 +302,8 @@ const QUERY_EXAMPLES: ReadonlyArray<OntologySparqlExample> = [
 /**
  * Built-in SPARQL query examples for the panel library.
  *
- * @example
+ * **Example** (List built-in examples)
+ *
  * ```ts
  * import { ontologySparqlExamples } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -321,7 +330,8 @@ const prefixLines = (prefixes: PrefixMap, query: string): ReadonlyArray<string> 
 /**
  * Builds a prefix prelude from the session prefix map.
  *
- * @example
+ * **Example** (Build prefix prelude)
+ *
  * ```ts
  * import { ontologySparqlPrefixPrelude } from "@beep/ontology-use-cases/aggregates/Session"
  * import { PrefixMap } from "@beep/rdf/Rdf"
@@ -342,7 +352,8 @@ export const ontologySparqlPrefixPrelude = (prefixes: PrefixMap): string =>
 /**
  * Default prefix-aware SPARQL query for a session.
  *
- * @example
+ * **Example** (Default session SPARQL query)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { defaultOntologySparqlQuery } from "@beep/ontology-use-cases/aggregates/Session"
@@ -619,7 +630,8 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
 /**
  * SPARQL runner service tag.
  *
- * @example
+ * **Example** (Yield runner service)
+ *
  * ```ts
  * import { OntologySparqlRunner } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -642,7 +654,8 @@ export class OntologySparqlRunner extends Context.Service<OntologySparqlRunner, 
 /**
  * Live SPARQL runner service built on the semantic-web SPARQL contract.
  *
- * @example
+ * **Example** (Reference live runner)
+ *
  * ```ts
  * import { OntologySparqlRunnerLive } from "@beep/ontology-use-cases/aggregates/Session"
  *

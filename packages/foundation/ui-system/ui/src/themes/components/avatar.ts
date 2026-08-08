@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Avatar theme theme value.
  *
- * @example
+ * **Example** (Import avatar theme)
+ *
  * ```ts
  * import { avatarTheme } from "@beep/ui/themes/components/avatar"
  *

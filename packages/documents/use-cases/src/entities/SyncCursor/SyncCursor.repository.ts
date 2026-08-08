@@ -21,7 +21,8 @@ const $I = $DocumentsUseCasesId.create("entities/SyncCursor/SyncCursor.repositor
 /**
  * Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields.
  *
- * @example
+ * **Example** (Construct cursor seed)
+ *
  * ```ts
  * import { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -68,7 +69,8 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
 /**
  * Persistence failure raised when the SyncCursor repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncCursorRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncCursor/server"
  *
@@ -99,7 +101,8 @@ export class SyncCursorRepositoryUnavailable extends TaggedErrorClass<SyncCursor
 /**
  * Lookup input addressing the cursor of one workspace mirror.
  *
- * @example
+ * **Example** (Construct find input)
+ *
  * ```ts
  * import { FindSyncCursorInput } from "@beep/documents-use-cases/entities/SyncCursor/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -132,11 +135,13 @@ export class FindSyncCursorInput extends S.Class<FindSyncCursorInput>($I`FindSyn
 /**
  * SyncCursor repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * At most one cursor row exists per `workspaceId` and `provider` pair: `upsert`
  * inserts the row when absent and replaces its seed fields when present.
  *
- * @example
+ * **Example** (Stub repository port)
+ *
  * ```ts
  * import {
  *   FindSyncCursorInput,
@@ -175,7 +180,8 @@ export interface SyncCursorRepositoryShape {
 /**
  * Context tag for the SyncCursor repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   SyncCursorRepository,

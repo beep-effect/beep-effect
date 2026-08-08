@@ -24,7 +24,8 @@ const decodeNotionPullSummary = S.decodeUnknownEffect(ResearchNotionPullSummary)
 /**
  * Pull saved Notion links into research x-post cards.
  *
- * @example
+ * **Example** (Pull Notion database links)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { notionPullImpl } from "@beep/repo-cli/commands/Research/internal/NotionPullRun"
@@ -35,6 +36,7 @@ const decodeNotionPullSummary = S.decodeUnknownEffect(ResearchNotionPullSummary)
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

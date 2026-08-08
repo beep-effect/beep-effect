@@ -13,7 +13,8 @@ import type React from "react";
 /**
  * Props for {@link CheckboxField}.
  *
- * @example
+ * **Example** (Satisfy checkbox field props)
+ *
  * ```ts
  * import type { CheckboxFieldProps } from "@beep/form/fields/CheckboxField"
  *
@@ -36,7 +37,8 @@ export interface CheckboxFieldProps
 /**
  * Schema-bound checkbox rendered inline with its label.
  *
- * @example
+ * **Example** (Consent form with checkbox)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { CheckboxField } from "@beep/form/fields/CheckboxField"

@@ -23,11 +23,13 @@ const $I = $QaCaptureId.create("ExtractionPlan.models");
 /**
  * Extraction priorities from must-keep (`P0`) to first-dropped (`P2`).
  *
- * @example
+ * **Example** (Log P0 priority enum)
+ *
  * ```ts
  * import { ExtractionPriority } from "@beep/qa-capture"
  * console.log(ExtractionPriority.Enum.P0)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -40,13 +42,15 @@ export const ExtractionPriority = LiteralKit(["P0", "P1", "P2"]).pipe(
 /**
  * Extraction priorities from must-keep (`P0`) to first-dropped (`P2`).
  *
- * @example
+ * **Example** (Assign typed priority value)
+ *
  * ```ts
  * import { ExtractionPriority } from "@beep/qa-capture"
  * import type { ExtractionPriority as ExtractionPriorityValue } from "@beep/qa-capture"
  * const priority: ExtractionPriorityValue = ExtractionPriority.Enum.P1
  * console.log(priority)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -55,11 +59,13 @@ export type ExtractionPriority = typeof ExtractionPriority.Type;
 /**
  * Kinds of extraction rules the planner understands.
  *
- * @example
+ * **Example** (Log drag rule kind)
+ *
  * ```ts
  * import { ExtractionRuleKind } from "@beep/qa-capture"
  * console.log(ExtractionRuleKind.Enum.drag)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -72,13 +78,15 @@ export const ExtractionRuleKind = LiteralKit(["animation", "click", "drag", "hov
 /**
  * Kinds of extraction rules the planner understands.
  *
- * @example
+ * **Example** (Assign typed rule kind)
+ *
  * ```ts
  * import { ExtractionRuleKind } from "@beep/qa-capture"
  * import type { ExtractionRuleKind as ExtractionRuleKindValue } from "@beep/qa-capture"
  * const kind: ExtractionRuleKindValue = ExtractionRuleKind.Enum.marker
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -87,11 +95,13 @@ export type ExtractionRuleKind = typeof ExtractionRuleKind.Type;
 /**
  * Reasons a window was merged, degraded, or dropped by the planner.
  *
- * @example
+ * **Example** (Log budget-dropped reason)
+ *
  * ```ts
  * import { DropReason } from "@beep/qa-capture"
  * console.log(DropReason.Enum["budget-dropped"])
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -112,13 +122,15 @@ export const DropReason = LiteralKit([
 /**
  * Reasons a window was merged, degraded, or dropped by the planner.
  *
- * @example
+ * **Example** (Assign typed drop reason)
+ *
  * ```ts
  * import { DropReason } from "@beep/qa-capture"
  * import type { DropReason as DropReasonValue } from "@beep/qa-capture"
  * const reason: DropReasonValue = DropReason.Enum["overlap-merged"]
  * console.log(reason)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,6 +139,8 @@ export type DropReason = typeof DropReason.Type;
 /**
  * One extraction rule with its priority, pads, and thresholds.
  *
+ * **Details**
+ *
  * The default rule set ({@link defaultExtractionRules}) encodes the planner
  * doctrine: markers get a frame plus a ±1 s GIF (P0); transitions and
  * animations get a GIF over `[start-100, end+100]` plus first/mid/last frames
@@ -134,7 +148,8 @@ export type DropReason = typeof DropReason.Type;
  * 15 fps plus a three-frame strip (P1); hovers dwelling at least 120 ms get a
  * strip (P2); clicks get a strip (P2).
  *
- * @example
+ * **Example** (Make a drag rule)
+ *
  * ```ts
  * import { ExtractionRule } from "@beep/qa-capture"
  * const rule = ExtractionRule.make({
@@ -151,6 +166,7 @@ export type DropReason = typeof DropReason.Type;
  * })
  * console.log(rule.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -264,13 +280,15 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
 /**
  * Rule set accepted by the planner (and the `beep qa extract --rules` file).
  *
- * @example
+ * **Example** (Decode empty rule set)
+ *
  * ```ts
  * import { ExtractionRuleSet } from "@beep/qa-capture"
  * import * as S from "effect/Schema"
  * const effect = S.decodeUnknownEffect(ExtractionRuleSet)([])
  * console.log(effect)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -283,12 +301,14 @@ export const ExtractionRuleSet = S.Array(ExtractionRule).pipe(
 /**
  * Rule set accepted by the planner (and the `beep qa extract --rules` file).
  *
- * @example
+ * **Example** (Type an empty rule set)
+ *
  * ```ts
  * import type { ExtractionRuleSet } from "@beep/qa-capture"
  * const empty: ExtractionRuleSet = []
  * console.log(empty)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -297,11 +317,13 @@ export type ExtractionRuleSet = typeof ExtractionRuleSet.Type;
 /**
  * The default planner rule set.
  *
- * @example
+ * **Example** (Log default rules length)
+ *
  * ```ts
  * import { defaultExtractionRules } from "@beep/qa-capture"
  * console.log(defaultExtractionRules.length)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -383,12 +405,14 @@ export const defaultExtractionRules: ExtractionRuleSet = [
 /**
  * Byte and duration budget applied to one extraction round.
  *
- * @example
+ * **Example** (Make default artifact budget)
+ *
  * ```ts
  * import { ArtifactBudget } from "@beep/qa-capture"
  * const budget = ArtifactBudget.make({})
  * console.log(budget.maxTotalBytes)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -431,12 +455,14 @@ export class ArtifactBudget extends S.Class<ArtifactBudget>($I`ArtifactBudget`)(
 /**
  * GIF rendering parameters attached to a window.
  *
- * @example
+ * **Example** (Make a GIF spec)
+ *
  * ```ts
  * import { GifSpec } from "@beep/qa-capture"
  * const spec = GifSpec.make({ fps: 15, width: 640 })
  * console.log(spec)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -475,7 +501,8 @@ export class GifSpec extends S.Class<GifSpec>($I`GifSpec`)(
 /**
  * One planned extraction window in the witness wall-clock domain.
  *
- * @example
+ * **Example** (Make a drag window)
+ *
  * ```ts
  * import { ExtractionWindow } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -491,6 +518,7 @@ export class GifSpec extends S.Class<GifSpec>($I`GifSpec`)(
  * })
  * console.log(window.label)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -546,7 +574,8 @@ export class ExtractionWindow extends S.Class<ExtractionWindow>($I`ExtractionWin
 /**
  * Record of a window that was merged, degraded, or dropped.
  *
- * @example
+ * **Example** (Make a dropped window)
+ *
  * ```ts
  * import { DroppedWindow } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -560,6 +589,7 @@ export class ExtractionWindow extends S.Class<ExtractionWindow>($I`ExtractionWin
  * })
  * console.log(dropped.reason)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -605,7 +635,8 @@ export class DroppedWindow extends S.Class<DroppedWindow>($I`DroppedWindow`)(
 /**
  * Complete extraction plan for one round.
  *
- * @example
+ * **Example** (Make an empty plan)
+ *
  * ```ts
  * import { ArtifactBudget, ExtractionPlan } from "@beep/qa-capture"
  * const plan = ExtractionPlan.make({
@@ -617,6 +648,7 @@ export class DroppedWindow extends S.Class<DroppedWindow>($I`DroppedWindow`)(
  * })
  * console.log(plan.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -663,7 +695,8 @@ export class ExtractionPlan extends S.Class<ExtractionPlan>($I`ExtractionPlan`)(
 /**
  * Planned frame-strip extraction wrapping an ffmpeg request.
  *
- * @example
+ * **Example** (Make planned frame extraction)
+ *
  * ```ts
  * import { ExtractFramesAtRequest } from "@beep/ffmpeg"
  * import { ExtractFramesAtPlanned } from "@beep/qa-capture"
@@ -681,6 +714,7 @@ export class ExtractionPlan extends S.Class<ExtractionPlan>($I`ExtractionPlan`)(
  * })
  * console.log(planned.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -705,7 +739,8 @@ export class ExtractFramesAtPlanned extends S.Class<ExtractFramesAtPlanned>($I`E
 /**
  * Planned GIF rendering wrapping an ffmpeg request.
  *
- * @example
+ * **Example** (Make planned GIF render)
+ *
  * ```ts
  * import { RenderGifRequest } from "@beep/ffmpeg"
  * import { RenderGifPlanned } from "@beep/qa-capture"
@@ -720,6 +755,7 @@ export class ExtractFramesAtPlanned extends S.Class<ExtractFramesAtPlanned>($I`E
  * })
  * console.log(planned.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -744,7 +780,8 @@ export class RenderGifPlanned extends S.Class<RenderGifPlanned>($I`RenderGifPlan
 /**
  * Planned contact-sheet rendering wrapping an ffmpeg request.
  *
- * @example
+ * **Example** (Make planned contact sheet)
+ *
  * ```ts
  * import { RenderContactSheetRequest } from "@beep/ffmpeg"
  * import { RenderContactSheetPlanned } from "@beep/qa-capture"
@@ -757,6 +794,7 @@ export class RenderGifPlanned extends S.Class<RenderGifPlanned>($I`RenderGifPlan
  * })
  * console.log(planned.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -781,7 +819,8 @@ export class RenderContactSheetPlanned extends S.Class<RenderContactSheetPlanned
 /**
  * Planned clip extraction wrapping an ffmpeg request.
  *
- * @example
+ * **Example** (Make planned clip extraction)
+ *
  * ```ts
  * import { ExtractClipRequest } from "@beep/ffmpeg"
  * import { ExtractClipPlanned } from "@beep/qa-capture"
@@ -797,6 +836,7 @@ export class RenderContactSheetPlanned extends S.Class<RenderContactSheetPlanned
  * })
  * console.log(planned.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -821,7 +861,8 @@ export class ExtractClipPlanned extends S.Class<ExtractClipPlanned>($I`ExtractCl
 /**
  * Tagged union of `@beep/ffmpeg` driver requests emitted by the planner.
  *
- * @example
+ * **Example** (Inspect driver request kind)
+ *
  * ```ts
  * import { QaDriverRequest } from "@beep/qa-capture"
  * import type { QaDriverRequest as QaDriverRequestValue } from "@beep/qa-capture"
@@ -829,6 +870,7 @@ export class ExtractClipPlanned extends S.Class<ExtractClipPlanned>($I`ExtractCl
  * console.log(kindOf)
  * console.log(QaDriverRequest)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -848,12 +890,14 @@ export const QaDriverRequest = S.Union([
 /**
  * Tagged union of `@beep/ffmpeg` driver requests emitted by the planner.
  *
- * @example
+ * **Example** (Type a driver request)
+ *
  * ```ts
  * import type { QaDriverRequest } from "@beep/qa-capture"
  * const kindOf = (request: QaDriverRequest) => request.kind
  * console.log(kindOf)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -862,12 +906,14 @@ export type QaDriverRequest = typeof QaDriverRequest.Type;
 /**
  * Decode an unknown value into an {@link ExtractionRuleSet}.
  *
- * @example
+ * **Example** (Decode empty rule set)
+ *
  * ```ts
  * import { decodeExtractionRuleSet } from "@beep/qa-capture"
  * const effect = decodeExtractionRuleSet([])
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -879,12 +925,14 @@ export const decodeExtractionRuleSet: {
 /**
  * Decode an unknown value into an {@link ExtractionPlan}.
  *
- * @example
+ * **Example** (Decode empty extraction plan)
+ *
  * ```ts
  * import { decodeExtractionPlan } from "@beep/qa-capture"
  * const effect = decodeExtractionPlan({})
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -896,13 +944,15 @@ export const decodeExtractionPlan: {
 /**
  * Encode an {@link ExtractionPlan} into its JSON string representation.
  *
- * @example
+ * **Example** (Encode plan to JSON)
+ *
  * ```ts
  * import { encodeExtractionPlanJson } from "@beep/qa-capture"
  * import type { ExtractionPlan } from "@beep/qa-capture"
  * const encode = (plan: ExtractionPlan) => encodeExtractionPlanJson(plan)
  * console.log(encode)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */

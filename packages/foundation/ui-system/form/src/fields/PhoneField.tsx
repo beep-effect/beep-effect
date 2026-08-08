@@ -14,7 +14,8 @@ import type React from "react";
  * Props for {@link PhoneField}: `PhoneInput` props plus label/description;
  * binding props are owned by the field.
  *
- * @example
+ * **Example** (Phone field props)
+ *
  * ```ts
  * import type { PhoneFieldProps } from "@beep/form/fields/PhoneField"
  *
@@ -50,7 +51,8 @@ type PhoneControlProps = {
 /**
  * Schema-bound phone input whose canonical value is an E.164 string.
  *
- * @example
+ * **Example** (E.164 phone form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { PhoneField } from "@beep/form/fields/PhoneField"

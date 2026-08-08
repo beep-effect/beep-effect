@@ -20,13 +20,15 @@ const $I = $RepoCliId.create("commands/Files/internal/DetectFaces.schemas");
 /**
  * Reason a direct directory entry was skipped by `files detect-faces`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesSkippedReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesSkippedReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -56,13 +58,15 @@ export type DetectFacesSkippedReason = typeof DetectFacesSkippedReason.Type;
 /**
  * Triage flag emitted by `files detect-faces`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesFlag } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesFlag)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -89,13 +93,15 @@ export type DetectFacesFlag = typeof DetectFacesFlag.Type;
 /**
  * Options used by the image face detection operation.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,13 +124,15 @@ export class DetectFacesOptions extends S.Class<DetectFacesOptions>($I`DetectFac
 /**
  * JSON-safe options recorded by the image face detection report.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesReportOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesReportOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,13 +154,15 @@ export class DetectFacesReportOptions extends S.Class<DetectFacesReportOptions>(
 /**
  * Image entry analyzed by `files detect-faces`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -181,13 +191,15 @@ export class DetectFacesEntry extends S.Class<DetectFacesEntry>($I`DetectFacesEn
 /**
  * Source entry skipped by image face detection.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesSkippedEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -207,13 +219,15 @@ export class DetectFacesSkippedEntry extends S.Class<DetectFacesSkippedEntry>($I
 /**
  * Summary counts for an image face detection run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -236,13 +250,15 @@ export class DetectFacesSummary extends S.Class<DetectFacesSummary>($I`DetectFac
 /**
  * JSON report emitted by an image face detection run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectFacesReport } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectFacesReport)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -265,12 +281,14 @@ export class DetectFacesReport extends S.Class<DetectFacesReport>($I`DetectFaces
 /**
  * Decode face detection options from unknown input.
  *
- * @example
+ * **Example** (Decode undefined options)
+ *
  * ```ts
  * import { decodeDetectFacesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeDetectFacesOptions(undefined)
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -282,12 +300,14 @@ export const decodeDetectFacesOptions: {
 /**
  * Encode a face detection report into its JSON-safe shape.
  *
- * @example
+ * **Example** (Assign encode function)
+ *
  * ```ts
  * import { encodeDetectFacesReport } from "@beep/repo-cli/commands/Files"
  *
  * const encode: typeof encodeDetectFacesReport = encodeDetectFacesReport
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

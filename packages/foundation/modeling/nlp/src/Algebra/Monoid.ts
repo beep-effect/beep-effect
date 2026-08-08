@@ -15,11 +15,14 @@ import { dual } from "effect/Function";
 /**
  * Monoid type class
  *
+ * **Details**
+ *
  * A monoid is an algebraic structure with:
  * - An identity element (empty)
  * - An associative binary operation (combine)
  *
- * @example
+ * **Example** (Folding sum monoid scores)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import { dual } from "effect/Function"
@@ -33,9 +36,8 @@ import { dual } from "effect/Function";
  * ```
  *
  * @typeParam A - The carrier type
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Monoid<A> {
   /**
@@ -61,7 +63,8 @@ export interface Monoid<A> {
  * algebraic structure rather than a subject and an argument, so they are
  * supplied together as a single options object.
  *
- * @example
+ * **Example** (Creating score monoid)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import { dual } from "effect/Function"
@@ -74,8 +77,8 @@ export interface Monoid<A> {
  * // 11
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const make = <A>(options: { readonly empty: A; readonly combine: Monoid<A>["combine"] }): Monoid<A> => ({
   empty: options.empty,
@@ -86,9 +89,12 @@ export const make = <A>(options: { readonly empty: A; readonly combine: Monoid<A
  * Fold a collection using a monoid
  * This is the fundamental aggregation operation.
  *
+ * **Details**
+ *
  * Category theory: This is a catamorphism from the list functor to the monoid.
  *
- * @example
+ * **Example** (Folding number sum monoid)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -98,8 +104,8 @@ export const make = <A>(options: { readonly empty: A; readonly combine: Monoid<A
  * // 26
  * ```
  *
- * @since 0.0.0
  * @category folding
+ * @since 0.0.0
  */
 export const fold =
   <A>(monoid: Monoid<A>) =>
@@ -114,7 +120,8 @@ export const fold =
 /**
  * Combine an array of values using a monoid, seeded with the identity.
  *
- * @example
+ * **Example** (Joining strings with separator)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -124,8 +131,8 @@ export const fold =
  * // "title / summary / body"
  * ```
  *
- * @since 0.0.0
  * @category folding
+ * @since 0.0.0
  */
 export const combineAll =
   <A>(monoid: Monoid<A>) =>
@@ -139,10 +146,13 @@ export const combineAll =
 /**
  * String concatenation monoid.
  *
+ * **Details**
+ *
  * - Empty: ""
  * - Combine: (x, y) =\> x + y
  *
- * @example
+ * **Example** (Concatenating string tokens)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -152,8 +162,8 @@ export const combineAll =
  * // "subword"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const StringConcat: Monoid<string> = {
   empty: "",
@@ -163,9 +173,12 @@ export const StringConcat: Monoid<string> = {
 /**
  * String join with separator monoid.
  *
+ * **Details**
+ *
  * Combines strings with a separator, intelligently handling empty strings.
  *
- * @example
+ * **Example** (Joining strings skipping empties)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -175,8 +188,8 @@ export const StringConcat: Monoid<string> = {
  * // "effect schemas"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const StringJoin = (separator: string): Monoid<string> => ({
   empty: "",
@@ -190,7 +203,8 @@ export const StringJoin = (separator: string): Monoid<string> => ({
 /**
  * String join with prefix and suffix, useful for creating delimited lists.
  *
- * @example
+ * **Example** (Building delimited list string)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -200,8 +214,8 @@ export const StringJoin = (separator: string): Monoid<string> => ({
  * // "[alpha, beta, gamma]"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const StringDelimited = (options: {
   readonly prefix: string;
@@ -228,7 +242,8 @@ export const StringDelimited = (options: {
 /**
  * Addition monoid for numbers (empty: 0).
  *
- * @example
+ * **Example** (Summing word counts)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -238,8 +253,8 @@ export const StringDelimited = (options: {
  * // 230
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const NumberSum: Monoid<number> = {
   empty: 0,
@@ -249,7 +264,8 @@ export const NumberSum: Monoid<number> = {
 /**
  * Multiplication monoid for numbers (empty: 1).
  *
- * @example
+ * **Example** (Multiplying weight factors)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -259,8 +275,8 @@ export const NumberSum: Monoid<number> = {
  * // 0.1
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const NumberProduct: Monoid<number> = {
   empty: 1,
@@ -270,7 +286,8 @@ export const NumberProduct: Monoid<number> = {
 /**
  * Max monoid for numbers (empty: -Infinity).
  *
- * @example
+ * **Example** (Finding peak score)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -280,8 +297,8 @@ export const NumberProduct: Monoid<number> = {
  * // 0.91
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const NumberMax: Monoid<number> = {
   empty: Number.NEGATIVE_INFINITY,
@@ -291,7 +308,8 @@ export const NumberMax: Monoid<number> = {
 /**
  * Min monoid for numbers (empty: Infinity).
  *
- * @example
+ * **Example** (Finding nearest distance)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -301,8 +319,8 @@ export const NumberMax: Monoid<number> = {
  * // 4
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const NumberMin: Monoid<number> = {
   empty: Number.POSITIVE_INFINITY,
@@ -316,7 +334,8 @@ export const NumberMin: Monoid<number> = {
 /**
  * Array concatenation monoid (empty: []).
  *
- * @example
+ * **Example** (Concatenating token arrays)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -326,8 +345,8 @@ export const NumberMin: Monoid<number> = {
  * // ["effect", "schema", "model"]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const ArrayConcat = <A>(): Monoid<ReadonlyArray<A>> => ({
   empty: [],
@@ -341,10 +360,13 @@ export const ArrayConcat = <A>(): Monoid<ReadonlyArray<A>> => ({
 /**
  * Multiset (bag) union monoid.
  *
+ * **Details**
+ *
  * A multiset is a collection where elements can appear multiple times.
  * Union adds the multiplicities.
  *
- * @example
+ * **Example** (Union multiset counts)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import { HashMap } from "effect"
@@ -357,8 +379,8 @@ export const ArrayConcat = <A>(): Monoid<ReadonlyArray<A>> => ({
  * // Option.some(5)
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const MultiSet = <K>(): Monoid<HashMap.HashMap<K, number>> => ({
   empty: HashMap.empty(),
@@ -372,7 +394,8 @@ export const MultiSet = <K>(): Monoid<HashMap.HashMap<K, number>> => ({
 /**
  * Set union monoid (empty: ∅).
  *
- * @example
+ * **Example** (Union vocabulary sets)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as HashSet from "effect/HashSet"
@@ -386,8 +409,8 @@ export const MultiSet = <K>(): Monoid<HashMap.HashMap<K, number>> => ({
  * // ["effect", "nlp", "schema"]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const SetUnion = <A>(): Monoid<HashSet.HashSet<A>> => ({
   empty: HashSet.empty(),
@@ -397,12 +420,15 @@ export const SetUnion = <A>(): Monoid<HashSet.HashSet<A>> => ({
 /**
  * Set intersection monoid.
  *
+ * **Details**
+ *
  * Note: There is no universal identity element for intersection over an
  * unbounded universe, so we model the identity as the "universal set" via
  * `Option.none()` (intersecting with the universal set is the identity).
  * Only use when all elements come from a finite universe.
  *
- * @example
+ * **Example** (Intersecting common tags)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as HashSet from "effect/HashSet"
@@ -417,8 +443,8 @@ export const SetUnion = <A>(): Monoid<HashSet.HashSet<A>> => ({
  * // Option.some(["entity", "topic"])
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const SetIntersection: <A>() => Monoid<O.Option<HashSet.HashSet<A>>> = <A>(): Monoid<
   O.Option<HashSet.HashSet<A>>
@@ -438,7 +464,8 @@ export const SetIntersection: <A>() => Monoid<O.Option<HashSet.HashSet<A>>> = <A
 /**
  * Vector addition monoid (element-wise addition; empty: zero vector).
  *
- * @example
+ * **Example** (Adding embedding vectors)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -451,8 +478,8 @@ export const SetIntersection: <A>() => Monoid<O.Option<HashSet.HashSet<A>>> = <A
  * // [5, 7, 9]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const VectorAdd = (dimension: number): Monoid<ReadonlyArray<number>> => ({
   empty: A.replicate(0, dimension),
@@ -462,7 +489,8 @@ export const VectorAdd = (dimension: number): Monoid<ReadonlyArray<number>> => (
 /**
  * Vector average monoid (tracks sum and count to compute a running average).
  *
- * @example
+ * **Example** (Averaging vector embeddings)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -476,8 +504,8 @@ export const VectorAdd = (dimension: number): Monoid<ReadonlyArray<number>> => (
  * // [3, 6]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const VectorAverage = (
   dimension: number
@@ -492,7 +520,8 @@ export const VectorAverage = (
 /**
  * Extract the average from a {@link VectorAverage} result.
  *
- * @example
+ * **Example** (Extracting vector average)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -502,8 +531,8 @@ export const VectorAverage = (
  * // [4, 6]
  * ```
  *
- * @since 0.0.0
  * @category accessors
+ * @since 0.0.0
  */
 export const getAverage = (result: {
   readonly sum: ReadonlyArray<number>;
@@ -517,7 +546,8 @@ export const getAverage = (result: {
 /**
  * Product monoid: combine two monoids component-wise.
  *
- * @example
+ * **Example** (Combining sum and max)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -531,8 +561,8 @@ export const getAverage = (result: {
  * // [25, 0.9]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const Product: {
   <A, B>(ma: Monoid<A>, mb: Monoid<B>): Monoid<readonly [A, B]>;
@@ -548,7 +578,8 @@ export const Product: {
 /**
  * Triple product monoid.
  *
- * @example
+ * **Example** (Triple product corpus stats)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -562,8 +593,8 @@ export const Product: {
  * // [180, 7, 0.92]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const Product3: {
   <A, B, C>(ma: Monoid<A>, mb: Monoid<B>, mc: Monoid<C>): Monoid<readonly [A, B, C]>;
@@ -583,7 +614,8 @@ export const Product3: {
 /**
  * Lift a monoid through Option: combine point-wise, treating `None` as the identity.
  *
- * @example
+ * **Example** (Folding optional scores)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as O from "effect/Option"
@@ -595,8 +627,8 @@ export const Product3: {
  * // Option.some(7)
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const Option = <A>(monoid: Monoid<A>): Monoid<O.Option<A>> => ({
   empty: O.none(),
@@ -615,7 +647,8 @@ export const Option = <A>(monoid: Monoid<A>): Monoid<O.Option<A>> => ({
 /**
  * Endomorphism monoid: functions from A to A under composition (empty: identity).
  *
- * @example
+ * **Example** (Composing string normalizers)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -629,8 +662,8 @@ export const Option = <A>(monoid: Monoid<A>): Monoid<O.Option<A>> => ({
  * // "effect"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const Endo = <A>(): Monoid<(a: A) => A> => ({
   empty: (a) => a,
@@ -644,7 +677,8 @@ export const Endo = <A>(): Monoid<(a: A) => A> => ({
 /**
  * Dual monoid: reverse the order of combination (x ⊕' y = y ⊕ x).
  *
- * @example
+ * **Example** (Reversing join order)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -654,8 +688,8 @@ export const Endo = <A>(): Monoid<(a: A) => A> => ({
  * // "answer -> rank -> parse"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const Dual = <A>(monoid: Monoid<A>): Monoid<A> => ({
   empty: monoid.empty,
@@ -669,7 +703,8 @@ export const Dual = <A>(monoid: Monoid<A>): Monoid<A> => ({
 /**
  * Logical AND monoid (empty: true).
  *
- * @example
+ * **Example** (Checking all conditions)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -679,8 +714,8 @@ export const Dual = <A>(monoid: Monoid<A>): Monoid<A> => ({
  * // false
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const BooleanAll: Monoid<boolean> = {
   empty: true,
@@ -690,7 +725,8 @@ export const BooleanAll: Monoid<boolean> = {
 /**
  * Logical OR monoid (empty: false).
  *
- * @example
+ * **Example** (Checking any match)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -700,8 +736,8 @@ export const BooleanAll: Monoid<boolean> = {
  * // true
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const BooleanAny: Monoid<boolean> = {
   empty: false,
@@ -726,7 +762,8 @@ const checkIdentity = <A>(
 /**
  * Check left identity law: empty ⊕ x = x
  *
- * @example
+ * **Example** (Validating left identity)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -736,8 +773,8 @@ const checkIdentity = <A>(
  * // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const checkLeftIdentity: {
   <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
@@ -749,7 +786,8 @@ export const checkLeftIdentity: {
 /**
  * Check right identity law: x ⊕ empty = x
  *
- * @example
+ * **Example** (Validating right identity)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -759,8 +797,8 @@ export const checkLeftIdentity: {
  * // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const checkRightIdentity: {
   <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
@@ -772,7 +810,8 @@ export const checkRightIdentity: {
 /**
  * Check associativity law: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)
  *
- * @example
+ * **Example** (Validating associativity law)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -782,8 +821,8 @@ export const checkRightIdentity: {
  * // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const checkAssociativity = <A>(options: {
   readonly monoid: Monoid<A>;
@@ -801,7 +840,8 @@ export const checkAssociativity = <A>(options: {
 /**
  * Check all monoid laws against a representative triple.
  *
- * @example
+ * **Example** (Checking all monoid laws)
+ *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
@@ -811,8 +851,8 @@ export const checkAssociativity = <A>(options: {
  * // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const checkLaws: {
   <A>(

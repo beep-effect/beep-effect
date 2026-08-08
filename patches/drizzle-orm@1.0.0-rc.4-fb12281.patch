@@ -44,7 +44,7 @@ index 9ec5bab6a265fbdb694e4fffa639ebea7be3a6cc..657ff333dbd8453ae8219d6e5c3d6af6
  	query: effect_Schema.String,
  	params: effect_Schema.Array(effect_Schema.Any).pipe(effect_Schema.mutable),
  	cause: effect_Schema.Unknown
-@@ -25,11 +25,11 @@ var EffectDrizzleQueryError = class EffectDrizzleQueryError extends effect_Schem
+@@ -25,11 +25,11 @@ var EffectDrizzleQueryError = class EffectDrizzleQueryError extends effect_Schema
  		Error.captureStackTrace(this, EffectDrizzleQueryError);
  	}
  };

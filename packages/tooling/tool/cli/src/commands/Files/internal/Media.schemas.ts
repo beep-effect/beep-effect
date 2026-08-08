@@ -20,13 +20,15 @@ const $I = $RepoCliId.create("commands/Files/internal/Media.schemas");
 /**
  * Positive media dimension schema.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveMediaDimension } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(PositiveMediaDimension)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -63,13 +65,15 @@ export type PositiveMediaDimension = typeof PositiveMediaDimension.Type;
 /**
  * SHA-256 hash recorded for normalized file bytes.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FileSha256Hash } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(FileSha256Hash)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -97,13 +101,15 @@ export type FileSha256Hash = typeof FileSha256Hash.Type;
 /**
  * Non-negative pixel offset schema.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativePixelOffset } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NonNegativePixelOffset)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -140,13 +146,15 @@ export type NonNegativePixelOffset = typeof NonNegativePixelOffset.Type;
 /**
  * Media kind schema for selected dataset files.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MediaKind } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(MediaKind)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -167,13 +175,15 @@ export type MediaKind = typeof MediaKind.Type;
 /**
  * Integer RGB channel value.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RgbChannel } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(RgbChannel)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -216,13 +226,15 @@ export type RgbChannel = typeof RgbChannel.Type;
 /**
  * Dimension metadata returned by `image-size`.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageSizeMetadata } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ImageSizeMetadata)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -240,13 +252,15 @@ export class ImageSizeMetadata extends S.Class<ImageSizeMetadata>($I`ImageSizeMe
 /**
  * Side-data entry returned by `ffprobe`.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FfprobeSideData } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(FfprobeSideData)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -262,13 +276,15 @@ export class FfprobeSideData extends S.Class<FfprobeSideData>($I`FfprobeSideData
 /**
  * Video stream metadata returned by `ffprobe`.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FfprobeStream } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(FfprobeStream)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -287,13 +303,15 @@ export class FfprobeStream extends S.Class<FfprobeStream>($I`FfprobeStream`)(
 /**
  * JSON document emitted by `ffprobe`.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FfprobeOutput } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(FfprobeOutput)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -309,13 +327,15 @@ export class FfprobeOutput extends S.Class<FfprobeOutput>($I`FfprobeOutput`)(
 /**
  * Safe generated filename prefix schema.
  *
- * @example
+ * **Example** (Check schema with undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeFilePrefix } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(SafeFilePrefix)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -370,13 +390,15 @@ export type SafeFilePrefix = typeof SafeFilePrefix.Type;
 /**
  * Width and height discovered for an image or video file.
  *
- * @example
+ * **Example** (Make media dimensions)
+ *
  * ```ts
  * import { MediaDimensions } from "@beep/repo-cli/commands/Files/index"
  *
  * const dimensions = MediaDimensions.make({ height: 1024, width: 1536 })
  * console.log(dimensions.width)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -393,12 +415,14 @@ export class MediaDimensions extends S.Class<MediaDimensions>($I`MediaDimensions
 /**
  * Decode unknown image-size metadata.
  *
- * @example
+ * **Example** (Decode undefined image metadata)
+ *
  * ```ts
  * import { decodeImageSizeMetadata } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeImageSizeMetadata(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -410,12 +434,14 @@ export const decodeImageSizeMetadata: {
 /**
  * Decode an ffprobe JSON document.
  *
- * @example
+ * **Example** (Decode undefined ffprobe JSON)
+ *
  * ```ts
  * import { decodeFfprobeOutputJson } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeFfprobeOutputJson(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -427,12 +453,14 @@ export const decodeFfprobeOutputJson: {
 /**
  * Decode an unknown rotation value into an optional number.
  *
- * @example
+ * **Example** (Decode undefined rotation)
+ *
  * ```ts
  * import { decodeRotationNumber } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeRotationNumber(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -444,12 +472,14 @@ export const decodeRotationNumber: {
 /**
  * Decode an unknown safe filename prefix.
  *
- * @example
+ * **Example** (Decode undefined file prefix)
+ *
  * ```ts
  * import { decodeSafeFilePrefix } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeSafeFilePrefix(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */

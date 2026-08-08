@@ -18,7 +18,8 @@ import type { FieldErrorEntry } from "../core/Errors.ts";
 /**
  * Props for {@link FieldShell}.
  *
- * @example
+ * **Example** (Satisfying FieldShellProps object)
+ *
  * ```tsx
  * import type { FieldShellProps } from "../../src/internal/FieldShell.tsx"
  *
@@ -47,7 +48,8 @@ export interface FieldShellProps {
 /**
  * Renders the shared field chrome around a bound control.
  *
- * @example
+ * **Example** (FieldShell wrapping an input)
+ *
  * ```tsx
  * import { FieldShell } from "../../src/internal/FieldShell.tsx"
  *

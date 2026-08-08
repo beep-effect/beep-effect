@@ -14,7 +14,8 @@ const make = EntityId.factory("shared", $I);
 /**
  * Organization entity identifier.
  *
- * @example
+ * **Example** (Log organization table name)
+ *
  * ```ts
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
  *
@@ -31,7 +32,8 @@ export const OrganizationId = make("organization", {
 /**
  * Companion type for {@link OrganizationId.Type}.
  *
- * @example
+ * **Example** (Decode OrganizationId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -52,7 +54,8 @@ export type OrganizationId = typeof OrganizationId.Type;
 /**
  * User entity identifier.
  *
- * @example
+ * **Example** (Log user table name)
+ *
  * ```ts
  * import { UserId } from "@beep/shared-domain/identity/Shared"
  *
@@ -69,7 +72,8 @@ export const UserId = make("user", {
 /**
  * Companion type for {@link UserId.Type}.
  *
- * @example
+ * **Example** (Decode UserId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UserId } from "@beep/shared-domain/identity/Shared"
@@ -90,7 +94,8 @@ export type UserId = typeof UserId.Type;
 /**
  * Membership entity identifier.
  *
- * @example
+ * **Example** (Log membership table name)
+ *
  * ```ts
  * import { MembershipId } from "@beep/shared-domain/identity/Shared"
  *
@@ -107,7 +112,8 @@ export const MembershipId = make("membership", {
 /**
  * Companion type for {@link MembershipId.Type}.
  *
- * @example
+ * **Example** (Decode MembershipId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { MembershipId } from "@beep/shared-domain/identity/Shared"
@@ -128,7 +134,8 @@ export type MembershipId = typeof MembershipId.Type;
 /**
  * Team entity identifier.
  *
- * @example
+ * **Example** (Log team table name)
+ *
  * ```ts
  * import { TeamId } from "@beep/shared-domain/identity/Shared"
  *
@@ -145,7 +152,8 @@ export const TeamId = make("team", {
 /**
  * Companion type for {@link TeamId.Type}.
  *
- * @example
+ * **Example** (Decode TeamId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { TeamId } from "@beep/shared-domain/identity/Shared"
@@ -166,7 +174,8 @@ export type TeamId = typeof TeamId.Type;
 /**
  * Service-account entity identifier.
  *
- * @example
+ * **Example** (Log service-account table name)
+ *
  * ```ts
  * import { ServiceAccountId } from "@beep/shared-domain/identity/Shared"
  *
@@ -183,7 +192,8 @@ export const ServiceAccountId = make("service_account", {
 /**
  * Companion type for {@link ServiceAccountId.Type}.
  *
- * @example
+ * **Example** (Decode ServiceAccountId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ServiceAccountId } from "@beep/shared-domain/identity/Shared"
@@ -204,7 +214,8 @@ export type ServiceAccountId = typeof ServiceAccountId.Type;
 /**
  * Agent entity identifier.
  *
- * @example
+ * **Example** (Log agent table name)
+ *
  * ```ts
  * import { AgentId } from "@beep/shared-domain/identity/Shared"
  *
@@ -221,7 +232,8 @@ export const AgentId = make("agent", {
 /**
  * Companion type for {@link AgentId.Type}.
  *
- * @example
+ * **Example** (Decode AgentId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AgentId } from "@beep/shared-domain/identity/Shared"
@@ -242,7 +254,8 @@ export type AgentId = typeof AgentId.Type;
 /**
  * Agent-version entity identifier.
  *
- * @example
+ * **Example** (Log agent-version table name)
+ *
  * ```ts
  * import { AgentVersionId } from "@beep/shared-domain/identity/Shared"
  *
@@ -259,7 +272,8 @@ export const AgentVersionId = make("agent_version", {
 /**
  * Companion type for {@link AgentVersionId.Type}.
  *
- * @example
+ * **Example** (Decode AgentVersionId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AgentVersionId } from "@beep/shared-domain/identity/Shared"
@@ -280,7 +294,8 @@ export type AgentVersionId = typeof AgentVersionId.Type;
 /**
  * Connector-account entity identifier.
  *
- * @example
+ * **Example** (Log connector-account table name)
+ *
  * ```ts
  * import { ConnectorAccountId } from "@beep/shared-domain/identity/Shared"
  *
@@ -297,7 +312,8 @@ export const ConnectorAccountId = make("connector_account", {
 /**
  * Companion type for {@link ConnectorAccountId.Type}.
  *
- * @example
+ * **Example** (Decode ConnectorAccountId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ConnectorAccountId } from "@beep/shared-domain/identity/Shared"
@@ -318,7 +334,8 @@ export type ConnectorAccountId = typeof ConnectorAccountId.Type;
 /**
  * Activity entity identifier used by provenance and lifecycle entity fields.
  *
- * @example
+ * **Example** (Log activity table name)
+ *
  * ```ts
  * import { ActivityId } from "@beep/shared-domain/identity/Shared"
  *
@@ -335,7 +352,8 @@ export const ActivityId = make("activity", {
 /**
  * Companion type for {@link ActivityId.Type}.
  *
- * @example
+ * **Example** (Decode ActivityId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ActivityId } from "@beep/shared-domain/identity/Shared"
@@ -356,7 +374,8 @@ export type ActivityId = typeof ActivityId.Type;
 /**
  * Local-machine entity identifier used by synchronization metadata.
  *
- * @example
+ * **Example** (Log local-machine table name)
+ *
  * ```ts
  * import { LocalMachineId } from "@beep/shared-domain/identity/Shared"
  *
@@ -373,7 +392,8 @@ export const LocalMachineId = make("local_machine", {
 /**
  * Companion type for {@link LocalMachineId.Type}.
  *
- * @example
+ * **Example** (Decode LocalMachineId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { LocalMachineId } from "@beep/shared-domain/identity/Shared"

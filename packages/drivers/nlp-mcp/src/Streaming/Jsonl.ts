@@ -29,7 +29,8 @@ const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
 /**
  * Structured parse failure for a single JSONL line.
  *
- * @example
+ * **Example** (Construct line parse error)
+ *
  * ```ts
  * import { JsonlLineError } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
@@ -37,8 +38,8 @@ const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
  * console.log(error.lineNumber)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class JsonlLineError extends S.Class<JsonlLineError>($I`JsonlLineError`)(
   {
@@ -58,7 +59,8 @@ export class JsonlLineError extends S.Class<JsonlLineError>($I`JsonlLineError`)(
 /**
  * Aggregate parse statistics for a JSONL file.
  *
- * @example
+ * **Example** (Build aggregate parse stats)
+ *
  * ```ts
  * import { JsonlStats } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
@@ -66,8 +68,8 @@ export class JsonlLineError extends S.Class<JsonlLineError>($I`JsonlLineError`)(
  * console.log(stats.successCount)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class JsonlStats extends S.Class<JsonlStats>($I`JsonlStats`)(
   {
@@ -90,7 +92,8 @@ export class JsonlStats extends S.Class<JsonlStats>($I`JsonlStats`)(
 /**
  * Options shared by JSONL read and sample helpers.
  *
- * @example
+ * **Example** (Create skip-invalid options)
+ *
  * ```ts
  * import { JsonlReadOptions } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
@@ -98,8 +101,8 @@ export class JsonlStats extends S.Class<JsonlStats>($I`JsonlStats`)(
  * console.log(options.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class JsonlReadOptions extends S.Class<JsonlReadOptions>($I`JsonlReadOptions`)(
   {
@@ -115,7 +118,8 @@ export class JsonlReadOptions extends S.Class<JsonlReadOptions>($I`JsonlReadOpti
 /**
  * Validation result containing parsed records and collected line errors.
  *
- * @example
+ * **Example** (Build validation result)
+ *
  * ```ts
  * import { JsonlValidationResult } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
@@ -123,8 +127,8 @@ export class JsonlReadOptions extends S.Class<JsonlReadOptions>($I`JsonlReadOpti
  * console.log(result.records.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class JsonlValidationResult extends S.Class<JsonlValidationResult>($I`JsonlValidationResult`)(
   {
@@ -171,11 +175,14 @@ const streamIndexedLines = (
 /**
  * Stream parsed JSONL records, optionally dropping invalid lines.
  *
+ * **Details**
+ *
  * Blank lines are filtered before parsing. When `skipInvalid` is `true` parse
  * failures are silently discarded; otherwise the first failure fails the stream
  * with a {@link JsonlLineError}.
  *
- * @example
+ * **Example** (Stream with skipInvalid)
+ *
  * ```ts
  * import * as Stream from "effect/Stream"
  * import { streamJsonl } from "@beep/nlp-mcp/Streaming/Jsonl"
@@ -183,8 +190,8 @@ const streamIndexedLines = (
  * console.log(Stream.runCollect(streamJsonl("/tmp/data.jsonl", { skipInvalid: true })))
  * ```
  *
- * @since 0.0.0
  * @category streams
+ * @since 0.0.0
  */
 export const streamJsonl: {
   (
@@ -212,10 +219,13 @@ export const streamJsonl: {
 /**
  * Stream per-line parse results, never failing on malformed JSON.
  *
+ * **Details**
+ *
  * Each emitted {@link Result.Result} is either a parsed record (`Success`) or a
  * {@link JsonlLineError} (`Failure`), enabling callers to fold over outcomes.
  *
- * @example
+ * **Example** (Stream per-line results)
+ *
  * ```ts
  * import * as Stream from "effect/Stream"
  * import { streamJsonlResults } from "@beep/nlp-mcp/Streaming/Jsonl"
@@ -223,8 +233,8 @@ export const streamJsonl: {
  * console.log(Stream.runCollect(streamJsonlResults("/tmp/data.jsonl")))
  * ```
  *
- * @since 0.0.0
  * @category streams
+ * @since 0.0.0
  */
 export const streamJsonlResults = (
   filePath: string
@@ -234,15 +244,16 @@ export const streamJsonlResults = (
 /**
  * Collect parsed JSONL records into an array.
  *
- * @example
+ * **Example** (Collect records to array)
+ *
  * ```ts
  * import { readJsonl } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
  * console.log(readJsonl("/tmp/data.jsonl", { skipInvalid: true }))
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const readJsonl: {
   (
@@ -266,15 +277,16 @@ export const readJsonl: {
 /**
  * Compute aggregate parse statistics for a JSONL file.
  *
- * @example
+ * **Example** (Compute file parse stats)
+ *
  * ```ts
  * import { computeJsonlStats } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
  * console.log(computeJsonlStats("/tmp/data.jsonl"))
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const computeJsonlStats = (
   filePath: string
@@ -301,15 +313,16 @@ export const computeJsonlStats = (
 /**
  * Validate a JSONL file, returning parsed records and collected line errors.
  *
- * @example
+ * **Example** (Validate file collect errors)
+ *
  * ```ts
  * import { validateJsonl } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
  * console.log(validateJsonl("/tmp/data.jsonl"))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const validateJsonl = (
   filePath: string
@@ -338,11 +351,14 @@ export const validateJsonl = (
 /**
  * Sample up to `sampleSize` parsed JSONL records uniformly at random.
  *
+ * **Details**
+ *
  * Records are first parsed (honoring `skipInvalid`); when at most `sampleSize`
  * are available they are returned in order, otherwise a {@link Random} shuffle
  * selects the sample which is then re-sorted into original order.
  *
- * @example
+ * **Example** (Sample records randomly)
+ *
  * ```ts
  * import { sampleJsonl } from "@beep/nlp-mcp/Streaming/Jsonl"
  *
@@ -352,9 +368,8 @@ export const validateJsonl = (
  * @effects Reads parsed records through {@link readJsonl} and uses the Effect
  * `Random` service to choose sample indices when the file contains more than
  * `sampleSize` records.
- *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const sampleJsonl = Effect.fn("Jsonl.sampleJsonl")(function* (
   filePath: string,

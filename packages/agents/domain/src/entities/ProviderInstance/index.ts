@@ -8,7 +8,8 @@
 /**
  * ProviderInstance login-guidance behavior exports.
  *
- * @example
+ * **Example** (Decode snapshot and guide login)
+ *
  * ```ts
  * import { loginGuidance, UnauthenticatedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -27,7 +28,8 @@ export * from "./ProviderInstance.behavior.ts";
 /**
  * ProviderInstance entity schema exports.
  *
- * @example
+ * **Example** (Log ProviderInstance entity type)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -41,7 +43,8 @@ export * from "./ProviderInstance.model.ts";
 /**
  * ProviderInstance value-schema exports.
  *
- * @example
+ * **Example** (Check ProviderKind is claude)
+ *
  * ```ts
  * import { ProviderKind } from "@beep/agents-domain/entities/ProviderInstance"
  *

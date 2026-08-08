@@ -14,7 +14,8 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 /**
  * Request for an evidence-bounded context packet.
  *
- * @example
+ * **Example** (Make scoped context packet)
+ *
  * ```ts
  * import { GetContextPacket, RuntimeScope } from "@beep/agents-use-cases/public"
  *

@@ -2,10 +2,13 @@
  * Effect metric observation helpers for duration tracking, workflow profiling,
  * and HTTP request instrumentation.
  *
+ * **Details**
+ *
  * All helpers wrap an inner `Effect` and transparently record metrics and span
  * annotations without altering the original success/failure semantics.
  *
- * @example
+ * **Example** (Track duration with timer)
+ *
  * ```typescript
  * import { Effect, Metric, Duration } from "effect"
  * import { measureElapsedMillis, trackDuration } from "@beep/observability"
@@ -33,7 +36,8 @@ const $I = $ObservabilityId.create("Metric");
 /**
  * Options for the trackDuration metric helper.
  *
- * @example
+ * **Example** (Make options with attributes)
+ *
  * ```typescript
  * import { TrackDurationOptions } from "@beep/observability"
  *
@@ -59,7 +63,8 @@ export class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`Track
 /**
  * Constructor input accepted by {@link trackDuration} before schema defaults are resolved.
  *
- * @example
+ * **Example** (Type attributes input object)
+ *
  * ```typescript
  * import type { TrackDurationOptionsInput } from "@beep/observability"
  *
@@ -68,8 +73,8 @@ export class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`Track
  * // { op: "read" }
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TrackDurationOptionsInput = typeof TrackDurationOptions.Encoded;
 
@@ -127,9 +132,12 @@ const incrementOutcomeCounter = (outcome: PhaseOutcome, options: ObserveWorkflow
 /**
  * Normalize an HTTP status code to its class label (e.g. `"2xx"`, `"4xx"`).
  *
+ * **Details**
+ *
  * Returns `"unknown"` for status codes outside the 100-599 range.
  *
- * @example
+ * **Example** (Map status codes to classes)
+ *
  * ```typescript
  * import { statusClass } from "@beep/observability"
  *
@@ -139,8 +147,8 @@ const incrementOutcomeCounter = (outcome: PhaseOutcome, options: ObserveWorkflow
  * console.log(statusClass(999)) // "unknown"
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const statusClass = (status: number): string => {
   if (status >= 100 && status < 600) {
@@ -153,10 +161,13 @@ export const statusClass = (status: number): string => {
 /**
  * Measure wall-clock elapsed milliseconds for an effect.
  *
+ * **Details**
+ *
  * Returns a tuple of `[result, elapsedMs]` without altering the inner
  * effect's success or failure semantics.
  *
- * @example
+ * **Example** (Measure effect elapsed time)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { measureElapsedMillis } from "@beep/observability"
@@ -171,9 +182,8 @@ export const statusClass = (status: number): string => {
  * ```
  *
  * @effects Reads the clock before and after the wrapped effect while preserving the wrapped effect's error and service channels.
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>
@@ -199,10 +209,13 @@ export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* 
 /**
  * Track one timer metric around an effect.
  *
+ * **Details**
+ *
  * Records the wall-clock elapsed duration into the provided metric and
  * annotates the current span with `duration_ms`.
  *
- * @example
+ * **Example** (Track timer with attributes)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { trackDuration } from "@beep/observability"
@@ -216,8 +229,8 @@ export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* 
  * console.log(Effect.runPromise(tracked))
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const trackDurationImpl = Effect.fn("trackDurationImpl")(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>,
@@ -241,7 +254,8 @@ const trackDurationImpl = Effect.fn("trackDurationImpl")(function* <A, E, R>(
 /**
  * Tracks the elapsed duration of an Effect with a metric.
  *
- * @example
+ * **Example** (Track effect with timer)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { trackDuration } from "@beep/observability"
@@ -252,7 +266,6 @@ const trackDurationImpl = Effect.fn("trackDurationImpl")(function* <A, E, R>(
  * ```
  *
  * @effects Updates the supplied metric and annotates the current span after the wrapped effect completes.
- *
  * @category observability
  * @since 0.0.0
  */
@@ -294,12 +307,15 @@ export const trackDuration: {
 /**
  * Observe one workflow with start, terminal outcome, and duration metrics.
  *
+ * **Details**
+ *
  * Wraps an effect and records lifecycle counters (`started`, `completed`,
  * `failed`, `interrupted`) plus an optional duration metric. The current
  * span is annotated with `workflow_name`, `workflow_duration_ms`, and
  * `workflow_outcome`.
  *
- * @example
+ * **Example** (Observe workflow lifecycle metrics)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { observeWorkflow } from "@beep/observability"
@@ -316,8 +332,8 @@ export const trackDuration: {
  * console.log(Effect.runPromise(observed))
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const observeWorkflowImpl = Effect.fn("observeWorkflowImpl")(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>,
@@ -362,7 +378,8 @@ const observeWorkflowImpl = Effect.fn("observeWorkflowImpl")(function* <A, E, R>
 /**
  * Observes workflow duration and outcome metrics for an Effect.
  *
- * @example
+ * **Example** (Observe workflow with counters)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { observeWorkflow } from "@beep/observability"
@@ -375,7 +392,6 @@ const observeWorkflowImpl = Effect.fn("observeWorkflowImpl")(function* <A, E, R>
  * ```
  *
  * @effects Updates workflow metrics and annotates the current span while preserving the wrapped effect's result.
- *
  * @category observability
  * @since 0.0.0
  */
@@ -404,12 +420,15 @@ export const observeWorkflow: {
 /**
  * Observe one HTTP request with success and failure metrics.
  *
+ * **Details**
+ *
  * Wraps an effect whose error type carries a `status` field. Records
  * `requestsTotal` and `requestDuration` metrics with `method`, `route`,
  * and `status_class` attributes. The current span is annotated with
  * `http_status`, `http_status_class`, and `http_request_duration_ms`.
  *
- * @example
+ * **Example** (Observe HTTP request metrics)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { observeHttpRequest } from "@beep/observability"
@@ -424,8 +443,8 @@ export const observeWorkflow: {
  * console.log(Effect.runPromise(observed))
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const observeHttpRequestImpl = Effect.fn("observeHttpRequestImpl")(function* <
   A,
@@ -507,7 +526,8 @@ const observeHttpRequestImpl = Effect.fn("observeHttpRequestImpl")(function* <
 /**
  * Observes HTTP request duration and status metrics for an Effect.
  *
- * @example
+ * **Example** (Observe HTTP request duration)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { observeHttpRequest } from "@beep/observability"
@@ -523,7 +543,6 @@ const observeHttpRequestImpl = Effect.fn("observeHttpRequestImpl")(function* <
  * ```
  *
  * @effects Updates HTTP request metrics and annotates the current span with request status and duration.
- *
  * @category observability
  * @since 0.0.0
  */

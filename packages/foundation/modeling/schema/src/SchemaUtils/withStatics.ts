@@ -9,7 +9,6 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("SchemaUtils/withStatics");
 
@@ -29,7 +28,7 @@ type WithStaticsTransform<Schema extends object, Statics extends Record<string, 
   schema: Schema
 ) => WithStatics<Schema, Statics>;
 
-class WithStaticsStaticRedefinitionError extends TaggedErrorClass<WithStaticsStaticRedefinitionError>(
+class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStaticRedefinitionError>(
   $I`WithStaticsStaticRedefinitionError`
 )(
   "WithStaticsStaticRedefinitionError",
@@ -89,13 +88,15 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  * Attach static methods to a schema object while preserving them across later
  * `annotate` calls.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Existing configurable properties may be replaced, identical statics are
  * ignored, and conflicting non-configurable properties raise an internal
  * tagged error. Use this for schema companion helpers that should travel with
  * the schema value instead of living as separate module-level functions.
  *
- * @example
+ * **Example** (Attach companion empty static)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
@@ -114,8 +115,8 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  * console.log(MySchema.empty) // ""
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const withStatics: {
   <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): WithStaticsTransform<S, M>;

@@ -8,7 +8,8 @@
 /**
  * Message row converter exports.
  *
- * @example
+ * **Example** (Import Message converter exports)
+ *
  * ```ts
  * import * as Message from "@beep/workspace-tables/entities/Message"
  *
@@ -22,7 +23,8 @@ export * from "./Message.converters.ts";
 /**
  * Message table exports.
  *
- * @example
+ * **Example** (Log Message entity type)
+ *
  * ```ts
  * import * as Message from "@beep/workspace-tables/entities/Message"
  *

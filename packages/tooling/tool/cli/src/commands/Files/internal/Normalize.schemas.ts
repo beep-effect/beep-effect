@@ -19,13 +19,15 @@ const $I = $RepoCliId.create("commands/Files/internal/Normalize.schemas");
 /**
  * CLI image format accepted by `files normalize`.
  *
- * @example
+ * **Example** (Validate undefined format input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeImageFormatInput } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeImageFormatInput)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -46,13 +48,15 @@ export type NormalizeImageFormatInput = typeof NormalizeImageFormatInput.Type;
 /**
  * Canonical image output format emitted by `files normalize`.
  *
- * @example
+ * **Example** (Validate undefined image format)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeImageFormat } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeImageFormat)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -73,13 +77,15 @@ export type NormalizeImageFormat = typeof NormalizeImageFormat.Type;
 /**
  * Reason a direct directory entry was skipped by `files normalize`.
  *
- * @example
+ * **Example** (Validate undefined skip reason)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeSkippedReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeSkippedReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -108,13 +114,15 @@ export type NormalizeSkippedReason = typeof NormalizeSkippedReason.Type;
 /**
  * Options used by the image normalization operation.
  *
- * @example
+ * **Example** (Validate undefined files options)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeFilesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeFilesOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -140,13 +148,15 @@ export class NormalizeFilesOptions extends S.Class<NormalizeFilesOptions>($I`Nor
 /**
  * Manifest options recorded for an image normalization run.
  *
- * @example
+ * **Example** (Validate undefined manifest options)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeManifestOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeManifestOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -166,13 +176,15 @@ export class NormalizeManifestOptions extends S.Class<NormalizeManifestOptions>(
 /**
  * Planned source-to-output image transform.
  *
- * @example
+ * **Example** (Validate undefined plan entry)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizePlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizePlanEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -201,13 +213,15 @@ export class NormalizePlanEntry extends S.Class<NormalizePlanEntry>($I`Normalize
 /**
  * Source entry skipped by image normalization.
  *
- * @example
+ * **Example** (Validate undefined skipped entry)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeSkippedEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -232,13 +246,15 @@ export class NormalizeSkippedEntry extends S.Class<NormalizeSkippedEntry>($I`Nor
 /**
  * Planned image normalization run.
  *
- * @example
+ * **Example** (Validate undefined normalize plan)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizePlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizePlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -260,13 +276,15 @@ export class NormalizePlan extends S.Class<NormalizePlan>($I`NormalizePlan`)(
 /**
  * Summary counts for an image normalization run.
  *
- * @example
+ * **Example** (Validate undefined summary)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -296,13 +314,15 @@ export class NormalizeSummary extends S.Class<NormalizeSummary>($I`NormalizeSumm
 /**
  * JSON-safe summary recorded in an image normalization manifest.
  *
- * @example
+ * **Example** (Validate undefined manifest summary)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeManifestSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeManifestSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -323,13 +343,15 @@ export class NormalizeManifestSummary extends S.Class<NormalizeManifestSummary>(
 /**
  * Manifest written by a successful image normalization run.
  *
- * @example
+ * **Example** (Validate undefined manifest)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeManifest } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(NormalizeManifest)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,12 +374,14 @@ export class NormalizeManifest extends S.Class<NormalizeManifest>($I`NormalizeMa
 /**
  * Decode an unknown maximum long-edge value.
  *
- * @example
+ * **Example** (Decode undefined long edge)
+ *
  * ```ts
  * import { decodeNormalizeMaxLongEdge } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeNormalizeMaxLongEdge(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -369,12 +393,14 @@ export const decodeNormalizeMaxLongEdge: {
 /**
  * Encode a normalize manifest into its JSON-safe shape.
  *
- * @example
+ * **Example** (Type-check encode function)
+ *
  * ```ts
  * import { encodeNormalizeManifest } from "@beep/repo-cli/commands/Files"
  *
  * const encode: typeof encodeNormalizeManifest = encodeNormalizeManifest
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */

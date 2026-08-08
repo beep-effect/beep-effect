@@ -48,12 +48,14 @@ const isStringLiteral = (node: ESTree.Expression): node is ESTree.StringLiteral 
 /**
  * Require source-facing TypeScript extensions in relative imports and re-exports.
  *
- * @example
+ * **Example** (JS extension fixable flag)
+ *
  * ```ts
  * import plugin from "@beep/lint-rules/oxlint"
  *
  * console.log(plugin.rules["no-js-extension-imports"]?.meta.fixable)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

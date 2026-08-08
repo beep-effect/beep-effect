@@ -24,12 +24,14 @@ const $I = $RepoCliId.create("commands/Qa/Doctor");
 /**
  * Default obs-websocket host the QA lane B recorder connects to.
  *
- * @example
+ * **Example** (Log default OBS port)
+ *
  * ```ts
  * import { OBS_WEBSOCKET_PORT } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * console.log(OBS_WEBSOCKET_PORT) // 4455
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -38,12 +40,14 @@ export const OBS_WEBSOCKET_PORT = 4455;
 /**
  * Outcome domain of one environment probe.
  *
- * @example
+ * **Example** (Count status domain options)
+ *
  * ```ts
  * import { QaProbeStatus } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * console.log(QaProbeStatus.Options.length) // 3
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -56,13 +60,15 @@ export const QaProbeStatus = LiteralKit(["fail", "pass", "warn"]).pipe(
 /**
  * Outcome of one environment probe.
  *
- * @example
+ * **Example** (Assign pass status value)
+ *
  * ```ts
  * import type { QaProbeStatus } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * const status: QaProbeStatus = "pass"
  * console.log(status)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -71,13 +77,15 @@ export type QaProbeStatus = typeof QaProbeStatus.Type;
 /**
  * Result of probing one tool the recorded-QA pipeline depends on.
  *
- * @example
+ * **Example** (Make ffmpeg probe result)
+ *
  * ```ts
  * import { QaProbe } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * const probe = QaProbe.make({ detail: "8.0", name: "ffmpeg", required: true, status: "pass" })
  * console.log(probe.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -112,14 +120,16 @@ export class QaProbe extends S.Class<QaProbe>($I`QaProbe`)(
 /**
  * Whether a probe blocks the recorded-QA pipeline.
  *
- * @param probe - Probe result to classify.
- * @returns True when the probe is required and failed.
- * @example
+ * **Example** (Optional fail is non-blocking)
+ *
  * ```ts
  * import { isBlockingProbe, QaProbe } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * console.log(isBlockingProbe(QaProbe.make({ detail: "", name: "obs", required: false, status: "fail" }))) // false
  * ```
+ *
+ * @param probe - Probe result to classify.
+ * @returns True when the probe is required and failed.
  * @category predicates
  * @since 0.0.0
  */
@@ -141,15 +151,17 @@ const statusMark = (status: QaProbeStatus): string =>
 /**
  * Render the doctor probe table.
  *
- * @param probes - Probe results in display order.
- * @returns Report lines, heading first, one row per probe.
- * @example
+ * **Example** (Render report heading line)
+ *
  * ```ts
  * import { QaProbe, renderDoctorReport } from "@beep/repo-cli/commands/Qa/Doctor"
  *
  * const lines = renderDoctorReport([QaProbe.make({ detail: "8.0", name: "ffmpeg", required: true, status: "pass" })])
  * console.log(lines[0]) // "qa doctor"
  * ```
+ *
+ * @param probes - Probe results in display order.
+ * @returns Report lines, heading first, one row per probe.
  * @category formatting
  * @since 0.0.0
  */
@@ -260,16 +272,20 @@ const probePlaywrightChromium = Effect.fn("QaDoctor.probePlaywrightChromium")(fu
 /**
  * Run every recorded-QA environment probe.
  *
+ * **Details**
+ *
  * Probes run concurrently because they are independent processes; the returned
  * order is stable so the rendered table never reshuffles between runs.
  *
- * @example
+ * **Example** (runQaDoctor returns Effect)
+ *
  * ```ts
  * import { runQaDoctor } from "@beep/repo-cli/commands/Qa/Doctor"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runQaDoctor())) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

@@ -18,13 +18,15 @@ const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Gh.schemas");
 /**
  * Repository owner metadata needed for closeout GraphQL calls.
  *
- * @example
+ * **Example** (Make owner from login)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhRepoOwner } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(GhRepoOwner.make({ login: "beep-effect" }).login, "beep-effect")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -40,7 +42,8 @@ export class GhRepoOwner extends S.Class<GhRepoOwner>($I`GhRepoOwner`)(
 /**
  * Repository metadata returned by `gh repo view`.
  *
- * @example
+ * **Example** (Make repo with owner)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhRepoOwner, GhRepoView } from "@beep/repo-cli/test/Yeet"
@@ -49,6 +52,7 @@ export class GhRepoOwner extends S.Class<GhRepoOwner>($I`GhRepoOwner`)(
  *
  * strictEqual(repo.owner.login, "beep-effect")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,7 +69,8 @@ export class GhRepoView extends S.Class<GhRepoView>($I`GhRepoView`)(
 /**
  * Inline review comment returned from a pull request review node.
  *
- * @example
+ * **Example** (Make inline review comment)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhInlineReviewComment } from "@beep/repo-cli/test/Yeet"
@@ -81,6 +86,7 @@ export class GhRepoView extends S.Class<GhRepoView>($I`GhRepoView`)(
  *
  * strictEqual(comment.path, "src/file.ts")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -101,7 +107,8 @@ export class GhInlineReviewComment extends S.Class<GhInlineReviewComment>($I`GhI
 /**
  * Paginated inline review comments nested under a pull request review.
  *
- * @example
+ * **Example** (Empty comment connection page)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhInlineReviewCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -113,6 +120,7 @@ export class GhInlineReviewComment extends S.Class<GhInlineReviewComment>($I`GhI
  *
  * strictEqual(connection.pageInfo.hasNextPage, false)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,7 +139,8 @@ export class GhInlineReviewCommentConnection extends S.Class<GhInlineReviewComme
 /**
  * Paginated comments nested under a pull request review thread.
  *
- * @example
+ * **Example** (Empty thread comments page)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -143,6 +152,7 @@ export class GhInlineReviewCommentConnection extends S.Class<GhInlineReviewComme
  *
  * strictEqual(connection.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -161,7 +171,8 @@ export class GhReviewThreadCommentConnection extends S.Class<GhReviewThreadComme
 /**
  * Pull request review thread returned by GitHub GraphQL.
  *
- * @example
+ * **Example** (Make unresolved review thread)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThread, GhReviewThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -180,6 +191,7 @@ export class GhReviewThreadCommentConnection extends S.Class<GhReviewThreadComme
  *
  * strictEqual(thread.isResolved, false)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -200,7 +212,8 @@ export class GhReviewThread extends S.Class<GhReviewThread>($I`GhReviewThread`)(
 /**
  * Paginated review-thread connection for a pull request.
  *
- * @example
+ * **Example** (Empty review threads page)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThreadConnection } from "@beep/repo-cli/test/Yeet"
@@ -212,6 +225,7 @@ export class GhReviewThread extends S.Class<GhReviewThread>($I`GhReviewThread`)(
  *
  * strictEqual(connection.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -228,7 +242,8 @@ export class GhReviewThreadConnection extends S.Class<GhReviewThreadConnection>(
 /**
  * Paginated top-level pull request comments.
  *
- * @example
+ * **Example** (Empty PR comments page)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhPullRequestCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -240,6 +255,7 @@ export class GhReviewThreadConnection extends S.Class<GhReviewThreadConnection>(
  *
  * strictEqual(connection.pageInfo.hasNextPage, false)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -258,7 +274,8 @@ export class GhPullRequestCommentConnection extends S.Class<GhPullRequestComment
 /**
  * Pull request review returned by GitHub GraphQL.
  *
- * @example
+ * **Example** (Make changes-requested review)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhInlineReviewCommentConnection, GhReview } from "@beep/repo-cli/test/Yeet"
@@ -277,6 +294,7 @@ export class GhPullRequestCommentConnection extends S.Class<GhPullRequestComment
  *
  * strictEqual(review.state, "CHANGES_REQUESTED")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -297,7 +315,8 @@ export class GhReview extends S.Class<GhReview>($I`GhReview`)(
 /**
  * Paginated pull request reviews.
  *
- * @example
+ * **Example** (Empty reviews connection page)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewConnection } from "@beep/repo-cli/test/Yeet"
@@ -309,6 +328,7 @@ export class GhReview extends S.Class<GhReview>($I`GhReview`)(
  *
  * strictEqual(connection.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -325,7 +345,8 @@ export class GhReviewConnection extends S.Class<GhReviewConnection>($I`GhReviewC
 /**
  * Pull request payload containing one page of top-level comments.
  *
- * @example
+ * **Example** (PR with empty comments)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhCommentsPullRequest, GhPullRequestCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -339,6 +360,7 @@ export class GhReviewConnection extends S.Class<GhReviewConnection>($I`GhReviewC
  *
  * strictEqual(pullRequest.comments.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -354,7 +376,8 @@ export class GhCommentsPullRequest extends S.Class<GhCommentsPullRequest>($I`GhC
 /**
  * Pull request payload containing one page of review threads.
  *
- * @example
+ * **Example** (PR with empty review threads)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThreadConnection, GhReviewThreadsPullRequest } from "@beep/repo-cli/test/Yeet"
@@ -368,6 +391,7 @@ export class GhCommentsPullRequest extends S.Class<GhCommentsPullRequest>($I`GhC
  *
  * strictEqual(pullRequest.reviewThreads.pageInfo.hasNextPage, false)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -383,7 +407,8 @@ export class GhReviewThreadsPullRequest extends S.Class<GhReviewThreadsPullReque
 /**
  * Pull request payload containing one page of reviews.
  *
- * @example
+ * **Example** (PR with empty reviews)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewConnection, GhReviewsPullRequest } from "@beep/repo-cli/test/Yeet"
@@ -397,6 +422,7 @@ export class GhReviewThreadsPullRequest extends S.Class<GhReviewThreadsPullReque
  *
  * strictEqual(pullRequest.reviews.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -412,7 +438,8 @@ export class GhReviewsPullRequest extends S.Class<GhReviewsPullRequest>($I`GhRev
 /**
  * Combined pull request payload used after closeout pagination finishes.
  *
- * @example
+ * **Example** (Combined empty closeout payload)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import {
@@ -431,6 +458,7 @@ export class GhReviewsPullRequest extends S.Class<GhReviewsPullRequest>($I`GhRev
  *
  * strictEqual(pullRequest.reviews.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -448,7 +476,8 @@ export class GhCloseoutPullRequest extends S.Class<GhCloseoutPullRequest>($I`GhC
 /**
  * Repository wrapper for pull request comment page GraphQL responses.
  *
- * @example
+ * **Example** (Repo wrapper for comments)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhCommentsPullRequest, GhCommentsRepository, GhPullRequestCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -464,6 +493,7 @@ export class GhCloseoutPullRequest extends S.Class<GhCloseoutPullRequest>($I`GhC
  *
  * strictEqual(repository.pullRequest.comments.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -479,7 +509,8 @@ export class GhCommentsRepository extends S.Class<GhCommentsRepository>($I`GhCom
 /**
  * Repository wrapper for pull request review-thread page GraphQL responses.
  *
- * @example
+ * **Example** (Repo wrapper for threads)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThreadConnection, GhReviewThreadsPullRequest, GhReviewThreadsRepository } from "@beep/repo-cli/test/Yeet"
@@ -495,6 +526,7 @@ export class GhCommentsRepository extends S.Class<GhCommentsRepository>($I`GhCom
  *
  * strictEqual(repository.pullRequest.reviewThreads.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -510,7 +542,8 @@ export class GhReviewThreadsRepository extends S.Class<GhReviewThreadsRepository
 /**
  * Repository wrapper for pull request review page GraphQL responses.
  *
- * @example
+ * **Example** (Repo wrapper for reviews)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewConnection, GhReviewsPullRequest, GhReviewsRepository } from "@beep/repo-cli/test/Yeet"
@@ -526,6 +559,7 @@ export class GhReviewThreadsRepository extends S.Class<GhReviewThreadsRepository
  *
  * strictEqual(repository.pullRequest.reviews.pageInfo.hasNextPage, false)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -541,7 +575,8 @@ export class GhReviewsRepository extends S.Class<GhReviewsRepository>($I`GhRevie
 /**
  * GraphQL `data` wrapper for pull request comment pages.
  *
- * @example
+ * **Example** (Comments GraphQL data wrapper)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhCommentsData, GhCommentsPullRequest, GhCommentsRepository, GhPullRequestCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -559,6 +594,7 @@ export class GhReviewsRepository extends S.Class<GhReviewsRepository>($I`GhRevie
  *
  * strictEqual(data.repository.pullRequest.comments.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -574,7 +610,8 @@ export class GhCommentsData extends S.Class<GhCommentsData>($I`GhCommentsData`)(
 /**
  * GraphQL `data` wrapper for pull request review-thread pages.
  *
- * @example
+ * **Example** (Threads GraphQL data wrapper)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import {
@@ -597,6 +634,7 @@ export class GhCommentsData extends S.Class<GhCommentsData>($I`GhCommentsData`)(
  *
  * strictEqual(data.repository.pullRequest.reviewThreads.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -612,7 +650,8 @@ export class GhReviewThreadsData extends S.Class<GhReviewThreadsData>($I`GhRevie
 /**
  * GraphQL `data` wrapper for pull request review pages.
  *
- * @example
+ * **Example** (Reviews GraphQL data wrapper)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewConnection, GhReviewsData, GhReviewsPullRequest, GhReviewsRepository } from "@beep/repo-cli/test/Yeet"
@@ -630,6 +669,7 @@ export class GhReviewThreadsData extends S.Class<GhReviewThreadsData>($I`GhRevie
  *
  * strictEqual(data.repository.pullRequest.reviews.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -645,7 +685,8 @@ export class GhReviewsData extends S.Class<GhReviewsData>($I`GhReviewsData`)(
 /**
  * Complete GraphQL response document for pull request comment pages.
  *
- * @example
+ * **Example** (Full comments response document)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import {
@@ -671,6 +712,7 @@ export class GhReviewsData extends S.Class<GhReviewsData>($I`GhReviewsData`)(
  *
  * strictEqual(document.data.repository.pullRequest.comments.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -686,7 +728,8 @@ export class GhCommentsDocument extends S.Class<GhCommentsDocument>($I`GhComment
 /**
  * Complete GraphQL response document for pull request review-thread pages.
  *
- * @example
+ * **Example** (Full threads response document)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import {
@@ -712,6 +755,7 @@ export class GhCommentsDocument extends S.Class<GhCommentsDocument>($I`GhComment
  *
  * strictEqual(document.data.repository.pullRequest.reviewThreads.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -727,7 +771,8 @@ export class GhReviewThreadsDocument extends S.Class<GhReviewThreadsDocument>($I
 /**
  * Complete GraphQL response document for pull request review pages.
  *
- * @example
+ * **Example** (Full reviews response document)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import {
@@ -753,6 +798,7 @@ export class GhReviewThreadsDocument extends S.Class<GhReviewThreadsDocument>($I
  *
  * strictEqual(document.data.repository.pullRequest.reviews.nodes.length, 0)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -768,7 +814,8 @@ export class GhReviewsDocument extends S.Class<GhReviewsDocument>($I`GhReviewsDo
 /**
  * Decode `gh pr view` JSON into the shared GitHub pull request schema.
  *
- * @example
+ * **Example** (Decode gh pr view JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeGhPrView } from "@beep/repo-cli/test/Yeet"
@@ -777,6 +824,7 @@ export class GhReviewsDocument extends S.Class<GhReviewsDocument>($I`GhReviewsDo
  *   Effect.map((view) => view.number)
  * )
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -788,7 +836,8 @@ export const decodeGhPrView: {
 /**
  * Decode `gh repo view` JSON into repository metadata for GraphQL variables.
  *
- * @example
+ * **Example** (Decode gh repo view JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeGhRepoView } from "@beep/repo-cli/test/Yeet"
@@ -797,6 +846,7 @@ export const decodeGhPrView: {
  *   Effect.map((repo) => repo.owner.login)
  * )
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -808,7 +858,8 @@ export const decodeGhRepoView: {
 /**
  * Decode the closeout comments GraphQL document.
  *
- * @example
+ * **Example** (Decode comments GraphQL document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeGhCommentsDocument } from "@beep/repo-cli/test/Yeet"
@@ -826,6 +877,7 @@ export const decodeGhRepoView: {
  *   Effect.map((document) => document.data.repository.pullRequest.comments.nodes.length)
  * )
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -837,7 +889,8 @@ export const decodeGhCommentsDocument: {
 /**
  * Decode the closeout review-thread GraphQL document.
  *
- * @example
+ * **Example** (Decode threads GraphQL document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeGhReviewThreadsDocument } from "@beep/repo-cli/test/Yeet"
@@ -855,6 +908,7 @@ export const decodeGhCommentsDocument: {
  *   Effect.map((document) => document.data.repository.pullRequest.reviewThreads.nodes.length)
  * )
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -866,7 +920,8 @@ export const decodeGhReviewThreadsDocument: {
 /**
  * Decode the closeout reviews GraphQL document.
  *
- * @example
+ * **Example** (Decode reviews GraphQL document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeGhReviewsDocument } from "@beep/repo-cli/test/Yeet"
@@ -884,6 +939,7 @@ export const decodeGhReviewThreadsDocument: {
  *   Effect.map((document) => document.data.repository.pullRequest.reviews.nodes.length)
  * )
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -895,13 +951,15 @@ export const decodeGhReviewsDocument: {
 /**
  * GraphQL query for paginating top-level pull request comments.
  *
- * @example
+ * **Example** (Comments page query string)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { commentsPageQuery } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(commentsPageQuery.includes("comments(first: 100"), true)
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */
@@ -921,13 +979,15 @@ query YeetPrCloseoutComments($owner: String!, $name: String!, $number: Int!, $cu
 /**
  * GraphQL query for paginating pull request review threads.
  *
- * @example
+ * **Example** (Review threads page query)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { reviewThreadsPageQuery } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(reviewThreadsPageQuery.includes("reviewThreads(first: 100"), true)
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */
@@ -957,13 +1017,15 @@ query YeetPrCloseoutReviewThreads($owner: String!, $name: String!, $number: Int!
 /**
  * GraphQL query for paginating pull request reviews and inline comments.
  *
- * @example
+ * **Example** (Reviews page query string)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { reviewsPageQuery } from "@beep/repo-cli/test/Yeet"
  *
  * strictEqual(reviewsPageQuery.includes("reviews(first: 100"), true)
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */

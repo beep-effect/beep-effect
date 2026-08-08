@@ -24,12 +24,14 @@ const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
 /**
  * Root alias target emitted into tsconfig/docgen path mappings.
  *
- * @example
+ * **Example** (Validate root alias target)
+ *
  * ```ts
  * import { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const isRootTarget = RootAliasTarget.is("./packages/example/src/index.ts")
  * console.log(isRootTarget)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -43,12 +45,14 @@ export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern
 /**
  * Runtime type for {@link RootAliasTarget}.
  *
- * @example
+ * **Example** (Accept RootAliasTarget type)
+ *
  * ```ts
  * import type { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const acceptRootTarget = (_value: RootAliasTarget) => undefined
  * console.log(acceptRootTarget)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -57,12 +61,14 @@ export type RootAliasTarget = typeof RootAliasTarget.Type;
 /**
  * Wildcard alias target emitted into tsconfig/docgen path mappings.
  *
- * @example
+ * **Example** (Validate wildcard alias target)
+ *
  * ```ts
  * import { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const isWildcardTarget = WildcardAliasTarget.is("./packages/example/src/*")
  * console.log(isWildcardTarget)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -76,12 +82,14 @@ export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTarge
 /**
  * Runtime type for {@link WildcardAliasTarget}.
  *
- * @example
+ * **Example** (Accept WildcardAliasTarget type)
+ *
  * ```ts
  * import type { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const acceptWildcardTarget = (_value: WildcardAliasTarget) => undefined
  * console.log(acceptWildcardTarget)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -90,7 +98,8 @@ export type WildcardAliasTarget = typeof WildcardAliasTarget.Type;
 /**
  * Canonical alias targets derived for a package root export.
  *
- * @example
+ * **Example** (Make canonical alias targets)
+ *
  * ```ts
  * import { CanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const targets = CanonicalAliasTargets.make({
@@ -99,6 +108,7 @@ export type WildcardAliasTarget = typeof WildcardAliasTarget.Type;
  * })
  * console.log(targets.wildcardAliasTarget) // "./packages/example/src/*"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,14 +161,15 @@ const firstRelativeDotPath = (value: unknown): O.Option<string> => {
 /**
  * Resolve the canonical root export target from a package `exports` field.
  *
- * @param exportsField - Package `exports` field value the root entry is resolved from.
- * @returns The resolved root export target path, or `Option.none` when only subpaths exist.
- * @remarks
+ * **Details**
+ *
  * Conditional export objects are searched in repo-preferred order:
  * `types`, `import`, `default`, `require`, `node`, `bun`, then `browser`.
  * If an export map only contains subpaths and no `"."` key, this returns
  * `Option.none`.
- * @example
+ *
+ * **Example** (Resolve root export target)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { resolveRootExportTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
@@ -168,6 +179,9 @@ const firstRelativeDotPath = (value: unknown): O.Option<string> => {
  * })
  * console.log(O.getOrUndefined(target)) // "./dist/index.d.ts"
  * ```
+ *
+ * @param exportsField - Package `exports` field value the root entry is resolved from.
+ * @returns The resolved root export target path, or `Option.none` when only subpaths exist.
  * @category models
  * @since 0.0.0
  */
@@ -187,7 +201,8 @@ export const resolveRootExportTarget = (exportsField: unknown): O.Option<string>
 /**
  * Resolve a specific subpath export target from a package `exports` field.
  *
- * @example
+ * **Example** (Resolve subpath export target)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { resolveSubpathExportTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
@@ -197,6 +212,7 @@ export const resolveRootExportTarget = (exportsField: unknown): O.Option<string>
  * )
  * console.log(O.getOrUndefined(target)) // "./src/testing.ts"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -214,15 +230,17 @@ export const resolveSubpathExportTarget: {
 /**
  * Resolve the wildcard export target from a package `exports` field.
  *
- * @param exportsField - Package `exports` field value the wildcard entry is resolved from.
- * @returns The resolved wildcard export target path, or `Option.none` when absent.
- * @example
+ * **Example** (Resolve wildcard export target)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { resolveWildcardExportTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const wildcard = resolveWildcardExportTarget({ "./*": "./src/*.ts" })
  * console.log(O.getOrUndefined(wildcard)) // "./src/*.ts"
  * ```
+ *
+ * @param exportsField - Package `exports` field value the wildcard entry is resolved from.
+ * @returns The resolved wildcard export target path, or `Option.none` when absent.
  * @category models
  * @since 0.0.0
  */
@@ -232,17 +250,21 @@ export const resolveWildcardExportTarget = (exportsField: unknown): O.Option<str
 /**
  * Build root and wildcard alias targets for a package export target.
  *
- * @remarks
+ * **Details**
+ *
  * The wildcard target is derived from the directory that contains the root
  * export. A root export at `./src/index.ts` therefore maps wildcards to
  * `./src/*`, not to the package root.
- * @example
+ *
+ * **Example** (Build package alias targets)
+ *
  * ```ts
  * import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const targets = buildCanonicalAliasTargets("packages/example", "./src/index.ts")
  * console.log(targets.rootAliasTarget) // "./packages/example/src/index.ts"
  * console.log(targets.wildcardAliasTarget) // "./packages/example/src/*"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -267,14 +289,17 @@ export const buildCanonicalAliasTargets: {
 /**
  * Derive a tsconfig wildcard alias target from a package wildcard export target.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Wildcard export targets whose `*` is a file stem (`./src/*.ts`,
  * `./src/components/*.tsx`) map to extensionless alias targets so TypeScript
  * extension substitution resolves them (`./<pkg>/src/*`). Every other shape —
  * most importantly the dir-uniform `./src/*` + `/index.ts` — passes through
  * verbatim, because an extensionless alias cannot resolve directory modules
  * under nodenext resolution.
- * @example
+ *
+ * **Example** (Derive wildcard from export)
+ *
  * ```ts
  * import { deriveWildcardAliasTargetFromExport } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * const flat = deriveWildcardAliasTargetFromExport("packages/example", "./src/*.ts")
@@ -282,6 +307,7 @@ export const buildCanonicalAliasTargets: {
  * console.log(flat) // "./packages/example/src/*"
  * console.log(dir.endsWith("index.ts")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -300,21 +326,25 @@ export const deriveWildcardAliasTargetFromExport: {
 /**
  * Whether a wildcard export target uses its `*` as a file stem.
  *
- * @param exportTarget - Wildcard export target path from a package `exports` field.
- * @returns `true` when the target's `*` names a `.ts`/`.tsx` file stem.
- * @remarks
+ * **Gotchas**
+ *
  * File-stem targets (`./src/SchemaUtils/*.ts`, `./src/components/*.tsx`) are
  * the shapes that need dedicated scoped aliases. Directory-shaped scoped
  * targets (`./src/aggregates/*` + `/index.ts`) must NOT get aliases: an alias
  * pattern rewrites unconditionally, so it would shadow sibling mid-star export
  * keys such as `./aggregates/*` + `/server` that only the package export map
  * can resolve.
- * @example
+ *
+ * **Example** (Detect file-stem wildcards)
+ *
  * ```ts
  * import { isFileStemWildcardExportTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
  * console.log(isFileStemWildcardExportTarget("./src/SchemaUtils/*.ts")) // true
  * console.log(isFileStemWildcardExportTarget("./src/aggregates/*" + "/index.ts")) // false
  * ```
+ *
+ * @param exportTarget - Wildcard export target path from a package `exports` field.
+ * @returns `true` when the target's `*` names a `.ts`/`.tsx` file stem.
  * @category validation
  * @since 0.0.0
  */

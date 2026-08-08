@@ -28,11 +28,14 @@ class AnalyzeParameters extends S.Class<AnalyzeParameters>($I`AnalyzeParameters`
  * Defines the agent-facing tool contract for running a composite linguistic
  * analysis over text.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs counts, sentence texts, and annotated
  * tokens from a single pass instead of invoking tokenization, sentence, and
  * statistics tools separately.
  *
- * @example
+ * **Example** (Decode parameters schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Analyze } from "@beep/nlp-processing/Tools/Analyze"

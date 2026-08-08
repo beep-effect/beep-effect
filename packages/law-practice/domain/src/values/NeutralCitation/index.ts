@@ -9,9 +9,8 @@
 /**
  * NeutralCitation model exports.
  *
- * **Example**
+ * **Example** (Import model from values)
  *
- * @example
  * ```ts
  * import { NeutralCitation } from "@beep/law-practice-domain/values";
  * ```

@@ -18,11 +18,13 @@ const $I = $NlpId.create("Core/Token");
 /**
  * Zero-based position of a token within its document token stream.
  *
- * @remarks
+ * **Details**
+ *
  * The brand prevents call sites from accidentally passing a character offset or
  * sentence index where a token ordinal is required.
  *
- * @example
+ * **Example** (Accept branded token index)
+ *
  * ```ts
  * import type { TokenIndex } from "@beep/nlp/Core/Token"
  *
@@ -38,7 +40,8 @@ export type TokenIndex = Brand.Branded<NonNegativeInt, "TokenIndex">;
 /**
  * Narrow an unknown value to a non-negative token index.
  *
- * @example
+ * **Example** (Reject negative token index)
+ *
  * ```ts
  * import { isTokenIndex } from "@beep/nlp/Core/Token"
  *
@@ -54,7 +57,8 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
 /**
  * Construct a branded token index after validating it is non-negative.
  *
- * @example
+ * **Example** (Construct zero token index)
+ *
  * ```ts
  * import { tokenIndex } from "@beep/nlp/Core/Token"
  *
@@ -70,7 +74,8 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
 /**
  * Schema that decodes non-negative numbers into {@link TokenIndex} values.
  *
- * @example
+ * **Example** (Make schema token index)
+ *
  * ```ts
  * import { TokenIndex } from "@beep/nlp/Core/Token"
  *
@@ -92,10 +97,12 @@ export const TokenIndex = NonNegativeInt.pipe(
 /**
  * Zero-based character offset into the original source text.
  *
- * @remarks
+ * **Details**
+ *
  * Token spans use half-open ranges: `start` is included and `end` is excluded.
  *
- * @example
+ * **Example** (Compute half-open span length)
+ *
  * ```ts
  * import type { CharPosition } from "@beep/nlp/Core/Token"
  *
@@ -111,7 +118,8 @@ export type CharPosition = Brand.Branded<NonNegativeInt, "CharPosition">;
 /**
  * Narrow an unknown value to a non-negative character offset.
  *
- * @example
+ * **Example** (Reject negative char offset)
+ *
  * ```ts
  * import { isCharPosition } from "@beep/nlp/Core/Token"
  *
@@ -127,7 +135,8 @@ export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is
 /**
  * Construct a branded character offset after validating it is non-negative.
  *
- * @example
+ * **Example** (Construct character offset)
+ *
  * ```ts
  * import { charPosition } from "@beep/nlp/Core/Token"
  *
@@ -145,7 +154,8 @@ export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPos
 /**
  * Schema that decodes non-negative numbers into {@link CharPosition} values.
  *
- * @example
+ * **Example** (Make schema char position)
+ *
  * ```ts
  * import { CharPosition } from "@beep/nlp/Core/Token"
  *
@@ -167,12 +177,14 @@ export const CharPosition = NonNegativeInt.pipe(
 /**
  * Immutable token with lexical text, source offsets, and optional NLP metadata.
  *
- * @remarks
+ * **Details**
+ *
  * `index` identifies the token in document order, while `start` and `end`
  * retain the token's half-open character span in the source text. Optional
  * fields mirror annotations commonly produced by wink-nlp.
  *
- * @example
+ * **Example** (Create token check position)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"

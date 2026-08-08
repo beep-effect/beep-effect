@@ -61,13 +61,16 @@ const rejectionReason: (violations: ReadonlyArray<ClaimGateViolation>) => string
 /**
  * Everything the resolver needs to turn a gate verdict into an outcome.
  *
+ * **Details**
+ *
  * The disposition inherits the claim's `orgId` rather than accepting one: a
  * disposition belongs to the organization that owns the claim it resolves, and
  * that is not a caller's choice to make. `dispositionId` and `dispositionPublicId`
  * are the identity the caller reserves for the row; the database assigns the
  * SERIAL primary key on insert.
  *
- * @example
+ * **Example** (Decode gate outcome input)
+ *
  * ```ts
  * import { ClaimGateOutcomeInput } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import * as S from "effect/Schema"
@@ -138,7 +141,8 @@ export class ClaimGateOutcomeInput extends S.Class<ClaimGateOutcomeInput>($I`Cla
  * claim and records nothing; a rejected verdict records a disposition and leaves
  * the claim exactly as it was.
  *
- * @example
+ * **Example** (Make outcome without disposition)
+ *
  * ```ts
  * import { ClaimGateOutcome } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { CandidateClaim } from "@beep/epistemic-domain"
@@ -186,7 +190,8 @@ export class ClaimGateOutcome extends S.Class<ClaimGateOutcome>($I`ClaimGateOutc
 /**
  * Service shape for claim gate outcome resolution.
  *
- * @example
+ * **Example** (Define resolver shape)
+ *
  * ```ts
  * import { ClaimGateOutcome } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import type { ClaimGateOutcomeResolverShape } from "@beep/epistemic-use-cases/ClaimDisposition"
@@ -212,7 +217,8 @@ export interface ClaimGateOutcomeResolverShape {
 /**
  * Claim gate outcome resolver service tag.
  *
- * @example
+ * **Example** (Provide resolver service)
+ *
  * ```ts
  * import { ClaimGateOutcome, ClaimGateOutcomeResolver } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { Effect } from "effect"
@@ -273,7 +279,8 @@ const buildRejection = (
  * over the disposition repository and the shared lifecycle transition — the
  * transition is consumed exactly as published, never re-implemented.
  *
- * @example
+ * **Example** (Build and resolve admitted)
+ *
  * ```ts
  * import { ClaimGateOutcomeInput, makeClaimGateOutcomeResolver } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle"

@@ -33,11 +33,14 @@ import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
 /**
  * Grant specification plus optional transport override accepted by {@link GovernedEgressLive}.
  *
+ * **Details**
+ *
  * `baseFetch` exists for tests, which need to observe what the boundary let
  * through without reaching the network. Production omits it and the platform
  * `fetch` is used.
  *
- * @example
+ * **Example** (Build egress layer with options)
+ *
  * ```ts
  * import { GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import type { GovernedEgressLiveOptions } from "@beep/epistemic-server/GovernedEgress"

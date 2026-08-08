@@ -14,7 +14,8 @@ const $I = $ColorsId.create("Domain");
 /**
  * Input accepted by a color formatter.
  *
- * @example
+ * **Example** (Decode ready string input)
+ *
  * ```typescript
  * import { FormatterInput } from "./ColorsSchema.ts"
  * import * as S from "effect/Schema"
@@ -36,7 +37,8 @@ export const FormatterInput = S.Union([S.String, S.Finite]).pipe(
 /**
  * Runtime type for {@link FormatterInput}.
  *
- * @example
+ * **Example** (Annotate numeric formatter input)
+ *
  * ```typescript
  * import type { FormatterInput } from "./ColorsSchema.ts"
  *
@@ -52,7 +54,8 @@ export type FormatterInput = typeof FormatterInput.Type;
 /**
  * Schema for a formatter that renders one value to a string.
  *
- * @example
+ * **Example** (Format number as string)
+ *
  * ```typescript
  * import type { Formatter } from "./ColorsSchema.ts"
  *
@@ -75,7 +78,8 @@ export const Formatter = Fn({
 /**
  * Runtime type for {@link Formatter}.
  *
- * @example
+ * **Example** (Format ready string value)
+ *
  * ```typescript
  * import type { Formatter } from "@beep/colors/Colors"
  *
@@ -91,7 +95,8 @@ export type Formatter = typeof Formatter.Type;
 /**
  * Schema fields used to construct a `Colors` formatter set.
  *
- * @example
+ * **Example** (Check bold field exists)
+ *
  * ```typescript
  * import { ColorsFields } from "./ColorsSchema.ts"
  *

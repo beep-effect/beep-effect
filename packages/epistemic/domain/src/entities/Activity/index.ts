@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import Activity entity)
+ *
  * ```ts
  * import { Activity } from "@beep/epistemic-domain/entities/Activity"
  *

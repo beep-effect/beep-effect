@@ -13,7 +13,8 @@ const $I = $SchemaId.create("Json");
 /**
  * Schema for a JSON object (a record of string keys to JSON-compatible values).
  *
- * @example
+ * **Example** (Decode JSON object schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonObject } from "@beep/schema/Json"
@@ -34,7 +35,8 @@ export const JsonObject = S.Record(S.String, S.Json).pipe(
 /**
  * Runtime type extracted from the {@link JsonObject} schema.
  *
- * @example
+ * **Example** (Annotate decoded JsonObject type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonObject } from "@beep/schema/Json"
@@ -51,7 +53,8 @@ export type JsonObject = typeof JsonObject.Type;
 /**
  * Schema for a JSON array (an array of JSON-compatible values).
  *
- * @example
+ * **Example** (Decode JSON array schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonArray } from "@beep/schema/Json"
@@ -72,7 +75,8 @@ export const JsonArray = S.Array(S.Json).pipe(
 /**
  * Runtime type extracted from the {@link JsonArray} schema.
  *
- * @example
+ * **Example** (Annotate decoded JsonArray type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonArray } from "@beep/schema/Json"
@@ -89,7 +93,8 @@ export type JsonArray = typeof JsonArray.Type;
 /**
  * Decodes a JSON string into an unknown JSON-compatible value.
  *
- * @example
+ * **Example** (Decode JSON string value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeJsonString } from "@beep/schema/Json"
@@ -113,7 +118,8 @@ export const decodeJsonString: (input: unknown) => Effect.Effect<unknown, S.Sche
 /**
  * Encodes an unknown JSON-compatible value into a compact JSON string.
  *
- * @example
+ * **Example** (Encode value as JSON string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { encodeJsonString } from "@beep/schema/Json"

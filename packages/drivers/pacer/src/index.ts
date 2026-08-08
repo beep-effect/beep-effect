@@ -91,7 +91,8 @@ export * from "./PclClient.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/pacer"
  *

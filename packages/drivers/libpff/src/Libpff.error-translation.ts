@@ -22,7 +22,8 @@ const isLibpffError = S.is(LibpffError);
 /**
  * Engine name reported by every libpff engine descriptor and operation error.
  *
- * @example
+ * **Example** (Log engine name constant)
+ *
  * ```ts
  * import { LIBPFF_ENGINE_NAME } from "@beep/libpff"
  *
@@ -37,7 +38,8 @@ export const LIBPFF_ENGINE_NAME = "libpff";
 /**
  * Message reported when a live pffexport runtime cannot be reached.
  *
- * @example
+ * **Example** (Log unavailable host message)
+ *
  * ```ts
  * import { LIBPFF_ENGINE_UNAVAILABLE_MESSAGE } from "@beep/libpff"
  *
@@ -52,10 +54,13 @@ export const LIBPFF_ENGINE_UNAVAILABLE_MESSAGE = "pffexport is not available on 
 /**
  * Engine-unavailable message emitted by the P1 scaffold engine.
  *
+ * **Details**
+ *
  * The scaffold predates the live pffexport engine and keeps its own wording so
  * its emitted errors stay stable across the shared-translator migration.
  *
- * @example
+ * **Example** (Check scaffold message prefix)
+ *
  * ```ts
  * import { LIBPFF_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE } from "@beep/libpff"
  *
@@ -71,7 +76,8 @@ export const LIBPFF_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE =
 /**
  * Timeout message emitted by the P1 scaffold engine.
  *
- * @example
+ * **Example** (Log scaffold timeout message)
+ *
  * ```ts
  * import { LIBPFF_SCAFFOLD_TIMEOUT_MESSAGE } from "@beep/libpff"
  *
@@ -86,7 +92,8 @@ export const LIBPFF_SCAFFOLD_TIMEOUT_MESSAGE = "libpff export timed out.";
 /**
  * Export-failed message emitted by the P1 scaffold engine.
  *
- * @example
+ * **Example** (Log scaffold export failure)
+ *
  * ```ts
  * import { LIBPFF_SCAFFOLD_EXPORT_FAILED_MESSAGE } from "@beep/libpff"
  *
@@ -121,17 +128,16 @@ const operationErrorContext = (operation: ExportArchiveOperation) => ({
 /**
  * Translate a technical {@link LibpffError} into a file-processing operation error.
  *
+ * **Details**
+ *
  * Missing-runtime failures surface as `engine-unavailable`; timeouts surface
  * as `operation-timed-out`; budget overruns surface as
  * `output-limit-exceeded`; configuration and process failures surface as
  * `archive-export-failed` carrying the process exit code in `details` when
  * one was available.
  *
- * @param operation - Archive export operation whose artifact, format, and operation id annotate the error.
- * @param error - Technical driver failure being translated.
- * @param options - Per-arm wording overrides; the P1 scaffold engine supplies its own messages.
- * @returns The sanitized operation error for this failure.
- * @example
+ * **Example** (Translate timeout to timed-out)
+ *
  * ```ts
  * import { libpffOperationError, makeLibpffError } from "@beep/libpff"
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
@@ -161,6 +167,10 @@ const operationErrorContext = (operation: ExportArchiveOperation) => ({
  * Effect.runPromise(program).then(console.log) // "operation-timed-out"
  * ```
  *
+ * @param operation - Archive export operation whose artifact, format, and operation id annotate the error.
+ * @param error - Technical driver failure being translated.
+ * @param options - Per-arm wording overrides; the P1 scaffold engine supplies its own messages.
+ * @returns The sanitized operation error for this failure.
  * @category constructors
  * @since 0.0.0
  */

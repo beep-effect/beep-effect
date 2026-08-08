@@ -700,6 +700,24 @@ export const jsdocCommentsFromSource = (sourceText: string): ReadonlyArray<strin
       break;
     }
     const start = cursor + relativeStart;
+    // Reject `/**` that is not a line-leading comment opener (string literals
+    // like Str.endsWith("/**") and template globs "src/**" otherwise swallow
+    // large code spans as fake JSDoc and the migrate apply rewrites them).
+    const lineStart = sourceText.lastIndexOf("\n", start - 1) + 1;
+    const linePrefix = sourceText.slice(lineStart, start);
+    const afterOpener = sourceText[start + 3];
+    const lineLeading = /^[ \t]*$/.test(linePrefix);
+    const plausibleBody =
+      afterOpener === undefined ||
+      afterOpener === "\n" ||
+      afterOpener === "\r" ||
+      afterOpener === " " ||
+      afterOpener === "\t" ||
+      afterOpener === "*";
+    if (!lineLeading || !plausibleBody) {
+      cursor = start + 3;
+      continue;
+    }
     const end = jsdocCommentEnd(sourceText, start);
     A.appendInPlace(comments, sourceText.slice(start, end));
     cursor = end;

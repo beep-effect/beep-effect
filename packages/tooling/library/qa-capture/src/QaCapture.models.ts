@@ -23,11 +23,13 @@ const $I = $QaCaptureId.create("QaCapture.models");
 /**
  * Recording lanes a capture session can run on.
  *
- * @example
+ * **Example** (Log playwright enum value)
+ *
  * ```ts
  * import { CaptureLane } from "@beep/qa-capture"
  * console.log(CaptureLane.Enum.playwright)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -40,13 +42,15 @@ export const CaptureLane = LiteralKit(["obs", "playwright"]).pipe(
 /**
  * Recording lanes a capture session can run on.
  *
- * @example
+ * **Example** (Type annotated lane value)
+ *
  * ```ts
  * import { CaptureLane } from "@beep/qa-capture"
  * import type { CaptureLane as CaptureLaneValue } from "@beep/qa-capture"
  * const lane: CaptureLaneValue = CaptureLane.Enum.playwright
  * console.log(lane)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -55,11 +59,13 @@ export type CaptureLane = typeof CaptureLane.Type;
 /**
  * Methods a clock synchronization can be derived from.
  *
- * @example
+ * **Example** (Log beacon enum value)
+ *
  * ```ts
  * import { ClockSyncMethod } from "@beep/qa-capture"
  * console.log(ClockSyncMethod.Enum.beacon)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -72,13 +78,15 @@ export const ClockSyncMethod = LiteralKit(["assumed-start", "beacon", "obs-recor
 /**
  * Methods a clock synchronization can be derived from.
  *
- * @example
+ * **Example** (Type annotated method value)
+ *
  * ```ts
  * import { ClockSyncMethod } from "@beep/qa-capture"
  * import type { ClockSyncMethod as ClockSyncMethodValue } from "@beep/qa-capture"
  * const method: ClockSyncMethodValue = ClockSyncMethod.Enum.beacon
  * console.log(method)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -87,11 +95,13 @@ export type ClockSyncMethod = typeof ClockSyncMethod.Type;
 /**
  * Confidence levels attached to a clock synchronization.
  *
- * @example
+ * **Example** (Log high confidence enum)
+ *
  * ```ts
  * import { ClockConfidence } from "@beep/qa-capture"
  * console.log(ClockConfidence.Enum.high)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -104,13 +114,15 @@ export const ClockConfidence = LiteralKit(["high", "low", "medium"]).pipe(
 /**
  * Confidence levels attached to a clock synchronization.
  *
- * @example
+ * **Example** (Type annotated confidence value)
+ *
  * ```ts
  * import { ClockConfidence } from "@beep/qa-capture"
  * import type { ClockConfidence as ClockConfidenceValue } from "@beep/qa-capture"
  * const confidence: ClockConfidenceValue = ClockConfidence.Enum.high
  * console.log(confidence)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,11 +131,13 @@ export type ClockConfidence = typeof ClockConfidence.Type;
 /**
  * Kinds of artifacts a capture round can commit.
  *
- * @example
+ * **Example** (Log gif kind enum)
+ *
  * ```ts
  * import { CaptureArtifactKind } from "@beep/qa-capture"
  * console.log(CaptureArtifactKind.Enum.gif)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -136,13 +150,15 @@ export const CaptureArtifactKind = LiteralKit(["clip", "frame", "gif", "sheet", 
 /**
  * Kinds of artifacts a capture round can commit.
  *
- * @example
+ * **Example** (Type annotated kind value)
+ *
  * ```ts
  * import { CaptureArtifactKind } from "@beep/qa-capture"
  * import type { CaptureArtifactKind as CaptureArtifactKindValue } from "@beep/qa-capture"
  * const kind: CaptureArtifactKindValue = CaptureArtifactKind.Enum.frame
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,12 +167,14 @@ export type CaptureArtifactKind = typeof CaptureArtifactKind.Type;
 /**
  * Non-empty QA capture session identifier.
  *
- * @example
+ * **Example** (Make session identifier)
+ *
  * ```ts
  * import { SessionId } from "@beep/qa-capture"
  * const id = SessionId.make("qa-2026-07-30-091500")
  * console.log(id)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -177,13 +195,15 @@ export const SessionId = S.String.check(
 /**
  * Non-empty QA capture session identifier.
  *
- * @example
+ * **Example** (Type annotated session id)
+ *
  * ```ts
  * import { SessionId } from "@beep/qa-capture"
  * import type { SessionId as SessionIdValue } from "@beep/qa-capture"
  * const id: SessionIdValue = SessionId.make("qa-2026-07-30-091500")
  * console.log(id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -192,12 +212,14 @@ export type SessionId = typeof SessionId.Type;
 /**
  * One-based QA round number (`.beep/qa/round-N`).
  *
- * @example
+ * **Example** (Make first round number)
+ *
  * ```ts
  * import { RoundNumber } from "@beep/qa-capture"
  * const round = RoundNumber.make(1)
  * console.log(round)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -218,13 +240,15 @@ export const RoundNumber = S.Int.check(
 /**
  * One-based QA round number (`.beep/qa/round-N`).
  *
- * @example
+ * **Example** (Type annotated round number)
+ *
  * ```ts
  * import { RoundNumber } from "@beep/qa-capture"
  * import type { RoundNumber as RoundNumberValue } from "@beep/qa-capture"
  * const round: RoundNumberValue = RoundNumber.make(2)
  * console.log(round)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -233,12 +257,14 @@ export type RoundNumber = typeof RoundNumber.Type;
 /**
  * Positive integer pixel dimension for viewports.
  *
- * @example
+ * **Example** (Make viewport width)
+ *
  * ```ts
  * import { ViewportDimension } from "@beep/qa-capture"
  * const width = ViewportDimension.make(1280)
  * console.log(width)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -259,13 +285,15 @@ export const ViewportDimension = S.Int.check(
 /**
  * Positive integer pixel dimension for viewports.
  *
- * @example
+ * **Example** (Type annotated dimension)
+ *
  * ```ts
  * import { ViewportDimension } from "@beep/qa-capture"
  * import type { ViewportDimension as ViewportDimensionValue } from "@beep/qa-capture"
  * const width: ViewportDimensionValue = ViewportDimension.make(1280)
  * console.log(width)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -274,12 +302,14 @@ export type ViewportDimension = typeof ViewportDimension.Type;
 /**
  * Loopback TCP port a collector can listen on.
  *
- * @example
+ * **Example** (Make collector port)
+ *
  * ```ts
  * import { CollectorPort } from "@beep/qa-capture"
  * const port = CollectorPort.make(43117)
  * console.log(port)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -315,13 +345,15 @@ export const CollectorPort = S.Int.check(
 /**
  * Loopback TCP port a collector can listen on.
  *
- * @example
+ * **Example** (Type annotated port)
+ *
  * ```ts
  * import { CollectorPort } from "@beep/qa-capture"
  * import type { CollectorPort as CollectorPortValue } from "@beep/qa-capture"
  * const port: CollectorPortValue = CollectorPort.make(43117)
  * console.log(port)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -330,12 +362,14 @@ export type CollectorPort = typeof CollectorPort.Type;
 /**
  * Tool name to version string record captured for reproducibility.
  *
- * @example
+ * **Example** (Record tool versions)
+ *
  * ```ts
  * import { ToolVersions } from "@beep/qa-capture"
  * const versions: ToolVersions = { ffmpeg: "8.0", playwright: "1.62.0" }
  * console.log(versions)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -348,12 +382,14 @@ export const ToolVersions = S.Record(S.String, S.String).pipe(
 /**
  * Tool name to version string record captured for reproducibility.
  *
- * @example
+ * **Example** (Type tool versions record)
+ *
  * ```ts
  * import type { ToolVersions } from "@beep/qa-capture"
  * const versions: ToolVersions = { ffmpeg: "8.0" }
  * console.log(versions)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -362,12 +398,14 @@ export type ToolVersions = typeof ToolVersions.Type;
 /**
  * Browser viewport size recorded for a capture session.
  *
- * @example
+ * **Example** (Make viewport dimensions)
+ *
  * ```ts
  * import { Viewport } from "@beep/qa-capture"
  * const viewport = Viewport.make({ height: 800, width: 1280 })
  * console.log(viewport)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -392,7 +430,8 @@ export class Viewport extends S.Class<Viewport>($I`Viewport`)(
 /**
  * Identity and environment of one QA capture session.
  *
- * @example
+ * **Example** (Construct capture session)
+ *
  * ```ts
  * import { CaptureSession, Viewport } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -410,6 +449,7 @@ export class Viewport extends S.Class<Viewport>($I`Viewport`)(
  * })
  * console.log(session.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -475,10 +515,13 @@ export class CaptureSession extends S.Class<CaptureSession>($I`CaptureSession`)(
 /**
  * Mapping from witness wall-clock time to video time.
  *
+ * **Details**
+ *
  * `videoTimeMs = slope * tEpochMs + offsetMs`; slope stays fixed at 1.0 for
  * all current methods.
  *
- * @example
+ * **Example** (Make clock sync mapping)
+ *
  * ```ts
  * import { ClockSync } from "@beep/qa-capture"
  * const sync = ClockSync.make({
@@ -490,6 +533,7 @@ export class CaptureSession extends S.Class<CaptureSession>($I`CaptureSession`)(
  * })
  * console.log(sync.offsetMs)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -543,11 +587,14 @@ export class ClockSync extends S.Class<ClockSync>($I`ClockSync`)(
 /**
  * Provenance payload embedded into every committed artifact.
  *
+ * **Details**
+ *
  * This is the single schema encoded into each artifact's native metadata
  * channel — the `XMP-beepQA` namespace for PNG/JPEG/GIF via exiftool, and
  * container tags for webm/mkv/mp4 via ffmpeg remuxing.
  *
- * @example
+ * **Example** (Make provenance payload)
+ *
  * ```ts
  * import { CaptureProvenance } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -564,6 +611,7 @@ export class ClockSync extends S.Class<ClockSync>($I`ClockSync`)(
  * })
  * console.log(provenance.sessionId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -626,7 +674,8 @@ export class CaptureProvenance extends S.Class<CaptureProvenance>($I`CaptureProv
 /**
  * One committed artifact of a capture round.
  *
- * @example
+ * **Example** (Make gif artifact)
+ *
  * ```ts
  * import { CaptureArtifact } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -638,6 +687,7 @@ export class CaptureProvenance extends S.Class<CaptureProvenance>($I`CaptureProv
  * })
  * console.log(artifact.relativePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -682,7 +732,8 @@ export class CaptureArtifact extends S.Class<CaptureArtifact>($I`CaptureArtifact
 /**
  * Canonical `session.json` payload for one capture round.
  *
- * @example
+ * **Example** (Make session manifest)
+ *
  * ```ts
  * import { CaptureSession, SessionManifest, Viewport } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -708,6 +759,7 @@ export class CaptureArtifact extends S.Class<CaptureArtifact>($I`CaptureArtifact
  * })
  * console.log(manifest.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -761,7 +813,8 @@ export class SessionManifest extends S.Class<SessionManifest>($I`SessionManifest
  * Runtime discovery handle written to `.beep/qa/current.json` while a
  * collector is live, letting `beep qa stop` / `beep qa mark` find it.
  *
- * @example
+ * **Example** (Make collector handle)
+ *
  * ```ts
  * import { CollectorHandle } from "@beep/qa-capture"
  * const handle = CollectorHandle.make({
@@ -775,6 +828,7 @@ export class SessionManifest extends S.Class<SessionManifest>($I`SessionManifest
  * })
  * console.log(handle.port)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -831,12 +885,14 @@ export class CollectorHandle extends S.Class<CollectorHandle>($I`CollectorHandle
 /**
  * Decode an unknown value into a {@link SessionManifest}.
  *
- * @example
+ * **Example** (Decode unknown to manifest)
+ *
  * ```ts
  * import { decodeSessionManifest } from "@beep/qa-capture"
  * const effect = decodeSessionManifest({})
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -848,12 +904,14 @@ export const decodeSessionManifest: {
 /**
  * Decode a JSON string into a {@link SessionManifest}.
  *
- * @example
+ * **Example** (Decode JSON to manifest)
+ *
  * ```ts
  * import { decodeSessionManifestJson } from "@beep/qa-capture"
  * const effect = decodeSessionManifestJson("{}")
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -865,13 +923,15 @@ export const decodeSessionManifestJson: {
 /**
  * Encode a {@link SessionManifest} into its JSON string representation.
  *
- * @example
+ * **Example** (Encode manifest to JSON)
+ *
  * ```ts
  * import { encodeSessionManifestJson } from "@beep/qa-capture"
  * import type { SessionManifest } from "@beep/qa-capture"
  * const encode = (manifest: SessionManifest) => encodeSessionManifestJson(manifest)
  * console.log(encode)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -883,12 +943,14 @@ export const encodeSessionManifestJson: {
 /**
  * Decode a JSON string into a {@link CollectorHandle}.
  *
- * @example
+ * **Example** (Decode JSON to handle)
+ *
  * ```ts
  * import { decodeCollectorHandleJson } from "@beep/qa-capture"
  * const effect = decodeCollectorHandleJson("{}")
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -900,13 +962,15 @@ export const decodeCollectorHandleJson: {
 /**
  * Encode a {@link CollectorHandle} into its JSON string representation.
  *
- * @example
+ * **Example** (Encode handle to JSON)
+ *
  * ```ts
  * import { encodeCollectorHandleJson } from "@beep/qa-capture"
  * import type { CollectorHandle } from "@beep/qa-capture"
  * const encode = (handle: CollectorHandle) => encodeCollectorHandleJson(handle)
  * console.log(encode)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
@@ -918,12 +982,14 @@ export const encodeCollectorHandleJson: {
 /**
  * Decode an unknown value into a {@link CaptureProvenance}.
  *
- * @example
+ * **Example** (Decode unknown provenance)
+ *
  * ```ts
  * import { decodeCaptureProvenance } from "@beep/qa-capture"
  * const effect = decodeCaptureProvenance({})
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */

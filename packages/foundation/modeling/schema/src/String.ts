@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("String");
 const encodeUnknownAsJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
-const isError = S.is(S.ErrorInstance());
+const isError = S.is(S.instanceOf(Error));
 
 const stringifyFallback = (value: unknown): string => {
   try {
@@ -46,7 +46,8 @@ const stringifyUnknown = (value: unknown): string => {
 /**
  * Branded non-empty trimmed string schema that strips whitespace and rejects empty results.
  *
- * @example
+ * **Example** (Decode trimmed non-empty string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
@@ -55,8 +56,8 @@ const stringifyUnknown = (value: unknown): string => {
  * console.log(value) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
   S.brand("NonEmptyTrimmedStr"),
@@ -69,7 +70,8 @@ export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String m
 /**
  * Type for {@link NonEmptyTrimmedStr}.
  *
- * @example
+ * **Example** (Annotate decoded trimmed string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
@@ -78,15 +80,16 @@ export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String m
  * console.log(label) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
 
 /**
  * Branded UUID string schema that validates RFC 4122 format.
  *
- * @example
+ * **Example** (Decode RFC 4122 UUID)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
@@ -95,8 +98,8 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   S.brand("UUID"),
@@ -109,7 +112,8 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
 /**
  * Type for {@link UUID}.
  *
- * @example
+ * **Example** (Annotate decoded UUID value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
@@ -118,15 +122,16 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
  * console.log(userId)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UUID = typeof UUID.Type;
 
 /**
  * A nullable string schema that accepts `string | null`.
  *
- * @example
+ * **Example** (Decode string or null)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
@@ -148,7 +153,8 @@ export const NullableStr = S.String.pipe(
 /**
  * Type for {@link NullableStr}.
  *
- * @example
+ * **Example** (Annotate nullable string type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
@@ -165,7 +171,8 @@ export type NullableStr = typeof NullableStr.Type;
 /**
  * A nullable string that decodes to `Option<string>` using `S.OptionFromNullOr`.
  *
- * @example
+ * **Example** (Decode null to Option.none)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { OptionFromNullableStr } from "@beep/schema/String"
@@ -187,7 +194,8 @@ export const OptionFromNullableStr = S.String.pipe(
 /**
  * Type for {@link OptionFromNullableStr}.
  *
- * @example
+ * **Example** (Annotate Option string type)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -205,11 +213,14 @@ export type OptionFromNullableStr = typeof OptionFromNullableStr.Type;
 /**
  * Schema transformation that decodes any unknown input into a string.
  *
+ * **Details**
+ *
  * Strings pass through unchanged. Errors decode to their message. JSON-compatible
  * values decode to compact JSON text, and values that cannot be JSON encoded
  * fall back to JavaScript string coercion.
  *
- * @example
+ * **Example** (Decode object to JSON string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -240,7 +251,8 @@ export const StrFromUnknown = S.Unknown.pipe(
 /**
  * Type for {@link StrFromUnknown}.
  *
- * @example
+ * **Example** (Decode Error to message)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

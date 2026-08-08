@@ -25,7 +25,8 @@ import type * as S from "effect/Schema";
  * input/output schemas (type contract), and an Effect-returning implementation
  * whose `R`/`E` are inferred from its body.
  *
- * @example
+ * **Example** (Define string length operation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -42,8 +43,8 @@ import type * as S from "effect/Schema";
  * Effect.runPromise(definition.implementation("Effect")).then(console.log) // 6
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface OperationDefinition<A, B, R = never, E = never> {
   readonly description?: string;
@@ -57,7 +58,8 @@ export interface OperationDefinition<A, B, R = never, E = never> {
 /**
  * Extract the decoded input type from an {@link OperationDefinition}.
  *
- * @example
+ * **Example** (Extract operation input type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -74,8 +76,8 @@ export interface OperationDefinition<A, B, R = never, E = never> {
  * console.log(String(input).toUpperCase()) // "EFFECT"
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type OperationInput<D extends OperationDefinition<unknown, unknown, unknown, unknown>> =
   D extends OperationDefinition<infer A, unknown, unknown, unknown> ? A : never;
@@ -83,7 +85,8 @@ export type OperationInput<D extends OperationDefinition<unknown, unknown, unkno
 /**
  * Extract the decoded output type from an {@link OperationDefinition}.
  *
- * @example
+ * **Example** (Extract operation output type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -100,8 +103,8 @@ export type OperationInput<D extends OperationDefinition<unknown, unknown, unkno
  * console.log(output + 1) // 7
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type OperationOutput<D extends OperationDefinition<unknown, unknown, unknown, unknown>> =
   D extends OperationDefinition<unknown, infer B, unknown, unknown> ? B : never;

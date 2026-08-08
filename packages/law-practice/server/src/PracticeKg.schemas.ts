@@ -43,7 +43,8 @@ export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-p
 /**
  * Validated options used by `corpus graph`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Omitting `bundleOut` puts the bundle under
  * `<corpusRoot>/staging/practice-kg-bundle` (see {@link PracticeKgOptions.resolveBundleOut}),
  * and omitting `maxTextBytes` applies the 2 MiB positive byte budget for both
@@ -51,7 +52,8 @@ export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-p
  * accidental clobber — without it a build refuses to run against an existing
  * bundle.
  *
- * @example
+ * **Example** (Make options with defaults)
+ *
  * ```ts
  * import { PracticeKgOptions } from "@beep/law-practice-server"
  *
@@ -86,7 +88,8 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
    * Resolve the effective bundle destination for a corpus root, applying the
    * canonical `<corpusRoot>/staging/practice-kg-bundle` default.
    *
-   * @example
+   * **Example** (Resolve default bundle path)
+   *
    * ```ts
    * import { PracticeKgOptions } from "@beep/law-practice-server"
    * import { Effect, Path } from "effect"
@@ -117,7 +120,8 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
  * {@link PracticeKgOptions.resolveBundleOut} — the schema-derived subset of
  * {@link PracticeKgOptions} the resolver reads.
  *
- * @example
+ * **Example** (Corpus root only input)
+ *
  * ```ts
  * import type { PracticeKgBundleOutInput } from "@beep/law-practice-server"
  *
@@ -133,7 +137,8 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
 /**
  * One persisted `kg_node` row.
  *
- * @remarks
+ * **Details**
+ *
  * `iri` is the node's identity across the whole graph and the join target for
  * both edge endpoints; `naturalKey` is the human-facing key it was minted from.
  * `client` and `docketFamily` are absent — not empty — for nodes that belong to
@@ -141,7 +146,8 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
  * to the settled spine label because these rows are written only by the
  * deterministic projection; candidate material never flows through this class.
  *
- * @example
+ * **Example** (Make docket node row)
+ *
  * ```ts
  * import { PracticeKgNodeRow } from "@beep/law-practice-server"
  *
@@ -185,13 +191,15 @@ export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgN
 /**
  * One persisted `kg_edge` row.
  *
- * @remarks
+ * **Details**
+ *
  * The `(subjectIri, predicate, objectIri)` triple is the row's identity, so the
  * same assertion derived twice collapses to one edge. Both IRIs must name nodes
  * that exist in the same bundle. `epistemicStatus` carries the same
  * spine-writers-only constructor default as {@link PracticeKgNodeRow}.
  *
- * @example
+ * **Example** (Make granted_as edge row)
+ *
  * ```ts
  * import { PracticeKgEdgeRow } from "@beep/law-practice-server"
  *
@@ -227,14 +235,16 @@ export class PracticeKgEdgeRow extends S.Class<PracticeKgEdgeRow>($I`PracticeKgE
 /**
  * One parsed pffexport email-header row.
  *
- * @remarks
+ * **Details**
+ *
  * Headers only — no message body is ever read. `messageOrd` is the ordinal
  * parsed from the export directory name, and together with `archiveDigest` and
  * `folderPath` it gives the stable sort that makes a rebuild byte-identical. The
  * optional keys are absent when the header was missing from the export, which is
  * routine for drafts and calendar items.
  *
- * @example
+ * **Example** (Make email header row)
+ *
  * ```ts
  * import { PracticeKgEmailHeaderRow } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -278,12 +288,14 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
 /**
  * Schema versions embedded in a graph bundle manifest.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The two stores version independently, so a reader can support a new DuckDB
  * layout without re-reading every PGlite bundle. Both are currently pinned at
  * `"1"`; a change to either is a breaking change for bundle consumers.
  *
- * @example
+ * **Example** (Pin both store versions)
+ *
  * ```ts
  * import { PracticeKgSchemaVersions } from "@beep/law-practice-server"
  *
@@ -308,12 +320,14 @@ export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>(
 /**
  * Included/excluded source runs embedded in a graph bundle manifest.
  *
- * @remarks
+ * **Details**
+ *
  * Recording exclusion explicitly, rather than omitting the run, is what lets a
  * reader tell "the refresh was deliberately left out" from "this bundle predates
  * the refresh".
  *
- * @example
+ * **Example** (Record excluded refresh run)
+ *
  * ```ts
  * import { PracticeKgSourceRuns } from "@beep/law-practice-server"
  *
@@ -338,12 +352,14 @@ export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`Pract
 /**
  * Stable table counts embedded in graph artifacts.
  *
- * @remarks
+ * **Details**
+ *
  * These counts are the bundle's fingerprint: two builds over the same corpus
  * snapshot with the same options must produce identical values, so a difference
  * is evidence that an input moved.
  *
- * @example
+ * **Example** (Make stable table counts)
+ *
  * ```ts
  * import { PracticeKgCounts } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -376,13 +392,15 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
 /**
  * Portable practice knowledge-graph bundle manifest.
  *
- * @remarks
+ * **Details**
+ *
  * Written as `bundle.manifest.json` at the bundle root and read first by any
  * consumer: it is what makes a bundle self-describing once it has been copied
  * away from the corpus it was built from. `corpusRootExpected` records whether
  * the bundle's paths still assume the originating corpus layout.
  *
- * @example
+ * **Example** (Make portable bundle manifest)
+ *
  * ```ts
  * import { PracticeKgBundleManifest, PracticeKgCounts } from "@beep/law-practice-server"
  * import { PracticeKgSchemaVersions, PracticeKgSourceRuns } from "@beep/law-practice-server"
@@ -425,13 +443,15 @@ export class PracticeKgBundleManifest extends S.Class<PracticeKgBundleManifest>(
 /**
  * Summary report written to `catalog/reports/graph-summary.json`.
  *
- * @remarks
+ * **Details**
+ *
  * Carries the reconciliation counts alongside the bundle counts, so a reviewer
  * can check the graph against the corpus it was projected from: `sourceRows` and
  * `baseDigests` describe the input, `counts` describes the output, and a gap
  * between them is the thing worth investigating.
  *
- * @example
+ * **Example** (Make graph summary report)
+ *
  * ```ts
  * import { PracticeKgCounts, PracticeKgSummary } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -477,11 +497,13 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
 /**
  * Encode a bundle manifest as its JSON string form.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Produces the exact text written to `bundle.manifest.json`. Encoding is fallible
  * because the manifest's branded count fields are validated on the way out.
  *
- * @example
+ * **Example** (Encode manifest to JSON)
+ *
  * ```ts
  * import { encodePracticeKgBundleManifestJson, PracticeKgBundleManifest, PracticeKgCounts } from "@beep/law-practice-server"
  * import { PracticeKgSchemaVersions, PracticeKgSourceRuns } from "@beep/law-practice-server"
@@ -517,7 +539,8 @@ export const encodePracticeKgBundleManifestJson: {
 /**
  * Encode reconciliation counts as their JSON string form.
  *
- * @example
+ * **Example** (Encode counts to JSON)
+ *
  * ```ts
  * import { encodePracticeKgCountsJson, PracticeKgCounts } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -545,12 +568,14 @@ export const encodePracticeKgCountsJson: {
 /**
  * Encode a kg_node payload record as its JSON string form.
  *
- * @remarks
+ * **Details**
+ *
  * Node payloads are open records, so this validates only that the value is a
  * record of JSON-encodable entries — the payload's shape is the caller's
  * contract with whoever reads it back.
  *
- * @example
+ * **Example** (Encode open node payload)
+ *
  * ```ts
  * import { encodePracticeKgNodePayloadJson } from "@beep/law-practice-server"
  * import { Effect } from "effect"
@@ -572,10 +597,12 @@ export const encodePracticeKgNodePayloadJson: {
 /**
  * Encode a build summary as its JSON string form.
  *
- * @remarks
+ * **Details**
+ *
  * Produces the exact text written to `catalog/reports/graph-summary.json`.
  *
- * @example
+ * **Example** (Encode summary to JSON)
+ *
  * ```ts
  * import { encodePracticeKgSummaryJson, PracticeKgCounts, PracticeKgSummary } from "@beep/law-practice-server"
  * import { NonNegativeInt } from "@beep/schema"

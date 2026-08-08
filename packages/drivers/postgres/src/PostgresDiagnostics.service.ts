@@ -292,7 +292,8 @@ const normalizePostgresError = (error: unknown): PostgresError => {
 /**
  * Format and highlight PostgreSQL SQL for terminal output.
  *
- * @example
+ * **Example** (Format SQL with parameters)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { formatSql } from "@beep/postgres"
@@ -398,7 +399,8 @@ export const formatPostgresErrorWith =
 /**
  * Render a Postgres failure with diagnostics and formatted SQL.
  *
- * @example
+ * **Example** (Format unknown query failure)
+ *
  * ```ts
  * import { formatPostgresError, PostgresError } from "@beep/postgres"
  *
@@ -414,7 +416,8 @@ export const formatPostgresError: PostgresErrorFormatter = formatPostgresErrorWi
 /**
  * Log a formatted Postgres failure to stderr.
  *
- * @example
+ * **Example** (Log error via Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { logPostgresError, PostgresError } from "@beep/postgres"
@@ -426,7 +429,6 @@ export const formatPostgresError: PostgresErrorFormatter = formatPostgresErrorWi
  * @effects Formats the unknown failure as a Postgres diagnostic message and
  * writes it to stderr through Effect's `Console` service when the returned
  * effect is executed.
- *
  * @category utilities
  * @since 0.0.0
  */

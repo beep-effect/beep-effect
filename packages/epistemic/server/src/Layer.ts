@@ -69,7 +69,8 @@ const ClaimGateOutcomeResolverLayer = Layer.effect(
  * gate-outcome resolver, and an in-memory disposition repository over the
  * bounded SHACL engine.
  *
- * @example
+ * **Example** (Import EpistemicServerLive layer)
+ *
  * ```ts
  * import { EpistemicServerLive } from "@beep/epistemic-server/layer"
  *
@@ -96,7 +97,8 @@ export const EpistemicServerLive: Layer.Layer<
  * edge authority and the append-only execution ledger, with dispositions
  * persisted rather than held in memory.
  *
- * @example
+ * **Example** (Import Drizzle-backed layer)
+ *
  * ```ts
  * import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer"
  *
@@ -133,11 +135,14 @@ const ContradictionRpcLive = ContradictionHandlersLive.pipe(Layer.provide(Contra
 /**
  * In-memory epistemic server surface plus contradiction RPC handlers.
  *
+ * **Details**
+ *
  * The application supplies the authenticated reviewer, trusted organization
  * and source scope, a source-text resolver, and the cryptographic hashing
  * service used to verify source identity.
  *
- * @example
+ * **Example** (Import RPC live layer)
+ *
  * ```ts
  * import { EpistemicServerRpcLive } from "@beep/epistemic-server/layer"
  *
@@ -156,11 +161,14 @@ export const EpistemicServerRpcLive: Layer.Layer<
 /**
  * Drizzle-backed epistemic server surface plus contradiction RPC handlers.
  *
+ * **Details**
+ *
  * The application supplies Postgres, the authenticated reviewer, trusted
  * organization and source scope, a source-text resolver, and the cryptographic
  * hashing service used to verify source identity.
  *
- * @example
+ * **Example** (Import Drizzle RPC layer)
+ *
  * ```ts
  * import { EpistemicServerDrizzleRpcLive } from "@beep/epistemic-server/layer"
  *

@@ -8,7 +8,8 @@
 /**
  * UsageRecord row converter exports.
  *
- * @example
+ * **Example** (Access toUsageRecordInsert export)
+ *
  * ```ts
  * import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord"
  *
@@ -22,7 +23,8 @@ export * from "./UsageRecord.converters.ts";
 /**
  * UsageRecord table exports.
  *
- * @example
+ * **Example** (Access Table entityType path)
+ *
  * ```ts
  * import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord"
  *

@@ -160,7 +160,8 @@ const ensureUnique = (
 /**
  * Validates reason-specific workspace invariants at a public boundary.
  *
- * @example
+ * **Example** (Validate populated workspace)
+ *
  * ```ts
  * import { DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, validateWorkspace } from "@beep/dock"
  * import { Effect } from "effect"
@@ -1041,11 +1042,13 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
 /**
  * Applies one command and validates its next state before publication.
  *
- * @remarks
+ * **Details**
+ *
  * Each accepted transition publishes exactly one validated revision; unchanged
  * commands retain the current revision and emit no events.
  *
- * @example
+ * **Example** (Reduce clear workspace command)
+ *
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, reduceDockCommand } from "@beep/dock"
  * import { Effect } from "effect"
@@ -1178,11 +1181,13 @@ export const reduceDockCommand = Effect.fn("DockReducer.reduceDockCommand")(func
 /**
  * Builds a monotonic outcome after a snapshot has decoded successfully.
  *
- * @remarks
+ * **Details**
+ *
  * Both current and restored workspaces are validated before comparison. A changed
  * restore preserves the snapshot content but advances from the live revision.
  *
- * @example
+ * **Example** (Restore from empty workspace)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, RestoreSnapshotRequest, TabsNode, TextPanelView, restoreDockWorkspace } from "@beep/dock"
  * import { Effect } from "effect"

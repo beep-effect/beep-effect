@@ -46,7 +46,8 @@ const osCallMessage = (property: string): string =>
  * Oxlint rule that blocks direct host platform and architecture reads outside
  * the shared host-process reference module.
  *
- * @example
+ * **Example** (Host runtime rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -55,6 +56,7 @@ const osCallMessage = (property: string): string =>
  *
  * strictEqual(description?.includes("host runtime"), true)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

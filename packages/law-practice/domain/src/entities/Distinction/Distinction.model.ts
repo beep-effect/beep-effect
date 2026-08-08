@@ -18,11 +18,14 @@ const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model")
 /**
  * Distinction entity asserted to overcome a rejection against a claim.
  *
+ * **Details**
+ *
  * Stores the argued {@link DistinctionDetail}, a source {@link TextAnchor}, and
  * the {@link ClaimLifecycle} state while linking to the claim it defends and the
  * rejection it answers.
  *
- * @example
+ * **Example** (Decode Distinction via Schema)
+ *
  * ```ts
  * import { Distinction } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

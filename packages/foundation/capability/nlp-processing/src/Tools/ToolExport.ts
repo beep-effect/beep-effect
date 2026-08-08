@@ -80,11 +80,14 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
 /**
  * Typed failure for the positional tool export adapter.
  *
+ * **Details**
+ *
  * The error preserves the tool name, a caller-facing message, and the original
  * unknown cause when parameter decoding, toolkit startup, stream execution, or
  * result extraction fails.
  *
- * @example
+ * **Example** (Recover from ExportedToolError)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ExportedToolError } from "@beep/nlp-processing/Tools/ToolExport"
@@ -145,11 +148,14 @@ export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`Ex
 /**
  * Runtime descriptor for a tool exported as a positional function contract.
  *
+ * **Details**
+ *
  * The descriptor exposes stable argument ordering, JSON schemas, examples, and
  * an Effectful `handle` function that validates positional arguments before
  * delegating to the toolkit handler.
  *
- * @example
+ * **Example** (Define ExportedTool descriptor)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { ExportedTool } from "@beep/nlp-processing/Tools/ToolExport"
@@ -370,11 +376,14 @@ const exportToolsEffect: Effect.Effect<
 /**
  * Effect that exports every NLP toolkit tool as a positional descriptor.
  *
+ * **Details**
+ *
  * Use this adapter when an integration cannot call Effect AI toolkit handlers
  * directly and instead needs ordered argument names, JSON schemas, timeouts,
  * usage snippets, and a single Effectful handler per tool.
  *
- * @example
+ * **Example** (List exported tool names)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"

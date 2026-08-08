@@ -48,10 +48,13 @@ class TextSimilaritySuccess extends S.Class<TextSimilaritySuccess>($I`TextSimila
  * Defines the agent-facing tool contract for comparing two texts with BM25
  * vectorization and cosine similarity.
  *
+ * **Details**
+ *
  * Use this tool when the caller needs a normalized semantic-ish similarity
  * score for two standalone texts without creating a persistent corpus.
  *
- * @example
+ * **Example** (Decode similarity parameters)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity"

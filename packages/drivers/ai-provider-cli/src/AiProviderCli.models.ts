@@ -18,11 +18,13 @@ const AiProviderCliTokenSourceBase = LiteralKit(["claude.ai", "console", "api-ke
 /**
  * Supported local AI provider CLI identifiers.
  *
- * @remarks
+ * **Details**
+ *
  * The vocabulary is intentionally limited to CLIs this driver knows how to
  * probe: Claude uses `claude auth status`, and Codex uses `codex login status`.
  *
- * @example
+ * **Example** (Decode claude provider id)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliProvider } from "@beep/ai-provider-cli"
@@ -45,7 +47,8 @@ export const AiProviderCliProvider = AiProviderCliProviderBase.pipe(
 /**
  * Type for a supported local AI provider CLI identifier.
  *
- * @example
+ * **Example** (Annotate codex provider type)
+ *
  * ```ts
  * import type { AiProviderCliProvider } from "@beep/ai-provider-cli"
  *
@@ -62,12 +65,14 @@ export type AiProviderCliProvider = typeof AiProviderCliProvider.Type;
 /**
  * Redacted authentication state inferred from a provider CLI exit code.
  *
- * @remarks
+ * **Details**
+ *
  * `authenticated` means the provider status command exited with code `0`.
  * `not-authenticated` means the command ran and returned a non-zero exit code;
  * transport and spawning failures are represented by `AiProviderCliError`.
  *
- * @example
+ * **Example** (Decode authenticated status)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliAuthStatus } from "@beep/ai-provider-cli"
@@ -90,7 +95,8 @@ export const AiProviderCliAuthStatus = AiProviderCliAuthStatusBase.pipe(
 /**
  * Type for the redacted provider CLI authentication state.
  *
- * @example
+ * **Example** (Annotate not-authenticated type)
+ *
  * ```ts
  * import type { AiProviderCliAuthStatus } from "@beep/ai-provider-cli"
  *
@@ -107,13 +113,15 @@ export type AiProviderCliAuthStatus = typeof AiProviderCliAuthStatus.Type;
 /**
  * Credential origin reported by a provider CLI status command.
  *
- * @remarks
+ * **Details**
+ *
  * Claude reports `authMethod` values such as `"claude.ai"` (subscription
  * login) and `"console"` (Anthropic Console billing). Codex reports a status
  * line naming ChatGPT (`"chatgpt"`) or an API key (`"api-key"`). Unrecognized
  * values collapse to an absent token source rather than failing the probe.
  *
- * @example
+ * **Example** (Decode claude.ai token source)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliTokenSource } from "@beep/ai-provider-cli"
@@ -136,7 +144,8 @@ export const AiProviderCliTokenSource = AiProviderCliTokenSourceBase.pipe(
 /**
  * Type for a provider CLI credential origin.
  *
- * @example
+ * **Example** (Annotate chatgpt token source)
+ *
  * ```ts
  * import type { AiProviderCliTokenSource } from "@beep/ai-provider-cli"
  *
@@ -153,13 +162,15 @@ export type AiProviderCliTokenSource = typeof AiProviderCliTokenSource.Type;
 /**
  * Reversible codec from Claude CLI `subscriptionType` values to human labels.
  *
- * @remarks
+ * **Details**
+ *
  * Decoding maps a known `subscriptionType` (for example `"max"`) to its
  * display label (`"Claude Max Subscription"`). Unknown subscription types are
  * not decodable through this codec; probe assembly falls back to the generic
  * `"Claude Subscription"` label instead of failing.
  *
- * @example
+ * **Example** (Decode max subscription label)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliClaudeSubscriptionLabel } from "@beep/ai-provider-cli"
@@ -187,7 +198,8 @@ export const AiProviderCliClaudeSubscriptionLabel = MappedLiteralKit([
 /**
  * Type for a Claude subscription display label.
  *
- * @example
+ * **Example** (Annotate Claude Max label)
+ *
  * ```ts
  * import type { AiProviderCliClaudeSubscriptionLabel } from "@beep/ai-provider-cli"
  *
@@ -204,7 +216,8 @@ export type AiProviderCliClaudeSubscriptionLabel = typeof AiProviderCliClaudeSub
 /**
  * Process exit status accepted from provider CLI status commands.
  *
- * @example
+ * **Example** (Decode zero exit code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliExitCode } from "@beep/ai-provider-cli"
@@ -226,7 +239,8 @@ export const AiProviderCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxim
 /**
  * Type for a provider CLI process exit status.
  *
- * @example
+ * **Example** (Annotate zero exit code)
+ *
  * ```ts
  * import type { AiProviderCliExitCode } from "@beep/ai-provider-cli"
  *
@@ -243,11 +257,13 @@ export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
 /**
  * Per-call process overrides for a provider CLI auth probe.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Environment values are secrets-adjacent runner inputs. They are never
  * copied into probe results, errors, logs, or spans.
  *
- * @example
+ * **Example** (Make probe options with env)
+ *
  * ```ts
  * import { AiProviderCliProbeOptions } from "@beep/ai-provider-cli"
  * import * as O from "effect/Option"
@@ -280,11 +296,13 @@ export class AiProviderCliProbeOptions extends S.Class<AiProviderCliProbeOptions
 /**
  * Complete technical request passed to an injected provider CLI runner.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This request is an execution boundary only. Its executable and environment
  * must never be rendered into diagnostics or observable probe payloads.
  *
- * @example
+ * **Example** (Make codex run request)
+ *
  * ```ts
  * import { AiProviderCliRunRequest } from "@beep/ai-provider-cli"
  *
@@ -324,12 +342,14 @@ export class AiProviderCliRunRequest extends S.Class<AiProviderCliRunRequest>($I
 /**
  * Captured provider CLI status process output.
  *
- * @remarks
+ * **Details**
+ *
  * This model is for runner boundaries and tests. Public auth probes collapse
  * the process result into a redacted status and do not expose raw stdout or
  * stderr.
  *
- * @example
+ * **Example** (Make process result with stdout)
+ *
  * ```ts
  * import { AiProviderCliProcessResult } from "@beep/ai-provider-cli"
  *
@@ -365,11 +385,13 @@ export class AiProviderCliProcessResult extends S.Class<AiProviderCliProcessResu
 /**
  * Redacted provider CLI authentication probe result.
  *
- * @remarks
+ * **Details**
+ *
  * The probe records the executable name and normalized auth status only. It
  * deliberately omits stdout, stderr, account identifiers, and token material.
  *
- * @example
+ * **Example** (Make not-authenticated probe)
+ *
  * ```ts
  * import { AiProviderCliAuthProbe } from "@beep/ai-provider-cli"
  *
@@ -405,13 +427,15 @@ export class AiProviderCliAuthProbe extends S.Class<AiProviderCliAuthProbe>($I`A
 /**
  * JSON payload printed by `claude auth status` on stdout.
  *
- * @remarks
+ * **Details**
+ *
  * Only the fields the driver consumes are modeled: `loggedIn`, `authMethod`,
  * `email`, and `subscriptionType`. Extra keys (for example `orgId` and
  * `orgName`) are deliberately ignored for data minimization. Payloads that do
  * not decode degrade the probe to the exit-code-only interpretation.
  *
- * @example
+ * **Example** (Make Claude auth status payload)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliClaudeAuthStatusPayload } from "@beep/ai-provider-cli"
@@ -454,13 +478,15 @@ export class AiProviderCliClaudeAuthStatusPayload extends S.Class<AiProviderCliC
 /**
  * Rich provider CLI authentication snapshot.
  *
- * @remarks
+ * **Details**
+ *
  * Extends the boolean {@link AiProviderCliAuthProbe} with optional account
  * email, subscription display label, and credential origin. Every optional
  * field stays `Option.none()` whenever the provider CLI does not report it;
  * the snapshot never carries raw stdout, stderr, or token material.
  *
- * @example
+ * **Example** (Make Claude auth snapshot)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliAuthSnapshot } from "@beep/ai-provider-cli"

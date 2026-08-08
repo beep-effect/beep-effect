@@ -26,7 +26,8 @@ const unknownCauseMessage = (cause: unknown): string =>
 /**
  * PACER Authentication API host per environment.
  *
- * @example
+ * **Example** (Log QA auth base URL)
+ *
  * ```ts
  * import { PACER_AUTH_BASE_URL } from "@beep/pacer"
  *
@@ -44,7 +45,8 @@ export const PACER_AUTH_BASE_URL = {
 /**
  * PACER Case Locator (PCL) API host per environment.
  *
- * @example
+ * **Example** (Log prod PCL base URL)
+ *
  * ```ts
  * import { PACER_PCL_BASE_URL } from "@beep/pacer"
  *
@@ -62,7 +64,8 @@ export const PACER_PCL_BASE_URL = {
 /**
  * Environment variable names the config loader reads.
  *
- * @example
+ * **Example** (Log username env key)
+ *
  * ```ts
  * import { PACER_ENV } from "@beep/pacer"
  *
@@ -83,7 +86,8 @@ export const PACER_ENV = {
 /**
  * Resolved PACER configuration consumed by the auth + PCL services.
  *
- * @example
+ * **Example** (Make base PACER config)
+ *
  * ```ts
  * import { PacerConfigBase } from "@beep/pacer"
  * import { Redacted } from "effect"
@@ -114,7 +118,8 @@ export class PacerConfigBase extends S.Class<PacerConfigBase>($I`PacerConfigBase
 /**
  * QA PACER configuration.
  *
- * @example
+ * **Example** (Make QA PACER config)
+ *
  * ```ts
  * import { PacerConfigQA, PACER_AUTH_BASE_URL, PACER_PCL_BASE_URL } from "@beep/pacer"
  * import { Redacted } from "effect"
@@ -139,7 +144,8 @@ export class PacerConfigQA extends PacerConfigBase.extend<PacerConfigQA>($I`Pace
 /**
  * Production PACER configuration.
  *
- * @example
+ * **Example** (Make prod PACER config)
+ *
  * ```ts
  * import { PacerConfigProd, PACER_AUTH_BASE_URL, PACER_PCL_BASE_URL } from "@beep/pacer"
  * import { Redacted } from "effect"
@@ -164,7 +170,8 @@ export class PacerConfigProd extends PacerConfigBase.extend<PacerConfigProd>($I`
 /**
  * Resolved PACER configuration consumed by the auth + PCL services.
  *
- * @example
+ * **Example** (Validate mock PACER config)
+ *
  * ```ts
  * import { PacerConfig, mockPacerConfig } from "@beep/pacer"
  * import * as S from "effect/Schema"
@@ -185,7 +192,8 @@ export const PacerConfig = S.Union([PacerConfigQA, PacerConfigProd]).pipe(
 /**
  * Type for {@link PacerConfig}.
  *
- * @example
+ * **Example** (Type mock PACER config)
+ *
  * ```ts
  * import { mockPacerConfig } from "@beep/pacer"
  * import type { PacerConfig as PacerConfigType } from "@beep/pacer"
@@ -202,7 +210,8 @@ export type PacerConfig = typeof PacerConfig.Type;
 /**
  * Options used when loading PACER config from an Effect `ConfigProvider`.
  *
- * @example
+ * **Example** (Make load options)
+ *
  * ```ts
  * import { PacerConfigLoadOptions } from "@beep/pacer"
  *
@@ -226,7 +235,8 @@ export class PacerConfigLoadOptions extends S.Class<PacerConfigLoadOptions>($I`P
 /**
  * Constructor input for {@link PacerConfigLoadOptions}.
  *
- * @example
+ * **Example** (Type load options input)
+ *
  * ```ts
  * import type { PacerConfigLoadOptionsInput } from "@beep/pacer"
  *
@@ -242,11 +252,14 @@ export type PacerConfigLoadOptionsInput = typeof PacerConfigLoadOptions.Encoded;
 /**
  * Load PACER configuration from the environment (secrets via {@link Config}).
  *
+ * **Details**
+ *
  * `otpCode` is sourced from the explicit `options.otpCode` when present (the
  * live runner passes the freshly-typed code), otherwise from the `PACER_OTP`
  * env var, otherwise `none`.
  *
- * @example
+ * **Example** (Load QA PACER config)
+ *
  * ```ts
  * import { loadPacerConfig } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -286,7 +299,8 @@ export const loadPacerConfig = Effect.fn("Pacer.loadPacerConfig")((rawOptions: P
  * A placeholder configuration for the deterministic mock runner. Reads no
  * secrets; the credential values are never sent anywhere real.
  *
- * @example
+ * **Example** (Create mock PACER config)
+ *
  * ```ts
  * import { mockPacerConfig } from "@beep/pacer"
  *

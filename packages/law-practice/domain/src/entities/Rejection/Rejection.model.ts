@@ -16,11 +16,14 @@ const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
 /**
  * Rejection entity raised against a claim by an office action.
  *
+ * **Details**
+ *
  * Stores the statutory {@link RejectionGround} as JSONB so the per-statute
  * prior-art cardinality survives persistence while linking to the rejected claim
  * and the office action that raised the rejection.
  *
- * @example
+ * **Example** (Decoding a Rejection entity)
+ *
  * ```ts
  * import { Rejection } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

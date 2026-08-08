@@ -23,7 +23,8 @@ const $I = $DockId.create("Dock.protocol");
 /**
  * Operation that executes an already decoded command envelope.
  *
- * @example
+ * **Example** (Make dispatch dock command)
+ *
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DispatchDockCommand, DockCommandEnvelope } from "@beep/dock"
  *
@@ -47,7 +48,8 @@ export class DispatchDockCommand extends S.Class<DispatchDockCommand>($I`Dispatc
 /**
  * Operation that decodes unknown input before dispatch.
  *
- * @example
+ * **Example** (Make unknown command dispatch)
+ *
  * ```ts
  * import { DispatchUnknownDockCommand } from "@beep/dock"
  *
@@ -71,7 +73,8 @@ export class DispatchUnknownDockCommand extends S.Class<DispatchUnknownDockComma
 /**
  * Operation that persists the current live workspace.
  *
- * @example
+ * **Example** (Make save snapshot operation)
+ *
  * ```ts
  * import { SaveDockSnapshot } from "@beep/dock"
  *
@@ -94,7 +97,8 @@ export class SaveDockSnapshot extends S.Class<SaveDockSnapshot>($I`SaveDockSnaps
 /**
  * Operation that loads and atomically installs a validated snapshot.
  *
- * @example
+ * **Example** (Make restore snapshot operation)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, RestoreDockSnapshot, RestoreSnapshotRequest } from "@beep/dock"
  *
@@ -118,7 +122,8 @@ export class RestoreDockSnapshot extends S.Class<RestoreDockSnapshot>($I`Restore
 /**
  * Serialized operation-kind domain for the tagged algebra of every Atom-session operation.
  *
- * @example
+ * **Example** (Read operation kind field)
+ *
  * ```ts
  * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
  *
@@ -142,7 +147,8 @@ export const DockAtomOperationKind = LiteralKit([
 /**
  * Decoded serialized Atom-session operation kind.
  *
- * @example
+ * **Example** (Make operation kind value)
+ *
  * ```ts
  * import { DockAtomOperationKind } from "@beep/dock"
  *
@@ -158,7 +164,8 @@ export type DockAtomOperationKind = typeof DockAtomOperationKind.Type;
 /**
  * Complete serialized operation algebra for one Dockview Atom session.
  *
- * @example
+ * **Example** (Wrap save snapshot operation)
+ *
  * ```ts
  * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
  *
@@ -186,7 +193,8 @@ export const DockAtomOperation = DockAtomOperationKind.mapMembers(
 /**
  * Decoded serialized operation submitted to the Atom session.
  *
- * @example
+ * **Example** (Assign save snapshot type)
+ *
  * ```ts
  * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
  *
@@ -202,7 +210,8 @@ export type DockAtomOperation = typeof DockAtomOperation.Type;
 /**
  * Successful session result for a reducer mutation attempt.
  *
- * @example
+ * **Example** (Make mutation completed result)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockMutationCompleted, DockMutationOutcome, DockUnchanged } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -227,7 +236,8 @@ export class DockMutationCompleted extends S.Class<DockMutationCompleted>($I`Doc
 /**
  * Successful session result for persisted snapshot text.
  *
- * @example
+ * **Example** (Make snapshot saved result)
+ *
  * ```ts
  * import { DockSnapshotSaved } from "@beep/dock"
  *
@@ -253,7 +263,8 @@ const DockAtomOperationOutcomeKind = LiteralKit(["mutationCompleted", "snapshotS
 /**
  * Tagged union of successful session operation results.
  *
- * @example
+ * **Example** (Use snapshot saved outcome)
+ *
  * ```ts
  * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock"
  *
@@ -276,7 +287,8 @@ export const DockAtomOperationOutcome = DockAtomOperationOutcomeKind.mapMembers(
 /**
  * Decoded tagged union of successful session operation results.
  *
- * @example
+ * **Example** (Type snapshot saved outcome)
+ *
  * ```ts
  * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock"
  *
@@ -292,7 +304,8 @@ export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
 /**
  * Tagged union of failures produced by a built Atom session.
  *
- * @example
+ * **Example** (Make snapshot missing error)
+ *
  * ```ts
  * import { DockAtomSessionError, DockSnapshotMissing } from "@beep/dock"
  *
@@ -318,7 +331,8 @@ export const DockAtomSessionError = S.Union([
 /**
  * Decoded tagged union of failures produced by a built Atom session.
  *
- * @example
+ * **Example** (Type snapshot missing error)
+ *
  * ```ts
  * import { DockAtomSessionError, DockSnapshotMissing } from "@beep/dock"
  *
@@ -334,7 +348,8 @@ export type DockAtomSessionError = typeof DockAtomSessionError.Type;
 /**
  * Ordered feed entry for one successful session operation.
  *
- * @example
+ * **Example** (Make feed success entry)
+ *
  * ```ts
  * import { DockAtomFeedSuccess, DockSnapshotSaved } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -361,7 +376,8 @@ export class DockAtomFeedSuccess extends S.TaggedClass<DockAtomFeedSuccess>($I`D
 /**
  * Ordered feed entry for one typed session failure.
  *
- * @example
+ * **Example** (Make feed failure entry)
+ *
  * ```ts
  * import { DockAtomFeedFailure, DockSnapshotMissing } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -388,7 +404,8 @@ export class DockAtomFeedFailure extends S.TaggedClass<DockAtomFeedFailure>($I`D
 /**
  * Lossless ordered completion entry exposed to host adapters.
  *
- * @example
+ * **Example** (Use feed failure entry)
+ *
  * ```ts
  * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -409,7 +426,8 @@ export const DockAtomFeedEntry = S.Union([DockAtomFeedSuccess, DockAtomFeedFailu
 /**
  * Decoded lossless ordered completion entry exposed to host adapters.
  *
- * @example
+ * **Example** (Type feed failure entry)
+ *
  * ```ts
  * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"

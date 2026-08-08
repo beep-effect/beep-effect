@@ -1,6 +1,8 @@
 /**
  * Shared SSRF guard for outbound HTTP(S) requests.
  *
+ * **Details**
+ *
  * Classifies the *literal* hostname or IP of a target URL before any
  * `HttpClient` request is issued and rejects loopback, link-local, RFC1918/ULA
  * private, and cloud-metadata (`169.254.169.254`) targets. This bounds the SSRF
@@ -14,7 +16,8 @@
  * {@link BlockedHostError}. An optional allowlist permits explicitly trusted
  * hosts (matched case-insensitively against the normalized hostname).
  *
- * @remarks
+ * **Gotchas**
+ *
  * By default the guard only inspects the literal hostname/IP and does **not**
  * perform DNS resolution: a public DNS name that resolves to `127.0.0.1` or
  * `169.254.169.254` is not caught unless a resolver is supplied. To close that
@@ -64,9 +67,12 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  * Typed failure raised when a hostname or URL targets internal network space
  * or cannot be parsed into a hostname.
  *
+ * **Details**
+ *
  * Fails closed: an unparseable URL is treated as blocked rather than allowed.
  *
- * @example
+ * **Example** (Constructing a BlockedHostError)
+ *
  * ```ts
  * import { BlockedHostError } from "@beep/schema"
  * import * as O from "effect/Option"
@@ -250,11 +256,14 @@ const assertResolvedAddressesAllowed: (
  * Report whether a hostname should be blocked as loopback, link-local,
  * private (RFC1918/ULA), or a cloud metadata endpoint.
  *
+ * **Details**
+ *
  * Pure boolean predicate. Hostnames present in `options.allowlist` are never
  * blocked. The input is normalized (lowercased, IPv6 brackets stripped) before
  * matching, so `[::1]`, `::1`, and `LOCALHOST` all classify consistently.
  *
- * @example
+ * **Example** (Checking blocked hostnames)
+ *
  * ```ts
  * import { isBlockedRemoteHost } from "@beep/schema"
  *
@@ -283,6 +292,8 @@ export const isBlockedRemoteHost: {
 /**
  * Fail-closed assertion that a hostname does not target internal network space.
  *
+ * **Details**
+ *
  * Succeeds with `void` when the host is allowed; fails with a typed
  * {@link BlockedHostError} when the literal host classifies as loopback,
  * link-local, private, or cloud-metadata space and is not allowlisted.
@@ -294,7 +305,8 @@ export const isBlockedRemoteHost: {
  * supplied or when the literal host is allowlisted. See the module
  * `@remarks` for the residual DNS-rebinding TOCTOU limitation.
  *
- * @example
+ * **Example** (Asserting an allowed hostname)
+ *
  * ```ts
  * import { assertAllowedRemoteHost } from "@beep/schema"
  * import * as Effect from "effect/Effect"
@@ -305,7 +317,6 @@ export const isBlockedRemoteHost: {
  *
  * @effects Fails with `BlockedHostError` when the host is blocked; otherwise
  * succeeds with `void`. Emits a `SafeRemoteHost.assertAllowedRemoteHost` span.
- *
  * @category assertions
  * @since 0.0.0
  */
@@ -344,6 +355,8 @@ export const assertAllowedRemoteHost: {
 /**
  * Fail-closed assertion that a full URL does not target internal network space.
  *
+ * **Details**
+ *
  * Parses the URL, extracts its hostname, and delegates to the same
  * classification used by {@link isBlockedRemoteHost}. An unparseable URL fails
  * with a typed {@link BlockedHostError} carrying the parse defect, so callers
@@ -356,7 +369,8 @@ export const assertAllowedRemoteHost: {
  * when no resolver is supplied or the literal host is allowlisted; see the module
  * `@remarks` for the residual DNS-rebinding TOCTOU limitation.
  *
- * @example
+ * **Example** (Asserting an allowed remote URL)
+ *
  * ```ts
  * import { assertAllowedRemoteUrl } from "@beep/schema"
  * import * as Effect from "effect/Effect"
@@ -368,7 +382,6 @@ export const assertAllowedRemoteHost: {
  * @effects Fails with `BlockedHostError` when the URL cannot be parsed or its
  * host is blocked; otherwise succeeds with `void`. Emits a
  * `SafeRemoteHost.assertAllowedRemoteUrl` span.
- *
  * @category assertions
  * @since 0.0.0
  */

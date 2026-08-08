@@ -48,7 +48,8 @@ export {
 /**
  * Live documents server layer.
  *
- * @example
+ * **Example** (Import DocumentsServerLive layer)
+ *
  * ```ts
  * import { DocumentsServerLive } from "@beep/documents-server/layer"
  *
@@ -63,7 +64,8 @@ export const DocumentsServerLive = DocumentsServerLayer;
 /**
  * Live documents server layer using an app-provided LanguageModel and file-processing service.
  *
- * @example
+ * **Example** (Import DocumentsServerLlmLive layer)
+ *
  * ```ts
  * import { DocumentsServerLlmLive } from "@beep/documents-server/layer"
  *
@@ -80,7 +82,8 @@ export const DocumentsServerLlmLive = DocumentsServerLlmLayer;
  * mirror with its availability probe, the vault sync configuration, and
  * platform filesystem and path services.
  *
- * @example
+ * **Example** (Import DocumentsSyncEngineLayer)
+ *
  * ```ts
  * import { DocumentsSyncEngineLayer } from "@beep/documents-server/layer"
  *
@@ -97,7 +100,8 @@ export const DocumentsSyncEngineLayer = Layer.effect(VaultSyncEngine, makeVaultS
  * configuration; still requires `PostgresDrizzle`, the DMS mirror with its
  * availability probe, and platform filesystem and path services.
  *
- * @example
+ * **Example** (Import DocumentsSyncDrizzleLive layer)
+ *
  * ```ts
  * import { DocumentsSyncDrizzleLive } from "@beep/documents-server/layer"
  *
@@ -125,7 +129,8 @@ export const DocumentsSyncDrizzleLive = DocumentsSyncEngineLayer.pipe(
  * filesystem and path services. The fixture handle stays exposed for tests
  * and smoke runs.
  *
- * @example
+ * **Example** (Import DocumentsSyncFixtureLive layer)
+ *
  * ```ts
  * import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer"
  *

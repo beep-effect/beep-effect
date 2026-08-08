@@ -12,7 +12,8 @@ const $I = $RepoUtilsId.create("JSDoc/models/TagParameters.model");
 /**
  * Structured description of what arguments a tag accepts.
  *
- * @example
+ * **Example** (Make TagParameters instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { TagParameters } from "@beep/repo-utils/JSDoc/models/TagParameters.model"
@@ -26,6 +27,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/TagParameters.model");
  * })
  * console.log(parameters.acceptsName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

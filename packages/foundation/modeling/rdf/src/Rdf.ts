@@ -206,7 +206,8 @@ const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
 /**
  * Prefix label used by RDF namespace bindings.
  *
- * @example
+ * **Example** (Decode prefix labels)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PrefixLabel } from "@beep/rdf/Rdf"
@@ -217,8 +218,8 @@ const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
  * console.log(defaultPrefix) // ""
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
   S.brand("PrefixLabel"),
@@ -244,7 +245,8 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
 /**
  * Type for {@link PrefixLabel}.
  *
- * @example
+ * **Example** (Accept PrefixLabel type)
+ *
  * ```ts
  * import type { PrefixLabel } from "@beep/rdf/Rdf"
  *
@@ -252,8 +254,8 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
  * console.log(acceptPrefixLabel)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PrefixLabel = typeof PrefixLabel.Type;
 
@@ -281,7 +283,8 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
 /**
  * CURIE-style compact IRI expression.
  *
- * @example
+ * **Example** (Decode compact IRI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Curie } from "@beep/rdf/Rdf"
@@ -290,8 +293,8 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
  * console.log(compact) // "schema:name"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Curie = S.String.check(CurieChecks).pipe(
   S.brand("Curie"),
@@ -305,7 +308,8 @@ export const Curie = S.String.check(CurieChecks).pipe(
 /**
  * Type for {@link Curie}.
  *
- * @example
+ * **Example** (Accept Curie type)
+ *
  * ```ts
  * import type { Curie } from "@beep/rdf/Rdf"
  *
@@ -313,15 +317,16 @@ export const Curie = S.String.check(CurieChecks).pipe(
  * console.log(acceptCurie)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Curie = typeof Curie.Type;
 
 /**
  * RDF literal language tag.
  *
- * @example
+ * **Example** (Decode language tag)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LanguageTag } from "@beep/rdf/Rdf"
@@ -330,8 +335,8 @@ export type Curie = typeof Curie.Type;
  * console.log(tag) // "en-US"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
   S.brand("LanguageTag"),
@@ -358,7 +363,8 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
 /**
  * Type for {@link LanguageTag}.
  *
- * @example
+ * **Example** (Accept LanguageTag type)
+ *
  * ```ts
  * import type { LanguageTag } from "@beep/rdf/Rdf"
  *
@@ -366,15 +372,16 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
  * console.log(acceptLanguageTag)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LanguageTag = typeof LanguageTag.Type;
 
 /**
  * RDF named node value.
  *
- * @example
+ * **Example** (Decode named node)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NamedNode } from "@beep/rdf/Rdf"
@@ -386,8 +393,8 @@ export type LanguageTag = typeof LanguageTag.Type;
  * console.log(node.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
   {
@@ -405,7 +412,8 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
 /**
  * RDF blank node value.
  *
- * @example
+ * **Example** (Decode blank node)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BlankNode } from "@beep/rdf/Rdf"
@@ -417,8 +425,8 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
  * console.log(node.value) // "b0"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class BlankNode extends S.Class<BlankNode>($I`BlankNode`)(
   {
@@ -449,7 +457,8 @@ export class BlankNode extends S.Class<BlankNode>($I`BlankNode`)(
 /**
  * RDF literal value.
  *
- * @example
+ * **Example** (Decode RDF literal)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Literal } from "@beep/rdf/Rdf"
@@ -463,8 +472,8 @@ export class BlankNode extends S.Class<BlankNode>($I`BlankNode`)(
  * console.log(literal.termType) // "Literal"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Literal extends S.Class<Literal>($I`Literal`)(
   {
@@ -484,7 +493,8 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
 /**
  * RDF default graph term.
  *
- * @example
+ * **Example** (Decode default graph)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DefaultGraph } from "@beep/rdf/Rdf"
@@ -496,8 +506,8 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
  * console.log(graph.value) // ""
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
   {
@@ -526,7 +536,8 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
 /**
  * RDF term union.
  *
- * @example
+ * **Example** (Decode term union)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Term } from "@beep/rdf/Rdf"
@@ -538,8 +549,8 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
  * console.log(term.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
   S.toTaggedUnion("termType"),
@@ -568,7 +579,8 @@ export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
 /**
  * Type for {@link Term}.
  *
- * @example
+ * **Example** (Accept Term type)
+ *
  * ```ts
  * import type { Term } from "@beep/rdf/Rdf"
  *
@@ -576,15 +588,16 @@ export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
  * console.log(acceptTerm)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Term = typeof Term.Type;
 
 /**
  * RDF subject term union.
  *
- * @example
+ * **Example** (Decode subject term)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Subject } from "@beep/rdf/Rdf"
@@ -596,8 +609,8 @@ export type Term = typeof Term.Type;
  * console.log(subject.termType) // "BlankNode"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Subject = S.Union([NamedNode, BlankNode]).pipe(
   S.toTaggedUnion("termType"),
@@ -610,7 +623,8 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
 /**
  * Type for {@link Subject}.
  *
- * @example
+ * **Example** (Accept Subject type)
+ *
  * ```ts
  * import type { Subject } from "@beep/rdf/Rdf"
  *
@@ -618,15 +632,16 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
  * console.log(acceptSubject)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Subject = typeof Subject.Type;
 
 /**
  * RDF object term union.
  *
- * @example
+ * **Example** (Decode object term)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ObjectTerm } from "@beep/rdf/Rdf"
@@ -639,8 +654,8 @@ export type Subject = typeof Subject.Type;
  * console.log(object.termType) // "Literal"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
   S.toTaggedUnion("termType"),
@@ -653,7 +668,8 @@ export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
 /**
  * Type for {@link ObjectTerm}.
  *
- * @example
+ * **Example** (Accept ObjectTerm type)
+ *
  * ```ts
  * import type { ObjectTerm } from "@beep/rdf/Rdf"
  *
@@ -661,15 +677,16 @@ export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
  * console.log(acceptObjectTerm)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ObjectTerm = typeof ObjectTerm.Type;
 
 /**
  * RDF graph term union.
  *
- * @example
+ * **Example** (Decode graph term)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GraphTerm } from "@beep/rdf/Rdf"
@@ -681,8 +698,8 @@ export type ObjectTerm = typeof ObjectTerm.Type;
  * console.log(graph.termType) // "DefaultGraph"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const GraphTerm = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(
   S.toTaggedUnion("termType"),
@@ -695,7 +712,8 @@ export const GraphTerm = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(
 /**
  * Type for {@link GraphTerm}.
  *
- * @example
+ * **Example** (Accept GraphTerm type)
+ *
  * ```ts
  * import type { GraphTerm } from "@beep/rdf/Rdf"
  *
@@ -703,15 +721,16 @@ export const GraphTerm = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(
  * console.log(acceptGraphTerm)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GraphTerm = typeof GraphTerm.Type;
 
 /**
  * RDF quad value aligned with RDF/JS.
  *
- * @example
+ * **Example** (Decode RDF quad)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Quad } from "@beep/rdf/Rdf"
@@ -729,8 +748,8 @@ export type GraphTerm = typeof GraphTerm.Type;
  * console.log(quad.predicate.value) // "https://schema.org/name"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Quad extends S.Class<Quad>($I`Quad`)(
   {
@@ -748,7 +767,8 @@ export class Quad extends S.Class<Quad>($I`Quad`)(
 /**
  * Dataset wrapper for RDF quads.
  *
- * @example
+ * **Example** (Build dataset from quads)
+ *
  * ```ts
  * import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
  *
@@ -761,8 +781,8 @@ export class Quad extends S.Class<Quad>($I`Quad`)(
  * console.log(dataset.quads.length) // 1
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Dataset extends S.Class<Dataset>($I`Dataset`)(
   {
@@ -777,7 +797,8 @@ export class Dataset extends S.Class<Dataset>($I`Dataset`)(
 /**
  * Prefix-to-namespace binding for RDF compaction and expansion.
  *
- * @example
+ * **Example** (Decode namespace binding)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NamespaceBinding } from "@beep/rdf/Rdf"
@@ -789,8 +810,8 @@ export class Dataset extends S.Class<Dataset>($I`Dataset`)(
  * console.log(binding.prefix) // "schema"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NamespaceBinding extends S.Class<NamespaceBinding>($I`NamespaceBinding`)(
   {
@@ -806,7 +827,8 @@ export class NamespaceBinding extends S.Class<NamespaceBinding>($I`NamespaceBind
 /**
  * Prefix map keyed by {@link PrefixLabel}.
  *
- * @example
+ * **Example** (Decode prefix map)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PrefixMap } from "@beep/rdf/Rdf"
@@ -817,8 +839,8 @@ export class NamespaceBinding extends S.Class<NamespaceBinding>($I`NamespaceBind
  * console.log(Object.keys(prefixes)) // ["schema"]
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const PrefixMap = S.Record(S.String, IRI).pipe(
   S.check(PrefixMapKeyChecks),
@@ -846,7 +868,8 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
 /**
  * Type for {@link PrefixMap}.
  *
- * @example
+ * **Example** (Accept PrefixMap type)
+ *
  * ```ts
  * import type { PrefixMap } from "@beep/rdf/Rdf"
  *
@@ -854,15 +877,16 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
  * console.log(acceptPrefixMap)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PrefixMap = typeof PrefixMap.Type;
 
 /**
  * Build a named node from an IRI string.
  *
- * @example
+ * **Example** (Create named node)
+ *
  * ```ts
  * import { makeNamedNode } from "@beep/rdf/Rdf"
  *
@@ -873,8 +897,8 @@ export type PrefixMap = typeof PrefixMap.Type;
  *
  * @param value - Named node IRI.
  * @returns Decoded named node.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeNamedNode = (value: string): NamedNode =>
   pipe(
@@ -888,7 +912,8 @@ export const makeNamedNode = (value: string): NamedNode =>
 /**
  * Build a blank node from a non-empty label.
  *
- * @example
+ * **Example** (Create blank node)
+ *
  * ```ts
  * import { makeBlankNode } from "@beep/rdf/Rdf"
  *
@@ -899,8 +924,8 @@ export const makeNamedNode = (value: string): NamedNode =>
  *
  * @param value - Blank node label.
  * @returns Decoded blank node.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeBlankNode = (value: string): BlankNode =>
   BlankNode.make({
@@ -911,7 +936,8 @@ export const makeBlankNode = (value: string): BlankNode =>
 /**
  * Optional language settings for {@link makeLiteral}.
  *
- * @example
+ * **Example** (Literal language options)
+ *
  * ```ts
  * import type { MakeLiteralOptions } from "@beep/rdf/Rdf"
  *
@@ -919,8 +945,8 @@ export const makeBlankNode = (value: string): BlankNode =>
  * console.log(options)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiteralOptions`)(
   {
@@ -947,7 +973,8 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
 /**
  * Build an RDF literal.
  *
- * @example
+ * **Example** (Create RDF literal)
+ *
  * ```ts
  * import { makeLiteral } from "@beep/rdf/Rdf"
  *
@@ -961,8 +988,8 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
  * @param options - Optional literal settings; pass the language tag as
  * `{ language }` rather than a bare string.
  * @returns Decoded RDF literal.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeLiteral: {
   (value: string, datatype: string): Literal;
@@ -974,7 +1001,8 @@ export const makeLiteral: {
 /**
  * Object and optional graph settings for {@link makeQuad}.
  *
- * @example
+ * **Example** (Accept MakeQuadOptions type)
+ *
  * ```ts
  * import type { MakeQuadOptions } from "@beep/rdf/Rdf"
  *
@@ -982,8 +1010,8 @@ export const makeLiteral: {
  * console.log(acceptOptions)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions`)(
   {
@@ -1007,7 +1035,8 @@ const makeDefaultGraph = (): DefaultGraph =>
 /**
  * Build an RDF quad.
  *
- * @example
+ * **Example** (Create RDF quad)
+ *
  * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad } from "@beep/rdf/Rdf"
  *
@@ -1022,8 +1051,8 @@ const makeDefaultGraph = (): DefaultGraph =>
  * @param predicate - Predicate term.
  * @param options - Object term or object/graph settings.
  * @returns Decoded quad.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeQuad: {
   (subject: Subject, predicate: NamedNode, object: ObjectTerm): Quad;
@@ -1043,7 +1072,8 @@ export const makeQuad: {
 /**
  * Build a dataset from quads.
  *
- * @example
+ * **Example** (Create dataset from quads)
+ *
  * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad, makeDataset } from "@beep/rdf/Rdf"
  *
@@ -1058,8 +1088,8 @@ export const makeQuad: {
  *
  * @param quads - Input quads.
  * @returns Decoded dataset.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeDataset = (quads: ReadonlyArray<Quad>): Dataset => Dataset.make({ quads: A.fromIterable(quads) });
 
@@ -1100,7 +1130,8 @@ const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-
 /**
  * Serialize an RDF term to a deterministic lexical form.
  *
- * @example
+ * **Example** (Serialize named node term)
+ *
  * ```ts
  * import { makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
  *
@@ -1110,8 +1141,8 @@ const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-
  *
  * @param term - RDF term.
  * @returns Deterministic term serialization.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const serializeTerm = (term: Term): string =>
   Term.match(term, {
@@ -1127,7 +1158,8 @@ export const serializeTerm = (term: Term): string =>
 /**
  * Serialize an RDF quad to a deterministic lexical form.
  *
- * @example
+ * **Example** (Serialize RDF quad)
+ *
  * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad, serializeQuad } from "@beep/rdf/Rdf"
  *
@@ -1141,8 +1173,8 @@ export const serializeTerm = (term: Term): string =>
  *
  * @param quad - RDF quad.
  * @returns Deterministic quad serialization.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const serializeQuad = (quad: Quad): string =>
   `${serializeTerm(quad.subject)} ${serializeTerm(quad.predicate)} ${serializeTerm(quad.object)} ${serializeTerm(quad.graph)} .`;
@@ -1152,7 +1184,8 @@ const byQuadLexicalAscending: Order.Order<Quad> = Order.mapInput(Order.String, s
 /**
  * Sort dataset quads by deterministic quad serialization.
  *
- * @example
+ * **Example** (Sort empty dataset quads)
+ *
  * ```ts
  * import { makeDataset, sortDatasetQuads } from "@beep/rdf/Rdf"
  *
@@ -1163,8 +1196,8 @@ const byQuadLexicalAscending: Order.Order<Quad> = Order.mapInput(Order.String, s
  *
  * @param dataset - RDF dataset.
  * @returns Sorted quad array.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const sortDatasetQuads = (dataset: Dataset): ReadonlyArray<Quad> =>
   A.sort(dataset.quads, byQuadLexicalAscending);
@@ -1172,7 +1205,8 @@ export const sortDatasetQuads = (dataset: Dataset): ReadonlyArray<Quad> =>
 /**
  * Compare datasets by sorted quad serialization.
  *
- * @example
+ * **Example** (Compare empty datasets)
+ *
  * ```ts
  * import { makeDataset, areDatasetsEquivalent } from "@beep/rdf/Rdf"
  *
@@ -1184,8 +1218,8 @@ export const sortDatasetQuads = (dataset: Dataset): ReadonlyArray<Quad> =>
  * @param left - Left dataset.
  * @param right - Right dataset.
  * @returns `true` when both datasets share the same sorted quad serialization.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const areDatasetsEquivalent: {
   (right: Dataset): (left: Dataset) => boolean;

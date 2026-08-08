@@ -17,7 +17,8 @@ const $I = $RepoCliId.create("commands/Files/internal/FlattenMedia.schemas");
 /**
  * Options used by the recursive media flattening operation.
  *
- * @example
+ * **Example** (Make options and log dryRun)
+ *
  * ```ts
  * import { FlattenMediaOptions } from "@beep/repo-cli/commands/Files"
  *
@@ -27,6 +28,7 @@ const $I = $RepoCliId.create("commands/Files/internal/FlattenMedia.schemas");
  * })
  * console.log(options.dryRun)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -44,7 +46,8 @@ export class FlattenMediaOptions extends S.Class<FlattenMediaOptions>($I`Flatten
 /**
  * Summary returned by `flattenMediaFiles`.
  *
- * @example
+ * **Example** (Schema accepts undefined value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FlattenMediaSummary } from "@beep/repo-cli/commands/Files"
@@ -52,6 +55,7 @@ export class FlattenMediaOptions extends S.Class<FlattenMediaOptions>($I`Flatten
  * const acceptsUndefined = S.is(FlattenMediaSummary)(undefined)
  * console.log(acceptsUndefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -73,7 +77,8 @@ export class FlattenMediaSummary extends S.Class<FlattenMediaSummary>($I`Flatten
 /**
  * Decode unknown recursive media flattening options.
  *
- * @example
+ * **Example** (Decode undefined returns Effect)
+ *
  * ```ts
  * import { decodeFlattenMediaOptions } from "@beep/repo-cli/commands/Files"
  * import { Effect } from "effect"
@@ -81,6 +86,7 @@ export class FlattenMediaSummary extends S.Class<FlattenMediaSummary>($I`Flatten
  * const program = decodeFlattenMediaOptions(undefined)
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */

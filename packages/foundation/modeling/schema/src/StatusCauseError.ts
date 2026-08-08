@@ -16,7 +16,8 @@ const $I = $SchemaId.create("StatusCauseError");
 /**
  * Shared field set for tagged errors that carry a message, HTTP status, and optional defect cause.
  *
- * @example
+ * **Example** (Build tagged AppError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { TaggedErrorClass } from "@beep/schema"
@@ -45,9 +46,12 @@ export const StatusCauseFields = {
 /**
  * Build the payload object expected by errors using {@link StatusCauseFields}.
  *
+ * **Details**
+ *
  * Normalizes an optional raw cause into an `Option`.
  *
- * @example
+ * **Example** (Normalize status cause payload)
+ *
  * ```ts
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
@@ -72,7 +76,8 @@ export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I
 /**
  * Input payload shape produced by {@link statusCauseInput}.
  *
- * @example
+ * **Example** (Type status cause payload)
+ *
  * ```ts
  * import { statusCauseInput, type StatusCauseInput } from "@beep/schema/StatusCauseError"
  *
@@ -98,7 +103,8 @@ export class StatusCauseInput extends S.Class<StatusCauseInput>($I`StatusCauseIn
 /**
  * Creates normalized status/cause input payloads.
  *
- * @example
+ * **Example** (Create status cause payload)
+ *
  * ```ts
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
@@ -175,12 +181,15 @@ const buildStatusCauseErrorBuilder = <Input extends StatusCauseInput, Error>(
 /**
  * Build a tagged error directly or derive a reusable `(message, status, cause?) => Error` builder.
  *
+ * **Details**
+ *
  * Supports multiple calling conventions via `dual`:
  * - `makeStatusCauseError(Ctor)` returns a builder function.
  * - `makeStatusCauseError(Ctor, message, status)` returns a cause handler.
  * - `makeStatusCauseError(Ctor, message, status, cause)` returns the error directly.
  *
- * @example
+ * **Example** (Build dual error constructor)
+ *
  * ```ts
  * import { TaggedErrorClass } from "@beep/schema"
  * import { StatusCauseFields, makeStatusCauseError } from "@beep/schema/StatusCauseError"

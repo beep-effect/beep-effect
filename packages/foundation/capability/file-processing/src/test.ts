@@ -31,7 +31,8 @@ import type * as Crypto from "effect/Crypto";
 /**
  * Synthetic engine descriptor used by tests and proof fixtures.
  *
- * @example
+ * **Example** (Verify PST format support)
+ *
  * ```ts
  * import { TestFileProcessingEngineDescriptor } from "@beep/file-processing/test"
  *
@@ -55,7 +56,8 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  * Decode the canonical synthetic artifact, digest, and operation identifiers
  * shared by driver test fixtures.
  *
- * @example
+ * **Example** (Decode synthetic identifiers)
+ *
  * ```ts
  * import { decodeTestOperationIdentifiers } from "@beep/file-processing/test"
  * import { Effect } from "effect"
@@ -117,7 +119,8 @@ const deriveTestChildArtifactId = (
 /**
  * Synthetic file-processing engine for generated fixtures.
  *
- * @example
+ * **Example** (Log engine descriptor name)
+ *
  * ```ts
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  *
