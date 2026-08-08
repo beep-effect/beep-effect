@@ -430,6 +430,60 @@ const legacyAgentTaskIdExpression = (tableAlias: string): string =>
 const currentAgentTaskIdExpression = (tableAlias: string): string =>
   `concat('agent-task-', sha256(concat('agent-task', chr(0), ${tableAlias}.config_snapshot_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_role, chr(0), ${tableAlias}.source_path_hash)))`;
 
+// Deliberately two parts, not three. `turn_id` keys on
+// [sourceKind, sourcePathHash, lineNumber, rawEventHash] and turns are INSERT OR IGNORE,
+// so a turn's session pointer freezes at the first run that saw that line. The session key
+// therefore has to be the file-identifying prefix of the turn key and nothing more.
+//
+// `source_role` is excluded for that reason: it is derived from transcript content, not
+// from the file, so a transcript that later reveals subagent metadata flips role. Were role
+// part of the key, that flip would mint a second session row while the already-ingested
+// turns kept pointing at the first -- reintroducing exactly the fragmentation this removes,
+// only rarer and harder to see. Under a two-part key a role flip just rewrites the row's
+// descriptive `source_role` column, which is what it should do.
+const legacyAgentSessionIdExpression = (tableAlias: string): string =>
+  `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.ingest_run_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
+
+const currentAgentSessionIdExpression = (tableAlias: string): string =>
+  `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
+
+// Order is load-bearing. Turns are repointed while the legacy session rows still exist,
+// because the mapping is computed from those rows' columns; only then can the duplicates be
+// dropped. Reversing it would strand every turn behind the exporter's INNER JOIN on
+// `ai_metrics_sessions`, which drops unmatched turns silently and without a watermark.
+const legacyAgentSessionIdMigrationStatements = [
+  `UPDATE ai_metrics_turns AS turns
+   SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
+   FROM ai_metrics_sessions AS sessions
+   WHERE turns.agent_session_id = sessions.agent_session_id
+     AND sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
+  // Unlike the agent-task rewrite above, this collapse is many-to-one: the legacy key
+  // embeds `ingest_run_id`, so one transcript owns one row per run and they all map onto a
+  // single content-addressed id. Without dropping the losers first, the rewrite below would
+  // violate the primary key on any store that ingested a transcript twice -- which is every
+  // real store. The tiebreak keeps the greatest legacy digest: deterministic, and it does
+  // not consult `ai_metrics_ingest_runs`, which retention may already have pruned.
+  `DELETE FROM ai_metrics_sessions AS legacy
+   WHERE legacy.agent_session_id = ${legacyAgentSessionIdExpression("legacy")}
+     AND EXISTS (
+       SELECT 1
+       FROM ai_metrics_sessions AS keeper
+       WHERE keeper.agent_session_id <> legacy.agent_session_id
+         AND (
+           keeper.agent_session_id = ${currentAgentSessionIdExpression("legacy")}
+           OR (
+             keeper.agent_session_id = ${legacyAgentSessionIdExpression("keeper")}
+             AND keeper.source_kind = legacy.source_kind
+             AND keeper.source_path_hash = legacy.source_path_hash
+             AND keeper.agent_session_id > legacy.agent_session_id
+           )
+         )
+     )`,
+  `UPDATE ai_metrics_sessions AS sessions
+   SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
+   WHERE sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
+] as const;
+
 const legacyAgentTaskIdMigrationStatements = [
   `UPDATE ai_metrics_sessions AS sessions
    SET agent_task_id = ${currentAgentTaskIdExpression("task")}
@@ -576,6 +630,21 @@ const derivedStorageMigrations = [
       { columnName: "agent_task_id", tableName: "ai_metrics_outcome_labels" },
     ],
     statements: legacyAgentTaskIdMigrationStatements,
+    transactional: true,
+  },
+  {
+    // Existing turns are INSERT OR IGNORE, so they keep the per-run session id written by
+    // the first run that saw them. Nothing self-heals; without this migration a store stays
+    // fragmented forever no matter how the id is minted going forward.
+    migrationId: "ai-metrics-agent-session-id-v2",
+    requiredColumns: [
+      { columnName: "agent_session_id", tableName: "ai_metrics_sessions" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_sessions" },
+      { columnName: "source_kind", tableName: "ai_metrics_sessions" },
+      { columnName: "source_path_hash", tableName: "ai_metrics_sessions" },
+      { columnName: "agent_session_id", tableName: "ai_metrics_turns" },
+    ],
+    statements: legacyAgentSessionIdMigrationStatements,
     transactional: true,
   },
   {
@@ -1225,7 +1294,11 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
 ) {
   const duckdb = yield* DuckDb;
   const sanitized = record.privacy.sanitized;
-  const agentSessionId = yield* rowId("session", [input.ingestRunId, sanitized.sourceKind, sanitized.sourcePathHash]);
+  // Content-addressed, like `turn_id` and for the same reason: an ingest run is lineage,
+  // never identity. With the run id in this key a transcript that grew between runs minted
+  // a fresh session row every run, so one conversation accumulated one row per run and its
+  // turns scattered across all of them.
+  const agentSessionId = yield* rowId("session", [sanitized.sourceKind, sanitized.sourcePathHash]);
   yield* duckdb.run(
     `INSERT OR REPLACE INTO ai_metrics_sessions (
       agent_session_id,

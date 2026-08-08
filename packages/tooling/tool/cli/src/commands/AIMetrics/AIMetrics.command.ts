@@ -247,10 +247,6 @@ const otlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
   Flag.optional
 );
 
-const ingestRunFlag = Flag.string("ingest-run").pipe(
-  Flag.withDefault("latest"),
-  Flag.withDescription("Derived ingest run id to export, or latest")
-);
 const installPreviewCommand = Command.make(
   "preview",
   {
@@ -653,18 +649,16 @@ const otlpExportCommand = Command.make(
   {
     dataRoot: dataRootFlag,
     hashSaltSecretRef: hashSaltSecretRefFlag,
-    ingestRunId: ingestRunFlag,
     json: jsonFlag,
     otlpBaseUrl: otlpBaseUrlFlag,
     rawArchiveKeySecretRef: rawArchiveKeySecretRefFlag,
     target: targetFlag,
   },
-  ({ dataRoot, hashSaltSecretRef, ingestRunId, json, otlpBaseUrl, rawArchiveKeySecretRef, target }) =>
+  ({ dataRoot, hashSaltSecretRef, json, otlpBaseUrl, rawArchiveKeySecretRef, target }) =>
     runAiMetricsProgram(
       makeOtlpExportProgram({
         dataRoot,
         hashSaltSecretRef,
-        ingestRunId,
         json,
         otlpBaseUrl,
         rawArchiveKeySecretRef,
@@ -674,7 +668,7 @@ const otlpExportCommand = Command.make(
 ).pipe(Command.withDescription("Export redacted derived AI metrics spans through OTLP"));
 
 const otlpCommand = Command.make("otlp", {}, () =>
-  printLines(["AI metrics OTLP commands:", "- bun run beep ai-metrics otlp export --target local --ingest-run latest"])
+  printLines(["AI metrics OTLP commands:", "- bun run beep ai-metrics otlp export --target local"])
 ).pipe(Command.withDescription("AI metrics OTLP export workflow"), Command.withSubcommands([otlpExportCommand]));
 
 const benchmarkRunCommand = Command.make(
