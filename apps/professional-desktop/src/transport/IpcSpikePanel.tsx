@@ -105,7 +105,8 @@ const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
  * Floating dev panel that drives the IPC transport spike. Mounted by `App` only
  * when the shell reports IPC mode and the page URL carries `?ipc=1`.
  *
- * @example
+ * **Example** (Access component name)
+ *
  * ```tsx
  * import { IpcSpikePanel } from "@/transport/IpcSpikePanel"
  *

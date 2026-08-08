@@ -533,7 +533,7 @@ export const hasGeneratedFileHeader = (sourceText: string): boolean =>
  * @since 0.0.0
  */
 export const isPackageSourceFile = (filePath: string): boolean =>
-  Str.startsWith("packages/")(filePath) &&
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
   !isGeneratedSourceFile(filePath);
@@ -550,7 +550,7 @@ export const isPackageSourceFile = (filePath: string): boolean =>
  * @since 0.0.0
  */
 export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean =>
-  Str.startsWith("packages/")(filePath) &&
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
@@ -558,7 +558,7 @@ const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(fu
   repoRoot: string,
   includeGenerated: boolean
 ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages"], jsdocGitErrorAdapter);
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
   return A.filter(lines, predicate);
 });

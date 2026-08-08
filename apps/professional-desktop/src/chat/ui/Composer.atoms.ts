@@ -161,12 +161,15 @@ function normalizeLegacyBlock(block: Md.Block): Md.Block {
 /**
  * Converts legacy trusted raw Markdown/HTML nodes to ordinary text nodes.
  *
+ * **Details**
+ *
  * The original general {@link Md.Document} is never mutated. URL-bearing nodes
  * are deliberately left unchanged so this helper cannot turn an unsafe URL
  * refusal into an approval. React/Lexical render the replacement text as an
  * escaped literal.
  *
- * @example
+ * **Example** (Normalize legacy RawHtml document)
+ *
  * ```ts
  * import * as Md from "@beep/md/Md.model"
  * import { normalizeLegacyRawDocument } from "@/chat/ui/Composer.atoms"
@@ -229,7 +232,8 @@ class ComposerUnsafeDocumentGate extends S.TaggedClass<ComposerUnsafeDocumentGat
 /**
  * Tagged safety gate raised before an unsafe or legacy document can be sent.
  *
- * @example
+ * **Example** (Create UnsafeDocument safety gate)
+ *
  * ```ts
  * import { ComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
  * import * as S from "effect/Schema"
@@ -255,7 +259,8 @@ export const ComposerDocumentSafetyGate = S.Union([ComposerRawNormalizationGate,
 /**
  * Runtime value represented by {@link ComposerDocumentSafetyGate}.
  *
- * @example
+ * **Example** (Type UnsafeDocument safety gate)
+ *
  * ```ts
  * import { ComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
  *
@@ -364,7 +369,8 @@ const preparePendingRawNormalizationGate = (
  * non-convertible violation keeps the refusal while retaining the pending raw
  * provenance for confirmation after that violation is corrected.
  *
- * @example
+ * **Example** (Classify legacy RawNormalization gate)
+ *
  * ```ts
  * import { prepareComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -400,7 +406,8 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * original persisted `Document`, before Lexical can lossily project trusted raw
  * nodes to plain text.
  *
- * @example
+ * **Example** (Get initial None safety gate)
+ *
  * ```ts
  * import { composerDocumentSafetyGateAtoms } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -428,7 +435,8 @@ export const composerDocumentSafetyGateAtoms = Atom.family((_threadId: Workspace
  * next ordinary send consumes this exact document instead of rebuilding it
  * from Lexical's intentionally lossy projection.
  *
- * @example
+ * **Example** (Get initial None confirmed atom)
+ *
  * ```ts
  * import { composerConfirmedNormalizationAtoms } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -453,7 +461,8 @@ export const composerConfirmedNormalizationAtoms = Atom.family((_threadId: Works
  * Per-thread safety refusal shown beside the composer. A successful subsequent
  * refinement clears it; rejected drafts stay persisted as general documents.
  *
- * @example
+ * **Example** (Verify safety refusal atoms type)
+ *
  * ```ts
  * import { composerSafetyRefusalAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -484,7 +493,8 @@ const composerNoticeAtom = professionalBrowserRuntime.fn<ComposerNotice>()(
 /**
  * Untracked draft seed, keyed by thread and failure-driven draft revision.
  *
- * @example
+ * **Example** (Verify draft seed atoms type)
+ *
  * ```ts
  * import { composerDraftSeedAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -573,7 +583,8 @@ const cancelComposerEditAtom = professionalBrowserRuntime.fn<void>()(
  * Stable editor-change handler that delegates draft projection and state writes
  * to the professional atom runtime.
  *
- * @example
+ * **Example** (Verify change handler atoms type)
+ *
  * ```ts
  * import { composerSerializedChangeHandlerAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -597,7 +608,8 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
  * Rebuilds editable children while retaining persistence-owned frontmatter,
  * which is intentionally outside the Lexical wire vocabulary.
  *
- * @example
+ * **Example** (Rebuild document from editor state)
+ *
  * ```ts
  * import { composerDocumentFromEditorState } from "@/chat/ui/Composer.atoms"
  * import { documentToEditorState } from "@beep/lexical-schema"
@@ -629,7 +641,8 @@ export const composerDocumentFromEditorState: {
  * the exact semantics shown in the confirmation preview. Ordinary projection
  * preserves the seed's persistence-owned frontmatter.
  *
- * @example
+ * **Example** (Prefer confirmed document for send)
+ *
  * ```ts
  * import { composerDocumentForSend } from "@/chat/ui/Composer.atoms"
  * import { documentToEditorState } from "@beep/lexical-schema"
@@ -663,7 +676,8 @@ export const composerDocumentForSend: {
  * contract; notices and accepted state transitions execute through runtime
  * atoms.
  *
- * @example
+ * **Example** (Verify send handler atoms type)
+ *
  * ```ts
  * import { composerSendHandlerAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -753,7 +767,8 @@ export const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity
  * gate. The caller then dispatches the ordinary editor send command so content,
  * attachments, focus, and selection share the exact successful-send reset.
  *
- * @example
+ * **Example** (Invoke confirm normalization handler)
+ *
  * ```ts
  * import { composerConfirmNormalizationHandlerAtoms } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -829,7 +844,8 @@ export const composerConfirmNormalizationHandlerAtoms = Atom.family((threadId: W
 /**
  * Stable stop handler backed by a runtime action.
  *
- * @example
+ * **Example** (Verify stop handler atom type)
+ *
  * ```ts
  * import { composerStopHandlerAtom } from "@/chat/ui/Composer.atoms"
  *
@@ -847,7 +863,8 @@ export const composerStopHandlerAtom = Atom.make((get) => {
 /**
  * Stable edit-cancellation handler backed by a runtime action.
  *
- * @example
+ * **Example** (Verify cancel edit handler type)
+ *
  * ```ts
  * import { composerCancelEditHandlerAtom } from "@/chat/ui/Composer.atoms"
  *

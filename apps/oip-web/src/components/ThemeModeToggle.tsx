@@ -10,12 +10,15 @@
  * behavior script (see `oipThemeToggleScript`) that flips `data-theme-mode`
  * on the button, so the page swaps icons through CSS without React hydration.
  *
+ * **Details**
+ *
  * Renders as a quiet editorial ghost button: a hairline-bordered square that
  * holds a gold sun (light) and moon (dark) glyph. The active glyph rotates and
  * cross-fades into view while the other rotates out, driven entirely by the
  * `group-data-[theme-mode=…]` state the behavior script toggles.
  *
- * @example
+ * **Example** (Basic component instantiation)
+ *
  * ```tsx
  * import { ThemeModeToggle } from "@beep/oip-web/components/ThemeModeToggle"
  *

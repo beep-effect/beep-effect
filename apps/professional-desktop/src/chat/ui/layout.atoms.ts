@@ -23,7 +23,8 @@ const $I = $ProfessionalDesktopId.create("chat/ui/layout.atoms");
 /**
  * Minimum percentage of the chat surface the sidebar may occupy.
  *
- * @example
+ * **Example** (Logging minimum percentage)
+ *
  * ```ts
  * import { SIDEBAR_MIN_PERCENT } from "@/chat/ui/layout.atoms"
  *
@@ -38,7 +39,8 @@ export const SIDEBAR_MIN_PERCENT = 14;
 /**
  * Maximum percentage of the chat surface the sidebar may occupy.
  *
- * @example
+ * **Example** (Logging maximum percentage)
+ *
  * ```ts
  * import { SIDEBAR_MAX_PERCENT } from "@/chat/ui/layout.atoms"
  *
@@ -53,7 +55,8 @@ export const SIDEBAR_MAX_PERCENT = 40;
 /**
  * Initial percentage of the chat surface assigned to the sidebar.
  *
- * @example
+ * **Example** (Logging default percentage)
+ *
  * ```ts
  * import { SIDEBAR_DEFAULT_PERCENT } from "@/chat/ui/layout.atoms"
  *
@@ -68,7 +71,8 @@ export const SIDEBAR_DEFAULT_PERCENT = 20;
 /**
  * Valid persisted width for the thread sidebar.
  *
- * @example
+ * **Example** (Validating percent with schema)
+ *
  * ```ts
  * import { SidebarPercent } from "@/chat/ui/layout.atoms"
  * import * as S from "effect/Schema"
@@ -90,7 +94,8 @@ export const SidebarPercent = S.Finite.check(
 /**
  * Runtime type for {@link SidebarPercent}.
  *
- * @example
+ * **Example** (Assigning typed percent value)
+ *
  * ```ts
  * import type { SidebarPercent } from "@/chat/ui/layout.atoms"
  *
@@ -106,11 +111,14 @@ type SidebarPercent = typeof SidebarPercent.Type;
 /**
  * The sidebar's share of the chat surface, as a percentage.
  *
+ * **Details**
+ *
  * Only the sidebar's width is stored, not the whole panel layout: the main pane is
  * whatever is left, so the two can never be persisted into disagreement, and a
  * renamed panel cannot orphan the stored value.
  *
- * @example
+ * **Example** (Inspecting atom object type)
+ *
  * ```ts
  * import { sidebarPercentAtom } from "@/chat/ui/layout.atoms"
  *
@@ -141,7 +149,8 @@ class SidebarLayoutChanged extends S.Class<SidebarLayoutChanged>($I`SidebarLayou
  * Runtime action that persists the sidebar width after a user finishes
  * resizing the panel group.
  *
- * @example
+ * **Example** (Checking action atom type)
+ *
  * ```ts
  * import { persistSidebarLayoutAtom } from "@/chat/ui/layout.atoms"
  *
@@ -163,10 +172,13 @@ export const persistSidebarLayoutAtom = professionalStorageRuntime.fn<SidebarLay
 /**
  * Clamp a stored width back into the range the panes actually allow.
  *
+ * **Details**
+ *
  * A value written by an older build — or by a hand-edited `localStorage` — must not
  * be able to hand the user a sidebar they cannot drag back.
  *
- * @example
+ * **Example** (Clamping oversized percent value)
+ *
  * ```ts
  * import { clampSidebarPercent } from "@/chat/ui/layout.atoms"
  *
@@ -182,13 +194,16 @@ export const clampSidebarPercent = (percent: number): number =>
 /**
  * A pane size the panel library cannot misread.
  *
+ * **Details**
+ *
  * `react-resizable-panels` reads a bare `number` size as **pixels**. Handing it the
  * percentages by their number pinned the sidebar into a fourteen-to-forty *pixel*
  * range: a sliver too narrow to read and too narrow to grab. Every size the panes are
  * given goes through here, so the unit is part of the value and not a convention
  * someone has to remember.
  *
- * @example
+ * **Example** (Formatting size as percent)
+ *
  * ```ts
  * import { sidebarSize } from "@/chat/ui/layout.atoms"
  *

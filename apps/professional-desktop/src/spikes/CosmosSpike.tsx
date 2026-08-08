@@ -43,7 +43,8 @@ class CosmosWorkerInitializationError extends TaggedErrorClass<CosmosWorkerIniti
 /**
  * Headless probe contract exposed by a mounted Cosmos spike.
  *
- * @example
+ * **Example** (Constructing probe contract)
+ *
  * ```ts
  * import { CosmosSpikeProbeContract } from "@/spikes/CosmosSpike"
  *
@@ -84,7 +85,8 @@ type SpikeSizeLabel = typeof SpikeSizeLabel.Type;
 /**
  * Synthetic graph dimensions for one Cosmos spike preset.
  *
- * @example
+ * **Example** (Making size preset)
+ *
  * ```ts
  * import { CosmosSpikeSize } from "@/spikes/CosmosSpike"
  *
@@ -150,7 +152,8 @@ const CosmosSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
 /**
  * Exhaustive lifecycle state for the Cosmos spike renderer.
  *
- * @example
+ * **Example** (Creating rendering status)
+ *
  * ```ts
  * import { CosmosSpikeStatus } from "@/spikes/CosmosSpike"
  *
@@ -391,7 +394,8 @@ const CosmosRuntimeFailureReporter = ({ cause }: { readonly cause: unknown }): n
 /**
  * Dev-only cosmos.gl and WebKitGTK viability spike screen.
  *
- * @example
+ * **Example** (Accessing component name)
+ *
  * ```tsx
  * import { CosmosSpike } from "@/spikes/CosmosSpike"
  *

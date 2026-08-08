@@ -12,7 +12,8 @@ const components: MDXComponents = {};
 /**
  * Returns the MDX component overrides used by oip web.
  *
- * @example
+ * **Example** (Counting MDX components)
+ *
  * ```ts
  * import { useMDXComponents } from "@beep/oip-web/mdx-components"
  *

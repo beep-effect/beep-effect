@@ -17,7 +17,8 @@ const decodeWorkspaceIdValue = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId
  * Decode an unknown value into a validated {@link WorkspaceIdentity.WorkspaceId}
  * for use in fixture data.
  *
- * @example
+ * **Example** (Decode workspace ID)
+ *
  * ```ts
  * import { decodeWorkspaceId } from "@/chat/ChatFixtures"
  *
@@ -34,7 +35,8 @@ export const decodeWorkspaceId = (input: unknown): WorkspaceIdentity.WorkspaceId
  * Build a single-paragraph `@beep/md` {@link Md.Document.Type} fixture from a
  * plain string, for chat smoke and contract-test message content.
  *
- * @example
+ * **Example** (Build single-paragraph document)
+ *
  * ```ts
  * import { userDocument } from "@/chat/ChatFixtures"
  *
@@ -52,7 +54,8 @@ export const userDocument = (text: string): SafeDocument =>
  * Build a multi-paragraph `@beep/md` {@link Md.Document.Type} fixture, one
  * paragraph per input string, for chat smoke and contract-test message content.
  *
- * @example
+ * **Example** (Build multi-paragraph document)
+ *
  * ```ts
  * import { userParagraphDocument } from "@/chat/ChatFixtures"
  *

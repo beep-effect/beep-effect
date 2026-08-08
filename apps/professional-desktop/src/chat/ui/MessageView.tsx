@@ -25,7 +25,8 @@ import type { JSX } from "react";
 /**
  * Renders one persisted message's md-aligned content as read-only rich text.
  *
- * @example
+ * **Example** (Log MessageView component name)
+ *
  * ```tsx
  * import { MessageView } from "@/chat/ui/MessageView"
  *

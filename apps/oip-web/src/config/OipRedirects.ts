@@ -10,7 +10,8 @@ import type { Redirect } from "next/dist/lib/load-custom-routes";
 /**
  * Returns the canonical OIP redirect table for legacy OPIP compatibility.
  *
- * @example
+ * **Example** (Basic function invocation)
+ *
  * ```ts
  * import { oipRedirects } from "@beep/oip-web/config/OipRedirects"
  *

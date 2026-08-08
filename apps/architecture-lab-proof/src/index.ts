@@ -21,7 +21,8 @@ const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 /**
  * App-level WorkItem proof result.
  *
- * @example
+ * **Example** (Logging the AST property)
+ *
  * ```ts
  * import { ArchitectureLabProofResult } from "@beep/architecture-lab-proof"
  *
@@ -45,7 +46,8 @@ export class ArchitectureLabProofResult extends S.Class<ArchitectureLabProofResu
 /**
  * Execute the architecture lab proof harness against the composed server layer.
  *
- * @example
+ * **Example** (Logging the proof runner)
+ *
  * ```ts
  * import { runArchitectureLabProof } from "@beep/architecture-lab-proof"
  *
@@ -53,7 +55,6 @@ export class ArchitectureLabProofResult extends S.Class<ArchitectureLabProofResu
  * ```
  *
  * @effects Requires `WorkItemServer`, creates one proof WorkItem, and projects it to a summary view model.
- *
  * @category workflows
  * @since 0.0.0
  */

@@ -113,7 +113,8 @@ const renderOpenFailure = (
  * surface. The binding is Atom-owned and tears its global listener down on
  * unmount.
  *
- * @example
+ * **Example** (Render opener component)
+ *
  * ```tsx
  * import { YouTubeWatchOpener } from "@/chat/ui/YouTubeWatchOpener"
  *

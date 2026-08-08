@@ -43,7 +43,8 @@ const PostgresSchemaName = S.NonEmptyString.pipe(
 /**
  * Options accepted when applying the Professional Desktop runtime migrations.
  *
- * @example
+ * **Example** (Making options with make)
+ *
  * ```ts
  * import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations"
  *
@@ -71,7 +72,8 @@ export class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDes
  * Apply the bundled Professional Desktop migrations against the ambient
  * Drizzle database, entirely in-memory.
  *
- * @example
+ * **Example** (Checking Effect return type)
+ *
  * ```ts
  * import { migrateProfessionalDesktopDatabase } from "@/runtime/Migrations"
  * import { Effect } from "effect"
@@ -95,12 +97,15 @@ export const migrateProfessionalDesktopDatabase = Effect.fn("professional_deskto
 /**
  * Stderr marker emitted after the complete sidecar runtime is ready.
  *
+ * **Details**
+ *
  * The native shell and IPC stdio integration test wait for this marker instead
  * of coupling to human-readable log output. {@link migrateOnBoot} owns only the
  * database phase; `server/main.ts` emits the marker after every transport and
  * handler layer is live.
  *
- * @example
+ * **Example** (Verifying ready marker suffix)
+ *
  * ```ts
  * import { SidecarReadyMarker } from "@/runtime/Migrations"
  *
@@ -115,7 +120,8 @@ export const SidecarReadyMarker = "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY";
 /**
  * Boot-time migration effect for the sidecar database layer.
  *
- * @example
+ * **Example** (Checking Effect type)
+ *
  * ```ts
  * import { migrateOnBoot } from "@/runtime/Migrations"
  * import { Effect } from "effect"

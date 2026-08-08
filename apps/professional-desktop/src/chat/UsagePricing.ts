@@ -75,7 +75,8 @@ const APPROXIMATE_MODEL_PRICES: ReadonlyArray<ApproximateModelPrice> = [
  * has a price row. One USD per million tokens equals one micro-USD per token.
  * Unknown models intentionally return `None` instead of guessing.
  *
- * @example
+ * **Example** (Compute cost for fixture usage)
+ *
  * ```ts
  * import { approximateCostUsdMicros } from "@/chat/UsagePricing"
  * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
