@@ -9,7 +9,7 @@ import {
 import { A } from "@beep/utils";
 import { Order, pipe } from "effect";
 import * as O from "effect/Option";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = "/repo";
 
@@ -91,47 +91,6 @@ describe("CI lane descriptors", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
-  // The hosted-swap step is plan-time gated on GITHUB_ACTIONS, so on hosted
-  // runners it would prepend itself to the very plans these tests pin. Clear
-  // the variable so the shape assertions are identical locally and in CI; the
-  // dedicated hosted-swap test below opts back in explicitly.
-  let previousGithubActions: string | undefined;
-  beforeEach(() => {
-    previousGithubActions = Bun.env.GITHUB_ACTIONS;
-    delete Bun.env.GITHUB_ACTIONS;
-  });
-  afterEach(() => {
-    if (previousGithubActions === undefined) {
-      delete Bun.env.GITHUB_ACTIONS;
-    } else {
-      Bun.env.GITHUB_ACTIONS = previousGithubActions;
-    }
-  });
-
-  it("provisions hosted swap ahead of the memory-heavy lanes on GitHub runners", () => {
-    Bun.env.GITHUB_ACTIONS = "true";
-    const coverage = ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions);
-    expect(A.length(coverage)).toBe(2);
-    expect(firstOf(coverage)).toMatchObject({ label: "ci:coverage:hosted-swap", command: "bash" });
-    expect([...lastOf(coverage).args]).toEqual([
-      "run",
-      "coverage",
-      "--",
-      "--concurrency=1",
-      "--affected",
-      "--summarize",
-    ]);
-
-    const check = ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions);
-    expect(firstOf(check)).toMatchObject({ label: "ci:check:hosted-swap" });
-
-    const integration = ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions);
-    expect(firstOf(integration)).toMatchObject({ label: "ci:test-integration:hosted-swap" });
-
-    delete Bun.env.GITHUB_ACTIONS;
-    expect(A.length(ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions))).toBe(1);
-  });
-
   it("builds the PR-shape lint lane with TURBO_SCM_BASE", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "lint", prShapeOptions);
     expect(A.length(steps)).toBe(1);
@@ -152,15 +111,7 @@ describe("ciLaneStepsForTesting", () => {
     expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
-    expect([...integration.args]).toEqual([
-      "run",
-      "test",
-      "--",
-      "--integration",
-      "--concurrency=1",
-      "--affected",
-      "--summarize",
-    ]);
+    expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
   });
 
   it("matches coverage baseline regeneration concurrency", () => {
@@ -241,13 +192,13 @@ describe("ciLaneStepsForTesting", () => {
       "origin/main",
       "--head",
       "HEAD",
-      "--parallel=2",
+      "--parallel=3",
     ]);
 
     const full = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }))
     );
-    expect([...full.args]).toEqual(["run", "docgen:ci"]);
+    expect([...full.args]).toEqual(["run", "docgen"]);
   });
 
   it("appends the changeset status step to repo-sanity on request", () => {

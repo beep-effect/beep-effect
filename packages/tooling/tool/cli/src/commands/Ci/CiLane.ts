@@ -650,70 +650,19 @@ const turboRootLaneStep = (
     options.affected ? { TURBO_SCM_BASE: options.base } : undefined
   );
 
-// GitHub-hosted 16 GB runners OOM-kill single beta.104 compiles even fully
-// serial — packages/epistemic/server `tsc -b` alone exceeds physical RAM
-// (evidence: explorations/graphnosis-prior-art/research/OPPORTUNITIES.md,
-// 2026-08-07). Swap lets the one worst task page through instead of dying;
-// the serial lane caps keep everything else inside RAM. Advisory by design:
-// a provisioning failure logs loudly and lets the lane try anyway, so this
-// step can never turn a healthy runner red. Plan-time gating on
-// GITHUB_ACTIONS keeps local replays and lane tests byte-identical.
-const HOSTED_SWAP_SCRIPT = [
-  "set -u",
-  'if [ "${GITHUB_ACTIONS:-}" != "true" ]; then echo "hosted-swap: skip (not a hosted runner)"; exit 0; fi',
-  "existing=$(awk '/SwapTotal/ {print $2}' /proc/meminfo)",
-  'if [ "${existing:-0}" -ge 12582912 ]; then echo "hosted-swap: ${existing} kB swap already active"; exit 0; fi',
-  "target=/mnt/beep-swapfile",
-  "sudo test -d /mnt && sudo test -w /mnt || target=/beep-swapfile",
-  'if sudo fallocate -l 12G "$target" && sudo chmod 600 "$target" && sudo mkswap "$target" && sudo swapon "$target"; then',
-  '  echo "hosted-swap: 12G swap active at $target"',
-  "  swapon --show || true",
-  "else",
-  '  echo "hosted-swap: provisioning FAILED — memory-heavy tasks may still exit 137"',
-  "fi",
-  "exit 0",
-].join("\n");
-
-const hostedSwapSteps = (repoRoot: string, laneId: CiLaneId): ReadonlyArray<QualityTaskStep> =>
-  Bun.env.GITHUB_ACTIONS === "true"
-    ? [
-        QualityTaskStep.make({
-          label: `ci:${laneId}:hosted-swap`,
-          command: "bash",
-          args: ["-c", HOSTED_SWAP_SCRIPT],
-          cwd: repoRoot,
-        }),
-      ]
-    : A.empty<QualityTaskStep>();
-
 const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
   DocgenLaneMode.$match(options.mode, {
     none: A.empty<QualityTaskStep>,
     affected: () => [
-      // Two example-compiler workers fit 16 GB only marginally on the
-      // beta.104 tree — the lane's runner still died mid-run twice; swap
-      // absorbs the spikes.
-      ...hostedSwapSteps(repoRoot, "docgen"),
       rootScriptStep(repoRoot, "ci:docgen", "docgen:local", [
         "--base",
         options.base,
         "--head",
         options.head,
-        // Hosted 16 GB runners OOM-killed the docgen lane at three concurrent
-        // example-compiler workers on the beta.104 tree; two fit. Local dev
-        // paths (Quality.command.ts) keep --parallel=3.
-        "--parallel=2",
+        "--parallel=3",
       ]),
     ],
-    // Full mode is what the workflow lane-gate picks when docgen tooling
-    // itself changed, so it must survive the same 16 GB runners: swap plus
-    // the docgen:ci root script (turbo --concurrency=2 — three concurrent
-    // example compiles died at 21-24 min on the beta.104 tree; local `docgen`
-    // keeps --concurrency=3).
-    full: () => [
-      ...hostedSwapSteps(repoRoot, "docgen"),
-      rootScriptStep(repoRoot, "ci:docgen", "docgen:ci", A.empty<string>()),
-    ],
+    full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
 
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
@@ -940,12 +889,7 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-      // Serial like the check lane: epistemic/server's build plus any other
-      // heavy task exceeded 16 GB at the CI cap of 2.
-      "test-integration": () => [
-        ...hostedSwapSteps(repoRoot, "test-integration"),
-        turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration", "--concurrency=1"], options),
-      ],
+      "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
       "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
     })
 );
